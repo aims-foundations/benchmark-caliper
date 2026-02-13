@@ -1,0 +1,34 @@
+name: "CulturalBench"
+full_name: "CulturalBench: A Cultural Knowledge Benchmark"
+paper_url: "https://arxiv.org/abs/2410.02677"
+year: 2024
+domain: "Cultural Knowledge"
+porting_strategy: "ground_up"
+languages: ["en"]
+primary_region: "Multi-region (45 global regions)"
+
+description: |
+  CulturalBench tests LLMs on cultural knowledge across 45 global regions
+  with 1,227 questions. Designed to measure whether models have equitable
+  cultural knowledge across different parts of the world.
+
+documentation_excerpts: |
+  1,227 questions spanning 45 global regions. Questions test factual cultural
+  knowledge (customs, traditions, food, holidays, social norms, etc.).
+
+  Covers Africa, Asia, Europe, Americas, Middle East, Oceania.
+
+  English-only (questions about non-English-speaking cultures asked in English).
+  This means cultural knowledge is tested through an English-language lens.
+
+  Questions designed to test knowledge disparities: do models know more about
+  Western cultures than non-Western ones?
+
+  Found that models have significant performance disparities: much higher
+  accuracy on Western cultural knowledge than Global South regions.
+
+  Labels: correct answers based on verifiable cultural facts.
+  Questions validated by regional experts.
+
+  The English-only format means the benchmark tests whether models have cultural
+  knowledge, not whether they can communicate it in locally relevant languages.

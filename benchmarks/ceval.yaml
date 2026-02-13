@@ -1,0 +1,33 @@
+name: "C-Eval"
+full_name: "C-Eval: A Multi-Level Multi-Discipline Chinese Evaluation Suite"
+paper_url: "https://arxiv.org/abs/2305.08322"
+year: 2023
+domain: "Knowledge (52 subjects, Chinese national exams)"
+porting_strategy: "regional_exams"
+languages: ["zh"]
+primary_region: "China"
+
+description: |
+  C-Eval is a Chinese knowledge evaluation benchmark covering 52 subjects from
+  middle school to professional level, sourced from Chinese national examinations.
+  It is the Chinese parallel to MMLU, designed to evaluate knowledge relevant to
+  the Chinese context.
+
+documentation_excerpts: |
+  52 subjects spanning STEM, social sciences, humanities, and professional domains.
+  Questions from Chinese national exams including gaokao preparation materials,
+  professional licensing exams, and university entrance materials.
+
+  Content is inherently Chinese-centric: Chinese history, Chinese political system,
+  Chinese geography, Chinese law, traditional Chinese medicine, etc. This is by
+  design—it evaluates knowledge relevant to the Chinese context.
+
+  Language: Chinese (Simplified). No multilingual versions.
+
+  Built as a parallel to MMLU specifically because MMLU's Western-centric content
+  was inadequate for evaluating models deployed in China.
+
+  Labels: multiple choice (4 options). Correct answers based on Chinese educational
+  standards and official exam answer keys.
+
+  Annotated/validated by Chinese education professionals.

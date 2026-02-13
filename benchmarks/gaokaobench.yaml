@@ -1,0 +1,33 @@
+name: "GAOKAO-Bench"
+full_name: "GAOKAO-Bench: Benchmarking AI on China's National College Entrance Exam"
+paper_url: "https://arxiv.org/abs/2305.12474"
+year: 2023
+domain: "Education (Chinese Gaokao)"
+porting_strategy: "regional_exams"
+languages: ["zh"]
+primary_region: "China"
+
+description: |
+  GAOKAO-Bench uses questions from China's National College Entrance Examination
+  (高考/Gaokao) to evaluate AI models. The Gaokao is one of the world's most
+  competitive standardized tests, taken by ~10 million students annually.
+
+documentation_excerpts: |
+  Questions from actual Gaokao examinations across multiple years and subjects.
+  Covers Chinese, mathematics, English, physics, chemistry, biology, history,
+  geography, and political science.
+
+  Deeply embedded in Chinese educational context. Chinese history questions
+  reflect PRC curriculum perspective. Political science questions aligned with
+  Chinese political system and ideology.
+
+  Chinese language (Simplified). Mix of multiple choice and free-form answers.
+  Some subjects (Chinese literature, history) are highly culturally specific.
+  Math/science subjects more universally applicable.
+
+  Labels: official Gaokao answer keys. For subjective questions (essays, etc.),
+  scoring rubrics based on Chinese educational standards.
+
+  The Gaokao represents a specific educational philosophy and set of cultural
+  values around examination, meritocracy, and educational achievement that is
+  distinctive to Chinese society.

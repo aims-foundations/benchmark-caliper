@@ -1,0 +1,34 @@
+name: "AfriQA"
+full_name: "AfriQA: Cross-lingual Open-Retrieval Question Answering for African Languages"
+paper_url: "https://arxiv.org/abs/2305.06897"
+year: 2023
+domain: "Question Answering"
+porting_strategy: "ground_up"
+languages: ["amh", "bem", "fon", "hau", "ibo", "kin", "swa", "twi", "wol", "yor"]
+primary_region: "Sub-Saharan Africa"
+
+description: |
+  AfriQA provides cross-lingual open-retrieval QA for 10 African languages.
+  Questions are written by native speakers about topics relevant to their
+  communities, with answers retrieved from African language Wikipedia.
+
+documentation_excerpts: |
+  10 African languages. Questions natively written by speakers, not translated
+  from English. Questions reflect topics important to African communities.
+
+  Cross-lingual design: questions in African languages, knowledge retrieval
+  from both African language and English Wikipedia.
+
+  Wikipedia as knowledge source introduces bias: African language Wikipedia
+  articles are fewer and often shorter than English equivalents. Coverage
+  of local topics may be incomplete.
+
+  Questions cover local knowledge: geography, culture, history, and current
+  events relevant to each language's speaker community.
+
+  Annotation by native speakers. Question quality varies by language based
+  on annotator pool size.
+
+  Labels: correct answers extracted from Wikipedia passages.
+
+  Text-based only. Retrieval-augmented format.

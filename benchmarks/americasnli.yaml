@@ -1,0 +1,40 @@
+name: "AmericasNLI"
+full_name: "Natural Language Inference for Indigenous Languages of the Americas"
+source_url: "https://github.com/nala-cub/AmericasNLI"
+paper_url: "https://aclanthology.org/2022.naacl-main.279/"
+year: 2022
+domain: "Natural Language Inference (NLI)"
+porting_strategy: "translation"
+languages: ["aym", "bzd", "cni", "gn", "hch", "nah", "oto", "quy", "shp", "tar"]
+primary_region: "Americas (Indigenous)"
+
+description: |
+  AmericasNLI extends NLI evaluation to 10 indigenous languages of the Americas:
+  Aymara, Bribri, Asháninka, Guarani, Wixárika, Nahuatl, Otomí, Quechua, Shipibo-Konibo,
+  and Rarámuri. Created by translating XNLI/MultiNLI data into indigenous languages.
+
+documentation_excerpts: |
+  Source data: XNLI test and dev sets (which are themselves translations of MultiNLI).
+  Thus the content chain is: American English → XNLI → AmericasNLI.
+
+  Translation performed by native speakers of each indigenous language. Quality varies
+  across languages depending on translator availability and linguistic resources.
+
+  All 10 languages are extremely low-resource for NLP. Most lack significant digital
+  text corpora, NLP tools, and standardized orthographies (some have competing
+  orthographic conventions).
+
+  Cultural distance is very large: content from American English contexts
+  (US government documents, fiction, travel guides) is being translated into
+  languages spoken by communities with fundamentally different worldviews,
+  economic systems, and social structures.
+
+  The NLI task itself (formal logical inference between premise-hypothesis pairs)
+  may not map onto indigenous communicative practices, which tend to be more
+  narrative and contextual rather than propositional.
+
+  Labels: entailment, contradiction, neutral (inherited from XNLI/MultiNLI).
+  Not re-annotated by indigenous language speakers.
+
+  Many indigenous languages have strong oral traditions; text-based evaluation
+  does not match primary communicative modality.

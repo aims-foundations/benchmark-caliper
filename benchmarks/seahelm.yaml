@@ -1,0 +1,75 @@
+# SEA-HELM - Southeast Asian Holistic Evaluation of Language Models
+# Source: Susanto et al., 2025
+# Ground-truth region for validation: Southeast Asia
+
+name: "SEA-HELM"
+full_name: "Southeast Asian Holistic Evaluation of Language Models"
+source_url: "https://leaderboard.sea-lion.ai/"
+year: 2025
+domain: "Regional LLM evaluation"
+porting_strategy: "mixed"  # Combination of filtering, modification, and ground-up development
+languages: ["en", "zh", "ms", "id", "th", "vi", "tl", "ta", "km", "my", "lo"]
+primary_region: "Southeast Asia"
+
+description: |
+  SEA-HELM is a regional adaptation of the HELM framework designed specifically for
+  Southeast Asian contexts. It was developed by AI Singapore and collaborators to
+  address the limitations of Global North benchmarks when applied to SEA populations.
+  SEA-HELM employs all three remediation strategies: filtering (removing inapplicable
+  prompts), modification (localizing tasks), and development (creating new datasets
+  like Kalahi and LINDSEA).
+
+documentation_excerpts: |
+  ## Key characteristics relevant to validity analysis:
+
+  ### Test Case Categories (Input Ontology)
+  SEA-HELM introduces region-specific evaluation pillars beyond the standard HELM
+  taxonomy, including dedicated SEA Culture and Safety pillars. It includes the Kalahi
+  dataset for evaluating understanding of Filipino cultural norms (e.g., pakikisama -
+  communal unity, bayanihan - community cooperation). The evaluation taxonomy was
+  designed with regional stakeholder input.
+
+  ### Content (Input Content)
+  SEA-HELM prioritizes native-language data with native speaker verification. It
+  systematically removes Western-centric assumptions from evaluation prompts. Data
+  is sourced from or verified by speakers of the target languages. Human localization
+  processes are used rather than machine translation alone.
+
+  ### Input Signal Form (Input Form)
+  Explicitly adapts for non-Latin scripts used in Southeast Asia. Removes
+  capitalization-based tasks and letter-frequency tasks that assume Latin script.
+  Modifies evaluation procedures for Thai, Khmer, Burmese, and other writing systems.
+  Minor limitation: may not cover all 1,000+ indigenous SEA languages.
+
+  ### Output Categories (Output Ontology)
+  Uses regional value-based labels. For Filipino cultural tasks, uses "relevant" vs.
+  "irrelevant" categories based on Filipino cultural norms rather than Western value
+  frameworks. Penalizes wrong-language responses (e.g., English output when prompted
+  in Thai).
+
+  ### Annotation Process (Output Content)
+  Annotations are produced and verified by native speakers from target populations.
+  Preserves original regional labeling practices. Annotator pools are documented as
+  representative of SEA populations.
+
+  ### Output Modality (Output Form)
+  Requires local language outputs and penalizes language mismatches. However, SEA-HELM
+  remains text-only. This is a residual gap: literacy rates in SEA vary significantly
+  (99% in Brunei to 68% in Timor-Leste, 84% in Cambodia). Over 1,000 indigenous
+  languages in the region lack text-to-speech systems, making text-only evaluation
+  insufficient for populations where speech-based AI would be more accessible.
+
+  ### Remediation Strategies Employed
+  - Filtering: Removes inapplicable prompts from source benchmarks
+  - Modification: Localizes tasks for SEA contexts (script, cultural references)
+  - Development: Creates new datasets (Kalahi for Filipino culture, LINDSEA)
+
+ground_truth_scores:
+  southeast_asia:
+    input_ontology: 5
+    input_content: 5
+    input_form: 4
+    output_ontology: 4
+    output_content: 5
+    output_form: 3
+    source: "Case study analysis in Corona, Truong, Trager (2025)"

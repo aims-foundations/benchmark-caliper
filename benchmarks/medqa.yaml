@@ -1,0 +1,39 @@
+name: "MedQA"
+full_name: "MedQA: Medical Question Answering Benchmark"
+paper_url: "https://arxiv.org/abs/2009.13081"
+year: 2021
+domain: "Medical (licensing exam QA)"
+porting_strategy: "regional_exams"
+languages: ["en", "zh"]
+primary_region: "United States, China, Taiwan"
+
+description: |
+  MedQA collects medical licensing examination questions from the US (USMLE),
+  China (CNMLE), and Taiwan medical licensing exams. Tests medical knowledge
+  in different regional medical practice contexts.
+
+documentation_excerpts: |
+  Three medical licensing exam sources:
+  - USMLE (United States Medical Licensing Examination)
+  - CNMLE (China National Medical Licensing Examination)
+  - Taiwan medical licensing examination
+
+  US questions: English, based on Western medicine practice standards, US FDA
+  drug approvals, US clinical guidelines, US-prevalent conditions.
+
+  Chinese questions: Simplified Chinese, based on Chinese medical practice
+  including traditional Chinese medicine (TCM) integration, Chinese drug
+  formulary, China-specific clinical guidelines.
+
+  Taiwan questions: Traditional Chinese, reflecting Taiwanese medical practice.
+
+  Medical knowledge is not universal: drug names, clinical guidelines, disease
+  prevalence, treatment protocols all vary by country and region.
+
+  Labels: correct answers from official licensing exam answer keys.
+
+  The benchmark demonstrates that medical benchmarks are inherently regional:
+  a correct answer for US practice may be incorrect for Chinese practice.
+
+  Entirely absent: tropical disease expertise, African medical conditions,
+  Latin American healthcare contexts, South Asian medical practice.

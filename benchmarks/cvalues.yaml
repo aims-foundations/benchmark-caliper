@@ -1,0 +1,34 @@
+name: "CValues"
+full_name: "CValues: Measuring the Values of Chinese LLMs"
+paper_url: "https://arxiv.org/abs/2307.09705"
+year: 2023
+domain: "Values/Safety (Chinese societal values)"
+porting_strategy: "ground_up"
+languages: ["zh"]
+primary_region: "China"
+
+description: |
+  CValues evaluates LLMs on alignment with Chinese societal values, covering
+  both safety (avoiding harmful content) and responsibility (promoting positive
+  values aligned with Chinese society).
+
+documentation_excerpts: |
+  Evaluates alignment with Chinese societal values and norms.
+  Two dimensions: safety (avoiding harmful/illegal content) and responsibility
+  (promoting socially positive values).
+
+  Values framework based on Chinese social and legal norms, which differ from
+  Western value frameworks in several areas (political expression, social harmony,
+  collective vs. individual rights).
+
+  Chinese language only.
+
+  Includes evaluation of politically sensitive topics from a Chinese perspective.
+  What constitutes "safe" or "responsible" output reflects Chinese government
+  and societal standards.
+
+  Labels: safe/unsafe, responsible/irresponsible based on Chinese value norms.
+  Annotated by Chinese evaluators.
+
+  Explicitly addresses the gap that Western safety benchmarks (like HELM's safety
+  evaluation) encode Western values that may not apply to Chinese contexts.

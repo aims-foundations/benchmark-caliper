@@ -1,0 +1,31 @@
+name: "CMMLU"
+full_name: "CMMLU: Measuring Massive Multitask Language Understanding in Chinese"
+paper_url: "https://arxiv.org/abs/2306.09212"
+year: 2023
+domain: "Knowledge (67 subjects, Chinese context)"
+porting_strategy: "regional_exams"
+languages: ["zh"]
+primary_region: "China"
+
+description: |
+  CMMLU is a comprehensive Chinese evaluation benchmark with 67 subjects,
+  broader than C-Eval, emphasizing China-specific knowledge including
+  traditional Chinese culture, Chinese history, and Chinese legal system.
+
+documentation_excerpts: |
+  67 subjects covering a wider range than C-Eval. Includes both universal
+  STEM topics and China-specific domains.
+
+  Explicitly includes subjects not found in MMLU: Chinese history, Chinese
+  food culture, Chinese driving rules, traditional Chinese medicine, ancient
+  Chinese literature, Chinese civil service exam content.
+
+  Chinese-only. Multiple choice format.
+
+  Designed to fill gaps left by both MMLU (Western-centric) and C-Eval
+  (narrower subject range). Aims to capture uniquely Chinese knowledge domains.
+
+  Questions sourced from Chinese educational materials, professional exams,
+  and cultural knowledge assessments.
+
+  Labels: correct answers validated by Chinese domain experts.

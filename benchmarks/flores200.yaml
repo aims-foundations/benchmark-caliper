@@ -1,0 +1,37 @@
+name: "FLORES-200"
+full_name: "FLORES-200 Machine Translation Benchmark"
+source_url: "https://github.com/facebookresearch/flores"
+paper_url: "https://arxiv.org/abs/2207.04672"
+year: 2022
+domain: "Machine Translation"
+porting_strategy: "translation"
+languages: ["200 languages"]
+primary_region: "Multi-region (Meta AI)"
+
+description: |
+  FLORES-200 is a machine translation evaluation benchmark covering 200 languages.
+  It provides parallel sentences across all 200 languages for evaluating translation
+  quality in many directions.
+
+documentation_excerpts: |
+  Source sentences drawn from English Wikipedia, Wikinews, Wikijunior, and WikiVoyage.
+  Professionally translated into 200 languages by native speakers.
+
+  Wikipedia-sourced content inherits biases: overrepresentation of Western topics,
+  English-centric worldview, uneven coverage of Global South topics.
+
+  For low-resource languages, the translator pool is necessarily small. Translation
+  quality may vary for languages with fewer qualified translators.
+
+  Domain: machine translation evaluation. The task itself (translating between
+  languages) is inherently cross-cultural, but the source content determines what
+  is being translated.
+
+  Output: translated text evaluated by metrics like BLEU, chrF. Evaluation metrics
+  may not equally capture quality across typologically different languages.
+
+  200-language coverage is impressive for breadth but means per-language cultural
+  adaptation depth is minimal.
+
+  Text-based only. Many of the 200 languages are primarily spoken languages with
+  limited written traditions.

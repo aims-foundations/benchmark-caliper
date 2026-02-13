@@ -1,0 +1,36 @@
+name: "PAWS-X"
+full_name: "Cross-lingual Paraphrase Adversaries from Word Scrambling"
+source_url: "https://github.com/google-research-datasets/paws/tree/master/pawsx"
+paper_url: "https://arxiv.org/abs/1908.11828"
+year: 2019
+domain: "Paraphrase Detection"
+porting_strategy: "translation"
+languages: ["en", "fr", "es", "de", "zh", "ja", "ko"]
+primary_region: "United States (source: English Wikipedia)"
+
+description: |
+  PAWS-X extends the English PAWS dataset to 6 additional languages through
+  professional translation. Tests whether two sentences are paraphrases of each other,
+  specifically targeting cases where high word overlap does not imply paraphrase.
+
+documentation_excerpts: |
+  Source: English PAWS (Zhang et al., 2019), constructed from Wikipedia and
+  Quora Question Pairs. Sentence pairs with high lexical overlap but different meanings.
+
+  Translation: Human professional translation into French, Spanish, German, Chinese,
+  Japanese, Korean.
+
+  Content reflects English Wikipedia content, which is known to have systematic
+  biases toward Western/English-speaking topics. Quora questions reflect
+  English-speaking user base concerns.
+
+  Languages: Covers East Asian and European languages but no South Asian, African,
+  Middle Eastern, or indigenous languages.
+
+  Labels: binary (paraphrase / not paraphrase). Labels inherited from English source.
+  Paraphrase relationships should be language-independent for the most part, but
+  some nuances may differ across languages.
+
+  The adversarial design (high word overlap ≠ paraphrase) relies on lexical
+  properties that may transfer differently across languages with different
+  morphological systems.

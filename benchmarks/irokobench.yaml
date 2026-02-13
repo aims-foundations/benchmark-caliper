@@ -1,0 +1,37 @@
+name: "IrokoBench"
+full_name: "IrokoBench: A New Benchmark for African Languages in the Age of LLMs"
+paper_url: "https://arxiv.org/abs/2406.03368"
+year: 2024
+domain: "Multi-task LLM evaluation"
+porting_strategy: "mixed"
+languages: ["amh", "hau", "ibo", "kin", "nya", "sna", "swa", "twi", "xho", "yor", "zul", "bam", "bbj", "ewe", "fon", "wol"]
+primary_region: "Sub-Saharan Africa"
+
+description: |
+  IrokoBench aggregates multiple African language evaluation tasks into a
+  comprehensive LLM evaluation suite for 16 African languages. Builds on
+  Masakhane community efforts.
+
+documentation_excerpts: |
+  16 African languages spanning West, East, and Southern Africa. Aggregates
+  existing Masakhane community benchmarks and adds new evaluation tasks.
+
+  Tasks include: NER, sentiment analysis, question answering, natural language
+  inference, machine translation, and text classification.
+
+  Mix of natively sourced data (e.g., AfriSenti tweets, MasakhaNER news) and
+  translated data (e.g., NLI tasks translated from English).
+
+  For translated components, the same cultural transfer concerns apply as with
+  XNLI/AmericasNLI: English-sourced content may not reflect African cultural contexts.
+
+  For natively sourced components, data is regionally grounded and annotated
+  by native speakers.
+
+  Comprehensive but heterogeneous: quality and cultural grounding varies
+  across component tasks.
+
+  Labels vary by task type. Natively sourced labels generally stronger than
+  translated ones.
+
+  Text-based evaluation only.

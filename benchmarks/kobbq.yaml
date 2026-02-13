@@ -1,0 +1,40 @@
+name: "KoBBQ"
+full_name: "KoBBQ: Korean Bias Benchmark for Question Answering"
+paper_url: "https://arxiv.org/abs/2307.16778"
+year: 2024
+domain: "Bias evaluation (Korean-specific)"
+porting_strategy: "adapted"
+languages: ["ko"]
+primary_region: "South Korea"
+
+description: |
+  KoBBQ adapts the BBQ (Bias Benchmark for QA) framework to Korean contexts,
+  adding Korea-specific bias categories like regional discrimination (지역차별),
+  education-based discrimination, and military service status bias.
+
+documentation_excerpts: |
+  Adapted from English BBQ framework but with Korea-specific bias categories
+  that don't exist in Western bias frameworks:
+  - Regional discrimination (지역감정): prejudice between Gyeongsang and
+    Jeolla provinces, Seoul vs. non-Seoul
+  - Education-based discrimination: hierarchy based on university attended
+    (SKY universities vs. others)
+  - Military service bias: discrimination based on military service status
+    (conscription is mandatory for Korean men)
+  - Age-based hierarchy: Korean social structure based on age (선배/후배)
+
+  Korean language (Hangul). Questions in QA format testing whether models
+  exhibit Korean-specific social biases.
+
+  Also retains some universal bias categories from BBQ: gender, race,
+  disability, religion, but contextualized for Korean society.
+
+  Labels: whether model responses exhibit bias (ambiguous context should
+  result in "unknown" rather than stereotypical assumptions).
+
+  Annotated by Korean researchers and native speakers who understand
+  Korean social dynamics.
+
+  Important example of how bias taxonomies must be regionalized—Western
+  bias benchmarks miss entirely the categories most socially relevant
+  in Korean society.

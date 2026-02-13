@@ -1,0 +1,66 @@
+# Iran / Persian-Speaking World - Regional Context for Validity Analysis
+
+name: "Iran/Persian"
+abbreviation: "Persian"
+
+countries:
+  - Iran
+  - Afghanistan (Dari-speaking)
+  - Tajikistan (Tajik)
+
+languages:
+  major:
+    - Persian/Farsi (Iran)
+    - Dari (Afghanistan)
+    - Tajik (Tajikistan)
+  minority:
+    - Azerbaijani Turkish (northwest Iran)
+    - Kurdish (western Iran)
+    - Arabic (southwestern Iran)
+    - Balochi (southeastern Iran)
+    - Turkmen (northeastern Iran)
+  note: "Persian, Dari, and Tajik are mutually intelligible varieties of the same language. Iran is multilingual with significant minority language populations."
+
+writing_systems:
+  - Persian/Arabic script (Iran, Afghanistan - right-to-left)
+  - Cyrillic script (Tajikistan)
+  note: "RTL script requires specific NLP handling. Persian script differs from Arabic in 4 additional characters (پ, چ, ژ, گ). Tajik uses Cyrillic due to Soviet-era policy."
+
+literacy_rates:
+  Iran: 0.87
+  Afghanistan: 0.43
+  Tajikistan: 0.99
+  note: "Wide variation. Iran has high urban literacy but lower rural rates. Afghanistan has one of the world's lowest literacy rates."
+
+cultural_norms_notes: |
+  - Taarof (تعارف): Elaborate system of ritual politeness. Offers must be refused
+    multiple times before accepting. Compliments require self-deprecating responses.
+    Critical for NLP systems in commerce, customer service, and social interaction.
+  - Shi'a Islamic values central to social life in Iran
+  - Persian poetry and literature deeply embedded in daily communication
+    (quoting Hafez, Rumi, Sa'di is common)
+  - Concept of "ru" (face/social standing) important in interactions
+  - Hierarchical social structures with age and status-based deference
+  - Nowruz (Persian New Year) and Zoroastrian cultural heritage
+  - Different gender interaction norms than Western contexts
+  - Strong hospitality traditions (mehmaan-navazi)
+
+infrastructure_notes: |
+  - Iran: Moderate internet infrastructure with significant government filtering/censorship.
+    Domestic social media platforms (Rubika, Soroush) alongside filtered access to global ones.
+  - Afghanistan: Very limited internet access, especially outside Kabul. Mobile phones
+    more common but smartphones limited.
+  - Tajikistan: Moderate internet access. Russian-language internet dominant.
+  - Speech interfaces important for Afghanistan given low literacy rates
+  - Persian NLP tools exist but are less developed than Arabic NLP
+
+domain_specific_notes: |
+  - Commerce: Taarof norms directly affect commercial NLP (chatbots, customer service).
+    An AI system that doesn't understand taarof will seem rude or produce incorrect
+    interpretations of customer intent.
+  - Healthcare: Traditional Persian medicine (Unani medicine) practiced alongside
+    modern medicine. Different drug names and medical terminology.
+  - Legal: Islamic Republic legal system (Iran). Mix of civil and religious law.
+    Very different from Western legal frameworks.
+  - Education: Konkur (university entrance exam) in Iran. National curricula reflect
+    Islamic Republic values and Persian cultural heritage.

@@ -1,0 +1,34 @@
+name: "XCOPA"
+full_name: "Cross-lingual Choice of Plausible Alternatives"
+source_url: "https://github.com/cambridgeltl/xcopa"
+paper_url: "https://aclanthology.org/2020.emnlp-main.185/"
+year: 2020
+domain: "Commonsense Reasoning"
+porting_strategy: "translation"
+languages: ["et", "ht", "id", "it", "qu", "sw", "ta", "th", "tr", "vi", "zh"]
+primary_region: "United States (source: English COPA)"
+
+description: |
+  XCOPA extends the English Choice of Plausible Alternatives (COPA) benchmark to
+  11 languages. Tests causal commonsense reasoning: given a premise, choose the more
+  plausible cause or effect from two alternatives. Notable for including Quechua and
+  Tamil alongside more resourced languages.
+
+documentation_excerpts: |
+  Source: English COPA (Roemmele et al., 2011). Premises describe everyday situations
+  and causal relationships.
+
+  Translation: Human translation of English COPA into 11 typologically diverse languages.
+  Includes both high-resource (Italian, Chinese) and lower-resource languages
+  (Quechua, Haitian Creole, Swahili, Tamil).
+
+  Commonsense reasoning premises are drawn from everyday scenarios, but "everyday"
+  is culturally situated. Causal relationships that seem obvious in one culture may
+  not hold in another. For example, premises about weather, social customs, or
+  daily routines reflect English-speaking cultural norms.
+
+  Translation preserves source cultural context. No cultural adaptation of scenarios
+  to target languages was performed.
+
+  Labels: binary choice (cause/effect selection). Labels not re-annotated for
+  target languages.

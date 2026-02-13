@@ -1,0 +1,86 @@
+# Middle East and North Africa - Regional Context for Validity Analysis
+
+name: "MENA"
+abbreviation: "MENA"
+
+countries:
+  - Saudi Arabia
+  - Egypt
+  - UAE
+  - Morocco
+  - Algeria
+  - Tunisia
+  - Iraq
+  - Jordan
+  - Lebanon
+  - Kuwait
+  - Qatar
+  - Bahrain
+  - Oman
+  - Yemen
+  - Libya
+  - Palestine
+  - Syria
+
+languages:
+  major:
+    - Modern Standard Arabic (formal/written)
+    - Egyptian Arabic
+    - Gulf Arabic
+    - Levantine Arabic
+    - Maghreb Arabic (Darija)
+  minority:
+    - Berber/Amazigh (North Africa)
+    - Kurdish (Iraq, Syria)
+    - Hebrew (Israel)
+    - Persian (Iran overlap)
+    - French (North Africa, Lebanon)
+    - Turkish (regional influence)
+  note: "Diglossia is a defining feature: MSA for formal/written, regional dialects for spoken. Dialectal variation is enormous."
+
+writing_systems:
+  - Arabic script (right-to-left)
+  - Latin script (French in North Africa, transliteration)
+  - Tifinagh script (Berber/Amazigh)
+  note: "RTL script requires specific NLP handling. Arabic morphology (root-pattern system) creates unique tokenization challenges."
+
+literacy_rates:
+  Saudi_Arabia: 0.98
+  UAE: 0.98
+  Egypt: 0.73
+  Morocco: 0.74
+  Algeria: 0.81
+  Tunisia: 0.82
+  Iraq: 0.86
+  Jordan: 0.98
+  Lebanon: 0.95
+  Yemen: 0.54
+  note: "Wide variation across the region. Gulf states have high literacy; Yemen, Morocco, Egypt lower."
+
+cultural_norms_notes: |
+  - Islamic values and norms central to social life across most of the region
+  - Honor culture and family-based social structures
+  - Gender norms and segregation practices vary by country
+  - Arabic hospitality traditions (diyafa) and social etiquette
+  - Political sensitivities: Israeli-Palestinian conflict, sectarian divisions,
+    monarchies vs. republics, Arab Spring aftermath
+  - Rich literary and poetic traditions in Arabic
+  - Ramadan and Islamic calendar shape daily life and commerce
+  - Coffee/tea culture as social institution
+
+infrastructure_notes: |
+  - Gulf states: advanced digital infrastructure, high smartphone penetration
+  - North Africa / Levant: moderate to good internet access, mobile-dominant
+  - Yemen, Syria, Iraq: infrastructure damaged by conflict, limited connectivity
+  - Arabic NLP tooling improving but still behind English, Chinese, European languages
+  - RTL text rendering and mixed-direction text (Arabic + Latin) remain challenges
+
+domain_specific_notes: |
+  - Legal: Islamic law (Sharia) plays varying roles across countries. Mix of Sharia,
+    civil law, and customary law. Very different from Western common law.
+  - Healthcare: Islamic bioethics influence medical practice. Regional diseases
+    and conditions differ from Global North.
+  - Education: National exam systems vary. Religious education integrated.
+    Curricula reflect national narratives and values.
+  - Commerce: Islamic finance principles (no interest/riba). Gulf economies
+    oil-dependent. Different market structures from Western economies.

@@ -1,0 +1,38 @@
+name: "Belebele"
+full_name: "Belebele Reading Comprehension Benchmark"
+source_url: "https://github.com/facebookresearch/belebele"
+paper_url: "https://arxiv.org/abs/2308.16884"
+year: 2023
+domain: "Reading Comprehension"
+porting_strategy: "parallel"
+languages: ["122 language variants"]
+primary_region: "Multi-region (Meta AI)"
+
+description: |
+  Belebele is a massively multilingual reading comprehension benchmark covering
+  122 language variants. Each question has a short passage and a 4-way multiple
+  choice question. Designed to enable evaluation of text models across many languages.
+
+documentation_excerpts: |
+  Coverage: 122 language variants spanning all major language families and many
+  low-resource languages.
+
+  Construction: Passages sourced from FLORES-200 dataset. Questions and answer
+  choices were created by professional linguists/annotators and translated.
+
+  The passages from FLORES-200 are drawn from diverse domains (Wikipedia, Wikinews,
+  Wikijunior, WikiVoyage). While these cover global topics, Wikipedia content has
+  known biases toward English-speaking world topics and perspectives.
+
+  Quality control: Professional linguists reviewed translations. However, for
+  some of the 122 language variants, translator pools are very small, limiting
+  quality assurance capacity.
+
+  Massive scale (122 languages) means depth of regional adaptation per language
+  is limited. Broad but shallow coverage.
+
+  Labels: 4-way multiple choice (single correct answer). Answers derived from
+  passage content, so label validity depends on passage content validity.
+
+  Primarily text-based. Many of the 122 languages are spoken by communities
+  with lower literacy rates and strong oral traditions.

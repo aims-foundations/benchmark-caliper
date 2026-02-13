@@ -1,0 +1,34 @@
+name: "XNLI"
+full_name: "Cross-lingual Natural Language Inference"
+source_url: "https://github.com/facebookresearch/XNLI"
+paper_url: "https://aclanthology.org/D18-1269/"
+year: 2018
+domain: "Natural Language Inference (NLI)"
+porting_strategy: "translation"
+languages: ["en", "fr", "es", "de", "el", "bg", "ru", "tr", "ar", "vi", "th", "zh", "hi", "sw", "ur"]
+primary_region: "United States (source: MultiNLI)"
+
+description: |
+  XNLI is a cross-lingual evaluation corpus for NLI. It extends MultiNLI by providing
+  professional translations of 5,010 test pairs and 2,490 dev pairs into 15 languages.
+  Models determine whether a premise entails, contradicts, or is neutral to a hypothesis.
+
+documentation_excerpts: |
+  Source corpus: MultiNLI (Williams et al., 2018), collected from American English text.
+  MultiNLI premises drawn from 10 genres of written and spoken English: fiction,
+  government documents, letters, 9/11 reports, travel guides, telephone speech, etc.
+
+  Translation process: Professional translators translated English premise-hypothesis pairs
+  into 14 additional languages. The translation was human-performed, not machine translation.
+
+  Known concern: Translation carries over cultural assumptions from English source text.
+  The semantic content reflects American English cultural context (e.g., travel guides
+  about US destinations, US government documents, American fiction). Wu et al. (2025)
+  meta-analysis documents that direct translation can lead to cultural nuances being lost.
+
+  Languages include typologically diverse set: Vietnamese, Thai, Chinese, Hindi, Swahili,
+  Urdu, Arabic, Turkish, plus European languages. No indigenous or low-resource languages.
+
+  Label categories: entailment, contradiction, neutral (universal NLI taxonomy).
+  Annotators for original MultiNLI corpus were English speakers. Labels preserved through
+  translation (not re-annotated in target languages).

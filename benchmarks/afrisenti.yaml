@@ -1,0 +1,35 @@
+name: "AfriSenti"
+full_name: "AfriSenti: Sentiment Analysis for African Languages"
+paper_url: "https://arxiv.org/abs/2302.08956"
+year: 2023
+domain: "Sentiment Analysis"
+porting_strategy: "ground_up"
+languages: ["amh", "ary", "hau", "ibo", "kin", "pcm", "pt-mz", "swa", "tir", "twi", "yor", "arq", "orm", "tsn"]
+primary_region: "Sub-Saharan Africa"
+
+description: |
+  AfriSenti provides sentiment analysis datasets for 14 African languages,
+  with tweets natively collected from African Twitter users. Developed as part
+  of the AfriSenti SemEval-2023 shared task.
+
+documentation_excerpts: |
+  14 African languages. Tweets collected from Twitter/X users in African countries,
+  not translated from English. Natively sourced social media text.
+
+  Languages: Amharic, Moroccan Arabic, Hausa, Igbo, Kinyarwanda, Nigerian Pidgin,
+  Mozambican Portuguese, Swahili, Tigrinya, Twi, Yoruba, Algerian Arabic, Oromo, Tswana.
+
+  Sentiment labels: positive, negative, neutral. Annotated by native speakers
+  from the target language communities.
+
+  Twitter data reflects actual African social media discourse, including
+  code-switching, informal language, and culturally specific expressions.
+
+  Annotation by native speakers captures culturally-grounded sentiment expressions.
+  What is positive/negative can vary by cultural context.
+
+  Inter-annotator agreement varies by language. Some languages show higher
+  disagreement, reflecting genuine cultural ambiguity in sentiment.
+
+  Text-based (tweet format). Limited to Twitter users (demographic bias toward
+  younger, urban, more educated populations).

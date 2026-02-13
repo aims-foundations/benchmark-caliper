@@ -1,0 +1,35 @@
+name: "MasakhaNER"
+full_name: "MasakhaNER: Named Entity Recognition for African Languages"
+paper_url: "https://arxiv.org/abs/2103.11811"
+year: 2021
+domain: "Named Entity Recognition (NER)"
+porting_strategy: "ground_up"
+languages: ["amh", "hau", "ibo", "kin", "lug", "luo", "pcm", "swa", "wol", "yor", "bam", "bbj", "ewe", "fon", "mos", "nya", "sna", "tsn", "twi", "zul"]
+primary_region: "Sub-Saharan Africa (Masakhane community)"
+
+description: |
+  MasakhaNER provides NER annotations for 20 African languages, developed by the
+  Masakhane community—a grassroots initiative of African NLP researchers. Data is
+  natively sourced from African language news articles and other regional text.
+
+documentation_excerpts: |
+  20 African languages spanning West, East, and Southern Africa. Community-driven
+  development by African NLP researchers and native speakers.
+
+  Data sources: African language news articles (e.g., VOA Hausa, BBC Yoruba, etc.),
+  Wikipedia articles in African languages, and other regionally sourced text.
+
+  NER categories: PER (person), ORG (organization), LOC (location), DATE.
+  Standard NER taxonomy applicable across languages.
+
+  Annotations by native speakers of each language. Annotation guidelines
+  developed with input from linguistics experts familiar with each language.
+
+  Challenges: Some African languages have complex morphology (e.g., Bantu noun
+  classes) that affect entity boundary detection. Naming conventions vary
+  across cultures (patronymics, clan names, etc.).
+
+  Text-based only. Many of these languages have strong oral traditions and
+  lower digital text availability.
+
+  One of the first large-scale NER resources for many of these languages.

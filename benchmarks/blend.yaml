@@ -1,0 +1,31 @@
+name: "BLEnD"
+full_name: "BLEnD: A Benchmark for LLMs on Everyday Knowledge in Diverse Cultures and Languages"
+paper_url: "https://arxiv.org/abs/2406.09948"
+year: 2024
+domain: "Everyday Cultural Knowledge"
+porting_strategy: "ground_up"
+languages: ["13 languages"]
+primary_region: "Multi-region"
+
+description: |
+  BLEnD tests LLMs on everyday cultural knowledge (customs, food, social norms)
+  across 13 languages. Questions are written by native speakers in their languages
+  about their own cultures.
+
+documentation_excerpts: |
+  13 languages with questions natively written (not translated).
+  Topics: everyday knowledge that locals would know (customs, food, social norms,
+  greetings, celebrations, taboos).
+
+  Questions written by native speakers about their own culture, ensuring
+  cultural authenticity. Not translated from English.
+
+  Multilingual: questions asked in the language of the culture they test,
+  providing a more authentic evaluation than English-only cultural benchmarks.
+
+  Labels: correct answers validated by multiple native speakers.
+
+  Covers a range of cultures but 13 languages is still limited compared to
+  global linguistic diversity.
+
+  Text-based evaluation.

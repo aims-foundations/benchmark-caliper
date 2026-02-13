@@ -1,0 +1,31 @@
+name: "M3Exam"
+full_name: "M3Exam: A Multilingual, Multimodal, Multilevel Benchmark"
+paper_url: "https://arxiv.org/abs/2306.05179"
+year: 2023
+domain: "Education (national exams from 9 countries)"
+porting_strategy: "regional_exams"
+languages: ["en", "zh", "vi", "th", "id", "pt", "it", "af", "jv"]
+primary_region: "Multi-region (9 countries)"
+
+description: |
+  M3Exam collects exam questions from national examinations in 9 countries,
+  testing models on locally relevant knowledge at multiple education levels.
+
+documentation_excerpts: |
+  9 countries: China, Vietnam, Thailand, Indonesia, Portugal, Italy,
+  South Africa, Java (Indonesia), and English-speaking countries.
+
+  Questions from actual national examination systems, not translated from English.
+  Covers primary school through university entrance exam levels.
+
+  Each country's questions reflect national curriculum and educational standards.
+  Content is inherently regionally grounded.
+
+  Multiple choice and some free-form questions.
+  Multimodal: some questions include images, diagrams, or tables.
+
+  Labels: correct answers from official national exam answer keys.
+
+  Coverage is limited to 9 countries—many regions of the world not represented.
+  Languages represent a mix but with gaps (no Arabic, no African languages
+  beyond Afrikaans, no South Asian languages beyond the 9 covered).

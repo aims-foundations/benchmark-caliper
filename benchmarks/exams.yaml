@@ -1,0 +1,31 @@
+name: "EXAMS"
+full_name: "EXAMS: A Multi-subject High School Examinations Dataset"
+paper_url: "https://arxiv.org/abs/2011.03080"
+year: 2020
+domain: "Education (high school exams from 16 countries)"
+porting_strategy: "regional_exams"
+languages: ["16 languages from 16 countries"]
+primary_region: "Multi-region (16 countries)"
+
+description: |
+  EXAMS collects high school examination questions from 16 countries in their
+  original languages. Tests multilingual knowledge evaluation using locally
+  relevant educational content.
+
+documentation_excerpts: |
+  16 countries across multiple continents. Questions from national high school
+  examinations in original languages.
+
+  Covers subjects from natural sciences, social sciences, and other high school
+  disciplines. Content reflects each country's national curriculum.
+
+  Not translated—each country's questions are in their original language and
+  reflect local educational standards and cultural context.
+
+  Multiple choice format. Covers both factual knowledge and reasoning tasks.
+
+  Labels: correct answers from official examination answer keys.
+
+  Coverage limited to 16 countries. Representation across global regions
+  is uneven. Quality and difficulty calibration varies across countries'
+  educational systems.

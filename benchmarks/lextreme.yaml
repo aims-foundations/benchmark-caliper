@@ -1,0 +1,37 @@
+name: "LEXTREME"
+full_name: "LEXTREME: A Multi-Lingual and Multi-Task Benchmark for Legal Language Understanding"
+paper_url: "https://arxiv.org/abs/2301.13126"
+year: 2023
+domain: "Legal (EU multilingual)"
+porting_strategy: "ground_up"
+languages: ["24 EU languages"]
+primary_region: "European Union"
+
+description: |
+  LEXTREME evaluates legal language understanding across 24 EU languages,
+  leveraging the EU's multilingual legal corpus where the same legislation
+  exists in all official EU languages.
+
+documentation_excerpts: |
+  24 EU official languages. Built from EU legal corpora (EUR-Lex) where
+  legislation is officially translated into all member state languages.
+
+  Tasks include: legal topic classification, court opinion prediction,
+  legal entity recognition, and legislative text analysis.
+
+  EU legal framework: based on civil law tradition (continental European),
+  EU regulations and directives, European Court of Justice precedents.
+
+  Multilingual by design: same legal concepts expressed across 24 languages,
+  providing natural parallel data.
+
+  Labels: based on official EU legal classifications and court decisions.
+
+  Limited to EU legal context. Does not cover: common law (UK post-Brexit,
+  US), Islamic law, customary law, or legal systems of non-EU countries.
+
+  Good validity for EU member states but would not transfer to non-EU
+  legal systems (Latin America, Africa, Middle East, East Asia).
+
+  Text-based only. Legal language register is highly specialized and
+  differs from everyday language use.

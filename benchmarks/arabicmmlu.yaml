@@ -1,0 +1,34 @@
+name: "ArabicMMLU"
+full_name: "ArabicMMLU: Assessing Arabic Knowledge in LLMs"
+paper_url: "https://arxiv.org/abs/2402.12840"
+year: 2024
+domain: "Knowledge (Arabic exam-based)"
+porting_strategy: "regional_exams"
+languages: ["ar"]
+primary_region: "Arab countries"
+
+description: |
+  ArabicMMLU evaluates language models on knowledge relevant to Arab countries,
+  sourced from Arabic-language examination questions. Covers domains important
+  to the Arab/Islamic world.
+
+documentation_excerpts: |
+  Questions sourced from Arabic-language examinations across multiple Arab countries.
+  Covers both universal academic subjects and region-specific domains.
+
+  Includes Islamic studies, Arabic language and literature, Arab history,
+  and other culturally relevant subjects not found in English MMLU.
+
+  Arabic language only (Modern Standard Arabic). Questions may reflect
+  specific national educational standards of particular Arab countries.
+
+  Multiple choice format following MMLU structure.
+
+  The Arab world spans enormous cultural and dialectal diversity (Gulf, Levant,
+  North Africa, etc.). The degree to which a single Arabic benchmark captures
+  this diversity is a key question.
+
+  Labels: correct answers based on official exam answer keys from source countries.
+
+  Written in MSA, which differs from colloquial Arabic dialects used in daily life.
+  This creates a diglossia concern for evaluation validity.

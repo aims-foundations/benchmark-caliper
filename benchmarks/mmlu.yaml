@@ -1,0 +1,34 @@
+name: "MMLU"
+full_name: "Massive Multitask Language Understanding"
+source_url: "https://github.com/hendrycks/test"
+paper_url: "https://arxiv.org/abs/2009.03300"
+year: 2021
+domain: "Knowledge (broad multitask)"
+porting_strategy: "none"
+languages: ["en"]
+primary_region: "United States"
+
+description: |
+  MMLU tests models across 57 academic subjects ranging from STEM to humanities to
+  professional domains. The abstract claims models must possess "extensive world
+  knowledge and problem solving ability." Widely used as a core LLM benchmark.
+
+documentation_excerpts: |
+  57 subjects: abstract algebra, anatomy, astronomy, business ethics, clinical knowledge,
+  college biology/chemistry/computer science/math/medicine/physics, computer security,
+  conceptual physics, econometrics, electrical engineering, elementary math, formal logic,
+  genetics, global facts, high school biology/chemistry/computer science/European history/
+  geography/government and politics/macroeconomics/math/microeconomics/physics/psychology/
+  statistics/US history/world history, human aging, human sexuality, international law,
+  jurisprudence, logical fallacies, machine learning, management, marketing, medical genetics,
+  miscellaneous, moral disputes, moral scenarios, nutrition, philosophy, prehistory,
+  professional accounting/law/medicine/psychology, public relations, security studies,
+  sociology, US foreign policy, virology, world religions.
+
+  Approximately 28% of examples require region-specific cultural, geographic, or dialectal
+  knowledge. Of those, roughly 86% require Western-specific knowledge (primarily US-centric).
+  Subjects like math/physics have minimal cultural sensitivity; history, geopolitics, and
+  world religions are nearly entirely culturally sensitive.
+
+  English-only. Multiple choice format. Questions drawn from US educational materials,
+  professional licensing exams, and academic curricula.

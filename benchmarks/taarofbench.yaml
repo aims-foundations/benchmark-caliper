@@ -1,0 +1,38 @@
+name: "TaarofBench"
+full_name: "TaarofBench: Evaluating Persian Ritual Politeness in LLMs"
+paper_url: "https://arxiv.org/abs/2501.18893"
+year: 2025
+domain: "Cultural Norms (Persian taarof)"
+porting_strategy: "ground_up"
+languages: ["fa"]
+primary_region: "Iran/Persian-speaking world"
+
+description: |
+  TaarofBench evaluates whether LLMs understand and can navigate taarof—the
+  Iranian system of ritual politeness where offers must be refused multiple
+  times before acceptance. Critical for NLP systems in Persian commercial
+  and social contexts.
+
+documentation_excerpts: |
+  Tests understanding of taarof (تعارف), the Iranian social norm of ritual
+  politeness. In taarof, an initial offer (e.g., "Please, it's on me") is
+  expected to be refused ("No, no, I couldn't"), with multiple rounds of
+  offer-refusal before genuine acceptance.
+
+  Persian (Farsi) language only.
+
+  Highly specific cultural construct with no direct equivalent in Western
+  cultures. Global North benchmarks completely lack this concept.
+
+  Critical for commercial NLP (chatbots, customer service): misinterpreting
+  a taarof refusal as genuine could lead to incorrect business outcomes.
+
+  Labels: whether the model correctly identifies taarof vs. genuine refusal,
+  and whether it can appropriately navigate the multi-turn taarof sequence.
+
+  Annotated by Persian native speakers familiar with taarof norms.
+
+  Uniquely focused benchmark: tests a single cultural phenomenon deeply
+  rather than broad cultural knowledge shallowly.
+
+  Persian script (right-to-left). Literacy rates in Iran ~87%.

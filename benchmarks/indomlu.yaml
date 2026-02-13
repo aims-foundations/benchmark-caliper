@@ -1,0 +1,33 @@
+name: "IndoMMLU"
+full_name: "IndoMMLU: Measuring Indonesian Knowledge in LLMs"
+paper_url: "https://arxiv.org/abs/2310.04928"
+year: 2023
+domain: "Knowledge (Indonesian national curriculum)"
+porting_strategy: "regional_exams"
+languages: ["id"]
+primary_region: "Indonesia"
+
+description: |
+  IndoMMLU evaluates language models on knowledge from the Indonesian national
+  curriculum, including local languages and regional cultural traditions.
+  Built from Indonesian educational assessments.
+
+documentation_excerpts: |
+  Questions sourced from Indonesian national curriculum materials and educational
+  assessments at multiple levels (primary through university).
+
+  Includes Indonesia-specific subjects: Indonesian history (Sejarah Indonesia),
+  Pancasila and citizenship education, Indonesian geography, local languages
+  and regional traditions, Indonesian literature.
+
+  Indonesian language (Bahasa Indonesia). Some questions involve local languages
+  and dialects reflecting Indonesia's linguistic diversity (700+ languages).
+
+  Multiple choice format.
+
+  Indonesia is the world's largest archipelago nation with enormous ethnic and
+  cultural diversity. The benchmark reflects the national curriculum's perspective,
+  which may not equally represent all of Indonesia's 300+ ethnic groups.
+
+  Labels: correct answers based on Indonesian educational standards and national
+  curriculum answer keys.

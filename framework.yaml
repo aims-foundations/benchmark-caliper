@@ -1,0 +1,232 @@
+# Validity Analysis Framework for Benchmark Porting
+# Source: "Validity Analysis when Porting Benchmarks Across Cultures and Regions"
+# Authors: Corona, Truong, Trager
+#
+# 6 dimensions organized as 2x3: (Input/Output) x (Ontology/Content/Form)
+# Each dimension has: definition, theoretical importance, checklist items, validity types
+
+scoring_rubric:
+  1: "Major validity violations identified; benchmark component fundamentally misaligned with target context."
+  2: "Significant concerns; multiple concrete violations or gaps identified."
+  3: "Partially addressed; mixed evidence; some alignment, some gaps."
+  4: "Well addressed; minor concerns or gaps; documentation shows awareness of regional needs."
+  5: "Fully addressed; no concerns identified; documentation demonstrates explicit validity-preserving practices."
+
+dimensions:
+  input_ontology:
+    name: "Input Ontology"
+    category: "input"
+    aspect: "ontology"
+    validity_types: ["content"]
+    definition: >
+      The input data ontology consists of the set of test case categories which are
+      represented by the benchmark. This set of categories should cover the query types
+      which evaluated systems are expected to encounter during deployment. For example,
+      for NLP dialogue systems it could include factual questions, creative writing help,
+      or restaurant recommendations, whereas in robotics this can include pick-and-place
+      tasks, point navigation, or planning.
+    theoretical_importance: >
+      A misalignment in test case taxonomy can present itself through the omission of
+      necessary test case categories, resulting in construct underrepresentation.
+      Conversely, a taxonomy may also define test case categories which are not necessary
+      for evaluating the constructs of interest, which would present a form of
+      construct-irrelevant variance in the evaluation. In both of these cases, the
+      content validity of the benchmark would be harmed.
+    checklist:
+      - id: "IO-1"
+        text: "Identify test case categories required for regional deployment."
+      - id: "IO-2"
+        text: "Check if source benchmark's taxonomy omits regionally-relevant categories."
+      - id: "IO-3"
+        text: "Check if source benchmark includes categories irrelevant to regional context."
+      - id: "IO-4"
+        text: "Document category gaps that would harm content validity."
+
+  input_content:
+    name: "Input Content"
+    category: "input"
+    aspect: "content"
+    validity_types: ["content"]
+    definition: >
+      For a datapoint to be task-relevant, the input query itself must be useful for
+      evaluating the intended AI system capabilities in a regional context. Here, an
+      input query can be anything from an LLM prompt, an image, or a database. Whereas
+      test case categories determine the types of input queries a benchmark may have for
+      the system, we refer to the content of dataset inputs as the explicit instances or
+      inputs specified by datapoints in the dataset.
+    theoretical_importance: >
+      The content of datapoint inputs can present a violation of evaluation validity when
+      the instance introduces construct-irrelevant variance. Even if the test case
+      taxonomy to which the instance belongs provides good coverage of test cases, it is
+      possible that the implementation-level details of datapoints can introduce irrelevant
+      variance. A key vector is cultural sensitivity: inputs for which the correct output
+      requires specific cultural, geographic, or dialectal knowledge. Cultural sensitivity
+      is not undesirable per se -- it is problematic when misaligned with target deployment
+      culture.
+    checklist:
+      - id: "IC-1"
+        text: "Determine if input queries require region-specific cultural, geographic, or dialectal knowledge."
+      - id: "IC-2"
+        text: "Assess whether culturally sensitive content aligns with target deployment culture."
+      - id: "IC-3"
+        text: "Flag inputs requiring Western-specific knowledge that may not transfer."
+      - id: "IC-4"
+        text: "Recruit regional annotators to identify culturally sensitive instances if resources permit."
+      - id: "IC-5"
+        text: "Document content issues that would harm content validity."
+
+  input_form:
+    name: "Input Form"
+    category: "input"
+    aspect: "form"
+    validity_types: ["external"]
+    definition: >
+      The form of dataset inputs determines the encoding of the input signal. For example,
+      natural language data can be represented as text or audio, which themselves can take
+      different encodings. In the space of visual data, it would describe the parameters
+      of the device used to capture the image, such as the focal length and resolution of
+      a camera.
+    theoretical_importance: >
+      Machine learning systems are sensitive to the signal distributions that they are
+      trained with. If the input signal representation of the data in a benchmark is
+      sufficiently different from that of the real-world signals that evaluated models
+      would encounter when deployed, then the external validity of the evaluation would
+      be violated.
+    checklist:
+      - id: "IF-1"
+        text: "Compare signal distributions (e.g., image resolution, MRI field strength) between source and target contexts."
+      - id: "IF-2"
+        text: "Check if regional infrastructure supports the same data capture specifications."
+      - id: "IF-3"
+        text: "Identify domain-specific form differences relevant to the intended use case."
+      - id: "IF-4"
+        text: "Document form mismatches that would harm external validity."
+
+  output_ontology:
+    name: "Output Ontology"
+    category: "output"
+    aspect: "ontology"
+    validity_types: ["structural", "content", "external"]
+    definition: >
+      A benchmark's output taxonomy determines the set of label categories or output types
+      which an AI system is expected to produce given an input. For example, labels may
+      take on a binary form as safe or unsafe in a safety context, or they may take
+      categorical values such as animal and object names in classification settings.
+    theoretical_importance: >
+      A misaligned taxonomy presents multiple types of validity violations. The taxonomy
+      misalignment itself presents a violation to the structural validity of the evaluation,
+      since it directly indicates that the structure of the construct of interest is not
+      correctly represented. This also signals a violation in content validity because
+      misalignment in taxonomies is operationalized by either missing categories or
+      irrelevant categories. Taxonomic misalignment also increases the risk of violations
+      to external validity since performance on a misaligned benchmark is less likely to
+      correlate well with generalization in regional settings.
+    checklist:
+      - id: "OO-1"
+        text: "Review output label categories for regional relevance."
+      - id: "OO-2"
+        text: "Identify missing categories specific to regional contexts (e.g., autorickshaws in Indian driving data)."
+      - id: "OO-3"
+        text: "Flag categories that encode non-regional values or assumptions."
+      - id: "OO-4"
+        text: "Consider stakeholder-driven taxonomy redesign if significant misalignment exists."
+      - id: "OO-5"
+        text: "Document taxonomy issues that would harm structural validity and content validity."
+
+  output_content:
+    name: "Output Content"
+    category: "output"
+    aspect: "content"
+    validity_types: ["convergent", "external"]
+    definition: >
+      Whereas taxonomic alignment addresses whether the abstract decision boundaries for
+      labeling a dataset appropriately reflect the values and needs of a region, label
+      correctness is concerned with ensuring that the labels determined for particular
+      datapoints are correlated with the judgments of the stakeholders the actor is
+      developing the regional benchmark for.
+    theoretical_importance: >
+      If there is disagreement over datapoint labels between regional annotators and the
+      original annotators of the dataset, then this would indicate a violation of
+      convergent validity because the original labels fail to correlate with a measure of
+      the construct of interest (the perspective of regional annotators). This disagreement
+      also indicates a violation of external validity since it would indicate that the
+      original annotated judgments do not generalize to the Global South context.
+    checklist:
+      - id: "OC-1"
+        text: "Determine if ground truth labels reflect regional stakeholder perspectives."
+      - id: "OC-2"
+        text: "Assess potential disagreement between original annotators and regional population."
+      - id: "OC-3"
+        text: "Review annotator demographics in benchmark documentation (Datasheets, Data Statements)."
+      - id: "OC-4"
+        text: "Consider label re-annotation by representative regional annotator pool."
+      - id: "OC-5"
+        text: "Review aggregation methods for potential erasure of minority perspectives."
+      - id: "OC-6"
+        text: "Document label issues that would harm convergent validity and external validity."
+
+  output_form:
+    name: "Output Form"
+    category: "output"
+    aspect: "form"
+    validity_types: ["external"]
+    definition: >
+      The form of the dataset outputs pertains to the representation of the output signals
+      which models are expected to produce for a given benchmark evaluation.
+    theoretical_importance: >
+      If a benchmark fails to evaluate models on the form of outputs which would be
+      encountered during real-world deployment, this would present a violation of the
+      external validity of the evaluation. This form of validity violation can occur when
+      transferring benchmarks if the expected modality of use for an AI system changes
+      between cultures or regions.
+    checklist:
+      - id: "OF-1"
+        text: "Check if expected output modality matches regional deployment needs."
+      - id: "OF-2"
+        text: "Assess text-to-speech availability for speech-based output requirements."
+      - id: "OF-3"
+        text: "Consider literacy rates and accessibility requirements in target population."
+      - id: "OF-4"
+        text: "Document form mismatches that would harm external validity."
+
+# Dimension ordering for display (matches radar chart)
+dimension_order:
+  - input_ontology
+  - input_content
+  - input_form
+  - output_ontology
+  - output_content
+  - output_form
+
+# Ground-truth scores from the paper's case studies (for validation)
+ground_truth:
+  helm_to_sea:
+    benchmark: "helm"
+    region: "southeast_asia"
+    scores:
+      input_ontology: 2
+      input_content: 1
+      input_form: 1
+      output_ontology: 2
+      output_content: 2
+      output_form: 2
+  seahelm_to_sea:
+    benchmark: "seahelm"
+    region: "southeast_asia"
+    scores:
+      input_ontology: 5
+      input_content: 5
+      input_form: 4
+      output_ontology: 4
+      output_content: 5
+      output_form: 3
+  iberbench_to_iberian:
+    benchmark: "iberbench"
+    region: "iberian"
+    scores:
+      input_ontology: 3
+      input_content: 4
+      input_form: 5
+      output_ontology: 2
+      output_content: 3
+      output_form: 5

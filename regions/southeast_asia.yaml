@@ -1,0 +1,83 @@
+# Southeast Asia - Regional Context for Validity Analysis
+
+name: "Southeast Asia"
+abbreviation: "SEA"
+
+countries:
+  - Brunei
+  - Cambodia
+  - Indonesia
+  - Laos
+  - Malaysia
+  - Myanmar
+  - Philippines
+  - Singapore
+  - Thailand
+  - Timor-Leste
+  - Vietnam
+
+languages:
+  major:
+    - Malay / Indonesian
+    - Thai
+    - Vietnamese
+    - Filipino / Tagalog
+    - Burmese
+    - Khmer
+    - Lao
+    - Tamil (Singapore, Malaysia)
+    - Mandarin Chinese (Singapore, Malaysia)
+    - English (Singapore, Philippines, Malaysia)
+  note: "Over 1,000 indigenous languages across the region"
+
+writing_systems:
+  - Latin (Malay, Indonesian, Vietnamese, Filipino)
+  - Thai script
+  - Khmer script
+  - Burmese script
+  - Lao script
+  - Chinese characters (Singapore, Malaysia)
+  - Tamil script (Singapore, Malaysia)
+  note: "Several SEA scripts lack uppercase/lowercase distinctions. Thai, Khmer, Burmese, and Lao do not use capitalization."
+
+literacy_rates:
+  Brunei: 0.99
+  Singapore: 0.97
+  Philippines: 0.96
+  Indonesia: 0.96
+  Thailand: 0.94
+  Vietnam: 0.95
+  Malaysia: 0.95
+  Myanmar: 0.76
+  Cambodia: 0.84
+  Timor-Leste: 0.68
+  Laos: 0.85
+  note: "Significant variation across the region. Lower rates in rural areas and among indigenous communities."
+
+cultural_norms_notes: |
+  Key cultural concepts absent from Global North benchmarks:
+  - Pakikisama (Filipino): Communal unity, maintaining smooth interpersonal relations
+  - Bayanihan (Filipino): Community cooperation and mutual aid
+  - Kreng jai (Thai): Deference and reluctance to impose on others
+  - Gotong royong (Malay/Indonesian): Communal self-help, mutual assistance
+  - Face-saving norms across most SEA cultures
+  - Hierarchical social structures and respect for elders (common across region)
+  - Religious diversity: Buddhism (Thailand, Myanmar, Cambodia, Laos), Islam (Indonesia,
+    Malaysia, Brunei), Christianity (Philippines, Timor-Leste), mixed (Singapore, Vietnam)
+
+infrastructure_notes: |
+  - Internet penetration varies: near-universal in Singapore, lower in Myanmar, Laos, Cambodia
+  - Mobile-first internet usage is dominant across much of the region
+  - Speech-based interfaces may be important for lower-literacy populations
+  - Text-to-speech systems unavailable for most indigenous languages
+  - Data center infrastructure concentrated in Singapore, with growing capacity in
+    Indonesia, Thailand, Malaysia
+
+domain_specific_notes: |
+  - Healthcare: Traditional medicine practices vary significantly (traditional Chinese
+    medicine in Singapore/Malaysia, traditional Thai medicine, Jamu in Indonesia)
+  - Legal systems: Mix of common law (Singapore, Malaysia), civil law (Indonesia, Vietnam,
+    Thailand), religious law (Islamic law in Malaysia, Indonesia, Brunei)
+  - Education: Varied curricula; some countries use local-language instruction, others
+    use English as medium of instruction
+  - Commerce: Informal markets and cash-based transactions remain significant in many areas

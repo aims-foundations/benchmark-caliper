@@ -1,0 +1,36 @@
+name: "LegalBench"
+full_name: "LegalBench: A Collaboratively Built Benchmark for Measuring Legal Reasoning"
+paper_url: "https://arxiv.org/abs/2308.11462"
+year: 2023
+domain: "Legal (US common law)"
+porting_strategy: "ground_up"
+languages: ["en"]
+primary_region: "United States"
+
+description: |
+  LegalBench evaluates legal reasoning capabilities, built collaboratively by
+  legal professionals. Focuses on US common law tradition, including case law
+  interpretation, statutory analysis, and legal argument evaluation.
+
+documentation_excerpts: |
+  Developed by US legal professionals and law professors. Tasks cover
+  US common law reasoning, statutory interpretation, contract analysis,
+  and legal argument evaluation.
+
+  Deeply embedded in US legal system: references US case law, US constitutional
+  principles, US regulatory frameworks.
+
+  English only. US legal terminology and conventions.
+
+  Common law reasoning (case-based, precedent-based) differs fundamentally from
+  civil law systems used in most of the world (Latin America, continental Europe,
+  East Asia) and from religious legal systems (Islamic law, customary law).
+
+  Labels: correct legal conclusions based on US legal standards.
+
+  Would require fundamental redesign (not just translation) for non-US legal
+  systems. Legal concepts like "reasonable person," "due process," and
+  "stare decisis" have different or no equivalents in other legal traditions.
+
+  Important benchmark for US legal AI applications but essentially non-transferable
+  to other legal systems without complete reconstruction.

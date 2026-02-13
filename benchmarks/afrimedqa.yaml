@@ -1,0 +1,37 @@
+name: "AfriMedQA"
+full_name: "AfriMedQA: Pan-African Medical Question Answering"
+paper_url: "https://arxiv.org/abs/2311.16116"
+year: 2024
+domain: "Medical (Pan-African)"
+porting_strategy: "ground_up"
+languages: ["en", "fr"]
+primary_region: "Sub-Saharan Africa"
+
+description: |
+  AfriMedQA provides medical QA tailored to the African healthcare context,
+  covering region-specific conditions, treatment protocols, and healthcare
+  infrastructure realities that differ from Global North medical benchmarks.
+
+documentation_excerpts: |
+  Medical QA designed for African healthcare contexts. Questions cover
+  conditions with high prevalence in Africa that are underrepresented in
+  Global North medical benchmarks: malaria, tuberculosis, HIV/AIDS,
+  sickle cell disease, neglected tropical diseases.
+
+  Includes questions about healthcare delivery in resource-limited settings:
+  point-of-care diagnostics, community health worker protocols, drug
+  availability in African markets.
+
+  English and French (reflecting anglophone and francophone African countries).
+
+  Questions developed by African medical professionals and validated by
+  physicians practicing in African countries.
+
+  Labels: correct answers based on WHO guidelines for African contexts and
+  national clinical guidelines of African countries.
+
+  Explicitly addresses the gap that US-centric medical benchmarks (USMLE-based)
+  test knowledge irrelevant to African medical practice and miss critical
+  conditions that are daily realities for African healthcare providers.
+
+  Important for evaluating AI medical assistants deployed in African countries.

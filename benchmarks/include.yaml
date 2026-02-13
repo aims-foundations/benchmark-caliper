@@ -1,0 +1,31 @@
+name: "INCLUDE"
+full_name: "INCLUDE: Evaluating Multilingual Language Understanding with Regional Knowledge"
+paper_url: "https://arxiv.org/abs/2411.19799"
+year: 2024
+domain: "Knowledge (44 languages, professional exams)"
+porting_strategy: "regional_exams"
+languages: ["44 languages"]
+primary_region: "Multi-region"
+
+description: |
+  INCLUDE evaluates multilingual language understanding across 44 languages using
+  professionally sourced exam questions from each language's regional context.
+  Questions come from actual professional and academic examinations.
+
+documentation_excerpts: |
+  44 languages covered with questions from regional professional examinations.
+  Each language's questions are sourced from that language's educational/professional
+  context, not translated from English.
+
+  Covers a wide range of regions: Europe, Asia, Africa, Americas.
+  Exam questions reflect regional educational standards and professional requirements.
+
+  Professional exam sourcing means questions test knowledge actually required
+  in each region's professional context (medicine, law, engineering, etc.).
+
+  Quality varies across languages based on availability of professional exam
+  materials and annotator expertise.
+
+  Multiple choice format (following MMLU structure but with regional content).
+
+  Labels: correct answers from official exam answer keys per language/country.

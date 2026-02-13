@@ -1,0 +1,32 @@
+name: "KMMLU"
+full_name: "KMMLU: Measuring Massive Multitask Language Understanding in Korean"
+paper_url: "https://arxiv.org/abs/2402.11548"
+year: 2024
+domain: "Knowledge (45 subjects, Korean context)"
+porting_strategy: "regional_exams"
+languages: ["ko"]
+primary_region: "South Korea"
+
+description: |
+  KMMLU evaluates language models on 45 subjects relevant to the Korean context,
+  including Korea-specific categories like Korean history, Korean law, and
+  traditional Korean medicine. Built from Korean national exam questions.
+
+documentation_excerpts: |
+  45 subjects including Korea-specific categories absent from MMLU:
+  Korean history, Korean law, Korean traditional medicine (hanbang),
+  Korean geography, Korean literature, Korean constitutional law.
+
+  Questions sourced from Korean professional licensing exams (의사, 변호사, etc.)
+  and national educational assessments (수능/Suneung related materials).
+
+  Korean-only, Hangul script. Multiple choice format.
+
+  Specifically designed because MMLU evaluated US-centric knowledge that is
+  irrelevant for assessing model capabilities in Korean contexts.
+
+  Includes subjects testing understanding of Korean social norms, historical
+  events (Korean War, Japanese colonial period), and contemporary Korean issues.
+
+  Labels: correct answers based on official Korean exam answer keys.
+  Validated by Korean education professionals.
