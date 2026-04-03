@@ -1,3 +1,0 @@
-[submodule "vault"]
-	path = vault
-	url = git@github.com:rcorona/vault-validity-global-south.git
