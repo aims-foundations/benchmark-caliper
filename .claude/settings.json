@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat | jq -c '{timestamp: now | todate, tool: .tool_name, input: .tool_input, session: .session_id}' >> ./logs/claude-trace.jsonl"
+          }
+        ]
+      }
+    ]
+  }
+}
