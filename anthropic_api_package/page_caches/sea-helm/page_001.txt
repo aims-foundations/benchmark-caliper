@@ -1,0 +1,54 @@
+```json
+{
+  "quotes": [
+    {
+      "text": "SEA-HELM, a holistic linguistic and cultural LLM evaluation suite that emphasises SEA languages, comprising five core pillars: (1) NLP CLASSICS, (2) LLM-SPECIFICS, (3) SEA LINGUISTICS, (4) SEA CULTURE, (5) SAFETY.",
+      "page": 1,
+      "category": "task_taxonomy"
+    },
+    {
+      "text": "SEA-HELM currently supports Filipino, Indonesian, Tamil, Thai, and Vietnamese.",
+      "page": 1,
+      "category": "data_sources"
+    },
+    {
+      "text": "We also introduce the SEA-HELM leaderboard, which allows users to understand models' multilingual and multicultural performance in a systematic and user-friendly manner.",
+      "page": 1,
+      "category": "evaluation_metrics"
+    },
+    {
+      "text": "Traditional approaches to NLP evaluation, which emphasise on alignment with a predefined ground truth reference, are not sufficient in measuring the complex abilities of LLMs.",
+      "page": 1,
+      "category": "stated_limitations"
+    },
+    {
+      "text": "This gap is further exacerbated in lower-resource languages in South East Asia (SEA), owing to a lack of both training and testing data on the internet.",
+      "page": 1,
+      "category": "stated_limitations"
+    },
+    {
+      "text": "The SEA region is home to nearly 700 million speakers across more than 1,000 languages.",
+      "page": 1,
+      "category": "data_sources"
+    },
+    {
+      "text": "While this region represents almost 10% of the global population and constitutes approximately one-seventh of the world's total languages, most of these languages remain unsupported by major LLMs, such as Mistral (Mistral AI, 2023) and Claude (Anthropic, 2023).",
+      "page": 1,
+      "category": "stated_limitations"
+    },
+    {
+      "text": "Yosephine Susanto, Adithya Venkatadri Hulagadri, Jann Railey Montalan, Jian Gang Ngui, Xian Bin Yong, Weiqi Leong, Hamsawardhini Rengarajan, Peerat Limkonchotiwat, Yifan Mai, William Chandra Tjhi from AI Singapore, National University of Singapore, and Center for Research on Foundation Models (CRFM), Stanford University.",
+      "page": 1,
+      "category": "authors_affiliations"
+    },
+    {
+      "text": "We make the SEA-HELM evaluation code publicly available.",
+      "page": 1,
+      "category": "authors_affiliations"
+    }
+  ],
+  "page_summary": "This page introduces SEA-HELM, a holistic multilingual and multicultural LLM evaluation benchmark for Southeast Asian languages. It presents the motivation for creating this benchmark due to gaps in evaluation capabilities for SEA languages and outlines the five core evaluation pillars.",
+  "continues_from_previous": false,
+  "continues_to_next": true
+}
+```

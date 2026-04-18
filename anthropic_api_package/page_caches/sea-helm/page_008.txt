@@ -1,0 +1,39 @@
+```json
+{
+  "quotes": [
+    {
+      "text": "Of all the open-sourced models tested, DeepSeek-R1 was the strongest performing model and showed comparable results to gpt-4o-2024-08-06 on the SEA-HELM suite (Figure 2a, Table 2).",
+      "page": 8,
+      "category": "evaluation_metrics"
+    },
+    {
+      "text": "Given the large size of DeepSeek-R1 (671B), finding comparisons to other models that support SEA languages was not trivial.",
+      "page": 8,
+      "category": "stated_limitations"
+    },
+    {
+      "text": "Thus, we chose to focus our discussion on LLMs of sizes ranging between 7-9B parameters (See Table 2 for the full list of models) and used both the DeepSeek-R1 and gpt-4o-2024-08-06 as the reference models for what was the best available open-sourced and closed-sourced model respectively.",
+      "page": 8,
+      "category": "evaluation_metrics"
+    },
+    {
+      "text": "We also observe that the gap between the smaller models and the reference models is closing, as evidenced by the smaller gap between gpt-4o-2024-08-06 with the newer LLaMA model Llama-3.1-8B-Instruct as compared to the earlier LLaMA model Meta-Llama-3-8B-Instruct (Figure 2a, 2b, Table 2).",
+      "page": 8,
+      "category": "evaluation_metrics"
+    },
+    {
+      "text": "Notably, continued pre-training and further tuning for the SEA languages resulted in this gap closing even further (Figure 2b; llama3.1-8b-cpt-sea-lionv3-instruct compared against Llama-3.1-8B-Instruct).",
+      "page": 8,
+      "category": "evaluation_metrics"
+    },
+    {
+      "text": "This suggests that there is still room for improvement and spending the effort to train LLMs to target the specific SEA languages can result in models that are more suited for the SEA region and thus work better for the region's use cases.",
+      "page": 8,
+      "category": "stated_limitations"
+    }
+  ],
+  "page_summary": "This page discusses model performance evaluation on the SEA-HELM benchmark, comparing various language models across different sizes and families, and highlighting the importance of targeted training for SEA languages.",
+  "continues_from_previous": true,
+  "continues_to_next": true
+}
+```

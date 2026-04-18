@@ -1,0 +1,8 @@
+```json
+{
+  "quotes": [],
+  "page_summary": "Page 11 is entirely a bibliography/references section containing citations to academic works, conference proceedings, and technical reports. No methodological claims, dataset descriptions, or benchmark specifications are presented.",
+  "continues_from_previous": false,
+  "continues_to_next": false
+}
+```

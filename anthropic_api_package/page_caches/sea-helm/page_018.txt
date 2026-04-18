@@ -1,0 +1,8 @@
+```json
+{
+  "quotes": [],
+  "page_summary": "Page 18 contains only bibliographic references and citations with no methodological content relevant to benchmark design, data collection, annotation, or evaluation.",
+  "continues_from_previous": false,
+  "continues_to_next": false
+}
+```

@@ -1,0 +1,6 @@
+anthropic>=0.40.0
+pyyaml
+python-dotenv
+jsonschema
+tqdm
+pypdf

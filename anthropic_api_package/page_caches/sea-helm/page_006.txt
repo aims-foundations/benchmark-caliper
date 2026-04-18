@@ -1,0 +1,49 @@
+```json
+{
+  "quotes": [
+    {
+      "text": "Such datasets are inherently limited and cannot comprehensively represent the complex nature of culture (Causadias, 2020), even if they can capture aggregated value alignment.",
+      "page": 6,
+      "category": "stated_limitations"
+    },
+    {
+      "text": "Thus, we place emphasis on a strong participatory approach that includes the native speaker communities in order to authentically represent the target culture.",
+      "page": 6,
+      "category": "annotation_process"
+    },
+    {
+      "text": "The KALAHI dataset is designed to determine if LLMs can provide culturally-relevant responses to culturally-specific situations that Filipino people can reasonably encounter in their daily lives, and the dataset is composed of 150 high-quality Filipino-language prompts created in collaboration with native Filipino speakers.",
+      "page": 6,
+      "category": "task_taxonomy"
+    },
+    {
+      "text": "Multilingual inputs, especially when given in lower-resource languages such as those in the SEA region, can increase the likelihood that LLMs produce unsafe responses (Song et al., 2024; Shen et al., 2024).",
+      "page": 6,
+      "category": "stated_limitations"
+    },
+    {
+      "text": "Currently, we cover Indonesian, Thai, Vietnamese, and Filipino for this task.",
+      "page": 6,
+      "category": "data_sources"
+    },
+    {
+      "text": "For each task, we opted to be explicit in instructing the LLM to output the answer following a specified format.",
+      "page": 6,
+      "category": "evaluation_metrics"
+    },
+    {
+      "text": "The answer can then be extracted using regular expressions and compared against the corresponding gold label.",
+      "page": 6,
+      "category": "evaluation_metrics"
+    },
+    {
+      "text": "Crucially, if the model fails to append the answer",
+      "page": 6,
+      "category": "evaluation_metrics"
+    }
+  ],
+  "page_summary": "Page 6 discusses the SEA-HELM benchmark's safety pillar and cultural evaluation approaches, including the KALAHI dataset for Filipino cultural knowledge and toxicity detection across SEA languages. It also describes the evaluation design choices, specifically the task prompt format requiring explicit answer tags for extraction.",
+  "continues_from_previous": true,
+  "continues_to_next": true
+}
+```

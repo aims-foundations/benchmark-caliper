@@ -1,0 +1,8 @@
+```json
+{
+  "quotes": [],
+  "page_summary": "Page 13 contains bibliography/references citations for various academic papers and publications related to NLP, multilingual processing, machine translation, and linguistic studies.",
+  "continues_from_previous": false,
+  "continues_to_next": true
+}
+```

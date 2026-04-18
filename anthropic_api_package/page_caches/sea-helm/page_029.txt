@@ -1,0 +1,8 @@
+```json
+{
+  "quotes": [],
+  "page_summary": "Page 29 contains Table J.20 listing evaluated models and their citations. This is a reference table with no methodological claims about data collection, annotation, evaluation procedures, or limitations.",
+  "continues_from_previous": false,
+  "continues_to_next": false
+}
+```

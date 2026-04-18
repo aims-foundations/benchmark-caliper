@@ -1,0 +1,8 @@
+```json
+{
+  "quotes": [],
+  "page_summary": "Page 15 contains a bibliography/references section with citations to academic papers, technical reports, and datasets across various topics including NLP, multilingual models, and language analysis.",
+  "continues_from_previous": false,
+  "continues_to_next": false
+}
+```

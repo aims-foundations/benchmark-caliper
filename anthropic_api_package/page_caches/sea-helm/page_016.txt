@@ -1,0 +1,8 @@
+```json
+{
+  "quotes": [],
+  "page_summary": "Page 16 contains author names and affiliations listed in a two-column format as part of a references or author list section.",
+  "continues_from_previous": true,
+  "continues_to_next": true
+}
+```

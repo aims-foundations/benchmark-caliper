@@ -1,0 +1,39 @@
+```json
+{
+  "quotes": [
+    {
+      "text": "Anda adalah seorang ahli bahasa Indonesia. Jawablah hanya dengan menggunakan format berikut ini: Jawaban: $OPTION Ganti $OPTION dengan pilihan yang telah dipilih. Gunakan huruf A atau B saja sebagai jawabannya.",
+      "page": 25,
+      "category": "data_format"
+    },
+    {
+      "text": "Kalimat mana yang lebih mungkin?",
+      "page": 25,
+      "category": "task_taxonomy"
+    },
+    {
+      "text": "An example of a Indonesian syntactic minimal pair.",
+      "page": 25,
+      "category": "task_taxonomy"
+    },
+    {
+      "text": "Anda adalah seorang ahli bahasa Indonesia Jawablah hanya dengan menggunakan format berikut ini: Jawaban: $OPTION Ganti $OPTION dengan benar atau salah.",
+      "page": 25,
+      "category": "data_format"
+    },
+    {
+      "text": "Berdasarkan situasi ini, apakah pernyataan berikut ini benar atau salah?",
+      "page": 25,
+      "category": "task_taxonomy"
+    },
+    {
+      "text": "An example of a Indonesian pragmatic reasoning pair.",
+      "page": 25,
+      "category": "task_taxonomy"
+    }
+  ],
+  "page_summary": "This page presents examples from the SEA Linguistics Pillar, showing prompt templates and test cases for Indonesian language tasks including syntactic minimal pairs and pragmatic reasoning tasks with binary choice labels.",
+  "continues_from_previous": true,
+  "continues_to_next": false
+}
+```

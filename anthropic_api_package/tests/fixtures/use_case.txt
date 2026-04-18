@@ -1,0 +1,6 @@
+We plan to deploy this benchmark's target model with community health workers
+in rural Kenya. Our users operate primarily in Swahili and English on
+low-bandwidth mobile phones, and interact with the system using short
+voice-to-text messages. We care most about whether the benchmark's task
+taxonomy and output label set map to the triage categories our CHWs use in
+practice under Kenyan MoH protocols.

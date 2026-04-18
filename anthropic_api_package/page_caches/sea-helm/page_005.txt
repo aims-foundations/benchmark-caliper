@@ -1,0 +1,54 @@
+```json
+{
+  "quotes": [
+    {
+      "text": "grading approach, where we compare the win-rate of each candidate model against a fixed reference model, namely gpt-3.5-turbo-0125. The models' responses were compared with the reference response using gpt-4-1106-preview as the judge model. This setup sees the number of judge calls scale linearly with the number of models being compared, whereas pairwise comparisons would scale quadratically.",
+      "page": 5,
+      "category": "evaluation_metrics"
+    },
+    {
+      "text": "Models receive an initial prompt based on a category such as creative writing, mathematics, STEM or humanities. They are then given a follow-up instruction which related to the initial prompt, and are expected to respond appropriately.",
+      "page": 5,
+      "category": "task_taxonomy"
+    },
+    {
+      "text": "Finally, a model's responses to both the initial and follow-up prompts are evaluated as a whole given accuracy, relevance, and coherence as judging criteria. Results are reported based on each model's average win rate against the reference model.",
+      "page": 5,
+      "category": "evaluation_metrics"
+    },
+    {
+      "text": "As one of the five core evaluation pillars, LINDSEA (LINguistic Diagnostics for SouthEast Asian languages) is a high quality, manually-crafted linguistic dataset that systematically diagnoses models' language proficiency and grammatical understanding based on a granular taxonomy of syntactic, semantic and pragmatic phenomena. It is also the first to be created for SEA languages.",
+      "page": 5,
+      "category": "task_taxonomy"
+    },
+    {
+      "text": "The design of LINDSEA is based on three principles: breadth, depth, and quality.",
+      "page": 5,
+      "category": "data_format"
+    },
+    {
+      "text": "That is, rather than using a small set of lexical items and grammatical rules to automatically generate large numbers of test sentences, the examples in LINDSEA are handcrafted from scratch by linguists in collaboration with native speakers and reviewed iteratively to ensure that they sound natural, are semantically coherent and target the relevant phenomena effectively (quality).",
+      "page": 5,
+      "category": "annotation_process"
+    },
+    {
+      "text": "While there are existing syntactic and semantic diagnostic datasets for English (Warstadt et al., 2020; Jeretic et al., 2020; Liu et al., 2023), Mandarin (Xiang et al., 2021) and even Japanese (Someya and Oseki, 2023), none yet exist for SEA languages, and, to our knowledge, there has yet to be such an extensive coverage of linguistic phenomena in any dataset.",
+      "page": 5,
+      "category": "stated_limitations"
+    },
+    {
+      "text": "Cultural representation and bias have also become increasingly important with LLM use (Adilazuarda et al., 2024) since a lack thereof can potentially cause social harm (Solaiman et al., 2023).",
+      "page": 5,
+      "category": "task_taxonomy"
+    },
+    {
+      "text": "Much prior work on analysing or evaluating cultural representation in LLMs is created in ways that do not start from consulting the communities of speakers of the language but instead starts from reference sources that aggregate cultural knowledge, opinions, and values at a population level.",
+      "page": 5,
+      "category": "stated_limitations"
+    }
+  ],
+  "page_summary": "Page 5 describes the evaluation methodology for LLMs, detailing the grading approach using a reference model comparison, introduces LINDSEA (a manually-crafted linguistic diagnostic dataset for SEA languages based on breadth, depth, and quality principles), and discusses cultural representation evaluation in LLMs.",
+  "continues_from_previous": true,
+  "continues_to_next": true
+}
+```

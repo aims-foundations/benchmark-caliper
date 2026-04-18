@@ -1,0 +1,202 @@
+{
+  "benchmark": "SEA-HELM",
+  "region": "indonesia_bahasa_administrative_citizen",
+  "dimensions": {
+    "input_ontology": {
+      "score": 2,
+      "justification": "SEA-HELM's taxonomy — NLP Classics, LLM-Specifics, SEA Linguistics, SEA Culture, Safety — is a general-purpose LLM evaluation structure that contains no category corresponding to the deployment's critical interaction types: step-by-step procedural instruction, document prerequisite checking, error recovery, or jurisdictional referral. The SEA Culture pillar, which would be the closest analog for situated regional reasoning, explicitly covers only Filipino daily-life scenarios via KALAHI and has no Indonesian counterpart. LINDSEA targets syntactic/semantic/pragmatic diagnostics rather than procedural competence. The authors themselves acknowledge non-exhaustiveness and plan future expansion. Given the elicitation ranked IO as HIGH priority with error recovery and procedural instruction as the top categories, the taxonomic gap is substantial.",
+      "checklist_responses": {
+        "IO-1": "Deployment requires step-by-step procedural instruction, prerequisite checking, error recovery, jurisdictional referral, and citation/deferral for recently changed regulations — none of which map to SEA-HELM's five pillars.",
+        "IO-2": "Yes — SEA-HELM's taxonomy omits all administrative-procedure categories. The Culture pillar which could potentially host such content covers only Filipino (KALAHI), per Q40 and Q42.",
+        "IO-3": "SEA-HELM includes categories (e.g., creative writing, mathematics, STEM in SEA-MTBench per Q30; syntactic minimal pairs in LINDSEA per Q32) that are not directly relevant to a government procedure chatbot, though general NLU/NLG competencies provide useful baseline signal so are not wholly irrelevant.",
+        "IO-4": "Category gaps confirmed: (a) no procedural instruction category, (b) no error-recovery category, (c) no jurisdictional-referral category, (d) no Indonesian cultural pillar, (e) no regulatory-version-aware category. These omissions produce construct underrepresentation for this deployment."
+      },
+      "evidence_quotes": [
+        "[Q1] 'SEA-HELM, a holistic linguistic and cultural LLM evaluation suite that emphasises SEA languages, comprising five core pillars: (1) NLP CLASSICS, (2) LLM-SPECIFICS, (3) SEA LINGUISTICS, (4) SEA CULTURE, (5) SAFETY.' (p.1)",
+        "[Q40] 'The KALAHI dataset is designed to determine if LLMs can provide culturally-relevant responses to culturally-specific situations that Filipino people can reasonably encounter in their daily lives, and the dataset is composed of 150 high-quality Filipino-language prompts created in collaboration with native Filipino speakers.' (p.6)",
+        "[Q42] 'Currently, we cover Indonesian, Thai, Vietnamese, and Filipino for this task.' (p.6)",
+        "[Q62] 'While aiming to achieve holistic and authentic evaluations for LLMs in Southeast Asia, SEA-HELM is not yet exhaustive in its coverage of languages and tasks.' (p.9)",
+        "[Q67] 'Specifically, we plan to expand SEA-HELM to include a broader range of languages, cultures, tasks and models to encourage stronger SEA representation in models.' (p.9)"
+      ],
+      "evidence_region_sources": [
+        "No Indonesian-language government administrative procedure NLP benchmark exists for Dukcapil, DJP/Coretax, OSS-RBA, or Imigrasi procedures (ResearchGate Dukcapil chatbot study 2023 — https://www.researchgate.net/publication/373124017)",
+        "IndoCulture covers province-level cultural commonsense across 11 Indonesian provinces including NTT but does not cover government procedures (MIT Press TACL Dec 2024 — https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00726/125984/)"
+      ],
+      "confidence": "high",
+      "information_gaps": [
+        "Whether SEA-HELM's roadmap includes an Indonesian cultural/procedural pillar and on what timeline",
+        "Whether any SEA-HELM task subcategory implicitly tests procedural reasoning in Indonesian"
+      ],
+      "requires_expert_verification": [
+        "Whether an LLM strong on SEA-HELM's general Indonesian pillars transfers to procedural correctness on Dukcapil/DJP queries"
+      ]
+    },
+    "input_content": {
+      "score": 2,
+      "justification": "SEA-HELM's Indonesian content is general-domain, drawn from native-written sources where possible and translated by native speakers otherwise. The benchmark documentation contains no evidence of DJP, Dukcapil, OSS-RBA, or Imigrasi procedural content, and its participatory design principle is not attested for Indonesian in the administrative-procedure domain. Two critical deployment requirements — pemda-level regional procedural variation and the informal-to-formal comprehension asymmetry (Betawi, Sundanese, Javanese-inflected input) — are not addressed; LINDSEA and SEA-IFEval target standard formal Indonesian. Furthermore, because SEA-HELM was prepared concurrently with the January 2025 Coretax launch that superseded DJP Online, any DJP-related content in training or evaluation likely encodes outdated procedural flows. IC was elicited as HIGH priority.",
+      "checklist_responses": {
+        "IC-1": "Yes — the deployment requires region-specific knowledge of Indonesian administrative procedures (KTP/e-KTP, Coretax, OSS-RBA), pemda-level variation across Jakarta/Sleman/NTT/Makassar, and comprehension of dialectal input. SEA-HELM's general Indonesian content does not demonstrably cover these.",
+        "IC-2": "SEA-HELM's only attested cultural dataset (KALAHI) is Filipino; it is not aligned with Indonesian deployment culture. SEA-IFEval was 'localised to fit the linguistic and cultural nuances of SEA languages' per Q22, but no specific evidence of Indonesian administrative cultural grounding is provided.",
+        "IC-3": "SEA-IFEval is translated/localised from the English IF-Eval per Q22; translationese risk is acknowledged by the authors themselves (Q19). Residual Western-anchored instruction content may persist despite localisation.",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — annotator demographics are withheld (Q20, 'available upon request'); cannot confirm whether Indonesian annotators represent the target sub-national populations (NTT, Sleman, non-Jakarta). IndoCulture's use of in-province annotators across 11 provinces demonstrates a feasible methodology SEA-HELM does not evidence.",
+        "IC-5": "Content issues: (a) no DJP/Dukcapil/OSS-RBA domain content confirmed absent; (b) no pemda-level regional variation; (c) no informal-register/Betawi/Sundanese comprehension items; (d) probable pre-Coretax DJP procedural content if any tax material exists; (e) no regulatory-version timestamping."
+      },
+      "evidence_quotes": [
+        "[Q16] 'SEA-HELM currently supports five SEA languages – Filipino, Indonesian, Tamil, Thai, and Vietnamese, enabling users and AI practitioners to assess the overall performance of LLMs for these languages.' (p.3)",
+        "[Q18] 'We selected datasets that comprised of data originally written in the native language as far as possible. Otherwise, existing datasets in English were carefully translated by native speakers.' (p.3)",
+        "[Q19] 'This is important because translated datasets often contain elements of translationese (Gellerstam, 1986), which can differ significantly from natively written text...' (p.3)",
+        "[Q22] 'SEA-IFEval is an instruction-following benchmark we created collaboratively with native speakers. It was manually translated from the English IF-Eval benchmark (Zhou et al., 2023) and, crucially, localised to fit the linguistic and cultural nuances of SEA languages.' (p.4)",
+        "[Q40] 'The KALAHI dataset is designed to determine if LLMs can provide culturally-relevant responses to culturally-specific situations that Filipino people can reasonably encounter in their daily lives...' (p.6)",
+        "[Q61] 'Our results show that there are still significant gaps between high-resource languages such as English and the mid- to low-resource languages in Southeast Asia...' (p.9)"
+      ],
+      "evidence_region_sources": [
+        "Coretax (CTAS/PSIAP) launched 2025-01-01 under PMK No. 81/2024 replacing DJP Online; pre-2025 procedural knowledge is superseded (DJP official article — https://www.pajak.go.id/en/artikel/embracing-digital-future-coretax; ASEAN Briefing Coretax guide — https://www.aseanbriefing.com/doing-business-guide/indonesia/taxation-and-accounting/coretax-indonesia)",
+        "KTP registration and permit requirements differ materially between DKI Jakarta (Jakipedia/JakEVO), Sleman, Makassar, and rural kabupaten (GovInsider Asia DPI article Jan 2026 — https://govinsider.asia/intl-en/article/digital-public-infrastructure-is-changing-how-the-indonesian-government-works)",
+        "mBERT achieves only 62.1% F1 on informal/code-mixed Indonesian text (Betawi, Javanese-, Sundanese-influenced), confirming systematic model weakness on registers this deployment must handle (NusaDialect benchmark, Attaqwa journal Vol.21 No.1 2025 — https://jurnal.insida.ac.id/index.php/attaqwa/article/download/978/461/3267)",
+        "LoraxBench notes existing Indonesian NLP datasets frequently overlook formal/informal register variation (arXiv 2508.12459 — https://arxiv.org/html/2508.12459)"
+      ],
+      "confidence": "high",
+      "information_gaps": [
+        "Which specific Indonesian datasets constitute SEA-HELM's Indonesian content (e.g., IndoNLU subset coverage)",
+        "Whether SEA-IFEval's Indonesian localisation touched administrative or bureaucratic language"
+      ],
+      "requires_expert_verification": [
+        "Whether SEA-HELM's Indonesian subset includes any informal-register or dialectal input items",
+        "Whether participatory design principles (Q13) extended to non-Jakarta Indonesian communities"
+      ]
+    },
+    "input_form": {
+      "score": 3,
+      "justification": "Form-level alignment is the strongest dimension of the match. Both benchmark and deployment are text-only in Latin-script Bahasa Indonesia (PUEBI), and SEA-HELM demonstrates script-awareness through SEA-IFEval adaptations (Q24, Q25). However, the input form of a government chatbot is conversational, often informal or code-mixed, and originates from users across a wide education range; SEA-HELM's Indonesian prompts appear to be standard formal written Indonesian (LINDSEA is handcrafted for naturalness but targets linguistic phenomena, not conversational citizen queries). Regional research (NusaDialect, LoraxBench) confirms the register/dialect variation dimension is under-evaluated. Text modality match prevents a lower score; register mismatch prevents a higher one.",
+      "checklist_responses": {
+        "IF-1": "Modality match: text-to-text, Latin script, Bahasa Indonesia — aligned. Register distribution mismatch: benchmark uses formal written Indonesian; deployment input is frequently informal/colloquial/code-mixed.",
+        "IF-2": "Indonesian digital literacy and Latin-script infrastructure are compatible with SEA-HELM's text format. INSUFFICIENT DOCUMENTATION on whether prompt length and conversational turn structure reflect chatbot interaction patterns.",
+        "IF-3": "Domain-specific form differences: citizen queries often contain Betawi pronouns (gue/lu), Sundanese/Javanese phrasing, and short imperative fragments ('bang gimana caranya urus KTP ilang'). SEA-HELM prompt examples (Q84, Q85, Q86) are formal instructions or linguistic diagnostics rather than this register.",
+        "IF-4": "Form mismatch risk is moderate: signal modality aligns, but register distribution likely diverges from real citizen input. This is documented as systematically underserved in Indonesian NLP (LoraxBench 2025)."
+      },
+      "evidence_quotes": [
+        "[Q24] 'Specifically, to create the SEA-IFEval dataset, we first filtered out instructions that could not reasonably apply to most SEA languages. For example, prompts asking to change the capitalisation or punctuation do not make sense in many scripts in the region, such as Burmese, Tamil, or Thai.' (p.4)",
+        "[Q25] 'We also changed instructions that required inclusion of a stated quantity of instances of letters to instead require a stated quantity of instances of numbers as it was not easy to localise them for non-Latin scripts...' (p.4)",
+        "[Q46] 'It should also be noted that each prompt is given in the target language rather than in English (except for the English tasks) and is manually translated by native speakers of each language.' (p.7)",
+        "[Q85] 'Anda adalah seorang ahli bahasa Indonesia. Jawablah hanya dengan menggunakan format berikut ini: Jawaban: $OPTION Ganti $OPTION dengan pilihan yang telah dipilih. Gunakan huruf A atau B saja sebagai jawabannya.' (p.25)"
+      ],
+      "evidence_region_sources": [
+        "LoraxBench (2025) explicitly notes existing Indonesian NLP datasets 'frequently overlook [formal/informal register variation], typically focusing solely on the casual register' — the converse asymmetry in SEA-HELM's case (arXiv 2508.12459 — https://arxiv.org/html/2508.12459)",
+        "NusaDialect synthetic benchmark documents Jakartan/Betawi, Javanese-, Sundanese-, and Eastern-Indonesian varieties with Indonesian-English and Indonesian-Javanese code-mixing prevalent in digital communication (Attaqwa journal 2025 — https://jurnal.insida.ac.id/index.php/attaqwa/article/download/978/461/3267)"
+      ],
+      "confidence": "medium",
+      "information_gaps": [
+        "Length, turn-structure, and register distribution of SEA-HELM Indonesian prompts vs. real chatbot user queries",
+        "Whether any SEA-HELM subtask uses colloquial or code-mixed Indonesian"
+      ],
+      "requires_expert_verification": [
+        "Degree of register mismatch between LINDSEA/SEA-IFEval Indonesian examples and live chatbot input logs"
+      ]
+    },
+    "output_ontology": {
+      "score": 1,
+      "justification": "This is the deployment's most severe mismatch. The central evaluation requirement — distinguishing plausible-but-outdated from currently-compliant answers, and rewarding citation-and-deferral behavior for recently changed regulations — has no analog in SEA-HELM's output taxonomy. KALAHI uses a binary culturally-relevant/irrelevant label (Filipino-only), LINDSEA uses forced-choice A/B or true/false, and SEA-MTBench uses LLM-as-judge win-rate against gpt-3.5-turbo on creative writing/math/STEM/humanities criteria. None of these encode regulatory-version awareness, procedural correctness grading, jurisdictional-referral correctness, or accessibility scoring. The authors themselves note safety evaluation is necessary-but-not-sufficient (Q68, Q69), and the same logic applies with even greater force to procedural correctness, which is not attempted at all. OO was elicited as HIGH priority.",
+      "checklist_responses": {
+        "OO-1": "Output label categories (culturally-relevant/irrelevant, A/B forced-choice, true/false, win-rate, instruction-follow accuracy) do not map to the deployment's required decision axes: procedural correctness, regulatory compliance, jurisdictional correctness, plain-language accessibility.",
+        "OO-2": "Missing categories: (a) regulation-version-compliant vs. outdated, (b) correct-deferral-to-official-channel, (c) accessibility-to-low-education-users, (d) jurisdictional-correctness (Dukcapil vs. Imigrasi vs. DJP vs. OSS-RBA), (e) prerequisite-completeness.",
+        "OO-3": "The MTBench criteria (accuracy, relevance, coherence per Q31) encode generic helpfulness assumptions and LLM-as-judge preferences that may not align with civil-servant or ministry-legal evaluation standards; the taxonomy does not encode regulatory values.",
+        "OO-4": "Stakeholder-driven taxonomy redesign is strongly indicated: the three-tier evaluator model (civil servants + legal experts + citizen panel) called for by the deployment has no precedent in SEA-HELM's output taxonomy.",
+        "OO-5": "Taxonomy gaps violate structural validity (construct of 'procedural correctness' is not represented), content validity (regulatory-compliance category missing), and likely external validity (SEA-HELM scores will not predict deployment-time safety against ministerial liability)."
+      },
+      "evidence_quotes": [
+        "[Q31] 'Finally, a model's responses to both the initial and follow-up prompts are evaluated as a whole given accuracy, relevance, and coherence as judging criteria. Results are reported based on each model's average win rate against the reference model.' (p.5)",
+        "[Q47] 'In our view, for full SEA languages support, an LLM should be able to output coherent responses and should also be able to correctly interpret native instructions.' (p.7)",
+        "[Q68] 'acknowledge that passing our evaluations with a high score is not necessarily a guarantee of the safety of an LLM in the SEA context, as it is not possible to enumerate every type of unsafe response in real-world scenarios.' (p.10)",
+        "[Q69] 'Thus, passing the safety evaluations in SEA-HELM must be seen as a necessary but not sufficient requirement for ensuring safety in real-world LLM applications.' (p.10)",
+        "[Q87] 'Each sample is composed of a prompt and a list of responses that are culturally-relevant (helpful and harmless within the context of the given culture) and culturally-irrelevant (unhelpful and harmful within a culture).' (p.26)"
+      ],
+      "evidence_region_sources": [
+        "Coretax launch January 2025 under PMK 81/2024 creates an immediate regulatory version discontinuity any static benchmark cannot track (DJP official article — https://www.pajak.go.id/en/artikel/embracing-digital-future-coretax)",
+        "UU 27/2022 PDP Law full compliance required from October 2024, with 72-hour breach notification and data-localization obligations for public ESOs — the regulatory-compliance dimension has real enforcement stakes (DLA Piper Data Protection Laws of the World Indonesia, updated Feb 2026 — https://www.dlapiperdataprotection.com/?t=law&c=ID; Library of Congress Global Legal Monitor 2022-12-18 — https://www.loc.gov/item/global-legal-monitor/2022-12-18/indonesia-personal-data-protection-act-enters-into-force)"
+      ],
+      "confidence": "high",
+      "information_gaps": [
+        "Whether any SEA-HELM subtask indirectly captures citation quality or deferral appropriateness"
+      ],
+      "requires_expert_verification": [
+        "Whether regulatory-compliance scoring should be implemented as a binary gate, a graded scale, or a multi-axis rubric"
+      ]
+    },
+    "output_content": {
+      "score": 2,
+      "justification": "SEA-HELM demonstrates strong methodological practice for its general-purpose scope: paid native-speaker annotators, IRB approval, voluntary participation, PII removal, iterative review, and community participation principles (Q13, Q70–Q78). However, for this deployment the annotator composition is likely mismatched with the required three-tier evaluator model (civil servants + ministry legal experts + low-education non-Jakarta citizens). Annotators are 'predominantly students at local universities and members of the public' (Q73) recruited around the Singapore-based research team, with demographics withheld (Q20). The accessibility KPI — responses must be understandable to low-education, non-Jakarta users — cannot be validated against an annotator pool whose demographics are unknown and whose described profile (university students) skews opposite. No civil-servant or legal-expert annotation layer is documented. IndoCulture's in-province annotator methodology across 11 Indonesian provinces demonstrates a feasible alternative not replicated here. OC was elicited as HIGH priority.",
+      "checklist_responses": {
+        "OC-1": "INSUFFICIENT DOCUMENTATION on whether Indonesian ground truth reflects stakeholder perspectives relevant to administrative procedures; annotators are native speakers (Q70) but not identified as civil servants, legal experts, or citizen panelists representing low-education non-Jakarta populations.",
+        "OC-2": "Potential disagreement is high for accessibility labels (university-student annotators may not flag bureaucratically dense but technically correct responses as failures, contrary to the deployment's explicit KPI) and for procedural correctness (non-civil-servant annotators cannot authoritatively label current Dukcapil/DJP procedures).",
+        "OC-3": "Annotator demographics are explicitly withheld per Q20 ('not included in this paper for anonymity, demographics can be provided upon request'). Q73 describes the QA team as predominantly local university students and adult members of the public; Q71 ties the research to a single university's IRB; Q81 credits National Research Foundation Singapore funding, suggesting Singapore-centered operations.",
+        "OC-4": "Label re-annotation by a representative three-tier Indonesian panel (civil servants, ministry legal staff, citizen panel including NTT/non-Jakarta participants) is strongly indicated and not optional for this deployment.",
+        "OC-5": "INSUFFICIENT DOCUMENTATION — aggregation methods for annotator disagreement are not described at the level needed to assess minority-perspective erasure (e.g., whether outer-island Indonesian annotators, if any, are aggregated with Java-centric majorities).",
+        "OC-6": "Label validity concerns: accessibility-to-citizens labels cannot be validated without demographic confirmation; procedural-correctness labels cannot be validated without domain-expert annotation. Convergent validity and external validity are both at risk."
+      },
+      "evidence_quotes": [
+        "[Q13] 'We deliberately incorporate community participation by involving native speakers of the SEA languages at each stage of the dataset planning and construction to ensure linguistic accuracy and cultural authenticity.' (p.2)",
+        "[Q20] 'Annotator demographics are not included in this paper for anonymity, demographics can be provided upon request.' (p.3)",
+        "[Q70] 'SEA-HELM is grateful to our Quality Assurance (QA) team, consisting of paid native speakers of SEA languages who worked as translators and annotators...' (p.10)",
+        "[Q71] 'The SEA-HELM project has received full and official approval from our university's internal review board...' (p.10)",
+        "[Q73] 'The team is composed predominantly of students at local universities and members of the public, all of whom are adults who satisfy the legal age requirements for employment, as defined by the labour laws of the country.' (p.10)",
+        "[Q81] 'This research/project is supported by the National Research Foundation, Singapore under its National Large Language Models Funding Initiative.' (p.10)"
+      ],
+      "evidence_region_sources": [
+        "IndoCulture (Koto et al., 2024) used local in-province annotators across 11 Indonesian provinces including East Nusa Tenggara — demonstrating a feasible participatory methodology with sub-national coverage (MIT Press TACL Dec 2024 — https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00726/125984/)",
+        "Accessibility to low-education, non-Jakarta users is an explicit chatbot KPI; Jakarta-specific procedural flows (Jakipedia/JakEVO) differ materially from Sleman, Makassar, and rural kabupaten flows (GovInsider Asia DPI article Jan 2026 — https://govinsider.asia/intl-en/article/digital-public-infrastructure-is-changing-how-the-indonesian-government-works)"
+      ],
+      "confidence": "medium",
+      "information_gaps": [
+        "Indonesian-specific annotator demographics (age, education, region of residence, civil-service experience)",
+        "Whether any SEA-HELM Indonesian annotator was based in Indonesia rather than Singapore",
+        "Inter-annotator agreement statistics for Indonesian tasks"
+      ],
+      "requires_expert_verification": [
+        "Whether SEA-HELM's annotator pool, upon demographic disclosure per Q20, includes non-Jakarta and non-university participants",
+        "Whether civil-servant or domain-expert review was any part of Indonesian dataset construction"
+      ]
+    },
+    "output_form": {
+      "score": 3,
+      "justification": "Text output modality aligns with deployment needs; literacy is not a barrier since the chatbot is a text service. However, SEA-HELM's output form mix — regex-extracted MCQ answers (Q44), instruction-following verifiers (Q27), and LLM-as-judge win-rate on gpt-3.5-turbo reference (Q29) — does not measure the open-ended conversational generation, citation-and-deferral behavior, or plain-language register control that the deployment requires. The one partial exception is SEA-IFEval's language-correctness penalty (Q27), which rewards responding in the target language — a relevant mechanism but insufficient for register control (formal-only output from informal input). Text modality match prevents a low score; format granularity mismatch prevents a high one. OF was elicited as MODERATE priority.",
+      "checklist_responses": {
+        "OF-1": "Text modality matches. Format granularity does not: deployment output is open-ended conversational text with required citation and register control; SEA-HELM evaluates primarily via MCQ, forced-choice, instruction-follow verifiers, and pairwise win-rate.",
+        "OF-2": "TTS/speech is not required; deployment is a text chatbot. Not applicable.",
+        "OF-3": "Deployment users include low-education non-Jakarta citizens; text literacy is assumed but reading-level and plain-language requirements are stringent. SEA-HELM's output scoring does not measure reading-level or accessibility.",
+        "OF-4": "Form mismatches: (a) no open-ended generation scoring tied to regulatory citation, (b) no register-consistency scoring (informal in → formal out asymmetry unmeasured), (c) LLM-as-judge (gpt-4-1106-preview per Q29) may not reliably assess procedural correctness or plain-language accessibility for Indonesian administrative contexts."
+      },
+      "evidence_quotes": [
+        "[Q27] 'The accuracy with which LLMs follow the exact instruction following requirements is calculated using the same verifiers as those found in the English IF-Eval benchmark (Zhou et al., 2023). The model's accuracy is then adjusted to penalise instructions that responded in the wrong language by multiplying its accuracy with the rate at which it responds in the correct target language.' (p.4)",
+        "[Q29] 'grading approach, where we compare the win-rate of each candidate model against a fixed reference model, namely gpt-3.5-turbo-0125. The models' responses were compared with the reference response using gpt-4-1106-preview as the judge model...' (p.5)",
+        "[Q44] 'The answer can then be extracted using regular expressions and compared against the corresponding gold label.' (p.6)",
+        "[Q45] 'tag to its answer, the model is deemed to have given a null response. This approach allows for more efficient automatic evaluation at scale, even for models that may tend to have lengthy outputs.' (p.7)",
+        "[Q64] 'Our leaderboard results are based on single model runs.' (p.9)"
+      ],
+      "evidence_region_sources": [
+        "Deployment requires formal plain Bahasa Indonesia output regardless of informal/Betawi/Sundanese/Javanese-inflected input — a comprehension-generation asymmetry not measured by any SEA-HELM output form (register variation gap confirmed in LoraxBench — arXiv 2508.12459 — https://arxiv.org/html/2508.12459)"
+      ],
+      "confidence": "medium",
+      "information_gaps": [
+        "Whether LLM-as-judge (gpt-4-1106-preview) has adequate Indonesian administrative-domain competence to assess procedural correctness",
+        "Whether SEA-MTBench Indonesian subset includes any scenarios requiring citation or deferral"
+      ],
+      "requires_expert_verification": [
+        "Suitability of LLM-as-judge for Indonesian government-procedure evaluation",
+        "Appropriate output-form design for citation-and-deferral evaluation"
+      ]
+    }
+  },
+  "overall_summary": "SEA-HELM is a carefully constructed regional evaluation suite with strong methodology for its stated scope — five-pillar taxonomy, native-speaker participatory design, localised instruction-following, and script-aware adaptations. However, its stated scope is general-purpose SEA LLM evaluation, not Indonesian government administrative-procedure chatbot evaluation. For this specific deployment, SEA-HELM has four structural gaps that the benchmark does not attempt to fill: (1) no Indonesian procedural/cultural pillar (KALAHI is Filipino-only); (2) no administrative-procedure task categories (error recovery, prerequisite checking, jurisdictional referral); (3) no regulatory-compliance scoring dimension that distinguishes plausible-but-outdated answers from currently-compliant ones — critical given the January 2025 Coretax launch that superseded DJP Online; (4) no documented annotator coverage of low-education non-Jakarta citizens or civil-servant/legal-expert reviewers needed for the three-tier evaluation model. SEA-HELM is best understood as providing a general Indonesian LLM competence baseline; it is not a substitute for bespoke evaluation of this deployment's critical failure modes.",
+  "risk_assessment": "high",
+  "remediation_suggestions": "1. Treat SEA-HELM as a general Indonesian-language competence screen only; do not use its scores as evidence of procedural or regulatory correctness. 2. Commission a bespoke Indonesian administrative-procedure evaluation set covering KTP/e-KTP, Coretax (PMK 81/2024 grounding), OSS-RBA, and Imigrasi flows, with timestamped regulation references and a regulatory-version-aware scoring rubric that rewards citation and deferral for recently changed guidance. 3. Implement the three-tier evaluator model — civil servants (Dukcapil, DJP) for procedural correctness, ministry legal staff for regulatory compliance, and citizen panelists including low-education and non-Jakarta (NTT, outer-island) representation for accessibility — following IndoCulture's in-province annotator methodology. 4. Request SEA-HELM Indonesian annotator demographics per Q20 to confirm or refute sub-national coverage, and supplement with domain-expert annotation where gaps are identified. 5. Add a register-asymmetry evaluation component testing comprehension of Betawi-, Sundanese-, and Javanese-inflected input with formal Bahasa Indonesia output (IndoRobusta or NusaDialect methodology extended to administrative dialogue); complement with IndoCulture as a province-level cultural reasoning supplement. 6. Build a live deferral/routing evaluation for Coretax-, Adminduk-, and other recently-changed-regulation queries in which improvising a substantive answer is scored as a failure and citing/routing to pajak.go.id or the relevant official channel is scored as success.",
+  "highest_concern_dimensions": [
+    "output_ontology",
+    "input_ontology",
+    "input_content",
+    "output_content"
+  ],
+  "strongest_dimensions": [
+    "input_form",
+    "output_form"
+  ]
+}

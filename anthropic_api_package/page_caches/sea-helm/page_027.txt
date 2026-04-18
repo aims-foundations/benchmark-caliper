@@ -1,0 +1,8 @@
+```json
+{
+  "quotes": [],
+  "page_summary": "Page 27 contains appendix materials: Section F shows an example from the Safety Pillar (Thai Toxicity task) with prompt template and label, and Section G displays a reference table for linguistic phenomena consulted in LINDSEA design for Indonesian and Tamil languages.",
+  "continues_from_previous": false,
+  "continues_to_next": false
+}
+```

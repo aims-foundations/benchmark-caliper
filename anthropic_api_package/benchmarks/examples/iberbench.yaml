@@ -1,0 +1,109 @@
+# IberBench - Iberian Language Understanding Benchmark
+# Source: IberBench authors, 2025
+# Ground-truth region for validation: Iberian Peninsula
+
+name: "IberBench"
+full_name: "IberBench: Iberian Language Understanding Benchmark"
+year: 2025
+domain: "Regional NLU evaluation"
+porting_strategy: "ground_up"  # Built from regional workshops and Iberian sources
+languages: ["es", "pt", "ca", "gl", "eu", "es-ar", "pt-br"]
+primary_region: "Iberian Peninsula and Latin America"
+
+description: |
+  IberBench is a benchmark for evaluating language models on Iberian language
+  understanding tasks. It aggregates 101 datasets across 6 Iberian languages
+  (Spanish, Portuguese, Catalan, Galician, Basque, and variants) covering 22 NLP
+  task categories. 57 of the 101 tasks are sourced from Iberian-focused workshops
+  (IberLEF) and 43 from general LLM evaluation tasks.
+
+documentation_excerpts: |
+  ## Key characteristics relevant to validity analysis:
+
+  ### Test Case Categories (Input Ontology)
+  IberBench covers 22 NLP test case categories including lexical analysis, textual
+  entailment, question answering, sentiment analysis, humor detection, toxicity
+  detection, and more [Q1]. However, there is high imbalance across (category, language)
+  pairs — Argentinian Spanish and Brazilian Portuguese are not well represented despite
+  being major language variants [Q7]. The broad construct of "general language understanding"
+  makes it difficult to assess whether the taxonomy is complete for any specific
+  regional use case.
+
+  ### Content (Input Content)
+  Data is sourced from regional workshops and Iberian authors, providing strong
+  regional relevance. 57/101 tasks come from IberLEF (Iberian-focused shared task
+  campaigns) [Q2]. Sampled tasks show regionally appropriate provenance:
+  - IroSvA: Twitter data for irony detection in Spanish variants
+  - TASS 2020: Spanish sentiment analysis from news and social media
+  - PAN 2015: Author profiling with regionally-sourced text [Q10]
+
+  ### Input Signal Form (Input Form)
+  Latin alphabet with diacritics naturally matches all target languages (Spanish,
+  Portuguese, Catalan, Galician, Basque) [Q3]. High literacy rates across all target
+  countries make text-based input appropriate. No script mismatch issues.
+
+  ### Output Categories (Output Ontology)
+  Documentation does not explicitly justify the relevance of output taxonomies for
+  Iberian contexts. Sampled subtasks reveal gaps:
+  - HUHU (humor detection): Binary humor/not-humor categories not substantiated
+    for Iberian humor norms [Q4]
+  - DETOXIS (toxicity detection): Topic categories not argued for relevance to
+    Iberian toxicity concerns specifically [Q8]
+  The lack of documentation is the primary concern rather than confirmed misalignment.
+
+  ### Annotation Process (Output Content)
+  Mixed documentation quality across the 101 constituent datasets:
+  - IroSvA: Requires native Spanish speakers as annotators (well documented) [Q5]
+  - HUHU/DETOXIS: Used local university students from Spain (documented) [Q9]
+  - TASS 2020: Does not document annotator demographics
+  The heterogeneity of the 101 source datasets means annotation quality and
+  representativeness varies considerably.
+
+  ### Output Modality (Output Form)
+  Text-based outputs are appropriate for all target populations [Q6]. Literacy rates are
+  high across Spain, Portugal, and Latin American countries. Latin alphabet is the
+  native script for all target languages. No modality mismatch concerns.
+
+# NOTE: quote text/pages below are ICL placeholders to anchor the schema for
+# Sonnet's synthesis step. They do not correspond to actual IberBench paper quotes.
+verbatim_quotes:
+  - id: Q1
+    text: "IberBench aggregates 101 datasets across 6 Iberian languages covering 22 NLP test case categories spanning lexical analysis, textual entailment, question answering, sentiment, humor, and toxicity detection."
+    page: 2
+    dimension: input_ontology
+  - id: Q2
+    text: "Of the 101 constituent tasks, 57 are sourced from IberLEF shared task campaigns focused on Iberian languages, providing regionally grounded input content."
+    page: 5
+    dimension: input_content
+  - id: Q3
+    text: "All target languages use Latin script with diacritics, which matches the text-based encoding of all constituent datasets."
+    page: 7
+    dimension: input_form
+  - id: Q4
+    text: "HUHU and DETOXIS use binary and categorical label schemas adapted from general-purpose datasets without Iberian-specific justification or stakeholder validation."
+    page: 12
+    dimension: output_ontology
+  - id: Q5
+    text: "The IroSvA irony detection task requires native Spanish-speaking annotators, while TASS 2020 and several other constituent tasks do not document annotator demographics."
+    page: 14
+    dimension: output_content
+  - id: Q6
+    text: "Evaluation is text-based across all 101 constituent tasks, matching the high literacy rates of target populations and the Latin-script conventions of all target languages."
+    page: 9
+    dimension: output_form
+  - id: Q7
+    text: "Argentinian Spanish and Brazilian Portuguese are underrepresented across IberBench's 22 task categories despite being the largest variants of their respective languages."
+    page: 4
+    dimension: input_ontology
+  - id: Q8
+    text: "DETOXIS topic categories are inherited from general-purpose toxicity frameworks and are not substantiated as culturally appropriate for Iberian deployment contexts."
+    page: 13
+    dimension: output_ontology
+  - id: Q9
+    text: "HUHU and DETOXIS annotation was conducted by local university students in Spain, which does not proportionally represent Latin American Spanish or Portuguese stakeholder populations."
+    page: 15
+    dimension: output_content
+  - id: Q10
+    text: "PAN 2015 author profiling tasks use regionally-sourced Iberian text, providing strong content grounding for the author-profiling construct."
+    page: 8
+    dimension: input_content

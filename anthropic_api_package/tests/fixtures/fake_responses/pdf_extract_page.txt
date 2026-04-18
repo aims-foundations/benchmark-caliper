@@ -1,0 +1,12 @@
+```json
+{
+  "page": 1,
+  "extractions": [
+    {
+      "dimension": "input_ontology",
+      "text": "The task taxonomy covers five categories common in US edtech.",
+      "relevance": "Describes the input ontology of test categories."
+    }
+  ]
+}
+```
