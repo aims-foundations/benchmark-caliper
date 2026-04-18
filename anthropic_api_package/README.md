@@ -1,6 +1,6 @@
 # Validity Analyzer (API Pipeline)
 
-A framework for assessing whether AI benchmarks developed in one cultural context can be validly applied to another. Based on the paper *"Validity Analysis when Porting Benchmarks Across Cultures and Regions"* (Corona, Truong, Trager, 2025).
+A framework for assessing whether AI benchmarks developed in one cultural context can be validly applied to another. Based on the paper *"Validity Analysis when Porting Benchmarks Across Cultures and Regions"*.
 
 The tool evaluates benchmarks across **6 validity dimensions** (Input/Output × Ontology/Content/Form) and produces scored JSON reports via a cost-routed pipeline of direct Anthropic API calls (Haiku / Sonnet / Opus + deterministic scripts).
 
