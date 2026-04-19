@@ -20,8 +20,33 @@ This replaces the previous all-Opus approach, reducing cost by ~80% for extracti
 ## Invocation
 
 ```
-/validity-pdf-extract <local-pdf-path>
+/validity-pdf-extract <local-pdf-path> <elicitation-summary-path>
 ```
+
+The second argument is the path to the elicitation summary produced by the pipeline's
+Step 2 (e.g., `papers/<benchmark_name>_elicitation_summary.md`). This summary contains
+**dimension priority weights** and **cultural topic priorities** that guide extraction
+depth.
+
+### Elicitation-guided extraction
+
+The elicitation summary's dimension priorities shape how the skill allocates
+narrative depth during consolidation:
+
+- **HIGH-priority dimensions**: Write 4-6 sentences of narrative context, include all
+  relevant quotes, and note even minor related claims.
+- **MODERATE-priority dimensions**: Write 2-4 sentences of narrative context.
+- **LOWER-priority dimensions**: Write 1-2 sentences, covering only key findings.
+
+**Cultural topic priorities** from the elicitation summary further focus the narrative:
+when the user has flagged specific topics (e.g., lifecycle events, regional cuisines,
+sub-national variation), the narrative should call out quotes and claims related to
+those topics even if they would otherwise be treated as minor details.
+
+**Important**: Priority guidance affects narrative depth only. Quote extraction from
+the PDF is always exhaustive — every relevant quote is captured regardless of
+priority level. This ensures the full evidence base is available for downstream
+steps, even if the narrative emphasizes what the user cares about most.
 
 ## Extraction Categories
 
@@ -140,7 +165,14 @@ This file is intermediate and can be deleted after consolidation.
 ### Phase 3: Consolidation (Sonnet — this model)
 
 This phase runs in the current Sonnet context. It takes the raw per-page extractions
-and produces the final two-section output.
+and the elicitation summary, and produces the final two-section output.
+
+**Before starting consolidation**, read the elicitation summary and note:
+1. The **dimension priority weights** (HIGH/MODERATE/LOWER for each of IO/IC/IF/OO/OC/OF)
+2. The **cultural topic priorities** (ranked list of 3-5 topics)
+3. The **flagged gaps** (areas where evidence is thin)
+
+Use these priorities throughout Steps 3.2 and 3.3 below.
 
 #### Step 3.1: Merge and Deduplicate Quotes
 
@@ -162,13 +194,32 @@ and produces the final two-section output.
 
 #### Step 3.2: Write Narrative Context
 
-For each of the 8 extraction categories, write 2-5 sentences of interpretive
-context that references quote IDs:
+For each of the 8 extraction categories, write interpretive context that
+references quote IDs. **Adjust depth based on elicitation dimension priorities:**
 
+- **HIGH-priority dimensions** (from elicitation): 4-6 sentences. Include all relevant
+  quotes, note minor related claims, and call out any quotes touching the user's
+  cultural topic priorities.
+- **MODERATE-priority dimensions**: 2-4 sentences (default depth).
+- **LOWER-priority dimensions**: 1-2 sentences, key findings only.
+
+Map extraction categories to validity dimensions for priority lookup:
+- task_taxonomy → Input Ontology (IO)
+- data_sources → Input Content (IC)
+- data_format → Input Form (IF)
+- label_categories → Output Ontology (OO)
+- annotation_process → Output Content (OC)
+- evaluation_metrics → Output Form (OF)
+- stated_limitations, authors_affiliations → use MODERATE depth
+
+Example for a HIGH-priority dimension:
 - "The benchmark covers 22 task categories [Q1] with a split between
-  industry-relevant and fundamental tasks [Q2]."
-- When quotes indicate something is NOT DOCUMENTED, say so explicitly:
-  "NOT DOCUMENTED: The paper provides no annotator demographic information.
+  industry-relevant and fundamental tasks [Q2]. Regional cuisines, flagged as a
+  cultural topic priority by the user, appear in the food-related QA subset [Q8]
+  but coverage is limited to national-level dishes [Q9]."
+
+When quotes indicate something is NOT DOCUMENTED, say so explicitly:
+- "NOT DOCUMENTED: The paper provides no annotator demographic information.
   This absence is itself a validity-relevant finding."
 
 #### Step 3.3: Verify Coverage
