@@ -32,11 +32,11 @@ send, skip the API call, and leave the cost ledger untouched. Pipe it
 through `less` for long prompts:
 
 ```bash
-python run_pipeline.py $PDF --step 1b-synthesize --dry-run | less
+python run_pipeline.py $PDF --step 3b-synthesize --dry-run | less
 ```
 
 Dry-run uses whatever real outputs are on disk from prior steps, so
-`--step 1b-synthesize --dry-run` after a real `--step 1a-consolidate` shows
+`--step 3b-synthesize --dry-run` after a real `--step 3a-consolidate` shows
 you the exact Sonnet prompt built from the real paper summary.
 
 ```bash
@@ -65,81 +65,27 @@ Delete `assessments/${NAME}/active_slug.txt` to force re-derivation (e.g.
 after swapping personas). Old slug dirs stick around — comparing two
 personas on the same paper just means two sibling `<slug>/` dirs.
 
-### Step 1a-extract — PDF extraction (per-page Haiku fan-out)
-~30 Haiku calls serially (1 worker); **~$0.04–0.12**; ~2–3 min wall-clock
+### Step 1 — Metadata extraction (Haiku, pages 1-2)
+1 Haiku; **< $0.001**
 
-The Haiku fan-out is single-threaded by default to stay under common
-per-minute TPM caps (50k TPM at tier 1 is enough for ~15 calls/min; one
-worker paces naturally at ~12 calls/min). If you're on a higher tier,
-edit `max_workers` in `step_1a_extract` to speed things up.
-
-```bash
-python run_pipeline.py $PDF --step 1a-extract
-# inspect: page_caches/${NAME}/page_NNN.txt
-python run_pipeline.py $PDF --show-cost
-```
-
-**Resumable.** Each page's Haiku output is written to
-`page_caches/${NAME}/page_NNN.txt` as soon as the call returns. If the step
-crashes partway (e.g. a 429 rate-limit error that outruns the SDK's retry
-budget), just re-run `--step 1a-extract` — cached pages are skipped and
-only the missing ones are re-dispatched. The cost ledger accumulates across
-retries so the final `--show-cost` total reflects the real cost of all
-pages, not just the last retry's.
-
-If you want a truly fresh re-run (new prompts, updated PDF, etc.), delete
-the cache dir first:
-```bash
-rm -rf page_caches/${NAME}
-```
-
-### Step 1a-consolidate — paper summary (Sonnet merge)
-1 Sonnet; **~$0.02–0.05**
-
-Reads every `page_caches/${NAME}/page_NNN.txt` and folds them into a single
-paper summary.
+Reads only the first 1-2 pages of the PDF and extracts lightweight metadata
+(name, domain, languages, region, porting strategy). This runs fast (~5s) so
+elicitation questions can be presented within ~30 seconds of pipeline start.
 
 ```bash
-python run_pipeline.py $PDF --step 1a-consolidate
-# inspect: papers/${NAME}/paper_summary.md
+python run_pipeline.py $PDF --step 1
+# inspect: papers/${NAME}/metadata.md
 ```
 
-### Step 1b-select — pick reference benchmark YAMLs
-1 Haiku; **~$0.001**
-
-Picks 1–2 YAMLs from `benchmarks/examples/` to use as ICL context for the
-synthesis step. Selection is persisted so the synthesis step can be
-re-run / dry-run without re-asking Haiku.
-
-```bash
-python run_pipeline.py $PDF --step 1b-select
-# inspect: papers/${NAME}/benchmark_refs.json
-```
-
-### Step 1b-synthesize — benchmark YAML synthesis
-1 Sonnet; **~$0.03–0.10**. Upper bound applies when the paper is long and
-the quote registry is dense (the output can run 10k+ tokens before the new
-32k `max_tokens` ceiling).
-
-```bash
-python run_pipeline.py $PDF --step 1b-synthesize
-# inspect: benchmarks/${NAME}.yaml
-```
-
-### Step 1c-verify — mechanical quote verification
-Script only, **no API cost**.
-
-```bash
-python run_pipeline.py $PDF --step 1c-verify
-# inspect console output; fails loud if YAML quotes don't match the summary
-```
-
-### Step 1d-questions — elicitation questions + persona handoff
+### Step 2-questions — elicitation questions + persona handoff
 1 Sonnet; **~$0.01**
+
+Uses lightweight metadata (not the full benchmark YAML) to generate targeted
+deployment-context questions.
 
 ```bash
 SLUG=$(cat assessments/${NAME}/active_slug.txt)
-python run_pipeline.py $PDF --step 1d-questions --persona $PERSONA
+python run_pipeline.py $PDF --step 2-questions --persona $PERSONA
 # inspect: assessments/${NAME}/${SLUG}/elicitation_questions.json
 #          assessments/${NAME}/${SLUG}/persona_prompt.md   ← hand to a CC Opus subagent
 ```
@@ -150,16 +96,89 @@ system prompt + user message from
 `assessments/${NAME}/${SLUG}/persona_prompt.md`. Save its JSON reply to
 `assessments/${NAME}/${SLUG}/elicitation_answers.json`.
 
-### Step 1d-summary — elicitation summary
+### Step 2-summary — elicitation summary
 1 Sonnet; **~$0.02**
 
 ```bash
-python run_pipeline.py $PDF --step 1d-summary \
+python run_pipeline.py $PDF --step 2-summary \
     --answers assessments/${NAME}/${SLUG}/elicitation_answers.json
 # inspect: assessments/${NAME}/${SLUG}/elicitation_summary.md
 ```
 
-### Step 2a-template — pick base region templates
+### Step 3a-extract — PDF extraction (per-page Haiku fan-out)
+~30 Haiku calls serially (1 worker); **~$0.04–0.12**; ~2–3 min wall-clock
+
+The Haiku fan-out is single-threaded by default to stay under common
+per-minute TPM caps (50k TPM at tier 1 is enough for ~15 calls/min; one
+worker paces naturally at ~12 calls/min). If you're on a higher tier,
+edit `max_workers` in `step_1a_extract` to speed things up.
+
+```bash
+python run_pipeline.py $PDF --step 3a-extract
+# inspect: page_caches/${NAME}/page_NNN.txt
+python run_pipeline.py $PDF --show-cost
+```
+
+**Resumable.** Each page's Haiku output is written to
+`page_caches/${NAME}/page_NNN.txt` as soon as the call returns. If the step
+crashes partway (e.g. a 429 rate-limit error that outruns the SDK's retry
+budget), just re-run `--step 3a-extract` — cached pages are skipped and
+only the missing ones are re-dispatched. The cost ledger accumulates across
+retries so the final `--show-cost` total reflects the real cost of all
+pages, not just the last retry's.
+
+If you want a truly fresh re-run (new prompts, updated PDF, etc.), delete
+the cache dir first:
+```bash
+rm -rf page_caches/${NAME}
+```
+
+### Step 3a-consolidate — paper summary (Sonnet merge)
+1 Sonnet; **~$0.02–0.05**
+
+Reads every `page_caches/${NAME}/page_NNN.txt` and folds them into a single
+paper summary. When an elicitation summary exists, uses dimension priority
+weights to allocate narrative depth (HIGH: 4-6 sentences, MODERATE: 2-4,
+LOWER: 1-2). Quote extraction remains exhaustive regardless of priorities.
+
+```bash
+python run_pipeline.py $PDF --step 3a-consolidate
+# inspect: papers/${NAME}/paper_summary.md
+```
+
+### Step 3b-select — pick reference benchmark YAMLs
+1 Haiku; **~$0.001**
+
+Picks 1–2 YAMLs from `benchmarks/examples/` to use as ICL context for the
+synthesis step. Selection is persisted so the synthesis step can be
+re-run / dry-run without re-asking Haiku.
+
+```bash
+python run_pipeline.py $PDF --step 3b-select
+# inspect: papers/${NAME}/benchmark_refs.json
+```
+
+### Step 3b-synthesize — benchmark YAML synthesis
+1 Sonnet; **~$0.03–0.10**. Upper bound applies when the paper is long and
+the quote registry is dense (the output can run 10k+ tokens before the new
+32k `max_tokens` ceiling). When an elicitation summary is available, includes
+a `coverage_gap_analysis` section cross-referencing user priorities against
+benchmark documentation.
+
+```bash
+python run_pipeline.py $PDF --step 3b-synthesize
+# inspect: benchmarks/${NAME}.yaml
+```
+
+### Step 3c-verify — mechanical quote verification
+Script only, **no API cost**.
+
+```bash
+python run_pipeline.py $PDF --step 3c-verify
+# inspect console output; fails loud if YAML quotes don't match the summary
+```
+
+### Step 4a-template — pick base region templates
 1 Haiku; **~$0.001**
 
 Picks 1–2 templates from `regions/base/` to seed the region YAML. Selection
@@ -167,48 +186,49 @@ is persisted so the synthesis step can be re-run / dry-run without re-asking
 Haiku.
 
 ```bash
-python run_pipeline.py $PDF --step 2a-template
+python run_pipeline.py $PDF --step 4a-template
 # inspect: assessments/${NAME}/${SLUG}/region_templates.json
 ```
 
-### Step 2b-synthesize — region YAML synthesis
+### Step 4b-synthesize — region YAML synthesis
 1 Sonnet; **~$0.03–0.05**
 
 ```bash
-python run_pipeline.py $PDF --step 2b-synthesize
+python run_pipeline.py $PDF --step 4b-synthesize
 # inspect: assessments/${NAME}/${SLUG}/region.yaml
 ```
 
-### Step 3 — web-search enrichment (optional)
+### Step 5 — web-search enrichment (optional)
 1 Sonnet + up to 10 web searches; **~$0.20–0.50**. Skip if you want to save
-budget — step 4 will use whatever region YAML is on disk.
-
-```bash
-python run_pipeline.py $PDF --step 3
-# inspect: assessments/${NAME}/${SLUG}/region.yaml (overwritten in place)
-```
-
-### Step 4 — compose evaluation prompt
-Script, **no API cost**.
-
-```bash
-python run_pipeline.py $PDF --step 4
-# inspect: assessments/${NAME}/${SLUG}/composed_prompt.md
-```
-
-### Step 5 — Opus scoring
-1 Opus; **~$0.50–1.50**. Biggest line item.
+budget — step 6 will use whatever region YAML is on disk. Prioritizes
+`coverage_gap_analysis` from the benchmark YAML when available.
 
 ```bash
 python run_pipeline.py $PDF --step 5
-# inspect: assessments/${NAME}/${SLUG}/scoring.json
+# inspect: assessments/${NAME}/${SLUG}/region.yaml (overwritten in place)
 ```
 
-### Step 6 — format report
-Script, no API cost.
+### Step 6 — compose evaluation prompt
+Script, **no API cost**.
 
 ```bash
 python run_pipeline.py $PDF --step 6
+# inspect: assessments/${NAME}/${SLUG}/composed_prompt.md
+```
+
+### Step 7 — Opus scoring
+1 Opus; **~$0.50–1.50**. Biggest line item.
+
+```bash
+python run_pipeline.py $PDF --step 7
+# inspect: assessments/${NAME}/${SLUG}/scoring.json
+```
+
+### Step 8 — format report
+Script, no API cost.
+
+```bash
+python run_pipeline.py $PDF --step 8
 # final human-readable report prints to stdout
 ```
 
@@ -229,9 +249,9 @@ other.
 
 Every real (non-dry-run) API call appends a JSON line to
 `assessments/${NAME}/${SLUG}/traces/<step_label>.jsonl` — one JSONL file per
-step label, so the 1a-extract fan-out lands in
-`traces/1a_extract.jsonl` (N lines, one per page), while single-call steps
-like `1a_consolidate`, `1b_select`, etc. each get a one-line file. Each
+step label, so the 3a-extract fan-out lands in
+`traces/3a_extract.jsonl` (N lines, one per page), while single-call steps
+like `3a_consolidate`, `3b_select`, etc. each get a one-line file. Each
 record carries: `timestamp, step, model, max_tokens, pdf_path, tools,
 duration_seconds, system, user, output, tool_trace, usage, cost_usd`.
 Overwrite-on-rerun stays in sync with the cost ledger — re-running a step

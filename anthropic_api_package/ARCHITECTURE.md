@@ -37,81 +37,82 @@ Four pipeline steps that would otherwise require an LLM now use deterministic sc
                     └──────────┬──────────┘
                                │
                     ┌──────────▼──────────┐
-                    │  split_pdf.sh       │  ← bash script
-                    │  (page count/split) │
+                    │  Step 0: Haiku      │  ← slug from deployment description
+                    │  (derive slug)      │
                     └──────────┬──────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │  Step 1: Haiku      │  ← pages 1-2 only (fast, <30s)
+                    │  (metadata extract) │
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │  Step 2: Sonnet     │  ← elicitation on LIGHTWEIGHT metadata
+                    │  (questions → Q/A   │     prompts: elicitation_questions.md,
+                    │   → summary)        │     elicitation_summary.md. --persona or stdin.
+                    └──────────┬──────────┘     USER INTERACTION HAPPENS HERE (~30s in)
                                │
               ┌────────────────┼────────────────┐
               │                │                │
      ┌────────▼───┐   ┌───────▼────┐   ┌───────▼────┐
-     │ Haiku pg 1 │   │ Haiku pg 2 │   │ Haiku pg N │  ← parallel via ThreadPoolExecutor
-     │ (extract)  │   │ (extract)  │   │ (extract)  │
+     │ Haiku pg 1 │   │ Haiku pg 2 │   │ Haiku pg N │  ← Step 3a: parallel extraction
+     │ (extract)  │   │ (extract)  │   │ (extract)  │     via ThreadPoolExecutor
      └────────┬───┘   └───────┬────┘   └───────┬────┘
               │                │                │
               └────────────────┼────────────────┘
                                │
                     ┌──────────▼──────────┐
-                    │  Sonnet call        │  ← consolidation
-                    │  (dedup, narrative) │
+                    │  Sonnet call        │  ← 3a-consolidate (uses elicitation
+                    │  (dedup, narrative) │     priorities for narrative depth)
                     └──────────┬──────────┘
                                │
                     ┌──────────▼────────────────────────────────────────┐
-                    │  Step 1b: benchmark YAML synthesis                │
+                    │  Step 3b: benchmark YAML synthesis                │
                     │  ┌─────────────┐  ┌───────────────────────────┐   │
-                    │  │ Haiku (1b-i)│→ │ Sonnet (1b-ii)            │   │
+                    │  │ Haiku(3b-i) │→ │ Sonnet (3b-ii)            │   │
                     │  │ pick 1–2    │  │ synthesize benchmark.yaml │   │
-                    │  │ examples    │  │ (ICL + explicit schema)   │   │
+                    │  │ examples    │  │ + coverage_gap_analysis   │   │
                     │  └─────────────┘  └───────────────────────────┘   │
                     │  Reads: benchmarks/examples/*.yaml (r/o ICL)      │
                     │  Writes: benchmarks/<name>.yaml (gitignored)      │
                     └──────────┬────────────────────────────────────────┘
                                │
-                ┌──────────────┼──────────────┐
-                │                             │
-     ┌──────────▼──────────┐       ┌──────────▼──────────┐
-     │  verify_quotes.py   │       │  Sonnet call        │  ← parallel
-     │  (count/ID/coverage)│       │  (text spot-check)  │
-     └──────────┬──────────┘       └──────────┬──────────┘
-                │                             │
-                └──────────────┬──────────────┘
-                               │
                     ┌──────────▼──────────┐
-                    │  Sonnet call        │  ← Step 1d elicitation
-                    │  (questions → Q/A   │     prompts: elicitation_questions.md,
-                    │   → summary)        │     elicitation_summary.md. --persona or stdin.
+                    │  Step 3c: verify    │  ← verify_quotes.py (script only)
+                    │  (count/ID/coverage)│
                     └──────────┬──────────┘
                                │
                     ┌──────────▼───────────────────────────────────────┐
-                    │  Step 2: region YAML synthesis (always per-run)  │
-                    │  ┌─────────────┐  ┌─────────────┐  ┌───────────┐ │
-                    │  │ Haiku (2a)  │→ │ Haiku (2b)  │→ │ Sonnet(2c)│ │
-                    │  │ slug        │  │ pick 1–2    │  │ synthesize│ │
-                    │  │ from elicit │  │ base tmpl   │  │ tailored  │ │
-                    │  └─────────────┘  └─────────────┘  └───────────┘ │
+                    │  Step 4: region YAML synthesis (always per-run)  │
+                    │  ┌─────────────┐  ┌───────────────────────────┐  │
+                    │  │ Haiku (4a)  │→ │ Sonnet (4b)               │  │
+                    │  │ pick 1–2    │  │ synthesize tailored        │  │
+                    │  │ base tmpl   │  │ region.yaml               │  │
+                    │  └─────────────┘  └───────────────────────────┘  │
                     │  Reads: regions/base/*.yaml (templates, r/o)     │
                     │  Writes: assessments/<name>/<slug>/region.yaml   │
                     └──────────┬───────────────────────────────────────┘
                                │
                     ┌──────────▼──────────┐
-                    │  Sonnet + web_search│  ← Step 3 enrichment
-                    │  (server tool)      │     uses prompts/web_search_guide.md
+                    │  Step 5: Sonnet     │  ← web search enrichment
+                    │  + web_search tool  │     prioritizes coverage_gap_analysis
                     └──────────┬──────────┘
                                │
                     ┌──────────▼──────────┐
-                    │  compose_prompt.py  │  ← Python script
+                    │  Step 6: script     │  ← compose_prompt.py
                     │  (template fill +   │     + elicitation summary
                     │   quote registry)   │
                     └──────────┬──────────┘
                                │
                     ┌──────────▼──────────┐
                     │  ████████████████   │
-                    │  █ OPUS CALL    █   │  ← the only Opus call
+                    │  █ Step 7: OPUS █   │  ← the only Opus call
                     │  █ (scoring)    █   │
                     │  ████████████████   │
                     └──────────┬──────────┘
                                │
                     ┌──────────▼──────────┐
-                    │  format_results.py  │  ← Python script
+                    │  Step 8: script     │  ← format_results.py
                     │  (report)           │
                     └──────────┬──────────┘
                                │
@@ -162,24 +163,24 @@ Approximate token usage per pipeline run (29-page PDF):
 
 | Step | Model | Input tokens | Output tokens |
 |------|-------|--------------|---------------|
-| Per-page extraction | Haiku × 29 | ~4K × 29 = 116K | ~500 × 29 = 14.5K |
-| Consolidation | Sonnet × 1 | ~20K | ~15K |
-| Benchmark example selection (1b-i) | Haiku × 1 | ~3K | ~50 |
-| Benchmark YAML synthesis (1b-ii) | Sonnet × 1 | ~25K | ~15K |
-| Quote text spot-check | Sonnet × 1 | ~5K | ~1K |
-| Elicitation questions | Sonnet × 1 | ~15K | ~2K |
-| Persona simulation* | Sonnet × 1 | ~5K | ~1K |
-| Elicitation summary | Sonnet × 1 | ~8K | ~3K |
-| Assessment slug (2a) | Haiku × 1 | ~1K | ~50 |
-| Base template selection (2b) | Haiku × 1 | ~2K | ~50 |
-| Region synthesis (2c) | Sonnet × 1 | ~15K | ~8K |
-| Web enrichment | Sonnet × 1 | ~15K | ~8K |
-| **Scoring** | **Opus × 1** | **~45K** | **~15K** |
-| Scripts | — | 0 | 0 |
+| 0 — Assessment slug | Haiku × 1 | ~1K | ~50 |
+| 1 — Metadata extract (pp 1-2) | Haiku × 1 | ~4K | ~200 |
+| 2 — Elicitation questions | Sonnet × 1 | ~15K | ~2K |
+| 2 — Persona simulation* | Sonnet × 1 | ~5K | ~1K |
+| 2 — Elicitation summary | Sonnet × 1 | ~8K | ~3K |
+| 3a — Per-page extraction | Haiku × 29 | ~4K × 29 = 116K | ~500 × 29 = 14.5K |
+| 3a — Consolidation | Sonnet × 1 | ~20K | ~15K |
+| 3b — Example selection | Haiku × 1 | ~3K | ~50 |
+| 3b — Benchmark YAML synthesis | Sonnet × 1 | ~25K | ~15K |
+| 4a — Template selection | Haiku × 1 | ~2K | ~50 |
+| 4b — Region synthesis | Sonnet × 1 | ~15K | ~8K |
+| 5 — Web enrichment | Sonnet × 1 | ~15K | ~8K |
+| **7 — Scoring** | **Opus × 1** | **~45K** | **~15K** |
+| 3c, 6, 8 — Scripts | — | 0 | 0 |
 
 *Persona simulation runs only in `--persona` mode.
 
-**Total: 1 Opus call + 7–8 Sonnet calls + ~32 Haiku calls + 7 scripts.**
+**Total: 1 Opus call + 7–8 Sonnet calls + ~33 Haiku calls + 7 scripts.**
 
 ## Prerequisites
 

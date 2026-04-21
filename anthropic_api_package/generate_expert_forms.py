@@ -1,0 +1,322 @@
+#!/usr/bin/env python3
+"""Generate Google Forms for expert elicitation (Stage 2).
+
+After run_expert_stage1.py produces elicitation_questions.json for each
+(expert, tuple) pair, this script creates one Google Form per expert
+containing all four tuples' questions. The form URL and a question-ID
+mapping are saved to expert_responses/<csv>/<expert>/stage2_form.json
+for downstream response parsing.
+
+Usage:
+    python generate_expert_forms.py <csv_path> [--row N] [--dry-run]
+
+Idempotent: skips experts whose stage2_form.json already exists.
+Delete the manifest to regenerate.
+"""
+
+import argparse
+import json
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+
+PACKAGE_ROOT = Path(__file__).resolve().parent
+EXPERT_RESPONSES = PACKAGE_ROOT / "expert_responses"
+SECRETS_DIR = PACKAGE_ROOT / ".secrets"
+CREDENTIALS_FILE = SECRETS_DIR / "credentials.json"
+TOKEN_FILE = SECRETS_DIR / "token.json"
+
+SCOPES = [
+    "https://www.googleapis.com/auth/forms.body",
+    "https://www.googleapis.com/auth/drive.file",
+]
+
+DIMENSION_LABELS = {
+    "IO": "Input Ontology",
+    "IC": "Input Content",
+    "IF": "Input Form",
+    "OO": "Output Ontology",
+    "OC": "Output Content",
+    "OF": "Output Form",
+}
+
+FORM_DESCRIPTION = (
+    "Thank you for participating in this validity assessment study.\n\n"
+    "Below are four deployment scenarios, each paired with a benchmark "
+    "you proposed. For each scenario, please answer the questions based "
+    "on your regional expertise. Your answers will help us assess whether "
+    "these benchmarks are valid for the described deployment contexts.\n\n"
+    "Please provide detailed answers — a few sentences per question is ideal."
+)
+
+
+# ===================================================================
+# Auth
+# ===================================================================
+
+def authenticate():
+    """OAuth2 flow — opens browser on first run, caches token."""
+    creds = None
+    if TOKEN_FILE.exists():
+        creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), SCOPES)
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                str(CREDENTIALS_FILE), SCOPES
+            )
+            creds = flow.run_local_server(port=0)
+        TOKEN_FILE.write_text(creds.to_json())
+    return creds
+
+
+# ===================================================================
+# Expert discovery
+# ===================================================================
+
+def find_expert_dirs(csv_path: Path, row_filter: int | None = None):
+    """Yield (expert_dir, row_data) for each expert under the CSV stem."""
+    csv_stem = csv_path.stem
+    base = EXPERT_RESPONSES / csv_stem
+    if not base.exists():
+        print(f"ERROR: {base} not found. Run run_expert_stage1.py first.",
+              file=sys.stderr)
+        sys.exit(1)
+
+    for expert_dir in sorted(base.iterdir()):
+        if not expert_dir.is_dir():
+            continue
+        row_path = expert_dir / "row.json"
+        if not row_path.exists():
+            continue
+        row = json.loads(row_path.read_text())
+        if row_filter is not None and row["source_row"] != row_filter:
+            continue
+        yield expert_dir, row
+
+
+# ===================================================================
+# Form construction
+# ===================================================================
+
+def build_form_requests(expert_dir: Path, row: dict):
+    """Build batchUpdate requests for one expert's form.
+
+    Returns (requests, question_meta).  question_meta tracks which
+    requests are questions so we can correlate with the API response.
+    """
+    requests = []
+    question_meta = []
+    item_idx = 0
+
+    # Form description (shows on the intro page below the title)
+    requests.append({
+        "updateFormInfo": {
+            "info": {"description": FORM_DESCRIPTION},
+            "updateMask": "description",
+        }
+    })
+
+    for t in row["tuples"]:
+        tuple_dir = expert_dir / "tuples" / f"tuple_{t['index']}"
+        q_path = tuple_dir / "elicitation_questions.json"
+        if not q_path.exists():
+            print(f"  WARN: {q_path.relative_to(PACKAGE_ROOT)} missing, "
+                  f"skipping tuple {t['index']}")
+            continue
+
+        questions = json.loads(q_path.read_text())
+        dep_path = PACKAGE_ROOT / t["deployment_description_path"]
+        dep_desc = dep_path.read_text().strip() if dep_path.exists() else ""
+
+        # === Section break for this tuple ===
+        requests.append({
+            "createItem": {
+                "item": {
+                    "title": f"Scenario {t['index']}: {t['benchmark_name']}",
+                    "description": dep_desc,
+                    "pageBreakItem": {},
+                },
+                "location": {"index": item_idx},
+            }
+        })
+        item_idx += 1
+
+        # === One paragraph question per elicitation question ===
+        for q in questions:
+            dim_label = DIMENSION_LABELS.get(q["dimension"], q["dimension"])
+            requests.append({
+                "createItem": {
+                    "item": {
+                        "title": q["question"],
+                        "description": (
+                            f"[T{t['index']}-{q['id']}] "
+                            f"Dimension: {dim_label}"
+                        ),
+                        "questionItem": {
+                            "question": {
+                                "required": True,
+                                "textQuestion": {"paragraph": True},
+                            }
+                        },
+                    },
+                    "location": {"index": item_idx},
+                }
+            })
+            question_meta.append({
+                "tuple_index": t["index"],
+                "question_id": q["id"],
+                "dimension": q["dimension"],
+                "request_index": len(requests) - 1,
+            })
+            item_idx += 1
+
+    return requests, question_meta
+
+
+def create_expert_form(service, row: dict, requests: list,
+                       question_meta: list):
+    """Create the Google Form, populate it, and return form metadata."""
+    form = service.forms().create(body={
+        "info": {"title": f"Validity Assessment — {row['name']}"}
+    }).execute()
+    form_id = form["formId"]
+
+    response = service.forms().batchUpdate(
+        formId=form_id,
+        body={"requests": requests},
+    ).execute()
+
+    # === Map question IDs from the API response back to our metadata ===
+    replies = response.get("replies", [])
+    question_map = {}
+    for meta in question_meta:
+        reply = replies[meta["request_index"]]
+        question_ids = reply.get("createItem", {}).get("questionId", [])
+        if question_ids:
+            question_map[question_ids[0]] = {
+                "tuple_index": meta["tuple_index"],
+                "question_id": meta["question_id"],
+                "dimension": meta["dimension"],
+            }
+
+    form_data = service.forms().get(formId=form_id).execute()
+    form_url = form_data.get(
+        "responderUri",
+        f"https://docs.google.com/forms/d/{form_id}/viewform",
+    )
+
+    return form_id, form_url, question_map
+
+
+def save_manifest(expert_dir: Path, form_id: str, form_url: str,
+                  row: dict, question_map: dict) -> Path:
+    """Write stage2_form.json with form URL and question-ID mapping."""
+    manifest = {
+        "form_id": form_id,
+        "form_url": form_url,
+        "expert_id": row["expert_id"],
+        "expert_email": row["email"],
+        "expert_name": row["name"],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "question_map": question_map,
+    }
+    path = expert_dir / "stage2_form.json"
+    path.write_text(json.dumps(manifest, indent=2) + "\n")
+    return path
+
+
+# ===================================================================
+# CLI
+# ===================================================================
+
+def main():
+    p = argparse.ArgumentParser(
+        description="Generate Stage-2 Google Forms for expert elicitation.",
+    )
+    p.add_argument(
+        "csv_path",
+        help="Path to the Stage-1 CSV (used to locate expert_responses/)",
+    )
+    p.add_argument("--row", type=int,
+                   help="Only process the given 1-indexed CSV row")
+    p.add_argument("--dry-run", action="store_true",
+                   help="Show form structure without calling the API")
+    args = p.parse_args()
+
+    csv_path = Path(args.csv_path)
+    if not csv_path.exists():
+        print(f"ERROR: CSV not found: {csv_path}", file=sys.stderr)
+        sys.exit(1)
+
+    experts = list(find_expert_dirs(csv_path, args.row))
+    if not experts:
+        print("No matching expert directories found.", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Found {len(experts)} expert(s) to process.")
+
+    # === Dry run: show what would be created ===
+    if args.dry_run:
+        for expert_dir, row in experts:
+            requests, question_meta = build_form_requests(expert_dir, row)
+            n_sections = sum(
+                1 for r in requests
+                if "createItem" in r
+                and "pageBreakItem" in r["createItem"]["item"]
+            )
+            print(f"\n  {row['expert_id']} ({row['name']})")
+            print(f"    Form title: Validity Assessment — {row['name']}")
+            print(f"    Sections: {n_sections}, Questions: {len(question_meta)}")
+            for meta in question_meta:
+                dim = DIMENSION_LABELS.get(meta["dimension"], meta["dimension"])
+                print(f"      T{meta['tuple_index']}-{meta['question_id']}"
+                      f"  [{dim}]")
+        return
+
+    # === Real run ===
+    if not CREDENTIALS_FILE.exists():
+        print(f"ERROR: {CREDENTIALS_FILE} not found.", file=sys.stderr)
+        sys.exit(1)
+
+    creds = authenticate()
+    service = build("forms", "v1", credentials=creds)
+
+    for expert_dir, row in experts:
+        print(f"\n[{row['expert_id']}] Creating form for {row['name']}...")
+
+        manifest_path = expert_dir / "stage2_form.json"
+        if manifest_path.exists():
+            existing = json.loads(manifest_path.read_text())
+            print(f"  Already exists: {existing['form_url']}")
+            print(f"  Delete {manifest_path.relative_to(PACKAGE_ROOT)} "
+                  f"to regenerate.")
+            continue
+
+        requests, question_meta = build_form_requests(expert_dir, row)
+        if not question_meta:
+            print("  WARN: no questions found across tuples, skipping.")
+            continue
+
+        form_id, form_url, question_map = create_expert_form(
+            service, row, requests, question_meta,
+        )
+        manifest = save_manifest(
+            expert_dir, form_id, form_url, row, question_map,
+        )
+
+        print(f"  Form URL:  {form_url}")
+        print(f"  Manifest:  {manifest.relative_to(PACKAGE_ROOT)}")
+        print(f"  Questions: {len(question_map)}")
+
+    print("\nDone.")
+
+
+if __name__ == "__main__":
+    main()

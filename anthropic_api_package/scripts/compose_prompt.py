@@ -410,7 +410,7 @@ def main():
     # --template is accepted but not used (template is built into this script)
     parser.add_argument("--template", required=False, help="(unused, template is built-in)")
     parser.add_argument("--elicitation", required=False,
-                        help="Path to elicitation summary markdown (from Step 1d)")
+                        help="Path to elicitation summary markdown (from Step 2)")
     parser.add_argument("--region-name", required=False, default="",
                         help="Human-readable region name to use when the region "
                              "YAML has no top-level `name` field (e.g. the "

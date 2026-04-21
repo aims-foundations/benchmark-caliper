@@ -110,27 +110,30 @@ python run_pipeline.py papers/<name>.pdf
 |------|---------|
 | `--persona PID` | Auto-answer elicitation using a test persona (PID is one of `helm-a`, `helm-b`, `sea-a`, `sea-b`, `iber-a`, `iber-b`). The persona's `initial_description` is used as the deployment context, and answers are simulated by a Sonnet call in-character. |
 | `--use-case PATH` | Read the deployment description from a file. Overrides the persona's `initial_description` (persona still used for answers). |
-| `--no-web-search` | Skip Step 3 (web search enrichment). |
+| `--no-web-search` | Skip Step 5 (web search enrichment). |
 
 If neither `--persona` nor `--use-case` is set, the pipeline prompts for a deployment description on stdin (Ctrl-D to end), then collects each elicitation answer interactively.
 
 ### What the pipeline does
 
+Elicitation runs early (steps 1-2) so users provide deployment context within ~30 seconds, before heavy PDF processing.
+
 | Step | Who | Output |
 |------|-----|--------|
 | 0 — Slug | Haiku (one-shot) | `assessments/<name>/active_slug.txt` + `<slug>/deployment_description.txt` |
-| 1a — PDF extraction | Haiku per-page (parallel) + Sonnet consolidation | `papers/<name>/paper_summary.md` |
-| 1b — Benchmark YAML | Haiku example-select + Sonnet synthesis (ICL from `benchmarks/examples/`) | `benchmarks/<name>.yaml` |
-| 1c — Quote verification | `scripts/verify_quotes.py` + Sonnet text spot-check | Mechanical + LLM check |
-| 1d — Elicitation | Sonnet (questions → persona/stdin answers → summary) | `assessments/<name>/<slug>/elicitation_summary.md` |
-| 2 — Region YAML | Haiku template-select + Sonnet synthesis (ICL from `regions/base/`) | `assessments/<name>/<slug>/region.yaml` |
-| 3 — Web search | Sonnet + Anthropic's `web_search_20250305` server tool | Enriched region YAML (overwritten in place) |
-| 4 — Prompt assembly | `scripts/compose_prompt.py` | `assessments/<name>/<slug>/composed_prompt.md` |
-| 5 — Scoring | Opus (the single Opus call) | `assessments/<name>/<slug>/scoring.json` |
-| 6 — Report | `scripts/format_results.py` | stdout |
+| 1 — Metadata | Haiku (pages 1-2 only) | `papers/<name>/metadata.md` |
+| 2 — Elicitation | Sonnet (questions → persona/stdin answers → summary) | `assessments/<name>/<slug>/elicitation_summary.md` |
+| 3a — PDF extraction | Haiku per-page (parallel) + Sonnet consolidation | `papers/<name>/paper_summary.md` |
+| 3b — Benchmark YAML | Haiku example-select + Sonnet synthesis (ICL from `benchmarks/examples/`) | `benchmarks/<name>.yaml` |
+| 3c — Quote verification | `scripts/verify_quotes.py` | Mechanical check |
+| 4 — Region YAML | Haiku template-select + Sonnet synthesis (ICL from `regions/base/`) | `assessments/<name>/<slug>/region.yaml` |
+| 5 — Web search | Sonnet + Anthropic's `web_search_20250305` server tool | Enriched region YAML (overwritten in place) |
+| 6 — Prompt assembly | `scripts/compose_prompt.py` | `assessments/<name>/<slug>/composed_prompt.md` |
+| 7 — Scoring | Opus (the single Opus call) | `assessments/<name>/<slug>/scoring.json` |
+| 8 — Report | `scripts/format_results.py` | stdout |
 
-Every API call is its own `--step` key (e.g. `1a-extract`, `1a-consolidate`,
-`1b-select`, `1b-synthesize`, `2a-template`, `2b-synthesize`) so you can
+Every API call is its own `--step` key (e.g. `3a-extract`, `3a-consolidate`,
+`3b-select`, `3b-synthesize`, `4a-template`, `4b-synthesize`) so you can
 dry-run / inspect / pay for each one independently. See
 `api_test_instructions.md` for the full list and `ARCHITECTURE.md` for the
 cost breakdown.

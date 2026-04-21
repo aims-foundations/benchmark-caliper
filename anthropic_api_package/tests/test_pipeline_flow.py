@@ -44,6 +44,8 @@ import run_pipeline  # noqa: E402
 # Elicitation calls are routed via USER_ROUTES (by user-message content) since
 # the question and summary prompts share overlapping system-prompt text.
 ROUTES = [
+    ("You are extracting lightweight metadata from the first",
+     "metadata_extract.txt"),
     ("You are extracting validity-relevant quotes from page",
      "pdf_extract_page.txt"),
     ("You will consolidate per-page JSON extractions",
@@ -159,7 +161,7 @@ def clean_outputs():
 
 
 # ===================================================================
-# Test 1 — persona mode: pipeline pauses after 1d-questions, then resumes
+# Test 1 — persona mode: pipeline pauses after 2-questions, then resumes
 # via --step invocations once a CC Opus subagent answers file is supplied.
 # ===================================================================
 
@@ -167,7 +169,7 @@ def test_flow_persona_mode(clean_outputs, capsys):
     fake = FakeClient()
     dummy_pdf = FIXTURES / "dummy.pdf"
 
-    # === Phase 1: full run in persona mode — should pause after 1d-questions ===
+    # === Phase 1: full run in persona mode — should pause after 2-questions ===
     with patch.object(client, "call", side_effect=fake), \
          patch.object(sys, "argv",
                       ["run_pipeline.py", str(dummy_pdf),
@@ -205,8 +207,10 @@ def test_flow_persona_mode(clean_outputs, capsys):
     answers_path.write_text(json.dumps(canned))
 
     # === Phase 3: drive the remaining steps via --step invocations ===
-    for step in ("1d-summary", "2a-template", "2b-synthesize", "4", "5", "6"):
-        extra = ["--answers", str(answers_path)] if step == "1d-summary" else []
+    for step in ("2-summary", "3a-extract", "3a-consolidate", "3b-select",
+                 "3b-synthesize", "3c-verify", "4a-template", "4b-synthesize",
+                 "6", "7", "8"):
+        extra = ["--answers", str(answers_path)] if step == "2-summary" else []
         with patch.object(client, "call", side_effect=fake), \
              patch.object(sys, "argv",
                           ["run_pipeline.py", str(dummy_pdf),
@@ -250,16 +254,17 @@ def test_flow_persona_mode(clean_outputs, capsys):
     opus_calls = [c for c in fake.calls if c["model"] == "opus"]
     assert len(opus_calls) == 1, "should be exactly one Opus call (scoring)"
 
-    # === Every call is tagged; 1d_persona is gone (CC subagent, not API) ===
+    # === Every call is tagged; persona is CC subagent, not API ===
     untagged = [c for c in fake.calls if not c["step"]]
     assert not untagged, f"calls missing step= label: {untagged}"
     expected_steps = {
         "0_slug",
-        "1a_extract", "1a_consolidate",
-        "1b_select", "1b_synthesize",
-        "1d_questions", "1d_summary",
-        "2a_template", "2b_synthesize",
-        "5_score",
+        "1_metadata",
+        "2_questions", "2_summary",
+        "3a_extract", "3a_consolidate",
+        "3b_select", "3b_synthesize",
+        "4a_template", "4b_synthesize",
+        "7_score",
     }
     steps_seen = {c["step"] for c in fake.calls}
     assert "1d_persona" not in steps_seen, "persona API call must not fire"
@@ -315,7 +320,7 @@ def test_flow_interactive_mode(clean_outputs, monkeypatch):
     assessment_dir = ROOT / "assessments" / "dummy" / slug
     elicitation = assessment_dir / "elicitation_summary.md"
     assert elicitation.exists()
-    # Answers file written by step_1d_collect_stdin.
+    # Answers file written by step_2_collect_stdin.
     answers_path = assessment_dir / "elicitation_answers.json"
     assert answers_path.exists()
     assert json.loads(answers_path.read_text()) == {

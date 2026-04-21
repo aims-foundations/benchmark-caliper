@@ -5,22 +5,24 @@ Usage:
     python run_pipeline.py <pdf_path> [--persona PID] [--use-case PATH] [--no-web-search]
 
 Pipeline stages (costs kept in line with cli_package by routing each step to the
-cheapest sufficient model). Every API call has its own --step key so you can
-dry-run, inspect, and pay for each one independently:
+cheapest sufficient model). Elicitation runs EARLY (Steps 1-2) so the user
+provides deployment context within ~30 seconds, then heavy processing follows.
+
     Step 0              Haiku derives the assessment slug from the deployment description
-    Step 1a-extract     split PDF -> Haiku per-page (parallel, cached)
-    Step 1a-consolidate Sonnet merges per-page extractions into a paper summary
-    Step 1b-select      Haiku picks 1-2 reference benchmark YAMLs
-    Step 1b-synthesize  Sonnet writes the benchmark YAML
-    Step 1c-verify      verify_quotes.py (script, no API)
-    Step 1d-questions   Sonnet generates elicitation questions + persona handoff prompt
-    Step 1d-summary     Sonnet summarizes the answered questions
-    Step 2a-template    Haiku picks 1-2 base region templates
-    Step 2b-synthesize  Sonnet writes the assessment-specific region YAML
-    Step 3              Sonnet + web_search_20250305 server tool -> region enrichment
-    Step 4              compose_prompt.py (script)
-    Step 5              Opus scoring (the one Opus call in the pipeline)
-    Step 6              format_results.py (script)
+    Step 1              Haiku extracts lightweight metadata from pages 1-2
+    Step 2-questions    Sonnet generates elicitation questions (uses metadata, not full YAML)
+    Step 2-summary      Sonnet summarizes the answered questions
+    Step 3a-extract     split PDF -> Haiku per-page (parallel, cached)
+    Step 3a-consolidate Sonnet merges per-page extractions (guided by elicitation priorities)
+    Step 3b-select      Haiku picks 1-2 reference benchmark YAMLs
+    Step 3b-synthesize  Sonnet writes the benchmark YAML (+ coverage_gap_analysis)
+    Step 3c-verify      verify_quotes.py (script, no API)
+    Step 4a-template    Haiku picks 1-2 base region templates
+    Step 4b-synthesize  Sonnet writes the assessment-specific region YAML
+    Step 5              Sonnet + web_search_20250305 server tool -> region enrichment
+    Step 6              compose_prompt.py (script)
+    Step 7              Opus scoring (the one Opus call in the pipeline)
+    Step 8              format_results.py (script)
 
 All deployment-scoped outputs land under `assessments/<name>/<slug>/`
 (elicitation artifacts, region YAML, composed prompt, scoring, cost ledger,
@@ -130,6 +132,10 @@ def _read_yaml_file(filename: str, subdir: Path) -> str:
 
 def _paper_dir(name: str) -> Path:
     return PAPERS / name
+
+
+def _metadata_path(name: str) -> Path:
+    return _paper_dir(name) / "metadata.md"
 
 
 def _paper_summary_path(name: str) -> Path:
@@ -245,7 +251,92 @@ def step_0_derive_slug(initial_description: str, name: str) -> str:
 
 
 # ===================================================================
-# Step 1a — PDF extraction: per-page Haiku (1a-extract) + Sonnet (1a-consolidate)
+# Step 1 — Quick metadata extraction (Haiku, pages 1-2 only)
+# ===================================================================
+# Fast, lightweight step that reads only the first 1-2 pages of the PDF
+# to extract basic benchmark metadata (name, domain, languages, region,
+# porting strategy, source culture). This gives the elicitation step
+# (Step 2) enough context to generate targeted questions without waiting
+# for the full extraction pipeline.
+
+def step_1_metadata(pdf_path: Path, name: str) -> Path:
+    """Haiku reads pages 1-2 of the PDF and returns lightweight metadata."""
+    _paper_dir(name).mkdir(parents=True, exist_ok=True)
+    out_path = _metadata_path(name)
+
+    if out_path.exists():
+        print(f"[1] Using cached metadata: {out_path}")
+        return out_path
+
+    # === Extract pages 1-2 into a temp PDF ===
+    with tempfile.TemporaryDirectory() as tmp:
+        pages_dir = Path(tmp) / "pages"
+        pages_dir.mkdir()
+        _run_script("split_pdf.sh", str(pdf_path), str(pages_dir))
+        front_pages: list[Path] = []
+        for i in (1, 2):
+            p = pages_dir / f"page_{i:03d}.pdf"
+            if p.exists():
+                front_pages.append(p)
+
+        if not front_pages:
+            print("ERROR: split_pdf.sh produced no page files", file=sys.stderr)
+            sys.exit(1)
+
+        # Merge pages 1-2 back into a single small PDF for the API call.
+        # If only page 1 exists (single-page paper), just use that.
+        if len(front_pages) == 1:
+            front_pdf = front_pages[0]
+        else:
+            front_pdf = Path(tmp) / "front.pdf"
+            _merge_pages(front_pages, front_pdf)
+
+        print("[1] Haiku extracting metadata from pages 1-2...")
+        metadata = client.call(
+            model="haiku",
+            system=prompts.load("metadata_extract"),
+            user="Extract metadata from the attached benchmark paper (pages 1-2).",
+            pdf_path=str(front_pdf),
+            max_tokens=1024,
+            step="1_metadata",
+        )
+
+    if client.DRY_RUN:
+        return out_path
+    out_path.write_text(metadata)
+    print(f"[1] Metadata written to {out_path}")
+    return out_path
+
+
+def _merge_pages(page_paths: list[Path], out_path: Path) -> None:
+    """Merge a small set of single-page PDFs into one file."""
+    args = [str(p) for p in page_paths]
+    # Try pdftk first, then qpdf, then pypdf
+    if _which("pdftk"):
+        subprocess.run(["pdftk", *args, "cat", "output", str(out_path)],
+                        check=True, capture_output=True)
+    elif _which("qpdf"):
+        subprocess.run(["qpdf", "--empty", "--pages", *args, "--",
+                        str(out_path)], check=True, capture_output=True)
+    else:
+        # pypdf fallback
+        subprocess.run(
+            ["python3", "-c",
+             f"from pypdf import PdfReader,PdfWriter; "
+             f"w=PdfWriter(); "
+             f"[w.add_page(p) for f in {[str(p) for p in page_paths]} for p in PdfReader(f).pages]; "
+             f"w.write('{out_path}')"],
+            check=True, capture_output=True,
+        )
+
+
+def _which(cmd: str) -> bool:
+    from shutil import which
+    return which(cmd) is not None
+
+
+# ===================================================================
+# Step 3a — PDF extraction: per-page Haiku (3a-extract) + Sonnet (3a-consolidate)
 # ===================================================================
 
 def step_1a_extract(pdf_path: Path, name: str, max_workers: int = 1) -> Path:
@@ -284,14 +375,14 @@ def step_1a_extract(pdf_path: Path, name: str, max_workers: int = 1) -> Path:
                 todo.append((i, page_pdf, cache_file))
         cached = total - len(todo)
         if cached:
-            print(f"[1a-extract] {cached}/{total} pages cached from prior run; "
+            print(f"[3a-extract] {cached}/{total} pages cached from prior run; "
                   f"re-dispatching {len(todo)}.")
         else:
             # Fresh fan-out: drop any stale 1a_extract ledger + trace entries
             # so the cost of this run's pages replaces whatever was there.
-            client.clear_steps("1a_extract")
-            client.clear_trace_steps("1a_extract")
-            print(f"[1a-extract] Split into {total} pages; extracting via Haiku "
+            client.clear_steps("3a_extract")
+            client.clear_trace_steps("3a_extract")
+            print(f"[3a-extract] Split into {total} pages; extracting via Haiku "
                   f"(max_workers={max_workers})...")
 
         # === Fan-out with on-success cache writes ===
@@ -302,7 +393,7 @@ def step_1a_extract(pdf_path: Path, name: str, max_workers: int = 1) -> Path:
                 user=f"Extract validity-relevant content from page {page_num}.",
                 pdf_path=str(page_pdf),
                 max_tokens=8192,
-                step="1a_extract",
+                step="3a_extract",
             )
             # Persist immediately so the next re-run skips this page even if
             # a later page crashes the whole step. Skip in dry-run — writing
@@ -316,12 +407,17 @@ def step_1a_extract(pdf_path: Path, name: str, max_workers: int = 1) -> Path:
                 for fut in tqdm(as_completed(futures), total=len(futures), desc="Haiku pages"):
                     fut.result()  # surface exceptions from worker threads
 
-    print(f"[1a-extract] Page cache at {cache_dir}")
+    print(f"[3a-extract] Page cache at {cache_dir}")
     return cache_dir
 
 
-def step_1a_consolidate(name: str) -> Path:
-    """Sonnet merges per-page JSON into the two-section markdown summary."""
+def step_3a_consolidate(name: str, elicitation_summary: str = "") -> Path:
+    """Sonnet merges per-page JSON into the two-section markdown summary.
+
+    When an elicitation summary is provided, it guides narrative depth:
+    HIGH-priority dimensions get more detailed narrative, LOWER-priority
+    dimensions get briefer coverage. Quote extraction is always exhaustive.
+    """
     _paper_dir(name).mkdir(parents=True, exist_ok=True)
     cache_dir = PAGE_CACHES / name
     summary_path = _paper_summary_path(name)
@@ -329,7 +425,7 @@ def step_1a_consolidate(name: str) -> Path:
     page_files = sorted(cache_dir.glob("page_*.txt"))
     if not page_files:
         print(
-            f"ERROR: no page cache found at {cache_dir}. Run --step 1a-extract "
+            f"ERROR: no page cache found at {cache_dir}. Run --step 3a-extract "
             f"first.",
             file=sys.stderr,
         )
@@ -338,27 +434,47 @@ def step_1a_consolidate(name: str) -> Path:
     combined = "\n\n".join(
         f"### Page {i+1} extraction\n\n{out}" for i, out in enumerate(page_outputs)
     )
-    print(f"[1a-consolidate] Consolidating {len(page_outputs)} per-page extractions via Sonnet...")
+
+    # === Append elicitation priorities if available ===
+    user_msg = combined
+    if elicitation_summary:
+        user_msg += (
+            f"\n\n---\n\n"
+            f"## Elicitation Summary (for narrative depth guidance)\n\n"
+            f"{elicitation_summary}\n\n"
+            f"Use the Dimension Priority Weights above to guide narrative depth:\n"
+            f"- HIGH-priority dimensions: 4-6 sentences of narrative context\n"
+            f"- MODERATE-priority dimensions: 2-4 sentences\n"
+            f"- LOWER-priority dimensions: 1-2 sentences\n\n"
+            f"Cultural topic priorities from the summary should receive extra "
+            f"attention — call out related quotes even if they would otherwise "
+            f"be treated as minor details.\n\n"
+            f"IMPORTANT: Priority guidance affects narrative depth only. "
+            f"Quote extraction must remain exhaustive — every relevant quote "
+            f"is included in the registry regardless of priority level."
+        )
+
+    print(f"[3a-consolidate] Consolidating {len(page_outputs)} per-page extractions via Sonnet...")
     summary = client.call(
         model="sonnet",
         system=prompts.load("pdf_extract_consolidate"),
-        user=combined,
+        user=user_msg,
         max_tokens=32768,
-        step="1a_consolidate",
+        step="3a_consolidate",
     )
     summary_path.write_text(summary)
-    print(f"[1a-consolidate] Paper summary written to {summary_path}")
+    print(f"[3a-consolidate] Paper summary written to {summary_path}")
     return summary_path
 
 
 # ===================================================================
-# Step 1b — Benchmark YAML: Haiku selection (1b-select) + Sonnet synthesis (1b-synthesize)
+# Step 3b — Benchmark YAML: Haiku selection (3b-select) + Sonnet synthesis (3b-synthesize)
 # ===================================================================
 
-def step_1b_select(paper_summary: str, name: str) -> list[str]:
-    """Haiku picks 1-2 reference benchmark YAMLs; persisted for 1b-synthesize."""
+def step_3b_select(paper_summary: str, name: str) -> list[str]:
+    """Haiku picks 1-2 reference benchmark YAMLs; persisted for 3b-synthesize."""
     _paper_dir(name).mkdir(parents=True, exist_ok=True)
-    print("[1b-select] Haiku selecting reference benchmark examples...")
+    print("[3b-select] Haiku selecting reference benchmark examples...")
     selection_raw = client.call(
         model="haiku",
         system=prompts.load("benchmark_example_selection"),
@@ -367,23 +483,32 @@ def step_1b_select(paper_summary: str, name: str) -> list[str]:
             f"Paper summary:\n\n{paper_summary}"
         ),
         max_tokens=512,
-        step="1b_select",
+        step="3b_select",
     )
     if client.DRY_RUN:
         return []
     selected_files = _parse_fenced(selection_raw, "json")
     _benchmark_refs_path(name).write_text(json.dumps(selected_files))
-    print(f"[1b-select] Selected references: {selected_files}")
+    print(f"[3b-select] Selected references: {selected_files}")
     return selected_files
 
 
-def step_1b_synthesize(paper_summary: str, name: str) -> Path:
-    """Sonnet writes the benchmark YAML from the selected references."""
+def step_3b_synthesize(
+    paper_summary: str,
+    name: str,
+    elicitation_summary: str = "",
+) -> Path:
+    """Sonnet writes the benchmark YAML from selected references + elicitation context.
+
+    When an elicitation summary is provided, the YAML includes a
+    coverage_gap_analysis section cross-referencing user priorities against
+    benchmark documentation.
+    """
     BENCHMARKS.mkdir(exist_ok=True)
     refs_path = _benchmark_refs_path(name)
     if not refs_path.exists() and not client.DRY_RUN:
         print(
-            f"ERROR: {refs_path} not found — run --step 1b-select first.",
+            f"ERROR: {refs_path} not found — run --step 3b-select first.",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -392,28 +517,40 @@ def step_1b_synthesize(paper_summary: str, name: str) -> Path:
         f"### Example: {fn}\n\n```yaml\n{_read_yaml_file(fn, BENCHMARK_EXAMPLES)}\n```"
         for fn in selected_files
     )
-    print("[1b-synthesize] Sonnet synthesizing benchmark YAML...")
+
+    user_msg = f"Reference examples:\n\n{examples_text}\n\nPaper summary:\n\n{paper_summary}"
+    if elicitation_summary:
+        user_msg += (
+            f"\n\n---\n\n"
+            f"## Elicitation Summary\n\n{elicitation_summary}\n\n"
+            f"Use the dimension priority weights and cultural topic priorities "
+            f"above when writing the coverage_gap_analysis section. For each "
+            f"HIGH-priority dimension and each cultural topic priority, assess "
+            f"whether the benchmark documents relevant content."
+        )
+
+    print("[3b-synthesize] Sonnet synthesizing benchmark YAML...")
     synthesis_raw = client.call(
         model="sonnet",
         system=prompts.load("benchmark_synthesis"),
-        user=f"Reference examples:\n\n{examples_text}\n\nPaper summary:\n\n{paper_summary}",
+        user=user_msg,
         max_tokens=32768,
-        step="1b_synthesize",
+        step="3b_synthesize",
     )
     out_path = BENCHMARKS / f"{name}.yaml"
     if client.DRY_RUN:
         return out_path
     cleaned = _run_script("parse_llm_output.py", "--format", "yaml", "-", stdin=synthesis_raw)
     out_path.write_text(cleaned)
-    print(f"[1b-synthesize] Benchmark YAML written to {out_path}")
+    print(f"[3b-synthesize] Benchmark YAML written to {out_path}")
     return out_path
 
 
 # ===================================================================
-# Step 1c — Quote provenance: mechanical verify (1c-verify)
+# Step 3c — Quote provenance: mechanical verify (3c-verify)
 # ===================================================================
 
-def step_1c_verify(
+def step_3c_verify(
     benchmark_path: Path,
     summary_path: Path,
     strict: bool = False,
@@ -426,7 +563,7 @@ def step_1c_verify(
                       can decide what to do. Default for user-facing runs — a
                       single Sonnet formatting slip shouldn't burn the whole run.
     """
-    print("[1c-verify] Running mechanical verification (verify_quotes.py)...")
+    print("[3c-verify] Running mechanical verification (verify_quotes.py)...")
     cmd = ["python3", str(SCRIPTS / "verify_quotes.py"),
            str(benchmark_path), str(summary_path)]
     result = subprocess.run(cmd, capture_output=True, text=True)
@@ -441,31 +578,37 @@ def step_1c_verify(
               f"Re-run without --strict-verify to continue past this gate.",
               file=sys.stderr)
         sys.exit(result.returncode)
-    print("[1c-verify] WARNING: mechanical check failed but --strict-verify is "
+    print("[3c-verify] WARNING: mechanical check failed but --strict-verify is "
           "off; continuing. Inspect the report above and consider re-running "
-          "1a-consolidate / 1b-synthesize if the issues look substantive.",
+          "3a-consolidate / 3b-synthesize if the issues look substantive.",
           file=sys.stderr)
     return False
 
 
 # ===================================================================
-# Step 1d — Elicitation (questions + answers + summary)
+# Step 2 — Elicitation (questions + answers + summary)
 # ===================================================================
-# The persona branch no longer makes an API call. Instead, step_1d_questions
+# Runs EARLY — right after metadata extraction, before heavy PDF
+# processing. The user provides deployment context within the first
+# minute, then can walk away while the pipeline runs.
+#
+# The persona branch no longer makes an API call. Instead, step_2_questions
 # emits an `assessments/<name>/<slug>/persona_prompt.md` that the user hands
 # to a Claude Code Opus subagent. The subagent's JSON reply is saved to
-# `assessments/<name>/<slug>/elicitation_answers.json`, and step_1d_summary
+# `assessments/<name>/<slug>/elicitation_answers.json`, and step_2_summary
 # consumes it.
 # The stdin (no-persona) path collects answers inline and continues.
 
-def step_1d_questions(
-    benchmark_yaml_text: str,
+def step_2_questions(
+    metadata_text: str,
     initial_description: str,
     persona_id: str | None,
     name: str,
     slug: str,
 ) -> tuple[Path, Path | None]:
     """Generate the elicitation question array and (for personas) the CC handoff prompt.
+
+    Receives lightweight metadata (from Step 1), not the full benchmark YAML.
 
     Returns (questions_path, persona_prompt_path or None). The persona prompt
     is what the caller hands to a Claude Code Opus subagent; the subagent's
@@ -475,30 +618,26 @@ def step_1d_questions(
     _assessment_dir(name, slug).mkdir(parents=True, exist_ok=True)
 
     # === Generate the structured JSON question array (Sonnet) ===
-    print("[1d-questions] Sonnet generating elicitation questions...")
+    print("[2-questions] Sonnet generating elicitation questions...")
     questions_raw = client.call(
         model="sonnet",
         system=prompts.load("elicitation_questions"),
         user=(
-            f"Benchmark YAML:\n\n```yaml\n{benchmark_yaml_text}\n```\n\n"
+            f"Benchmark metadata:\n\n{metadata_text}\n\n"
             f"Deployment description:\n\n{initial_description}"
         ),
         max_tokens=4096,
-        step="1d_questions",
+        step="2_questions",
     )
     q_path = _questions_path(name, slug)
     if client.DRY_RUN:
         return q_path, None
-    # Validator: fails loud on bad IDs, missing fields, or invalid dimensions.
     questions_json = _run_script("parse_elicitation_questions.py", "-", stdin=questions_raw)
     questions = json.loads(questions_json)
 
     q_path.write_text(questions_json)
-    # Persist the deployment description (idempotent — step 0 already wrote it,
-    # but keep this write so 1d-questions stays re-runnable if the user edits
-    # the description manually between runs).
     _deployment_desc_path(name, slug).write_text(initial_description)
-    print(f"[1d-questions] {len(questions)} questions written to {q_path}")
+    print(f"[2-questions] {len(questions)} questions written to {q_path}")
 
     persona_prompt_path: Path | None = None
     if persona_id:
@@ -515,7 +654,7 @@ def step_1d_questions(
             f"message below. Save the subagent's JSON reply to:\n\n"
             f"    {answers_target}\n\n"
             f"Then resume the pipeline:\n\n"
-            f"    python run_pipeline.py {name}.pdf --step 1d-summary "
+            f"    python run_pipeline.py {name}.pdf --step 2-summary "
             f"--answers {answers_target}\n\n"
             f"---\n\n"
             f"## System prompt\n\n{system_rendered}\n\n"
@@ -523,39 +662,39 @@ def step_1d_questions(
             f"## User message\n\n"
             f"Questions:\n\n```json\n{json.dumps(questions, indent=2)}\n```\n"
         )
-        print(f"[1d-questions] Persona handoff prompt written to {persona_prompt_path}")
+        print(f"[2-questions] Persona handoff prompt written to {persona_prompt_path}")
 
     return q_path, persona_prompt_path
 
 
-def step_1d_collect_stdin(name: str, slug: str) -> Path:
+def step_2_collect_stdin(name: str, slug: str) -> Path:
     """Interactive stdin path: prompt each question, write answers JSON."""
     q_path = _questions_path(name, slug)
     if not q_path.exists():
-        print(f"ERROR: {q_path} not found — run step 1d-questions first", file=sys.stderr)
+        print(f"ERROR: {q_path} not found — run step 2-questions first", file=sys.stderr)
         sys.exit(1)
     questions = json.loads(q_path.read_text())
-    print("[1d-stdin] Collecting answers interactively...")
+    print("[2-stdin] Collecting answers interactively...")
     answers = {}
     for q in questions:
         print(f"\n{q['id']} [{q['dimension']}]: {q['question']}")
         answers[q["id"]] = input("> ").strip()
     a_path = _answers_path(name, slug)
     a_path.write_text(json.dumps(answers, indent=2))
-    print(f"[1d-stdin] Answers written to {a_path}")
+    print(f"[2-stdin] Answers written to {a_path}")
     return a_path
 
 
-def step_1d_summary(
+def step_2_summary(
     name: str,
     slug: str,
-    benchmark_yaml_text: str,
+    metadata_text: str,
     answers_path: Path | None = None,
 ) -> Path:
     """Merge Q+A into the Sonnet summary prompt; produce the elicitation summary."""
     q_path = _questions_path(name, slug)
     if not q_path.exists():
-        print(f"ERROR: {q_path} not found — run step 1d-questions first", file=sys.stderr)
+        print(f"ERROR: {q_path} not found — run step 2-questions first", file=sys.stderr)
         sys.exit(1)
     a_path = Path(answers_path) if answers_path else _answers_path(name, slug)
     if not a_path.exists():
@@ -576,33 +715,33 @@ def step_1d_summary(
         "--answers", str(a_path),
     )
 
-    print("[1d-summary] Sonnet producing elicitation summary...")
+    print("[2-summary] Sonnet producing elicitation summary...")
     summary = client.call(
         model="sonnet",
         system=prompts.load("elicitation_summary"),
         user=(
             f"Deployment description:\n\n{initial_description}\n\n"
-            f"Benchmark YAML:\n\n```yaml\n{benchmark_yaml_text}\n```\n\n"
+            f"Benchmark metadata:\n\n{metadata_text}\n\n"
             f"Questions & answers:\n\n{qa_block}"
         ),
         max_tokens=8192,
-        step="1d_summary",
+        step="2_summary",
     )
     summary_path = _elicitation_summary_path(name, slug)
     summary_path.write_text(summary)
-    print(f"[1d-summary] Elicitation summary written to {summary_path}")
+    print(f"[2-summary] Elicitation summary written to {summary_path}")
     return summary_path
 
 
 # ===================================================================
-# Step 2 — Region YAML: Haiku template selection (2a-template) + Sonnet synthesis (2b-synthesize)
+# Step 4 — Region YAML: Haiku template selection (4a-template) + Sonnet synthesis (4b-synthesize)
 # ===================================================================
 
-def step_2a_template(elicitation_summary: str, name: str, slug: str) -> list[str]:
-    """Haiku picks 1-2 base region templates; persisted for 2b-synthesize."""
+def step_4a_template(elicitation_summary: str, name: str, slug: str) -> list[str]:
+    """Haiku picks 1-2 base region templates; persisted for 4b-synthesize."""
     out_path = _region_templates_path(name, slug)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    print("[2a-template] Haiku selecting base region template(s)...")
+    print("[4a-template] Haiku selecting base region template(s)...")
     selection_raw = client.call(
         model="haiku",
         system=prompts.load("region_template_selection"),
@@ -611,17 +750,17 @@ def step_2a_template(elicitation_summary: str, name: str, slug: str) -> list[str
             f"Elicitation summary:\n\n{elicitation_summary}"
         ),
         max_tokens=256,
-        step="2a_template",
+        step="4a_template",
     )
     if client.DRY_RUN:
         return []
     selected = _parse_fenced(selection_raw, "json")
     out_path.write_text(json.dumps(selected))
-    print(f"[2a-template] Selected templates: {selected}")
+    print(f"[4a-template] Selected templates: {selected}")
     return selected
 
 
-def step_2b_synthesize(
+def step_4b_synthesize(
     elicitation_summary: str,
     benchmark_yaml_text: str,
     paper_summary: str,
@@ -634,7 +773,7 @@ def step_2b_synthesize(
     refs_path = _region_templates_path(name, slug)
     if not refs_path.exists() and not client.DRY_RUN:
         print(
-            f"ERROR: {refs_path} not found — run --step 2a-template first.",
+            f"ERROR: {refs_path} not found — run --step 4a-template first.",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -643,7 +782,7 @@ def step_2b_synthesize(
         f"### Template: {fn}\n\n```yaml\n{_read_yaml_file(fn, REGIONS_BASE)}\n```"
         for fn in selected
     )
-    print("[2b-synthesize] Sonnet synthesizing region YAML...")
+    print("[4b-synthesize] Sonnet synthesizing region YAML...")
     region_raw = client.call(
         model="sonnet",
         system=prompts.load("region_synthesis"),
@@ -654,36 +793,42 @@ def step_2b_synthesize(
             f"Paper summary excerpts:\n\n{paper_summary[:4000]}"
         ),
         max_tokens=16384,
-        step="2b_synthesize",
+        step="4b_synthesize",
     )
     if client.DRY_RUN:
         return out_path
     cleaned = _run_script("parse_llm_output.py", "--format", "yaml", "-", stdin=region_raw)
     out_path.write_text(cleaned)
-    print(f"[2b-synthesize] Region YAML written to {out_path}")
+    print(f"[4b-synthesize] Region YAML written to {out_path}")
     return out_path
 
 
 # ===================================================================
-# Step 3 — Web search enrichment (Sonnet + web_search_20250305)
+# Step 5 — Web search enrichment (Sonnet + web_search_20250305)
 # ===================================================================
 
-def step_3_web_search(region_path: Path, benchmark_yaml_text: str, elicitation_summary: str) -> None:
-    print("[3] Sonnet enriching region YAML via web_search (this may take a minute)...")
+def step_5_web_search(region_path: Path, benchmark_yaml_text: str, elicitation_summary: str) -> None:
+    print("[5] Sonnet enriching region YAML via web_search (this may take a minute)...")
     current = region_path.read_text()
     user_msg = (
         f"Current region YAML (assessment-specific — enrich this):\n\n"
         f"```yaml\n{current}\n```\n\n"
         f"Benchmark YAML:\n\n```yaml\n{benchmark_yaml_text}\n```\n\n"
         f"Elicitation summary:\n\n{elicitation_summary}\n\n"
-        f"The upstream step (2b) produced a scaffold without tool access, so "
+        f"**Start with the benchmark YAML's `coverage_gap_analysis` section.** "
+        f"This is your primary search targeting input — it lists exactly where "
+        f"the user's priorities and the benchmark's coverage diverge, with gap "
+        f"types (`full`/`partial`) and suggested search queries. Allocate the "
+        f"majority of your search budget to `full` and `partial` gaps before "
+        f"applying the guide's general heuristics.\n\n"
+        f"The upstream step (4b) produced a scaffold without tool access, so "
         f"every factual slot it could not confidently ground was left as "
-        f"`[NEEDS VERIFICATION]`. These tags are your primary search targets — "
+        f"`[NEEDS VERIFICATION]`. These tags are secondary search targets — "
         f"resolve as many as your search budget allows, replacing each tag with "
         f"a verified value (or, if the value genuinely cannot be found, a short "
         f"note explaining why and citing what was searched). You may also add "
         f"net-new fields surfaced by your searches; do not drop or silently "
-        f"overwrite fields that were filled directly by 2b.\n\n"
+        f"overwrite fields that were filled directly by 4b.\n\n"
         f"Execute your web search plan per the guide, then return the FULL updated "
         f"region YAML in a single ```yaml fence."
     )
@@ -694,20 +839,20 @@ def step_3_web_search(region_path: Path, benchmark_yaml_text: str, elicitation_s
         user=user_msg,
         tools=tools,
         max_tokens=16384,
-        step="3_web_search",
+        step="5_web_search",
     )
     if client.DRY_RUN:
         return
     cleaned = _run_script("parse_llm_output.py", "--format", "yaml", "-", stdin=updated_raw)
     region_path.write_text(cleaned)
-    print(f"[3] Region YAML updated at {region_path}")
+    print(f"[5] Region YAML updated at {region_path}")
 
 
 # ===================================================================
-# Step 4 — Compose evaluation prompt (script)
+# Step 6 — Compose evaluation prompt (script)
 # ===================================================================
 
-def step_4_compose(
+def step_6_compose(
     benchmark_path: Path,
     region_path: Path,
     elicitation_path: Path,
@@ -716,7 +861,7 @@ def step_4_compose(
 ) -> Path:
     out_path = _composed_prompt_path(name, slug)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    print("[4] Composing evaluation prompt via compose_prompt.py...")
+    print("[6] Composing evaluation prompt via compose_prompt.py...")
     _run_script(
         "compose_prompt.py",
         "--benchmark", str(benchmark_path),
@@ -730,33 +875,33 @@ def step_4_compose(
 
 
 # ===================================================================
-# Step 5 — Opus scoring (the one Opus call)
+# Step 7 — Opus scoring (the one Opus call)
 # ===================================================================
 
-def step_5_score(composed_path: Path, name: str, slug: str) -> Path:
+def step_7_score(composed_path: Path, name: str, slug: str) -> Path:
     out_path = _scoring_path(name, slug)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    print("[5] Opus scoring (the one Opus call in the pipeline)...")
+    print("[7] Opus scoring (the one Opus call in the pipeline)...")
     raw = client.call(
         model="opus",
         system=prompts.load("opus_scoring_framing"),
         user=composed_path.read_text(),
         max_tokens=16384,
-        step="5_score",
+        step="7_score",
     )
     if client.DRY_RUN:
         return out_path
     cleaned = _run_script("parse_llm_output.py", "--format", "json", "-", stdin=raw)
     out_path.write_text(cleaned)
-    print(f"[5] Results written to {out_path}")
+    print(f"[7] Results written to {out_path}")
     return out_path
 
 
 # ===================================================================
-# Step 6 — Report (script)
+# Step 8 — Report (script)
 # ===================================================================
 
-def step_6_report(results_path: Path) -> None:
+def step_8_report(results_path: Path) -> None:
     print("\n" + "=" * 60)
     print(_run_script("format_results.py", str(results_path)))
 
@@ -780,24 +925,25 @@ def step_6_report(results_path: Path) -> None:
 # each one independently.
 STEP_LABELS: dict[str, list[str]] = {
     "0": ["0_slug"],
-    # Note: "1a_extract" is NOT cleared by _ledger_begin, because the per-page
+    "1":              ["1_metadata"],
+    "2-questions":    ["2_questions"],
+    "2-summary":      ["2_summary"],
+    # Note: "3a_extract" is NOT cleared by _ledger_begin, because the per-page
     # cache lets a retry skip pages that already succeeded. Clearing it here
     # would erase the cost of those successful pages and under-count the true
-    # expected cost. Instead, step_1a_extract clears this label itself when it
-    # detects a fresh (no-cache) run.
-    "1a-extract":     [],
-    "1a-consolidate": ["1a_consolidate"],
-    "1b-select":      ["1b_select"],
-    "1b-synthesize":  ["1b_synthesize"],
-    "1c-verify":      [],   # script only, no API call
-    "1d-questions":   ["1d_questions"],
-    "1d-summary":     ["1d_summary"],
-    "2a-template":    ["2a_template"],
-    "2b-synthesize":  ["2b_synthesize"],
-    "3":              ["3_web_search"],
-    "4":              [],
-    "5":              ["5_score"],
+    # expected cost. Instead, step_1a_extract (the extraction function) clears
+    # this label itself when it detects a fresh (no-cache) run.
+    "3a-extract":     [],
+    "3a-consolidate": ["3a_consolidate"],
+    "3b-select":      ["3b_select"],
+    "3b-synthesize":  ["3b_synthesize"],
+    "3c-verify":      [],   # script only, no API call
+    "4a-template":    ["4a_template"],
+    "4b-synthesize":  ["4b_synthesize"],
+    "5":              ["5_web_search"],
     "6":              [],
+    "7":              ["7_score"],
+    "8":              [],
 }
 
 
@@ -878,7 +1024,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--no-web-search",
         action="store_true",
-        help="Skip Step 3 (web search enrichment)",
+        help="Skip Step 5 (web search enrichment)",
     )
     p.add_argument(
         "--step",
@@ -887,7 +1033,7 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument(
         "--answers",
-        help="Path to an answers JSON file (used with --step 1d-summary after "
+        help="Path to an answers JSON file (used with --step 2-summary after "
         "running a CC Opus subagent on the persona prompt).",
     )
     p.add_argument(
@@ -909,12 +1055,12 @@ def parse_args() -> argparse.Namespace:
         help="Force-enable (--streaming) or disable (--no-streaming) token "
         "streaming to stderr for ALL API calls. Default (omitted): stream "
         "Sonnet/Opus only, since the Haiku fan-out is usually parallel. "
-        "Handy with --step 1a-extract (1 worker) to watch page extractions.",
+        "Handy with --step 3a-extract (1 worker) to watch page extractions.",
     )
     p.add_argument(
         "--strict-verify",
         action="store_true",
-        help="Halt the pipeline if the 1c-verify mechanical check fails. "
+        help="Halt the pipeline if the 3c-verify mechanical check fails. "
         "Default is soft: print the failure report and continue, so a single "
         "Sonnet formatting slip doesn't waste a full-run's cost. Use --strict-verify "
         "in CI / dev to enforce the gate.",
@@ -1008,48 +1154,24 @@ def main() -> None:
     print(f"  Web search:    {'off' if args.no_web_search else 'on'}\n")
 
     try:
-        # === Step 0: derive the assessment slug; everything downstream is
-        # scoped under <name>/<slug>/. Resolving initial_description up front
-        # forces the user to commit to a deployment early so trace+ledger can
-        # be slug-scoped from the very first API call. ===
+        # === Step 0: derive the assessment slug ===
         initial_description = _resolve_initial_description(args, name)
         slug = step_0_derive_slug(initial_description, name)
         _init_assessment_paths(name)
 
-        # === Step 1a: paper -> per-page extractions -> consolidated summary ===
-        _ledger_begin(name, "1a-extract")
-        step_1a_extract(pdf_path, name)
+        # === Step 1: quick metadata extraction (Haiku, pages 1-2) ===
+        _ledger_begin(name, "1")
+        metadata_path = step_1_metadata(pdf_path, name)
+        metadata_text = metadata_path.read_text() if metadata_path.exists() else ""
         _ledger_end(name)
 
-        _ledger_begin(name, "1a-consolidate")
-        summary_path = step_1a_consolidate(name)
-        paper_summary = summary_path.read_text()
-        _ledger_end(name)
-
-        # === Step 1b: paper summary -> benchmark YAML ===
-        _ledger_begin(name, "1b-select")
-        step_1b_select(paper_summary, name)
-        _ledger_end(name)
-
-        _ledger_begin(name, "1b-synthesize")
-        benchmark_path = step_1b_synthesize(paper_summary, name)
-        benchmark_yaml_text = benchmark_path.read_text()
-        _ledger_end(name)
-
-        # === Step 1c: quote provenance verification ===
-        step_1c_verify(benchmark_path, summary_path, strict=args.strict_verify)
-
-        # === Step 1d: elicit the deployment context ===
-        _ledger_begin(name, "1d-questions")
-        q_path, persona_prompt_path = step_1d_questions(
-            benchmark_yaml_text, initial_description, args.persona, name, slug
+        # === Step 2: elicit deployment context (early — before heavy PDF processing) ===
+        _ledger_begin(name, "2-questions")
+        q_path, persona_prompt_path = step_2_questions(
+            metadata_text, initial_description, args.persona, name, slug
         )
         _ledger_end(name)
 
-        # Persona mode pauses for the CC Opus subagent handoff. The user
-        # dispatches the subagent, saves its JSON reply, and re-invokes with
-        # --step 1d-summary --answers <path>. Non-persona mode continues with
-        # an interactive stdin loop.
         if args.persona:
             answers_target = _answers_path(name, slug)
             print(
@@ -1058,46 +1180,68 @@ def main() -> None:
                 f"        2. Dispatch a CC Opus subagent with the system prompt + user message\n"
                 f"        3. Save the subagent's JSON reply to {answers_target}\n"
                 f"        4. Resume: python run_pipeline.py {pdf_path.name} "
-                f"--step 1d-summary --answers {answers_target}\n"
+                f"--step 2-summary --answers {answers_target}\n"
             )
             return
 
-        step_1d_collect_stdin(name, slug)
+        step_2_collect_stdin(name, slug)
 
-        _ledger_begin(name, "1d-summary")
-        elicitation_path = step_1d_summary(name, slug, benchmark_yaml_text)
+        _ledger_begin(name, "2-summary")
+        elicitation_path = step_2_summary(name, slug, metadata_text)
         elicitation_summary = elicitation_path.read_text()
         _ledger_end(name)
 
-        # === Step 2-3: region YAML + optional web-search enrichment ===
-        _ledger_begin(name, "2a-template")
-        step_2a_template(elicitation_summary, name, slug)
+        # === Step 3a: paper -> per-page extractions -> consolidated summary ===
+        _ledger_begin(name, "3a-extract")
+        step_1a_extract(pdf_path, name)
         _ledger_end(name)
 
-        _ledger_begin(name, "2b-synthesize")
-        region_path = step_2b_synthesize(
+        _ledger_begin(name, "3a-consolidate")
+        summary_path = step_3a_consolidate(name, elicitation_summary)
+        paper_summary = summary_path.read_text()
+        _ledger_end(name)
+
+        # === Step 3b: paper summary -> benchmark YAML ===
+        _ledger_begin(name, "3b-select")
+        step_3b_select(paper_summary, name)
+        _ledger_end(name)
+
+        _ledger_begin(name, "3b-synthesize")
+        benchmark_path = step_3b_synthesize(paper_summary, name, elicitation_summary)
+        benchmark_yaml_text = benchmark_path.read_text()
+        _ledger_end(name)
+
+        # === Step 3c: quote provenance verification ===
+        step_3c_verify(benchmark_path, summary_path, strict=args.strict_verify)
+
+        # === Step 4: region YAML ===
+        _ledger_begin(name, "4a-template")
+        step_4a_template(elicitation_summary, name, slug)
+        _ledger_end(name)
+
+        _ledger_begin(name, "4b-synthesize")
+        region_path = step_4b_synthesize(
             elicitation_summary, benchmark_yaml_text, paper_summary, name, slug
         )
         _ledger_end(name)
 
+        # === Step 5: web search enrichment ===
         if not args.no_web_search:
-            _ledger_begin(name, "3")
-            step_3_web_search(region_path, benchmark_yaml_text, elicitation_summary)
+            _ledger_begin(name, "5")
+            step_5_web_search(region_path, benchmark_yaml_text, elicitation_summary)
             _ledger_end(name)
 
-        # === Step 4-6: compose prompt, score (Opus), format report ===
-        composed_path = step_4_compose(
+        # === Step 6-8: compose prompt, score (Opus), format report ===
+        composed_path = step_6_compose(
             benchmark_path, region_path, elicitation_path, name, slug
         )
 
-        _ledger_begin(name, "5")
-        results_path = step_5_score(composed_path, name, slug)
+        _ledger_begin(name, "7")
+        results_path = step_7_score(composed_path, name, slug)
         _ledger_end(name)
 
-        step_6_report(results_path)
+        step_8_report(results_path)
     finally:
-        # Always surface the per-step cost breakdown — even on crash, so a
-        # mid-pipeline failure still tells you what you just spent.
         _print_cost_report()
 
 
@@ -1105,11 +1249,8 @@ def _run_single_step(args: argparse.Namespace, pdf_path: Path, name: str) -> Non
     """Execute exactly one step in isolation, reusing on-disk outputs."""
     benchmark_path = BENCHMARKS / f"{name}.yaml"
     summary_path = _paper_summary_path(name)
+    metadata_path = _metadata_path(name)
 
-    # Step 0 derives the slug and then wires trace+ledger at the assessment
-    # dir. Every other single-step invocation requires the slug to already be
-    # on disk (from an earlier `--step 0`) — otherwise we have no idea where
-    # to park the trace/ledger for this assessment.
     if args.step == "0":
         initial_description = _resolve_initial_description(args, name)
         step_0_derive_slug(initial_description, name)
@@ -1129,49 +1270,19 @@ def _run_single_step(args: argparse.Namespace, pdf_path: Path, name: str) -> Non
         _init_assessment_paths(name)
 
     try:
-        if args.step == "1a-extract":
-            _ledger_begin(name, "1a-extract")
-            step_1a_extract(pdf_path, name)
-        elif args.step == "1a-consolidate":
-            cache_dir = PAGE_CACHES / name
-            if not any(cache_dir.glob("page_*.txt")) and not client.DRY_RUN:
-                print(
-                    f"ERROR: run --step 1a-extract first ({cache_dir} empty)",
-                    file=sys.stderr,
-                )
-                sys.exit(1)
-            _ledger_begin(name, "1a-consolidate")
-            step_1a_consolidate(name)
-        elif args.step == "1b-select":
-            if not summary_path.exists() and not client.DRY_RUN:
-                print(f"ERROR: run --step 1a-consolidate first ({summary_path} missing)",
+        if args.step == "1":
+            _ledger_begin(name, "1")
+            step_1_metadata(pdf_path, name)
+        elif args.step == "2-questions":
+            if not metadata_path.exists() and not client.DRY_RUN:
+                print(f"ERROR: run --step 1 first ({metadata_path} missing)",
                       file=sys.stderr)
                 sys.exit(1)
-            paper_summary = summary_path.read_text() if summary_path.exists() else ""
-            _ledger_begin(name, "1b-select")
-            step_1b_select(paper_summary, name)
-        elif args.step == "1b-synthesize":
-            if not summary_path.exists() and not client.DRY_RUN:
-                print(f"ERROR: run --step 1a-consolidate first ({summary_path} missing)",
-                      file=sys.stderr)
-                sys.exit(1)
-            paper_summary = summary_path.read_text() if summary_path.exists() else ""
-            _ledger_begin(name, "1b-synthesize")
-            step_1b_synthesize(paper_summary, name)
-        elif args.step == "1c-verify":
-            if not benchmark_path.exists() or not summary_path.exists():
-                print("ERROR: run --step 1a-consolidate + 1b-synthesize first",
-                      file=sys.stderr)
-                sys.exit(1)
-            step_1c_verify(benchmark_path, summary_path, strict=args.strict_verify)
-        elif args.step == "1d-questions":
-            if not benchmark_path.exists():
-                print("ERROR: run step 1b first", file=sys.stderr)
-                sys.exit(1)
+            metadata_text = metadata_path.read_text() if metadata_path.exists() else ""
             initial_description = _resolve_initial_description(args, name)
-            _ledger_begin(name, "1d-questions")
-            _, persona_prompt_path = step_1d_questions(
-                benchmark_path.read_text(), initial_description, args.persona,
+            _ledger_begin(name, "2-questions")
+            _, persona_prompt_path = step_2_questions(
+                metadata_text, initial_description, args.persona,
                 name, slug,
             )
             if persona_prompt_path:
@@ -1180,87 +1291,124 @@ def _run_single_step(args: argparse.Namespace, pdf_path: Path, name: str) -> Non
                     f"\n[next] Hand {persona_prompt_path} to a CC Opus subagent, "
                     f"save its JSON to {answers_target}, then:\n"
                     f"       python run_pipeline.py {pdf_path.name} "
-                    f"--step 1d-summary --answers {answers_target}\n"
+                    f"--step 2-summary --answers {answers_target}\n"
                 )
-        elif args.step == "1d-summary":
-            if not benchmark_path.exists():
-                print("ERROR: run step 1b first", file=sys.stderr)
+        elif args.step == "2-summary":
+            if not metadata_path.exists() and not client.DRY_RUN:
+                print(f"ERROR: run --step 1 first ({metadata_path} missing)",
+                      file=sys.stderr)
                 sys.exit(1)
-            _ledger_begin(name, "1d-summary")
-            step_1d_summary(
+            metadata_text = metadata_path.read_text() if metadata_path.exists() else ""
+            _ledger_begin(name, "2-summary")
+            step_2_summary(
                 name,
                 slug,
-                benchmark_path.read_text(),
+                metadata_text,
                 answers_path=Path(args.answers) if args.answers else None,
             )
-        elif args.step == "2a-template":
+        elif args.step == "3a-extract":
+            _ledger_begin(name, "3a-extract")
+            step_1a_extract(pdf_path, name)
+        elif args.step == "3a-consolidate":
+            cache_dir = PAGE_CACHES / name
+            if not any(cache_dir.glob("page_*.txt")) and not client.DRY_RUN:
+                print(
+                    f"ERROR: run --step 3a-extract first ({cache_dir} empty)",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+            elicitation_path = _elicitation_summary_path(name, slug)
+            elicitation_summary = elicitation_path.read_text() if elicitation_path.exists() else ""
+            _ledger_begin(name, "3a-consolidate")
+            step_3a_consolidate(name, elicitation_summary)
+        elif args.step == "3b-select":
+            if not summary_path.exists() and not client.DRY_RUN:
+                print(f"ERROR: run --step 3a-consolidate first ({summary_path} missing)",
+                      file=sys.stderr)
+                sys.exit(1)
+            paper_summary = summary_path.read_text() if summary_path.exists() else ""
+            _ledger_begin(name, "3b-select")
+            step_3b_select(paper_summary, name)
+        elif args.step == "3b-synthesize":
+            if not summary_path.exists() and not client.DRY_RUN:
+                print(f"ERROR: run --step 3a-consolidate first ({summary_path} missing)",
+                      file=sys.stderr)
+                sys.exit(1)
+            paper_summary = summary_path.read_text() if summary_path.exists() else ""
+            elicitation_path = _elicitation_summary_path(name, slug)
+            elicitation_summary = elicitation_path.read_text() if elicitation_path.exists() else ""
+            _ledger_begin(name, "3b-synthesize")
+            step_3b_synthesize(paper_summary, name, elicitation_summary)
+        elif args.step == "3c-verify":
+            if not benchmark_path.exists() or not summary_path.exists():
+                print("ERROR: run --step 3a-consolidate + 3b-synthesize first",
+                      file=sys.stderr)
+                sys.exit(1)
+            step_3c_verify(benchmark_path, summary_path, strict=args.strict_verify)
+        elif args.step == "4a-template":
             elicitation_path = _elicitation_summary_path(name, slug)
             if not elicitation_path.exists() and not client.DRY_RUN:
-                print("ERROR: run --step 1d-summary first", file=sys.stderr)
+                print("ERROR: run --step 2-summary first", file=sys.stderr)
                 sys.exit(1)
-            _ledger_begin(name, "2a-template")
-            step_2a_template(
+            _ledger_begin(name, "4a-template")
+            step_4a_template(
                 elicitation_path.read_text() if elicitation_path.exists() else "",
                 name, slug,
             )
-        elif args.step == "2b-synthesize":
+        elif args.step == "4b-synthesize":
             elicitation_path = _elicitation_summary_path(name, slug)
             if (not elicitation_path.exists() or not benchmark_path.exists()) \
                     and not client.DRY_RUN:
-                print("ERROR: run --step 1b-synthesize + 1d-summary first",
+                print("ERROR: run --step 3b-synthesize + 2-summary first",
                       file=sys.stderr)
                 sys.exit(1)
-            _ledger_begin(name, "2b-synthesize")
-            step_2b_synthesize(
+            _ledger_begin(name, "4b-synthesize")
+            step_4b_synthesize(
                 elicitation_path.read_text() if elicitation_path.exists() else "",
                 benchmark_path.read_text() if benchmark_path.exists() else "",
                 summary_path.read_text() if summary_path.exists() else "",
                 name, slug,
             )
-        elif args.step == "3":
+        elif args.step == "5":
             region_path = _region_yaml_path(name, slug)
             if not region_path.exists():
                 print(
-                    f"ERROR: run --step 2b-synthesize first ({region_path} missing)",
+                    f"ERROR: run --step 4b-synthesize first ({region_path} missing)",
                     file=sys.stderr,
                 )
                 sys.exit(1)
             elicitation_path = _elicitation_summary_path(name, slug)
-            _ledger_begin(name, "3")
-            step_3_web_search(
+            _ledger_begin(name, "5")
+            step_5_web_search(
                 region_path, benchmark_path.read_text(), elicitation_path.read_text()
             )
-        elif args.step == "4":
+        elif args.step == "6":
             region_path = _region_yaml_path(name, slug)
             if not region_path.exists():
                 print(
-                    f"ERROR: run --step 2b-synthesize first ({region_path} missing)",
+                    f"ERROR: run --step 4b-synthesize first ({region_path} missing)",
                     file=sys.stderr,
                 )
                 sys.exit(1)
             elicitation_path = _elicitation_summary_path(name, slug)
-            step_4_compose(benchmark_path, region_path, elicitation_path, name, slug)
-        elif args.step == "5":
+            step_6_compose(benchmark_path, region_path, elicitation_path, name, slug)
+        elif args.step == "7":
             composed_path = _composed_prompt_path(name, slug)
             if not composed_path.exists():
-                print(f"ERROR: run step 4 first ({composed_path} missing)", file=sys.stderr)
+                print(f"ERROR: run step 6 first ({composed_path} missing)", file=sys.stderr)
                 sys.exit(1)
-            _ledger_begin(name, "5")
-            step_5_score(composed_path, name, slug)
-        elif args.step == "6":
+            _ledger_begin(name, "7")
+            step_7_score(composed_path, name, slug)
+        elif args.step == "8":
             results_path = _scoring_path(name, slug)
             if not results_path.exists():
-                print(f"ERROR: run step 5 first ({results_path} missing)", file=sys.stderr)
+                print(f"ERROR: run step 7 first ({results_path} missing)", file=sys.stderr)
                 sys.exit(1)
-            step_6_report(results_path)
+            step_8_report(results_path)
         else:
             print(f"ERROR: unknown --step {args.step}", file=sys.stderr)
             sys.exit(2)
     finally:
-        # Persist the ledger for any known step. Empty-label steps still
-        # need this: 1a-extract fires API calls but has no pre-declared labels
-        # to clear (it clears them internally when a fresh cache is detected).
-        # Pure-script steps (1c-verify, 4, 6) are no-op saves — cheap and safe.
         if args.step in STEP_LABELS:
             _ledger_end(name)
         _print_cost_report()

@@ -77,6 +77,38 @@ Rules:
 - Copy quote text exactly as it appears in the registry.
 - Tag each quote with the most relevant validity dimension using the definitions above. A quote's *extraction category* (`task_taxonomy`, `evaluation_metrics`, etc. from the registry) is a hint, not a mapping — e.g. a `task_taxonomy` quote about output label types belongs to `output_ontology`, not `input_ontology`.
 
+## Required section: `coverage_gap_analysis`
+
+**Only include this section if an elicitation summary is provided in the user
+message.** If no elicitation summary is present, omit the section entirely.
+
+Cross-reference the elicitation summary against the benchmark documentation to
+identify where the user's priorities and the benchmark's actual coverage diverge.
+For each HIGH-priority dimension and each cultural topic priority from the
+elicitation summary, assess whether the benchmark documents relevant content.
+
+```yaml
+coverage_gap_analysis:
+  - user_priority: "sub-national variation in Nigeria"
+    benchmark_coverage: "Country-level only — no state or ethnic group breakdown"
+    gap_type: "partial"
+    web_search_target: "Sub-national cultural variation benchmarks Nigeria Yoruba Igbo Hausa"
+  - user_priority: "regional cuisines"
+    benchmark_coverage: "NOT DOCUMENTED — no food-related tasks"
+    gap_type: "full"
+    web_search_target: "Nigerian cuisine cultural knowledge AI evaluation"
+```
+
+Gap types:
+- **full**: The benchmark is silent on this priority. Web search should look for
+  supplementary evidence or alternative benchmarks.
+- **partial**: The benchmark addresses this but at insufficient depth or the wrong
+  granularity for the user's context.
+- **none**: The benchmark covers this priority well. No web search needed.
+
+The `web_search_target` field provides a suggested search query for the web
+search step. Only populate for `full` and `partial` gaps.
+
 ## Schema enforcement
 
 This schema is enforced by downstream scripts (`verify_quotes.py`,

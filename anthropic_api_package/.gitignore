@@ -10,12 +10,18 @@ papers/*
 !papers/.gitkeep
 page_caches/
 
+# Expert-validation experiment artifacts (contain PII: emails, names,
+# regional context, expert-curated PDFs). Keep out of git entirely.
+expert_responses/*
+!expert_responses/.gitkeep
+
 # Nested logs (e.g. stray claude-trace deposits) — the repo-root logs/ rule
 # isn't inherited, so ignore any logs/ at any depth beneath this package.
 **/logs/
 
 # API key and environment
 .env
+.secrets/
 
 # Python
 __pycache__/
