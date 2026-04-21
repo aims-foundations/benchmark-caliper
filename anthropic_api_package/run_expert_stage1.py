@@ -75,6 +75,14 @@ def slugify(s: str) -> str:
     return s or "unknown"
 
 
+def _find_paper_pdf(slug: str) -> Path | None:
+    """Find a PDF in papers/ whose slugified stem matches the benchmark slug."""
+    for pdf in PAPERS_DIR.glob("*.pdf"):
+        if slugify(pdf.stem) == slug:
+            return pdf
+    return None
+
+
 def expert_id_from_email(email: str) -> str:
     # Full-email slugify keeps rcorona@berkeley.edu distinct from
     # rcorona@example.com (-> rcorona_berkeley_edu vs rcorona_example_com).
@@ -393,18 +401,37 @@ def main() -> None:
             print(f"ERROR: row {args.row} not found in CSV", file=sys.stderr)
             sys.exit(1)
 
-    # Always-on: manifest + deployment-description writing (cheap, idempotent).
+    # Always-on: dirs, deployment descriptions, PDF linking, manifest
+    # (cheap, idempotent). Manifest is written last so pdf_present reflects
+    # any auto-linked PDFs.
     for row in rows:
-        m = write_manifest(row)
-        print(f"[row {row['source_row']}] {row['email']} "
-              f"-> {m.relative_to(PACKAGE_ROOT)}")
+        print(f"[row {row['source_row']}] {row['email']}")
         for t in row["tuples"]:
             d = write_deployment_description(t)
             print(f"  tuple {t['index']} ({t['benchmark_slug']}): "
                   f"{d.relative_to(PACKAGE_ROOT)}")
         for b in row["benchmarks"]:
-            mark = "ok  " if b["pdf_present"] else "MISS"
-            print(f"  pdf [{mark}] {b['slug']}: {b['pdf_path']}")
+            pdf_target = PACKAGE_ROOT / b["pdf_path"]
+            pdf_target.parent.mkdir(parents=True, exist_ok=True)
+            if not pdf_target.exists():
+                source = _find_paper_pdf(b["slug"])
+                if source:
+                    pdf_target.symlink_to(source.resolve())
+                    b["pdf_present"] = True
+                    print(f"  pdf [link] {b['slug']}: "
+                          f"{source.name} -> {b['pdf_path']}")
+                else:
+                    print(f"  pdf [MISS] {b['slug']}: {b['pdf_path']}\n"
+                          f"           Place the PDF in papers/ with a name "
+                          f"that matches the benchmark slug \"{b['slug']}\".\n"
+                          f"           Any of these would work: "
+                          f"{b['slug']}.pdf, "
+                          f"{b['slug'].replace('_', '-')}.pdf, "
+                          f"{b['name']}.pdf")
+            else:
+                print(f"  pdf [ok  ] {b['slug']}: {b['pdf_path']}")
+        m = write_manifest(row)
+        print(f"  manifest: {m.relative_to(PACKAGE_ROOT)}")
 
     if args.parse_only:
         print(f"\nDone (parse-only): wrote {len(rows)} manifest(s).")
