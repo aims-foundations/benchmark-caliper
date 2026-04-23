@@ -19,6 +19,7 @@ Idempotent: rerunning skips any tuple that already has
 
 import argparse
 import csv
+import hashlib
 import json
 import re
 import shutil
@@ -86,9 +87,28 @@ def _find_paper_pdf(slug: str) -> Path | None:
 
 
 def expert_id_from_email(email: str) -> str:
-    # Full-email slugify keeps rcorona@berkeley.edu distinct from
-    # rcorona@example.com (-> rcorona_berkeley_edu vs rcorona_example_com).
-    return slugify(email)
+    """Deterministic, non-reversible ID from email.
+
+    Uses a truncated SHA-256 so raw emails never appear in repo-tracked
+    paths. A local mapping file (.secrets/expert_map.json, gitignored)
+    preserves the email ↔ ID link for de-anonymization."""
+    normalized = email.strip().lower()
+    expert_id = "expert_" + hashlib.sha256(normalized.encode()).hexdigest()[:12]
+    _record_expert_mapping(normalized, expert_id)
+    return expert_id
+
+
+def _record_expert_mapping(email: str, expert_id: str) -> None:
+    """Append to the local (gitignored) email ↔ ID mapping."""
+    map_path = PACKAGE_ROOT / ".secrets" / "expert_map.json"
+    map_path.parent.mkdir(parents=True, exist_ok=True)
+    mapping = {}
+    if map_path.exists():
+        mapping = json.loads(map_path.read_text())
+    if mapping.get(expert_id) == email:
+        return
+    mapping[expert_id] = email
+    map_path.write_text(json.dumps(mapping, indent=2) + "\n")
 
 
 def stage_csv(source: Path) -> Path:
