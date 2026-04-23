@@ -1,0 +1,11 @@
+- name: drbenchmark
+- full_name: DrBenchmark: A Large Language Understanding Evaluation Benchmark for French Biomedical Domain
+- year: 2024
+- domain: Evaluation of pre-trained language models on French biomedical NLP tasks including named-entity recognition, part-of-speech tagging, question-answering, semantic textual similarity, and text classification.
+- languages: French
+- primary_region: France
+- porting_strategy: ground_up
+- input_modalities: text
+- output_modalities: label, score
+- brief_description: DrBenchmark is the first comprehensive open benchmark for evaluating French biomedical language understanding, comprising 20 diverse tasks across multiple categories (POS tagging, NER, classification, QA, STS). The benchmark aggregates tasks from diverse sources including scientific literature, clinical trials, and clinical cases. The authors evaluate 8 state-of-the-art masked language models to provide standardized evaluation protocols for French biomedical models.
+- source_culture: designed by target population
