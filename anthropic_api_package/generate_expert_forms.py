@@ -46,12 +46,23 @@ DIMENSION_LABELS = {
 }
 
 FORM_DESCRIPTION = (
-    "Thank you for participating in this validity assessment study.\n\n"
-    "Below are four deployment scenarios, each paired with a benchmark "
-    "you proposed. For each scenario, please answer the questions based "
-    "on your regional expertise. Your answers will help us assess whether "
-    "these benchmarks are valid for the described deployment contexts.\n\n"
-    "Please provide detailed answers — a few sentences per question is ideal."
+    "Thank you for your contributions to the validity assessment "
+    "LLM-pipeline study!\n\n"
+    "In this form you will find the deployment scenarios you provided "
+    "during stage 1 of the study. For each scenario, please answer the "
+    "3-5 questions based on your regional/domain expertise. As in stage 1, your "
+    "answers can be based on a real-world deployment scenario you are "
+    "familiar with or may be hypothetical in nature. In either case, "
+    "please make sure that your answers are realistic, grounded in your "
+    "expertise of the region and domain. "
+    "The LLM pipeline wil use your answers to further scope the validity assessment for the benchmark in each scenario.\n\n" 
+    "2-5 sentences per answer will generally suffice. However, shorter "
+    "or longer answers are also fine if you feel it is appropriate for "
+    "the question. "
+    "We estimate that this form will take 20-45mins to complete\n\n"
+    "Once you submit this form, we will send you the final LLM-generated assessments for your scenarios within "
+    "24 - 48 hours. During stage 3, we will ask you to please grade the generated assessments, which we expect "
+    "may take 1.5 - 3 hours to complete." 
 )
 
 
@@ -123,6 +134,14 @@ def build_form_requests(expert_dir: Path, row: dict):
         }
     })
 
+    # Collect verified email — respondents must sign in with Google
+    requests.append({
+        "updateSettings": {
+            "settings": {"emailCollectionType": "VERIFIED"},
+            "updateMask": "emailCollectionType",
+        }
+    })
+
     for t in row["tuples"]:
         tuple_dir = expert_dir / "tuples" / f"tuple_{t['index']}"
         q_path = tuple_dir / "elicitation_questions.json"
@@ -134,13 +153,15 @@ def build_form_requests(expert_dir: Path, row: dict):
         questions = json.loads(q_path.read_text())
         dep_path = PACKAGE_ROOT / t["deployment_description_path"]
         dep_desc = dep_path.read_text().strip() if dep_path.exists() else ""
+        dep_desc = (dep_desc
+                    .replace("Use case and domain:", "\nUSE CASE AND DOMAIN:")
+                    .replace("Target population:", "\nTARGET POPULATION:"))
 
         # === Section break for this tuple ===
         requests.append({
             "createItem": {
                 "item": {
                     "title": f"Scenario {t['index']}: {t['benchmark_name']}",
-                    "description": dep_desc,
                     "pageBreakItem": {},
                 },
                 "location": {"index": item_idx},
@@ -148,17 +169,26 @@ def build_form_requests(expert_dir: Path, row: dict):
         })
         item_idx += 1
 
+        # === Stage 1 context block ===
+        requests.append({
+            "createItem": {
+                "item": {
+                    "title": "Stage 1 Response",
+                    "description": dep_desc,
+                    "textItem": {},
+                },
+                "location": {"index": item_idx},
+            }
+        })
+        item_idx += 1
+
         # === One paragraph question per elicitation question ===
-        for q in questions:
-            dim_label = DIMENSION_LABELS.get(q["dimension"], q["dimension"])
+        for qi, q in enumerate(questions, 1):
             requests.append({
                 "createItem": {
                     "item": {
-                        "title": q["question"],
-                        "description": (
-                            f"[T{t['index']}-{q['id']}] "
-                            f"Dimension: {dim_label}"
-                        ),
+                        "title": f"Question {qi}",
+                        "description": "\n" + q["question"],
                         "questionItem": {
                             "question": {
                                 "required": True,
@@ -177,6 +207,36 @@ def build_form_requests(expert_dir: Path, row: dict):
             })
             item_idx += 1
 
+        # === Optional feedback box at the end of each tuple's page ===
+        requests.append({
+            "createItem": {
+                "item": {
+                    "title": "Feedback on Generated Questions (Optional)",
+                    "description": (
+                        "\nDid any of the questions above contain "
+                        "hallucinations, factual errors, or culturally "
+                        "inappropriate assumptions? If so, please specify "
+                        "which question(s) and describe the issue. "
+                        "Leave blank if everything seemed fine."
+                    ),
+                    "questionItem": {
+                        "question": {
+                            "required": False,
+                            "textQuestion": {"paragraph": True},
+                        }
+                    },
+                },
+                "location": {"index": item_idx},
+            }
+        })
+        question_meta.append({
+            "tuple_index": t["index"],
+            "question_id": "feedback",
+            "dimension": "META",
+            "request_index": len(requests) - 1,
+        })
+        item_idx += 1
+
     return requests, question_meta
 
 
@@ -184,7 +244,7 @@ def create_expert_form(service, row: dict, requests: list,
                        question_meta: list):
     """Create the Google Form, populate it, and return form metadata."""
     form = service.forms().create(body={
-        "info": {"title": f"Validity Assessment — {row['name']}"}
+        "info": {"title": f"Regional Validity Assessment (Stage 2) -- {row['email']}"}
     }).execute()
     form_id = form["formId"]
 
@@ -272,7 +332,7 @@ def main():
                 and "pageBreakItem" in r["createItem"]["item"]
             )
             print(f"\n  {row['expert_id']} ({row['name']})")
-            print(f"    Form title: Validity Assessment — {row['name']}")
+            print(f"    Form title: Regional Validity Assessment (Stage 2) -- {row['email']}")
             print(f"    Sections: {n_sections}, Questions: {len(question_meta)}")
             for meta in question_meta:
                 dim = DIMENSION_LABELS.get(meta["dimension"], meta["dimension"])

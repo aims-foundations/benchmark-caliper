@@ -4,12 +4,12 @@
 Parses the CSV export from the Google Form of expert benchmark proposals,
 writes per-row manifests + per-tuple deployment descriptions under
 `expert_responses/`, then drives `run_pipeline.py` through --step 0,
---step 1 (metadata), paper-level steps (3a/3b/3c, cached across tuples
-sharing a benchmark),
-and --step 2-questions for each of the four tuples per row. The
-generated `elicitation_questions.json` for each tuple is copied back
-into `expert_responses/<csv>/<expert>/tuples/tuple_N/` for handoff to
-the expert via the Stage-2 Google Form.
+--step 1 (metadata), and --step 2-questions for each of the four tuples
+per row. The generated `elicitation_questions.json` for each tuple is
+copied back into `expert_responses/<csv>/<expert>/tuples/tuple_N/` for
+handoff to the expert via the Stage-2 Google Form. Paper-level steps
+(3a/3b/3c) are deferred to stage 2, where they can incorporate the
+elicitation summary from expert answers.
 
 Idempotent: rerunning skips any tuple that already has
 `elicitation_questions.json`. Use `--force` to re-run anyway,
@@ -25,6 +25,8 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+import client
 
 PACKAGE_ROOT = Path(__file__).resolve().parent
 EXPERT_RESPONSES = PACKAGE_ROOT / "expert_responses"
@@ -252,6 +254,63 @@ def stage_pdf(bench: dict, expert_id: str) -> str:
     return stem
 
 
+def collect_costs(row: dict) -> dict | None:
+    """Read each completed tuple's cost ledger and aggregate into a summary."""
+    csv_stem = Path(row["source_csv"]).stem
+    expert_id = row["expert_id"]
+    expert_dir = EXPERT_RESPONSES / csv_stem / expert_id
+
+    tuples_costs = {}
+    grand_total = 0.0
+
+    for t in row["tuples"]:
+        tuple_dir = expert_dir / "tuples" / f"tuple_{t['index']}"
+        slug_file = tuple_dir / "assessment_slug.txt"
+        if not slug_file.exists():
+            continue
+
+        slug = slug_file.read_text().strip()
+        paper_stem = _paper_stem(expert_id, t["benchmark_slug"])
+        ledger_path = ASSESSMENTS_DIR / paper_stem / slug / "cost_ledger.json"
+
+        if not ledger_path.exists():
+            continue
+
+        client.reset_ledger()
+        client.load_ledger(ledger_path)
+        report = client.cost_report()
+
+        tuples_costs[str(t["index"])] = {
+            "benchmark": t["benchmark_name"],
+            "slug": slug,
+            "steps": report["steps"],
+            "total_usd": report["total_usd"],
+        }
+        grand_total += report["total_usd"]
+
+    if not tuples_costs:
+        return None
+
+    return {
+        "expert_id": expert_id,
+        "expert_name": row["name"],
+        "tuples": tuples_costs,
+        "total_usd": round(grand_total, 6),
+    }
+
+
+def write_costs(row: dict) -> Path | None:
+    """Collect per-tuple costs and write summary to the expert directory."""
+    costs = collect_costs(row)
+    if costs is None:
+        return None
+    csv_stem = Path(row["source_csv"]).stem
+    expert_dir = EXPERT_RESPONSES / csv_stem / row["expert_id"]
+    path = expert_dir / "costs.json"
+    path.write_text(json.dumps(costs, indent=2) + "\n")
+    return path
+
+
 def run_pipeline_step(paper_stem: str, step: str, *,
                       use_case: Path = None) -> None:
     """Invoke run_pipeline.py with a single --step. Raises RuntimeError
@@ -338,15 +397,8 @@ def process_tuple(row: dict, t: dict, *, force: bool = False) -> str:
         active.unlink()
 
     try:
-        # Step 0 must run before paper-level steps because every
-        # --step X (X != 0) requires active_slug.txt for trace/ledger
-        # scoping, even when its outputs are paper-level.
         run_pipeline_step(paper_stem, "0", use_case=dep_path)
-        # Step 1 (metadata) is fast (pages 1-2 only) and needed for
-        # step 2-questions. prepare_paper (3a/3b/3c) is cached across
-        # tuples and pre-cached here for stage 2.
         run_pipeline_step(paper_stem, "1")
-        prepare_paper(paper_stem)
         run_pipeline_step(paper_stem, "2-questions", use_case=dep_path)
     except RuntimeError as e:
         return f"failed: {e}"
@@ -430,6 +482,15 @@ def main() -> None:
                           f"{b['name']}.pdf")
             else:
                 print(f"  pdf [ok  ] {b['slug']}: {b['pdf_path']}")
+        # Create papers/<expert_id>__<slug>.pdf symlinks so manual
+        # --step invocations use the namespaced paper stem.
+        for b in row["benchmarks"]:
+            if b["pdf_present"]:
+                try:
+                    stem = stage_pdf(b, row["expert_id"])
+                    print(f"  papers [link] {stem}.pdf")
+                except FileNotFoundError:
+                    pass  # already warned above
         m = write_manifest(row)
         print(f"  manifest: {m.relative_to(PACKAGE_ROOT)}")
 
@@ -462,6 +523,23 @@ def main() -> None:
     print(f"  done:    {totals['done']}")
     print(f"  skipped: {totals['skipped']}")
     print(f"  failed:  {totals['failed']}")
+
+    # Cost aggregation — reads each tuple's cost ledger (including
+    # previously completed tuples) and writes per-expert costs.json.
+    print("\n=== Costs ===")
+    for row in rows:
+        path = write_costs(row)
+        if path:
+            costs = json.loads(path.read_text())
+            print(f"\n  {row['expert_id']}:")
+            for tidx, tc in sorted(costs["tuples"].items()):
+                print(f"    tuple {tidx} ({tc['benchmark']}): "
+                      f"${tc['total_usd']:.4f}")
+            print(f"    TOTAL: ${costs['total_usd']:.4f}")
+            print(f"    -> {path.relative_to(PACKAGE_ROOT)}")
+        else:
+            print(f"\n  {row['expert_id']}: no cost data yet")
+
     if failures:
         print("\nFailures:")
         for row_i, tup_i, eid, bslug, reason in failures:

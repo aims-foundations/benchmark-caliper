@@ -38,7 +38,7 @@ The representation of output signals — MCQ vs open-ended, text vs speech, verb
 Assign each dimension a priority (HIGH / MODERATE / LOWER) using these rules, conditioned on the deployment context **and the user's answers**. A user's answer may push a dimension up or down relative to the a-priori rule — use the answer as the tie-breaker when rules would pull in different directions.
 
 ### IO
-- **HIGH** when: benchmark transferred from Western to Global South target; use case involves everyday cultural knowledge; target region has strong sub-national cultural variation.
+- **HIGH** when: benchmark source culture differs from target deployment culture; use case involves everyday cultural knowledge; target region has strong sub-national cultural variation.
 - **LOWER** when: domain-specific technical task; benchmark co-designed with target population.
 
 ### IC

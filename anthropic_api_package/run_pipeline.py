@@ -1102,8 +1102,8 @@ def main() -> None:
     if not args.pdf_path:
         print("ERROR: pdf_path is required", file=sys.stderr)
         sys.exit(2)
+    name = Path(args.pdf_path).stem  # un-resolved: preserves expert-namespaced stems
     pdf_path = Path(args.pdf_path).resolve()
-    name = pdf_path.stem
 
     # --show-cost: read-only, no step execution.
     if args.show_cost:

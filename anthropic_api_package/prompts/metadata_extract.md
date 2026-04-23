@@ -17,8 +17,10 @@ Output as a structured text block with exactly this format:
 - languages: [comma-separated list of languages mentioned]
 - primary_region: [the geographic/cultural region the benchmark targets]
 - porting_strategy: [one of: ground_up, adapted, mixed, translation, parallel, regional_exams, none]
+- input_modalities: [comma-separated list of modalities the benchmark uses as input — e.g. text, image, audio, video, code, structured_data]
+- output_modalities: [comma-separated list of modalities the benchmark evaluates as output — e.g. text, label, score, translation, code]
 - brief_description: [2-3 sentence summary of what this benchmark does and how it was built]
-- source_culture: [one of: designed by target population, transferred from Western context, mixed, unclear]
+- source_culture: [one of: designed by target population, transferred from different cultural context, mixed, unclear]
 
 Porting strategy definitions:
 - ground_up: benchmark was built from scratch for the target region/culture

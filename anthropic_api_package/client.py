@@ -64,10 +64,8 @@ def set_dry_run(enabled: bool) -> None:
     DRY_RUN = enabled
 
 
-# Streaming override. `None` (default) uses the per-call auto rule: stream
-# Sonnet/Opus, skip Haiku. Set to True/False to force-enable / disable streaming
-# for *every* call regardless of model. Wired up by run_pipeline's --streaming
-# / --no-streaming CLI flags.
+# Streaming override. `None` (default) streams all models. Set to False via
+# run_pipeline's --no-streaming flag to disable.
 STREAM_DEFAULT: bool | None = None
 
 
@@ -166,6 +164,9 @@ def _write_trace(
     pdf_path: str | None,
     tools: list | None,
     max_tokens: int,
+    temperature: float | None = None,
+    top_p: float | None = None,
+    top_k: int | None = None,
     tool_trace: list[dict] | None = None,
 ) -> None:
     if _TRACE_DIR is None:
@@ -177,6 +178,10 @@ def _write_trace(
         "model": model,
         "model_id": MODELS.get(model, model),
         "max_tokens": max_tokens,
+        "temperature": temperature,
+        "top_p": top_p,
+        "top_k": top_k,
+        "sampling_note": "explicit" if temperature is not None else "API defaults (not explicitly set)",
         "pdf_path": pdf_path,
         "tools": tools,
         "duration_seconds": round(duration_s, 3),
@@ -230,8 +235,9 @@ def _pdf_block(pdf_path: str) -> dict:
     }
 
 
-def _new_counters() -> dict[str, int]:
+def _new_counters() -> dict:
     return {
+        "model_id": "",
         "calls": 0,
         "input_tokens": 0,
         "output_tokens": 0,
@@ -273,6 +279,7 @@ def _record_usage(step: str, model: str, usage) -> None:
         step = "(unattributed)"
     with _LEDGER_LOCK:
         counters = _LEDGER.setdefault(step, {}).setdefault(model, _new_counters())
+        counters["model_id"] = MODELS.get(model, model)
         counters["calls"] += 1
         counters["input_tokens"] += getattr(usage, "input_tokens", 0) or 0
         counters["output_tokens"] += getattr(usage, "output_tokens", 0) or 0
@@ -444,7 +451,10 @@ def load_ledger(path: str | Path, *, replace: bool = True) -> None:
             for model, counters in models.items():
                 existing = _LEDGER.setdefault(step, {}).setdefault(model, _new_counters())
                 for k, v in counters.items():
-                    existing[k] = existing.get(k, 0) + int(v) if not replace else int(v)
+                    if k == "model_id":
+                        existing[k] = v
+                    else:
+                        existing[k] = existing.get(k, 0) + int(v) if not replace else int(v)
 
 
 def clear_steps(*step_names: str) -> None:
@@ -479,6 +489,9 @@ def call(
     max_tokens: int = 4096,
     step: str = "",
     stream: bool | None = None,
+    temperature: float | None = None,
+    top_p: float | None = None,
+    top_k: int | None = None,
 ) -> str:
     """One API call. Returns the joined assistant text across all text blocks.
 
@@ -491,9 +504,11 @@ def call(
     - `step` labels this call in the cost ledger for the end-of-run report.
     - `stream`: if True, stream tokens to stderr as they arrive (so you can
       tell a long call is still alive). If None (default), consult the
-      module-level `STREAM_DEFAULT` override; if that's also None, auto-enable
-      for Sonnet and Opus — the slow models — and skip for Haiku where calls
-      are quick and the display would spam a parallel fan-out.
+      module-level `STREAM_DEFAULT` override; if that's also None, stream is
+      enabled for all models. Use --no-streaming to disable.
+    - `temperature`, `top_p`, `top_k`: sampling parameters. When None (default),
+      the API's built-in defaults are used (temperature=1.0). All values are
+      recorded in the per-call trace for reproducibility.
     """
     if DRY_RUN:
         _print_dry_run(step=step, model=model, system=system, user=user,
@@ -513,9 +528,17 @@ def call(
     }
     if tools:
         kwargs["tools"] = tools
+    if temperature is not None:
+        kwargs["temperature"] = temperature
+    if top_p is not None:
+        kwargs["top_p"] = top_p
+    if top_k is not None:
+        kwargs["top_k"] = top_k
+
+    trace_sampling = dict(temperature=temperature, top_p=top_p, top_k=top_k)
 
     if stream is None:
-        stream = STREAM_DEFAULT if STREAM_DEFAULT is not None else model in ("sonnet", "opus")
+        stream = STREAM_DEFAULT if STREAM_DEFAULT is not None else True
 
     if not stream:
         t0 = time.monotonic()
@@ -527,7 +550,7 @@ def call(
         _write_trace(step=step, model=model, system=system, user=user,
                      output=output, usage=resp.usage, duration_s=duration,
                      pdf_path=pdf_path, tools=tools, max_tokens=max_tokens,
-                     tool_trace=tool_trace)
+                     tool_trace=tool_trace, **trace_sampling)
         return output
 
     # Streaming path: emit tokens to stderr as they arrive, then collect the
@@ -551,7 +574,7 @@ def call(
     _write_trace(step=step, model=model, system=system, user=user,
                  output=output, usage=final.usage, duration_s=duration,
                  pdf_path=pdf_path, tools=tools, max_tokens=max_tokens,
-                 tool_trace=tool_trace)
+                 tool_trace=tool_trace, **trace_sampling)
     return output
 
 
