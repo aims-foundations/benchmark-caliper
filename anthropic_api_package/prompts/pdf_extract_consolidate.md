@@ -1,30 +1,36 @@
-You will consolidate per-page JSON extractions from a benchmark paper into a
-final two-section markdown summary. The per-page extractions are attached in the
-user message as N markdown-headed sections — one per page, each introduced by a
-`### Page N extraction` heading and followed by the JSON object produced for
-that page.
+You will write the Metadata and Narrative Context sections for a benchmark paper
+extraction. A pre-assembled Quote Registry (with sequential Q IDs, page numbers,
+categories, and verbatim text) is provided as input — do NOT regenerate it.
 
-Parse each JSON object independently. If a page's block is malformed (missing
-brace, stray fence, unescaped quote, etc.) **do not discard it** — fall back to
-reading the block as prose and recover every visibly-complete quote and any
-other category / continuity signals you can identify. Malformed structure does
-not imply malformed content.
+Your job is to read the registry and write interpretive narrative that references
+quote IDs, making the extraction human-readable.
 
-If a page's block is genuinely unrecoverable (empty, truncated to a fragment,
-unintelligible), **omit that page entirely from the Quote Registry** and add a
-line to the Metadata block like:
+## Purpose: validity assessment
 
-`- Pages with unrecoverable extractions: [14, 22]`
+This extraction feeds a downstream validity assessment. The goal is to determine
+whether an AI benchmark appropriately measures what matters for a specific
+deployment context — considering cultural, linguistic, and regional factors.
 
-Do not create placeholder rows in the Registry — every Registry row must be a
-real verbatim quote with a valid `Q<n>` ID, a page number, a category tag, and
-quoted text. The count and ID continuity of the Registry are enforced by a
-downstream mechanical check.
+Validity is evaluated across six dimensions organized as a 2x3 grid of
+(Input / Output) x (Ontology / Content / Form):
+
+| Code | Dimension | What it captures |
+|------|-----------|-----------------|
+| IO | Input Ontology | Do the benchmark's test-case categories cover what the deployment needs? |
+| IC | Input Content | Do the actual datapoints reflect the target population's language, culture, domain? |
+| IF | Input Form | Does the signal encoding (text vs. audio, resolution, script) match deployment conditions? |
+| OO | Output Ontology | Do the output labels and scoring rules reflect regional values and decision boundaries? |
+| OC | Output Content | Do ground-truth labels agree with what regional stakeholders would judge correct? |
+| OF | Output Form | Does the output modality match what the deployment actually produces? |
+
+The eight extraction categories below were chosen because they supply evidence
+for these dimensions. When writing narrative, highlight information that bears on
+validity — especially mismatches between what the paper describes and what a
+different deployment context would require.
 
 ## Extraction categories
 
-Each per-page quote carries one of eight category tags. The same eight categories
-structure the Narrative Context section below:
+The registry uses eight category tags. Write one narrative subsection per category:
 
 1. **task_taxonomy** — test-case categories, task types, subtask breakdown.
 2. **data_sources** — where datapoints come from (crowdsourced, scraped, expert-written, etc.).
@@ -35,64 +41,71 @@ structure the Narrative Context section below:
 7. **stated_limitations** — limitations or cultural/regional scope restrictions the authors themselves call out.
 8. **authors_affiliations** — author names and institutional affiliations (signals deployment-context origin).
 
-## Step 1 — Merge and deduplicate quotes
+## Writing the narrative
 
-1. Collect all quotes from every per-page extraction.
-2. Handle cross-page sentences: if `continues_from_previous` or `continues_to_next`
-   is true, check adjacent pages for overlapping text and merge split sentences.
-3. Deduplicate exact or near-exact duplicates (same text on overlapping page
-   boundaries). Keep the most complete version.
-4. Assign sequential IDs Q1, Q2, ..., QN in page order.
-5. Preserve each quote's extraction `category` tag as-is.
-
-## Step 2 — Write narrative context
-
-For each of the 8 extraction categories, write 2-5 sentences of interpretive
-context that references quote IDs, e.g.:
+For each of the 8 categories, write 2-5 sentences of interpretive context that
+references quote IDs, e.g.:
 
 > "The benchmark covers 22 task categories [Q1] split between industry-relevant
 > and fundamental tasks [Q2]."
 
-When a category has no quotes, say so explicitly:
+When a category has no quotes in the registry, say so explicitly:
 
 > "NOT DOCUMENTED: the paper is silent on annotator demographics. This absence is
 > itself a validity-relevant finding."
 
 For categories that plausibly span both input and output (`task_taxonomy`,
 `data_sources`, `data_format`, `stated_limitations`), explicitly cover each side
-where the paper supports it — don't let one side dominate the narrative for
-that category.
+where the paper supports it — don't let one side dominate the narrative.
 
-## Step 3 — Verify coverage
+Every factual claim must reference at least one quote ID from the registry.
+If a claim has no backing quote, either find the quote or flag it as inference.
 
-For each category: count its quotes; if zero, add a "NOT DOCUMENTED" note.
+## Elicitation summary (deployment context)
 
-## Step 4 — Verify narrative references
+An **Elicitation Summary** may be provided alongside the registry. This summary
+captures the specific deployment scenario under which the benchmark will be
+evaluated — who will use the system, in what domain, and what matters most for
+validity in that context. It includes **Dimension Priority Weights** (HIGH,
+MODERATE, LOWER) that reflect which validity dimensions are most important for
+this deployment.
 
-Every factual claim in the narrative must reference at least one quote ID. If a
-claim has no backing quote, either find the quote or flag it as inference.
+Use these priorities to calibrate narrative depth:
+- **HIGH-priority dimensions**: 4-6 sentences — expand on nuances, surface
+  tensions between what the paper claims and what the deployment requires
+- **MODERATE-priority dimensions**: 2-4 sentences
+- **LOWER-priority dimensions**: 1-2 sentences
+
+Cultural or domain-specific topics flagged in the summary deserve extra attention
+— call out related quotes even if they would otherwise be treated as minor details.
+
+Priority guidance affects **narrative depth only**. Every quote in the registry
+must still be referenced regardless of priority level. Do not drop or skip quotes
+from low-priority categories.
+
+If no elicitation summary is provided, write all categories at uniform depth
+(2-5 sentences each).
 
 ## Output format
 
-Produce a single markdown document with this exact structure:
+Produce ONLY the following markdown sections — no surrounding prose, no registry:
 
 ```markdown
 # Validity Extraction: {Full Paper Title}
-<!-- Model routing: Haiku (per-page extraction) → Sonnet (consolidation) -->
+<!-- Model routing: Haiku (per-page extraction) → script (registry assembly) → Sonnet (narrative) -->
 
 ## Metadata
 - **Title**: ...
 - **Authors**: ...
 - **Venue/Year**: ...
-- **Total Pages**: ...
-- **Quotes Extracted**: N
-- **Pages with unrecoverable extractions**: [<page numbers>] (omit the line if none)
+- **Total Pages**: {from the registry page numbers}
+- **Quotes Extracted**: {count of quotes in the registry}
 
 ## Narrative Context
 
 Interpretive prose organized by extraction category. Each factual claim
-references quote IDs from the registry below. **This section is non-authoritative
-— it provides readability but is not evidence. Only the Quote Registry below
+references quote IDs from the registry. **This section is non-authoritative
+— it provides readability but is not evidence. Only the Quote Registry
 contains verbatim text from the paper.**
 
 ### 1. Task Taxonomy / Test Case Categories
@@ -118,27 +131,6 @@ contains verbatim text from the paper.**
 
 ### 8. Authors and Affiliations
 ...
-
----
-
-## Quote Registry
-
-**This section is authoritative.** Every entry is verbatim text from the paper.
-
-| ID | Page | Category | Text |
-|----|------|----------|------|
-| Q1 | ... | ... | "..." |
-| ... | ... | ... | ... |
-
-### Category Index
-- **task_taxonomy**: Q1, Q2, ...
-- **data_sources**: ...
-- **data_format**: ...
-- **label_categories**: ...
-- **annotation_process**: ... (or "NO QUOTES — paper is silent")
-- **evaluation_metrics**: ...
-- **stated_limitations**: ...
-- **authors_affiliations**: ...
 ```
 
-Output ONLY the markdown document, with no surrounding prose.
+Output ONLY the markdown above. The Quote Registry will be appended mechanically.

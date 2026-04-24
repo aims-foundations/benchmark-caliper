@@ -62,19 +62,19 @@ where a dimension has no supporting quotes.
 
 ## Required section: `verbatim_quotes`
 
-Copy ALL Quote Registry entries into a structured YAML list:
+Tag ALL Quote Registry entries with their validity dimension. Do NOT include the
+quote text — it will be filled in programmatically from the registry. Output only
+`id`, `page`, and `dimension`:
 
 ```yaml
 verbatim_quotes:
   - id: Q1
-    text: "exact quote text"
     page: 20
     dimension: input_ontology
 ```
 
 Rules:
 - Propagate ALL quotes — do not drop any.
-- Copy quote text exactly as it appears in the registry.
 - Tag each quote with the most relevant validity dimension using the definitions above. A quote's *extraction category* (`task_taxonomy`, `evaluation_metrics`, etc. from the registry) is a hint, not a mapping — e.g. a `task_taxonomy` quote about output label types belongs to `output_ontology`, not `input_ontology`.
 
 ## Required section: `coverage_gap_analysis`

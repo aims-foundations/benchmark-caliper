@@ -1,7 +1,7 @@
 # Web search enrichment for the region YAML
 
 You are the web-search stage of a cultural validity assessment pipeline.
-The upstream scaffold step (2b) produced a region YAML describing the
+The upstream scaffold step (4b) produced a region YAML describing the
 deployment population, but it ran without tool access, so every factual
 slot it could not confidently ground is left as `[NEEDS VERIFICATION]`.
 Your job is to replace those tags with verified values and, where your
@@ -31,7 +31,7 @@ assessment.
 
 ## Expect partial coverage
 
-The scaffold deliberately over-tags: step 2b was told to err toward
+The scaffold deliberately over-tags: step 4b was told to err toward
 `[NEEDS VERIFICATION]` whenever it couldn't confidently ground a factual
 slot. In practice this means the YAML you receive will almost always
 have substantially more tags than your search budget can cover.
@@ -274,49 +274,22 @@ retrievable, and when the axis is worth investigating.
   regions; civic or political applications; regions with contested or
   actively reinterpreted histories.
 
-## Evidence by validity dimension
+## Evidence by validity dimension (fallback targeting)
 
-The scoring step rates six validity dimensions. Each is sensitive to a
-different shape of evidence. Use this as a lens: when a search result
-surfaces, ask which dimension(s) it informs, and favor results that
-would move a score.
+When a `coverage_gap_analysis` section is present in the benchmark YAML,
+use it as your primary search targeting — it already maps user priorities
+to specific gaps with suggested queries. The dimension lens below is a
+fallback for thin or absent elicitation context.
 
-- **IO — Input Ontology** ("does the test-case taxonomy cover what
-  matters for this deployment?"). Shifted by: proposed new cultural
-  taxonomies for the target region, studies documenting categories
-  missing from existing benchmarks, community-driven (emic) vs.
-  researcher-imposed (etic) category systems.
+The scoring step rates six dimensions. When a search result surfaces, ask
+which it informs and favor results that would move a score:
 
-- **IC — Input Content** ("do the test items reflect the target
-  culture?"). Shifted by: quantifications of Western or US content bias
-  in comparable benchmarks, regional annotator validation studies,
-  culture-specific content that fails to transfer from source to target
-  region, community-contributed datasets for the target population.
-
-- **IF — Input Form** ("does the signal encoding match real-world
-  deployment inputs?"). Shifted by: visual or multimodal cultural
-  evaluation results, studies on regional infrastructure effects on
-  input signal quality (bandwidth, device quality), dialect surface-form
-  evaluations, target-language morphology benchmarks. Audio/speech
-  cultural evaluation is a near-vacuum; null results are expected.
-
-- **OO — Output Ontology** ("do output categories fit the target
-  region?"). Shifted by: stakeholder-driven taxonomy redesigns,
-  alternative label systems proposed by researchers from the target
-  region, multi-mode accuracy comparisons showing Western categories
-  fail downstream.
-
-- **OC — Output Content** ("do ground-truth labels reflect regional
-  perspectives?"). Shifted by: label re-annotation studies using
-  regional annotator pools, annotator demographic analyses of
-  comparable benchmarks, studies documenting legitimate disagreement
-  in cultural labels.
-
-- **OF — Output Form** ("does the benchmark evaluate the output
-  modality needed for deployment?"). Shifted by: MCQ-vs-open-ended
-  format comparisons, text-to-speech availability for the target
-  language, literacy-rate data for the target population, studies on
-  generated-image stereotype reproduction in target-region contexts.
+- **IO — Input Ontology**: regional taxonomies, missing category studies, emic vs. etic category systems.
+- **IC — Input Content**: Western content bias quantifications, regional validation studies, community datasets.
+- **IF — Input Form**: dialect surface-form evaluations, infrastructure effects on input quality, morphology benchmarks.
+- **OO — Output Ontology**: stakeholder-driven taxonomy redesigns, alternative label systems from target region.
+- **OC — Output Content**: regional re-annotation studies, annotator demographic analyses, legitimate label disagreement.
+- **OF — Output Form**: MCQ-vs-open-ended comparisons, TTS availability, literacy-rate data, generated-image stereotype studies.
 
 ## Calibration warnings
 

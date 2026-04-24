@@ -13,14 +13,16 @@ provides deployment context within ~30 seconds, then heavy processing follows.
     Step 2-questions    Sonnet generates elicitation questions (uses metadata, not full YAML)
     Step 2-summary      Sonnet summarizes the answered questions
     Step 3a-extract     split PDF -> Haiku per-page (parallel, cached)
-    Step 3a-consolidate Sonnet merges per-page extractions (guided by elicitation priorities)
+    Step 3a-assemble    Haiku cross-page merge + script assembles Quote Registry
+    Step 3a-consolidate Sonnet writes Narrative Context given registry
     Step 3b-select      Haiku picks 1-2 reference benchmark YAMLs
     Step 3b-synthesize  Sonnet writes the benchmark YAML (+ coverage_gap_analysis)
     Step 3c-verify      verify_quotes.py (script, no API)
     Step 4a-template    Haiku picks 1-2 base region templates
     Step 4b-synthesize  Sonnet writes the assessment-specific region YAML
     Step 5              Sonnet + web_search_20250305 server tool -> region enrichment
-    Step 6              compose_prompt.py (script)
+    Step 5b             Dataset analysis scripts + Sonnet interpretation (conditional)
+    Step 6              compose_prompt.py (script, embeds DA findings if present)
     Step 7              Opus scoring (the one Opus call in the pipeline)
     Step 8              format_results.py (script)
 
@@ -142,6 +144,10 @@ def _paper_summary_path(name: str) -> Path:
     return _paper_dir(name) / "paper_summary.md"
 
 
+def _quote_registry_path(name: str) -> Path:
+    return _paper_dir(name) / "quote_registry.md"
+
+
 def _benchmark_refs_path(name: str) -> Path:
     return _paper_dir(name) / "benchmark_refs.json"
 
@@ -186,6 +192,10 @@ def _region_yaml_path(name: str, slug: str) -> Path:
     return _assessment_dir(name, slug) / "region.yaml"
 
 
+def _da_report_path(name: str, slug: str) -> Path:
+    return _assessment_dir(name, slug) / "dataset_analysis_report.md"
+
+
 def _composed_prompt_path(name: str, slug: str) -> Path:
     return _assessment_dir(name, slug) / "composed_prompt.md"
 
@@ -205,6 +215,25 @@ def _trace_dir(name: str, slug: str) -> Path:
 def _read_slug(name: str) -> str | None:
     p = _active_slug_path(name)
     return p.read_text().strip() if p.exists() else None
+
+
+def _parse_quote_registry(name: str) -> dict[str, str]:
+    """Parse the Quote Registry markdown table into {Q_id: text}.
+
+    Registry rows look like: | Q1 | 20 | task_taxonomy | "verbatim text" |
+    """
+    registry_path = _quote_registry_path(name)
+    if not registry_path.exists():
+        return {}
+    id_to_text: dict[str, str] = {}
+    for line in registry_path.read_text().splitlines():
+        m = re.match(
+            r'^\|\s*(Q\d+)\s*\|\s*\d+\s*\|\s*\w+\s*\|\s*"(.+)"\s*\|$',
+            line,
+        )
+        if m:
+            id_to_text[m.group(1)] = m.group(2).replace("\\|", "|")
+    return id_to_text
 
 
 # ===================================================================
@@ -336,7 +365,8 @@ def _which(cmd: str) -> bool:
 
 
 # ===================================================================
-# Step 3a — PDF extraction: per-page Haiku (3a-extract) + Sonnet (3a-consolidate)
+# Step 3a — PDF extraction: Haiku per-page (3a-extract) + Haiku merge + script
+#           registry (3a-assemble) + Sonnet narrative (3a-consolidate)
 # ===================================================================
 
 def step_1a_extract(pdf_path: Path, name: str, max_workers: int = 1) -> Path:
@@ -411,32 +441,206 @@ def step_1a_extract(pdf_path: Path, name: str, max_workers: int = 1) -> Path:
     return cache_dir
 
 
-def step_3a_consolidate(name: str, elicitation_summary: str = "") -> Path:
-    """Sonnet merges per-page JSON into the two-section markdown summary.
+def _parse_page_json(raw_text: str) -> dict:
+    """Best-effort parse of a per-page extraction (may have markdown fences)."""
+    text = raw_text.strip()
+    if text.startswith("```"):
+        lines = text.split("\n")
+        lines = lines[1:]  # drop opening fence
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        text = "\n".join(lines)
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return {"quotes": [], "page_summary": "", "continues_from_previous": False,
+                "continues_to_next": False}
 
-    When an elicitation summary is provided, it guides narrative depth:
-    HIGH-priority dimensions get more detailed narrative, LOWER-priority
-    dimensions get briefer coverage. Quote extraction is always exhaustive.
+
+def step_3a_assemble(name: str) -> Path:
+    """Merge cross-page quotes (Haiku), then mechanically assemble the Quote Registry.
+
+    1. Read per-page JSONs from the page cache
+    2. Identify cross-page sentence boundaries
+    3. Call Haiku once per boundary to merge split sentences
+    4. Collect all quotes, apply merges, deduplicate
+    5. Assign sequential Q1..QN IDs in page order
+    6. Write Quote Registry + Category Index markdown
     """
-    _paper_dir(name).mkdir(parents=True, exist_ok=True)
     cache_dir = PAGE_CACHES / name
-    summary_path = _paper_summary_path(name)
+    registry_path = _quote_registry_path(name)
+    _paper_dir(name).mkdir(parents=True, exist_ok=True)
 
     page_files = sorted(cache_dir.glob("page_*.txt"))
     if not page_files:
-        print(
-            f"ERROR: no page cache found at {cache_dir}. Run --step 3a-extract "
-            f"first.",
-            file=sys.stderr,
-        )
+        print(f"ERROR: no page cache at {cache_dir}. Run --step 3a-extract first.",
+              file=sys.stderr)
         sys.exit(1)
-    page_outputs = [p.read_text() for p in page_files]
-    combined = "\n\n".join(
-        f"### Page {i+1} extraction\n\n{out}" for i, out in enumerate(page_outputs)
-    )
 
-    # === Append elicitation priorities if available ===
-    user_msg = combined
+    pages = [(int(p.stem.split("_")[1]), _parse_page_json(p.read_text()))
+             for p in page_files]
+    pages.sort(key=lambda x: x[0])
+
+    # === Phase 1: Haiku cross-page merge ===
+    merge_results = {}  # (page_a, page_b) -> merged_text or None
+    merge_pairs = []
+    for i in range(len(pages) - 1):
+        page_a_num, page_a = pages[i]
+        page_b_num, page_b = pages[i + 1]
+        if page_a.get("continues_to_next") and page_b.get("continues_from_previous"):
+            quotes_a = page_a.get("quotes", [])
+            quotes_b = page_b.get("quotes", [])
+            if quotes_a and quotes_b:
+                merge_pairs.append((page_a_num, page_b_num,
+                                    quotes_a[-1], quotes_b[0]))
+
+    if merge_pairs:
+        print(f"[3a-assemble] {len(merge_pairs)} cross-page boundaries to merge (Haiku)...")
+        merge_prompt = prompts.load("cross_page_merge")
+        for page_a_num, page_b_num, frag_a, frag_b in tqdm(merge_pairs, desc="Merging"):
+            result = client.call(
+                model="haiku",
+                system=merge_prompt,
+                user=(
+                    f"Fragment A (end of page {page_a_num}):\n"
+                    f"\"{frag_a['text']}\"\n\n"
+                    f"Fragment B (start of page {page_b_num}):\n"
+                    f"\"{frag_b['text']}\""
+                ),
+                max_tokens=512,
+                step="3a_merge",
+            )
+            if client.DRY_RUN:
+                continue
+            stripped = result.strip()
+            if stripped.upper().startswith("SEPARATE"):
+                merge_results[(page_a_num, page_b_num)] = None
+            else:
+                merge_results[(page_a_num, page_b_num)] = stripped.strip('"')
+                print(f"    pages {page_a_num}-{page_b_num}: merged")
+    else:
+        print("[3a-assemble] No cross-page boundaries found.")
+
+    # === Phase 2: collect quotes, apply merges, deduplicate ===
+    all_quotes = []
+    skip_next_first = set()  # page numbers whose first quote was merged into prior page
+
+    for page_a_num, page_b_num, _, _ in merge_pairs:
+        merged = merge_results.get((page_a_num, page_b_num))
+        if merged is not None:
+            skip_next_first.add(page_b_num)
+
+    for page_num, page_data in pages:
+        for qi, q in enumerate(page_data.get("quotes", [])):
+            # Skip the first quote if it was merged into the prior page's last quote
+            if qi == 0 and page_num in skip_next_first:
+                continue
+
+            text = q.get("text", "").strip()
+            if not text:
+                continue
+
+            # Check if this is the last quote on a page with a successful merge
+            is_last = (qi == len(page_data.get("quotes", [])) - 1)
+            merged_into = None
+            if is_last:
+                for pa, pb, _, _ in merge_pairs:
+                    if pa == page_num:
+                        merged_into = merge_results.get((pa, pb))
+                        break
+
+            if merged_into is not None:
+                all_quotes.append({
+                    "text": merged_into,
+                    "page": page_num,
+                    "category": q.get("category", ""),
+                })
+            else:
+                all_quotes.append({
+                    "text": text,
+                    "page": page_num,
+                    "category": q.get("category", ""),
+                })
+
+    # Deduplicate exact matches (keep first occurrence)
+    seen_texts = set()
+    deduped = []
+    for q in all_quotes:
+        normalized = q["text"].strip().lower()
+        if normalized not in seen_texts:
+            seen_texts.add(normalized)
+            deduped.append(q)
+    removed = len(all_quotes) - len(deduped)
+    if removed:
+        print(f"[3a-assemble] Removed {removed} duplicate quotes.")
+    all_quotes = deduped
+
+    # === Phase 3: assign IDs and build registry markdown ===
+    categories = [
+        "task_taxonomy", "data_sources", "data_format", "label_categories",
+        "annotation_process", "evaluation_metrics", "stated_limitations",
+        "authors_affiliations",
+    ]
+    cat_index: dict[str, list[str]] = {c: [] for c in categories}
+
+    lines = [
+        "---",
+        "",
+        "## Quote Registry",
+        "",
+        "**This section is authoritative.** Every entry is verbatim text from the paper.",
+        "",
+        "| ID | Page | Category | Text |",
+        "|----|------|----------|------|",
+    ]
+    for i, q in enumerate(all_quotes, 1):
+        qid = f"Q{i}"
+        cat = q["category"]
+        text_escaped = q["text"].replace("|", "\\|").replace("\n", " ")
+        lines.append(f'| {qid} | {q["page"]} | {cat} | "{text_escaped}" |')
+        if cat in cat_index:
+            cat_index[cat].append(qid)
+
+    lines.append("")
+    lines.append("### Category Index")
+    for cat in categories:
+        ids = cat_index[cat]
+        if ids:
+            lines.append(f"- **{cat}**: {', '.join(ids)}")
+        else:
+            lines.append(f'- **{cat}**: NO QUOTES — paper is silent')
+
+    registry_text = "\n".join(lines) + "\n"
+
+    if not client.DRY_RUN:
+        registry_path.write_text(registry_text)
+    print(f"[3a-assemble] {len(all_quotes)} quotes in registry "
+          f"({len(merge_pairs)} merges, {removed} deduped) -> {registry_path}")
+    return registry_path
+
+
+def step_3a_consolidate(name: str, elicitation_summary: str = "") -> Path:
+    """Sonnet writes Narrative Context given the pre-assembled Quote Registry.
+
+    The registry (from step_3a_assemble) is provided as input. Sonnet writes
+    only the Metadata + Narrative Context sections. The final paper_summary.md
+    is produced by concatenating Sonnet's output with the registry.
+
+    When an elicitation summary is provided, it guides narrative depth:
+    HIGH-priority dimensions get more detailed narrative.
+    """
+    _paper_dir(name).mkdir(parents=True, exist_ok=True)
+    summary_path = _paper_summary_path(name)
+    registry_path = _quote_registry_path(name)
+
+    if not registry_path.exists():
+        print(f"ERROR: {registry_path} not found. Run --step 3a-assemble first.",
+              file=sys.stderr)
+        sys.exit(1)
+
+    registry_text = registry_path.read_text()
+
+    user_msg = f"## Pre-Assembled Quote Registry\n\n{registry_text}"
     if elicitation_summary:
         user_msg += (
             f"\n\n---\n\n"
@@ -448,21 +652,21 @@ def step_3a_consolidate(name: str, elicitation_summary: str = "") -> Path:
             f"- LOWER-priority dimensions: 1-2 sentences\n\n"
             f"Cultural topic priorities from the summary should receive extra "
             f"attention — call out related quotes even if they would otherwise "
-            f"be treated as minor details.\n\n"
-            f"IMPORTANT: Priority guidance affects narrative depth only. "
-            f"Quote extraction must remain exhaustive — every relevant quote "
-            f"is included in the registry regardless of priority level."
+            f"be treated as minor details."
         )
 
-    print(f"[3a-consolidate] Consolidating {len(page_outputs)} per-page extractions via Sonnet...")
-    summary = client.call(
+    print(f"[3a-consolidate] Sonnet writing narrative context...")
+    narrative = client.call(
         model="sonnet",
         system=prompts.load("pdf_extract_consolidate"),
         user=user_msg,
-        max_tokens=32768,
+        max_tokens=16384,
         step="3a_consolidate",
     )
-    summary_path.write_text(summary)
+
+    # Concatenate Sonnet's narrative + mechanical registry
+    full_summary = narrative.rstrip() + "\n\n" + registry_text
+    summary_path.write_text(full_summary)
     print(f"[3a-consolidate] Paper summary written to {summary_path}")
     return summary_path
 
@@ -541,6 +745,26 @@ def step_3b_synthesize(
     if client.DRY_RUN:
         return out_path
     cleaned = _run_script("parse_llm_output.py", "--format", "yaml", "-", stdin=synthesis_raw)
+
+    # Backfill verbatim_quotes text from the mechanically-assembled registry.
+    # Sonnet only emits id/page/dimension; the text is filled in here to avoid
+    # LLM copying errors and reduce output tokens.
+    id_to_text = _parse_quote_registry(name)
+    if id_to_text:
+        data = yaml.safe_load(cleaned)
+        missing_ids = []
+        for q in data.get("verbatim_quotes", []):
+            qid = q.get("id", "")
+            if qid in id_to_text:
+                q["text"] = id_to_text[qid]
+            else:
+                missing_ids.append(qid)
+        if missing_ids:
+            print(f"  WARN: {len(missing_ids)} quote IDs not found in registry: "
+                  f"{', '.join(missing_ids[:5])}", file=sys.stderr)
+        cleaned = yaml.dump(data, sort_keys=False, allow_unicode=True,
+                            default_flow_style=False, width=120)
+
     out_path.write_text(cleaned)
     print(f"[3b-synthesize] Benchmark YAML written to {out_path}")
     return out_path
@@ -763,7 +987,6 @@ def step_4a_template(elicitation_summary: str, name: str, slug: str) -> list[str
 def step_4b_synthesize(
     elicitation_summary: str,
     benchmark_yaml_text: str,
-    paper_summary: str,
     name: str,
     slug: str,
 ) -> Path:
@@ -789,8 +1012,7 @@ def step_4b_synthesize(
         user=(
             f"Base templates:\n\n{templates_text}\n\n"
             f"Elicitation summary:\n\n{elicitation_summary}\n\n"
-            f"Benchmark YAML:\n\n```yaml\n{benchmark_yaml_text}\n```\n\n"
-            f"Paper summary excerpts:\n\n{paper_summary[:4000]}"
+            f"Benchmark YAML:\n\n```yaml\n{benchmark_yaml_text}\n```"
         ),
         max_tokens=16384,
         step="4b_synthesize",
@@ -849,6 +1071,273 @@ def step_5_web_search(region_path: Path, benchmark_yaml_text: str, elicitation_s
 
 
 # ===================================================================
+# Step 5b — Dataset analysis (deterministic scripts + Sonnet interpretation)
+# ===================================================================
+
+HF_LINKS_FILE = ROOT / "benchmarks" / "hf_links.json"
+DA_SCRIPTS = ROOT / "scripts" / "dataset_analysis"
+DA_CACHE = ROOT / "benchmarks" / "da_cache"
+
+
+def _da_script_cache_path(hf_dataset: str, hf_config: str | None = None) -> Path:
+    key = hf_dataset.replace("/", "__")
+    if hf_config:
+        key += f"__{hf_config}"
+    return DA_CACHE / key / "script_outputs.json"
+
+
+def _da_summary_cache_path(hf_dataset: str) -> Path:
+    return DA_CACHE / hf_dataset.replace("/", "__") / "summary.md"
+
+
+def _resolve_hf_info(args: argparse.Namespace, name: str) -> dict | None:
+    """Resolve dataset analysis target from CLI args or hf_links.json.
+
+    Returns a dict with either:
+      {"mode": "single", "hf_dataset_id": "...", "hf_config": "..."}
+      {"mode": "org",    "hf_org": "DrBenchmark"}
+    or None if no HF info is available.
+    """
+    if args.hf_dataset:
+        return {"mode": "single",
+                "hf_dataset_id": args.hf_dataset,
+                "hf_config": args.hf_config}
+
+    if HF_LINKS_FILE.exists():
+        links = json.loads(HF_LINKS_FILE.read_text())
+        tuple_key = getattr(args, "hf_tuple", None)
+        for key in [name, name.split("__", 1)[-1]]:
+            entry = links.get(key, {})
+            if not entry:
+                continue
+            # Per-tuple override (always single-dataset)
+            if tuple_key:
+                per_tuple = entry.get("per_tuple", {}).get(tuple_key, {})
+                if per_tuple.get("hf_dataset_id"):
+                    return {"mode": "single",
+                            "hf_dataset_id": per_tuple["hf_dataset_id"],
+                            "hf_config": per_tuple.get("hf_config")}
+            # Org-level resolution
+            if entry.get("hf_org"):
+                return {"mode": "org", "hf_org": entry["hf_org"]}
+            # Single dataset
+            if entry.get("hf_dataset_id"):
+                return {"mode": "single",
+                        "hf_dataset_id": entry["hf_dataset_id"],
+                        "hf_config": entry.get("hf_config")}
+
+    return None
+
+
+def _resolve_org_datasets(hf_org: str) -> list[str]:
+    """List all dataset IDs under a HuggingFace organization."""
+    import requests
+    url = f"https://huggingface.co/api/datasets?author={hf_org}"
+    resp = requests.get(url, timeout=30)
+    resp.raise_for_status()
+    return [d["id"] for d in resp.json()]
+
+
+def _run_da_script(script_name: str, *extra_args: str) -> str:
+    """Run a dataset analysis script and return its JSON stdout."""
+    script = DA_SCRIPTS / script_name
+    cmd = [sys.executable, str(script), *extra_args]
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+    except subprocess.TimeoutExpired:
+        print(f"  WARN: {script_name} timed out after 300s")
+        return json.dumps({"script": script_name, "error": "timed out after 300s"})
+    if result.returncode != 0:
+        print(f"  WARN: {script_name} failed:\n{result.stderr.rstrip()}")
+        return json.dumps({"script": script_name, "error": result.stderr[:500]})
+    return result.stdout
+
+
+def _profile_single_dataset(hf_dataset: str, hf_config: str | None) -> dict:
+    """Run DA scripts on one dataset. Returns {script: json_str}."""
+    script_outputs = {}
+
+    meta_args = ["--repo_id", hf_dataset]
+    if hf_config:
+        meta_args += ["--config", hf_config]
+    print(f"    hf_metadata...")
+    meta_json = _run_da_script("hf_metadata.py", *meta_args)
+    script_outputs["hf_metadata"] = meta_json
+
+    meta = json.loads(meta_json)
+    if meta.get("errors"):
+        print(f"    WARN: metadata errors: {meta['errors']}")
+        return script_outputs
+
+    sample_args = ["--repo_id", hf_dataset, "--split", "train"]
+    if hf_config:
+        sample_args += ["--config", hf_config]
+    print(f"    content_sample...")
+    script_outputs["content_sample"] = _run_da_script(
+        "content_sample.py", *sample_args)
+
+    modalities = meta.get("modality", [])
+    features = meta.get("schema", {}).get("features", {})
+
+    if "audio" in modalities:
+        audio_cols = [col for col, dtype in features.items() if "Audio" in str(dtype)]
+        if audio_cols:
+            audio_args = ["--repo_id", hf_dataset, "--split", "train",
+                          "--column", audio_cols[0], "--sample_size", "50"]
+            if hf_config:
+                audio_args += ["--config", hf_config]
+            print(f"    audio_stats on '{audio_cols[0]}'...")
+            script_outputs["audio_stats"] = _run_da_script(
+                "audio_stats.py", *audio_args)
+
+    return script_outputs
+
+
+def _sonnet_per_dataset_summary(hf_dataset: str, script_outputs: dict) -> str:
+    """Stage 1: Sonnet produces a concise summary for one dataset's script outputs."""
+    scripts_block = "\n\n".join(
+        f"### {sname}\n```json\n{output}\n```"
+        for sname, output in script_outputs.items()
+    )
+    return client.call(
+        model="sonnet",
+        system=prompts.load("da_per_dataset"),
+        user=(
+            f"## Dataset: {hf_dataset}\n\n"
+            f"## Script Outputs\n\n{scripts_block}"
+        ),
+        max_tokens=2048,
+        step="5b_da_per_dataset",
+    )
+
+
+def step_5b_dataset_analysis(
+    hf_info: dict,
+    benchmark_yaml_text: str,
+    elicitation_summary: str,
+    web_search_text: str,
+    name: str,
+    slug: str,
+) -> Path | None:
+    """Run dataset analysis scripts and have Sonnet interpret findings.
+
+    Supports two modes:
+      single — one dataset, single-pass interpretation
+      org    — all datasets under an HF org, two-stage interpretation
+               (per-dataset summaries → aggregated report)
+    """
+    out_path = _da_report_path(name, slug)
+    if out_path.exists():
+        print(f"[5b] DA report already exists: {out_path}")
+        return out_path
+
+    if hf_info["mode"] == "org":
+        hf_org = hf_info["hf_org"]
+        print(f"[5b] Resolving datasets under HF org '{hf_org}'...")
+        dataset_ids = _resolve_org_datasets(hf_org)
+        print(f"[5b] Found {len(dataset_ids)} datasets: "
+              f"{', '.join(d.split('/')[-1] for d in dataset_ids)}")
+
+        # === Stage 1: profile each dataset + per-dataset Sonnet summary ===
+        # Script outputs and summaries are cached — they're deterministic /
+        # dataset-intrinsic and shared across tuples using the same benchmark.
+        per_dataset_summaries = {}
+        for i, ds_id in enumerate(dataset_ids, 1):
+            ds_short = ds_id.split("/")[-1]
+
+            script_cache = _da_script_cache_path(ds_id)
+            if script_cache.exists():
+                print(f"\n  [{i}/{len(dataset_ids)}] {ds_id} (script cache hit)")
+                outputs = json.loads(script_cache.read_text())
+            else:
+                print(f"\n  [{i}/{len(dataset_ids)}] Profiling {ds_id}...")
+                outputs = _profile_single_dataset(ds_id, hf_config=None)
+                script_cache.parent.mkdir(parents=True, exist_ok=True)
+                script_cache.write_text(json.dumps(outputs, indent=2))
+
+            if client.DRY_RUN:
+                per_dataset_summaries[ds_id] = "(dry-run)"
+                continue
+
+            summary_cache = _da_summary_cache_path(ds_id)
+            if summary_cache.exists():
+                print(f"    {ds_short} summary (cache hit)")
+                summary = summary_cache.read_text()
+            else:
+                print(f"    Sonnet summarizing {ds_short}...")
+                summary = _sonnet_per_dataset_summary(ds_id, outputs)
+                summary_cache.parent.mkdir(parents=True, exist_ok=True)
+                summary_cache.write_text(summary)
+
+            per_dataset_summaries[ds_id] = summary
+
+        # === Stage 2: aggregation across all datasets ===
+        summaries_block = "\n\n".join(
+            f"### {ds_id}\n\n{summary}"
+            for ds_id, summary in per_dataset_summaries.items()
+        )
+        print(f"\n  [5b] Sonnet aggregating {len(dataset_ids)} dataset summaries...")
+        report = client.call(
+            model="sonnet",
+            system=prompts.load("da_interpret"),
+            user=(
+                f"## Benchmark YAML\n\n```yaml\n{benchmark_yaml_text}\n```\n\n"
+                f"## Deployment Context (Elicitation Summary)\n\n{elicitation_summary}\n\n"
+                f"## Web Search Findings\n\n{web_search_text}\n\n"
+                f"## Per-Dataset Analysis Summaries\n\n"
+                f"The following summaries were produced by profiling each dataset "
+                f"in the {hf_org} benchmark collection independently. Use them as "
+                f"evidence for your aggregated validity assessment.\n\n"
+                f"{summaries_block}"
+            ),
+            max_tokens=8192,
+            step="5b_da_interpret",
+        )
+
+    else:
+        # Single-dataset mode — direct interpretation (no two-stage needed)
+        hf_dataset = hf_info["hf_dataset_id"]
+        hf_config = hf_info.get("hf_config")
+
+        script_cache = _da_script_cache_path(hf_dataset, hf_config)
+        if script_cache.exists():
+            print(f"[5b] {hf_dataset} (script cache hit)")
+            script_outputs = json.loads(script_cache.read_text())
+        else:
+            print(f"[5b] Running dataset analysis on {hf_dataset}"
+                  f"{f' (config={hf_config})' if hf_config else ''}...")
+            script_outputs = _profile_single_dataset(hf_dataset, hf_config)
+            script_cache.parent.mkdir(parents=True, exist_ok=True)
+            script_cache.write_text(json.dumps(script_outputs, indent=2))
+
+        scripts_block = "\n\n".join(
+            f"### {script_name}\n```json\n{output}\n```"
+            for script_name, output in script_outputs.items()
+        )
+        print("  [5b] Sonnet interpreting DA findings...")
+        report = client.call(
+            model="sonnet",
+            system=prompts.load("da_interpret"),
+            user=(
+                f"## Benchmark YAML\n\n```yaml\n{benchmark_yaml_text}\n```\n\n"
+                f"## Deployment Context (Elicitation Summary)\n\n{elicitation_summary}\n\n"
+                f"## Web Search Findings\n\n{web_search_text}\n\n"
+                f"## Dataset Analysis Script Outputs\n\n{scripts_block}"
+            ),
+            max_tokens=8192,
+            step="5b_da_interpret",
+        )
+
+    if client.DRY_RUN:
+        return out_path
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(report)
+    print(f"[5b] DA report written to {out_path}")
+    return out_path
+
+
+# ===================================================================
 # Step 6 — Compose evaluation prompt (script)
 # ===================================================================
 
@@ -858,19 +1347,22 @@ def step_6_compose(
     elicitation_path: Path,
     name: str,
     slug: str,
+    da_report_path: Path | None = None,
 ) -> Path:
     out_path = _composed_prompt_path(name, slug)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     print("[6] Composing evaluation prompt via compose_prompt.py...")
-    _run_script(
-        "compose_prompt.py",
+    compose_args = [
         "--benchmark", str(benchmark_path),
         "--region", str(region_path),
         "--framework", str(FRAMEWORK),
         "--elicitation", str(elicitation_path),
         "--region-name", slug,
         "--output", str(out_path),
-    )
+    ]
+    if da_report_path and da_report_path.exists():
+        compose_args += ["--dataset-analysis", str(da_report_path)]
+    _run_script("compose_prompt.py", *compose_args)
     return out_path
 
 
@@ -934,6 +1426,7 @@ STEP_LABELS: dict[str, list[str]] = {
     # expected cost. Instead, step_1a_extract (the extraction function) clears
     # this label itself when it detects a fresh (no-cache) run.
     "3a-extract":     [],
+    "3a-assemble":    ["3a_merge"],
     "3a-consolidate": ["3a_consolidate"],
     "3b-select":      ["3b_select"],
     "3b-synthesize":  ["3b_synthesize"],
@@ -941,6 +1434,7 @@ STEP_LABELS: dict[str, list[str]] = {
     "4a-template":    ["4a_template"],
     "4b-synthesize":  ["4b_synthesize"],
     "5":              ["5_web_search"],
+    "5b-da":          ["5b_da_per_dataset", "5b_da_interpret"],
     "6":              [],
     "7":              ["7_score"],
     "8":              [],
@@ -1065,6 +1559,25 @@ def parse_args() -> argparse.Namespace:
         "Sonnet formatting slip doesn't waste a full-run's cost. Use --strict-verify "
         "in CI / dev to enforce the gate.",
     )
+    p.add_argument(
+        "--hf-dataset",
+        help="HuggingFace dataset ID (e.g. masakhane/afrisenti). "
+        "Enables Step 5b dataset analysis. Also checks benchmarks/hf_links.json.",
+    )
+    p.add_argument(
+        "--hf-config",
+        help="HuggingFace dataset config/subset (e.g. pcm). Used with --hf-dataset.",
+    )
+    p.add_argument(
+        "--hf-tuple",
+        help="Tuple key for per-tuple HF link override in hf_links.json "
+        "(e.g. tuple_3). Used by expert experiment scripts.",
+    )
+    p.add_argument(
+        "--no-dataset-analysis",
+        action="store_true",
+        help="Skip Step 5b even if an HF dataset ID is available.",
+    )
     return p.parse_args()
 
 
@@ -1148,10 +1661,20 @@ def main() -> None:
         return
 
     # === Sequential mode ===
+    hf_info = _resolve_hf_info(args, name)
     print(f"Running validity pipeline on {pdf_path.name}")
     print(f"  Persona:       {args.persona or '(stdin mode)'}")
     print(f"  Use case file: {args.use_case or '(n/a)'}")
-    print(f"  Web search:    {'off' if args.no_web_search else 'on'}\n")
+    print(f"  Web search:    {'off' if args.no_web_search else 'on'}")
+    if args.no_dataset_analysis:
+        da_status = "off"
+    elif hf_info is None:
+        da_status = "no HF link"
+    elif hf_info["mode"] == "org":
+        da_status = f"org: {hf_info['hf_org']}"
+    else:
+        da_status = hf_info["hf_dataset_id"]
+    print(f"  Dataset analysis: {da_status}\n")
 
     try:
         # === Step 0: derive the assessment slug ===
@@ -1191,9 +1714,13 @@ def main() -> None:
         elicitation_summary = elicitation_path.read_text()
         _ledger_end(name)
 
-        # === Step 3a: paper -> per-page extractions -> consolidated summary ===
+        # === Step 3a: paper -> per-page extractions -> assemble registry -> narrative ===
         _ledger_begin(name, "3a-extract")
         step_1a_extract(pdf_path, name)
+        _ledger_end(name)
+
+        _ledger_begin(name, "3a-assemble")
+        step_3a_assemble(name)
         _ledger_end(name)
 
         _ledger_begin(name, "3a-consolidate")
@@ -1221,19 +1748,33 @@ def main() -> None:
 
         _ledger_begin(name, "4b-synthesize")
         region_path = step_4b_synthesize(
-            elicitation_summary, benchmark_yaml_text, paper_summary, name, slug
+            elicitation_summary, benchmark_yaml_text, name, slug
         )
         _ledger_end(name)
 
         # === Step 5: web search enrichment ===
+        web_search_text = ""
         if not args.no_web_search:
             _ledger_begin(name, "5")
             step_5_web_search(region_path, benchmark_yaml_text, elicitation_summary)
             _ledger_end(name)
+            web_search_text = region_path.read_text()
+
+        # === Step 5b: dataset analysis (conditional on HF link) ===
+        da_report_path = None
+        if not args.no_dataset_analysis and hf_info:
+            _ledger_begin(name, "5b-da")
+            da_report_path = step_5b_dataset_analysis(
+                hf_info,
+                benchmark_yaml_text, elicitation_summary, web_search_text,
+                name, slug,
+            )
+            _ledger_end(name)
 
         # === Step 6-8: compose prompt, score (Opus), format report ===
         composed_path = step_6_compose(
-            benchmark_path, region_path, elicitation_path, name, slug
+            benchmark_path, region_path, elicitation_path, name, slug,
+            da_report_path=da_report_path,
         )
 
         _ledger_begin(name, "7")
@@ -1309,11 +1850,21 @@ def _run_single_step(args: argparse.Namespace, pdf_path: Path, name: str) -> Non
         elif args.step == "3a-extract":
             _ledger_begin(name, "3a-extract")
             step_1a_extract(pdf_path, name)
-        elif args.step == "3a-consolidate":
+        elif args.step == "3a-assemble":
             cache_dir = PAGE_CACHES / name
             if not any(cache_dir.glob("page_*.txt")) and not client.DRY_RUN:
                 print(
                     f"ERROR: run --step 3a-extract first ({cache_dir} empty)",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+            _ledger_begin(name, "3a-assemble")
+            step_3a_assemble(name)
+        elif args.step == "3a-consolidate":
+            registry_path = _quote_registry_path(name)
+            if not registry_path.exists() and not client.DRY_RUN:
+                print(
+                    f"ERROR: run --step 3a-assemble first ({registry_path} missing)",
                     file=sys.stderr,
                 )
                 sys.exit(1)
@@ -1366,7 +1917,6 @@ def _run_single_step(args: argparse.Namespace, pdf_path: Path, name: str) -> Non
             step_4b_synthesize(
                 elicitation_path.read_text() if elicitation_path.exists() else "",
                 benchmark_path.read_text() if benchmark_path.exists() else "",
-                summary_path.read_text() if summary_path.exists() else "",
                 name, slug,
             )
         elif args.step == "5":
@@ -1382,6 +1932,22 @@ def _run_single_step(args: argparse.Namespace, pdf_path: Path, name: str) -> Non
             step_5_web_search(
                 region_path, benchmark_path.read_text(), elicitation_path.read_text()
             )
+        elif args.step == "5b-da":
+            hf_info = _resolve_hf_info(args, name)
+            if not hf_info:
+                print("ERROR: no HF info. Pass --hf-dataset or add "
+                      f"'{name}' to benchmarks/hf_links.json", file=sys.stderr)
+                sys.exit(1)
+            elicitation_path = _elicitation_summary_path(name, slug)
+            region_path = _region_yaml_path(name, slug)
+            _ledger_begin(name, "5b-da")
+            step_5b_dataset_analysis(
+                hf_info,
+                benchmark_path.read_text() if benchmark_path.exists() else "",
+                elicitation_path.read_text() if elicitation_path.exists() else "",
+                region_path.read_text() if region_path.exists() else "",
+                name, slug,
+            )
         elif args.step == "6":
             region_path = _region_yaml_path(name, slug)
             if not region_path.exists():
@@ -1391,7 +1957,9 @@ def _run_single_step(args: argparse.Namespace, pdf_path: Path, name: str) -> Non
                 )
                 sys.exit(1)
             elicitation_path = _elicitation_summary_path(name, slug)
-            step_6_compose(benchmark_path, region_path, elicitation_path, name, slug)
+            da_path = _da_report_path(name, slug)
+            step_6_compose(benchmark_path, region_path, elicitation_path, name, slug,
+                           da_report_path=da_path if da_path.exists() else None)
         elif args.step == "7":
             composed_path = _composed_prompt_path(name, slug)
             if not composed_path.exists():

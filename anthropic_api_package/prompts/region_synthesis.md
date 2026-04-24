@@ -5,7 +5,6 @@ The user message contains:
 - 1-2 selected base template YAMLs (structural and stylistic examples).
 - The full elicitation summary (authoritative source for scoping).
 - The benchmark YAML (domain, languages, task categories).
-- Relevant excerpts from the paper summary.
 
 ## Granularity: narrower than the base templates
 
@@ -32,8 +31,8 @@ specifies; don't invent narrowness that isn't there.
 
 ## Pipeline context: you are producing a scaffold, not a finished document
 
-A downstream step (step 3) runs another Sonnet call with web search access
-that will fill in factual content. **You have no web search and no tools.**
+A downstream step runs another Sonnet call with web search access that will
+fill in factual content. **You have no web search and no tools.**
 Everything factual you emit comes from parametric knowledge, which is stale
 by construction (training-cutoff + sub-national populations + shifting
 policy), so even facts you feel confident about are not reliable enough to

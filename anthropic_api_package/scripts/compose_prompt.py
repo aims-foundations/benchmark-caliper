@@ -258,7 +258,8 @@ def load_text(path: str) -> str:
 
 def compose_prompt(benchmark: dict, region: dict, framework: dict,
                    elicitation_text: str = "",
-                   region_name_override: str = "") -> str:
+                   region_name_override: str = "",
+                   dataset_analysis_text: str = "") -> str:
     """Compose the full evaluation prompt."""
 
     # Extract benchmark fields
@@ -359,7 +360,30 @@ When populating `evidence_quotes` in your output JSON:
 {elicitation_text if elicitation_text else "_No deployment context provided. Evaluate the benchmark's general validity for the target region._"}
 
 ---
+"""
 
+    if dataset_analysis_text:
+        prompt += f"""
+## Dataset Analysis Findings
+
+The following empirical findings were produced by automated profiling scripts that
+sampled the benchmark's actual dataset on HuggingFace. These findings may confirm
+or contradict claims in the benchmark documentation above.
+
+**Scoring instruction:** Dataset analysis provides empirical evidence that may
+contradict documentation claims. When script outputs conflict with documented
+properties (e.g., language distribution differs from claimed languages), treat
+the empirical evidence as more authoritative for scoring purposes. Note the
+discrepancy explicitly in your justification. Dataset analysis findings tagged
+as CRITICAL should be treated as strong evidence for lower scores on the
+affected dimensions.
+
+{dataset_analysis_text}
+
+---
+"""
+
+    prompt += f"""
 ## Framework Dimensions to Evaluate
 
 {format_framework_dimensions(framework)}
@@ -415,6 +439,8 @@ def main():
                         help="Human-readable region name to use when the region "
                              "YAML has no top-level `name` field (e.g. the "
                              "deployment slug).")
+    parser.add_argument("--dataset-analysis", required=False,
+                        help="Path to dataset analysis report markdown (from Step 5b)")
     args = parser.parse_args()
 
     benchmark = load_yaml(args.benchmark)
@@ -425,8 +451,13 @@ def main():
     if args.elicitation:
         elicitation_text = load_text(args.elicitation)
 
+    dataset_analysis_text = ""
+    if args.dataset_analysis:
+        dataset_analysis_text = load_text(args.dataset_analysis)
+
     prompt = compose_prompt(benchmark, region, framework, elicitation_text,
-                            region_name_override=args.region_name)
+                            region_name_override=args.region_name,
+                            dataset_analysis_text=dataset_analysis_text)
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -436,6 +467,7 @@ def main():
     print(f"  Benchmark: {benchmark.get('name', 'unknown')}")
     print(f"  Region:    {region.get('name') or args.region_name or 'unknown'}")
     print(f"  Quotes:    {len(benchmark.get('verbatim_quotes', []))}")
+    print(f"  DA report: {'included' if dataset_analysis_text else 'not included'}")
     char_count = len(prompt)
     print(f"  Prompt size: {char_count:,} chars (~{char_count // 4:,} tokens)")
 

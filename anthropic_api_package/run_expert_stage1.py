@@ -226,6 +226,81 @@ def read_rows(csv_path: Path) -> list:
         ]
 
 
+HF_LINKS_FILE = BENCHMARKS_DIR / "hf_links.json"
+
+
+def _scaffold_hf_links(rows: list[dict]) -> None:
+    """Add blank entries to hf_links.json for any benchmark slugs not yet listed.
+
+    Entries are keyed by benchmark slug so they work across experts.
+    When multiple tuples share a benchmark slug, per_tuple overrides are
+    scaffolded so each tuple can point to a different HF dataset.
+    Blank entries (hf_dataset_id: null) cause DA to be skipped.
+    """
+    links = {}
+    if HF_LINKS_FILE.exists():
+        links = json.loads(HF_LINKS_FILE.read_text())
+
+    # Collect which tuples use each benchmark slug
+    slug_tuples: dict[str, list[dict]] = {}
+    for row in rows:
+        for t in row["tuples"]:
+            slug_tuples.setdefault(t["benchmark_slug"], []).append(t)
+
+    added = []
+    added_tuples = []
+    for row in rows:
+        for b in row["benchmarks"]:
+            slug = b["slug"]
+            if slug not in links:
+                links[slug] = {
+                    "hf_dataset_id": None,
+                    "hf_config": None,
+                    "benchmark_name": b["name"],
+                }
+                added.append(slug)
+
+            # Scaffold per_tuple entries if multiple tuples use this benchmark
+            tuples_for_slug = slug_tuples.get(slug, [])
+            if len(tuples_for_slug) > 1:
+                per_tuple = links[slug].setdefault("per_tuple", {})
+                for t in tuples_for_slug:
+                    tkey = f"tuple_{t['index']}"
+                    if tkey not in per_tuple:
+                        per_tuple[tkey] = {
+                            "hf_dataset_id": None,
+                            "hf_config": None,
+                            "note": t["use_case"][:120],
+                        }
+                        added_tuples.append(f"{slug}/{tkey}")
+
+    changed = added or added_tuples
+    if changed:
+        HF_LINKS_FILE.write_text(json.dumps(links, indent=2) + "\n")
+
+    if added:
+        print(f"\n  hf_links: added {len(added)} benchmark entries to "
+              f"{HF_LINKS_FILE.relative_to(PACKAGE_ROOT)}")
+        for slug in added:
+            print(f"    - {slug}: fill in hf_dataset_id "
+                  f"(e.g. \"masakhane/afrisenti\") to enable dataset analysis")
+    if added_tuples:
+        print(f"  hf_links: added {len(added_tuples)} per-tuple entries")
+        for entry in added_tuples:
+            print(f"    - {entry}")
+    if not changed:
+        print(f"\n  hf_links: all entries already present in "
+              f"{HF_LINKS_FILE.relative_to(PACKAGE_ROOT)}")
+
+    print(f"\n  Edit {HF_LINKS_FILE.relative_to(PACKAGE_ROOT)} to configure "
+          f"dataset analysis. For each benchmark, set one of:")
+    print(f"    - hf_dataset_id: single HF dataset (e.g. \"masakhane/afrisenti\")")
+    print(f"    - hf_org: HF organization to profile all datasets "
+          f"(e.g. \"DrBenchmark\")")
+    print(f"    - per_tuple entries: different datasets per tuple")
+    print(f"  Benchmarks with all null values will skip dataset analysis.")
+
+
 def write_manifest(row: dict) -> Path:
     csv_stem = Path(row["source_csv"]).stem
     path = EXPERT_RESPONSES / csv_stem / row["expert_id"] / "row.json"
@@ -332,13 +407,16 @@ def write_costs(row: dict) -> Path | None:
 
 
 def run_pipeline_step(paper_stem: str, step: str, *,
-                      use_case: Path = None) -> None:
+                      use_case: Path = None,
+                      hf_tuple: str | None = None) -> None:
     """Invoke run_pipeline.py with a single --step. Raises RuntimeError
     on non-zero exit so the caller can mark the tuple as failed."""
     pdf = PAPERS_DIR / f"{paper_stem}.pdf"
     cmd = [sys.executable, str(RUN_PIPELINE), str(pdf), "--step", step]
     if use_case is not None:
         cmd += ["--use-case", str(use_case)]
+    if hf_tuple is not None:
+        cmd += ["--hf-tuple", hf_tuple]
     print(f"[run] --step {step} ({paper_stem})")
     r = subprocess.run(cmd, cwd=PACKAGE_ROOT)
     if r.returncode != 0:
@@ -357,10 +435,17 @@ def prepare_paper(paper_stem: str) -> None:
     bench_refs = PAPERS_DIR / paper_stem / "benchmark_refs.json"
     bench_yaml = BENCHMARKS_DIR / f"{paper_stem}.yaml"
 
+    registry = PAPERS_DIR / paper_stem / "quote_registry.md"
+
     if page_cache.exists() and any(page_cache.glob("page_*.txt")):
         print(f"[skip] 3a-extract ({paper_stem}: page cache populated)")
     else:
         run_pipeline_step(paper_stem, "3a-extract")
+
+    if registry.exists():
+        print(f"[skip] 3a-assemble ({paper_stem}: registry exists)")
+    else:
+        run_pipeline_step(paper_stem, "3a-assemble")
 
     if summary.exists():
         print(f"[skip] 3a-consolidate ({paper_stem}: summary exists)")
@@ -515,6 +600,7 @@ def main() -> None:
         print(f"  manifest: {m.relative_to(PACKAGE_ROOT)}")
 
     if args.parse_only:
+        _scaffold_hf_links(rows)
         print(f"\nDone (parse-only): wrote {len(rows)} manifest(s).")
         return
 
