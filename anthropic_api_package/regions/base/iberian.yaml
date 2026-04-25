@@ -46,7 +46,8 @@ languages:
   note: "Significant dialectal variation across Latin America. Basque is a language isolate unrelated to other Iberian languages."
 
 writing_systems:
-  - Latin alphabet with diacritics (á, é, í, ó, ú, ñ, ç, ã, õ, ü)
+  scripts:
+    - Latin alphabet with diacritics (á, é, í, ó, ú, ñ, ç, ã, õ, ü)
   note: "All target languages use the Latin alphabet. No script mismatch concerns."
 
 literacy_rates:

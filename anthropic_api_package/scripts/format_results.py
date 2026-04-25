@@ -85,12 +85,37 @@ def format_report(result: dict) -> str:
             lines.append(f"- {s}")
         lines.append("")
 
+    # Practical guidance
+    guidance = result.get("practical_guidance", {})
+    if guidance:
+        lines.append("## Practical Guidance")
+        lines.append("")
+        for field, label in [
+            ("what_this_benchmark_measures", "What This Benchmark Measures"),
+            ("construct_depth", "Construct Depth"),
+            ("supplementation_needed", "Supplementation Needed"),
+        ]:
+            text = guidance.get(field, "")
+            if text:
+                lines.append(f"**{label}**: {text}")
+                lines.append("")
+
     # Remediation
-    remediation = result.get("remediation_suggestions", "")
+    remediation = result.get("remediation_suggestions", [])
     if remediation:
         lines.append("## Remediation Suggestions")
         lines.append("")
-        lines.append(remediation)
+        if isinstance(remediation, list):
+            for item in remediation:
+                if isinstance(item, dict):
+                    dim = item.get("dimension", "")
+                    gap = item.get("gap", "")
+                    rec = item.get("recommendation", "")
+                    lines.append(f"- **{dim}** — {gap}: {rec}")
+                else:
+                    lines.append(f"- {item}")
+        else:
+            lines.append(str(remediation))
         lines.append("")
 
     # Information gaps across dimensions

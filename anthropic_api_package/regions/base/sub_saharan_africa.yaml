@@ -43,10 +43,11 @@ languages:
   note: "Over 2,000 languages spoken across the continent. Many languages are low-resource with minimal NLP tooling."
 
 writing_systems:
-  - Latin alphabet (most written African languages)
-  - Ge'ez/Ethiopic script (Amharic, Tigrinya)
-  - Arabic script (Hausa in some regions, Swahili historically)
-  - N'Ko script (Manding languages, West Africa)
+  scripts:
+    - Latin alphabet (most written African languages)
+    - Ge'ez/Ethiopic script (Amharic, Tigrinya)
+    - Arabic script (Hausa in some regions, Swahili historically)
+    - N'Ko script (Manding languages, West Africa)
   note: "Most African languages use Latin-based orthographies, but with additional characters and diacritics."
 
 literacy_rates:

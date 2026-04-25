@@ -1,16 +1,16 @@
-Produce an assessment-specific region YAML scoped to the target population
+Produce an assessment-specific region document scoped to the target population
 described in the elicitation summary.
 
 The user message contains:
-- 1-2 selected base template YAMLs (structural and stylistic examples).
+- 1-2 selected base templates as JSON (structural and stylistic examples).
 - The full elicitation summary (authoritative source for scoping).
-- The benchmark YAML (domain, languages, task categories).
+- The benchmark as JSON (domain, languages, task categories).
 
 ## Granularity: narrower than the base templates
 
 The base templates in `regions/base/` are **broad regional sketches**
 (continent- or language-family-scale, e.g. `east_asia`, `mena`,
-`sub_saharan_africa`). The output YAML you produce is **not** another
+`sub_saharan_africa`). The output you produce is **not** another
 broad-region template. It describes the specific deployment population
 named in the elicitation summary — typically much narrower (one country, a
 sub-national cohort, a specific ministry or NGO, a defined occupational
@@ -83,29 +83,25 @@ the tag — not as a value, but as a placeholder in place of the value:
   device model distributions).
 
 Examples:
-```yaml
-# GOOD — grounded qualitative field, fill directly:
-population_description: >
-  Indonesian citizens seeking guidance on federal administrative
-  procedures (KTP, tax filing, business registration), contacting the
-  service primarily via mobile.
+```json
+// GOOD — grounded qualitative field, fill directly:
+"population_description": "Indonesian citizens seeking guidance on federal administrative procedures (KTP, tax filing, business registration), contacting the service primarily via mobile."
 
-# GOOD — factual slot, tag instead of guessing:
-literacy_rate: "[NEEDS VERIFICATION]"
-mobile_internet_penetration_pct: "[NEEDS VERIFICATION]"
-applicable_data_protection_regulation: "[NEEDS VERIFICATION]"
+// GOOD — factual slot, tag instead of guessing:
+"literacy_rate": "[NEEDS VERIFICATION]",
+"mobile_internet_penetration_pct": "[NEEDS VERIFICATION]",
+"applicable_data_protection_regulation": "[NEEDS VERIFICATION]"
 
-# GOOD — list structure induced from schema, individual facts tagged:
-regional_procedural_variation:
-  - region: DKI Jakarta
-    notes: "[NEEDS VERIFICATION]"
-  - region: "[NEEDS VERIFICATION — surface other salient kabupaten/provinces]"
-    notes: "[NEEDS VERIFICATION]"
+// GOOD — list structure induced from schema, individual facts tagged:
+"regional_procedural_variation": [
+  {"region": "DKI Jakarta", "notes": "[NEEDS VERIFICATION]"},
+  {"region": "[NEEDS VERIFICATION — surface other salient kabupaten/provinces]", "notes": "[NEEDS VERIFICATION]"}
+]
 
-# BAD — parametric-memory number shipped as fact:
-literacy_rate: 96
-# BAD — confident-sounding but potentially stale regulation name:
-applicable_data_protection_regulation: "PP 71/2019"
+// BAD — parametric-memory number shipped as fact:
+"literacy_rate": 96
+// BAD — confident-sounding but potentially stale regulation name:
+"applicable_data_protection_regulation": "PP 71/2019"
 ```
 
 **When in doubt, tag.** Over-tagging at most wastes a web search; under-
@@ -117,9 +113,12 @@ template has a field that's irrelevant to the scoped population (e.g. a
 drop it — don't tag it.
 
 **Read-only invariant:** `regions/base/` is never modified. Your output is
-a new YAML for `assessments/<benchmark>/<slug>/region.yaml`.
+a new document for `assessments/<benchmark>/<slug>/region_scaffold.yaml`.
 
 ## Output
 
-Output ONLY the YAML document, wrapped in a ```yaml fenced block so it can
-be extracted cleanly. No preamble.
+Output ONLY the document as a JSON object, wrapped in a ```json fenced
+block so it can be extracted cleanly. No preamble. Use the same field
+names and nesting as the base templates — the only difference is that
+the output format is JSON instead of YAML. Multi-line text values should
+be plain strings (use `\n` for line breaks if needed).

@@ -22,8 +22,9 @@ languages:
   note: "Persian, Dari, and Tajik are mutually intelligible varieties of the same language. Iran is multilingual with significant minority language populations."
 
 writing_systems:
-  - Persian/Arabic script (Iran, Afghanistan - right-to-left)
-  - Cyrillic script (Tajikistan)
+  scripts:
+    - Persian/Arabic script (Iran, Afghanistan - right-to-left)
+    - Cyrillic script (Tajikistan)
   note: "RTL script requires specific NLP handling. Persian script differs from Arabic in 4 additional characters (پ, چ, ژ, گ). Tajik uses Cyrillic due to Soviet-era policy."
 
 literacy_rates:

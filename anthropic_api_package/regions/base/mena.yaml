@@ -39,9 +39,10 @@ languages:
   note: "Diglossia is a defining feature: MSA for formal/written, regional dialects for spoken. Dialectal variation is enormous."
 
 writing_systems:
-  - Arabic script (right-to-left)
-  - Latin script (French in North Africa, transliteration)
-  - Tifinagh script (Berber/Amazigh)
+  scripts:
+    - Arabic script (right-to-left)
+    - Latin script (French in North Africa, transliteration)
+    - Tifinagh script (Berber/Amazigh)
   note: "RTL script requires specific NLP handling. Arabic morphology (root-pattern system) creates unique tokenization challenges."
 
 literacy_rates:

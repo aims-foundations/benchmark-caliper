@@ -23,11 +23,12 @@ languages:
     - Various Chinese dialects (Wu, Min, Hakka)
 
 writing_systems:
-  - Simplified Chinese characters (mainland China)
-  - Traditional Chinese characters (Taiwan, Hong Kong)
-  - Korean Hangul (+ limited Hanja)
-  - Japanese (Kanji + Hiragana + Katakana)
-  - Mongolian Cyrillic / traditional Mongolian script
+  scripts:
+    - Simplified Chinese characters (mainland China)
+    - Traditional Chinese characters (Taiwan, Hong Kong)
+    - Korean Hangul (+ limited Hanja)
+    - Japanese (Kanji + Hiragana + Katakana)
+    - Mongolian Cyrillic / traditional Mongolian script
   note: "CJK character sets pose unique NLP challenges (tokenization, character-level vs. word-level)."
 
 literacy_rates:

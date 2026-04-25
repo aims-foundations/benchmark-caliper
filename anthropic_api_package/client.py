@@ -20,6 +20,7 @@ import json
 import sys
 import threading
 import time
+from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
@@ -72,6 +73,82 @@ STREAM_DEFAULT: bool | None = None
 def set_stream_default(mode: bool | None) -> None:
     global STREAM_DEFAULT
     STREAM_DEFAULT = mode
+
+
+# Preemptive rate limiter: tracks input and output tokens in rolling 60s
+# windows and sleeps before sending a request that would exceed the budget.
+# Avoids wasting money on 429'd requests that must be re-sent.
+_INPUT_TPM_LIMIT: int = 0   # 0 = disabled
+_OUTPUT_TPM_LIMIT: int = 0  # 0 = disabled
+_INPUT_TPM_WINDOW: deque[tuple[float, int]] = deque()
+_OUTPUT_TPM_WINDOW: deque[tuple[float, int]] = deque()
+_TPM_LOCK = threading.Lock()
+
+
+def set_tpm_limit(input_tpm: int = 0, output_tpm: int = 0) -> None:
+    global _INPUT_TPM_LIMIT, _OUTPUT_TPM_LIMIT
+    _INPUT_TPM_LIMIT = input_tpm
+    _OUTPUT_TPM_LIMIT = output_tpm
+    parts = []
+    if input_tpm:
+        parts.append(f"{input_tpm:,} input")
+    if output_tpm:
+        parts.append(f"{output_tpm:,} output")
+    if parts:
+        print(f"  Rate limiter: {' / '.join(parts)} tokens/min",
+              file=sys.stderr)
+
+
+def _window_used(window: deque[tuple[float, int]], now: float) -> int:
+    while window and window[0][0] < now - 60:
+        window.popleft()
+    return sum(t for _, t in window)
+
+
+def _wait_for_capacity(step: str) -> None:
+    """If the rolling 60s window is over budget, sleep until it drains."""
+    if not _INPUT_TPM_LIMIT and not _OUTPUT_TPM_LIMIT:
+        return
+    label = step or "call"
+    with _TPM_LOCK:
+        now = time.monotonic()
+        if _INPUT_TPM_LIMIT:
+            input_used = _window_used(_INPUT_TPM_WINDOW, now)
+            if input_used >= _INPUT_TPM_LIMIT:
+                oldest = _INPUT_TPM_WINDOW[0][0] if _INPUT_TPM_WINDOW else now
+                wait = 60 - (now - oldest) + 1
+                print(f"\n  ⏳ [{label}] input rate limit — {input_used:,}"
+                      f" >= {_INPUT_TPM_LIMIT:,} TPM, "
+                      f"waiting {wait:.0f}s...",
+                      file=sys.stderr, flush=True)
+                _TPM_LOCK.release()
+                time.sleep(wait)
+                _TPM_LOCK.acquire()
+                now = time.monotonic()
+        if _OUTPUT_TPM_LIMIT:
+            output_used = _window_used(_OUTPUT_TPM_WINDOW, now)
+            if output_used >= _OUTPUT_TPM_LIMIT:
+                oldest = _OUTPUT_TPM_WINDOW[0][0] if _OUTPUT_TPM_WINDOW else now
+                wait = 60 - (now - oldest) + 1
+                print(f"\n  ⏳ [{label}] output rate limit — {output_used:,}"
+                      f" >= {_OUTPUT_TPM_LIMIT:,} TPM, "
+                      f"waiting {wait:.0f}s...",
+                      file=sys.stderr, flush=True)
+                _TPM_LOCK.release()
+                time.sleep(wait)
+                _TPM_LOCK.acquire()
+
+
+def _record_tpm(input_tokens: int, output_tokens: int) -> None:
+    """Record actual tokens from the API response into the rolling window."""
+    if not _INPUT_TPM_LIMIT and not _OUTPUT_TPM_LIMIT:
+        return
+    now = time.monotonic()
+    with _TPM_LOCK:
+        if _INPUT_TPM_LIMIT:
+            _INPUT_TPM_WINDOW.append((now, input_tokens))
+        if _OUTPUT_TPM_LIMIT:
+            _OUTPUT_TPM_WINDOW.append((now, output_tokens))
 
 
 # Per-call trace log: one JSONL file per step label in `_TRACE_DIR`. Each file
@@ -540,42 +617,57 @@ def call(
     if stream is None:
         stream = STREAM_DEFAULT if STREAM_DEFAULT is not None else True
 
-    if not stream:
-        t0 = time.monotonic()
-        resp = _get_client().messages.create(**kwargs)
-        duration = time.monotonic() - t0
-        _record_usage(step=step, model=model, usage=resp.usage)
-        output = "".join(b.text for b in resp.content if getattr(b, "type", None) == "text")
-        tool_trace = _extract_tool_trace(resp.content)
-        _write_trace(step=step, model=model, system=system, user=user,
-                     output=output, usage=resp.usage, duration_s=duration,
-                     pdf_path=pdf_path, tools=tools, max_tokens=max_tokens,
-                     tool_trace=tool_trace, **trace_sampling)
-        return output
+    _wait_for_capacity(step)
 
-    # Streaming path: emit tokens to stderr as they arrive, then collect the
-    # final message for accurate usage accounting.
-    label = step or model
-    print(f"\n  [{label}] streaming ▶ ", file=sys.stderr, end="", flush=True)
-    t0 = time.monotonic()
-    with _get_client().messages.stream(**kwargs) as stream_resp:
-        for text in stream_resp.text_stream:
-            print(text, file=sys.stderr, end="", flush=True)
-        final = stream_resp.get_final_message()
-    duration = time.monotonic() - t0
-    print(file=sys.stderr)  # newline after the stream
-    _record_usage(step=step, model=model, usage=final.usage)
-    # Prefer the final message's text blocks as source of truth (covers
-    # non-text blocks like server-tool-use interleaved with text).
-    output = "".join(
-        b.text for b in final.content if getattr(b, "type", None) == "text"
-    )
-    tool_trace = _extract_tool_trace(final.content)
-    _write_trace(step=step, model=model, system=system, user=user,
-                 output=output, usage=final.usage, duration_s=duration,
-                 pdf_path=pdf_path, tools=tools, max_tokens=max_tokens,
-                 tool_trace=tool_trace, **trace_sampling)
-    return output
+    max_retries = 5
+    base_delay = 30
+
+    for attempt in range(max_retries + 1):
+        try:
+            if not stream:
+                t0 = time.monotonic()
+                resp = _get_client().messages.create(**kwargs)
+                duration = time.monotonic() - t0
+                _record_usage(step=step, model=model, usage=resp.usage)
+                _record_tpm(getattr(resp.usage, "input_tokens", 0) or 0,
+                            getattr(resp.usage, "output_tokens", 0) or 0)
+                output = "".join(b.text for b in resp.content if getattr(b, "type", None) == "text")
+                tool_trace = _extract_tool_trace(resp.content)
+                _write_trace(step=step, model=model, system=system, user=user,
+                             output=output, usage=resp.usage, duration_s=duration,
+                             pdf_path=pdf_path, tools=tools, max_tokens=max_tokens,
+                             tool_trace=tool_trace, **trace_sampling)
+                return output
+
+            label = step or model
+            print(f"\n  [{label}] streaming ▶ ", file=sys.stderr, end="", flush=True)
+            t0 = time.monotonic()
+            with _get_client().messages.stream(**kwargs) as stream_resp:
+                for text in stream_resp.text_stream:
+                    print(text, file=sys.stderr, end="", flush=True)
+                final = stream_resp.get_final_message()
+            duration = time.monotonic() - t0
+            print(file=sys.stderr)
+            _record_usage(step=step, model=model, usage=final.usage)
+            _record_tpm(getattr(final.usage, "input_tokens", 0) or 0,
+                        getattr(final.usage, "output_tokens", 0) or 0)
+            output = "".join(
+                b.text for b in final.content if getattr(b, "type", None) == "text"
+            )
+            tool_trace = _extract_tool_trace(final.content)
+            _write_trace(step=step, model=model, system=system, user=user,
+                         output=output, usage=final.usage, duration_s=duration,
+                         pdf_path=pdf_path, tools=tools, max_tokens=max_tokens,
+                         tool_trace=tool_trace, **trace_sampling)
+            return output
+
+        except anthropic.RateLimitError:
+            if attempt == max_retries:
+                raise
+            delay = base_delay * (2 ** attempt)
+            print(f"\n  ⏳ Rate limited (attempt {attempt + 1}/{max_retries}), "
+                  f"waiting {delay}s...", file=sys.stderr, flush=True)
+            time.sleep(delay)
 
 
 def call_parallel(jobs: list[dict], max_workers: int = 6) -> list[str]:

@@ -64,46 +64,37 @@ documentation_excerpts: |
   high across Spain, Portugal, and Latin American countries. Latin alphabet is the
   native script for all target languages. No modality mismatch concerns.
 
-# NOTE: quote text/pages below are ICL placeholders to anchor the schema for
-# Sonnet's synthesis step. They do not correspond to actual IberBench paper quotes.
+# NOTE: pages/dimensions below are ICL placeholders to anchor the schema for
+# Sonnet's synthesis step. Quote text is filled in programmatically from the
+# registry — only id, page, and dimension are emitted by the model.
 verbatim_quotes:
   - id: Q1
-    text: "IberBench aggregates 101 datasets across 6 Iberian languages covering 22 NLP test case categories spanning lexical analysis, textual entailment, question answering, sentiment, humor, and toxicity detection."
     page: 2
     dimension: input_ontology
   - id: Q2
-    text: "Of the 101 constituent tasks, 57 are sourced from IberLEF shared task campaigns focused on Iberian languages, providing regionally grounded input content."
     page: 5
     dimension: input_content
   - id: Q3
-    text: "All target languages use Latin script with diacritics, which matches the text-based encoding of all constituent datasets."
     page: 7
     dimension: input_form
   - id: Q4
-    text: "HUHU and DETOXIS use binary and categorical label schemas adapted from general-purpose datasets without Iberian-specific justification or stakeholder validation."
     page: 12
     dimension: output_ontology
   - id: Q5
-    text: "The IroSvA irony detection task requires native Spanish-speaking annotators, while TASS 2020 and several other constituent tasks do not document annotator demographics."
     page: 14
     dimension: output_content
   - id: Q6
-    text: "Evaluation is text-based across all 101 constituent tasks, matching the high literacy rates of target populations and the Latin-script conventions of all target languages."
     page: 9
     dimension: output_form
   - id: Q7
-    text: "Argentinian Spanish and Brazilian Portuguese are underrepresented across IberBench's 22 task categories despite being the largest variants of their respective languages."
     page: 4
     dimension: input_ontology
   - id: Q8
-    text: "DETOXIS topic categories are inherited from general-purpose toxicity frameworks and are not substantiated as culturally appropriate for Iberian deployment contexts."
     page: 13
     dimension: output_ontology
   - id: Q9
-    text: "HUHU and DETOXIS annotation was conducted by local university students in Spain, which does not proportionally represent Latin American Spanish or Portuguese stakeholder populations."
     page: 15
     dimension: output_content
   - id: Q10
-    text: "PAN 2015 author profiling tasks use regionally-sourced Iberian text, providing strong content grounding for the author-profiling construct."
     page: 8
     dimension: input_content

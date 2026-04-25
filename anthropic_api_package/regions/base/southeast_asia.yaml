@@ -31,13 +31,14 @@ languages:
   note: "Over 1,000 indigenous languages across the region"
 
 writing_systems:
-  - Latin (Malay, Indonesian, Vietnamese, Filipino)
-  - Thai script
-  - Khmer script
-  - Burmese script
-  - Lao script
-  - Chinese characters (Singapore, Malaysia)
-  - Tamil script (Singapore, Malaysia)
+  scripts:
+    - Latin (Malay, Indonesian, Vietnamese, Filipino)
+    - Thai script
+    - Khmer script
+    - Burmese script
+    - Lao script
+    - Chinese characters (Singapore, Malaysia)
+    - Tamil script (Singapore, Malaysia)
   note: "Several SEA scripts lack uppercase/lowercase distinctions. Thai, Khmer, Burmese, and Lao do not use capitalization."
 
 literacy_rates:

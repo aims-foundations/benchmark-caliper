@@ -17,6 +17,7 @@ All quote provenance rules are baked into the template — no LLM judgment neede
 """
 
 import argparse
+import re
 import yaml
 from pathlib import Path
 
@@ -63,159 +64,92 @@ def format_documentation_excerpts(excerpts) -> str:
     return "\n\n".join(sections)
 
 
-def format_region_context(region: dict) -> str:
-    """Format region YAML into readable context sections.
+def format_region_yaml(region: dict, registry: list[dict]) -> str:
+    """Dump region dict as fenced YAML, replacing [|url|] with [WEB-N] IDs."""
+    dumped = yaml.dump(region, sort_keys=False, allow_unicode=True,
+                       default_flow_style=False)
+    if registry:
+        dumped = inject_web_ids(dumped, registry)
+    return f"```yaml\n{dumped}```"
 
-    Handles both formats:
-    - Repo format: countries as list or dict with primary/extended, languages as
-      dict with major/variants keys
-    - Pipeline format: countries as dict with primary/extended, languages as list
-      of dicts with name/notes
+
+_URL_DELIM_RE = re.compile(r"\[\|([^|]+)\|\]")
+
+
+def extract_web_source_registry(region: dict) -> list[dict]:
+    """Walk the region dict and extract all [|url|] delimited sources.
+
+    Returns a list of {id: "WEB-1", url: "https://..."} dicts, deduplicated
+    by URL in order of first appearance.
     """
-    parts = []
+    seen_urls: dict[str, int] = {}
+    registry: list[dict] = []
 
-    # Countries — handle list, dict with primary/extended, or plain list
-    countries = region.get("countries", {})
-    if countries:
-        if isinstance(countries, dict):
-            primary = countries.get("primary", [])
-            extended = countries.get("extended", [])
-            if isinstance(primary, list):
-                parts.append(f"**Countries**: {', '.join(primary)}")
-            if isinstance(extended, list) and extended:
-                parts.append(f"**Extended region**: {', '.join(extended)}")
-        elif isinstance(countries, list):
-            parts.append(f"**Countries**: {', '.join(countries)}")
+    def _walk(obj):
+        if isinstance(obj, str):
+            for m in _URL_DELIM_RE.finditer(obj):
+                url = m.group(1).strip()
+                if url not in seen_urls:
+                    idx = len(registry) + 1
+                    seen_urls[url] = idx
+                    registry.append({"id": f"WEB-{idx}", "url": url})
+        elif isinstance(obj, dict):
+            for v in obj.values():
+                _walk(v)
+        elif isinstance(obj, list):
+            for item in obj:
+                _walk(item)
 
-    # Languages — handle dict with major/variants, list of dicts, or list of strings
-    languages = region.get("languages", [])
-    if languages:
-        lang_strs = []
-        if isinstance(languages, dict):
-            # Dict format: {major: [...], variants/varieties: [...], note: "..."}
-            for lang in languages.get("major", []):
-                if isinstance(lang, dict):
-                    name = lang.get("name", lang.get("language", str(lang)))
-                    code = lang.get("code", "")
-                    notes = lang.get("notes", "")
-                    entry = f"- {name}"
-                    if code:
-                        entry += f" ({code})"
-                    if notes:
-                        entry += f": {notes}"
-                    lang_strs.append(entry)
-                else:
-                    lang_strs.append(f"- {lang}")
-            # Handle both 'variants' (repo) and 'varieties' (pipeline)
-            variants = languages.get("variants", languages.get("varieties", []))
-            if variants:
-                lang_strs.append("\n**Language varieties**:")
-                for v in variants:
-                    if isinstance(v, dict):
-                        name = v.get("variety", v.get("name", str(v)))
-                        code = v.get("code", "")
-                        notes = v.get("notes", "")
-                        entry = f"- {name}"
-                        if code:
-                            entry += f" ({code})"
-                        if notes:
-                            entry += f": {notes}"
-                        lang_strs.append(entry)
-                    else:
-                        lang_strs.append(f"- {v}")
-            note = languages.get("note", "")
-            if note:
-                lang_strs.append(f"\n*Note: {note}*")
-        elif isinstance(languages, list):
-            for lang in languages:
-                if isinstance(lang, dict):
-                    # Handle both {name: ..., notes: ...} and {language: ..., code: ..., notes: ...}
-                    name = lang.get("name", lang.get("language", str(lang)))
-                    code = lang.get("code", "")
-                    notes = lang.get("notes", "")
-                    entry = f"- {name}"
-                    if code:
-                        entry += f" ({code})"
-                    if notes:
-                        entry += f": {notes}"
-                    lang_strs.append(entry)
-                else:
-                    lang_strs.append(f"- {lang}")
-        parts.append("**Languages**:\n" + "\n".join(lang_strs))
+    _walk(region)
+    return registry
 
-    # Writing systems — handle list of strings or list of dicts with note
-    ws = region.get("writing_systems", [])
-    if ws:
-        if isinstance(ws, list):
-            ws_strs = [item if isinstance(item, str) else str(item) for item in ws]
-            parts.append(f"**Writing systems**: {', '.join(ws_strs)}")
-        ws_note = region.get("writing_systems", {})
-        if isinstance(ws_note, dict) and ws_note.get("note"):
-            parts.append(f"*Note: {ws_note['note']}*")
 
-    # Literacy rates — handle dict {country: rate}, list of {country, rate} dicts
-    literacy = region.get("literacy_rates", {})
-    if literacy:
-        if isinstance(literacy, list):
-            # Pipeline format: [{country: "Spain", rate: "98%"}, ...]
-            rates = [f"- {item.get('country', '?')}: {item.get('rate', '?')}"
-                     if isinstance(item, dict) else f"- {item}"
-                     for item in literacy]
-            parts.append("**Literacy rates**:\n" + "\n".join(rates))
-        elif isinstance(literacy, dict):
-            # Repo format: {Spain: 0.98, Portugal: 0.96, ...}
-            rates = [f"- {k}: {v}" for k, v in literacy.items()]
-            parts.append("**Literacy rates**:\n" + "\n".join(rates))
+def inject_web_ids(yaml_text: str, registry: list[dict]) -> str:
+    """Replace [|url|] with [WEB-N] in the YAML text for the composed prompt."""
+    url_to_id = {entry["url"]: entry["id"] for entry in registry}
+
+    def _replace(m):
+        url = m.group(1).strip()
+        wid = url_to_id.get(url, m.group(0))
+        return f"[{wid}]"
+
+    return _URL_DELIM_RE.sub(_replace, yaml_text)
+
+
+def format_web_source_registry(registry: list[dict]) -> str:
+    """Format web source registry as a markdown table."""
+    if not registry:
+        return "_No web sources cited._"
+    rows = ["| ID | URL |", "|----|-----|"]
+    for entry in registry:
+        rows.append(f"| {entry['id']} | {entry['url']} |")
+    return "\n".join(rows)
+
+
+def filter_elicitation(text: str) -> str:
+    """Keep only Elicitation Responses and Dimension Priority Weights.
+
+    Use Case, Target Population, and Flagged Gaps are already captured in
+    the region YAML and would be redundant in the composed prompt.
+    """
+    keep = {"Elicitation Responses", "Dimension Priority Weights"}
+    result = []
+    current_heading = None
+    current_lines: list[str] = []
+
+    for line in text.splitlines():
+        if line.startswith("## "):
+            if current_heading in keep:
+                result.extend(current_lines)
+            current_heading = line[3:].strip()
+            current_lines = [line]
         else:
-            parts.append(f"**Literacy rates**: {literacy}")
+            current_lines.append(line)
 
-    # Notes sections
-    for field, label in [
-        ("cultural_norms_notes", "Cultural Norms"),
-        ("infrastructure_notes", "Infrastructure"),
-        ("domain_specific_notes", "Domain-Specific Notes"),
-    ]:
-        val = region.get(field, "")
-        if val:
-            parts.append(f"**{label}**:\n\n{val}")
+    if current_heading in keep:
+        result.extend(current_lines)
 
-    # Web search enrichment — handle both formats
-    enrichment = region.get("web_search_enrichment", {})
-    if enrichment:
-        parts.append("**Web Search Enrichment**:")
-
-        # Pipeline format: searches_performed as list of {query, key_findings} dicts
-        searches = enrichment.get("searches_performed", [])
-        if searches:
-            for s in searches:
-                if isinstance(s, dict):
-                    q = s.get("query", "")
-                    f = s.get("key_findings", "")
-                    parts.append(f"- **Search**: {q}\n  **Findings**: {f}")
-                else:
-                    parts.append(f"- {s}")
-
-        # Repo format: queries_performed as list of strings, key_findings as list
-        queries = enrichment.get("queries_performed", [])
-        if queries and not searches:
-            parts.append("Searches performed:\n" + "\n".join(f"- {q}" for q in queries))
-        findings = enrichment.get("key_findings", [])
-        if findings:
-            parts.append("Key findings:\n" + "\n".join(f"- {f}" for f in findings))
-
-        conflicts = enrichment.get("conflicting_information", [])
-        if conflicts:
-            parts.append("\nConflicting information:\n" + "\n".join(f"- {c}" for c in conflicts))
-
-    # Fallback: if none of the expected flat-schema top-level keys matched
-    # (e.g. the synthesis step produced a nested, deployment-specific schema),
-    # dump the full YAML so downstream scoring still sees the regional data.
-    if not parts:
-        dumped = yaml.dump(region, sort_keys=False, allow_unicode=True,
-                           default_flow_style=False)
-        return f"```yaml\n{dumped}```"
-
-    return "\n\n".join(parts)
+    return "\n".join(result).strip() if result else text
 
 
 def format_framework_dimensions(framework: dict) -> str:
@@ -285,19 +219,21 @@ def compose_prompt(benchmark: dict, region: dict, framework: dict,
             rubric_lines.append(f"- **{score}**: {desc}")
         rubric = "\n".join(rubric_lines)
 
+    web_registry = extract_web_source_registry(region)
+
     prompt = f"""I need you to perform a validity analysis of an AI benchmark for a specific target region.
 
 ## Instructions
 
 You are evaluating whether the benchmark **{bm_full}** is valid for use in **{region_name}**.
 
-Analyze the benchmark documentation and regional context below against each of the 6 validity dimensions. For each dimension, assign a score (1-5), provide justification with evidence quotes, respond to each checklist item, and identify information gaps.
+Analyze the evidence sources below against each of the 6 validity dimensions. For each dimension, assign a score (1-5), provide justification with cited evidence, respond to each checklist item, and identify information gaps.
 
 ### Critical Constraints
 
-- **Document-grounded only**: Base your analysis ONLY on evidence found in the provided benchmark documentation and the factual regional context given. Do NOT role-play as a member of the target culture or speculate beyond what the documentation supports.
-- **Cite evidence**: For each finding, quote or reference specific parts of the benchmark documentation.
-- **Flag gaps explicitly**: When information is missing from the documentation, say "INSUFFICIENT DOCUMENTATION" and describe what would be needed.
+- **Evidence-grounded only**: Base your analysis ONLY on the three evidence sources provided: (1) benchmark documentation with verbatim quotes, (2) regional context with web-sourced findings, and (3) dataset analysis findings with datapoint citations (if present). Do NOT role-play as a member of the target culture or speculate beyond what these sources support.
+- **Cite evidence**: For each finding, cite at least one source — a verbatim quote `[QN]`, a web source `[WEB-N]`, or a dataset citation `DATASET-D{{n}}`.
+- **Flag gaps explicitly**: When none of the three evidence sources addresses a checklist item, say "INSUFFICIENT DOCUMENTATION" and describe what would be needed.
 - **Distinguish documentable vs. expert-needed**: Classify each finding as either (a) determinable from documentation, or (b) requiring regional expert verification.
 - **Regional specificity**: Evaluate validity *for the specified target region*, not in general.
 - **Conservative scoring**: When evidence is ambiguous or insufficient, score lower rather than higher.
@@ -306,23 +242,15 @@ Analyze the benchmark documentation and regional context below against each of t
 
 {rubric}
 
-### Quote Provenance Rules
+### Evidence Sources
 
-The benchmark documentation below contains two types of text:
+The prompt below contains three evidence sources:
 
-- **Verbatim quotes** from the original paper, listed in the "Verbatim Quote Registry"
-  section with IDs (Q1, Q2, ...), page numbers, and exact text. These are
-  **authoritative evidence** extracted directly from the PDF.
-- **Interpretive context** in the "Benchmark Documentation" section, written by the
-  extraction pipeline. This provides useful framing and references quote IDs like
-  [Q3], but is NOT evidence from the paper itself.
+1. **Benchmark Documentation** + **Verbatim Quote Registry** — paper content, with authoritative quotes labeled `[QN]`
+2. **Regional Context** (YAML) + **Web Source Registry** — deployment context with web research findings cited as `[WEB-N]`
+3. **Dataset Analysis Findings** (if present) — empirical observations from the benchmark's HuggingFace data, cited as `DATASET-D{{n}}`
 
-When populating `evidence_quotes` in your output JSON:
-- ONLY include text from the Verbatim Quote Registry
-- Format each entry as: `"[QN] 'exact quote text' (p.X)"`
-- Do NOT cite interpretive context as if it were from the paper
-- If you cannot find a verbatim quote to support a finding, state this explicitly
-  rather than citing paraphrased text
+Citation rules for each source are in your system instructions.
 
 ---
 
@@ -345,19 +273,19 @@ When populating `evidence_quotes` in your output JSON:
 
 ---
 
-## Target Region
+## Regional Context
 
-- **Name**: {region_name}
+{format_region_yaml(region, web_registry)}
 
-### Regional Context
+### Web Source Registry
 
-{format_region_context(region)}
+{format_web_source_registry(web_registry)}
 
 ---
 
-## Deployment Context
+## Expert Elicitation
 
-{elicitation_text if elicitation_text else "_No deployment context provided. Evaluate the benchmark's general validity for the target region._"}
+{filter_elicitation(elicitation_text) if elicitation_text else "_No elicitation responses provided. Evaluate the benchmark's general validity for the target region._"}
 
 ---
 """
@@ -367,16 +295,9 @@ When populating `evidence_quotes` in your output JSON:
 ## Dataset Analysis Findings
 
 The following empirical findings were produced by automated profiling scripts that
-sampled the benchmark's actual dataset on HuggingFace. These findings may confirm
-or contradict claims in the benchmark documentation above.
-
-**Scoring instruction:** Dataset analysis provides empirical evidence that may
-contradict documentation claims. When script outputs conflict with documented
-properties (e.g., language distribution differs from claimed languages), treat
-the empirical evidence as more authoritative for scoring purposes. Note the
-discrepancy explicitly in your justification. Dataset analysis findings tagged
-as CRITICAL should be treated as strong evidence for lower scores on the
-affected dimensions.
+sampled the benchmark's actual dataset on HuggingFace. Observations cite specific
+datapoints using `DATASET-D{{n}}` IDs (e.g., QUAERO-D3). Findings tagged CRITICAL
+should be treated as strong evidence for lower scores on the affected dimensions.
 
 {dataset_analysis_text}
 
@@ -400,10 +321,14 @@ Output a single valid JSON object with this structure:
   "region": "{region_name}",
   "dimensions": {{
     "input_ontology": {{
-      "score": "<1-5>",
+      "score": "<integer 1-5>",
       "justification": "...",
+      "strengths": ["what this dimension captures well for the target context"],
       "checklist_responses": {{ "IO-1": "...", "IO-2": "..." }},
       "evidence_quotes": ["[Q1] 'quote text' (p.7)", ...],
+      "evidence_web_sources": ["[WEB-1] literacy rate 96%", ...],
+      "evidence_dataset": ["DATASET-D1: observation", ...],
+      "evidence_map": {{ "IO-1": ["Q1", "WEB-3"], "IO-2": ["DATASET-D1"] }},
       "confidence": "<high|medium|low>",
       "information_gaps": ["..."],
       "requires_expert_verification": ["..."]
@@ -416,7 +341,14 @@ Output a single valid JSON object with this structure:
   }},
   "overall_summary": "...",
   "risk_assessment": "<high|medium|low>",
-  "remediation_suggestions": "...",
+  "practical_guidance": {{
+    "what_this_benchmark_measures": "...",
+    "construct_depth": "...",
+    "supplementation_needed": "..."
+  }},
+  "remediation_suggestions": [
+    {{ "dimension": "...", "gap": "...", "recommendation": "..." }}
+  ],
   "highest_concern_dimensions": ["..."],
   "strongest_dimensions": ["..."]
 }}
@@ -467,6 +399,8 @@ def main():
     print(f"  Benchmark: {benchmark.get('name', 'unknown')}")
     print(f"  Region:    {region.get('name') or args.region_name or 'unknown'}")
     print(f"  Quotes:    {len(benchmark.get('verbatim_quotes', []))}")
+    web_sources = len(extract_web_source_registry(region))
+    print(f"  Web srcs:  {web_sources}")
     print(f"  DA report: {'included' if dataset_analysis_text else 'not included'}")
     char_count = len(prompt)
     print(f"  Prompt size: {char_count:,} chars (~{char_count // 4:,} tokens)")

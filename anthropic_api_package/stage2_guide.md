@@ -77,11 +77,34 @@ benchmark only run the deterministic scripts once.
 Per tuple (approximate):
 - Steps 2-summary through 4b: ~$0.05-0.10 (Sonnet + Haiku)
 - Step 5 web search: ~$0.02-0.05 (Sonnet)
-- Step 5b DA interpretation: ~$0.02-0.05 (Sonnet), scripts are free
+- Step 5b DA: ~$0.02-0.05 single-dataset / ~$1.00-2.00 org mode (Sonnet), scripts free
 - Step 7 Opus scoring: ~$0.30-0.50 (the one Opus call)
-- **Total per tuple: ~$0.40-0.70**
+- **Total per tuple: ~$0.40-0.70** (single-dataset DA) / **~$1.40-2.70** (org-mode DA)
 
 For 4 tuples: ~$1.50-2.80 total (less if tuples share benchmarks).
+Per-dataset DA script outputs and Sonnet summaries are cached, so multiple
+tuples sharing an org-mode benchmark only re-run the aggregation step.
+
+## Rate limiting
+
+The pipeline tracks actual API token usage in rolling 60-second windows
+and sleeps preemptively before hitting Anthropic's rate limits. Defaults
+match personal-tier Sonnet limits:
+
+```bash
+# Defaults (personal tier)
+python run_pipeline.py $PDF --step 5b-da --tpm-limit 30000 --otpm-limit 8000
+
+# Higher-tier account
+python run_pipeline.py $PDF --step 5b-da --tpm-limit 80000 --otpm-limit 16000
+
+# Disable rate limiting
+python run_pipeline.py $PDF --step 5b-da --tpm-limit 0 --otpm-limit 0
+```
+
+This is especially relevant for org-mode DA (Step 5b), which makes 12+
+sequential Sonnet calls. The rate limiter avoids 429 errors and wasted
+input tokens on rejected requests.
 
 ## Dry run
 
@@ -232,6 +255,9 @@ This runs:
 1. DA scripts on each dataset (cached under `benchmarks/da_cache/`)
 2. Per-dataset Sonnet summaries (also cached)
 3. Aggregated interpretation weighted by this tuple's deployment context
+4. Citation resolution (org mode): the aggregation outputs a JSON list of
+   cited evidence IDs (`DATASET-D{n}`), which are resolved to full excerpts
+   from the per-dataset reports before writing `da_report.md`
 
 For the second tuple using the same benchmark (e.g., tuple 4), steps 1-2
 hit the cache and only step 3 runs fresh.

@@ -188,6 +188,10 @@ def _region_templates_path(name: str, slug: str) -> Path:
     return _assessment_dir(name, slug) / "region_templates.json"
 
 
+def _region_scaffold_path(name: str, slug: str) -> Path:
+    return _assessment_dir(name, slug) / "region_scaffold.yaml"
+
+
 def _region_yaml_path(name: str, slug: str) -> Path:
     return _assessment_dir(name, slug) / "region.yaml"
 
@@ -990,8 +994,8 @@ def step_4b_synthesize(
     name: str,
     slug: str,
 ) -> Path:
-    """Sonnet writes the assessment-specific region YAML from selected templates."""
-    out_path = _region_yaml_path(name, slug)
+    """Sonnet writes the assessment-specific region YAML scaffold from selected templates."""
+    out_path = _region_scaffold_path(name, slug)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     refs_path = _region_templates_path(name, slug)
     if not refs_path.exists() and not client.DRY_RUN:
@@ -1001,27 +1005,41 @@ def step_4b_synthesize(
         )
         sys.exit(1)
     selected: list[str] = json.loads(refs_path.read_text()) if refs_path.exists() else []
+
+    def _yaml_to_json_str(yaml_text: str) -> str:
+        try:
+            parsed = yaml.safe_load(yaml_text)
+            return json.dumps(parsed, indent=2, ensure_ascii=False)
+        except yaml.YAMLError as e:
+            print(f"WARNING: YAML parse failed, inserting raw text: {e}",
+                  file=sys.stderr)
+            return yaml_text
+
     templates_text = "\n\n".join(
-        f"### Template: {fn}\n\n```yaml\n{_read_yaml_file(fn, REGIONS_BASE)}\n```"
+        f"### Template: {fn}\n\n```json\n{_yaml_to_json_str(_read_yaml_file(fn, REGIONS_BASE))}\n```"
         for fn in selected
     )
-    print("[4b-synthesize] Sonnet synthesizing region YAML...")
+    benchmark_json = _yaml_to_json_str(benchmark_yaml_text)
+    print("[4b-synthesize] Sonnet synthesizing region scaffold...")
     region_raw = client.call(
         model="sonnet",
         system=prompts.load("region_synthesis"),
         user=(
             f"Base templates:\n\n{templates_text}\n\n"
             f"Elicitation summary:\n\n{elicitation_summary}\n\n"
-            f"Benchmark YAML:\n\n```yaml\n{benchmark_yaml_text}\n```"
+            f"Benchmark:\n\n```json\n{benchmark_json}\n```"
         ),
         max_tokens=16384,
         step="4b_synthesize",
     )
     if client.DRY_RUN:
         return out_path
-    cleaned = _run_script("parse_llm_output.py", "--format", "yaml", "-", stdin=region_raw)
-    out_path.write_text(cleaned)
-    print(f"[4b-synthesize] Region YAML written to {out_path}")
+    cleaned_json = _run_script("parse_llm_output.py", "--format", "json", "-", stdin=region_raw)
+    parsed = json.loads(cleaned_json)
+    as_yaml = yaml.dump(parsed, sort_keys=False, allow_unicode=True,
+                        default_flow_style=False)
+    out_path.write_text(as_yaml)
+    print(f"[4b-synthesize] Region scaffold written to {out_path}")
     return out_path
 
 
@@ -1029,15 +1047,20 @@ def step_4b_synthesize(
 # Step 5 — Web search enrichment (Sonnet + web_search_20250305)
 # ===================================================================
 
-def step_5_web_search(region_path: Path, benchmark_yaml_text: str, elicitation_summary: str) -> None:
-    print("[5] Sonnet enriching region YAML via web_search (this may take a minute)...")
-    current = region_path.read_text()
+def step_5_web_search(scaffold_path: Path, region_path: Path,
+                      benchmark_yaml_text: str, elicitation_summary: str) -> None:
+    print("[5] Sonnet enriching region document via web_search (this may take a minute)...")
+    current_yaml = scaffold_path.read_text()
+    current_parsed = yaml.safe_load(current_yaml)
+    current_json = json.dumps(current_parsed, indent=2, ensure_ascii=False)
+    benchmark_parsed = yaml.safe_load(benchmark_yaml_text)
+    benchmark_json = json.dumps(benchmark_parsed, indent=2, ensure_ascii=False)
     user_msg = (
-        f"Current region YAML (assessment-specific — enrich this):\n\n"
-        f"```yaml\n{current}\n```\n\n"
-        f"Benchmark YAML:\n\n```yaml\n{benchmark_yaml_text}\n```\n\n"
+        f"Current region document (assessment-specific — enrich this):\n\n"
+        f"```json\n{current_json}\n```\n\n"
+        f"Benchmark:\n\n```json\n{benchmark_json}\n```\n\n"
         f"Elicitation summary:\n\n{elicitation_summary}\n\n"
-        f"**Start with the benchmark YAML's `coverage_gap_analysis` section.** "
+        f"**Start with the benchmark's `coverage_gap_analysis` section.** "
         f"This is your primary search targeting input — it lists exactly where "
         f"the user's priorities and the benchmark's coverage diverge, with gap "
         f"types (`full`/`partial`) and suggested search queries. Allocate the "
@@ -1052,7 +1075,8 @@ def step_5_web_search(region_path: Path, benchmark_yaml_text: str, elicitation_s
         f"net-new fields surfaced by your searches; do not drop or silently "
         f"overwrite fields that were filled directly by 4b.\n\n"
         f"Execute your web search plan per the guide, then return the FULL updated "
-        f"region YAML in a single ```yaml fence."
+        f"region document as a single JSON object in a ```json fence. Do NOT output "
+        f"any preamble, analysis, or commentary — only the fenced JSON block."
     )
     tools = [{"type": "web_search_20250305", "name": "web_search", "max_uses": 10}]
     updated_raw = client.call(
@@ -1060,14 +1084,18 @@ def step_5_web_search(region_path: Path, benchmark_yaml_text: str, elicitation_s
         system=prompts.load("web_search_guide"),
         user=user_msg,
         tools=tools,
-        max_tokens=16384,
+        max_tokens=32768,
         step="5_web_search",
     )
     if client.DRY_RUN:
         return
-    cleaned = _run_script("parse_llm_output.py", "--format", "yaml", "-", stdin=updated_raw)
-    region_path.write_text(cleaned)
-    print(f"[5] Region YAML updated at {region_path}")
+    cleaned_json = _run_script("parse_llm_output.py", "--format", "json", "-",
+                               stdin=updated_raw)
+    parsed = json.loads(cleaned_json)
+    as_yaml = yaml.dump(parsed, sort_keys=False, allow_unicode=True,
+                        default_flow_style=False)
+    region_path.write_text(as_yaml)
+    print(f"[5] Region YAML written to {region_path}")
 
 
 # ===================================================================
@@ -1193,22 +1221,143 @@ def _profile_single_dataset(hf_dataset: str, hf_config: str | None) -> dict:
     return script_outputs
 
 
-def _sonnet_per_dataset_summary(hf_dataset: str, script_outputs: dict) -> str:
-    """Stage 1: Sonnet produces a concise summary for one dataset's script outputs."""
-    scripts_block = "\n\n".join(
-        f"### {sname}\n```json\n{output}\n```"
-        for sname, output in script_outputs.items()
-    )
+def _sonnet_per_dataset_summary(
+    hf_dataset: str,
+    script_outputs: dict,
+    benchmark_yaml_text: str,
+    elicitation_summary: str,
+) -> str:
+    """Stage 1 (org mode): Sonnet analyzes one dataset with deployment context."""
+    data_sections = []
+    data_sections.append(
+        f"### HF Metadata\n```json\n{script_outputs.get('hf_metadata', '{}')}\n```")
+    content_json = script_outputs.get("content_sample", "{}")
+    try:
+        content_md = json.loads(content_json).get("markdown", content_json)
+    except (json.JSONDecodeError, AttributeError):
+        content_md = content_json
+    data_sections.append(f"### Sampled Examples\n\n{content_md}")
+    if "audio_stats" in script_outputs:
+        data_sections.append(
+            f"### Audio Stats\n```json\n{script_outputs['audio_stats']}\n```")
+    data_block = "\n\n".join(data_sections)
+
     return client.call(
         model="sonnet",
         system=prompts.load("da_per_dataset"),
         user=(
             f"## Dataset: {hf_dataset}\n\n"
-            f"## Script Outputs\n\n{scripts_block}"
+            f"## Benchmark YAML\n\n```yaml\n{benchmark_yaml_text}\n```\n\n"
+            f"## Deployment Context (Elicitation Summary)\n\n{elicitation_summary}\n\n"
+            f"## Dataset Content\n\n{data_block}"
         ),
-        max_tokens=2048,
+        max_tokens=4096,
         step="5b_da_per_dataset",
     )
+
+
+def _find_citation_excerpt(report_text: str, d_num: int) -> str | None:
+    """Find citation [D{d_num}] in the citations registry of a per-dataset report."""
+    registry_text = report_text
+    for heading in ("Datapoint Citations Registry", "Citations Registry",
+                    "Datapoint citations"):
+        idx = report_text.find(heading)
+        if idx != -1:
+            registry_text = report_text[idx:]
+            break
+
+    bracketed = f"[D{d_num}]"
+    table_pat = re.compile(rf"\|\s*D{d_num}\s*\|")
+
+    for line in registry_text.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("|-") or stripped.startswith("| --"):
+            continue
+
+        if bracketed in stripped:
+            content = stripped.lstrip("-|").strip()
+            content = content.replace(bracketed, "", 1).strip()
+            content = content.strip("|").strip()
+            return content
+
+        if table_pat.search(stripped):
+            cells = [c.strip() for c in stripped.split("|")]
+            cells = [c for c in cells if c and c.strip() != f"D{d_num}"]
+            return " | ".join(cells)
+
+    return None
+
+
+def _resolve_cited_evidence(
+    report: str,
+    per_dataset_summaries: dict[str, str],
+) -> str:
+    """Replace bare citation IDs in Cited Evidence with full excerpts
+    from per-dataset reports. Org (multi-dataset) mode only."""
+    marker = "### Cited Evidence"
+    idx = report.find(marker)
+    if idx == -1:
+        return report
+
+    before = report[:idx]
+    rest = report[idx + len(marker):]
+
+    next_heading = re.search(r"\n### ", rest)
+    if next_heading:
+        section_body = rest[:next_heading.start()]
+        after = rest[next_heading.start():]
+    else:
+        section_body = rest
+        after = ""
+
+    # Extract the JSON array from a ```json ... ``` fenced block
+    json_match = re.search(
+        r"```json\s*\n(\[.*?\])\s*\n```", section_body, re.DOTALL)
+    if not json_match:
+        print("  [5b] Warning: no JSON array found in Cited Evidence section")
+        return report
+    try:
+        cited_ids: list[str] = json.loads(json_match.group(1))
+    except json.JSONDecodeError as exc:
+        print(f"  [5b] Warning: malformed JSON in Cited Evidence: {exc}")
+        return report
+
+    # Parse each "DATASET_SHORT-D{n}" string
+    id_pat = re.compile(r"^(.+)-D(\d+)$")
+    parsed = []
+    for cid in cited_ids:
+        m = id_pat.match(cid.strip())
+        if m:
+            parsed.append((m.group(1), int(m.group(2)), cid.strip()))
+
+    if not parsed:
+        return report
+
+    short_to_full: dict[str, str] = {}
+    for full_id in per_dataset_summaries:
+        short = full_id.split("/")[-1].upper()
+        short_to_full[short] = full_id
+
+    resolved = []
+    found = 0
+    for ds_short, d_num, prefixed in parsed:
+        full_id = short_to_full.get(ds_short.upper())
+        if not full_id:
+            resolved.append(f"- **{prefixed}**: _[source dataset not found]_")
+            continue
+
+        excerpt = _find_citation_excerpt(per_dataset_summaries[full_id], d_num)
+        if excerpt:
+            resolved.append(f"- **{prefixed}**: {excerpt}")
+            found += 1
+        else:
+            resolved.append(
+                f"- **{prefixed}**: _[citation not found in report]_")
+
+    total = len(parsed)
+    print(f"  [5b] Resolved {found}/{total} cited evidence entries")
+
+    return before + f"{marker}\n\n" + "\n".join(resolved) + "\n" + after
 
 
 def step_5b_dataset_analysis(
@@ -1238,9 +1387,31 @@ def step_5b_dataset_analysis(
         print(f"[5b] Found {len(dataset_ids)} datasets: "
               f"{', '.join(d.split('/')[-1] for d in dataset_ids)}")
 
-        # === Stage 1: profile each dataset + per-dataset Sonnet summary ===
-        # Script outputs and summaries are cached — they're deterministic /
-        # dataset-intrinsic and shared across tuples using the same benchmark.
+        # === Stage 1: profile each dataset + per-dataset Sonnet analysis ===
+        # Script outputs are cached (dataset-intrinsic). Per-dataset Sonnet
+        # analyses use trace-based resume: completed analyses are recovered
+        # from 5b_da_per_dataset.jsonl so a crash mid-way can resume.
+        # Traces are only cleared on a fully fresh run (no prior results).
+        trace_file = _trace_dir(name, slug) / "5b_da_per_dataset.jsonl"
+        completed_analyses: dict[str, str] = {}
+        if trace_file.exists():
+            for line in trace_file.read_text().splitlines():
+                try:
+                    entry = json.loads(line)
+                    user_msg = entry.get("user", "")
+                    for ds_id in dataset_ids:
+                        if ds_id in user_msg and ds_id not in completed_analyses:
+                            completed_analyses[ds_id] = entry["output"]
+                            break
+                except (json.JSONDecodeError, KeyError):
+                    continue
+
+        if completed_analyses:
+            print(f"[5b] Resuming: {len(completed_analyses)}/{len(dataset_ids)} "
+                  f"per-dataset analyses cached from prior run")
+        else:
+            client.clear_trace_steps("5b_da_per_dataset")
+
         per_dataset_summaries = {}
         for i, ds_id in enumerate(dataset_ids, 1):
             ds_short = ds_id.split("/")[-1]
@@ -1255,20 +1426,14 @@ def step_5b_dataset_analysis(
                 script_cache.parent.mkdir(parents=True, exist_ok=True)
                 script_cache.write_text(json.dumps(outputs, indent=2))
 
-            if client.DRY_RUN:
-                per_dataset_summaries[ds_id] = "(dry-run)"
+            if ds_id in completed_analyses and not client.DRY_RUN:
+                print(f"    {ds_short} analysis (trace hit)")
+                per_dataset_summaries[ds_id] = completed_analyses[ds_id]
                 continue
 
-            summary_cache = _da_summary_cache_path(ds_id)
-            if summary_cache.exists():
-                print(f"    {ds_short} summary (cache hit)")
-                summary = summary_cache.read_text()
-            else:
-                print(f"    Sonnet summarizing {ds_short}...")
-                summary = _sonnet_per_dataset_summary(ds_id, outputs)
-                summary_cache.parent.mkdir(parents=True, exist_ok=True)
-                summary_cache.write_text(summary)
-
+            print(f"    Sonnet analyzing {ds_short}...")
+            summary = _sonnet_per_dataset_summary(
+                ds_id, outputs, benchmark_yaml_text, elicitation_summary)
             per_dataset_summaries[ds_id] = summary
 
         # === Stage 2: aggregation across all datasets ===
@@ -1276,26 +1441,25 @@ def step_5b_dataset_analysis(
             f"### {ds_id}\n\n{summary}"
             for ds_id, summary in per_dataset_summaries.items()
         )
-        print(f"\n  [5b] Sonnet aggregating {len(dataset_ids)} dataset summaries...")
+        print(f"\n  [5b] Sonnet aggregating {len(dataset_ids)} dataset analyses...")
         report = client.call(
             model="sonnet",
-            system=prompts.load("da_interpret"),
+            system=prompts.load("da_aggregate"),
             user=(
                 f"## Benchmark YAML\n\n```yaml\n{benchmark_yaml_text}\n```\n\n"
                 f"## Deployment Context (Elicitation Summary)\n\n{elicitation_summary}\n\n"
                 f"## Web Search Findings\n\n{web_search_text}\n\n"
-                f"## Per-Dataset Analysis Summaries\n\n"
-                f"The following summaries were produced by profiling each dataset "
-                f"in the {hf_org} benchmark collection independently. Use them as "
-                f"evidence for your aggregated validity assessment.\n\n"
-                f"{summaries_block}"
+                f"## Per-Dataset Analysis Reports\n\n{summaries_block}"
             ),
-            max_tokens=8192,
+            max_tokens=16384,
             step="5b_da_interpret",
         )
 
+        if not client.DRY_RUN:
+            report = _resolve_cited_evidence(report, per_dataset_summaries)
+
     else:
-        # Single-dataset mode — direct interpretation (no two-stage needed)
+        # Single-dataset mode — direct interpretation, no intermediate summary
         hf_dataset = hf_info["hf_dataset_id"]
         hf_config = hf_info.get("hf_config")
 
@@ -1310,11 +1474,21 @@ def step_5b_dataset_analysis(
             script_cache.parent.mkdir(parents=True, exist_ok=True)
             script_cache.write_text(json.dumps(script_outputs, indent=2))
 
-        scripts_block = "\n\n".join(
-            f"### {script_name}\n```json\n{output}\n```"
-            for script_name, output in script_outputs.items()
-        )
-        print("  [5b] Sonnet interpreting DA findings...")
+        data_sections = []
+        data_sections.append(
+            f"### HF Metadata\n```json\n{script_outputs.get('hf_metadata', '{}')}\n```")
+        content_json = script_outputs.get("content_sample", "{}")
+        try:
+            content_md = json.loads(content_json).get("markdown", content_json)
+        except (json.JSONDecodeError, AttributeError):
+            content_md = content_json
+        data_sections.append(f"### Sampled Examples\n\n{content_md}")
+        if "audio_stats" in script_outputs:
+            data_sections.append(
+                f"### Audio Stats\n```json\n{script_outputs['audio_stats']}\n```")
+        data_block = "\n\n".join(data_sections)
+
+        print("  [5b] Sonnet interpreting dataset content...")
         report = client.call(
             model="sonnet",
             system=prompts.load("da_interpret"),
@@ -1322,7 +1496,7 @@ def step_5b_dataset_analysis(
                 f"## Benchmark YAML\n\n```yaml\n{benchmark_yaml_text}\n```\n\n"
                 f"## Deployment Context (Elicitation Summary)\n\n{elicitation_summary}\n\n"
                 f"## Web Search Findings\n\n{web_search_text}\n\n"
-                f"## Dataset Analysis Script Outputs\n\n{scripts_block}"
+                f"## Dataset Content\n\n{data_block}"
             ),
             max_tokens=8192,
             step="5b_da_interpret",
@@ -1378,7 +1552,7 @@ def step_7_score(composed_path: Path, name: str, slug: str) -> Path:
         model="opus",
         system=prompts.load("opus_scoring_framing"),
         user=composed_path.read_text(),
-        max_tokens=16384,
+        max_tokens=32768,
         step="7_score",
     )
     if client.DRY_RUN:
@@ -1434,7 +1608,9 @@ STEP_LABELS: dict[str, list[str]] = {
     "4a-template":    ["4a_template"],
     "4b-synthesize":  ["4b_synthesize"],
     "5":              ["5_web_search"],
-    "5b-da":          ["5b_da_per_dataset", "5b_da_interpret"],
+    # 5b_da_per_dataset is NOT auto-cleared: per-dataset analyses use
+    # trace-based resume (like 3a_extract). Only the aggregation re-runs.
+    "5b-da":          ["5b_da_interpret"],
     "6":              [],
     "7":              ["7_score"],
     "8":              [],
@@ -1578,6 +1754,20 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Skip Step 5b even if an HF dataset ID is available.",
     )
+    p.add_argument(
+        "--tpm-limit",
+        type=int,
+        default=30_000,
+        help="Input tokens-per-minute rate limit. Default: 30000 "
+        "(personal-tier Sonnet limit). Set to 0 to disable.",
+    )
+    p.add_argument(
+        "--otpm-limit",
+        type=int,
+        default=8_000,
+        help="Output tokens-per-minute rate limit. Default: 8000 "
+        "(personal-tier Sonnet limit). Set to 0 to disable.",
+    )
     return p.parse_args()
 
 
@@ -1643,6 +1833,8 @@ def main() -> None:
         print("[dry-run mode] API calls are skipped; prompts printed to stdout.\n")
     if args.streaming is not None:
         client.set_stream_default(args.streaming)
+    if args.tpm_limit or args.otpm_limit:
+        client.set_tpm_limit(args.tpm_limit, args.otpm_limit)
     if args.persona:
         args.persona = args.persona.lower()
         if args.persona not in PERSONAS:
@@ -1747,16 +1939,19 @@ def main() -> None:
         _ledger_end(name)
 
         _ledger_begin(name, "4b-synthesize")
-        region_path = step_4b_synthesize(
+        scaffold_path = step_4b_synthesize(
             elicitation_summary, benchmark_yaml_text, name, slug
         )
         _ledger_end(name)
+
+        region_path = _region_yaml_path(name, slug)
 
         # === Step 5: web search enrichment ===
         web_search_text = ""
         if not args.no_web_search:
             _ledger_begin(name, "5")
-            step_5_web_search(region_path, benchmark_yaml_text, elicitation_summary)
+            step_5_web_search(scaffold_path, region_path,
+                              benchmark_yaml_text, elicitation_summary)
             _ledger_end(name)
             web_search_text = region_path.read_text()
 
@@ -1920,17 +2115,19 @@ def _run_single_step(args: argparse.Namespace, pdf_path: Path, name: str) -> Non
                 name, slug,
             )
         elif args.step == "5":
-            region_path = _region_yaml_path(name, slug)
-            if not region_path.exists():
+            scaffold_path = _region_scaffold_path(name, slug)
+            if not scaffold_path.exists():
                 print(
-                    f"ERROR: run --step 4b-synthesize first ({region_path} missing)",
+                    f"ERROR: run --step 4b-synthesize first ({scaffold_path} missing)",
                     file=sys.stderr,
                 )
                 sys.exit(1)
+            region_path = _region_yaml_path(name, slug)
             elicitation_path = _elicitation_summary_path(name, slug)
             _ledger_begin(name, "5")
             step_5_web_search(
-                region_path, benchmark_path.read_text(), elicitation_path.read_text()
+                scaffold_path, region_path,
+                benchmark_path.read_text(), elicitation_path.read_text()
             )
         elif args.step == "5b-da":
             hf_info = _resolve_hf_info(args, name)

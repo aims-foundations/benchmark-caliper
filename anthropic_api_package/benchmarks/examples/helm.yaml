@@ -69,46 +69,37 @@ documentation_excerpts: |
   HELM documentation does not explicitly discuss cross-cultural or cross-regional
   validity limitations.
 
-# NOTE: quote text/pages below are ICL placeholders to anchor the schema for
-# Sonnet's synthesis step. They do not correspond to actual HELM paper quotes.
+# NOTE: pages/dimensions below are ICL placeholders to anchor the schema for
+# Sonnet's synthesis step. Quote text is filled in programmatically from the
+# registry — only id, page, and dimension are emitted by the model.
 verbatim_quotes:
   - id: Q1
-    text: "HELM evaluates models across a broad range of scenarios including question answering, information retrieval, summarization, sentiment analysis, and text classification, organized by NLP task type."
     page: 4
     dimension: input_ontology
   - id: Q2
-    text: "Approximately 28% of MMLU examples are culturally sensitive, with roughly 86% of those requiring Western-specific knowledge primarily centered on the United States."
     page: 17
     dimension: input_content
   - id: Q3
-    text: "Several HELM tasks evaluate letter-frequency and capitalization properties that implicitly assume Latin-alphabet input and do not transfer to Thai, Khmer, or Burmese scripts."
     page: 6
     dimension: input_form
   - id: Q4
-    text: "Safety and toxicity evaluation categories in HELM are drawn from Anglosphere frameworks without documented validation across non-Western cultural contexts."
     page: 21
     dimension: output_ontology
   - id: Q5
-    text: "Cross-cultural annotator agreement on hate-speech detection reaches only 56% unanimous agreement across UK, US, Australia, South Africa, and Singapore, with stronger pairwise agreement among Anglosphere countries."
     page: 33
     dimension: output_content
   - id: Q6
-    text: "HELM evaluates text-based model outputs only and does not penalize or evaluate responses produced in languages other than the prompt language."
     page: 8
     dimension: output_form
   - id: Q7
-    text: "The majority of culturally sensitive MMLU examples center on United States civics, history, and law, with minimal coverage of non-Western knowledge domains."
     page: 18
     dimension: input_content
   - id: Q8
-    text: "Annotator recruitment for HELM subtasks draws primarily from Western crowdworker platforms and does not document demographic composition for non-Western regions."
     page: 34
     dimension: output_content
   - id: Q9
-    text: "HELM scenarios are organized around NLP task capabilities — summarization, QA, information retrieval, classification, and reasoning — rather than deployment-context categories."
     page: 5
     dimension: input_ontology
   - id: Q10
-    text: "HELM's toxicity taxonomy is derived from Jigsaw-style Anglosphere toxicity frameworks and reflects Western social media norms rather than region-specific harmful content."
     page: 22
     dimension: output_ontology
