@@ -2,21 +2,21 @@
   {
     "id": "Q1",
     "dimension": "IO",
-    "question": "Citizen feedback to Luxembourgish public administration likely spans highly specific local topics — municipal services, cross-border worker issues (given Luxembourg's large frontier-worker population), multilingual submissions mixing Luxembourgish with French or German, EU institution-related queries, or complaints about housing and cost-of-living. Which of these topic categories are most critical for your routing system, and are there domain-specific categories unique to Luxembourg's administrative structure (e.g., specific ministries or communal services) that the system must reliably distinguish?"
+    "question": "Citizen feedback to Luxembourgish government agencies likely spans topics specific to local governance — such as cross-border worker issues, multilingual administrative procedures (French/German/Luxembourgish coexistence), housing, transport like the free public transit policy, or EU institutional matters. Does the topic taxonomy your system needs to classify cover these Luxembourg-specific administrative domains, or does it extend to other areas not typical of local government correspondence?"
   },
   {
     "id": "Q2",
     "dimension": "IC",
-    "question": "Luxembourgish citizen correspondence is likely written in highly varied orthographic styles — informal spelling, code-switching with French or German mid-sentence, and non-standardized Lëtzebuergesch. Does the sentiment and intent content your system needs to classify come primarily from formally written messages, or do you also expect colloquial, dialectal, or heavily mixed-language input? How representative is the language in your actual message corpus of what a benchmark built on more standardized sources would contain?"
+    "question": "Citizen messages to public administration are often written in non-standard Luxembourgish — code-switching with French or German, informal orthography, or dialect forms. Does your deployment need to handle this kind of mixed or non-standardized language input, or can you assume messages are written in reasonably standard Luxembourgish prose?"
   },
   {
     "id": "Q3",
     "dimension": "OC",
-    "question": "For sentiment and frustration detection specifically, the ground-truth labels need to reflect what Luxembourgish civil servants and citizens consider 'frustrated' or 'urgent' — which may differ from annotator intuitions imported from other cultural contexts. Were the sentiment or intent labels in any evaluation data your system relies on validated by people embedded in Luxembourg's administrative culture, or do you have a way to audit whether routing decisions based on those labels align with what your civil servants would themselves judge as priority cases?"
+    "question": "For sentiment and frustration detection specifically, the judgment of what counts as 'disgruntled' or 'urgent' can vary by annotator background. Were the sentiment or tone labels used to evaluate the system validated by people familiar with Luxembourgish civil communication norms — for example, the typically understated or formal register citizens use when writing to government bodies — or were they produced by a broader, potentially non-Luxembourg-resident annotator pool?"
   },
   {
     "id": "Q4",
     "dimension": "OO",
-    "question": "Your system triggers concrete administrative actions — routing to departments and prioritizing correspondence — based on model-assigned labels. If the model produces a single top-label for intent or sentiment, does that match how your routing logic works, or do some messages legitimately belong to multiple departments or reflect ambiguous urgency? Would civil servants expect the system to flag uncertainty rather than always commit to one routing decision?"
+    "question": "Your system triggers automated routing and prioritization decisions based on classified intent and sentiment. If the model outputs a single label per message, does that capture enough nuance — for example, a message that is both a formal complaint (intent) and moderately frustrated (sentiment) about a specific named entity (a department)? Or does your routing logic require multi-label or confidence-scored outputs rather than a single hard classification?"
   }
 ]

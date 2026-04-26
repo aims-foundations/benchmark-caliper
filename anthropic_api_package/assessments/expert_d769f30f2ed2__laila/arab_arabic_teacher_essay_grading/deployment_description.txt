@@ -1,0 +1,2 @@
+Use case and domain: Assist high school (G10-12) Arabic teachers in Arab countries (teaching students who are native in Arabic) in grading Arabic essays (dataset was collected in Qatar but the writing is in modern standard Arabic which is standard across all Arab countries, although the standards for grading may differ from country to country).
+Target population: Arabic teachers in Arab countries teaching high school students (G10-12)

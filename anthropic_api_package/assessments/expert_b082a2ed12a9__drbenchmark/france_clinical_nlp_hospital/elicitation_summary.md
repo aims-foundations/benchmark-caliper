@@ -1,0 +1,46 @@
+## Use Case
+A document management system in a French pharmaceutical regulatory context uses NER and semantic textual similarity models to verify compliance of drug labeling documents (patient leaflets, scientific abstracts, potentially regulatory submissions) and flag inconsistencies in safety warnings. Outputs determine whether documentation meets professional standards for official submission or requires manual revision.
+
+## Target Population
+Metropolitan France (primary); French overseas territories identified as secondary priority. Target users are regulatory affairs specialists, pharmacologists, and legal experts at pharmaceutical companies or government health agencies. The system operates on structured regulatory and biomedical text in French, with human-in-the-loop adjudication for borderline cases.
+
+## Elicitation Responses
+
+Q1 [IO]: The benchmark covers biomedical NER and STS tasks drawn from scientific literature and clinical cases, but pharmaceutical regulatory documents have distinctive text types — SmPCs, patient information leaflets, patent claims, and CTD modules. Are these document genres central to your use case, and does the system need to handle highly formulaic, legally constrained language specific to EU regulatory submissions rather than clinical or research prose?
+A1: The system is optimized for Metropolitan France and would require adaptation before use in other French-speaking regions. French overseas territories are the highest secondary priority due to distinct disease prevalence patterns (e.g., tropical pathologies) not reflected in mainland datasets. The answer did not directly address regulatory document genres but confirms a mainland-France primary scope and flags regional text variation as a known concern.
+
+Q2 [IC]: Regulatory drug labeling uses specific vocabulary — INNs, ATC codes, excipient nomenclature, posology expressions, EMA-template contraindication phrasing. Are these entity types representative of what the system must detect, or do your labeling tasks involve categories or patterns diverging from standard clinical/research text?
+A2: The system is characterized as a "Silver Standard" clinical support tool rather than an authoritative classifier. It maps pathologies to standardized axes (e.g., ICD-10 chapters) but acknowledges imperfect alignment with hospital coding conventions in complex cases. Physicians and nurses retain decision authority. The answer implies the NER targets clinical/diagnostic entity types rather than specifically regulatory labeling vocabulary (INNs, posology templates, EMA phrasing), suggesting a possible category mismatch.
+
+Q3 [OO]: For STS-based compliance checking, small lexical differences (dose thresholds, contraindicated population qualifiers) may have legal significance under EMA/ANSM standards even when a general biomedical STS scorer treats them as equivalent. Does the system require a regulatory-equivalence scoring function, and does a borderline score trigger automatic rejection or only human review?
+A3: The system performs best on clean, standard medical documentation. It is resilient to moderate noise (common abbreviations, clinical shorthand) but not designed for highly disorganized or institution-specific shorthand, which would require pre-processing, custom glossaries, and normalization modules. The answer does not directly address whether the STS scoring function distinguishes regulatory-level semantic difference from general semantic proximity, leaving the scoring semantics unconfirmed.
+
+Q4 [OC]: Ground-truth annotations in biomedical benchmarks are typically produced by clinical or research professionals, whereas authoritative regulatory judgment may rest with regulatory affairs specialists or legal experts. Are the annotation norms (e.g., EMA SmPC guidelines, ANSM circulars) likely to align with biomedical NLP annotator labels, or do systematic disagreements on borderline cases occur?
+A4: The system outputs multiple candidate labels with confidence scores rather than a single authoritative label, allowing clinicians to adjudicate between plausible categories — especially for multi-morbid cases where a finding may belong to several classification axes. High-uncertainty entities are flagged for manual review. The answer confirms a human-in-the-loop design but does not resolve whether benchmark annotation norms (clinical/research professionals) align with the regulatory-legal standards the deployment context requires.
+
+## Dimension Priority Weights
+
+| Dimension | Priority | Rationale |
+|-----------|----------|-----------|
+| IO | HIGH | The benchmark draws from scientific literature and clinical cases, while the deployment centers on legally constrained regulatory document genres (SmPCs, leaflets, possibly patent claims) that are structurally and lexically distinct; overseas-territory sub-populations with tropical disease vocabulary add further genre and terminology gaps. |
+| IC | HIGH | Regulatory labeling vocabulary (INNs, ATC codes, EMA posology templates, contraindication phrasing) is highly specific and normatively loaded; the user's answers indicate the system targets ICD-10 clinical mapping rather than regulatory entity types, suggesting the benchmark's concrete instances may not represent the actual entity vocabulary the deployment requires. |
+| IF | LOWER | Both benchmark and deployment are text-only in high-resource French with no cross-modality or script mismatch, and metropolitan French infrastructure assumptions are consistent. |
+| OO | HIGH | The benchmark's STS scoring reflects general biomedical semantic proximity, whereas the deployment requires regulatory-equivalence judgments where minor lexical differences carry legal consequence under EMA/ANSM standards; the user's answers did not confirm that the scoring function is calibrated for this stricter interpretive standard. |
+| OC | HIGH | DrBenchmark labels are annotated by clinical and research professionals, but the authoritative ground truth for regulatory compliance rests with regulatory affairs specialists and legal experts applying EMA/ANSM norms; the multi-label confidence output and human adjudication loop confirm that label authority is contested, raising convergent validity concerns. |
+| OF | MODERATE | The benchmark outputs labels and scores, which matches the system's multi-candidate confidence-score output and human-review flagging design; however, the granularity of confidence scoring and the threshold that triggers mandatory review are not benchmarked against regulatory workflow requirements. |
+
+## Flagged Gaps
+
+1. **Regulatory document genre coverage**: Web search should investigate whether any DrBenchmark tasks include EMA-style SmPCs, patient information leaflets, or CTD modules, or whether all NER/STS tasks derive exclusively from clinical notes, research articles, and clinical trial reports. This is the central content-validity gap.
+
+2. **Regulatory entity taxonomy alignment**: The benchmark's NER categories should be compared against EMA/ANSM-standard regulatory entity types — INNs, ATC codes, excipient names, posology expressions, contraindication qualifiers. Search for any published crosswalk or gap analysis between DrBenchmark NER schemas and regulatory annotation guidelines.
+
+3. **STS scoring calibration for regulatory equivalence**: Investigate whether the STS tasks in DrBenchmark use scoring rubrics sensitive to clinically or legally significant small-magnitude differences (e.g., dose thresholds, population subgroup qualifiers), or whether they use coarse semantic proximity scales (e.g., 0–5 Likert as in STS-Benchmark) that would conflate legally distinct statements.
+
+4. **Annotation workforce for OC**: Determine who annotated DrBenchmark's NER and STS ground-truth labels — clinicians, researchers, or NLP specialists — and whether any regulatory affairs or legal expertise was incorporated. Search for the benchmark's annotation protocol documentation or associated papers.
+
+5. **French overseas territories and tropical disease vocabulary**: The user flagged French overseas territories (Martinique, Guadeloupe, French Guiana, Réunion, Mayotte) as a priority adaptation target. Investigate whether DrBenchmark includes any data from these regions or covers tropical pathology terminology (e.g., dengue, chikungunya, paludisme), and whether ANSM regulatory guidance differs for these territories.
+
+6. **ANSM vs. EMA normative alignment**: Search for documented divergences between ANSM national circulars and EMA centralized procedure guidelines that would affect what counts as a compliant safety warning in metropolitan France, as these would directly affect what the STS "equivalence" threshold should be.
+
+7. **Silver-standard label quality propagation**: The user described the system as built on a "Silver Standard." Investigate whether DrBenchmark tasks use silver-standard (automatically or weakly labeled) annotations versus fully adjudicated gold-standard labels, and what inter-annotator agreement levels are reported, particularly for NER boundary and category decisions.

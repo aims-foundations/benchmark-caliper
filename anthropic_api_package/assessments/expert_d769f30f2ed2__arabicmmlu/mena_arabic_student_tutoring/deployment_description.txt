@@ -1,0 +1,2 @@
+Use case and domain: Educational tutoring and supporting students studying with answers related to their curriculums in different subjects on the primary, middle, and high school, level as well as some university level subjects (management, economics, law, CS, political science, accounting)
+Target population: Students (primary, middle, high school, and university) from Morocco, Egypt, Jordan, Palestine, Lebanon, UAE, Kuwait, or KSA.

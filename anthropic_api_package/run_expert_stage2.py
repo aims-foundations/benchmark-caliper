@@ -178,7 +178,7 @@ def process_tuple(row: dict, tuple_idx: int, answers: dict,
     paper_stem = _paper_stem(row["expert_id"], t["benchmark_slug"])
     assessment_dir = ASSESSMENTS_DIR / paper_stem / slug
 
-    scoring_out = assessment_dir / "scoring_output.json"
+    scoring_out = assessment_dir / "scoring.json"
     if scoring_out.exists() and not force:
         print(f"[skip tuple {tuple_idx}] scoring output already exists")
         return "skipped"
@@ -216,7 +216,7 @@ def process_tuple(row: dict, tuple_idx: int, answers: dict,
         return f"failed: {e}"
 
     # Copy final outputs back to expert tuple dir for easy access
-    for artifact in ("scoring_output.json", "composed_prompt.md",
+    for artifact in ("scoring.json", "report.md", "composed_prompt.md",
                      "elicitation_summary.md", "da_report.md"):
         src = assessment_dir / artifact
         if src.exists():

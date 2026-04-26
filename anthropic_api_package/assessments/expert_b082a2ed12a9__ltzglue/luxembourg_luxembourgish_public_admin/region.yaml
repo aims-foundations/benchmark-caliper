@@ -1,0 +1,538 @@
+name: Luxembourg Public Administration — Civil Servant NLU Deployment
+abbreviation: LU-CIVSERV
+deployment_context:
+  country: Luxembourg
+  governance_levels:
+  - national (État)
+  - communal (communes)
+  eu_institutional_dimension: Luxembourg hosts major EU institutions (European Court
+    of Justice, European Commission DGs, European Parliament secretariat); EU-institutional
+    topic categories are operationally relevant to citizen correspondence routing.
+  system_purpose: LLM-based automatic classification of citizen feedback by topic,
+    named entity detection, intent identification, and sentiment/urgency gauging to
+    drive automated routing to government departments and prioritization of correspondence,
+    with human-in-the-loop fallback for low-confidence outputs.
+target_population:
+  primary_users: Civil servants in Luxembourgish government agencies at national and
+    communal levels who process, review, and act on digitally routed citizen correspondence.
+    They are the direct consumers of the system's classification outputs and the human
+    auditors in the escalation loop.
+  secondary_users: 'Citizens and residents of Luxembourg submitting feedback or queries
+    to government agencies in written digital form. Their messages constitute the
+    system''s primary text input. This population includes:
+
+    - Luxembourgish nationals
+
+    - Long-term residents holding Luxembourg nationality or permanent residency
+
+    - Cross-border workers (frontaliers) who commute daily from France, Germany, or
+    Belgium and are subject to distinct tax, social security, and labor frameworks
+
+    - EU nationals resident in Luxembourg under freedom-of-movement provisions
+
+    - Third-country nationals with various residency statuses'
+  cross_border_worker_subpopulation:
+    description: A demographically significant subpopulation of workers residing in
+      neighboring countries (primarily France, Belgium, Germany) who cross into Luxembourg
+      daily for employment. They generate a distinct class of administrative queries
+      relating to frontier-worker tax treaties, cross-border social security coordination,
+      healthcare access, and commuter transport.
+    estimated_workforce_share: '47% of Luxembourg''s employed workforce (approximately
+      216,000–228,000 individuals out of ~489,000 total employees in 2024). Source:
+      STATEC Regards 01/25 — [|https://statistiques.public.lu/en/publications/series/regards/2025/regards-01-25.html|];
+      corroborated by ODT/LISER Maps and Figures 2023 — [|https://www.chronicle.lu/category/surveys-reports/54808-cross-border-workers-constitute-47-of-luxembourgs-500k-workforce-in-2023|]'
+    primary_origin_countries:
+    - France (~52–53% of cross-border workers)
+    - Belgium (~23–24% of cross-border workers)
+    - Germany (~23–24% of cross-border workers)
+    relevant_administrative_domains:
+    - frontier-worker income tax treaties
+    - cross-border social security (détachement, affiliation)
+    - cross-border healthcare reimbursement
+    - commuter transport and rail passes
+    - childcare allocation portability
+geography:
+  country: Luxembourg
+  area_km2: 2,586 km² (Luxembourg official government portal — [|https://luxembourg.public.lu/en/society-and-culture/population/demographics.html|];
+    corroborated by multiple sources including alphatrad.co.uk — [|https://www.alphatrad.co.uk/news/portuguese-in-luxembourg|])
+  population: '672,050 as of 1 January 2024; 681,973 as of 1 January 2025 (+1.5% year-on-year).
+    Source: STATEC official population statistics — [|https://statistiques.public.lu/en/actualites/2025/stn16-population-2025.html|];
+    [|https://statistiques.public.lu/en/actualites/2024/stn16-population-2024.html|]'
+  administrative_divisions:
+    description: Luxembourg is divided into communes (municipalities), grouped historically
+      into cantons and districts. Responsibility for administrative services is split
+      between the national state and individual communes, creating a routing challenge
+      the system must resolve.
+    number_of_communes: 'Exactly 100 communes, following the mergers of Bous–Waldbredimus
+      and Grosbous–Wahl which took effect on 1 September 2023. Source: Luxembourg
+      Government official communiqué — [|https://gouvernement.lu/en/actualites/toutes_actualites/communiques/2023/02-fevrier/10-100-communes.html|];
+      confirmed by Luxembourg official elections portal — [|https://elections.public.lu/en/fusion-communes.html|]'
+    state_vs_communal_competency_examples:
+      state_competencies:
+      - national identity documents (passeport, carte d'identité)
+      - income tax
+      - social security (CNAP, CNS, CCSS)
+      - national police
+      - immigration and residency permits
+      - labor law enforcement (ITM)
+      - EU treaty obligations
+      communal_competencies:
+      - local urban planning and construction permits
+      - communal taxes (taxe foncière)
+      - local road maintenance
+      - communal social services
+      - waste management
+      - local event permits
+      - birth/death/marriage registration at état civil
+  eu_institutional_presence: Luxembourg City hosts the Court of Justice of the European
+    Union, the General Court, the European Court of Auditors, the European Investment
+    Bank, and multiple European Commission and Parliament administrative bodies. Citizens
+    may conflate national and EU-institutional contacts in correspondence.
+  cross_border_catchment_regions:
+    France: 'Primarily Moselle department (Thionville area, where ~half of French
+      cross-border workers reside) and Meurthe-et-Moselle. Source: ODT/LISER employment/mobility
+      study 2023 — [|https://www.chronicle.lu/category/surveys-reports/54808-cross-border-workers-constitute-47-of-luxembourgs-500k-workforce-in-2023|];
+      Paperjam cross-border worker analysis — [|https://en.paperjam.lu/article/delano_understanding-cross-border-worker-phenomenon|]'
+    Belgium: 'Primarily Province de Luxembourg (Arlon/Gaume region); ~73% of Belgian
+      cross-border workers reside in Province de Luxembourg. Source: Paperjam/ASTI
+      cross-border worker study — [|https://en.paperjam.lu/article/delano_understanding-cross-border-worker-phenomenon|]'
+    Germany: 'Primarily Trier region; ~half of German cross-border workers live in
+      or around Trier. Source: Paperjam/ASTI cross-border worker study — [|https://en.paperjam.lu/article/delano_understanding-cross-border-worker-phenomenon|]'
+languages:
+  official_languages:
+  - Luxembourgish (Lëtzebuergesch)
+  - French
+  - German
+  national_language: Luxembourgish (Lëtzebuergesch / LTZ) — the sole national language
+    and primary spoken vernacular of Luxembourgish citizens
+  administrative_language_practice: French dominates written administrative law and
+    formal government correspondence; German is used in some administrative contexts
+    and is the language of instruction in early primary education; Luxembourgish is
+    increasingly used in informal and semi-formal government digital channels.
+  deployment_target_language: Luxembourgish (lb) — the benchmark (LTZGLUE) and the
+    system both target LTZ as the primary processing language.
+  code_switching_profile:
+    description: Citizens composing digital feedback in Luxembourgish habitually alternate
+      between French-derived and German-derived lexical variants for the same administrative
+      concepts, and may embed entire French or German phrases within an otherwise
+      Luxembourgish message.
+    documented_examples:
+    - Administratioun (French-derived) vs. Verwaltung (German-derived) for 'administration'
+    - Formulaire (French) vs. Formular (German) for 'form'
+    - Bréif (Luxembourgish) vs. lettre (French) for 'letter'
+    orthographic_variation: Luxembourgish orthographic standardization (Eis Sprooch
+      reform and predecessor conventions) is ongoing and unevenly adopted. Citizens
+      may apply idiosyncratic or older spelling conventions. No assumption of standard
+      OLO (Offiziell Lëtzebuerger Orthografie) compliance is warranted for citizen
+      input.
+  resident_non_ltz_speaker_fraction: '~47.3% of Luxembourg''s population as of 1 January
+    2024 are foreign nationals. The largest group are Portuguese nationals (~14.5%
+    of total population, ~92,000–94,000 individuals as of 2023–2024). The CIA World
+    Factbook (2021 est.) reports Luxembourgish as first language for 48.9% of residents,
+    Portuguese for 15.4%, French for 14.9%, Italian 3.6%, English 3.6%, German 2.9%,
+    other 10.8%. A significant share of residents primarily write in French or Portuguese
+    rather than Luxembourgish. Source: STATEC population statistics — [|https://statistiques.public.lu/en/actualites/2025/stn16-population-2025.html|];
+    World Factbook Luxembourg demographics — [|https://theworldfactbook.org/country/luxembourg.html|];
+    Wikipedia Portuguese in Luxembourg — [|https://en.wikipedia.org/wiki/Portuguese_in_Luxembourg|]'
+  portuguese_community_note: 'Luxembourg has a very large Portuguese-origin resident
+    community (~14.5% of total population, ~93,659 Portuguese nationals as of January
+    2023, the single largest foreign nationality group). Portuguese is described as
+    the second most spoken primary language after Luxembourgish. Their written administrative
+    correspondence is likely in French or Portuguese rather than Luxembourgish and
+    falls outside the LTZ benchmark scope, but will appear in the deployment input
+    stream. Source: Portuguese in Luxembourg Wikipedia — [|https://en.wikipedia.org/wiki/Portuguese_in_Luxembourg|];
+    Luxembourg demographics portal — [|https://luxembourg.public.lu/en/society-and-culture/population/demographics.html|]'
+  benchmark_language_note: LTZGLUE processes only Luxembourgish (lb) text; non-Luxembourgish
+    content was filtered during benchmark construction using OpenLID. Deployment inputs
+    that are French-only or German-only will not be validly classified by a model
+    calibrated on LTZGLUE alone.
+writing_systems:
+  script: Latin alphabet with diacritics used in Luxembourgish (é, ë, ä, etc.)
+  directionality: left-to-right
+  citizen_orthographic_variance: Citizens may omit diacritics, apply inconsistent
+    capitalization (Luxembourgish capitalizes all nouns as in German), and use phonetic
+    approximations. Preprocessing pipelines must not over-normalize, as variation
+    is meaningful for dialect and register detection.
+  nls_note: No right-to-left script considerations; no script-mixing concerns beyond
+    Latin diacritics.
+demographic_and_literacy_profile:
+  general_literacy_rate: '[NEEDS VERIFICATION — deferred: below search budget; Luxembourg''s
+    general adult literacy is near-universal by all EU benchmarks but a specific authoritative
+    percentage was not retrieved in this pass]'
+  digital_literacy_among_civil_servants: Civil servants are the direct users of classification
+    outputs, not the text authors; high digital literacy is assumed for this subgroup
+    given Luxembourg's advanced e-government infrastructure.
+  citizen_digital_literacy: 'Luxembourg consistently ranks among the top EU member
+    states in digital skills (DESI). The 2024 DESI analysis identifies Luxembourg
+    as among the top three EU countries for ICT specialists as a share of employment
+    (8.0%, behind only Sweden at 8.7%), indicating a highly digitally skilled workforce.
+    The standalone DESI ranking was discontinued after 2022 and integrated into the
+    State of the Digital Decade report from 2023 onwards. Source: DESI 2024 analysis
+    — [|https://www.mdpi.com/1999-5903/17/6/228|]; EC DESI Luxembourg profile — [|https://digital-strategy.ec.europa.eu/en/policies/desi-luxembourg|]'
+  internet_penetration: '~99% of Luxembourg households had internet access in 2023,
+    one of the highest rates in the EU. Urban household access reached ~99.9%, rural
+    household access ~98.3% — both figures among the highest in the EU. Source: Eurostat
+    ICT Household Survey 2023 via Statista — [|https://www.statista.com/statistics/377741/household-internet-access-in-luxembourg/|];
+    Eurostat Urban-Rural Digital Society analysis — [|https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Urban-rural_Europe_-_digital_society|]'
+  mobile_internet_penetration: '[NEEDS VERIFICATION — deferred: below search budget;
+    Luxembourg is consistently a top EU performer in broadband and mobile connectivity
+    per DESI data, but a specific 2023/2024 mobile internet penetration percentage
+    was not retrieved in this pass]'
+  language_skills_in_population: The majority of Luxembourg residents are functionally
+    multilingual (Luxembourgish, French, German). Trilingualism is institutionally
+    embedded through the educational system. Cross-border workers may be monolingual
+    French or German speakers.
+  educational_system_note: Luxembourg's educational system uses Luxembourgish as initial
+    instruction language, transitioning to German then French. This produces a specific
+    pattern of multilingual competence in citizens educated domestically that differs
+    from the competence profile of recently arrived residents or cross-border workers.
+infrastructure_notes:
+  digital_government_maturity: 'Luxembourg has consistently ranked among the top EU
+    member states in e-government maturity. It ranked 5th in the DESI 2017 composite
+    index and has been described as ''one of the leading countries for connectivity,
+    digital skills and Internet usage.'' The standalone DESI index was replaced from
+    2023 by the State of the Digital Decade monitoring framework; Luxembourg remains
+    a top-tier performer. Source: EC DESI Luxembourg country profile — [|https://digital-strategy.ec.europa.eu/en/policies/desi-luxembourg|]'
+  key_digital_platforms:
+    myguichet: 'MyGuichet.lu — Luxembourg''s primary online administrative portal
+      for citizen-government interaction; likely a major channel for digital correspondence
+      captured by this deployment. [NEEDS VERIFICATION — deferred: low impact for
+      scoring; specific confirmation that MyGuichet.lu is in scope for this deployment
+      requires internal deployment documentation not publicly available]'
+    government_portal: 'gouvernement.lu [NEEDS VERIFICATION — deferred: low impact
+      for scoring; confirmation that gouvernement.lu citizen feedback channels feed
+      into this deployment requires internal documentation]'
+  connectivity:
+    broadband_infrastructure: 'Luxembourg leads EU in Very High Capacity Network (VHCN)
+      coverage (≥90% per DESI 2020 data), and internet access across all settlement
+      types is near-universal (~99% overall, ~98.3% rural in 2023). Source: DESI 2020
+      European analysis — [|https://eufordigital.eu/wp-content/uploads/2020/06/DESI2020Thematicchapters-FullEuropeanAnalysis.pdf|];
+      Eurostat 2023 — [|https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Urban-rural_Europe_-_digital_society|]'
+    mobile_network_coverage: '[NEEDS VERIFICATION — deferred: below search budget;
+      Luxembourg is a consistent top performer in EU mobile connectivity benchmarks
+      but a specific 4G/5G population coverage figure was not retrieved in this pass]'
+  text_processing_environment: Text-only deployment; no audio, image, or multimodal
+    input handling required. Inputs arrive as structured digital messages from e-government
+    portals.
+  system_architecture_note: Multi-label classifier with confidence scoring and human-escalation
+    fallback. LTZGLUE emits only single hard labels; the deployment requires model-level
+    adaptation beyond benchmark format — specifically calibrated probability outputs
+    and multi-label decoding.
+administrative_domain_profile:
+  topic_taxonomy_requirements:
+    description: The routing system requires a Luxembourg-specific administrative
+      topic taxonomy that LTZGLUE does not provide. The following categories are deployment-critical
+      and absent from LTZGLUE's five-class RTL news taxonomy (SPORTS, CULTURE, TECHNOLOGY,
+      BUSINESS, ANIMALS).
+    required_topic_categories:
+    - category: Cross-border worker / frontalier status
+      priority: HIGH
+      notes: '47% of Luxembourg''s workforce (489,000 employees, 2024 STATEC); generates
+        distinct query types around frontier-worker tax treaties, social security
+        affiliation, healthcare portability. LTZGLUE: FULL GAP. Source: STATEC — [|https://statistiques.public.lu/en/publications/series/regards/2025/regards-01-25.html|]'
+    - category: Housing and rental market
+      priority: HIGH — politically sensitive
+      notes: Housing affordability is documented as a major societal challenge in
+        Luxembourg, with households spending on average 21.54% of expenditure on housing,
+        water, electricity, gas and fuel (STATEC Luxembourg in Figures 2024 — [|https://statistiques.public.lu/en/publications/series/luxembourg-en-chiffres/2024/luxembourg-en-chiffres-2024.html|]).
+        High cost of living and housing scarcity are widely cited drivers of cross-border
+        worker commuting (OECD Economic Survey Luxembourg 2025 — [|https://www.oecd.org/en/publications/2025/04/oecd-economic-surveys-luxembourg-2025_3eb782b5/full-report/reviving-productivity-growth_4509ab88.html|]).
+        Housing is a confirmed high-volume citizen concern.
+    - category: Cost of living and consumer prices
+      priority: HIGH — politically sensitive
+      notes: 'Luxembourg has the second-highest median hourly wage in the EU (€24,
+        STATEC 2025) but among the highest costs of living; housing expenditure alone
+        averages 21.54% of household spending. Cost-of-living and wage-indexation
+        queries are a persistent theme in citizen-government interaction. Source:
+        STATEC Regards 01/25 — [|https://statistiques.public.lu/en/publications/series/regards/2025/regards-01-25.html|]'
+    - category: National identity and residency documents
+      priority: HIGH
+      notes: Passeport, carte d'identité, certificat de résidence — national state
+        competency (Ministère des Affaires étrangères). État civil (births, deaths,
+        marriages) is handled at communal level but governed by national law, creating
+        a routing ambiguity.
+    - category: Income tax and fiscal matters
+      priority: HIGH
+      notes: 'Administration des contributions directes. Distinct sub-categories for
+        residents vs. non-resident frontaliers. Bilateral double taxation agreements
+        (DTAs) with France, Belgium, Germany are directly relevant; the 34-day remote
+        work threshold under these DTAs is an active policy concern for frontaliers.
+        Source: OECD Economic Survey Luxembourg 2025 — [|https://www.oecd.org/en/publications/2025/04/oecd-economic-surveys-luxembourg-2025_3eb782b5/full-report/reviving-productivity-growth_4509ab88.html|]'
+    - category: Social security and health insurance
+      priority: HIGH
+      notes: 'CNS, CNAP, CCSS — national competency. Cross-border healthcare reimbursement
+        for frontaliers is a distinct sub-category. Frontaliers generally pay social
+        security in Luxembourg but with some benefit portability distinctions. Source:
+        Expatica cross-border worker guide — [|https://www.expatica.com/lu/working/employment-basics/cross-border-worker-in-luxembourg-1063529/|]'
+    - category: Urban planning and construction permits
+      priority: MODERATE
+      notes: Communal competency; routing must identify the relevant commune out of
+        100 communes.
+    - category: Transport and mobility
+      priority: MODERATE
+      notes: 'Luxembourg introduced free public transport on 1 March 2020 (effective
+        29 February 2020), becoming the first country in the world to do so — buses,
+        trains (2nd class), and trams are fare-free; first-class train travel retains
+        a fare. Policy remains in force as of 2025. Cross-border tickets are reduced-price
+        but not free. This policy generates ongoing citizen queries about eligibility,
+        cross-border fares, and service changes. Source: Official Luxembourg government
+        transport portal — [|https://transports.public.lu/en/plus/faq/gratuite-transports-publics.html|];
+        Mobiliteit.lu fares page — [|https://www.mobiliteit.lu/en/tickets-page/fares/|]'
+    - category: EU institutional matters
+      priority: MODERATE
+      notes: Citizen messages may erroneously address national government for EU-institution
+        matters or vice versa. Routing system needs a redirect/triage category.
+    - category: Labor law and employment
+      priority: MODERATE
+      notes: Inspection du Travail et des Mines (ITM) — national competency.
+    - category: Education and childcare
+      priority: MODERATE
+      notes: Childcare allocation (chèque-service accueil) is state-managed; school
+        enrollment may be communal. Routing split between national and communal for
+        specific sub-tasks requires domain knowledge not present in LTZGLUE.
+    - category: Immigration and naturalization
+      priority: MODERATE
+      notes: Direction de l'immigration — national competency.
+  state_vs_communal_routing:
+    description: A primary routing challenge is distinguishing whether a citizen message
+      concerns a national-state competency or a communal competency. No existing NLU
+      benchmark encodes this distinction. It requires Luxembourg-specific administrative
+      knowledge not present in LTZGLUE.
+    ambiguous_boundary_cases:
+    - État civil (births, marriages, deaths) — performed by communes but governed
+      by national law
+    - Social housing — involves both national policy (SNHBM) and communal implementation
+    - Road infrastructure — national vs. communal road network split
+    benchmark_coverage: FULL GAP — LTZGLUE contains no administrative jurisdiction
+      categories of any kind.
+  sentiment_and_urgency_norms:
+    description: Luxembourgish administrative communication culture is characterized
+      by formal, understated expression even when citizens are frustrated or distressed.
+      Sentiment classifiers trained on general-purpose or media-domain data will systematically
+      underestimate negative sentiment and urgency in citizen correspondence.
+    known_benchmark_gap: LTZGLUE sentiment annotation used two native speakers (Cohen's
+      Kappa 0.45) annotating RTL commentary/letters-to-editor. No civil-service or
+      administrative-correspondence register was included. Annotator familiarity with
+      formal civil communication norms is undocumented.
+    implications_for_prioritization: The deployment uses sentiment/urgency outputs
+      for correspondence prioritization. Underdetection of frustration could cause
+      genuinely urgent messages to be deprioritized. The human-in-the-loop audit mechanism
+      is critical to recalibrate this progressively.
+    cultural_communication_notes: Citizens may express severe dissatisfaction through
+      understatement, formal complaint procedures, or legalistic framing rather than
+      explicit negative sentiment markers. Urgency may be signaled indirectly through
+      references to deadlines, legal rights, or administrative timelines rather than
+      emotional language.
+legal_and_regulatory_framework:
+  data_protection:
+    applicable_regulation: EU General Data Protection Regulation (GDPR) — Regulation
+      2016/679
+    national_implementation: 'Law of 1 August 2018 on the organization of the Commission
+      nationale pour la protection des données (CNPD) and the general data protection
+      regime. CNPD serves as national supervisory authority. Source: regulations.ai
+      Luxembourg AI overview — [|https://regulations.ai/regulations/luxembourg-summary|];
+      CMS Expert Guide — [|https://cms.law/en/int/expert-guides/ai-regulation-scanner/luxembourg|]'
+    ai_act_considerations: 'Luxembourg is directly subject to EU AI Act (Regulation
+      (EU) 2024/1689). Automated public-sector correspondence routing that affects
+      service access is likely classifiable as high-risk AI under Annex III (public
+      administration provisions). Draft national implementation Bill 8476 was submitted
+      to Parliament on 23 December 2024 and designates CNPD as the default market
+      surveillance authority and single point of contact for AI Act matters. Most
+      high-risk AI obligations apply from August 2026; prohibited AI practices bans
+      and AI literacy requirements apply from 2 February 2025. Source: CMS Expert
+      Guide Luxembourg AI — [|https://cms.law/en/int/expert-guides/ai-regulation-scanner/luxembourg|];
+      Pinsent Masons AI Act enforcement — [|https://www.pinsentmasons.com/out-law/news/luxembourg-law-addresses-eu-ai-act-enforcement|];
+      Arendt bill analysis — [|https://www.arendt.com/news-insights/news/new-luxembourg-bill-designates-national-authorities-under-the-ai-act-the-cnpd-takes-centre-stage/|];
+      CNPD AI Act obligations 2025 — [|https://cnpd.public.lu/en/actualites/national/2025/08/ai-act-un-an.html|]'
+  administrative_law:
+    primary_framework: '[NEEDS VERIFICATION — deferred: below search budget; Luxembourg
+      administrative procedure law (loi du 1er décembre 1978 and subsequent reforms)
+      governs automated administrative decision-support; specific current statutes
+      require expert legal review rather than web search]'
+    automated_decision_constraints: 'Automated routing that affects citizen rights
+      or service access may be subject to administrative law requirements for transparency,
+      contestability, and human review. The system''s human-in-the-loop fallback is
+      directly relevant to compliance. Under EU AI Act Article 4, deployers must ensure
+      staff have sufficient AI literacy; compliance obligations for high-risk AI systems
+      (Article 26) include human oversight, data quality checks, and incident logging
+      — applicable from August 2026. Source: CNPD AI mastery obligations — [|https://cnpd.public.lu/en/dossiers-thematiques/intelligence-artificielle/regulation-ia/ria-maitrise-ia.html|]'
+    language_rights: '[NEEDS VERIFICATION — deferred: below search budget; Luxembourg
+      language law of 24 February 1984 (loi sur le régime des langues) governs which
+      languages may be used in administrative correspondence; specific provisions
+      require expert legal review]'
+  cross_border_worker_legal_framework:
+    tax_treaties: 'Bilateral double taxation agreements (DTAs) between Luxembourg
+      and France, Belgium, and Germany govern frontalier taxation. A key current provision:
+      under these DTAs, the threshold for remote work from abroad is 34 working days
+      per year; exceeding this threshold shifts taxation to the country of residence
+      rather than Luxembourg. This is an active policy concern generating citizen
+      queries. Source: OECD Economic Survey Luxembourg 2025 — [|https://www.oecd.org/en/publications/2025/04/oecd-economic-surveys-luxembourg-2025_3eb782b5/full-report/reviving-productivity-growth_4509ab88.html|];
+      Expatica cross-border worker guide — [|https://www.expatica.com/lu/working/employment-basics/cross-border-worker-in-luxembourg-1063529/|]'
+    social_security_coordination: 'EU Regulation 883/2004 on coordination of social
+      security systems — governs which country''s social security applies to cross-border
+      workers. Most frontaliers pay social security in Luxembourg. A1 certificate
+      arrangements apply for seconded workers (up to 2-year maximum). Source: Expatica
+      cross-border worker guide — [|https://www.expatica.com/lu/working/employment-basics/cross-border-worker-in-luxembourg-1063529/|]'
+    healthcare: '[NEEDS VERIFICATION — deferred: below search budget; cross-border
+      healthcare directive 2011/24/EU implementation and CNS reimbursement procedures
+      for frontaliers require specialist review of CNS administrative documentation]'
+  free_public_transit:
+    policy_description: Luxembourg abolished fares on all public transport nationally
+      (buses, trains 2nd class, trams) for all users including tourists. First-class
+      train travel retains fares. Cross-border tickets are reduced-price but not free
+      (Luxembourg portion is free; foreign-country portion remains payable).
+    implementation_date: '1 March 2020 (effective from 29 February 2020). Policy remains
+      fully in force as of 2025 with no rollback. Extended tram network and new routes
+      added post-2020. Source: Official Luxembourg transport FAQ — [|https://transports.public.lu/en/plus/faq/gratuite-transports-publics.html|];
+      Official Luxembourg government portal — [|https://luxembourg.public.lu/en/living/mobility/public-transport.html|];
+      Luxembourg Embassy Washington announcement — [|https://washington.mae.lu/en/actualites/2020/free-public-transport-nationwide.html|]'
+    relevance: Generates a distinct class of citizen queries; routing category for
+      Mobilité (CFL, RGTR, Luxtram operators vs. Ministère de la Mobilité et des Travaux
+      publics). Cross-border commuter queries about fare reductions on cross-border
+      segments are a related sub-category.
+benchmark_validity_concerns_for_this_population:
+  input_ontology_gap:
+    severity: CRITICAL
+    summary: LTZGLUE topic taxonomy (5 RTL news categories) and intent taxonomy (voice-assistant
+      reminder/alarm commands) share zero overlap with the deployment's required administrative
+      routing categories. The benchmark cannot be used as a direct proxy for topic
+      classification performance in this deployment context.
+    recommended_investigation: '[NOT FOUND — searched for Luxembourgish civic/administrative
+      NLP dataset that could supplement LTZGLUE for topic coverage; no such dataset
+      was identified. The LTZGLUE benchmark paper itself (Q5, Q6) notes only a handful
+      of LTZ NLU tasks exist (Lothritz et al. 2022; Philippy et al. 2024; Plum et
+      al. 2026), none in the administrative domain. This confirms a genuine documentation
+      gap for LTZ civic NLP, not a search failure.]'
+  output_format_gap:
+    severity: CRITICAL
+    summary: All LTZGLUE tasks emit single hard labels. The deployment requires multi-label
+      classification with calibrated confidence scores. No adaptation path exists
+      within the current benchmark format.
+    recommended_investigation: '[NEEDS VERIFICATION — deferred: likely unsearchable
+      (requires inspection of LTZGLUE code repository or author contact to confirm
+      whether evaluation scripts expose logit/probability outputs); no publicly available
+      LTZGLUE documentation of probabilistic scoring was found in this pass]'
+  input_content_register_gap:
+    severity: HIGH
+    summary: LTZGLUE data sources are predominantly formal (RTL news, parliamentary
+      speeches, Wikipedia, LOD dictionary). Citizen correspondence is colloquial,
+      code-switched, and orthographically variable. The partial exception — Lothritz
+      et al. NER corpus from RTL news comments — covers informal register in a narrow
+      slice of the benchmark.
+    recommended_investigation: '[NOT FOUND — no separate Luxembourgish informal/code-switched
+      citizen correspondence corpus was identified in searches. This is consistent
+      with the LTZGLUE paper''s own acknowledgment (Q112) that ''most data sources
+      reflect formal writing or institutional usage.'' The absence confirms the gap
+      rather than indicating an undiscovered resource.]'
+  annotator_provenance_gap:
+    severity: HIGH
+    summary: Sentiment annotators are identified only as two native LTZ speakers (Cohen's
+      Kappa 0.45). No documentation of familiarity with civil administrative communication
+      norms. Student assistants are acknowledged without further background detail.
+    recommended_investigation: '[NEEDS VERIFICATION — deferred: not searchable via
+      web; requires direct contact with LTZGLUE authors (University of Luxembourg)
+      or inspection of supplementary materials for annotator recruitment criteria,
+      residency, and occupation]'
+  benchmark_size_and_coverage:
+    severity: MODERATE
+    summary: Low-resource benchmark with small per-task dataset sizes. Rare administrative
+      sub-topics (e.g., EU institutional queries, frontalier-specific matters) are
+      entirely absent as categories and cannot be assessed for coverage adequacy.
+    recommended_investigation: '[NEEDS VERIFICATION — deferred: below search budget;
+      per-task test set sizes are reported in LTZGLUE appendix tables (Q156, Q158,
+      Q159); requires access to the paper''s appendix to extract exact figures]'
+  llm_label_contamination:
+    severity: MODERATE
+    summary: RTE labels verified by ChatGPT-5-Mini; JUDGEWEL NER labels generated
+      with LLM judges and minimal human verification. LLM-induced label artifacts
+      may not reflect genuine Luxembourgish administrative or legal linguistic norms.
+    recommended_investigation: '[NEEDS VERIFICATION — deferred: below search budget;
+      proportion of NER and RTE test data from LLM-annotated vs. human-annotated sources
+      requires inspection of LTZGLUE appendix tables and JUDGEWEL dataset documentation]'
+cultural_norms_notes: 'Luxembourg''s administrative culture reflects the country''s
+  trilingual institutional history and its position as both a small nation-state and
+  a major EU hub. Key norms relevant to this deployment:
+
+  - Civil communication with government is traditionally formal and legalistic, even
+  in digital channels.
+
+  - Citizens expect responses in the language they wrote in (Luxembourgish, French,
+  or German), with French dominant in formal administrative correspondence.
+
+  - Cross-border workers have a distinct civic identity and distinct administrative
+  needs; their messages may reference French or German administrative concepts by
+  habit.
+
+  - Luxembourg''s high cost of living and housing scarcity generate politically charged
+  correspondence that requires careful urgency/frustration calibration.
+
+  - The country''s EU identity means citizens sometimes conflate national and supranational
+  administrative channels.
+
+  - Understatement and formal complaint framing may mask genuine urgency or frustration
+  in citizen messages — a critical consideration for the sentiment/prioritization
+  subsystem.
+
+  - The Portuguese-origin community (~14.5% of total population, ~93,659 Portuguese
+  nationals as of January 2023, the largest single foreign nationality group — source:
+  Wikipedia Portuguese in Luxembourg — [|https://en.wikipedia.org/wiki/Portuguese_in_Luxembourg|];
+  migration policy — [|https://www.migrationpolicy.org/country-resource/luxembourg|])
+  primarily interacts in French rather than Luxembourgish, creating a population segment
+  whose correspondence may fall outside the LTZ model''s coverage.'
+domain_specific_operational_notes:
+  routing_architecture: The system routes messages to specific government departments
+    and differentiates between national and communal authority levels. A single message
+    may legitimately require multi-label routing (e.g., a housing query involving
+    both communal urban planning and national social housing allocation). The human-in-the-loop
+    fallback handles low-confidence and boundary cases.
+  high_stakes_decisions: 'Automated routing in a public administration context constitutes
+    a high-stakes application: misrouting delays citizen service delivery, and misclassification
+    of urgency/frustration can cause harm through deprioritization of urgent cases.
+    Assessment must weight error asymmetries — the cost of missing an urgent/frustrated
+    message is higher than the cost of over-escalating to human review.'
+  progressive_calibration: 'The deployment includes a civil servant feedback mechanism
+    to progressively align model outputs with actual administrative norms. This is
+    a critical mitigation for the benchmark''s annotator provenance and sentiment
+    calibration gaps, but its effectiveness depends on sufficient volume and diversity
+    of civil servant feedback over time. [NEEDS VERIFICATION — deferred: likely unsearchable
+    (lived practice / internal deployment design); feedback loop mechanism design
+    and calibration timeline require internal deployment documentation]'
+  luxembourgish_language_standardization: 'The ongoing OLO (Offiziell Lëtzebuerger
+    Orthografie) standardization effort affects how Luxembourgish is written in both
+    citizen messages and reference data. The benchmark was constructed largely before
+    or during early adoption periods. Assessment should account for potential orthographic
+    drift between benchmark data and current citizen writing conventions. [NEEDS VERIFICATION
+    — deferred: below search budget; OLO adoption timeline and current status require
+    specialist linguistic sources not retrieved in this pass]'
+net_new_fields:
+  ai_act_timeline_note: 'Under EU AI Act (Reg. 2024/1689), the deployment is likely
+    classifiable as high-risk AI (Annex III, public administration automated decision-support).
+    Key compliance timeline: prohibited AI practices ban and AI literacy (Article
+    4) obligations in force since 2 February 2025; high-risk AI notification and general-purpose
+    AI model obligations from August 2025; full high-risk AI system obligations from
+    August 2026. Luxembourg''s national implementing bill (No. 8476, submitted December
+    2024) designates CNPD as the default market surveillance authority. Source: CNPD
+    AI Act obligations article — [|https://cnpd.public.lu/en/actualites/national/2025/08/ai-act-un-an.html|];
+    Pinsent Masons — [|https://www.pinsentmasons.com/out-law/news/luxembourg-law-addresses-eu-ai-act-enforcement|]'
+  remote_work_dta_threshold: 'The bilateral DTAs between Luxembourg and France, Belgium,
+    and Germany currently set a 34-working-day annual threshold for remote work from
+    abroad before taxation shifts to the country of residence. This is a high-salience
+    administrative topic for cross-border workers that will generate citizen correspondence
+    to tax and labor authorities; it should be included as a routing sub-category
+    within the frontalier/income-tax topic class. Source: OECD Economic Survey Luxembourg
+    2025 — [|https://www.oecd.org/en/publications/2025/04/oecd-economic-surveys-luxembourg-2025_3eb782b5/full-report/reviving-productivity-growth_4509ab88.html|]'
+  portuguese_language_as_second_spoken_language: 'Portuguese is the second most spoken
+    primary language in Luxembourg after Luxembourgish (~15.4% of residents per 2021
+    CIA World Factbook estimate), ahead of French (~14.9%), reflecting the size of
+    the Portuguese community. This means a material share of citizen correspondence
+    arriving at government portals may be in Portuguese — a language entirely outside
+    the LTZGLUE benchmark scope and outside the three official languages. Source:
+    World Factbook Luxembourg — [|https://theworldfactbook.org/country/luxembourg.html|];
+    Luxembourg public demographics page — [|https://luxembourg.public.lu/en/society-and-culture/population/demographics.html|]'
+  luxembourg_employment_ratio_context: 'Luxembourg recorded nearly 500,000 jobs in
+    2023, yielding an employment-to-population ratio of 0.76 — the highest among European
+    countries excluding Monaco. This extreme ratio (workforce substantially larger
+    than resident population due to frontaliers) is directly relevant to the deployment:
+    a large fraction of citizen correspondence concerns work-related administrative
+    matters affecting a workforce that exceeds the resident population by ~75%. Source:
+    ODT/LISER Maps and Figures 2023, reported by chronicle.lu — [|https://www.chronicle.lu/category/surveys-reports/54808-cross-border-workers-constitute-47-of-luxembourgs-500k-workforce-in-2023|]'

@@ -1568,8 +1568,12 @@ def step_7_score(composed_path: Path, name: str, slug: str) -> Path:
 # ===================================================================
 
 def step_8_report(results_path: Path) -> None:
+    report_path = results_path.parent / "report.md"
+    report = _run_script("format_results.py", str(results_path))
+    report_path.write_text(report, encoding="utf-8")
+    print(f"[8] Report written to {report_path}")
     print("\n" + "=" * 60)
-    print(_run_script("format_results.py", str(results_path)))
+    print(report)
 
 
 # ===================================================================
