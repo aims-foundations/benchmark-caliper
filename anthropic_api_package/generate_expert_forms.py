@@ -31,11 +31,13 @@ SECRETS_DIR = PACKAGE_ROOT / ".secrets"
 CREDENTIALS_FILE = SECRETS_DIR / "credentials.json"
 TOKEN_FILE = SECRETS_DIR / "token.json"
 
+# forms.body: create/edit form structure; drive.file: set sharing permissions
 SCOPES = [
     "https://www.googleapis.com/auth/forms.body",
     "https://www.googleapis.com/auth/drive.file",
 ]
 
+# Human-readable labels for the six validity dimensions used as metadata in question_map
 DIMENSION_LABELS = {
     "IO": "Input Ontology",
     "IC": "Input Content",
@@ -45,6 +47,8 @@ DIMENSION_LABELS = {
     "OF": "Output Form",
 }
 
+# Fixed instructions shown to respondents at the top of every expert form.
+# Explains the study context, expected answer length, and what happens after submission.
 FORM_DESCRIPTION = (
     "Thank you for your contributions to the validity assessment "
     "LLM-pipeline study!\n\n"
@@ -83,6 +87,10 @@ FORM_DESCRIPTION = (
 # Auth
 # ===================================================================
 
+# Handles the OAuth2 dance for Google Forms/Drive access.
+# On first run, opens a browser for user consent and writes token.json.
+# On subsequent runs, refreshes the token silently if expired.
+# Returns a Credentials object ready to be passed to googleapiclient.discovery.build.
 def authenticate():
     """OAuth2 flow — opens browser on first run, caches token."""
     creds = None
@@ -90,8 +98,10 @@ def authenticate():
         creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), SCOPES)
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
+            # Token is stale but we have a refresh token — no browser needed
             creds.refresh(Request())
         else:
+            # No usable token at all — full browser-based consent flow
             flow = InstalledAppFlow.from_client_secrets_file(
                 str(CREDENTIALS_FILE), SCOPES
             )
@@ -104,6 +114,11 @@ def authenticate():
 # Expert discovery
 # ===================================================================
 
+# Walks the expert_responses/<csv_stem>/ directory tree built by run_expert_stage1.py.
+# Each subdirectory corresponds to one expert; row.json holds their metadata and
+# the list of (benchmark, tuple) assignments for that run.
+# Yields (expert_dir, row_dict) so the caller can iterate without knowing the layout.
+# row_filter: if provided, only yield the expert whose source_row matches (1-indexed CSV row).
 def find_expert_dirs(csv_path: Path, row_filter: int | None = None):
     """Yield (expert_dir, row_data) for each expert under the CSV stem."""
     csv_stem = csv_path.stem
@@ -118,6 +133,7 @@ def find_expert_dirs(csv_path: Path, row_filter: int | None = None):
             continue
         row_path = expert_dir / "row.json"
         if not row_path.exists():
+            # Skip any stray non-expert directories (e.g., temp files)
             continue
         row = json.loads(row_path.read_text())
         if row_filter is not None and row["source_row"] != row_filter:
@@ -129,6 +145,13 @@ def find_expert_dirs(csv_path: Path, row_filter: int | None = None):
 # Form construction
 # ===================================================================
 
+# Builds the full batchUpdate payload for one expert's Google Form.
+# The Google Forms API requires all structural mutations to be sent as a single
+# batchUpdate call; items must be indexed sequentially — hence the manual item_idx counter.
+# Returns:
+#   requests      — ordered list of API mutation objects (updateFormInfo, createItem, etc.)
+#   question_meta — parallel list recording which requests are actual questions,
+#                   used to correlate batchUpdate replies with question IDs after creation.
 def build_form_requests(expert_dir: Path, row: dict):
     """Build batchUpdate requests for one expert's form.
 
@@ -137,7 +160,7 @@ def build_form_requests(expert_dir: Path, row: dict):
     """
     requests = []
     question_meta = []
-    item_idx = 0
+    item_idx = 0  # Google Forms API requires explicit positional indices for all items
 
     # Form description (shows on the intro page below the title)
     requests.append({
@@ -147,7 +170,8 @@ def build_form_requests(expert_dir: Path, row: dict):
         }
     })
 
-    # Collect verified email — respondents must sign in with Google
+    # Collect verified email — respondents must sign in with Google so we can
+    # match responses back to expert IDs in the downstream parser
     requests.append({
         "updateSettings": {
             "settings": {"emailCollectionType": "VERIFIED"},
@@ -155,22 +179,33 @@ def build_form_requests(expert_dir: Path, row: dict):
         }
     })
 
+    # Each tuple is one benchmark scenario this expert assessed in stage 1.
+    # We lay out the form as: [page break] → [stage 1 context] → [questions] → [feedback]
     for t in row["tuples"]:
         tuple_dir = expert_dir / "tuples" / f"tuple_{t['index']}"
         q_path = tuple_dir / "elicitation_questions.json"
         if not q_path.exists():
+            # Stage 1 may have partially succeeded — warn and skip rather than abort,
+            # so the expert still receives a form for the tuples that did complete
             print(f"  WARN: {q_path.relative_to(PACKAGE_ROOT)} missing, "
                   f"skipping tuple {t['index']}")
             continue
 
         questions = json.loads(q_path.read_text())
+
+        # Load the deployment description the expert wrote in stage 1 to show as context
         dep_path = PACKAGE_ROOT / t["deployment_description_path"]
         dep_desc = dep_path.read_text().strip() if dep_path.exists() else ""
+
+        # Reformat section headers for readability in the Google Form description field,
+        # which does not support markdown — plain-text capitalization is the best we can do
         dep_desc = (dep_desc
                     .replace("Use case and domain:", "\nUSE CASE AND DOMAIN:")
                     .replace("Target population:", "\nTARGET POPULATION:"))
 
         # === Section break for this tuple ===
+        # pageBreakItem creates a new page in the form, grouping all items for this
+        # scenario together and preventing cognitive overload across scenarios
         requests.append({
             "createItem": {
                 "item": {
@@ -183,6 +218,9 @@ def build_form_requests(expert_dir: Path, row: dict):
         item_idx += 1
 
         # === Stage 1 context block ===
+        # textItem is a read-only display element (no response box).
+        # Shows the expert's own stage 1 text so they can answer in context
+        # without switching tabs.
         requests.append({
             "createItem": {
                 "item": {
@@ -196,6 +234,9 @@ def build_form_requests(expert_dir: Path, row: dict):
         item_idx += 1
 
         # === One paragraph question per elicitation question ===
+        # paragraph=True gives a multi-line text box — appropriate for 2-5 sentence answers.
+        # The question text goes in description (not title) so it renders below the label
+        # with a leading newline for visual breathing room.
         for qi, q in enumerate(questions, 1):
             requests.append({
                 "createItem": {
@@ -212,15 +253,20 @@ def build_form_requests(expert_dir: Path, row: dict):
                     "location": {"index": item_idx},
                 }
             })
+            # Record request_index so we can retrieve the API-assigned questionId
+            # from the parallel replies list returned by batchUpdate
             question_meta.append({
                 "tuple_index": t["index"],
-                "question_id": q["id"],
-                "dimension": q["dimension"],
+                "question_id": q["id"],      # our internal ID from elicitation_questions.json
+                "dimension": q["dimension"],  # e.g., "IC", "OO" — validity dimension
                 "request_index": len(requests) - 1,
             })
             item_idx += 1
 
         # === Optional feedback box at the end of each tuple's page ===
+        # Captures hallucination or cultural-error signals from the expert without
+        # requiring a separate survey instrument. Not required so as not to burden
+        # experts who found the questions acceptable.
         requests.append({
             "createItem": {
                 "item": {
@@ -242,6 +288,8 @@ def build_form_requests(expert_dir: Path, row: dict):
                 "location": {"index": item_idx},
             }
         })
+        # Track feedback boxes in question_meta so the response parser can
+        # distinguish them from substantive elicitation answers
         question_meta.append({
             "tuple_index": t["index"],
             "question_id": "feedback",
@@ -253,9 +301,16 @@ def build_form_requests(expert_dir: Path, row: dict):
     return requests, question_meta
 
 
+# Creates the empty form shell via forms.create, then fills it in a single batchUpdate.
+# After the update, the API returns a replies list whose ordering mirrors the requests list —
+# we use request_index stored in question_meta to fish out each item's assigned questionId.
+# Returns (form_id, form_url, question_map) where question_map is keyed by Google's
+# questionId and maps back to our internal tuple/dimension/question metadata.
 def create_expert_form(service, row: dict, requests: list,
                        question_meta: list):
     """Create the Google Form, populate it, and return form metadata."""
+    # Create a minimal form shell first — Google Forms API requires the form
+    # to exist before any batchUpdate can be issued
     form = service.forms().create(body={
         "info": {"title": f"Regional Validity Assessment (Stage 2) -- {row['email']}"}
     }).execute()
@@ -267,18 +322,26 @@ def create_expert_form(service, row: dict, requests: list,
     ).execute()
 
     # === Map question IDs from the API response back to our metadata ===
+    # The API returns one reply per request, in the same order.
+    # Non-question requests (updateFormInfo, updateSettings, textItem, pageBreakItem)
+    # return empty reply objects, so we index by our pre-recorded request_index rather
+    # than iterating sequentially — this is safe regardless of how many non-question
+    # items precede each real question.
     replies = response.get("replies", [])
     question_map = {}
     for meta in question_meta:
         reply = replies[meta["request_index"]]
         question_ids = reply.get("createItem", {}).get("questionId", [])
         if question_ids:
+            # questionId is a list; index [0] is always the primary response field
             question_map[question_ids[0]] = {
                 "tuple_index": meta["tuple_index"],
                 "question_id": meta["question_id"],
                 "dimension": meta["dimension"],
             }
 
+    # Fetch the live form to get the stable responderUri (shareable respondent URL).
+    # Falling back to a constructed URL in case the API omits the field.
     form_data = service.forms().get(formId=form_id).execute()
     form_url = form_data.get(
         "responderUri",
@@ -288,6 +351,9 @@ def create_expert_form(service, row: dict, requests: list,
     return form_id, form_url, question_map
 
 
+# Persists the form URL and the questionId→metadata mapping to disk so that
+# downstream response parsing (stage 3) can reconstruct which answer belongs
+# to which validity dimension and tuple without querying the Forms API again.
 def save_manifest(expert_dir: Path, form_id: str, form_url: str,
                   row: dict, question_map: dict) -> Path:
     """Write stage2_form.json with form URL and question-ID mapping."""
@@ -298,6 +364,7 @@ def save_manifest(expert_dir: Path, form_id: str, form_url: str,
         "expert_email": row["email"],
         "expert_name": row["name"],
         "created_at": datetime.now(timezone.utc).isoformat(),
+        # question_map: {google_question_id -> {tuple_index, question_id, dimension}}
         "question_map": question_map,
     }
     path = expert_dir / "stage2_form.json"
@@ -309,6 +376,10 @@ def save_manifest(expert_dir: Path, form_id: str, form_url: str,
 # CLI
 # ===================================================================
 
+# Entry point. Parses args, resolves the expert directory tree, and either
+# prints a structural preview (--dry-run) or creates real Google Forms via the API.
+# Idempotency: an existing stage2_form.json causes the expert to be skipped,
+# so the script is safe to re-run after partial failures.
 def main():
     p = argparse.ArgumentParser(
         description="Generate Stage-2 Google Forms for expert elicitation.",
@@ -336,9 +407,12 @@ def main():
     print(f"Found {len(experts)} expert(s) to process.")
 
     # === Dry run: show what would be created ===
+    # Useful for verifying question counts and dimension coverage before
+    # committing real API calls and creating live forms
     if args.dry_run:
         for expert_dir, row in experts:
             requests, question_meta = build_form_requests(expert_dir, row)
+            # Count page breaks to report how many tuple-sections the form will have
             n_sections = sum(
                 1 for r in requests
                 if "createItem" in r
@@ -348,6 +422,7 @@ def main():
             print(f"    Form title: Regional Validity Assessment (Stage 2) -- {row['email']}")
             print(f"    Sections: {n_sections}, Questions: {len(question_meta)}")
             for meta in question_meta:
+                # Expand short dimension code to human-readable label for legibility
                 dim = DIMENSION_LABELS.get(meta["dimension"], meta["dimension"])
                 print(f"      T{meta['tuple_index']}-{meta['question_id']}"
                       f"  [{dim}]")
@@ -364,6 +439,7 @@ def main():
     for expert_dir, row in experts:
         print(f"\n[{row['expert_id']}] Creating form for {row['name']}...")
 
+        # Idempotency check — avoid creating duplicate forms for an expert
         manifest_path = expert_dir / "stage2_form.json"
         if manifest_path.exists():
             existing = json.loads(manifest_path.read_text())
@@ -374,6 +450,7 @@ def main():
 
         requests, question_meta = build_form_requests(expert_dir, row)
         if not question_meta:
+            # All tuples were missing elicitation_questions.json — nothing to create
             print("  WARN: no questions found across tuples, skipping.")
             continue
 

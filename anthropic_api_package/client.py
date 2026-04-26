@@ -27,12 +27,17 @@ from pathlib import Path
 
 import anthropic
 
+# Load ANTHROPIC_API_KEY from a .env file if present; the SDK will also pick it
+# up from the environment directly, so this is a silent convenience fallback.
 try:
     from dotenv import load_dotenv
     load_dotenv()
 except ImportError:
     pass
 
+# Canonical short names -> full model IDs used in every API call. Callers
+# always pass "haiku"/"sonnet"/"opus" — never raw model strings — so that
+# upgrading a model version requires changing exactly one line here.
 MODELS = {
     "haiku":  "claude-haiku-4-5-20251001",
     "sonnet": "claude-sonnet-4-6",
@@ -50,6 +55,7 @@ PRICES: dict[str, dict[str, float]] = {
 # Web search is billed separately as a server tool: $10 per 1000 requests.
 WEB_SEARCH_PRICE_PER_1K = 10.00
 
+# Lazily initialized singleton; see _get_client().
 _client: anthropic.Anthropic | None = None
 
 # Dry-run mode: when enabled, `call()` / `call_parallel()` print each prompt
@@ -60,6 +66,7 @@ DRY_RUN: bool = False
 DRY_RUN_PLACEHOLDER = "<dry-run: skipped API call>"
 
 
+# Toggle dry-run globally; used by run_pipeline's --dry-run flag.
 def set_dry_run(enabled: bool) -> None:
     global DRY_RUN
     DRY_RUN = enabled
@@ -70,21 +77,24 @@ def set_dry_run(enabled: bool) -> None:
 STREAM_DEFAULT: bool | None = None
 
 
+# Override the module-level stream default; None means "stream everything".
 def set_stream_default(mode: bool | None) -> None:
     global STREAM_DEFAULT
     STREAM_DEFAULT = mode
 
 
+# === Rate limiter state ===
 # Preemptive rate limiter: tracks input and output tokens in rolling 60s
 # windows and sleeps before sending a request that would exceed the budget.
 # Avoids wasting money on 429'd requests that must be re-sent.
 _INPUT_TPM_LIMIT: int = 0   # 0 = disabled
 _OUTPUT_TPM_LIMIT: int = 0  # 0 = disabled
-_INPUT_TPM_WINDOW: deque[tuple[float, int]] = deque()
+_INPUT_TPM_WINDOW: deque[tuple[float, int]] = deque()   # (monotonic_time, tokens)
 _OUTPUT_TPM_WINDOW: deque[tuple[float, int]] = deque()
 _TPM_LOCK = threading.Lock()
 
 
+# Configure the preemptive rate limiter; 0 disables each dimension independently.
 def set_tpm_limit(input_tpm: int = 0, output_tpm: int = 0) -> None:
     global _INPUT_TPM_LIMIT, _OUTPUT_TPM_LIMIT
     _INPUT_TPM_LIMIT = input_tpm
@@ -100,6 +110,8 @@ def set_tpm_limit(input_tpm: int = 0, output_tpm: int = 0) -> None:
 
 
 def _window_used(window: deque[tuple[float, int]], now: float) -> int:
+    # Evict entries older than 60s, then sum remaining tokens in the window.
+    # Callers hold _TPM_LOCK, so no additional locking here.
     while window and window[0][0] < now - 60:
         window.popleft()
     return sum(t for _, t in window)
@@ -115,12 +127,16 @@ def _wait_for_capacity(step: str) -> None:
         if _INPUT_TPM_LIMIT:
             input_used = _window_used(_INPUT_TPM_WINDOW, now)
             if input_used >= _INPUT_TPM_LIMIT:
+                # Sleep until the oldest entry in the window falls out of the
+                # 60s budget. The +1 is a small safety margin.
                 oldest = _INPUT_TPM_WINDOW[0][0] if _INPUT_TPM_WINDOW else now
                 wait = 60 - (now - oldest) + 1
                 print(f"\n  ⏳ [{label}] input rate limit — {input_used:,}"
                       f" >= {_INPUT_TPM_LIMIT:,} TPM, "
                       f"waiting {wait:.0f}s...",
                       file=sys.stderr, flush=True)
+                # Release the lock while sleeping so other threads can record
+                # their completions — otherwise they'd deadlock on _LEDGER_LOCK.
                 _TPM_LOCK.release()
                 time.sleep(wait)
                 _TPM_LOCK.acquire()
@@ -151,6 +167,7 @@ def _record_tpm(input_tokens: int, output_tokens: int) -> None:
             _OUTPUT_TPM_WINDOW.append((now, output_tokens))
 
 
+# === Per-call trace log ===
 # Per-call trace log: one JSONL file per step label in `_TRACE_DIR`. Each file
 # holds every call that step fired (typically 1, except 1a_extract which has
 # one entry per page). Disabled unless set via `set_trace_dir`. Thread-safe:
@@ -159,6 +176,7 @@ _TRACE_DIR: Path | None = None
 _TRACE_LOCK = threading.Lock()
 
 
+# Point the trace log at a directory; None disables tracing.
 def set_trace_dir(path: Path | str | None) -> None:
     global _TRACE_DIR
     _TRACE_DIR = Path(path) if path is not None else None
@@ -174,12 +192,13 @@ def clear_trace_steps(*step_names: str) -> None:
 
 
 def _cost_for_usage(model: str, usage) -> float:
-    """Point-estimate USD cost for one call, mirroring `_model_cost_breakdown`."""
+    """Point-estimate USD cost for one API response object; mirrors _model_cost_breakdown."""
     price = PRICES.get(model)
     if not price:
         return 0.0
     in_tok = getattr(usage, "input_tokens", 0) or 0
     out_tok = getattr(usage, "output_tokens", 0) or 0
+    # server_tool_use is a nested object present only when web_search fired.
     stu = getattr(usage, "server_tool_use", None)
     web_req = getattr(stu, "web_search_requests", 0) or 0 if stu else 0
     return (
@@ -200,6 +219,7 @@ def _extract_tool_trace(content_blocks) -> list[dict]:
     for b in content_blocks:
         btype = getattr(b, "type", None)
         if btype == "server_tool_use":
+            # Model-issued search invocation — capture the query that was sent.
             trace.append({
                 "type": "server_tool_use",
                 "id": getattr(b, "id", None),
@@ -207,12 +227,15 @@ def _extract_tool_trace(content_blocks) -> list[dict]:
                 "input": getattr(b, "input", None),
             })
         elif btype == "web_search_tool_result":
+            # Server's response to a search — capture metadata but not the
+            # full page body (encrypted_content), which is large and opaque.
             entry: dict = {
                 "type": "web_search_tool_result",
                 "tool_use_id": getattr(b, "tool_use_id", None),
             }
             content = getattr(b, "content", None)
             if isinstance(content, list):
+                # Successful search: list of result objects with metadata.
                 entry["results"] = [
                     {
                         "title": getattr(r, "title", None),
@@ -222,6 +245,7 @@ def _extract_tool_trace(content_blocks) -> list[dict]:
                     for r in content
                 ]
             else:
+                # Failed search: content is a single error object.
                 entry["error"] = {
                     "error_code": getattr(content, "error_code", None),
                 }
@@ -246,6 +270,12 @@ def _write_trace(
     top_k: int | None = None,
     tool_trace: list[dict] | None = None,
 ) -> None:
+    """Append one JSONL entry for this call to the per-step trace file.
+
+    Each entry is a self-contained record: prompt, output, sampling params,
+    token usage, cost, and web-search tool activity. The file is created on
+    first write; parallel calls serialize via _TRACE_LOCK.
+    """
     if _TRACE_DIR is None:
         return
     step_label = step or "_unattributed"
@@ -258,6 +288,8 @@ def _write_trace(
         "temperature": temperature,
         "top_p": top_p,
         "top_k": top_k,
+        # Distinguish calls where sampling was explicitly set from API-defaulted
+        # ones so downstream analysis can flag non-deterministic runs.
         "sampling_note": "explicit" if temperature is not None else "API defaults (not explicitly set)",
         "pdf_path": pdf_path,
         "tools": tools,
@@ -280,6 +312,7 @@ def _write_trace(
     line = json.dumps(entry, ensure_ascii=False)
     path = _TRACE_DIR / f"{step_label}.jsonl"
     with _TRACE_LOCK:
+        # mkdir is inside the lock so concurrent first-writes don't race.
         _TRACE_DIR.mkdir(parents=True, exist_ok=True)
         with path.open("a") as f:
             f.write(line + "\n")
@@ -294,6 +327,7 @@ _LEDGER_LOCK = threading.Lock()
 
 
 def _get_client() -> anthropic.Anthropic:
+    """Return the module-level Anthropic client, initializing it on first call."""
     global _client
     if _client is None:
         # Use the SDK default (max_retries=2). Higher values multiply cost
@@ -304,6 +338,7 @@ def _get_client() -> anthropic.Anthropic:
 
 
 def _pdf_block(pdf_path: str) -> dict:
+    """Base64-encode a PDF and return the Anthropic document content block dict."""
     with open(pdf_path, "rb") as f:
         data = base64.standard_b64encode(f.read()).decode("ascii")
     return {
@@ -313,6 +348,7 @@ def _pdf_block(pdf_path: str) -> dict:
 
 
 def _new_counters() -> dict:
+    """Return a zero-initialized counter dict for one (step, model) ledger entry."""
     return {
         "model_id": "",
         "calls": 0,
@@ -374,6 +410,7 @@ def _record_usage(step: str, model: str, usage) -> None:
             )
 
 
+# Clear the in-memory ledger; called at the start of a fresh pipeline run.
 def reset_ledger() -> None:
     with _LEDGER_LOCK:
         _LEDGER.clear()
@@ -411,7 +448,7 @@ def _model_cost_breakdown(model: str, counters: dict) -> dict[str, float]:
 
 
 def cost_report() -> dict:
-    """Structured per-step cost rollup. Handy for JSON dumps."""
+    """Structured per-step cost rollup; returns a dict suitable for JSON dumps."""
     snap = ledger_snapshot()
     rollup: dict = {
         "steps": {},
@@ -490,7 +527,7 @@ def format_cost_report() -> str:
 
 
 def dump_cost_ledger(path: str | Path) -> Path:
-    """Write the structured cost report to a JSON file."""
+    """Write the structured cost report to a JSON file; returns the written path."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(cost_report(), indent=2))
@@ -531,6 +568,7 @@ def load_ledger(path: str | Path, *, replace: bool = True) -> None:
                     if k == "model_id":
                         existing[k] = v
                     else:
+                        # In replace mode, set directly; in merge mode, accumulate.
                         existing[k] = existing.get(k, 0) + int(v) if not replace else int(v)
 
 
@@ -587,16 +625,24 @@ def call(
       the API's built-in defaults are used (temperature=1.0). All values are
       recorded in the per-call trace for reproducibility.
     """
+    # === Dry-run short-circuit ===
+    # Print prompt and bail before building any API objects.
     if DRY_RUN:
         _print_dry_run(step=step, model=model, system=system, user=user,
                        pdf_path=pdf_path, tools=tools, max_tokens=max_tokens)
         return DRY_RUN_PLACEHOLDER
 
+    # === Build message content ===
+    # PDF document block (if provided) must precede the text block so the model
+    # sees the document before the question that refers to it.
     content: list[dict] = []
     if pdf_path:
         content.append(_pdf_block(pdf_path))
     content.append({"type": "text", "text": user})
 
+    # === Assemble API kwargs ===
+    # Only include sampling params if explicitly set — passing None to the API
+    # would override the model's built-in defaults with undefined behavior.
     kwargs = {
         "model": MODELS[model],
         "max_tokens": max_tokens,
@@ -612,18 +658,25 @@ def call(
     if top_k is not None:
         kwargs["top_k"] = top_k
 
+    # Capture sampling params now for trace writing (before any retry loop).
     trace_sampling = dict(temperature=temperature, top_p=top_p, top_k=top_k)
 
+    # Resolve stream: call-site > module override > global default (True).
     if stream is None:
         stream = STREAM_DEFAULT if STREAM_DEFAULT is not None else True
 
+    # Block here if the rolling token window is over the configured TPM limit.
     _wait_for_capacity(step)
 
+    # === Retry loop with exponential backoff ===
+    # Handles transient 429 rate limit errors from the API that slip through
+    # the preemptive limiter (e.g. burst spikes or concurrent pipelines).
     max_retries = 5
     base_delay = 30
 
     for attempt in range(max_retries + 1):
         try:
+            # === Non-streaming path ===
             if not stream:
                 t0 = time.monotonic()
                 resp = _get_client().messages.create(**kwargs)
@@ -631,6 +684,7 @@ def call(
                 _record_usage(step=step, model=model, usage=resp.usage)
                 _record_tpm(getattr(resp.usage, "input_tokens", 0) or 0,
                             getattr(resp.usage, "output_tokens", 0) or 0)
+                # Join only text blocks; skip server_tool_use / result blocks.
                 output = "".join(b.text for b in resp.content if getattr(b, "type", None) == "text")
                 tool_trace = _extract_tool_trace(resp.content)
                 _write_trace(step=step, model=model, system=system, user=user,
@@ -639,6 +693,10 @@ def call(
                              tool_trace=tool_trace, **trace_sampling)
                 return output
 
+            # === Streaming path ===
+            # Streams tokens to stderr so long-running calls show live progress
+            # in tmux. The final message object (with usage) is collected after
+            # the stream closes.
             label = step or model
             print(f"\n  [{label}] streaming ▶ ", file=sys.stderr, end="", flush=True)
             t0 = time.monotonic()
@@ -664,6 +722,7 @@ def call(
         except anthropic.RateLimitError:
             if attempt == max_retries:
                 raise
+            # Exponential backoff: 30s, 60s, 120s, 240s, 480s.
             delay = base_delay * (2 ** attempt)
             print(f"\n  ⏳ Rate limited (attempt {attempt + 1}/{max_retries}), "
                   f"waiting {delay}s...", file=sys.stderr, flush=True)
@@ -671,6 +730,11 @@ def call(
 
 
 def call_parallel(jobs: list[dict], max_workers: int = 6) -> list[str]:
-    """Run a list of `call()` kwargs dicts in parallel. Results are in input order."""
+    """Fan out a list of `call()` kwargs dicts in parallel; results are in input order.
+
+    Used by the per-page Haiku extraction step where each page is an independent
+    call. ThreadPoolExecutor.map preserves ordering even when threads complete
+    out of order.
+    """
     with ThreadPoolExecutor(max_workers=max_workers) as ex:
         return list(ex.map(lambda j: call(**j), jobs))

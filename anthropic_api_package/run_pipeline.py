@@ -54,6 +54,7 @@ import yaml
 try:
     from tqdm import tqdm
 except ImportError:
+    # Graceful no-op so the file runs on envs that didn't install tqdm
     def tqdm(iterable, **kwargs):
         return iterable
 
@@ -64,8 +65,14 @@ from personas import PERSONAS
 
 ROOT = Path(__file__).parent
 SCRIPTS = ROOT / "scripts"
-FRAMEWORK = ROOT / "framework.yaml"
+FRAMEWORK = ROOT / "framework.yaml"   # validity dimension definitions, read by compose_prompt.py
 
+# === Directory layout ===
+# papers/<name>/              — paper-scoped, stable across assessment re-runs
+# page_caches/<name>/         — per-page Haiku extraction cache (skipped on crash-resume)
+# benchmarks/                 — synthesized benchmark YAML + reference examples
+# regions/base/               — canonical regional context templates
+# assessments/<name>/<slug>/  — deployment-scoped artifacts (one dir per persona/use-case)
 PAPERS = ROOT / "papers"
 PAGE_CACHES = ROOT / "page_caches"
 BENCHMARKS = ROOT / "benchmarks"
@@ -78,6 +85,8 @@ ASSESSMENTS = ROOT / "assessments"
 # Helpers
 # ===================================================================
 
+# Runs any script under scripts/ as a subprocess and returns its stdout;
+# hard-exits on non-zero so callers don't need to propagate return codes.
 def _run_script(script: str, *args: str, stdin: str | None = None) -> str:
     """Run a script from scripts/ and return stdout; fail loud on non-zero exit."""
     path = SCRIPTS / script
@@ -96,14 +105,21 @@ def _run_script(script: str, *args: str, stdin: str | None = None) -> str:
     return result.stdout
 
 
+# Parse an LLM response that may have markdown fences; returns a Python object.
+# Delegates to parse_llm_output.py rather than inlining the fence-stripping logic
+# so all callers handle edge cases (nested fences, leading prose) identically.
 def _parse_fenced(raw: str, fmt: str) -> Any:
-    """Strip fences + parse. Goes through scripts/parse_llm_output.py for consistency."""
+    """Strip markdown fences and parse; fmt is 'json' or 'yaml'. Returns a Python object."""
     cleaned = _run_script("parse_llm_output.py", "--format", fmt, "-", stdin=raw)
     return json.loads(cleaned) if fmt == "json" else yaml.safe_load(cleaned)
 
 
 def _example_manifest() -> str:
-    """Build a one-line-per-file manifest of benchmarks/examples/ for Haiku selection."""
+    """Build a one-line-per-file manifest of benchmarks/examples/ for Haiku selection.
+
+    Produces a compact, token-efficient listing so Haiku can pick analogous
+    examples by domain/strategy/region without reading full YAML files.
+    """
     lines = []
     for path in sorted(BENCHMARK_EXAMPLES.glob("*.yaml")):
         data = yaml.safe_load(path.read_text()) or {}
@@ -116,11 +132,15 @@ def _example_manifest() -> str:
     return "\n".join(lines)
 
 
+# Returns sorted filenames only — Haiku sees the list and picks by name;
+# the actual YAML content is loaded later in 4b-synthesize.
 def _list_base_templates() -> list[str]:
+    """Return sorted filenames of all base region templates (names only, not content)."""
     return sorted(p.name for p in REGIONS_BASE.glob("*.yaml"))
 
 
 def _read_yaml_file(filename: str, subdir: Path) -> str:
+    """Read a YAML file from subdir and return raw text (not parsed)."""
     return (subdir / filename).read_text()
 
 
@@ -132,91 +152,117 @@ def _read_yaml_file(filename: str, subdir: Path) -> str:
 # the old one; the `active_slug.txt` pointer names the "current" assessment.
 # ===================================================================
 
+# --- Paper-scoped paths (shared across all assessments of the same paper) ---
+
 def _paper_dir(name: str) -> Path:
+    """Root directory for all paper-scoped artifacts (papers/<name>/)."""
     return PAPERS / name
 
 
+# Lightweight benchmark metadata (title, domain, languages, region) written by Step 1
 def _metadata_path(name: str) -> Path:
     return _paper_dir(name) / "metadata.md"
 
 
+# Full paper summary: Sonnet narrative + appended Quote Registry
 def _paper_summary_path(name: str) -> Path:
     return _paper_dir(name) / "paper_summary.md"
 
 
+# Mechanically-assembled verbatim quote table — authoritative source for 3b quote backfill
 def _quote_registry_path(name: str) -> Path:
     return _paper_dir(name) / "quote_registry.md"
 
 
+# JSON list of selected benchmark example filenames, written by 3b-select
 def _benchmark_refs_path(name: str) -> Path:
     return _paper_dir(name) / "benchmark_refs.json"
 
 
+# --- Assessment-scoped paths (unique per deployment persona / use-case) ---
+
 def _assessments_root(name: str) -> Path:
+    """Parent of all slug-specific assessment dirs for a given paper."""
     return ASSESSMENTS / name
 
 
+# Pointer to the current active assessment slug; removing this forces a new slug on next run
 def _active_slug_path(name: str) -> Path:
     return _assessments_root(name) / "active_slug.txt"
 
 
 def _assessment_dir(name: str, slug: str) -> Path:
+    """Root directory for a single deployment assessment (assessments/<name>/<slug>/)."""
     return _assessments_root(name) / slug
 
 
+# Free-text description of the deployment context, persisted so re-runs don't re-prompt
 def _deployment_desc_path(name: str, slug: str) -> Path:
     return _assessment_dir(name, slug) / "deployment_description.txt"
 
 
+# Structured JSON array of elicitation questions written by Step 2-questions
 def _questions_path(name: str, slug: str) -> Path:
     return _assessment_dir(name, slug) / "elicitation_questions.json"
 
 
+# Q&A responses: either typed interactively (stdin) or produced by CC Opus subagent
 def _answers_path(name: str, slug: str) -> Path:
     return _assessment_dir(name, slug) / "elicitation_answers.json"
 
 
+# Handoff document for the CC Opus subagent in persona mode (not used in stdin mode)
 def _persona_prompt_path(name: str, slug: str) -> Path:
     return _assessment_dir(name, slug) / "persona_prompt.md"
 
 
+# Sonnet-synthesized summary of the Q&A — priority weights, cultural topics, etc.
 def _elicitation_summary_path(name: str, slug: str) -> Path:
     return _assessment_dir(name, slug) / "elicitation_summary.md"
 
 
+# JSON list of selected base region template filenames, written by 4a-template
 def _region_templates_path(name: str, slug: str) -> Path:
     return _assessment_dir(name, slug) / "region_templates.json"
 
 
+# Initial region YAML from 4b (unverified slots marked [NEEDS VERIFICATION])
 def _region_scaffold_path(name: str, slug: str) -> Path:
     return _assessment_dir(name, slug) / "region_scaffold.yaml"
 
 
+# Final region YAML after web-search enrichment (Step 5 overwrites this from scaffold)
 def _region_yaml_path(name: str, slug: str) -> Path:
     return _assessment_dir(name, slug) / "region.yaml"
 
 
+# Sonnet interpretation of HuggingFace dataset content, written by Step 5b
 def _da_report_path(name: str, slug: str) -> Path:
     return _assessment_dir(name, slug) / "dataset_analysis_report.md"
 
 
+# Assembled evaluation prompt: benchmark YAML + region YAML + framework + elicitation context
 def _composed_prompt_path(name: str, slug: str) -> Path:
     return _assessment_dir(name, slug) / "composed_prompt.md"
 
 
+# Opus scoring output: structured JSON with per-dimension scores and rationale
 def _scoring_path(name: str, slug: str) -> Path:
     return _assessment_dir(name, slug) / "scoring.json"
 
 
+# Running cost ledger: accumulates per-step API usage, survives between re-runs
 def _cost_ledger_path(name: str, slug: str) -> Path:
     return _assessment_dir(name, slug) / "cost_ledger.json"
 
 
+# Per-step API call traces (JSONL), used for crash-resume and cost accounting
 def _trace_dir(name: str, slug: str) -> Path:
     return _assessment_dir(name, slug) / "traces"
 
 
 def _read_slug(name: str) -> str | None:
+    """Return the active assessment slug from disk, or None if not yet derived."""
     p = _active_slug_path(name)
     return p.read_text().strip() if p.exists() else None
 
@@ -225,17 +271,23 @@ def _parse_quote_registry(name: str) -> dict[str, str]:
     """Parse the Quote Registry markdown table into {Q_id: text}.
 
     Registry rows look like: | Q1 | 20 | task_taxonomy | "verbatim text" |
+
+    Used to backfill quote text into the benchmark YAML after Sonnet synthesis —
+    Sonnet only emits (id, page, dimension) to avoid transcription errors and
+    reduce output tokens; the authoritative text comes from this mechanical table.
     """
     registry_path = _quote_registry_path(name)
     if not registry_path.exists():
         return {}
     id_to_text: dict[str, str] = {}
     for line in registry_path.read_text().splitlines():
+        # Match the strict pipe-delimited table format: | Q{n} | {page} | {category} | "{text}" |
         m = re.match(
             r'^\|\s*(Q\d+)\s*\|\s*\d+\s*\|\s*\w+\s*\|\s*"(.+)"\s*\|$',
             line,
         )
         if m:
+            # Unescape pipe characters that were escaped to avoid breaking the table format
             id_to_text[m.group(1)] = m.group(2).replace("\\|", "|")
     return id_to_text
 
@@ -243,15 +295,18 @@ def _parse_quote_registry(name: str) -> dict[str, str]:
 # ===================================================================
 # Step 0 — Derive the assessment slug from the deployment description
 # ===================================================================
-# Run once per assessment at pipeline init. A short Haiku call turns the
-# deployment description into a human-readable slug like
-# `kenya_chw_swahili_dholuo`, which scopes every downstream artifact. The
-# slug is persisted to `assessments/<name>/active_slug.txt` so subsequent
-# --step invocations don't re-derive it.
 
 def step_0_derive_slug(initial_description: str, name: str) -> str:
+    """Haiku derives a short, filesystem-safe slug from the deployment description.
+
+    Idempotent: if active_slug.txt already exists on disk for this paper, the
+    cached slug is returned immediately without a new API call. Returns the slug
+    string that scopes all downstream assessment-dir paths.
+    """
     existing = _read_slug(name)
     if existing:
+        # Slug already exists on disk — idempotent, so subsequent --step invocations
+        # always land in the same assessment directory.
         print(f"[0] Using cached slug: {existing}")
         return existing
 
@@ -263,6 +318,9 @@ def step_0_derive_slug(initial_description: str, name: str) -> str:
         max_tokens=64,
         step="0_slug",
     ).strip()
+    # Sanitize to lowercase alphanumerics + underscores; truncate to keep paths sane.
+    # The `or "unknown"` guard handles the pathological case where Haiku returns
+    # only punctuation that gets stripped to empty string.
     slug = re.sub(
         r"[^a-z0-9_]", "",
         slug_raw.lower().replace(" ", "_").replace("-", "_"),
@@ -286,14 +344,15 @@ def step_0_derive_slug(initial_description: str, name: str) -> str:
 # ===================================================================
 # Step 1 — Quick metadata extraction (Haiku, pages 1-2 only)
 # ===================================================================
-# Fast, lightweight step that reads only the first 1-2 pages of the PDF
-# to extract basic benchmark metadata (name, domain, languages, region,
-# porting strategy, source culture). This gives the elicitation step
-# (Step 2) enough context to generate targeted questions without waiting
-# for the full extraction pipeline.
+# Runs early so Step 2 (elicitation) can generate targeted questions
+# from lightweight metadata without waiting for the full PDF extraction.
 
 def step_1_metadata(pdf_path: Path, name: str) -> Path:
-    """Haiku reads pages 1-2 of the PDF and returns lightweight metadata."""
+    """Haiku reads pages 1-2 of the PDF and returns lightweight metadata.
+
+    Caches to papers/<name>/metadata.md so subsequent re-runs are instant.
+    Returns the metadata file path.
+    """
     _paper_dir(name).mkdir(parents=True, exist_ok=True)
     out_path = _metadata_path(name)
 
@@ -317,7 +376,7 @@ def step_1_metadata(pdf_path: Path, name: str) -> Path:
             sys.exit(1)
 
         # Merge pages 1-2 back into a single small PDF for the API call.
-        # If only page 1 exists (single-page paper), just use that.
+        # Single-page papers (cover-only PDFs) produce only one file — skip merge.
         if len(front_pages) == 1:
             front_pdf = front_pages[0]
         else:
@@ -342,9 +401,13 @@ def step_1_metadata(pdf_path: Path, name: str) -> Path:
 
 
 def _merge_pages(page_paths: list[Path], out_path: Path) -> None:
-    """Merge a small set of single-page PDFs into one file."""
+    """Merge a small set of single-page PDFs into one file.
+
+    Falls back through three tools (pdftk -> qpdf -> pypdf) to handle
+    environments where only a subset is installed.
+    """
     args = [str(p) for p in page_paths]
-    # Try pdftk first, then qpdf, then pypdf
+    # Try pdftk first (fastest), then qpdf (widely available on Linux), then pypdf
     if _which("pdftk"):
         subprocess.run(["pdftk", *args, "cat", "output", str(out_path)],
                         check=True, capture_output=True)
@@ -363,7 +426,9 @@ def _merge_pages(page_paths: list[Path], out_path: Path) -> None:
         )
 
 
+# Thin wrapper so callers don't need to import shutil inline
 def _which(cmd: str) -> bool:
+    """Return True if cmd is available on PATH."""
     from shutil import which
     return which(cmd) is not None
 
@@ -374,7 +439,11 @@ def _which(cmd: str) -> bool:
 # ===================================================================
 
 def step_1a_extract(pdf_path: Path, name: str, max_workers: int = 1) -> Path:
-    """Per-page Haiku extraction with on-disk caching.
+    """Per-page Haiku extraction with on-disk caching (implements step 3a-extract).
+
+    NOTE: Named step_1a_extract for legacy reasons; this is step 3a-extract in the
+    pipeline numbering. The name predates the step renumbering that moved elicitation
+    earlier.
 
     Each successful page extraction is written to
     `page_caches/<name>/page_NNN.txt` immediately. On re-run (e.g. after a
@@ -400,7 +469,10 @@ def step_1a_extract(pdf_path: Path, name: str, max_workers: int = 1) -> Path:
             print("ERROR: split_pdf.sh produced no page files", file=sys.stderr)
             sys.exit(1)
 
-        # === Work out what still needs a Haiku call ===
+        # === Determine which pages still need extraction ===
+        # Page files that already have a cached .txt are skipped — this makes
+        # the step safe to retry after rate-limit crashes without re-paying for
+        # already-extracted pages.
         total = len(page_files)
         todo: list[tuple[int, Path, Path]] = []
         for i, page_pdf in enumerate(page_files, start=1):
@@ -412,14 +484,14 @@ def step_1a_extract(pdf_path: Path, name: str, max_workers: int = 1) -> Path:
             print(f"[3a-extract] {cached}/{total} pages cached from prior run; "
                   f"re-dispatching {len(todo)}.")
         else:
-            # Fresh fan-out: drop any stale 1a_extract ledger + trace entries
+            # Fresh fan-out: drop any stale 3a_extract ledger + trace entries
             # so the cost of this run's pages replaces whatever was there.
             client.clear_steps("3a_extract")
             client.clear_trace_steps("3a_extract")
             print(f"[3a-extract] Split into {total} pages; extracting via Haiku "
                   f"(max_workers={max_workers})...")
 
-        # === Fan-out with on-success cache writes ===
+        # === Fan-out: dispatch remaining pages to Haiku in parallel ===
         def _process(page_num: int, page_pdf: Path, cache_file: Path) -> None:
             text = client.call(
                 model="haiku",
@@ -429,9 +501,9 @@ def step_1a_extract(pdf_path: Path, name: str, max_workers: int = 1) -> Path:
                 max_tokens=8192,
                 step="3a_extract",
             )
-            # Persist immediately so the next re-run skips this page even if
-            # a later page crashes the whole step. Skip in dry-run — writing
-            # the placeholder would poison the cache for real runs.
+            # Write cache immediately on success — if a later page crashes, the
+            # next re-run skips this page. Skipped in dry-run to avoid poisoning
+            # the cache with placeholder text.
             if not client.DRY_RUN:
                 cache_file.write_text(text)
 
@@ -439,24 +511,30 @@ def step_1a_extract(pdf_path: Path, name: str, max_workers: int = 1) -> Path:
             with ThreadPoolExecutor(max_workers=max_workers) as ex:
                 futures = [ex.submit(_process, i, pp, cf) for i, pp, cf in todo]
                 for fut in tqdm(as_completed(futures), total=len(futures), desc="Haiku pages"):
-                    fut.result()  # surface exceptions from worker threads
+                    fut.result()  # re-raise any exception from the worker thread
 
     print(f"[3a-extract] Page cache at {cache_dir}")
     return cache_dir
 
 
 def _parse_page_json(raw_text: str) -> dict:
-    """Best-effort parse of a per-page extraction (may have markdown fences)."""
+    """Best-effort parse of a per-page Haiku extraction response (may have markdown fences).
+
+    Returns a safe empty skeleton if parsing fails — a bad page is dropped
+    rather than crashing the whole assemble step.
+    """
     text = raw_text.strip()
     if text.startswith("```"):
         lines = text.split("\n")
-        lines = lines[1:]  # drop opening fence
+        lines = lines[1:]  # drop opening fence line (e.g. ```json)
         if lines and lines[-1].strip() == "```":
             lines = lines[:-1]
         text = "\n".join(lines)
     try:
         return json.loads(text)
     except json.JSONDecodeError:
+        # Haiku occasionally returns a short explanation instead of JSON;
+        # return a safe skeleton so assemble continues without crashing.
         return {"quotes": [], "page_summary": "", "continues_from_previous": False,
                 "continues_to_next": False}
 
@@ -470,6 +548,8 @@ def step_3a_assemble(name: str) -> Path:
     4. Collect all quotes, apply merges, deduplicate
     5. Assign sequential Q1..QN IDs in page order
     6. Write Quote Registry + Category Index markdown
+
+    Returns the path to the written quote_registry.md.
     """
     cache_dir = PAGE_CACHES / name
     registry_path = _quote_registry_path(name)
@@ -485,7 +565,11 @@ def step_3a_assemble(name: str) -> Path:
              for p in page_files]
     pages.sort(key=lambda x: x[0])
 
-    # === Phase 1: Haiku cross-page merge ===
+    # === Phase 1: Identify and merge cross-page sentence splits ===
+    # Haiku flags each page with continues_to_next / continues_from_previous.
+    # When both sides agree a boundary exists, Haiku merges the last quote of
+    # page A with the first quote of page B. The merge prompt returns either
+    # the joined text or the word "SEPARATE" if the fragments are unrelated.
     merge_results = {}  # (page_a, page_b) -> merged_text or None
     merge_pairs = []
     for i in range(len(pages) - 1):
@@ -517,16 +601,22 @@ def step_3a_assemble(name: str) -> Path:
             if client.DRY_RUN:
                 continue
             stripped = result.strip()
+            # Haiku responds with "SEPARATE" when the two fragments don't belong
+            # together (e.g. a sentence ends naturally at the page break).
             if stripped.upper().startswith("SEPARATE"):
                 merge_results[(page_a_num, page_b_num)] = None
             else:
+                # Strip outer quotes that Haiku sometimes wraps the merged text in
                 merge_results[(page_a_num, page_b_num)] = stripped.strip('"')
                 print(f"    pages {page_a_num}-{page_b_num}: merged")
     else:
         print("[3a-assemble] No cross-page boundaries found.")
 
-    # === Phase 2: collect quotes, apply merges, deduplicate ===
+    # === Phase 2: collect all quotes, apply merges, deduplicate ===
+    # Walk pages in order, substituting merged text where applicable and
+    # dropping the "consumed" first quote of any page whose boundary was merged.
     all_quotes = []
+    # Track which pages had their first quote absorbed into the prior page's last quote
     skip_next_first = set()  # page numbers whose first quote was merged into prior page
 
     for page_a_num, page_b_num, _, _ in merge_pairs:
@@ -536,7 +626,7 @@ def step_3a_assemble(name: str) -> Path:
 
     for page_num, page_data in pages:
         for qi, q in enumerate(page_data.get("quotes", [])):
-            # Skip the first quote if it was merged into the prior page's last quote
+            # This quote was consumed by a successful cross-page merge — skip it
             if qi == 0 and page_num in skip_next_first:
                 continue
 
@@ -544,7 +634,8 @@ def step_3a_assemble(name: str) -> Path:
             if not text:
                 continue
 
-            # Check if this is the last quote on a page with a successful merge
+            # If this is the last quote on a page and its boundary was merged,
+            # replace it with the merged text so the full sentence is preserved.
             is_last = (qi == len(page_data.get("quotes", [])) - 1)
             merged_into = None
             if is_last:
@@ -566,7 +657,8 @@ def step_3a_assemble(name: str) -> Path:
                     "category": q.get("category", ""),
                 })
 
-    # Deduplicate exact matches (keep first occurrence)
+    # Deduplicate by normalized text — Haiku sometimes emits the same sentence
+    # from adjacent pages when a quote appears in both a figure and the body text.
     seen_texts = set()
     deduped = []
     for q in all_quotes:
@@ -580,6 +672,8 @@ def step_3a_assemble(name: str) -> Path:
     all_quotes = deduped
 
     # === Phase 3: assign IDs and build registry markdown ===
+    # The Category Index at the end lets Sonnet (3b-synthesize) quickly find all
+    # quotes for a given validity dimension without scanning the full table.
     categories = [
         "task_taxonomy", "data_sources", "data_format", "label_categories",
         "annotation_process", "evaluation_metrics", "stated_limitations",
@@ -600,6 +694,7 @@ def step_3a_assemble(name: str) -> Path:
     for i, q in enumerate(all_quotes, 1):
         qid = f"Q{i}"
         cat = q["category"]
+        # Escape pipes inside quote text to avoid breaking the markdown table
         text_escaped = q["text"].replace("|", "\\|").replace("\n", " ")
         lines.append(f'| {qid} | {q["page"]} | {cat} | "{text_escaped}" |')
         if cat in cat_index:
@@ -612,6 +707,7 @@ def step_3a_assemble(name: str) -> Path:
         if ids:
             lines.append(f"- **{cat}**: {', '.join(ids)}")
         else:
+            # Explicit "NO QUOTES" entry makes coverage gaps visible in the registry
             lines.append(f'- **{cat}**: NO QUOTES — paper is silent')
 
     registry_text = "\n".join(lines) + "\n"
@@ -632,6 +728,8 @@ def step_3a_consolidate(name: str, elicitation_summary: str = "") -> Path:
 
     When an elicitation summary is provided, it guides narrative depth:
     HIGH-priority dimensions get more detailed narrative.
+
+    Returns path to the written paper_summary.md.
     """
     _paper_dir(name).mkdir(parents=True, exist_ok=True)
     summary_path = _paper_summary_path(name)
@@ -646,6 +744,8 @@ def step_3a_consolidate(name: str, elicitation_summary: str = "") -> Path:
 
     user_msg = f"## Pre-Assembled Quote Registry\n\n{registry_text}"
     if elicitation_summary:
+        # Inject priority weights so Sonnet allocates narrative depth proportionally
+        # to what the deployment cares about rather than treating all dimensions equally.
         user_msg += (
             f"\n\n---\n\n"
             f"## Elicitation Summary (for narrative depth guidance)\n\n"
@@ -680,7 +780,10 @@ def step_3a_consolidate(name: str, elicitation_summary: str = "") -> Path:
 # ===================================================================
 
 def step_3b_select(paper_summary: str, name: str) -> list[str]:
-    """Haiku picks 1-2 reference benchmark YAMLs; persisted for 3b-synthesize."""
+    """Haiku picks 1-2 reference benchmark YAMLs from benchmarks/examples/; persisted for 3b-synthesize.
+
+    Returns the list of selected example filenames (e.g. ['afrisenti.yaml']).
+    """
     _paper_dir(name).mkdir(parents=True, exist_ok=True)
     print("[3b-select] Haiku selecting reference benchmark examples...")
     selection_raw = client.call(
@@ -710,7 +813,10 @@ def step_3b_synthesize(
 
     When an elicitation summary is provided, the YAML includes a
     coverage_gap_analysis section cross-referencing user priorities against
-    benchmark documentation.
+    benchmark documentation. Quote text is backfilled from the mechanical
+    registry after synthesis to avoid LLM transcription errors.
+
+    Returns path to the written benchmarks/<name>.yaml.
     """
     BENCHMARKS.mkdir(exist_ok=True)
     refs_path = _benchmark_refs_path(name)
@@ -721,6 +827,7 @@ def step_3b_synthesize(
         )
         sys.exit(1)
     selected_files: list[str] = json.loads(refs_path.read_text()) if refs_path.exists() else []
+    # Embed full YAML of each selected example so Sonnet can mimic the schema
     examples_text = "\n\n".join(
         f"### Example: {fn}\n\n```yaml\n{_read_yaml_file(fn, BENCHMARK_EXAMPLES)}\n```"
         for fn in selected_files
@@ -750,7 +857,7 @@ def step_3b_synthesize(
         return out_path
     cleaned = _run_script("parse_llm_output.py", "--format", "yaml", "-", stdin=synthesis_raw)
 
-    # Backfill verbatim_quotes text from the mechanically-assembled registry.
+    # === Backfill verbatim_quotes text from the mechanically-assembled registry ===
     # Sonnet only emits id/page/dimension; the text is filled in here to avoid
     # LLM copying errors and reduce output tokens.
     id_to_text = _parse_quote_registry(name)
@@ -869,6 +976,10 @@ def step_2_questions(
 
     persona_prompt_path: Path | None = None
     if persona_id:
+        # === Build handoff prompt for CC Opus subagent (persona mode) ===
+        # Rather than calling the API here, we emit a self-contained markdown doc
+        # the user drops into a CC Opus subagent. This keeps orchestration costs
+        # low and allows the persona simulation to run asynchronously.
         persona = PERSONAS[persona_id]
         system_rendered = prompts.render(
             "persona_system", persona_block=persona["persona_block"]
@@ -896,7 +1007,12 @@ def step_2_questions(
 
 
 def step_2_collect_stdin(name: str, slug: str) -> Path:
-    """Interactive stdin path: prompt each question, write answers JSON."""
+    """Interactive stdin path: prompt each elicitation question and write answers JSON.
+
+    Used when running in non-persona mode. The user is prompted for each question
+    in sequence; answers are persisted so step_2_summary can consume them.
+    Returns the path to the written answers JSON.
+    """
     q_path = _questions_path(name, slug)
     if not q_path.exists():
         print(f"ERROR: {q_path} not found — run step 2-questions first", file=sys.stderr)
@@ -919,7 +1035,15 @@ def step_2_summary(
     metadata_text: str,
     answers_path: Path | None = None,
 ) -> Path:
-    """Merge Q+A into the Sonnet summary prompt; produce the elicitation summary."""
+    """Sonnet synthesizes the Q&A into a structured elicitation summary.
+
+    Reads questions + answers (from disk or the provided path), assembles a
+    Q+A block via script, and has Sonnet produce dimension priority weights,
+    cultural topic priorities, and deployment context notes. These feed into
+    3a-consolidate, 3b-synthesize, 4a/4b, 5, and 5b as a shared context document.
+
+    Returns path to the written elicitation_summary.md.
+    """
     q_path = _questions_path(name, slug)
     if not q_path.exists():
         print(f"ERROR: {q_path} not found — run step 2-questions first", file=sys.stderr)
@@ -937,6 +1061,7 @@ def step_2_summary(
     desc_path = _deployment_desc_path(name, slug)
     initial_description = desc_path.read_text() if desc_path.exists() else ""
 
+    # Assemble the formatted Q+A block for Sonnet's input
     qa_block = _run_script(
         "assemble_elicitation_answers.py",
         "--questions", str(q_path),
@@ -966,7 +1091,11 @@ def step_2_summary(
 # ===================================================================
 
 def step_4a_template(elicitation_summary: str, name: str, slug: str) -> list[str]:
-    """Haiku picks 1-2 base region templates; persisted for 4b-synthesize."""
+    """Haiku picks 1-2 base region templates from regions/base/; persisted for 4b-synthesize.
+
+    The selection is based on the deployment context from the elicitation summary
+    (geography, language community, cultural context). Returns selected filenames.
+    """
     out_path = _region_templates_path(name, slug)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     print("[4a-template] Haiku selecting base region template(s)...")
@@ -994,7 +1123,14 @@ def step_4b_synthesize(
     name: str,
     slug: str,
 ) -> Path:
-    """Sonnet writes the assessment-specific region YAML scaffold from selected templates."""
+    """Sonnet writes the assessment-specific region YAML scaffold from selected templates.
+
+    The scaffold uses [NEEDS VERIFICATION] placeholders for factual slots that
+    Sonnet cannot confidently fill without tool access — Step 5 (web search)
+    resolves these. Outputs to assessments/<name>/<slug>/region_scaffold.yaml.
+
+    Returns path to the written scaffold.
+    """
     out_path = _region_scaffold_path(name, slug)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     refs_path = _region_templates_path(name, slug)
@@ -1007,6 +1143,8 @@ def step_4b_synthesize(
     selected: list[str] = json.loads(refs_path.read_text()) if refs_path.exists() else []
 
     def _yaml_to_json_str(yaml_text: str) -> str:
+        # Convert YAML to JSON for the prompt — models handle JSON more reliably
+        # as structured data than YAML (fewer ambiguous indent-level interpretations).
         try:
             parsed = yaml.safe_load(yaml_text)
             return json.dumps(parsed, indent=2, ensure_ascii=False)
@@ -1034,6 +1172,7 @@ def step_4b_synthesize(
     )
     if client.DRY_RUN:
         return out_path
+    # Parse JSON output then re-serialize as YAML for the canonical on-disk format
     cleaned_json = _run_script("parse_llm_output.py", "--format", "json", "-", stdin=region_raw)
     parsed = json.loads(cleaned_json)
     as_yaml = yaml.dump(parsed, sort_keys=False, allow_unicode=True,
@@ -1049,6 +1188,14 @@ def step_4b_synthesize(
 
 def step_5_web_search(scaffold_path: Path, region_path: Path,
                       benchmark_yaml_text: str, elicitation_summary: str) -> None:
+    """Sonnet enriches the region scaffold using the web_search_20250305 server tool.
+
+    Resolves [NEEDS VERIFICATION] placeholders in the scaffold and adds net-new
+    fields surfaced by searches. The search budget (max 10 queries) is allocated
+    first to coverage_gap_analysis entries from the benchmark YAML, then to
+    residual [NEEDS VERIFICATION] slots. Overwrites region_path with the enriched
+    YAML on success.
+    """
     print("[5] Sonnet enriching region document via web_search (this may take a minute)...")
     current_yaml = scaffold_path.read_text()
     current_parsed = yaml.safe_load(current_yaml)
@@ -1078,6 +1225,7 @@ def step_5_web_search(scaffold_path: Path, region_path: Path,
         f"region document as a single JSON object in a ```json fence. Do NOT output "
         f"any preamble, analysis, or commentary — only the fenced JSON block."
     )
+    # Cap web searches at 10 per run to keep costs predictable across all benchmarks
     tools = [{"type": "web_search_20250305", "name": "web_search", "max_uses": 10}]
     updated_raw = client.call(
         model="sonnet",
@@ -1108,6 +1256,7 @@ DA_CACHE = ROOT / "benchmarks" / "da_cache"
 
 
 def _da_script_cache_path(hf_dataset: str, hf_config: str | None = None) -> Path:
+    """Filesystem path for caching deterministic script outputs for one HF dataset."""
     key = hf_dataset.replace("/", "__")
     if hf_config:
         key += f"__{hf_config}"
@@ -1115,6 +1264,7 @@ def _da_script_cache_path(hf_dataset: str, hf_config: str | None = None) -> Path
 
 
 def _da_summary_cache_path(hf_dataset: str) -> Path:
+    """Filesystem path for caching a Sonnet per-dataset summary (org mode)."""
     return DA_CACHE / hf_dataset.replace("/", "__") / "summary.md"
 
 
@@ -1134,6 +1284,7 @@ def _resolve_hf_info(args: argparse.Namespace, name: str) -> dict | None:
     if HF_LINKS_FILE.exists():
         links = json.loads(HF_LINKS_FILE.read_text())
         tuple_key = getattr(args, "hf_tuple", None)
+        # Try both the full name and the part after "__" (handles expert-namespaced stems)
         for key in [name, name.split("__", 1)[-1]]:
             entry = links.get(key, {})
             if not entry:
@@ -1158,7 +1309,7 @@ def _resolve_hf_info(args: argparse.Namespace, name: str) -> dict | None:
 
 
 def _resolve_org_datasets(hf_org: str) -> list[str]:
-    """List all dataset IDs under a HuggingFace organization."""
+    """List all dataset IDs under a HuggingFace organization via the HF API."""
     import requests
     url = f"https://huggingface.co/api/datasets?author={hf_org}"
     resp = requests.get(url, timeout=30)
@@ -1167,7 +1318,11 @@ def _resolve_org_datasets(hf_org: str) -> list[str]:
 
 
 def _run_da_script(script_name: str, *extra_args: str) -> str:
-    """Run a dataset analysis script and return its JSON stdout."""
+    """Run a dataset analysis script and return its JSON stdout.
+
+    Returns a JSON error object on timeout or non-zero exit so callers can
+    surface warnings without crashing the whole analysis step.
+    """
     script = DA_SCRIPTS / script_name
     cmd = [sys.executable, str(script), *extra_args]
     try:
@@ -1182,7 +1337,12 @@ def _run_da_script(script_name: str, *extra_args: str) -> str:
 
 
 def _profile_single_dataset(hf_dataset: str, hf_config: str | None) -> dict:
-    """Run DA scripts on one dataset. Returns {script: json_str}."""
+    """Run DA scripts on one dataset and return {script_name: json_str}.
+
+    Runs hf_metadata unconditionally; adds content_sample and audio_stats
+    when the modality/schema warrants. Stops early if metadata returns errors
+    (e.g. private/non-existent dataset).
+    """
     script_outputs = {}
 
     meta_args = ["--repo_id", hf_dataset]
@@ -1208,6 +1368,7 @@ def _profile_single_dataset(hf_dataset: str, hf_config: str | None) -> dict:
     features = meta.get("schema", {}).get("features", {})
 
     if "audio" in modalities:
+        # Identify the audio column from the schema and run duration/language stats
         audio_cols = [col for col, dtype in features.items() if "Audio" in str(dtype)]
         if audio_cols:
             audio_args = ["--repo_id", hf_dataset, "--split", "train",
@@ -1227,12 +1388,17 @@ def _sonnet_per_dataset_summary(
     benchmark_yaml_text: str,
     elicitation_summary: str,
 ) -> str:
-    """Stage 1 (org mode): Sonnet analyzes one dataset with deployment context."""
+    """Stage 1 (org mode): Sonnet analyzes one dataset with deployment context.
+
+    Used in a loop over all org datasets before the Stage 2 aggregation call.
+    Returns the raw Sonnet markdown string (not written to disk here).
+    """
     data_sections = []
     data_sections.append(
         f"### HF Metadata\n```json\n{script_outputs.get('hf_metadata', '{}')}\n```")
     content_json = script_outputs.get("content_sample", "{}")
     try:
+        # content_sample.py returns {"markdown": "...", ...} — extract the human-readable part
         content_md = json.loads(content_json).get("markdown", content_json)
     except (json.JSONDecodeError, AttributeError):
         content_md = content_json
@@ -1257,8 +1423,14 @@ def _sonnet_per_dataset_summary(
 
 
 def _find_citation_excerpt(report_text: str, d_num: int) -> str | None:
-    """Find citation [D{d_num}] in the citations registry of a per-dataset report."""
+    """Find citation [D{d_num}] in the citations registry of a per-dataset report.
+
+    Searches the Citations Registry section for a matching row in either
+    bracketed or pipe-delimited table format. Returns the cell content or None
+    if the citation ID is not found.
+    """
     registry_text = report_text
+    # Narrow search to the citations section so we don't false-match body text
     for heading in ("Datapoint Citations Registry", "Citations Registry",
                     "Datapoint citations"):
         idx = report_text.find(heading)
@@ -1275,12 +1447,14 @@ def _find_citation_excerpt(report_text: str, d_num: int) -> str | None:
             continue
 
         if bracketed in stripped:
+            # Inline [D{n}] format: strip the ID prefix and surrounding decoration
             content = stripped.lstrip("-|").strip()
             content = content.replace(bracketed, "", 1).strip()
             content = content.strip("|").strip()
             return content
 
         if table_pat.search(stripped):
+            # Pipe-table format: collect non-ID cells and join them
             cells = [c.strip() for c in stripped.split("|")]
             cells = [c for c in cells if c and c.strip() != f"D{d_num}"]
             return " | ".join(cells)
@@ -1292,8 +1466,13 @@ def _resolve_cited_evidence(
     report: str,
     per_dataset_summaries: dict[str, str],
 ) -> str:
-    """Replace bare citation IDs in Cited Evidence with full excerpts
-    from per-dataset reports. Org (multi-dataset) mode only."""
+    """Replace bare citation IDs in Cited Evidence with full excerpts from per-dataset reports.
+
+    Org (multi-dataset) mode only. The aggregation Sonnet call produces a
+    Cited Evidence section containing a JSON array of "DATASET-D{n}" IDs.
+    This function replaces each ID with the actual datapoint text extracted
+    from that dataset's per-dataset report, so the final report is self-contained.
+    """
     marker = "### Cited Evidence"
     idx = report.find(marker)
     if idx == -1:
@@ -1322,7 +1501,7 @@ def _resolve_cited_evidence(
         print(f"  [5b] Warning: malformed JSON in Cited Evidence: {exc}")
         return report
 
-    # Parse each "DATASET_SHORT-D{n}" string
+    # Parse each "DATASET_SHORT-D{n}" string into (short_name, datapoint_number)
     id_pat = re.compile(r"^(.+)-D(\d+)$")
     parsed = []
     for cid in cited_ids:
@@ -1333,6 +1512,7 @@ def _resolve_cited_evidence(
     if not parsed:
         return report
 
+    # Build a short-name -> full HF ID map (e.g. "AFRISENTI" -> "masakhane/afrisenti")
     short_to_full: dict[str, str] = {}
     for full_id in per_dataset_summaries:
         short = full_id.split("/")[-1].upper()
@@ -1373,7 +1553,12 @@ def step_5b_dataset_analysis(
     Supports two modes:
       single — one dataset, single-pass interpretation
       org    — all datasets under an HF org, two-stage interpretation
-               (per-dataset summaries → aggregated report)
+               (per-dataset summaries -> aggregated report)
+
+    Script outputs are cached (dataset-intrinsic, reused across assessments).
+    Sonnet analyses use trace-based resume so a crash mid-org run can continue
+    from where it left off. Returns path to the written dataset_analysis_report.md
+    or None in dry-run mode.
     """
     out_path = _da_report_path(name, slug)
     if out_path.exists():
@@ -1395,6 +1580,8 @@ def step_5b_dataset_analysis(
         trace_file = _trace_dir(name, slug) / "5b_da_per_dataset.jsonl"
         completed_analyses: dict[str, str] = {}
         if trace_file.exists():
+            # Recover completed per-dataset analyses from the trace JSONL by
+            # matching the dataset ID in the user message of each entry
             for line in trace_file.read_text().splitlines():
                 try:
                     entry = json.loads(line)
@@ -1417,6 +1604,7 @@ def step_5b_dataset_analysis(
             ds_short = ds_id.split("/")[-1]
 
             script_cache = _da_script_cache_path(ds_id)
+
             if script_cache.exists():
                 print(f"\n  [{i}/{len(dataset_ids)}] {ds_id} (script cache hit)")
                 outputs = json.loads(script_cache.read_text())
@@ -1437,6 +1625,8 @@ def step_5b_dataset_analysis(
             per_dataset_summaries[ds_id] = summary
 
         # === Stage 2: aggregation across all datasets ===
+        # All per-dataset summaries are concatenated and sent to Sonnet for a
+        # cross-dataset interpretation informed by the benchmark and deployment context.
         summaries_block = "\n\n".join(
             f"### {ds_id}\n\n{summary}"
             for ds_id, summary in per_dataset_summaries.items()
@@ -1456,6 +1646,8 @@ def step_5b_dataset_analysis(
         )
 
         if not client.DRY_RUN:
+            # Replace citation IDs (e.g. AFRISENTI-D3) with inline excerpts
+            # so the final report is self-contained and readable without cross-referencing
             report = _resolve_cited_evidence(report, per_dataset_summaries)
 
     else:
@@ -1523,6 +1715,13 @@ def step_6_compose(
     slug: str,
     da_report_path: Path | None = None,
 ) -> Path:
+    """Assemble the final evaluation prompt by invoking compose_prompt.py.
+
+    Concatenates benchmark YAML, region YAML, framework dimensions, elicitation
+    summary, and (optionally) the dataset analysis report into a single prompt
+    document that Step 7 (Opus scoring) reads. No API call — pure script.
+    Returns path to the composed_prompt.md.
+    """
     out_path = _composed_prompt_path(name, slug)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     print("[6] Composing evaluation prompt via compose_prompt.py...")
@@ -1545,6 +1744,12 @@ def step_6_compose(
 # ===================================================================
 
 def step_7_score(composed_path: Path, name: str, slug: str) -> Path:
+    """Opus reads the composed evaluation prompt and returns structured validity scores.
+
+    This is the single Opus call in the pipeline. All prior steps build up the
+    prompt; Opus performs the final holistic judgment across validity dimensions.
+    Returns path to the written scoring.json.
+    """
     out_path = _scoring_path(name, slug)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     print("[7] Opus scoring (the one Opus call in the pipeline)...")
@@ -1568,6 +1773,11 @@ def step_7_score(composed_path: Path, name: str, slug: str) -> Path:
 # ===================================================================
 
 def step_8_report(results_path: Path) -> None:
+    """Format the Opus scoring JSON into a human-readable markdown report.
+
+    Invokes format_results.py (no API call). Writes report.md next to
+    scoring.json and also prints it to stdout for immediate review.
+    """
     report_path = results_path.parent / "report.md"
     report = _run_script("format_results.py", str(results_path))
     report_path.write_text(report, encoding="utf-8")
@@ -1577,11 +1787,7 @@ def step_8_report(results_path: Path) -> None:
 
 
 # ===================================================================
-# CLI
-# ===================================================================
-
-# ===================================================================
-# Persistent cost ledger — per-paper file under results/
+# Persistent cost ledger — per-paper file under assessments/
 # ===================================================================
 # Each step loads this file, clears its own step labels (so a re-run of a
 # single step overwrites that step's cost rather than accumulating), records
@@ -1622,7 +1828,11 @@ STEP_LABELS: dict[str, list[str]] = {
 
 
 def _ledger_begin(name: str, *step_keys: str) -> None:
-    """Load persistent ledger, then drop this step's prior entries."""
+    """Load persistent ledger then drop prior entries for the given step(s).
+
+    Called at the start of each step so a re-run replaces rather than
+    accumulates. No-ops in dry-run mode to leave the real ledger untouched.
+    """
     if client.DRY_RUN:
         return  # don't touch the real ledger in dry-run mode
     slug = _read_slug(name)
@@ -1644,7 +1854,7 @@ def _ledger_begin(name: str, *step_keys: str) -> None:
 
 
 def _ledger_end(name: str) -> None:
-    """Persist the updated ledger."""
+    """Persist the in-memory ledger to disk after a step completes."""
     if client.DRY_RUN:
         return
     slug = _read_slug(name)
@@ -1660,6 +1870,9 @@ def _init_assessment_paths(name: str) -> None:
     Safe to call repeatedly. The 0_slug Haiku call lands in the in-memory
     ledger before the slug exists on disk; this function persists it once
     the slug is known and wires subsequent calls into the trace file.
+
+    Reconciles the in-memory ledger (typically just 0_slug) with the disk
+    ledger so other steps' historical costs survive without being double-counted.
     """
     if client.DRY_RUN:
         return
@@ -1684,6 +1897,7 @@ def _init_assessment_paths(name: str) -> None:
 
 
 def parse_args() -> argparse.Namespace:
+    """Define and parse all CLI arguments; returns the populated Namespace."""
     p = argparse.ArgumentParser(description="Validity analysis pipeline.")
     p.add_argument("pdf_path", nargs="?", help="Path to the benchmark paper PDF")
     p.add_argument(
@@ -1776,7 +1990,10 @@ def parse_args() -> argparse.Namespace:
 
 
 def _resolve_initial_description(args: argparse.Namespace, name: str) -> str:
-    """Priority: --use-case file > persona default > cached active-slug description > stdin prompt."""
+    """Resolve the deployment description from CLI args or interactive input.
+
+    Priority: --use-case file > persona default > cached active-slug description > stdin prompt.
+    """
     if args.use_case:
         return Path(args.use_case).read_text().strip()
     if args.persona:
@@ -1791,6 +2008,7 @@ def _resolve_initial_description(args: argparse.Namespace, name: str) -> str:
 
 
 def _print_cost_report() -> None:
+    """Print the current in-memory cost report if any API calls were made."""
     report = client.format_cost_report()
     if report == "(no API calls recorded)":
         return
@@ -1804,12 +2022,15 @@ def _require_paths(name: str) -> None:
 
 
 def main() -> None:
+    """Entry point: parse args, validate preconditions, then run full pipeline or single step."""
     args = parse_args()
 
     if not args.pdf_path:
         print("ERROR: pdf_path is required", file=sys.stderr)
         sys.exit(2)
-    name = Path(args.pdf_path).stem  # un-resolved: preserves expert-namespaced stems
+    # Use the PDF stem as the paper name; deliberately un-resolved to preserve
+    # expert-experiment-namespaced stems (e.g. "expert_b082a2ed12a9__ltzglue").
+    name = Path(args.pdf_path).stem
     pdf_path = Path(args.pdf_path).resolve()
 
     # --show-cost: read-only, no step execution.
@@ -1892,6 +2113,8 @@ def main() -> None:
         _ledger_end(name)
 
         if args.persona:
+            # Persona mode requires an async CC Opus subagent loop — pause here
+            # and print instructions. The user resumes with --step 2-summary.
             answers_target = _answers_path(name, slug)
             print(
                 f"\n[pause] Persona elicitation requires a Claude Code Opus subagent.\n"
@@ -1957,6 +2180,7 @@ def main() -> None:
             step_5_web_search(scaffold_path, region_path,
                               benchmark_yaml_text, elicitation_summary)
             _ledger_end(name)
+            # Read back the enriched YAML to pass as context to Step 5b
             web_search_text = region_path.read_text()
 
         # === Step 5b: dataset analysis (conditional on HF link) ===
@@ -1982,11 +2206,17 @@ def main() -> None:
 
         step_8_report(results_path)
     finally:
+        # Always print cost report on exit, even if a step raised an exception
         _print_cost_report()
 
 
 def _run_single_step(args: argparse.Namespace, pdf_path: Path, name: str) -> None:
-    """Execute exactly one step in isolation, reusing on-disk outputs."""
+    """Execute exactly one pipeline step in isolation, reusing on-disk outputs for inputs.
+
+    Each branch validates that required upstream files exist, then calls the
+    appropriate step_* function. Cost ledger is loaded/saved via _ledger_begin
+    / _ledger_end in the try/finally.
+    """
     benchmark_path = BENCHMARKS / f"{name}.yaml"
     summary_path = _paper_summary_path(name)
     metadata_path = _metadata_path(name)
@@ -2048,7 +2278,7 @@ def _run_single_step(args: argparse.Namespace, pdf_path: Path, name: str) -> Non
             )
         elif args.step == "3a-extract":
             _ledger_begin(name, "3a-extract")
-            step_1a_extract(pdf_path, name)
+            step_1a_extract(pdf_path, name)  # legacy name; see docstring
         elif args.step == "3a-assemble":
             cache_dir = PAGE_CACHES / name
             if not any(cache_dir.glob("page_*.txt")) and not client.DRY_RUN:
