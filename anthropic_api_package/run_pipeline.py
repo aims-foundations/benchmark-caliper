@@ -553,6 +553,9 @@ def step_3a_assemble(name: str) -> Path:
     """
     cache_dir = PAGE_CACHES / name
     registry_path = _quote_registry_path(name)
+    if registry_path.exists():
+        print(f"[3a-assemble] Quote registry already exists: {registry_path}")
+        return registry_path
     _paper_dir(name).mkdir(parents=True, exist_ok=True)
 
     page_files = sorted(cache_dir.glob("page_*.txt"))
@@ -733,6 +736,9 @@ def step_3a_consolidate(name: str, elicitation_summary: str = "") -> Path:
     """
     _paper_dir(name).mkdir(parents=True, exist_ok=True)
     summary_path = _paper_summary_path(name)
+    if summary_path.exists():
+        print(f"[3a-consolidate] Paper summary already exists: {summary_path}")
+        return summary_path
     registry_path = _quote_registry_path(name)
 
     if not registry_path.exists():
@@ -784,6 +790,11 @@ def step_3b_select(paper_summary: str, name: str) -> list[str]:
 
     Returns the list of selected example filenames (e.g. ['afrisenti.yaml']).
     """
+    refs_path = _benchmark_refs_path(name)
+    if refs_path.exists():
+        selected = json.loads(refs_path.read_text())
+        print(f"[3b-select] Benchmark refs already exist: {selected}")
+        return selected
     _paper_dir(name).mkdir(parents=True, exist_ok=True)
     print("[3b-select] Haiku selecting reference benchmark examples...")
     selection_raw = client.call(
@@ -818,6 +829,10 @@ def step_3b_synthesize(
 
     Returns path to the written benchmarks/<name>.yaml.
     """
+    out_path = BENCHMARKS / f"{name}.yaml"
+    if out_path.exists():
+        print(f"[3b-synthesize] Benchmark YAML already exists: {out_path}")
+        return out_path
     BENCHMARKS.mkdir(exist_ok=True)
     refs_path = _benchmark_refs_path(name)
     if not refs_path.exists() and not client.DRY_RUN:
@@ -852,7 +867,6 @@ def step_3b_synthesize(
         max_tokens=32768,
         step="3b_synthesize",
     )
-    out_path = BENCHMARKS / f"{name}.yaml"
     if client.DRY_RUN:
         return out_path
     cleaned = _run_script("parse_llm_output.py", "--format", "yaml", "-", stdin=synthesis_raw)
@@ -1058,6 +1072,11 @@ def step_2_summary(
         )
         sys.exit(1)
 
+    summary_path = _elicitation_summary_path(name, slug)
+    if summary_path.exists():
+        print(f"[2-summary] Elicitation summary already exists: {summary_path}")
+        return summary_path
+
     desc_path = _deployment_desc_path(name, slug)
     initial_description = desc_path.read_text() if desc_path.exists() else ""
 
@@ -1080,7 +1099,6 @@ def step_2_summary(
         max_tokens=8192,
         step="2_summary",
     )
-    summary_path = _elicitation_summary_path(name, slug)
     summary_path.write_text(summary)
     print(f"[2-summary] Elicitation summary written to {summary_path}")
     return summary_path
@@ -1097,6 +1115,10 @@ def step_4a_template(elicitation_summary: str, name: str, slug: str) -> list[str
     (geography, language community, cultural context). Returns selected filenames.
     """
     out_path = _region_templates_path(name, slug)
+    if out_path.exists():
+        selected = json.loads(out_path.read_text())
+        print(f"[4a-template] Region templates already exist: {selected}")
+        return selected
     out_path.parent.mkdir(parents=True, exist_ok=True)
     print("[4a-template] Haiku selecting base region template(s)...")
     selection_raw = client.call(
@@ -1132,6 +1154,9 @@ def step_4b_synthesize(
     Returns path to the written scaffold.
     """
     out_path = _region_scaffold_path(name, slug)
+    if out_path.exists():
+        print(f"[4b-synthesize] Region scaffold already exists: {out_path}")
+        return out_path
     out_path.parent.mkdir(parents=True, exist_ok=True)
     refs_path = _region_templates_path(name, slug)
     if not refs_path.exists() and not client.DRY_RUN:
@@ -1196,6 +1221,9 @@ def step_5_web_search(scaffold_path: Path, region_path: Path,
     residual [NEEDS VERIFICATION] slots. Overwrites region_path with the enriched
     YAML on success.
     """
+    if region_path.exists():
+        print(f"[5] Region YAML already exists: {region_path}")
+        return
     print("[5] Sonnet enriching region document via web_search (this may take a minute)...")
     current_yaml = scaffold_path.read_text()
     current_parsed = yaml.safe_load(current_yaml)
@@ -1357,10 +1385,13 @@ def _profile_single_dataset(hf_dataset: str, hf_config: str | None) -> dict:
         print(f"    WARN: metadata errors: {meta['errors']}")
         return script_outputs
 
-    sample_args = ["--repo_id", hf_dataset, "--split", "train"]
+    splits_by_config = meta.get("splits_info", {}).get("splits_by_config", {})
+    available_splits = splits_by_config.get(hf_config, next(iter(splits_by_config.values()), []))
+    split = "train" if "train" in available_splits else (available_splits[0] if available_splits else "train")
+    sample_args = ["--repo_id", hf_dataset, "--split", split]
     if hf_config:
         sample_args += ["--config", hf_config]
-    print(f"    content_sample...")
+    print(f"    content_sample (split={split})...")
     script_outputs["content_sample"] = _run_da_script(
         "content_sample.py", *sample_args)
 
@@ -1371,7 +1402,7 @@ def _profile_single_dataset(hf_dataset: str, hf_config: str | None) -> dict:
         # Identify the audio column from the schema and run duration/language stats
         audio_cols = [col for col, dtype in features.items() if "Audio" in str(dtype)]
         if audio_cols:
-            audio_args = ["--repo_id", hf_dataset, "--split", "train",
+            audio_args = ["--repo_id", hf_dataset, "--split", split,
                           "--column", audio_cols[0], "--sample_size", "50"]
             if hf_config:
                 audio_args += ["--config", hf_config]
@@ -1540,6 +1571,40 @@ def _resolve_cited_evidence(
     return before + f"{marker}\n\n" + "\n".join(resolved) + "\n" + after
 
 
+EXIT_HF_SCRIPT_FAILED = 2
+
+
+def _validate_content_sample(
+    script_outputs: dict, hf_dataset: str, cache_path: Path,
+) -> None:
+    """Abort with exit code 2 if content_sample returned an error or no examples.
+
+    Removes the stale cache entry so a re-run with corrected config will
+    re-profile from scratch rather than replaying the cached failure.
+    """
+    raw = script_outputs.get("content_sample", "{}")
+    try:
+        parsed = json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        parsed = {}
+
+    error = parsed.get("error")
+    if error:
+        if cache_path.exists():
+            cache_path.unlink()
+        print(f"FATAL [5b]: content_sample failed for {hf_dataset}: {error}",
+              file=sys.stderr)
+        sys.exit(EXIT_HF_SCRIPT_FAILED)
+
+    n_examples = parsed.get("examples_exported", 0)
+    if n_examples == 0 and "markdown" not in parsed:
+        if cache_path.exists():
+            cache_path.unlink()
+        print(f"FATAL [5b]: content_sample returned 0 examples for {hf_dataset} "
+              f"(check hf_config in hf_links.json)", file=sys.stderr)
+        sys.exit(EXIT_HF_SCRIPT_FAILED)
+
+
 def step_5b_dataset_analysis(
     hf_info: dict,
     benchmark_yaml_text: str,
@@ -1666,6 +1731,10 @@ def step_5b_dataset_analysis(
             script_cache.parent.mkdir(parents=True, exist_ok=True)
             script_cache.write_text(json.dumps(script_outputs, indent=2))
 
+        # Validate that content_sample produced actual examples — a silent
+        # fallback to paper-only analysis defeats the purpose of the DA step
+        _validate_content_sample(script_outputs, hf_dataset, script_cache)
+
         data_sections = []
         data_sections.append(
             f"### HF Metadata\n```json\n{script_outputs.get('hf_metadata', '{}')}\n```")
@@ -1723,6 +1792,9 @@ def step_6_compose(
     Returns path to the composed_prompt.md.
     """
     out_path = _composed_prompt_path(name, slug)
+    if out_path.exists():
+        print(f"[6] Composed prompt already exists: {out_path}")
+        return out_path
     out_path.parent.mkdir(parents=True, exist_ok=True)
     print("[6] Composing evaluation prompt via compose_prompt.py...")
     compose_args = [
@@ -1751,6 +1823,9 @@ def step_7_score(composed_path: Path, name: str, slug: str) -> Path:
     Returns path to the written scoring.json.
     """
     out_path = _scoring_path(name, slug)
+    if out_path.exists():
+        print(f"[7] Scoring output already exists: {out_path}")
+        return out_path
     out_path.parent.mkdir(parents=True, exist_ok=True)
     print("[7] Opus scoring (the one Opus call in the pipeline)...")
     raw = client.call(
@@ -1779,6 +1854,9 @@ def step_8_report(results_path: Path) -> None:
     scoring.json and also prints it to stdout for immediate review.
     """
     report_path = results_path.parent / "report.md"
+    if report_path.exists():
+        print(f"[8] Report already exists: {report_path}")
+        return
     report = _run_script("format_results.py", str(results_path))
     report_path.write_text(report, encoding="utf-8")
     print(f"[8] Report written to {report_path}")

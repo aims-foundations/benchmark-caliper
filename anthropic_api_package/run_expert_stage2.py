@@ -34,6 +34,10 @@ from pathlib import Path
 
 import client
 
+# run_pipeline.py exit codes for the 5b-da step
+_EXIT_NO_HF_INFO = 1    # no HF entry — genuinely optional, safe to skip
+_EXIT_HF_SCRIPT_FAILED = 2  # HF entry exists but sampling failed — must abort
+
 # === Path Constants ===
 # All paths are resolved relative to this script's location so the package
 # remains portable regardless of the working directory at invocation time.
@@ -181,7 +185,7 @@ def run_pipeline_remaining(paper_stem: str, slug: str, answers_path: Path,
         ("4a-template", [], False),
         ("4b-synthesize", [], False),
         ("5", [], False),
-        ("5b-da", [], True),   # optional — fails gracefully if no HF info
+        ("5b-da", [], False),
         ("6", [], False),
         ("7", [], False),
         ("8", [], False),
@@ -201,10 +205,19 @@ def run_pipeline_remaining(paper_stem: str, slug: str, answers_path: Path,
         print(f"{'=' * 60}")
         r = subprocess.run(cmd, cwd=PACKAGE_ROOT)
         if r.returncode != 0:
+            # 5b-da: skip when no HF entry exists (exit 1), but halt the
+            # entire script when HF data is available and sampling failed
+            # (exit 2) — we need real dataset examples whenever available.
+            if step == "5b-da" and r.returncode == _EXIT_NO_HF_INFO:
+                print(f"  [stage2] --step {step} skipped (no HF info for this benchmark)")
+                continue
+            if step == "5b-da" and r.returncode == _EXIT_HF_SCRIPT_FAILED:
+                print(f"\nFATAL: HF dataset scripts failed for {paper_stem}. "
+                      f"Fix hf_links.json or HF access, then re-run.",
+                      file=sys.stderr)
+                sys.exit(1)
             if optional:
-                # Non-fatal: log and continue to the next step rather than
-                # aborting the whole tuple.
-                print(f"  [stage2] --step {step} skipped (no HF info or not applicable)")
+                print(f"  [stage2] --step {step} skipped (optional step failed)")
                 continue
             raise RuntimeError(
                 f"run_pipeline.py --step {step} failed "

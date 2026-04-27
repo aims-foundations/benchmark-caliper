@@ -1,0 +1,25 @@
+{
+  "ltzglue": {
+    "hf_dataset_id": null,
+    "hf_config": null,
+    "benchmark_name": "ltzGLUE"
+  },
+  "drbenchmark": {
+    "hf_dataset_id": null,
+    "hf_config": null,
+    "hf_org": "DrBenchmark",
+    "benchmark_name": "DrBenchmark",
+    "note": "Multi-dataset benchmark. hf_org resolves all 12 datasets under the org."
+  },
+  "milu_the_indicmmlu_benchmark": {
+    "hf_dataset_id": "ai4bharat/MILU",
+    "hf_config": "Hindi",
+    "benchmark_name": "MILU",
+    "note": "Gated dataset — requires HF_TOKEN with approved access. Config must match a language name (e.g. Hindi, Bengali, Telugu)."
+  },
+  "arabicmmlu": {
+    "hf_dataset_id": "MBZUAI/ArabicMMLU",
+    "hf_config": null,
+    "benchmark_name": "ArabicMMLU"
+  }
+}

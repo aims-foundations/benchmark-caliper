@@ -1,0 +1,432 @@
+name: Hindi-Medium Competitive Exam Aspirants — North India (Central Exams)
+abbreviation: IN-HI-COMPEXAM-NORTH
+benchmark: milu
+deployment_context: Mobile/enterprise application providing Hindi-language feedback
+  (correct/incorrect label + explanatory rationale) to graduate students preparing
+  for central-level competitive examinations (UPSC, SSC, banking exams) in North India.
+geography:
+  country: India
+  region: North India
+  primary_states:
+  - Uttar Pradesh
+  - Bihar
+  - Rajasthan
+  - Madhya Pradesh
+  scope_note: Deployment is scoped to central-level examinations (UPSC, SSC, banking)
+    with pan-India syllabus coverage, not state-level PSCs. Geographic focus reflects
+    where the largest Hindi-medium aspirant populations are concentrated, but content
+    scope extends to all-India GK.
+  urban_rural_mix: Semi-urban and peri-urban aspirants are the primary target; significant
+    share from small towns and district headquarters ('kasba' tier). Fully rural share
+    is lower due to smartphone and app access requirements.
+  urbanization_pct: '[NEEDS VERIFICATION — deferred: below search budget; national
+    urbanization ~36% per 2011 census, but state-level semi-urban figures for exam-prep
+    cohort not publicly aggregated]'
+target_population:
+  description: Graduate-level students actively preparing for Indian central government
+    competitive examinations (UPSC Civil Services, SSC CGL/CHSL, IBPS/SBI banking
+    exams). Likely first-generation or semi-urban exam aspirants from Hindi-medium
+    educational backgrounds. Access the system via smartphone (Android-dominant).
+    Primary motivation is securing central government employment.
+  education_level: Bachelor's degree (required eligibility for UPSC/SSC); many are
+    recent graduates or repeat aspirants ('repeaters') in the 21–28 age band.
+  age_band: '[NEEDS VERIFICATION — deferred: likely unsearchable (not aggregated publicly);
+    estimated 21–28 years based on eligibility requirements and exam culture norms]'
+  gender_breakdown: 'Women constitute approximately one-third (~33%) of all UPSC applicants
+    and approximately 30% of selected candidates in 2023. Women applicants nearly
+    quadrupled over the past 15 years, outpacing total applicant growth. SSC/banking
+    gender breakdown is not separately published at this granularity. Coaching institutes
+    and study environments remain male-dominated in many districts. Source: The Print
+    (Feb 2025) — [|https://theprint.in/india/family-support-safety-study-material-a-click-away-whats-driving-more-women-to-take-upsc-exam/1922660/|];
+    SleepyClasses (2025) — [|https://sleepyclasses.com/discover-how-many-candidates-are-selected-in-upsc-each-year/|]'
+  occupational_role: Full-time or part-time exam aspirant; may also hold temporary
+    employment or be enrolled in coaching institutes ('coaching classes') in cities
+    like Prayagraj, Patna, Jaipur, Indore.
+  coaching_institute_prevalence: '[NEEDS VERIFICATION — deferred: below search budget;
+    likely unsearchable at the quantitative level without specific survey data]'
+  first_generation_learner_share: '[NEEDS VERIFICATION — deferred: likely unsearchable
+    (lived practice); no publicly aggregated figure found for this demographic slice]'
+languages:
+  primary: Hindi (Devanagari script)
+  medium_of_instruction: Hindi-medium schooling and undergraduate education; limited
+    formal English-medium exposure.
+  code_mixing_tolerance: Moderate code-mixing with English technical/administrative
+    terms acceptable; deployment-specified ceiling of approximately 10% English content.
+    Heavy English-medium phrasing or Roman-script-dominant questions create construct-irrelevant
+    difficulty for this population.
+  english_proficiency: Functional reading of English technical terms (e.g., 'GDP',
+    'Parliament', 'RBI') common; sustained English-medium text comprehension limited.
+  script: Devanagari (Unicode standard; no RTL or capitalization complexity issues)
+  dialect_notes: Standard Khari Boli Hindi (Manak Hindi) is the expected register
+    for both exam content and AI feedback. Colloquial Bhojpuri, Awadhi, Rajasthani,
+    or Malvi dialects are understood by subsets of the population but are not the
+    target register.
+  minority_languages_in_population:
+  - Bhojpuri (Bihar, eastern UP)
+  - Awadhi (central UP)
+  - Rajasthani / Marwari (Rajasthan)
+  - Bundeli / Malvi (MP)
+writing_systems:
+  scripts:
+  - Devanagari (primary — Hindi)
+  note: Standard Unicode Devanagari. No RTL concerns. Mixed Devanagari + Latin (for
+    English technical terms) is the expected code-mixed form. NLP tokenization for
+    Devanagari is mature for high-resource Hindi.
+literacy_and_education:
+  population_literacy_rate_hindi_states: 'Per 2011 Census (most recent census; 2021
+    census pending): Bihar 61.8%, Rajasthan 66.1%, UP 67.7%, MP 70.6% — all below
+    the national average of 74.0%. NSO post-census survey estimates (circa 2020) are
+    marginally higher: Rajasthan ~69.7%, Bihar ~70.9%. These four states together
+    account for nearly half of all Indian illiterates. Caveat: these are general population
+    figures; the deployment targets graduate-level aspirants who are near-universally
+    literate. Source: Census 2011 via Wikipedia — [|https://en.wikipedia.org/wiki/List_of_Indian_states_and_union_territories_by_literacy_rate|];
+    NSO estimates via FindEasy — [|https://www.findeasy.in/indian-states-by-literacy-rate/|]'
+  graduate_level_literacy: Near-universal within the target cohort (graduate enrollment
+    is an exam eligibility requirement).
+  hindi_medium_undergraduate_share: '[NEEDS VERIFICATION — deferred: below search
+    budget; no publicly aggregated state-level figure for Hindi-medium college graduates
+    found]'
+  numeracy_notes: Mathematics and Reasoning are core exam subjects; aspirants have
+    completed 10+2 mathematics. Advanced mathematics not required; arithmetic, data
+    interpretation, and logical reasoning are the operative skills.
+infrastructure_notes:
+  device_profile: Android smartphone dominant; budget-to-mid-range handsets prevalent.
+    iOS share low among this demographic.
+  android_share_pct: '[NEEDS VERIFICATION — deferred: below search budget; nationally
+    Android holds ~95%+ smartphone market share in India but state-specific figures
+    for this cohort not published]'
+  mobile_internet_penetration_target_states: 'IAMAI/Kantar ICUBE 2024 report: Uttar
+    Pradesh 46% active internet user penetration, Bihar 43% (share of state population).
+    Earlier 2023 ICUBE data showed UP at 41%, Bihar at 37%. Independent estimates
+    put Bihar as low as 25–30% and UP at 30–41% depending on methodology and active
+    vs. subscriber definition. UP and Bihar are among the largest subscriber bases
+    in absolute numbers (73.6M and 69.9M respectively as of Sep 2023) but below-average
+    in penetration rate. Caveat: these are general population figures; the exam-aspirant
+    cohort (urban/semi-urban, smartphone-owning graduates) will have substantially
+    higher internet access than the state average. Source: IAMAI/Kantar Internet in
+    India 2024 — [|https://www.iamai.in/sites/default/files/research/Kantar_%20IAMAI%20report_2024_.pdf|];
+    Wikipedia Internet in India (TRAI data Sep 2023) — [|https://en.wikipedia.org/wiki/Internet_in_India|]'
+  connectivity: 4G coverage in urban/semi-urban areas adequate; rural connectivity
+    patchy. App must be functional under low-bandwidth or intermittent connectivity
+    conditions.
+  data_cost_sensitivity: High — aspirants in this cohort are cost-sensitive; heavy
+    data usage may be a barrier.
+  app_modality: Mobile app (primary) and enterprise/web (secondary). Text-only interface;
+    no image or audio input required.
+  offline_capability_requirement: '[NEEDS VERIFICATION — deferred: below search budget;
+    whether offline mode is in deployment scope is a product-level decision, not a
+    publicly documented fact]'
+exam_ecosystem:
+  primary_target_exams:
+  - UPSC Civil Services Examination (Prelims + Mains)
+  - SSC CGL (Combined Graduate Level)
+  - SSC CHSL (Combined Higher Secondary Level)
+  - IBPS PO / Clerk (Banking)
+  - SBI PO / Clerk (Banking)
+  - RRB NTPC (Railway Recruitment)
+  exam_scope_note: Central-level examinations only; state-level PSCs (e.g., UPPSC,
+    BPSC, RPSC, MPPSC) are explicitly out of scope for this deployment.
+  priority_subject_areas:
+  - General Knowledge
+  - Current Affairs
+  - History (Indian and World)
+  - Indian Polity and Constitution
+  - Mathematics and Quantitative Aptitude
+  - Logical Reasoning and Mental Ability
+  - Hindi Language Proficiency
+  - Geography (Indian and World)
+  - Economics and Indian Economy
+  north_india_regional_content_within_central_exams: Central exams do test some North
+    India–specific content (e.g., North Indian historical figures, land-revenue systems
+    like zamindari/ryotwari abolition, festivals such as Chhath Puja, Mughal and medieval
+    North Indian history, UP/Bihar administrative geography). AI must handle both
+    pan-India GK and this sub-regional layer.
+  exam_pattern: MCQ-based Prelims (objective); descriptive Mains for UPSC. The deployment
+    targets the objective/MCQ preparation phase with rationale-based feedback.
+  current_affairs_currency: Current Affairs questions require up-to-date knowledge;
+    benchmark staleness is a validity risk for this subject area.
+  upsc_applicant_scale: 'Approximately 13.4 lakh (1.34 million) candidates applied
+    for UPSC 2024; roughly 50–55% actually appear for Prelims. Only ~1,000 candidates
+    are ultimately selected. Source: PW / Physics Wallah (2024) — [|https://www.pw.live/upsc/exams/how-many-candidates-applied-for-upsc-2024|]'
+  syllabus_documents:
+    upsc_syllabus: 'Official UPSC CSE syllabus available at UPSC website: [|https://upsc.gov.in/|].
+      Prelims: GS Paper I (History, Geography, Polity, Economy, Environment, Science)
+      + CSAT (Aptitude); Mains: Essay + 4 GS papers + 2 Optional papers + 2 qualifying
+      language papers.'
+    ssc_cgl_syllabus: '[NEEDS VERIFICATION — deferred: below search budget; current
+      SSC CGL syllabus available at SSC official site ssc.gov.in but specific URL
+      not retrieved]'
+    ibps_syllabus: '[NEEDS VERIFICATION — deferred: below search budget; current IBPS
+      PO syllabus available at ibps.in but specific URL not retrieved]'
+cultural_norms_notes: '- Exam culture in North India is intensely aspirational; central
+  government employment (sarkari naukri) is a primary social mobility pathway, especially
+  for first-generation graduates from semi-urban/rural backgrounds.
+
+  - Coaching institute culture is deeply embedded: Prayagraj (formerly Allahabad)
+  is the national hub for UPSC prep; Patna, Jaipur, and Indore have large SSC/banking
+  coaching ecosystems.
+
+  - Students are accustomed to rote-and-revision learning styles; explanatory feedback
+  that mirrors pedagogical conventions of Hindi-medium coaching materials will be
+  better received.
+
+  - Social pressure and family investment in exam success are high; failure stigma
+  is significant. Feedback tone should be constructive and motivating.
+
+  - North Indian religious and cultural calendar (festivals such as Chhath Puja, Diwali,
+  Holi, Navratri) intersects with exam prep cycles; Current Affairs questions may
+  reference these.
+
+  - Caste and reservation system (OBC, SC, ST categories) shapes aspirant demographics
+  and exam eligibility; some GK questions may touch on reservation policy — culturally
+  sensitive area. Per 2023 UPSC results: General 48%, OBC 27%, SC 15% of selected
+  candidates.
+
+  - Gender: Female aspirants now constitute approximately one-third of UPSC applicants
+  (up from ~25% fifteen years ago), but coaching institutes and study environments
+  remain male-dominated in many districts. Source: The Print (Feb 2025) — [|https://theprint.in/india/family-support-safety-study-material-a-click-away-whats-driving-more-women-to-take-upsc-exam/1922660/|]
+
+  - Language register: Feedback in simple, clear Manak Hindi (standard Hindi) is preferred
+  over literary or highly Sanskritized Hindi, which may alienate Hindi-medium graduates
+  from less privileged backgrounds.
+
+  '
+pedagogical_context:
+  feedback_format_required: Correct/incorrect verdict (label) plus substantive Hindi-language
+    explanation of why the answer is right or wrong. Label-only scoring is insufficient
+    for deployment goals.
+  explanation_register: Plain, accessible Manak Hindi. Avoid heavy English code-mixing
+    (>10%), Sanskritized vocabulary, or English-medium textbook conventions.
+  explanation_quality_dimensions:
+  - Factual accuracy of the rationale
+  - Fluency and naturalness in Hindi
+  - Pedagogical clarity (does the explanation help the student understand the concept?)
+  - Appropriate difficulty level for graduate-level Hindi-medium aspirants
+  - Absence of misleading or contradictory information
+  benchmark_output_mismatch_note: 'MILU evaluates only MCQ label accuracy; it provides
+    no infrastructure for assessing explanatory rationale quality. This is a fundamental
+    gap: benchmark scores cannot validate the deployment''s core output.'
+  existing_hindi_nlg_evaluation_resources: 'No benchmark specifically evaluating Hindi-language
+    explanatory rationale quality for competitive exam content was found. The closest
+    relevant resources are: (1) IndicGenBench (2024) — evaluates LLM generation tasks
+    (summarization, translation, QA) across 29 Indic languages including Hindi, but
+    does not cover exam-explanation quality. Source: arXiv 2404.16816 — [|https://arxiv.org/abs/2404.16816|].
+    (2) Pariksha (2024) — evaluates human vs. LLM agreement on Hindi output quality
+    (linguistic acceptability, task quality, hallucination) across health/finance/culture
+    prompts; methodology is relevant but domain does not cover competitive exam rationale.
+    Source: arXiv 2406.15053 — [|https://arxiv.org/html/2406.15053v1|]. (3) ''Benchmarking
+    Hindi LLMs'' (arXiv 2508.19831, 2025) — introduces MT-Bench-Hi for instruction-tuned
+    model evaluation in Hindi but targets conversational/instruction-following tasks,
+    not exam-explanation generation. Source: [|https://arxiv.org/abs/2508.19831|].
+    (4) A 2025 analysis of Indic LLM capabilities (arXiv 2501.13912) notes that most
+    existing Hindi evaluation datasets are translated from English, limiting their
+    capture of socio-cultural and domain-specific nuance. Source: [|https://arxiv.org/html/2501.13912v1|].
+    Conclusion: No purpose-built Hindi competitive-exam explanation quality benchmark
+    exists; this is a genuine gap that represents a net-new evaluation development
+    need for this deployment.'
+domain_specific_notes:
+  general_knowledge_and_current_affairs: Core UPSC/SSC subject. Requires up-to-date
+    knowledge; any benchmark with a training cutoff will have stale Current Affairs
+    items. Model must be robust to knowledge currency limitations.
+  indian_polity_and_constitution: High-priority subject covering constitutional articles,
+    amendments, fundamental rights/duties, DPSP, Parliament/judiciary structures,
+    and landmark Supreme Court judgments. North Indian land-revenue and administrative
+    history (zamindari, panchayati raj) also relevant.
+  history: Both medieval (Mughal period, North Indian kingdoms) and modern Indian
+    history (independence movement, key leaders from UP/Bihar such as Nehru, Gandhi,
+    Bhagat Singh, Lal Bahadur Shastri) are prominent in central exams. Ancient Indian
+    history also tested.
+  mathematics_and_reasoning: Quantitative aptitude (arithmetic, percentage, ratio,
+    data interpretation) and logical/analytical reasoning are heavily tested in SSC
+    and banking exams. MILU's coverage of Mathematics/Reasoning in its Hindi subset
+    needs verification.
+  hindi_language_proficiency: Grammar, comprehension, vocabulary, and idiom questions
+    in Hindi are tested in UPSC Mains and SSC exams. The AI's Hindi output quality
+    is itself a validity-relevant consideration.
+  geography: Physical geography of India (rivers, mountains, states/capitals) and
+    North India–specific geography (Ganga-Yamuna doab, Deccan Plateau boundary) are
+    relevant.
+  economics: Indian economy, Five-Year Plans (historical), budget, monetary policy
+    (RBI), and schemes (PM Kisan, MGNREGS, etc.) are standard current affairs/GK intersections.
+  legal_and_governance: Indian constitutional law, IPC basics, and governance schemes
+    are tested. Sharia or Islamic law is not relevant to this deployment context.
+  north_india_sub_regional_knowledge:
+    examples:
+    - Chhath Puja (Bihar/UP festival — often appears in cultural GK)
+    - Land revenue systems (zamindari abolition, ryotwari — UP/Bihar history)
+    - Mughal administrative units (subas, sarkars, parganas)
+    - North Indian freedom movement figures (Chandrashekhar Azad, Ram Prasad Bismil,
+      Lal Bahadur Shastri)
+    - UP/Bihar/Rajasthan/MP state capitals, high courts, major rivers
+    - 'Administrative units: tehsil, mandal, district, division'
+    benchmark_coverage_status: '[NOT FOUND — searched for MILU Hindi subject distribution
+      and North India sub-regional content coverage; no published breakdown of MILU
+      Hindi item distribution by exam type (UPSC vs. SSC vs. state PSC vs. banking)
+      or by sub-regional North India content was found. MILU documents sourcing from
+      40+ exam types at national and state levels but does not report intra-Hindi
+      regional granularity. This remains an undocumented gap.]'
+benchmark_validity_flags:
+  central_exam_subject_distribution:
+    status: partial_gap
+    detail: MILU draws from over 40 exam types including national civil services,
+      government and private organization exams, and state-level civil services exams
+      [Q27, Q92, Q95, Q96, Q97]. However, the relative proportion of items aligned
+      to UPSC/SSC/banking syllabi versus state PSC or regional exams is NOT DOCUMENTED.
+      Mathematics/Reasoning and Current Affairs — top-priority subjects for central
+      exams — are not explicitly called out as well-covered subject categories within
+      the 41-subject taxonomy.
+    web_search_target: MILU benchmark Hindi subject distribution UPSC SSC banking
+      exam coverage Mathematics Reasoning Current Affairs proportion
+    search_result: '[NOT FOUND — no published breakdown of MILU Hindi item proportions
+      by exam type (UPSC/SSC/banking vs. state PSC) was found via search. The MILU
+      paper documents sourcing from 40+ exam types but does not decompose item counts
+      by exam category for the Hindi subset. Gap remains unresolved.]'
+  hindi_code_mixing_rate:
+    status: full_gap
+    detail: MILU documents that approximately 25% of its released questions were translated
+      from English using GPT-4O [Q47], introducing risk of elevated English code-mixing
+      or unnatural phrasing. INDICLID and Unicode-based filtering were applied to
+      remove incorrect language entries [Q34], but no characterization of residual
+      English code-mixing frequency in the Hindi item pool is provided. The ~10% code-mixing
+      ceiling specified for the deployment is entirely undocumented relative to MILU's
+      actual Hindi question composition.
+    web_search_target: MILU Hindi benchmark code-mixing English technical terms Devanagari
+      item analysis Hindi-medium accessibility
+    search_result: '[NOT FOUND — no published analysis of English code-mixing rates
+      in MILU Hindi items found. The arXiv analysis of Indic LLM capabilities (2501.13912)
+      notes that most Hindi evaluation datasets are translated from English, which
+      is consistent with the code-mixing risk, but no quantification of MILU''s specific
+      Hindi code-mixing rate was found. Gap remains unresolved.]'
+  explanatory_rationale_quality:
+    status: full_gap
+    detail: MILU has no evaluation infrastructure for open-ended Hindi explanatory
+      rationale. This is the deployment's core output and is entirely outside benchmark
+      scope.
+    web_search_target: Hindi language explanation quality evaluation NLG benchmark
+      competitive exam rationale generation UPSC SSC
+    search_result: 'No competitive-exam-specific Hindi explanation quality benchmark
+      found. Closest relevant resources: IndicGenBench (arXiv 2404.16816) covers Hindi
+      generation tasks but not exam rationale; Pariksha (arXiv 2406.15053) evaluates
+      Hindi output quality (linguistic acceptability, task quality, hallucination)
+      but for health/finance/culture domains; MT-Bench-Hi (arXiv 2508.19831, 2025)
+      evaluates Hindi instruction-tuned models on conversational tasks. None cover
+      the deployment''s core output type (competitive exam answer explanation in Hindi).
+      This is a genuine evaluation gap requiring purpose-built tooling. Sources: [|https://arxiv.org/abs/2404.16816|];
+      [|https://arxiv.org/html/2406.15053v1|]; [|https://arxiv.org/abs/2508.19831|]'
+  north_india_sub_regional_content:
+    status: partial_gap
+    detail: MILU includes culturally relevant subjects such as local history, arts,
+      festivals, and laws [Q2, Q12], and explicitly targets regional state exams to
+      capture local knowledge in each language [Q14, Q28]. However, whether Hindi-language
+      items specifically cover North India sub-regional content (e.g., Chhath Puja,
+      tehsil/mandal administrative structures, UP/Bihar/Rajasthan state-specific history)
+      within the central-exam framing is NOT DOCUMENTED. The benchmark aggregates
+      across all Indian states and languages without documenting intra-Hindi regional
+      granularity.
+    web_search_target: MILU Hindi items North India regional knowledge Chhath Puja
+      UP Bihar Rajasthan history land revenue systems sub-regional cultural content
+    search_result: '[NOT FOUND — no published documentation of MILU''s intra-Hindi
+      regional content distribution found. Gap confirmed unresolved.]'
+  hindi_medium_difficulty_calibration:
+    status: full_gap
+    detail: No documentation on whether MILU Hindi items were calibrated for Hindi-medium
+      graduates vs. English-medium or bilingual students. Annotator demographics not
+      reported.
+    web_search_target: MILU benchmark Hindi-medium student accessibility difficulty
+      calibration annotator demographics first-generation exam aspirants
+    search_result: '[NOT FOUND — no published user study, difficulty calibration report,
+      or annotator demographic breakdown for MILU''s Hindi subset found. The arXiv
+      2501.13912 analysis notes that most Indic evaluation datasets are translated
+      from English with limited socio-cultural grounding — consistent with this gap.
+      Gap confirmed unresolved.]'
+  output_format_mismatch:
+    status: full_gap
+    detail: MILU uses MCQ label accuracy (log-likelihood or JSON generative scoring).
+      Deployment requires open-ended Hindi rationale generation. Benchmark scores
+      cannot directly validate deployment output quality.
+    web_search_target: Hindi open-ended text generation evaluation fluency coherence
+      pedagogical quality competitive exam AI feedback benchmark
+    search_result: Confirmed gap. No Hindi open-ended exam-feedback quality evaluation
+      benchmark exists. Pariksha and MT-Bench-Hi are the closest methodological analogs
+      but are not domain-matched. See 'explanatory_rationale_quality' above for full
+      resource inventory.
+regulatory_and_policy_context:
+  data_protection: 'Digital Personal Data Protection Act 2023 (DPDPA) — enacted 11
+    August 2023 (No. 22 of 2023). Applicable to all digital personal data processing
+    within India, including mobile/enterprise edtech apps. Implementing DPDP Rules
+    2025 were notified in November 2025; phased compliance with full operational provisions
+    expected by May 2027. Penalties up to ₹250 crore for non-compliance. The DPDPA
+    applies to the deployment as it processes student response data digitally. Note:
+    parental consent provisions (Section 9) apply to users under 18; the deployment''s
+    graduate-level target population (21–28) is above this threshold, so standard
+    consent requirements (not parental consent) apply. Sources: MEITY official text
+    — [|https://www.meity.gov.in/static/uploads/2024/06/2bf1f0e9f04e6fb4f8fef35e82c42aa5.pdf|];
+    EY India (Dec 2025) — [|https://www.ey.com/en_in/insights/cybersecurity/decoding-the-digital-personal-data-protection-act-2023|];
+    DLA Piper (Feb 2026) — [|https://www.dlapiperdataprotection.com/?t=law&c=IN|]'
+  ai_governance: 'Two applicable frameworks: (1) MeitY Advisory on AI (15 March 2024)
+    — requires intermediaries deploying AI tools to ensure outputs are labelled, not
+    unlawfully biased, and compliant with IT Rules 2021; applies to AI platforms from
+    immediate effect. Source: Lexology — [|https://www.lexology.com/library/detail.aspx?g=47dda3b5-1111-4b6b-9f87-799ef8066802|].
+    (2) India AI Governance Guidelines (5 November 2025) — MeitY''s comprehensive
+    framework under the IndiaAI Mission, emphasizing safe, inclusive, and responsible
+    AI adoption with a sectoral regulatory approach (no standalone AI Act). Chaired
+    by Principal Scientific Adviser; relevant to AI deployments in education but not
+    yet education-sector specific. Source: NeGD/MeitY — [|https://negd.gov.in/press_release/meity-unveils-india-ai-governance-guidelines-under-indiaai-mission-to-ensure-safe-inclusive-and-responsible-adoption-of-artificial-intelligence-across-sectors/|].
+    UGC''s NPAI Skilling Framework (2023) addresses AI in higher education curricula
+    but does not regulate AI-based edtech tools. No specific MEITY or UGC regulation
+    governing AI-assisted competitive exam preparation platforms has been enacted
+    as of April 2026; compliance with DPDPA 2023 + MeitY Advisory 2024 represents
+    the current operative framework.'
+  exam_board_regulations: '[NOT FOUND — searched for UPSC/SSC/IBPS official guidelines
+    on AI-assisted exam preparation; no publicly available regulatory restriction
+    or guideline specifically addressing AI tools in competitive exam prep was found.
+    UPSC and SSC regulate exam conduct but not candidate preparation tools. Gap confirmed:
+    this is likely an unsearched/unenacted regulatory space as of April 2026.]'
+  right_to_education_act_relevance: Not directly applicable (targets school-age education);
+    graduate-level exam prep falls outside RTE scope.
+net_new_fields:
+  hindi_llm_evaluation_landscape_2024_2025:
+    summary: 'The Hindi LLM evaluation ecosystem has grown substantially in 2024–2025
+      but remains focused on MCQ accuracy, translation, and summarization — not domain-specific
+      explanation quality. Key benchmarks: MILU (2024, ~79K MCQ items from Indian
+      competitive exams), IndicGenBench (2024, generation tasks across 29 Indic languages
+      including Hindi), IndicMMLU-Pro (2025, MMLU-Pro adapted for Indic languages),
+      and ''Benchmarking Hindi LLMs'' suite (2025, five instruction-tuned model benchmarks
+      including MT-Bench-Hi). The 2025 arXiv analysis of Indic LLM capabilities notes
+      that a majority of Hindi evaluation datasets are direct translations of English
+      datasets, limiting socio-cultural coverage — a finding directly relevant to
+      MILU''s translated 25% subset. No benchmark covers Hindi competitive-exam explanation
+      generation.'
+    validity_relevance: Confirms that the output-form gap identified in the assessment
+      (no Hindi generative explanation benchmark) is not an oversight — it reflects
+      a genuine absence in the research ecosystem. The downstream scorer should weight
+      this gap highly.
+    sources: arXiv 2501.13912 (Jan 2025) — [|https://arxiv.org/html/2501.13912v1|];
+      arXiv 2508.19831 (Aug 2025) — [|https://arxiv.org/abs/2508.19831|]; arXiv 2404.16816
+      (Apr 2024) — [|https://arxiv.org/abs/2404.16816|]; arXiv 2406.15053 (Jun 2024)
+      — [|https://arxiv.org/html/2406.15053v1|]
+  indiaai_mission_education_relevance:
+    summary: The IndiaAI Mission (launched March 2024, ₹10,371.92 crore over five
+      years) includes education as a target sector and supports AI infrastructure
+      development. The YuvAI Initiative (MeitY + AICTE) targets 100,000 students/developers
+      aged 18–30 for AI capability building. These programs signal government endorsement
+      of AI in education but do not yet impose product-level compliance requirements
+      on competitive-exam prep tools.
+    validity_relevance: Regulatory risk is currently low for this deployment category
+      (no specific exam-prep AI regulation), but the landscape is evolving rapidly.
+      Deployments should monitor MeitY sectoral guidance as the India AI Governance
+      Guidelines implementation progresses.
+    sources: PIB (Mar 2026) — [|https://www.pib.gov.in/PressReleasePage.aspx?PRID=2234853&reg=3&lang=1|];
+      SCC Times (Nov 2025) — [|https://www.scconline.com/blog/post/2025/11/06/meity-launches-india-ai-governance-guidelines-under-indiaai-mission-2025/|]
+  pariksha_benchmark_methodological_relevance:
+    summary: Pariksha (2024, arXiv 2406.15053) is a large-scale investigation of human
+      vs. LLM evaluator agreement on Indic language outputs, covering Hindi across
+      health, finance, and cultural prompts. It uses Linguistic Acceptability, Task
+      Quality, and Hallucination as evaluation dimensions with human annotation. This
+      is the closest methodological template for evaluating Hindi explanation quality
+      in the deployment context, even though it does not cover competitive exam domains.
+    validity_relevance: The Pariksha evaluation framework (LA + TQ + Hallucination,
+      with native-speaker human annotation) could serve as a starting point for constructing
+      a deployment-specific Hindi explanation quality evaluation protocol. Downstream
+      assessment should flag this as an actionable recommendation.
+    source: arXiv 2406.15053 — [|https://arxiv.org/html/2406.15053v1|]

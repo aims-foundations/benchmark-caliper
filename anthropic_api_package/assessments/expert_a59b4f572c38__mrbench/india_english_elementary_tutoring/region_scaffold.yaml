@@ -1,0 +1,279 @@
+name: Metropolitan India – Grade 1–8 Mathematics Tutoring (English-medium)
+abbreviation: IN-METRO-MATH-K8
+deployment_context:
+  description: GPT-4 augmented by human tutors, deployed as a one-on-one tutoring
+    assistant via mobile application or enterprise software for students in grades
+    1–8 in metropolitan Indian cities. Human tutors co-author responses; student satisfaction
+    is the primary success criterion.
+  primary_use_case: Student mistake remediation and guided practice in mathematics,
+    NCERT-aligned, for ages approximately 6–14
+  delivery_channels:
+  - mobile application
+  - enterprise software
+  end_user_roles:
+    primary: Students (grades 1–8, ages approximately 6–14) in metropolitan India
+    secondary: Human tutors acting as co-authors and response quality evaluators
+geography:
+  country: India
+  scope: Metropolitan cities (no specific sub-national region specified beyond 'metropolitan')
+  representative_metros:
+  - '[NEEDS VERIFICATION — surface the major Indian metros most likely to be deployment
+    targets, e.g. Delhi, Mumbai, Bengaluru, Chennai, Hyderabad, Kolkata, Pune]'
+  sub_national_variation_note: The target population spans vastly different linguistic,
+    socioeconomic, and pedagogical contexts across Indian metropolitan areas. No sub-national
+    granularity was specified in the elicitation. Downstream search should flag whether
+    Indian metropolitan cohorts differ meaningfully in math tutoring expectations
+    or communication style norms.
+languages:
+  instruction_language: English
+  proficiency_level: Fluent English speakers (confirmed by elicitation)
+  home_language_diversity_note: Students in Indian metros typically speak one or more
+    Indian languages at home alongside English. Home language backgrounds may include
+    Hindi, Tamil, Telugu, Kannada, Marathi, Bengali, and others depending on the city.
+    L1-interference in mathematical reasoning and vocabulary may affect error typologies
+    even in English-medium instruction.
+  home_languages_by_metro: '[NEEDS VERIFICATION — document dominant home languages
+    per major deployment metro]'
+  medium_of_instruction: English (confirmed by elicitation as the deployment language)
+writing_systems:
+  scripts_in_use:
+  - Latin (English)
+  note: Interaction is text-based in English using the Latin script. No script mismatch
+    with the benchmark. Numerals follow Indian conventions (see curriculum_notes).
+target_population_demographics:
+  age_band: Approximately 6–14 years
+  grade_band: Grades 1–8
+  school_board_types:
+  - CBSE
+  - ICSE
+  - IB
+  - State boards
+  - '[NEEDS VERIFICATION — confirm which boards are most prevalent in target metro
+    deployments]'
+  socioeconomic_profile: Metropolitan school students; likely skewed toward middle-
+    and upper-middle-income families given mobile/enterprise software access, though
+    exact socioeconomic distribution is [NEEDS VERIFICATION]
+  device_access: '[NEEDS VERIFICATION — mobile device ownership rates and model distribution
+    among Grade 1–8 students in Indian metros]'
+  internet_penetration_metros: '[NEEDS VERIFICATION — broadband and mobile internet
+    penetration rates in target metropolitan areas]'
+  literacy_rate_india_national: '[NEEDS VERIFICATION]'
+  digital_literacy_children_metros: '[NEEDS VERIFICATION]'
+curriculum_and_pedagogy:
+  curriculum_alignment: NCERT (National Council of Educational Research and Training)
+    — confirmed required by elicitation
+  ncert_grade_band_topics:
+    grades_1_to_5: 'Foundational arithmetic: counting, place value, addition, subtraction,
+      multiplication, division, basic fractions, measurement, simple geometry'
+    grades_6_to_8: Rational numbers, integers, algebraic expressions, linear equations,
+      geometry (triangles, quadrilaterals, circles), data handling, percentages, ratio
+      and proportion, mensuration
+    notes: '[NEEDS VERIFICATION — confirm topic-by-topic NCERT syllabus coverage for
+      grades 1–8 and flag any topics with non-Western algorithmic conventions]'
+  numeral_naming_conventions:
+    required: true
+    conventions:
+    - Lakhs (1,00,000)
+    - Crores (1,00,00,000)
+    - Indian place-value grouping system (2-digit grouping above hundreds)
+    - Rupee (₹) as currency unit in word problems
+    notes: NCERT content explicitly uses Indian numeral naming conventions and rupee-denominated
+      problems. Benchmark source datasets (Bridge, MathDial) are Western-sourced and
+      do not reflect these conventions — a confirmed ontological gap.
+  culturally_grounded_contexts_required: true
+  required_context_examples:
+  - Cricket scores and statistics
+  - Local market transactions
+  - School fee calculations
+  - Train timetables
+  - Rupee-based pricing problems
+  - '[NEEDS VERIFICATION — surface additional NCERT word problem context types]'
+  prohibited_context_types: Culture-distant Western examples (e.g., baseball statistics,
+    US grocery prices, American school scenarios) — confirmed inappropriate by elicitation
+  algorithmic_conventions:
+    note: Indian standard algorithms for arithmetic (e.g., long division layout, column
+      addition/subtraction format) may differ from Western conventions used in benchmark
+      source datasets.
+    details: '[NEEDS VERIFICATION — document specific Indian vs. Western algorithmic
+      convention differences at Grade 1–8 level]'
+  dominant_pedagogical_tradition:
+    description: Indian primary and middle school mathematics instruction has historically
+      emphasized procedural fluency, rote memorization, exam-oriented drilling, and
+      direct correction by teachers. Socratic scaffolding and extended student verbalization
+      — common in Western tutoring benchmarks — are less characteristic of Indian
+      classroom norms.
+    implications_for_benchmark: MRBench's evaluation taxonomy implicitly favors Socratic
+      guidance (non-revelation of answers, extended student reasoning) over direct
+      instructional correction. This operationalization may not align with Indian
+      teachers' acceptability judgments.
+    empirical_basis: '[NEEDS VERIFICATION — find empirical studies on Indian primary/middle
+      school mathematics pedagogy norms and teacher communication style expectations]'
+  exam_orientation:
+    relevant_exams:
+    - CBSE board examinations
+    - School-level term assessments
+    - '[NEEDS VERIFICATION — other high-stakes assessments relevant to Grade 1–8 in
+      Indian metros]'
+    note: Exam-readiness framing may be a culturally salient criterion for judging
+      tutor response quality that is absent from the benchmark's taxonomy.
+cultural_norms_notes: 'Key cultural factors relevant to tutoring satisfaction in metropolitan
+  Indian Grade 1–8 contexts:
+
+  - Hierarchical teacher-student relationship: students are socialized to show deference
+  to teachers; direct correction by authority figures is normalized and expected
+
+  - Warmth register: encouragement that feels culturally appropriate to Indian students
+  may differ from generic motivational language; formulaic Western encouragement phrases
+  may feel distant or hollow
+
+  - Face-saving norms: public identification of errors must be handled sensitively;
+  mistake remediation framing should preserve student dignity
+
+  - Parental and family involvement: metropolitan Indian parents are often highly
+  engaged with academic performance; tutor tone may be evaluated partly through parent-mediated
+  student feedback
+
+  - Exam culture: student satisfaction may be partially mediated by perceived exam-readiness
+  of tutor guidance, not just conceptual clarity
+
+  - Communication register: brief, directive tutor turns may be more culturally consonant
+  than extended Socratic dialogues for younger grades
+
+  - [NEEDS VERIFICATION — empirical work on Indian pedagogical communication expectations
+  in primary/middle school settings, particularly for AI-mediated tutoring]'
+student_interaction_style:
+  description: Indian Grade 1–8 students in metropolitan contexts typically exhibit
+    brief, deferential interaction turns in tutoring contexts. Extended student verbalization
+    of reasoning across multiple dialogue turns — characteristic of MathDial and Bridge
+    benchmark instances — is not well-documented for this population.
+  typical_turn_length: '[NEEDS VERIFICATION — empirical data on Indian student turn
+    length and verbalization patterns in math tutoring interactions]'
+  error_presentation_style: Errors are likely to be procedural (wrong step execution,
+    place-value errors, algorithmic missteps) rather than conceptual reasoning errors,
+    reflecting rote-procedure instruction. L1-interference may produce characteristic
+    misconception types not present in Western-sourced benchmark data.
+  common_misconception_types: '[NEEDS VERIFICATION — literature on Indian Grade 1–8
+    math misconception typologies: CBSE/NCERT error patterns, rote learning artifacts,
+    L1-interference effects]'
+success_criterion:
+  primary_metric: Student satisfaction (not pedagogical correctness per se)
+  joint_requirement: A response must be BOTH pedagogically sound AND culturally appropriate
+    to count as satisfying — confirmed by elicitation (A4). Pedagogically correct
+    but culturally distant or overly formal responses do not meet the deployment success
+    criterion.
+  judges:
+    primary: Human tutors (co-authors) — evaluate pedagogical soundness and cultural
+      appropriateness
+    secondary: Student engagement signals (implicit satisfaction indicators)
+  alignment_with_benchmark_annotators: Partial. Metropolitan Indian student satisfaction
+    judgments are expected to largely align with MRBench annotators on pedagogical
+    correctness dimensions, but divergence is expected on tone, warmth register, and
+    culturally appropriate communication style. MRBench annotators are CS-educated
+    MBZUAI affiliates with no documented South Asian educational expertise or NCERT
+    familiarity.
+  satisfaction_construct_validation: '[NEEDS VERIFICATION — any study linking MRBench
+    scores or similar pedagogical quality scores to learner-reported satisfaction,
+    particularly for non-Western or Indian student populations]'
+infrastructure_notes: '- Deployment is via mobile application and/or enterprise software
+  in Indian metropolitan areas
+
+  - Metropolitan India has high smartphone penetration relative to rural India, but
+  exact device distribution for the school-age target demographic is [NEEDS VERIFICATION]
+
+  - Mobile internet connectivity in Indian metros is generally strong (4G/5G), but
+  bandwidth variability during peak usage hours is [NEEDS VERIFICATION]
+
+  - Enterprise software channel suggests some deployments may be school- or institution-mediated,
+  with institutional device or network constraints [NEEDS VERIFICATION]
+
+  - Text-based interaction in English only; no speech, image, or multilingual modality
+  required by deployment
+
+  - Data localization requirements under India''s personal data protection framework
+  may apply: [NEEDS VERIFICATION — current Indian data protection law applicability
+  to AI tutoring services for minors]'
+regulatory_and_compliance_notes:
+  applicable_data_protection_law: '[NEEDS VERIFICATION — India''s Digital Personal
+    Data Protection Act (DPDPA) 2023 applicability to AI tutoring platforms handling
+    minor student data]'
+  child_data_protection_provisions: '[NEEDS VERIFICATION — specific provisions for
+    minors under Indian data protection framework and their implications for AI tutoring
+    deployments]'
+  education_sector_regulations: '[NEEDS VERIFICATION — any NCERT, UGC, or Ministry
+    of Education guidelines on EdTech AI use in K–8 settings]'
+  edtech_regulatory_context: '[NEEDS VERIFICATION — DPIIT or other regulatory body
+    guidance on AI-assisted tutoring in India post-2023]'
+benchmark_validity_concerns:
+  curriculum_ontology_mismatch:
+    severity: HIGH
+    description: MRBench is derived from Bridge (Western elementary arithmetic) and
+      MathDial (Western middle-school reasoning). Neither dataset is aligned to NCERT
+      Grade 1–8 topics, Indian numeral naming conventions (lakhs/crores), or rupee-based
+      word problems.
+    search_target: '[NEEDS VERIFICATION — any math tutoring benchmark covering NCERT
+      Grade 1–8 topics, Indian numeral conventions, and rupee-based word problems]'
+  cultural_context_mismatch:
+    severity: HIGH
+    description: Benchmark instances embed Western contextual framings (US school
+      scenarios, dollar-denominated problems). Deployment requires Indian everyday
+      contexts (cricket, local markets, school fees). No India-specific word problems
+      are documented in Bridge or MathDial.
+    search_target: '[NEEDS VERIFICATION — whether MathDial or Bridge contain any India-specific
+      word problems or India-relevant student error typologies]'
+  satisfaction_vs_pedagogical_quality:
+    severity: HIGH
+    description: MRBench measures pedagogical correctness across eight dimensions;
+      the deployment success criterion is student satisfaction. Cultural appropriateness
+      and warmth are necessary conditions for satisfaction in this deployment but
+      are not captured in the benchmark taxonomy.
+    search_target: '[NEEDS VERIFICATION — validation studies linking MRBench or equivalent
+      pedagogical scores to learner-reported satisfaction for non-Western populations]'
+  annotator_representativeness:
+    severity: HIGH
+    description: MRBench annotators are four CS-educated MBZUAI affiliates in Abu
+      Dhabi with no documented South Asian educational expertise. Ground-truth labels
+      reflect non-Indian pedagogical priors. No Indian educators or students participated
+      in annotation.
+    search_target: '[NEEDS VERIFICATION — MRBench annotator demographics; any Indian
+      educator involvement in benchmark annotation]'
+  equal_weight_damr_scoring:
+    severity: MODERATE
+    description: DAMR reports equally across all eight dimensions. Indian teacher
+      acceptability judgments may weight 'providing guidance' and 'cultural appropriateness'
+      heavily; the benchmark provides no mechanism for dimension re-weighting.
+    search_target: '[NEEDS VERIFICATION — dimension weighting studies for pedagogical
+      AI evaluation in Indian or similar exam-oriented educational contexts]'
+  western_misconception_types:
+    severity: HIGH
+    description: Neither Bridge nor MathDial was designed to include Indian student
+      error patterns arising from rote-procedural instruction, L1-interference, or
+      NCERT-specific algorithmic conventions.
+    search_target: '[NEEDS VERIFICATION — literature on Indian Grade 1–8 math misconception
+      typologies and whether any AI tutoring benchmark captures them]'
+  socratic_vs_direct_correction_bias:
+    severity: MODERATE
+    description: MRBench taxonomy implicitly favors Socratic scaffolding (non-revelation,
+      extended student reasoning) over direct correction. Indian pedagogical tradition
+      may treat direct correction as acceptable or preferred, creating rubric misalignment.
+    search_target: '[NEEDS VERIFICATION — Indian primary/middle school math pedagogy
+      norms: direct correction vs. Socratic scaffolding preference among teachers
+      and students]'
+domain_specific_notes: '- Mathematics domain only; no other subject areas are in scope
+
+  - Grade band spans both foundational arithmetic (Grades 1–5) and pre-algebraic/reasoning
+  content (Grades 6–8), matching the Bridge/MathDial split in MRBench but with different
+  topic coverage
+
+  - NCERT curriculum is the authoritative content standard; CBSE is the dominant board
+  in metro schools [NEEDS VERIFICATION — verify board distribution across target metros]
+
+  - Human tutor co-authorship layer partially mitigates benchmark-deployment gaps
+  by filtering culturally inappropriate outputs before student delivery
+
+  - Warmth and encouragement are deployment-required properties; the benchmark''s
+  Tutor Tone dimension collapses Neutral and Encouraging into ''Non-offensive'' (100%
+  DAMR by construction), providing no discriminative signal on warmth quality
+
+  - Sub-national metro variation (e.g., Mumbai vs. Delhi vs. Bengaluru) in tutoring
+  norms and communication style is undocumented; downstream search should investigate
+  whether metro-level cohort differences are empirically meaningful for this deployment'

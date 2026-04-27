@@ -1,0 +1,420 @@
+{
+  "benchmark": "MILU",
+  "region": "North India Hindi-Medium Postgraduate Teacher — MCQ Assessment",
+  "dimensions": {
+    "input_ontology": {
+      "score": 3,
+      "justification": "MILU's MCQ-based, India-centric taxonomy of 8 domains and 41 subjects [Q1, Q42] partially aligns with the deployment's MCQ assessment needs across Hindi-belt boards, and the inclusion of culturally relevant subjects [Q12, Q74] is consistent with the user's school-board scope. However, the taxonomy is derived from competitive-exam sources [Q24, Q92] rather than school or university board syllabi, and the coarse aggregation of ~20K fine-grained tags into 41 subjects [Q39, Q42] obscures whether canonical Hindi-board topics (Hindi literature, regional medieval history) are adequately represented. Dataset evidence shows Literature and Linguistics items in the Hindi sample skewing to non-Hindi-belt content (Tamil, Telugu, Kashmiri, English Romantic poets) with no Tulsidas/Premchand/Kabir/Mahadevi Verma items observed [DATASET-MAJOR2]. The taxonomy thus omits or under-resolves regionally relevant categories central to the deployment.",
+      "strengths": [
+        "MCQ-only format with single-correct-answer structure [Q22, Q33] directly matches the deployment's binary-scoring MCQ assessment requirement.",
+        "Explicit India-first design that values regional/state-level exams for capturing local knowledge [Q14, Q28] makes the taxonomy more deployment-relevant than English-origin alternatives like MMLU.",
+        "Eight domains span the breadth of school-board subject areas (Arts & Humanities, Social Sciences, Science, Law and Governance, Business Studies) [Q42], covering the deployment's listed subject domains at a coarse level."
+      ],
+      "checklist_responses": {
+        "IO-1": "Required categories for the deployment include Hindi literature (canonical figures Tulsidas, Premchand, Kabir, Mahadevi Verma, Prasad, Nirala, Dinkar), regional history (UP, MP, Rajasthan, Bihar), civics/Constitution, geography of Hindi-belt states, and Hindi-medium science/maths. MILU declares 8 domains and 41 subjects [Q1, Q42] including Arts and Humanities, Social Sciences, Science and Law and Governance — covering the deployment's domains at the macro level, but with school-board-specific sub-categories not separately delineated.",
+        "IO-2": "MILU's taxonomy was built bottom-up from ~20K competitive-exam tags clustered into 41 subjects [Q39, Q40, Q42], not from school-board syllabi. The paper does not list a 'Hindi literature' or 'Hindi-board regional history' subject; such content appears subsumed within broader 'Arts and Humanities' labels. Dataset analysis shows the Hindi Literature and Linguistics subject contains Tamil, Telugu, Kashmiri, and English-vocabulary items rather than canonical Hindi-board literary content [DATASET-MAJOR2, DATASET-MAJOR3], suggesting taxonomic granularity insufficient for the deployment.",
+        "IO-3": "The taxonomy includes Engineering and Technology and (per elicitation) lower-priority Health and Medicine [Q42], which are largely irrelevant to school-board MCQ teacher assessment. MAJOR4 finding documents UPSC-Mains-style ethics scenarios appearing in Social Sciences/Sociology [DATASET-MAJOR4] — a category of construct-irrelevant variance for school-board MCQ contexts.",
+        "IO-4": "Documented gaps: (a) absence of explicit Hindi-board literature, regional-history, and state-civics sub-categories; (b) coarse 41-subject aggregation hides whether canonical Hindi-board topics are present at all; (c) inclusion of UPSC-Mains-style civil-services reasoning items as construct-irrelevant variance for the school-board deployment."
+      },
+      "evidence_quotes": [
+        "[Q1] 'MILU spans 8 domains and 41 subjects across 11 Indic languages, reflecting both general and culturally specific knowledge.' (p.1)",
+        "[Q22] 'MILU is a large, multi-domain test set containing multiple-choice based questions (MCQs) taken from over 41 subjects with an emphasis on India-specific knowledge.' (p.3)",
+        "[Q24] 'These questions were sourced following an approach similar to AGIEVAL ... collecting the questions from various public exams ... such as qualification tests and national and state-level civil services exams' (p.3)",
+        "[Q39] 'Finally, in total, we get around 20K tags. However, these tags are highly fine-grained, often having a heavy overlap.' (p.4)",
+        "[Q42] 'we determine 41 distinct subject names, which fall into eight main domains: Arts and Humanities, Social Sciences, Environmental Sciences, Law and Governance, Health and Medicine, Science, Engineering and Technology, and Business Studies.' (p.4)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-9] MILU paper provides subject-language granularity but no per-state source breakdown for Hindi-belt states.",
+        "[WEB-8] MILU GitHub now reports ~85K questions vs. ~79K in paper, indicating dataset is being updated."
+      ],
+      "evidence_dataset": [
+        "DATASET-MAJOR2: Sampled Hindi Literature and Linguistics items reference Tamil, Telugu, Kashmiri, and English-Romantic content, with no canonical Hindi-board literary figures observed in 245 sampled items.",
+        "DATASET-MAJOR4: Social Sciences subject contains UPSC-Mains-style civil-servant ethics scenario (Ex. 83) — competitive-exam framing not aligned with school-board MCQ taxonomy."
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "Q1",
+          "Q42"
+        ],
+        "IO-2": [
+          "Q39",
+          "Q42",
+          "DATASET-MAJOR2",
+          "DATASET-MAJOR3"
+        ],
+        "IO-3": [
+          "Q42",
+          "DATASET-MAJOR4"
+        ],
+        "IO-4": [
+          "Q39",
+          "DATASET-MAJOR2",
+          "DATASET-MAJOR4",
+          "WEB-9"
+        ]
+      },
+      "confidence": "medium",
+      "information_gaps": [
+        "Whether 'Hindi literature' is a discrete subject within MILU's 41-subject scheme or subsumed under 'Literature and Linguistics' is not explicit in the paper.",
+        "Whether school-board syllabus topics (vs. competitive-exam topics) are systematically represented within the 41-subject taxonomy is not documented."
+      ],
+      "requires_expert_verification": [
+        "Hindi-board curriculum specialist review of which MILU subjects map to which board syllabus topics.",
+        "Subject-matter expert audit to confirm absence of Tulsidas/Premchand/Kabir items beyond the 245-item sample."
+      ]
+    },
+    "input_content": {
+      "score": 1,
+      "justification": "Input Content is the highest-priority dimension per elicitation and shows the most severe validity violations. Dataset analysis reveals: (1) all 245 sampled Hindi validation items are flagged is_translated=True [DATASET-CRITICAL1], sharply at odds with the paper's 25% translated figure [Q47] and indicating the few-shot/validation calibration corpus may be wholly translated rather than organically Indic-sourced; (2) ~6% of sampled items have truncated/incomplete question stems where referenced statements/options are absent [DATASET-MAJOR1]; (3) the canonical North Indian Hindi literary figures listed as high-priority for the deployment (Tulsidas, Premchand, Kabir, Mahadevi Verma) are absent from the sample, while Tamil, Telugu, Kashmiri literary content predominates [DATASET-MAJOR2, DATASET-MAJOR5]; (4) English-vocabulary items (didactic, grim, evangelize) appear within the Hindi-language benchmark as construct-irrelevant content [DATASET-MAJOR3]; (5) social science items skew to UPSC-Mains-style ethics scenarios rather than school-board civics MCQs [DATASET-MAJOR4]. The flagged-gaps summary further confirms no per-state breakdown of Hindi-belt exam contributions is documented [WEB-9, WEB-8]. These are concrete, multi-stream violations of content validity for the deployment.",
+      "strengths": [
+        "Explicit India-first sourcing methodology incorporating regional and state-level exams [Q2, Q11, Q14] is a content-design strength relative to translated-from-English alternatives.",
+        "English questions with India-specific content are deliberately included [Q30], addressing a gap in popular benchmarks.",
+        "Some Hindi-belt regional content does appear (UP minerals Ex. 26, Rajasthan Bajju area Ex. 68, UP chikankari Ex. 242) [DATASET-D26, DATASET-D28, DATASET-D29, DATASET-D30]."
+      ],
+      "checklist_responses": {
+        "IC-1": "The deployment requires region-specific Hindi-belt knowledge (UP/MP/Rajasthan/Bihar history, geography, governance) and canonical Hindi-board literary content. MILU explicitly targets India-centric content [Q2, Q11], but dataset analysis shows under-representation of Hindi-belt regional content with disproportionate South Indian/Eastern/Kashmiri content in Arts & Humanities [DATASET-MAJOR5, DATASET-MAJOR2].",
+        "IC-2": "Cultural alignment is partially achieved at the national India-centric level [Q12, Q30] but fails at the Hindi-belt sub-national level. Canonical Hindi-board literature is absent from the sample [DATASET-MAJOR2]; competitive-exam framing dominates over school-board pedagogical framing [DATASET-MAJOR4].",
+        "IC-3": "MILU contains content not aligned to the deployment context: English vocabulary tested via Hindi translation [DATASET-MAJOR3], UPSC-Mains-style civil-servant ethics scenarios [DATASET-MAJOR4], and time-stamped current-affairs items (e.g., Ex. 40 GDP Q3 2018, Ex. 41 May 2022 archery cup, Ex. 42 2018 cabinet minister) [DATASET-D40, DATASET-D41, DATASET-D42] that suit civil-services prep but not school-board curricular assessment.",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — the paper documents AI4Bharat manual audits [Q87] but no regional Hindi-belt annotator review of content cultural alignment. Documentation does not specify whether annotators familiar with UP/MP/Bihar/Rajasthan board syllabi audited the Hindi item set.",
+        "IC-5": "Documented content issues: (a) validation split appears 100% translated despite paper's 25% figure [DATASET-CRITICAL1, Q47]; (b) ~6%+ items are functionally unanswerable due to truncated stems [DATASET-MAJOR1]; (c) canonical Hindi-board literary content absent [DATASET-MAJOR2]; (d) English-vocabulary items as construct-irrelevant variance [DATASET-MAJOR3]; (e) competitive-exam framing dominates [DATASET-MAJOR4]; (f) South Indian/non-Hindi-belt regional content over-represented [DATASET-MAJOR5]; (g) no per-state Hindi-belt source breakdown [WEB-9]; (h) potential syllabus-currency mismatch with NEP 2020/NCERT 2024 revisions [WEB-5, WEB-12]."
+      },
+      "evidence_quotes": [
+        "[Q2] 'With an India-centric design, MILU incorporates material from regional and state-level examinations, covering topics such as local history, arts, festivals, and laws, alongside standard subjects like science.' (p.1)",
+        "[Q11] 'We designed MILU with an India-first perspective by collecting questions from various national, state, and regional exams.' (p.2)",
+        "[Q24] 'collecting the questions from various public exams ... such as qualification tests and national and state-level civil services exams' (p.3)",
+        "[Q44] 'For subjects with insufficient questions, we sampled questions from the English set from that subject and translated them into the required language using GPT-4O.' (p.4)",
+        "[Q47] 'Of the total 79K questions, only 25% of questions are translated from English' (p.4)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-9] MILU paper provides no per-state breakdown of Hindi-language item counts for UPPSC, MPPSC, RPSC, or BPSC.",
+        "[WEB-8] MILU GitHub repo does not document per-state Hindi-belt source distribution.",
+        "[WEB-5] NCERT released revised textbooks for Classes 3 and 6 in 2024 under NEP 2020; Classes 4, 5, 7, 8 planned 2025–26 — creates syllabus-currency risk for items sourced from older exam papers.",
+        "[WEB-12] NEP 2020 implementation is ongoing across states with autonomous timelines."
+      ],
+      "evidence_dataset": [
+        "DATASET-CRITICAL1: All 245 sampled Hindi validation examples flagged is_translated=True, contradicting the paper's 25% translated figure and suggesting validation/few-shot calibration is entirely from translated origin.",
+        "DATASET-MAJOR1: Pervasive truncated question stems — at least 14/245 sampled items reference statements/options/underlined text not present in the question field, making items functionally unanswerable.",
+        "DATASET-MAJOR2: Hindi Literature and Linguistics items reference Tamil/Telugu/Kashmiri/English-Romantic literature; no Tulsidas/Premchand/Kabir/Mahadevi Verma items found in 245-item sample.",
+        "DATASET-MAJOR3: Hindi-language benchmark contains English-vocabulary items (didactic, grim, evangelize) testing English proficiency through Hindi translation — construct-irrelevant variance.",
+        "DATASET-MAJOR4: Social Sciences contains UPSC-Mains-style ethics scenarios and PCS-style argument-strength items unsuited to school-board MCQ assessment.",
+        "DATASET-MAJOR5: South Indian, Kashmiri, Eastern Indian regional content over-represented in Arts & Humanities and Geography; UP/MP/Bihar/Rajasthan content sparse."
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "Q2",
+          "Q11",
+          "DATASET-MAJOR5",
+          "DATASET-MAJOR2"
+        ],
+        "IC-2": [
+          "Q12",
+          "DATASET-MAJOR2",
+          "DATASET-MAJOR4"
+        ],
+        "IC-3": [
+          "DATASET-MAJOR3",
+          "DATASET-MAJOR4",
+          "DATASET-D40",
+          "DATASET-D41",
+          "DATASET-D42"
+        ],
+        "IC-4": [],
+        "IC-5": [
+          "Q47",
+          "DATASET-CRITICAL1",
+          "DATASET-MAJOR1",
+          "DATASET-MAJOR2",
+          "DATASET-MAJOR3",
+          "DATASET-MAJOR4",
+          "DATASET-MAJOR5",
+          "WEB-9",
+          "WEB-5"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether the test split (vs. validation split) has the same is_translated distribution as the sampled validation split.",
+        "What fraction of the full Hindi item set is functionally truncated beyond the 245-item sample.",
+        "Per-state distribution of Hindi-language items by source exam (UPPSC, MPPSC, RPSC, BPSC).",
+        "Whether translated Hindi register matches the formal Khari Boli expected in state-board contexts."
+      ],
+      "requires_expert_verification": [
+        "Hindi-board subject-matter experts to audit a larger sample for Hindi-board curricular coverage.",
+        "Linguistic review of GPT-4O-translated items for North Indian academic register conformity.",
+        "Item-level review of canonical literary content framing (literary-critical vs. competitive-exam GK)."
+      ]
+    },
+    "input_form": {
+      "score": 3,
+      "justification": "At the gross signal-distribution level, input form is well-aligned: text-only Devanagari MCQ items match the deployment's text-only Devanagari Hindi-medium use case; INDICLID and Unicode-based filtering are documented [Q34]; up-to-four-option uniformity is enforced [Q33]; reading comprehension and image-based items are excluded [Q33]. However, dataset analysis surfaces concrete form-level defects: ~14/245 sampled items have truncated stems where referenced content (numbered statements, lettered options, underlined text, idioms) is absent from the question field [DATASET-MAJOR1] — this is a form/encoding defect (the structured fields do not contain the full question signal) that will systematically depress measured accuracy unrelated to language competence. The English-vocabulary-in-Hindi-wrapping issue [DATASET-MAJOR3] is also partly a form issue (the input mixes scripts/languages in unintended ways). These form defects undermine external validity of measured scores even though the script/modality alignment itself is strong.",
+      "strengths": [
+        "Text-only Devanagari script-language pairing matches deployment exactly [Q34].",
+        "Multiple cleaning layers (INDICLID, Unicode filtering, deduplication, manual sampling) are documented [Q31, Q32, Q34, Q35, Q36].",
+        "MCQ uniformity (≤4 options, no images, no reading comprehension) [Q33] aligns with deployment's MCQ-only constraint.",
+        "Low-bandwidth-friendly form suits Hindi-belt infrastructure where rural connectivity is variable [WEB-3, WEB-4]."
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal distributions align: text-only Devanagari in both source and target contexts; MILU enforces script correctness via INDICLID and Unicode filtering [Q34].",
+        "IF-2": "Regional infrastructure (Android smartphones, 4G in urban Hindi-belt with variable rural coverage) supports text-only MCQ delivery; no capture-side mismatch [WEB-3, WEB-4].",
+        "IF-3": "Domain-specific form difference: dataset analysis shows a non-trivial fraction of items have structurally incomplete question stems where referenced content is missing from the question field [DATASET-MAJOR1, DATASET-D10, DATASET-D11, DATASET-D12, DATASET-D13, DATASET-D14, DATASET-D15, DATASET-D16, DATASET-D17, DATASET-D18, DATASET-D19]. English-vocabulary items embedded in Hindi wrappers [DATASET-MAJOR3] are a secondary form-level mismatch.",
+        "IF-4": "Documented form mismatches: (a) truncated/incomplete question stems making items functionally unanswerable [DATASET-MAJOR1]; (b) the 25% GPT-4O-translated subset's register fidelity to formal Khari Boli is undocumented (paper applies INDICLID for script but no register check) [Q34, Q44]; (c) Unicode normalization (NFC/NFD/nukta) consistency across the Hindi item set is not documented in the paper."
+      },
+      "evidence_quotes": [
+        "[Q33] 'we exclude any reading-comprehension-style questions, images-based questions, and those with more than four answer options to ensure uniformity and consistency.' (p.4)",
+        "[Q34] 'we utilize a combination of INDICLID ... and Unicode-based filtering ... ensuring that the questions are in the correct language.' (p.4)",
+        "[Q44] 'we sampled questions from the English set from that subject and translated them into the required language using GPT-4O.' (p.4)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-3] Hindi-belt internet penetration variable (Bihar ~25%, UP ~30%) but text-only modality is low-bandwidth tolerant.",
+        "[WEB-4] UP/Bihar have large absolute internet subscriber bases supporting text MCQ delivery."
+      ],
+      "evidence_dataset": [
+        "DATASET-MAJOR1: At least 14/245 sampled items have structurally incomplete question stems where referenced statements/options/underlined text is absent from the question field.",
+        "DATASET-MAJOR3: English-vocabulary items embedded in Hindi-wrapper form mix script/language in ways that conflate construct measurement."
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q34"
+        ],
+        "IF-2": [
+          "WEB-3",
+          "WEB-4"
+        ],
+        "IF-3": [
+          "DATASET-MAJOR1",
+          "DATASET-MAJOR3"
+        ],
+        "IF-4": [
+          "DATASET-MAJOR1",
+          "Q34",
+          "Q44"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Unicode normalization consistency across MILU's Hindi item set is not documented.",
+        "Fraction of truncated-stem items in the test split (as opposed to the sampled validation split) is unknown."
+      ],
+      "requires_expert_verification": [
+        "Hindi linguist review of GPT-4O-translated items for register and orthographic fidelity to formal Khari Boli."
+      ]
+    },
+    "output_ontology": {
+      "score": 3,
+      "justification": "MILU's output space — single correct answer from up to four options with binary correct/incorrect scoring [Q22, Q33, Q55] — directly matches the deployment's binary-scoring requirement and is a strong alignment per elicitation Q1/Q2 (LOWER priority dimension). However, the paper itself acknowledges that models perform poorly in culturally relevant domains (Arts & Humanities, Social Sciences, Law & Governance) compared to STEM [Q6, Q20, Q62, Q71], and attributes this to training-corpora gaps [Q72] — directly relevant since these are the deployment's high-priority domains. The 41-subject coarse aggregation [Q39, Q42] subsumes Hindi-board-specific cultural sub-categories under broader labels, limiting structural validity at the sub-category level. Thus the output taxonomy is structurally aligned at the macro level (binary MCQ, India-centric subjects) but mismatched at the granular level where the deployment's highest-priority assessment lives.",
+      "strengths": [
+        "Single-correct-answer MCQ output with binary scoring [Q22, Q55] exactly matches the deployment's positive/negative-marking binary scheme.",
+        "Culturally relevant subject areas are explicitly part of the output taxonomy [Q12, Q42].",
+        "Per-language, per-subject, per-shot accuracy tables (Tables 11–54) [Q99–Q132] enable Hindi-specific isolation, supporting deployment-relevant analysis.",
+        "Paper transparently flags the cultural-knowledge weakness as a limitation [Q6, Q77]."
+      ],
+      "checklist_responses": {
+        "OO-1": "Output label categories are binary correct/incorrect over 4-option MCQs [Q22, Q55] — directly relevant and matched to the deployment's evaluation scheme per elicitation Q2.",
+        "OO-2": "Missing fine-grained categories: Hindi-board sub-subjects (Hindi literature canonical authors, regional medieval history, state civics) are not separately resolved within the 41-subject scheme [Q39, Q42], limiting the deployment's ability to isolate performance on its highest-priority topic clusters.",
+        "OO-3": "The output taxonomy itself does not encode non-regional values; however, the inclusion of Engineering/Health subjects [Q42] and competitive-exam-framed Sociology/Ethics items [DATASET-MAJOR4] introduces categories that inflate breadth without serving the deployment.",
+        "OO-4": "INSUFFICIENT DOCUMENTATION on stakeholder involvement in taxonomy design — paper documents AI4Bharat team manual review of K-means clusters [Q41] but no Hindi-belt teacher or board-curriculum stakeholder consultation. A stakeholder-driven taxonomy redesign for school-board granularity would be warranted.",
+        "OO-5": "Documented taxonomy issues: (a) coarse 41-subject scheme hides Hindi-board sub-categories [Q39]; (b) STEM-vs-cultural performance gap concentrated in deployment's highest-priority domains [Q6, Q20, Q71, Q72]; (c) lack of school-board-aligned sub-categories prevents content-validity verification at the level the deployment cares about."
+      },
+      "evidence_quotes": [
+        "[Q22] 'MILU is a large, multi-domain test set containing multiple-choice based questions (MCQs)' (p.3)",
+        "[Q55] 'For multiple choice questions, given k possible answer strings, we select the answer string (ai) with the highest conditional log probability' (p.5)",
+        "[Q6] 'models perform poorly in culturally relevant areas like Arts & Humanities and Law & Governance compared to general fields like STEM.' (p.1)",
+        "[Q20] 'models perform poorly in culturally relevant areas, such as Arts & Humanities and Social Sciences, compared to more general fields like STEM.' (p.2)",
+        "[Q71] 'open models perform poorly in domains specific to Indian culture—such as Arts & Humanities, Social Sciences, and Law & Governance—but demonstrate higher performance in STEM fields.' (p.7)",
+        "[Q72] 'the training corpora for these models lack sufficient culturally specific data.' (p.7)",
+        "[Q42] 'we determine 41 distinct subject names, which fall into eight main domains' (p.4)"
+      ],
+      "evidence_web_sources": [],
+      "evidence_dataset": [
+        "DATASET-MAJOR4: Sociology subject contains UPSC-Mains-style ethics scenarios — a category whose taxonomic placement does not match school-board civics teacher-assessment ontology."
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q22",
+          "Q55"
+        ],
+        "OO-2": [
+          "Q39",
+          "Q42"
+        ],
+        "OO-3": [
+          "Q42",
+          "DATASET-MAJOR4"
+        ],
+        "OO-4": [],
+        "OO-5": [
+          "Q6",
+          "Q20",
+          "Q71",
+          "Q72",
+          "Q39"
+        ]
+      },
+      "confidence": "medium",
+      "information_gaps": [
+        "Whether MILU's 41-subject scheme can be re-mapped post-hoc to school-board topic taxonomy."
+      ],
+      "requires_expert_verification": [
+        "Hindi-board curriculum specialist mapping of MILU subjects to UP/MP/RBSE/BSEB/CBSE syllabus topics."
+      ]
+    },
+    "output_content": {
+      "score": 2,
+      "justification": "Although the elicitation marks OC as LOWER priority because evaluation schemas are claimed to be broadly consistent across boards [Q4 elicitation], multiple concrete label-provenance concerns remain: (1) the validation split is empirically 100% translated [DATASET-CRITICAL1], meaning few-shot calibration uses GPT-4O-translated answer keys whose correctness in formal Hindi-board register is unverified; (2) annotation is delegated to original exam portals [Q26] with no published demographic breakdown, and the AI4Bharat team is institutionally based at IIT Madras (Chennai) — geographically distant from the Hindi belt; (3) ~6%+ of items are functionally unanswerable yet still carry a 'correct' target label [DATASET-MAJOR1], meaning ground-truth correctness cannot be construct-validly verified for those items; (4) one law item (Ex. 127) tests the year the IPC took effect (target=1862) [DATASET-D43] — a factual answer-key whose correctness is uncontroversial, but the broader label-reliability of competitive-exam-sourced keys for school-board contexts is not externally validated. Although OC is lower priority, multiple concrete issues make a score of 2 appropriate.",
+      "strengths": [
+        "Original exam portals tag questions and subject experts verify answer accuracy [Q26], providing a baseline label-quality mechanism.",
+        "AI4Bharat team conducted manual audits [Q87], adding a second review layer.",
+        "User confirms evaluation schemas are broadly consistent across North Indian boards [elicitation Q4], reducing mismatch severity.",
+        "MILU was built by an India-based team (AI4Bharat / IIT Madras / IBM Research India) [Q10], better than out-of-region annotation."
+      ],
+      "checklist_responses": {
+        "OC-1": "The user states evaluation schemas are broadly consistent across North Indian boards and competitive-exam settings [elicitation Q4], suggesting moderate alignment of ground-truth labels with regional stakeholder perspectives. However, no Hindi-belt teacher annotator pool is documented [Q26, Q87].",
+        "OC-2": "Potential disagreement risk is moderate: competitive-exam answer keys may diverge from school-board pedagogical framings of canonical literary content (e.g., Tulsidas treated as GK fact vs. literary-critical object) — the regional context flags this explicitly though no item-level evidence is published. The is_translated=True dominance in validation [DATASET-CRITICAL1] introduces an additional translation-quality risk to ground-truth labels.",
+        "OC-3": "The paper provides no annotator demographic breakdown — no information on regional backgrounds, Hindi proficiency, or familiarity with Hindi state-board curricula. AI4Bharat institutional base is IIT Madras (Chennai, South India) [Q10]. INSUFFICIENT DOCUMENTATION for full assessment.",
+        "OC-4": "Re-annotation by representative North Indian Hindi-belt teacher pool would address translation-derived label uncertainty and competitive-vs-school-board framing differences; not currently documented.",
+        "OC-5": "INSUFFICIENT DOCUMENTATION on aggregation methods — paper does not describe how multiple annotator judgments are reconciled; primary trust is delegated to source-portal subject experts [Q26].",
+        "OC-6": "Documented label issues: (a) no annotator demographic breakdown [Q26, Q87]; (b) institutional geographic asymmetry (IIT Madras base vs. North Indian deployment) [Q10]; (c) 25% paper-reported and apparently 100% in-validation translated content [Q47, DATASET-CRITICAL1] introduces translation-derived label provenance risk; (d) functionally unanswerable items with ostensibly correct targets [DATASET-MAJOR1]."
+      },
+      "evidence_quotes": [
+        "[Q26] 'These portals typically tag questions manually with topic names and language details, and subject experts ensure the accuracy of the answers.' (p.3)",
+        "[Q87] 'We are also immensely grateful to the volunteers from the AI4Bharat team for their motivation and meticulous efforts in conducting manual audits.' (p.9)",
+        "[Q10] 'Nilekani Centre at AI4Bharat, Indian Institute of Technology, Madras, IBM Research, India' (p.1)",
+        "[Q47] 'Of the total 79K questions, only 25% of questions are translated from English' (p.4)"
+      ],
+      "evidence_web_sources": [],
+      "evidence_dataset": [
+        "DATASET-CRITICAL1: All 245 sampled validation items flagged is_translated=True — the calibration corpus's ground-truth labels are GPT-4O-translation-derived rather than organically Hindi-sourced.",
+        "DATASET-MAJOR1: ~14/245 items have correct targets but stems are functionally incomplete, making target-correctness unverifiable from the item content alone.",
+        "DATASET-D43: Example 127 IPC effective year — competitive-exam factual key (target=1862) — a representative case of competitive-exam answer-key style."
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q26"
+        ],
+        "OC-2": [
+          "DATASET-CRITICAL1"
+        ],
+        "OC-3": [
+          "Q10",
+          "Q26",
+          "Q87"
+        ],
+        "OC-4": [],
+        "OC-5": [
+          "Q26"
+        ],
+        "OC-6": [
+          "Q26",
+          "Q87",
+          "Q10",
+          "Q47",
+          "DATASET-CRITICAL1",
+          "DATASET-MAJOR1"
+        ]
+      },
+      "confidence": "medium",
+      "information_gaps": [
+        "Annotator demographic breakdown (regional background, Hindi proficiency, board-curriculum familiarity).",
+        "Whether translated items' answer keys were re-verified by Hindi-proficient annotators after GPT-4O translation.",
+        "Aggregation method when multiple annotators disagree."
+      ],
+      "requires_expert_verification": [
+        "Hindi-belt board-curriculum teacher review of a sample of MILU answer keys for regional concordance.",
+        "Independent Hindi linguist verification of translated items' answer-key fidelity."
+      ]
+    },
+    "output_form": {
+      "score": 5,
+      "justification": "Output form is fully aligned with the deployment's binary correct/incorrect scoring requirement. MILU evaluates via accuracy on closed-set MCQ outputs [Q22, Q55] using log-likelihood selection for non-API models [Q52, Q53, Q54, Q55] and structured JSON for API models [Q57]. The deployment requires identical binary correct/incorrect signal per elicitation Q2; no modality, representation, or scoring-form mismatch exists. The deployment is text-only Devanagari with no TTS or speech-output requirements, and the postgraduate-teacher cohort is fully literate. The paper acknowledges log-likelihood vs. generation-based methods may differ [Q85], a minor methodological caveat but not a form mismatch.",
+      "strengths": [
+        "Binary correct/incorrect output scoring matches deployment exactly [Q22, Q55, elicitation Q2].",
+        "Closed-set 4-option label space requires no free-form interpretation [Q33].",
+        "Per-language, per-subject accuracy reporting [Q99–Q132] enables Hindi-specific deployment evaluation.",
+        "Text-only output suits Devanagari Hindi-medium teacher use case [Q34, elicitation Q1].",
+        "Postgraduate-teacher cohort is effectively 100% literate, removing accessibility constraints [WEB-1, WEB-2]."
+      ],
+      "checklist_responses": {
+        "OF-1": "Expected output modality (binary correct/incorrect MCQ accuracy) matches deployment exactly [Q22, Q55, elicitation Q2].",
+        "OF-2": "Not applicable — no speech output is required for this deployment (text-only Devanagari MCQ assessment).",
+        "OF-3": "Postgraduate-teacher cohort is by definition fully literate in Hindi [WEB-1, WEB-2 contextual]; no accessibility gap for text-output form.",
+        "OF-4": "No form mismatch documented. Minor caveat: paper acknowledges log-likelihood evaluation may yield different results from generation/CoT [Q85] — relevant for deployment if the deployed LLM uses generation-based answering, but not a fundamental form mismatch."
+      },
+      "evidence_quotes": [
+        "[Q22] 'MILU is a large, multi-domain test set containing multiple-choice based questions (MCQs)' (p.3)",
+        "[Q52] 'For non-API-based models, we use the LM-EVALUATION-HARNESS' (p.5)",
+        "[Q55] 'For multiple choice questions, given k possible answer strings, we select the answer string (ai) with the highest conditional log probability' (p.5)",
+        "[Q57] 'We explicitly prompt these models to generate the correct response in a structured JSON format' (p.5)",
+        "[Q85] 'our evaluation primarily relies on the log-likelihood approach, which may yield different results compared to other established methods' (p.9)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-1] 2011 census general literacy figures contextualize cohort literacy assumptions; postgraduate teacher cohort effectively 100% literate.",
+        "[WEB-2] NSO PLFS 2023-24 literacy improvements support the literacy assumption."
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "OF-1": [
+          "Q22",
+          "Q55"
+        ],
+        "OF-2": [],
+        "OF-3": [
+          "WEB-1",
+          "WEB-2"
+        ],
+        "OF-4": [
+          "Q85"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": []
+    }
+  },
+  "overall_summary": "MILU is structurally well-suited to the deployment's MCQ format, scoring scheme, and Devanagari script-language pairing — Output Form, Output Ontology, and Input Form macro-alignment are strong. However, Input Content shows severe, multi-stream validity violations for the North Indian Hindi-medium teacher deployment: dataset analysis reveals that the sampled Hindi validation split is 100% translated (vs. the paper's claimed 25%), ~6%+ of items have truncated stems making them functionally unanswerable, canonical North Indian Hindi-board literary figures (Tulsidas, Premchand, Kabir, Mahadevi Verma) are absent while Tamil/Telugu/Kashmiri content predominates, English-vocabulary items appear within the Hindi benchmark, and competitive-exam framing (UPSC-Mains-style ethics scenarios) crowds out school-board pedagogical framing. The paper itself acknowledges that models perform worst in Arts & Humanities and Social Sciences — precisely the domains where Hindi-belt teachers most need reliable evaluation. With Input Content rated HIGH priority by elicitation, these findings translate into substantial deployment risk that the paper's documentation alone would not surface.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "MILU can help evaluate an LLM's ability to answer Indian competitive-exam-style MCQs in Hindi with binary correct/incorrect scoring — specifically its handling of Devanagari script, India-centric general-knowledge content, and STEM domains where it performs comparatively well. The strongest dimensions for the deployment are Output Form (perfect alignment with binary scoring), Output Ontology (matched MCQ taxonomy), and macro-level Input Form (text-only Devanagari).",
+    "construct_depth": "MILU probes broad-but-shallow Indian competitive-exam knowledge across 41 subjects, with per-language and per-subject accuracy tables enabling Hindi-specific isolation. However, depth is limited where the deployment most needs it: Hindi-board canonical literature, regional Hindi-belt history/civics, and school-board pedagogical framings are under-represented or absent in the sampled data. The benchmark does not probe whether a model can score student responses in alignment with state-board teacher answer keys; it only probes whether a model can answer competitive-exam keys in Hindi.",
+    "supplementation_needed": "For a complete deployment assessment, supplementation is required in three areas: (1) a Hindi-board curricular MCQ evaluation set drawn from UP/MP/RBSE/BSEB/CBSE Class 9–12 papers and aligned to NEP 2020/NCERT 2024 revisions [WEB-5, WEB-12] — addressing the Input Content gap; (2) Hindi-belt teacher annotator review of a stratified item sample for cultural/curricular framing concordance — addressing the Output Content gap; (3) item-level filtering or audit for the ~6%+ truncated-stem items [DATASET-MAJOR1] before reporting accuracy figures. IndicMMLU-Pro [WEB-11] and the 2025 Hindi instruction-following suite [WEB-13] are noted but neither addresses the school-board curricular gap."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_content",
+      "gap": "Validation split appears to be 100% translated rather than the paper-reported 25%; canonical Hindi-board literary figures absent from sampled items; ~6%+ items have truncated, functionally unanswerable stems.",
+      "recommendation": "Before deployment use, audit MILU's full Hindi item set for is_translated distribution, filter or repair truncated-stem items, and supplement with a Hindi-board-aligned MCQ set covering Tulsidas, Premchand, Kabir, Mahadevi Verma, Prasad, Nirala, and Dinkar. Engage a Hindi-board curriculum specialist to score this supplementation."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "No per-state breakdown of Hindi-belt exam contributions (UPPSC, MPPSC, RPSC, BPSC) is published; Hindi-belt regional content is sparse relative to South Indian/Eastern content in sampled items.",
+      "recommendation": "Request per-state metadata from the MILU authors or directly partition the dataset by source-exam tags if available. Re-balance evaluation by stratifying or up-sampling Hindi-belt-specific items for deployment-relevant accuracy reporting."
+    },
+    {
+      "dimension": "input_ontology",
+      "gap": "The 41-subject taxonomy was derived from competitive-exam tags and does not separately resolve school-board sub-categories (Hindi literature, regional history, state civics).",
+      "recommendation": "Construct a post-hoc mapping from MILU's 41 subjects to UP/MP/RBSE/BSEB/CBSE syllabus topics with a Hindi-board curriculum specialist; report deployment-relevant accuracy on this re-mapped taxonomy rather than MILU's native one."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "No annotator demographic breakdown; institutional base is in South India; translated items' answer keys are GPT-4O-derived without documented Hindi-proficient human re-verification.",
+      "recommendation": "Recruit a North Indian Hindi-belt teacher annotator pool to re-verify ground-truth labels on a stratified sample (especially translated items and items touching canonical literature); document inter-annotator agreement with the original keys before relying on MILU accuracy figures."
+    },
+    {
+      "dimension": "input_form",
+      "gap": "Pervasive truncated/incomplete question stems (≥6% in sampled validation split) systematically depress measured accuracy in ways unrelated to language or cultural competence.",
+      "recommendation": "Run an automated audit detecting items where answer options reference numbered/lettered content not present in the question stem; either repair these items by recovering the missing content or exclude them from the deployment-relevant evaluation set."
+    },
+    {
+      "dimension": "input_ontology",
+      "gap": "Inclusion of UPSC-Mains-style ethics scenarios, English-vocabulary items in Hindi wrappers, and Engineering/Health subjects introduces construct-irrelevant variance for school-board MCQ teacher assessment.",
+      "recommendation": "Filter out construct-irrelevant subject categories and item types (English-vocabulary wrappers, civil-servant ethics scenarios, time-stamped current-affairs items) when computing deployment-relevant accuracy; report deployment-filtered scores alongside native MILU scores."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_content",
+    "output_content"
+  ],
+  "strongest_dimensions": [
+    "output_form",
+    "output_ontology"
+  ]
+}

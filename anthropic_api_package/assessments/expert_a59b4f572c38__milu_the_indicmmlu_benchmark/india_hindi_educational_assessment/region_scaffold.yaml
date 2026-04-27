@@ -1,0 +1,344 @@
+name: North India Hindi-Medium Postgraduate Teacher — MCQ Assessment
+abbreviation: NI-HI-PG-TEACHER
+benchmark: MILU
+assessment_slug: milu-north-india-hindi-pg-teacher
+population_description: Postgraduate- or PhD-qualified teachers operating in Hindi-medium
+  educational institutions across the Hindi belt of North India (principally Uttar
+  Pradesh, Madhya Pradesh, Rajasthan, and Bihar, with adjacent regions). These educators
+  use an LLM-powered mobile or enterprise application to evaluate student responses
+  to multiple-choice questions, assign scores under a positive/negative marking scheme,
+  and deliver binary correct/incorrect judgements. They work across all Hindi state
+  board syllabi (UP Board, MP Board, Rajasthan Board, Bihar Board) and the central
+  CBSE board; English-medium board content is in scope only when translated into Hindi
+  and aligned to Hindi-board norms.
+geography:
+  country: India
+  region: North India — Hindi Belt
+  primary_states:
+  - Uttar Pradesh
+  - Madhya Pradesh
+  - Rajasthan
+  - Bihar
+  adjacent_states_in_scope:
+  - Uttarakhand
+  - Jharkhand
+  - Chhattisgarh
+  - Haryana
+  - Delhi NCT
+  urbanization_note: 'Target population spans both urban centres (Lucknow, Bhopal,
+    Jaipur, Patna) and semi-urban/peri-urban towns where state-board institutions
+    predominate. Rural postgraduate teachers are a minority but present. [NEEDS VERIFICATION:
+    rural vs. urban share of postgraduate-qualified teachers by state]'
+target_role:
+  occupation: Secondary or higher-secondary school teacher; university or college
+    lecturer
+  qualification_floor: Postgraduate degree (MA/MSc/MCom minimum); PhD holders also
+    within scope
+  experience_range_years: 0–20+
+  subject_domains:
+  - Hindi language and literature
+  - Social sciences (history, civics, geography, economics)
+  - Sciences (physics, chemistry, biology) — when in Hindi medium
+  - Mathematics
+  - General knowledge and current affairs (competitive exam prep)
+  institutional_affiliations:
+  - UP Board (Uttar Pradesh Madhyamik Shiksha Parishad)
+  - MP Board (Madhya Pradesh Board of Secondary Education)
+  - Rajasthan Board (RBSE)
+  - Bihar Board (BSEB)
+  - CBSE (Central Board of Secondary Education)
+  - State universities and degree colleges affiliated to universities in UP, MP, Rajasthan,
+    Bihar
+  note: 'Teachers in this cohort are expected to hold TET/CTET certification or equivalent
+    state eligibility credentials. [NEEDS VERIFICATION: proportion holding CTET vs.
+    state TET vs. neither, by state]'
+languages:
+  primary: Hindi (Modern Standard Hindi / Khari Boli; Devanagari script)
+  register_expected: Formal/standard academic register consistent with state-board
+    and CBSE examination language; pan-India formal Khari Boli rather than local colloquial
+    varieties
+  regional_variety_note: 'Teachers and students in UP, Bihar, and Rajasthan may be
+    exposed to local dialectal influences (Awadhi, Bhojpuri, Maithili, Rajasthani/Marwari)
+    in everyday speech, but the academic register used in board examinations and MCQ
+    items is expected to be standard Khari Boli. Subtle lexical or orthographic deviations
+    from pan-India formal Hindi in benchmark items could create a minor but non-trivial
+    familiarity gap. [NEEDS VERIFICATION: documented lexical or register variation
+    in state-board question papers vs. national exam Hindi]'
+  secondary_languages:
+  - English (passive reading for translated content; not primary medium)
+  - Sanskrit (relevant for Hindi literature items referencing classical texts)
+  minority_or_contact_languages_in_region:
+  - Awadhi (UP)
+  - Bhojpuri (eastern UP, Bihar)
+  - Maithili (Bihar — also Eighth Schedule language)
+  - Bundeli (MP)
+  - Rajasthani / Marwari dialects (Rajasthan)
+  note: These contact languages do not appear in the deployment interface or benchmark
+    items, but they inform the cultural and literary background knowledge teachers
+    bring (e.g., familiarity with Tulsidas's Awadhi, Kabir's Sadhukkadi).
+writing_systems:
+  scripts:
+  - Devanagari (primary — all Hindi MCQ items and student responses)
+  - Latin (marginal — English-origin proper nouns, translated content labels)
+  note: 'Devanagari is a left-to-right abugida. Hindi NLP tooling for Devanagari is
+    well-developed relative to other Indic scripts, making this a high-resource script-language
+    pairing. No RTL or bidirectional rendering issues apply. Unicode normalization
+    (NFC vs. NFD; nukta handling) can introduce subtle tokenization variation. [NEEDS
+    VERIFICATION: whether MILU applies consistent Unicode normalization across its
+    Hindi item set]'
+literacy_and_digital_access:
+  population_literacy: '[NEEDS VERIFICATION — state-level literacy rates for UP, MP,
+    Rajasthan, Bihar among adult population]'
+  teacher_cohort_literacy: Postgraduate-qualified by definition; effectively 100%
+    literate in Hindi and functionally literate in English
+  smartphone_penetration_general: '[NEEDS VERIFICATION — smartphone ownership rates
+    in UP, MP, Rajasthan, Bihar]'
+  internet_access_teacher_cohort: 'Expected to be high among postgraduate teachers
+    in urban/semi-urban settings; rural connectivity more variable. [NEEDS VERIFICATION:
+    proportion of government school teachers in Hindi-belt states with reliable mobile
+    data access]'
+  device_profile: 'Predominantly Android smartphones; enterprise desktop/laptop access
+    variable by institution type. [NEEDS VERIFICATION: device distribution among government
+    vs. private school teachers in Hindi-belt states]'
+  infrastructure_note: '4G/LTE coverage is widespread in urban UP, MP, Rajasthan,
+    Bihar; rural and small-town coverage improving but not universal. Low-bandwidth
+    conditions may affect enterprise application responsiveness. [NEEDS VERIFICATION:
+    4G coverage statistics by state]'
+curricular_scope:
+  boards_in_scope:
+  - board: UP Board (Uttar Pradesh Madhyamik Shiksha Parishad)
+    abbreviation: UPMSP
+    coverage_notes: 'Largest single board in India by enrolment. Hindi is the primary
+      medium. Syllabus emphasises Hindi literature (Tulsidas, Premchand, Mahadevi
+      Verma), regional history, and civics. [NEEDS VERIFICATION: current UP Board
+      syllabus structure for Classes 9–12]'
+  - board: MP Board (Madhya Pradesh Board of Secondary Education)
+    abbreviation: MPBSE
+    coverage_notes: '[NEEDS VERIFICATION: current MP Board Hindi syllabus scope and
+      canonical texts]'
+  - board: Rajasthan Board of Secondary Education
+    abbreviation: RBSE
+    coverage_notes: '[NEEDS VERIFICATION: current RBSE Hindi syllabus; regional history
+      emphasis (Maharana Pratap, Rani Padmini)]'
+  - board: Bihar School Examination Board
+    abbreviation: BSEB
+    coverage_notes: '[NEEDS VERIFICATION: current Bihar Board Hindi syllabus; Maithili/Bhojpuri-region
+      canonical texts in scope]'
+  - board: CBSE (Central Board of Secondary Education)
+    abbreviation: CBSE
+    coverage_notes: 'Pan-India board; Hindi-medium CBSE items are in scope. CBSE Hindi
+      syllabus (Classes 9–12) includes prescribed texts from NCERT. [NEEDS VERIFICATION:
+      CBSE Hindi course A vs. course B scope; NCERT prescribed text list current edition]'
+  english_medium_board_content: 'Translated English-medium board questions (CBSE English,
+    ICSE) are in deployment scope only when rendered in Hindi and aligned to Hindi-board
+    norms. Translation adequacy for subject-specific terminology (science, economics)
+    in North Indian academic register is an unverified assumption. [NEEDS VERIFICATION:
+    any validated Hindi translation of CBSE/ICSE MCQ item banks]'
+  university_level: 'Degree college and university undergraduate MCQs (for institutions
+    affiliated to state universities such as University of Lucknow, BHU, University
+    of Rajasthan, Patna University) are potentially in scope for postgraduate teacher
+    use. [NEEDS VERIFICATION: whether the deployment application is explicitly targeting
+    school board or also university board contexts]'
+assessment_format:
+  question_type: Multiple-choice questions (MCQ) — single correct answer per item
+  answer_options: Up to four options (A, B, C, D)
+  scoring_scheme: 'Positive/negative marking: positive marks awarded for correct selection;
+    negative marks deducted for incorrect selection; no marks for unanswered items
+    (convention may vary by board). [NEEDS VERIFICATION: standard negative marking
+    fraction used across UP, MP, Rajasthan, Bihar board and CBSE MCQ assessments]'
+  partial_credit: Not applicable — binary correct/incorrect judgement only
+  rubric_based_feedback: Not applicable for this deployment
+  output_language_register: Hindi (formal/standard Khari Boli Devanagari); scoring
+    rationale if provided should match the academic register familiar to state-board
+    teachers
+culturally_specific_content:
+  canonical_hindi_literary_figures:
+  - Tulsidas (Ramcharitmanas — Awadhi, but canonical in UP Board Hindi literature
+    curriculum)
+  - Premchand (fiction; Godaan, Nirmala — core CBSE and state board texts)
+  - Kabir (dohas — Sadhukkadi register; canonical across boards)
+  - Mahadevi Verma (Chhayavaad poetry)
+  - Jaishankar Prasad (Kamayani)
+  - Suryakant Tripathi 'Nirala'
+  - Ramdhari Singh Dinkar (Rashtriya Kavita tradition)
+  - Munshi Premchand (short stories — Panch Parmeshwar, Idgah)
+  canonical_regional_historical_figures:
+  - Rani Lakshmibai of Jhansi (UP history)
+  - Chandrashekhar Azad (UP; freedom movement)
+  - Bhagat Singh (referenced across boards)
+  - Maharana Pratap (Rajasthan Board emphasis)
+  - Birsa Munda (Jharkhand/Bihar overlap)
+  - Dr. B.R. Ambedkar (constitution; CBSE and state boards)
+  framing_risk: 'Competitive-exam (UPSC/SSC) framing of canonical figures often emphasises
+    administrative/general-knowledge angles; school-board framing emphasises literary-critical
+    or regional-patriotic angles. MILU items sourced from civil services exams may
+    not match the pedagogical framing familiar to state-board teachers. [NEEDS VERIFICATION:
+    item-level framing analysis for MILU Arts & Humanities Hindi items]'
+  religious_and_cultural_context: Hindu religious texts (Ramcharitmanas, Bhagavad
+    Gita excerpts) appear in Hindi board literature syllabi as literary — not doctrinal
+    — content. Items touching religious themes should be evaluated for framing consistency
+    with secular board syllabus norms.
+  civic_and_governance_content: Items on Indian Constitution, Panchayati Raj, state
+    governance structures, and fundamental rights are standard in Social Sciences
+    MCQs across all boards. Regional governance nuances (e.g., UP panchayat structure
+    vs. national framework) may produce locally specific correct answers.
+benchmark_language_alignment:
+  benchmark_hindi_resource_level: High-resource — Hindi is a major Indic language
+    with substantial NLP tooling
+  script_match: Full — both benchmark and deployment use Devanagari
+  register_match: Presumed formal Khari Boli in MILU; consistent with deployment expectation.
+    Regional register variation not documented. [NEEDS VERIFICATION]
+  translated_proportion: Approximately 25% of MILU questions are translated from English
+    into Hindi using GPT-4O. Translation adequacy for subject-specific North Indian
+    academic register is undocumented. [NEEDS VERIFICATION]
+  state_source_distribution: MILU reports state civil services exams as a source category
+    (UPPSC, MPPSC, RPSC, BPSC likely included) but provides no per-state breakdown
+    of Hindi-language item counts. Under-representation of any major Hindi-belt state's
+    exam corpus is a material content validity risk. [NEEDS VERIFICATION]
+exam_source_landscape:
+  national_exams_likely_in_milu:
+  - UPSC Civil Services Preliminary (Hindi medium)
+  - SSC CGL / SSC CHSL (Hindi medium items)
+  - NDA / CDS (Hindi medium items)
+  - CTET / TET (Hindi language paper)
+  state_exams_likely_in_milu:
+  - exam: UPPSC (Uttar Pradesh Public Service Commission)
+    state: Uttar Pradesh
+    notes: '[NEEDS VERIFICATION: confirmed inclusion in MILU]'
+  - exam: MPPSC (Madhya Pradesh Public Service Commission)
+    state: Madhya Pradesh
+    notes: '[NEEDS VERIFICATION: confirmed inclusion in MILU]'
+  - exam: RPSC (Rajasthan Public Service Commission)
+    state: Rajasthan
+    notes: '[NEEDS VERIFICATION: confirmed inclusion in MILU]'
+  - exam: BPSC (Bihar Public Service Commission)
+    state: Bihar
+    notes: '[NEEDS VERIFICATION: confirmed inclusion in MILU]'
+  school_board_exams: School board annual examinations (Class 10/12) are not competitive
+    exams and are unlikely to have been scraped from online exam portals that host
+    civil services past papers. Their representation in MILU is unconfirmed and considered
+    a gap. [NEEDS VERIFICATION]
+  note: MILU's sourcing methodology targets competitive-exam portals, creating a structural
+    gap for school-board syllabus content that is not recycled through competitive
+    exam formats.
+domain_coverage_priority:
+  high_priority_domains:
+  - milu_domain: Arts and Humanities
+    deployment_relevance: Highest priority — Hindi literature, cultural history, classical
+      texts are core to state-board teacher assessment tasks. MILU models perform
+      worst here; framing divergence between competitive-exam and school-board is
+      greatest.
+    gap_risk: HIGH
+  - milu_domain: Social Sciences
+    deployment_relevance: High priority — history, civics, geography, economics MCQs
+      are standard across all Hindi-state boards. Regional historical content is a
+      specific concern.
+    gap_risk: MODERATE-HIGH
+  - milu_domain: Law and Governance
+    deployment_relevance: Moderate priority — Indian Constitution and Panchayati Raj
+      topics appear in Class 9–12 social science MCQs; state-specific governance differs
+      from national competitive-exam framing.
+    gap_risk: MODERATE
+  lower_priority_domains:
+  - milu_domain: Science
+    deployment_relevance: Present in Hindi-medium school boards; STEM content is more
+      standardised and less susceptible to regional framing differences. MILU models
+      perform better here.
+    gap_risk: LOW
+  - milu_domain: Engineering and Technology
+    deployment_relevance: Limited relevance for school-board MCQ teacher assessment
+      deployment.
+    gap_risk: LOW
+  - milu_domain: Business Studies
+    deployment_relevance: Moderate for Class 11–12 Commerce stream Hindi-medium teachers.
+    gap_risk: LOW-MODERATE
+  - milu_domain: Health and Medicine
+    deployment_relevance: Low for general school-board MCQ context; relevant only
+      for biology sub-topics.
+    gap_risk: LOW
+  - milu_domain: Environmental Sciences
+    deployment_relevance: Low-moderate; environmental studies is a minor component
+      of school board curricula.
+    gap_risk: LOW
+annotator_population_notes:
+  benchmark_institution: AI4Bharat / IIT Madras (Chennai, Tamil Nadu — South India)
+  geographic_asymmetry: Institutional base is geographically distant from the Hindi-belt
+    deployment population. Annotators' familiarity with North Indian board-specific
+    canonical framings (UP Board Hindi literature, Bihar Board regional history) is
+    undocumented.
+  annotation_source: Primarily delegated to original exam portals (subject experts
+    verify answers); internal manual audit by AI4Bharat volunteers. No annotator demographic
+    breakdown published.
+  severity_assessment: Moderate — user confirms evaluation schemas are broadly consistent
+    across boards and competitive-exam settings, reducing severity; absence of documentation
+    prevents full verification.
+  translation_annotation_risk: The 25% GPT-4O-translated portion introduces label
+    provenance uncertainty; no human annotators familiar with North Indian Hindi academic
+    register are documented as having reviewed translated items.
+flagged_gaps_summary:
+- gap_id: 1
+  label: Hindi state-board syllabus coverage vs. competitive-exam framing
+  priority: HIGH
+  dimension: Input Content
+  web_search_target: MILU benchmark Hindi language items state board syllabus UP MP
+    Rajasthan Bihar board coverage competitive exam vs school curriculum
+- gap_id: 2
+  label: Regional Hindi linguistic variation and register in benchmark items
+  priority: MODERATE
+  dimension: Input Form
+  web_search_target: MILU Hindi language register variation Khari Boli formal standard
+    North India dialect state board UP Bihar Rajasthan academic vocabulary
+- gap_id: 3
+  label: Translated English-board content aligned to North Indian Hindi register
+  priority: HIGH
+  dimension: Input Content
+  web_search_target: Hindi MCQ benchmark translated English CBSE ICSE content Devanagari
+    register subject terminology validation North India academic
+- gap_id: 4
+  label: Sub-national state-exam source distribution for Hindi-belt states
+  priority: HIGH
+  dimension: Input Content
+  web_search_target: MILU Hindi questions state exam source distribution UPPSC MPPSC
+    RPSC BPSC Uttar Pradesh Madhya Pradesh Rajasthan Bihar proportion
+- gap_id: 5
+  label: Canonical Hindi literary and historical content framing (school vs. competitive
+    exam)
+  priority: HIGH
+  dimension: Input Content
+  web_search_target: MILU Hindi Arts Humanities subject items Tulsidas Premchand Kabir
+    Hindi literature canonical board syllabus competitive exam UPSC SSC framing
+- gap_id: 6
+  label: Annotator regional representativeness for North Indian Hindi-belt norms
+  priority: LOWER
+  dimension: Output Content
+  web_search_target: MILU annotation annotator demographics North India Hindi belt
+    regional representation IIT Madras AI4Bharat review team
+infrastructure_notes: 'The deployment is mobile-first (Android smartphones predominant)
+  with enterprise application access in larger institutions. North Indian Hindi-belt
+  states have expanding 4G coverage but rural and small-town connectivity remains
+  variable. The application is text-only (Devanagari MCQ items and binary scoring
+  output), making it low-bandwidth by design. No image, audio, or video modality is
+  involved. [NEEDS VERIFICATION: mobile internet reliability statistics for semi-urban
+  UP, MP, Rajasthan, Bihar relevant to teacher application performance]'
+domain_specific_notes:
+  education_system: 'The Hindi-belt states operate under a dual-board structure: state
+    boards (UP Board, MP Board, RBSE, BSEB) and CBSE. State boards historically have
+    higher enrolment in rural and semi-urban areas; CBSE dominates urban private schools.
+    Postgraduate teachers in state-board institutions are recruited through state
+    teacher eligibility tests (TET) and public service commissions. [NEEDS VERIFICATION:
+    current state TET qualification requirements by state]'
+  mcq_culture: 'Competitive examination culture is deeply embedded in North India
+    (UPSC, SSC, state PCS, bank exams). Teachers in this cohort are highly familiar
+    with MCQ-format assessment from both their own qualifying examinations and classroom
+    practice. Positive/negative marking is standard across all major competitive exams
+    and increasingly adopted in board examinations. [NEEDS VERIFICATION: current UP
+    Board / BSEB policies on negative marking in Class 12 MCQ sections]'
+  canonical_text_alignment: A key validity concern for this deployment is whether
+    MILU's Hindi items that touch canonical literary texts treat them as literary/pedagogical
+    objects (appropriate for school-board teacher assessment) or as general-knowledge
+    data points (appropriate for civil services exam preparation). This distinction
+    affects the correctness of specific items for the deployment context.
+  regulatory_context: 'National Education Policy 2020 (NEP 2020) promotes mother-tongue
+    instruction and may expand Hindi-medium assessment scope. State-level implementation
+    timelines vary. [NEEDS VERIFICATION: current NEP 2020 implementation status in
+    UP, MP, Rajasthan, Bihar affecting board syllabi]'

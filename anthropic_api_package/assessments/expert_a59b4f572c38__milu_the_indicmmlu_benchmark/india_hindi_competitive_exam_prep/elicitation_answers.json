@@ -1,0 +1,6 @@
+{
+  "Q1": "Most critical subject areas are General Knowledge, Current Affairs, History, and Mathematics/Reasoning. Additionally, there may be some familiarity required with Indian Polity & Constitution, and proficiency in the Hindi language. To be more specific, let\u2019s focus on the central examinations conducted in India.",
+  "Q2": "Central competitive examinations cover both regional aspects as well as pan-India general knowledge content, so AI should be able to handle both sets of knowledge.",
+  "Q3": "AI feedback should include a simple correct/incorrect label and an explanation of why an answer is right or wrong in the Hindi language.",
+  "Q4": "A small portion of code-mixing with English technical terms is acceptable, but it should not exceed ~10%."
+}
