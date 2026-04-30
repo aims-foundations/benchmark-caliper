@@ -16,11 +16,11 @@ Setting: Mobile application / enterprise software
 |-----------|:-----:|--------|:----------:|
 | Input Ontology ✓ | 4 | Minor gaps | high |
 | Input Content ⚠ | 2 | Significant gaps | high |
-| Input Form ✓ | 5 | Strong alignment | high |
+| Input Form ✓ | 4 | Minor gaps | high |
 | Output Ontology | 3 | Moderate gaps | high |
 | Output Content ⚠ | 2 | Significant gaps | high |
-| Output Form | 4 | Minor gaps | high |
-| **Average** | **3.3** | | |
+| Output Form ✓ | 4 | Minor gaps | high |
+| **Average** | **3.2** | | |
 
 > ⚠ = highest concern &nbsp; ✓ = strongest dimension
 
@@ -37,21 +37,21 @@ Setting: Mobile application / enterprise software
 
 ## Overall Summary
 
-MRBench is well-aligned with the deployment on input form (text/English) and input ontology (math mistake remediation, eight dimensions accepted by the user), but has serious validity concerns on input content and output content — both rated HIGH priority by the user. The benchmark's source dialogues reflect Western classroom dynamics with extended student verbalization and Socratic exchanges that the user explicitly identified as mismatched with Indian Grade 1–8 student behavior, and the ground-truth labels were produced by four CS-trained MBZUAI annotators with no required teaching experience and no documented Indian educator background, while the user expects systematic divergence in guidance-quality judgments. Output ontology raises a moderate concern: the eight dimensions are accepted, but DAMR's equal-weight aggregation does not reflect the deployment's prioritization of 'providing guidance,' and that dimension is operationalized in a Socratic-scaffolding frame that may misclassify direct-correction responses Indian teachers consider acceptable. Output form is structurally appropriate for the use case. Field-wide corroboration ([WEB-6], [WEB-10]) confirms these gaps are systemic rather than MRBench-specific.
+MRBench is a well-constructed, narrowly-scoped benchmark for evaluating AI tutor responses to mathematics mistakes, with strengths in taxonomy validation, annotator training, and metric design. For the Delhi/Mumbai Grade 1–8 mathematics teacher deployment, validity is strongly preserved on dimensions involving curricular ontology (IO), input form (IF), and output form (OF), all of which align with the user's accepted text-only English, curriculum-agnostic deployment. However, two HIGH-priority dimensions show significant validity concerns: (a) Input Content — Bridge and MathDial were sourced from Western academic settings and depict student communication dynamics (extended verbalization, structured Socratic exchanges) that the user explicitly identified as mismatched with Indian classroom realities; (b) Output Content — gold-standard labels were produced by four MBZUAI CS post-graduates without required teaching experience and without documented South Asian pedagogical expertise, while the user expects systematic divergence on the most-critical 'providing guidance' dimension between this pool and Indian professional teachers. A MODERATE-priority concern attaches to Output Ontology: equal-weight DAMR does not reflect the user's prioritization of 'providing guidance,' and that dimension's rubric implicitly favors Socratic scaffolding over the direct-correction norms valued by Indian teachers. Field-level evidence (MathTutorBench, Shiksha Copilot study, 2025 ITS survey) confirms these are not local artifacts but field-wide gaps in pedagogically- and cross-culturally-grounded benchmarking.
 
 ## Practical Guidance
 
 ### What This Benchmark Measures
 
-MRBench measures whether AI tutor responses to student math mistakes satisfy eight pedagogical criteria (active learning, goal adaptation, cognitive load, motivation, mistake identification, answer non-revelation, guidance, actionability, coherence, tone, human-likeness) under a Western-constructivist learning-sciences frame, scored as percentage-of-desired-label across a CS-trained annotator pool. For this deployment, it provides reasonably robust signal on Input Form and Input Ontology (the task is correctly scoped and the dimensions accepted), and useful signal on Output Form structure.
+MRBench can support evaluation of (i) whether AI tutor responses identify mathematical mistakes and avoid revealing answers immediately, (ii) whether responses are coherent and human-like, and (iii) the relative pedagogical performance of different LLMs on a Western-default rubric. For the Indian metro deployment, IO/IF/OF dimensions are well-aligned, so the benchmark is structurally usable as a screening tool for ruling out clearly poor tutors (e.g., Phi3, GPT-4's answer-revealing tendency) before deployment-specific validation.
 
 ### Construct Depth
 
-Construct depth is high for the scoped task (192 dialogues, 1,596 responses, dual annotation on a subsample, substantial inter-annotator agreement, factual-correctness gate on guidance) but the depth applies to a Western-default operationalization of pedagogical quality. The construct of 'Indian teacher acceptability of guidance quality' is undermeasured: the 'providing guidance' rubric is Socratic-leaning [Q17, Q23, Q24] and the annotator pool is non-Indian and non-teacher [Q31, Q32], so DAMR and AC scores cannot be interpreted as direct proxies for Indian teacher judgments without supplementation.
+The benchmark probes pedagogical quality at the level of individual tutor turns [Q119–Q121] across eight learning-science-grounded dimensions, with substantial within-pool annotator agreement (κ=0.71) [Q61]. However, depth is limited in three ways: (1) it does not assess cumulative learning impact [Q120, Q121]; (2) the most-critical dimension for this deployment ('providing guidance') is operationalized through a Socratic lens that may not match Indian acceptability criteria; (3) ground-truth labels reflect a homogeneous, non-Indian, non-teacher annotator pool, so the labels' convergent validity with Indian professional teachers' judgments is unestablished.
 
 ### What Else You Need
 
-Three concrete supplements are needed: (1) IC — collect or synthesize Indian-classroom-style short-turn, deferential, procedure-heavy student dialogues to extend or replace the MRBench input pool; (2) OC — re-annotate a representative MRBench subsample with Delhi/Mumbai Grade 1–8 mathematics teachers stratified by board (CBSE/ICSE/State Board/IB) to quantify divergence and produce India-aligned gold labels; (3) OO — design a re-weighted DAMR that elevates 'providing guidance' (with a within-dimension direct-correction vs. Socratic-scaffolding distinction) to reflect the deployment's acceptability priority.
+To use MRBench validly for this deployment, supplement with: (a) re-annotation of at least the 'providing guidance' dimension by Delhi/Mumbai Grade 1–8 teachers (addresses OC); (b) a small-N expansion of dialogues sampled from authentic Indian metropolitan classrooms or a pilot adaptation of Bridge/MathDial dialogues vetted by Indian teachers for realism (addresses IC); (c) a deployment-specific weighted DAMR with 'providing guidance' as dominant weight (addresses OO); (d) qualitative review of the guidance rubric's desired-label definition to determine whether direct-correction responses are appropriately rewarded (addresses OO/OC). MathTutorBench [WEB-16] is not a substitute — it shares the same Western pedagogical default.
 
 ## Dimension Details
 
@@ -60,36 +60,38 @@ Three concrete supplements are needed: (1) IC — collect or synthesize Indian-c
 **Confidence:** high
 
 **Justification:**
-The benchmark scopes the input ontology tightly to student mistake remediation in mathematics across elementary and middle school content [Q1, Q117, Q144], and the elicitation confirmed that curriculum-agnostic math errors are sufficient and that the eight pedagogical dimensions are necessary and sufficient. The user explicitly accepted the benchmark's task scoping and dimension set, reducing concerns about category-level misalignment. Minor concerns remain because the taxonomy was derived iteratively in a Western-default learning sciences frame [Q15, Q16] with no documented Indian pedagogical input, but the user's acceptance of the dimensions makes this a low-priority gap for IO specifically.
+The user explicitly accepted curriculum-agnostic math errors as sufficient and confirmed the eight pedagogical dimensions are necessary and sufficient (elicitation Q1, Q3), reducing concern at the taxonomy level. The benchmark covers two difficulty levels (elementary and middle-school) [Q143, Q144], aligning with Grade 1–8 scope. The taxonomy is curriculum-agnostic by construction [Q117, Q118] and was validated against learning-science principles with a pilot confirming necessity and sufficiency [Q129, Q131, Q132]. Minor concerns: the taxonomy reflects a Socratic/answer-withholding pedagogical model [Q17, Q23] that the deployment context flags as partially conflicting with Indian direct-correction norms, but this is more an output-rubric concern (handled in OO/OC) than an input-category gap. No Indian curriculum-specific subcategories (e.g., NCERT topics, lakh/crore conventions) are present, but the user explicitly stated these are not required.
 
 **Strengths:**
-- Task is tightly scoped to mistake remediation in mathematics, which directly matches the deployment's one-on-one math tutoring use case [Q1, Q111, Q117]
-- Coverage spans both elementary (Bridge) and middle-school (MathDial) math, aligning with the Grade 1–8 deployment band [Q144, Q143]
-- Eight pedagogical dimensions were validated as necessary and sufficient by the pilot study [Q132], and the user confirmed they are sufficient for this deployment
+- Eight-dimension taxonomy was iteratively validated and confirmed necessary and sufficient by pilot annotators [Q129, Q131, Q132]
+- Curriculum-agnostic design [Q117] aligns with the user's explicit acceptance criterion
+- Coverage of both elementary and middle-school difficulty levels matches Grade 1–8 scope [Q143, Q144]
+- Task is narrowly and clearly defined (mistake remediation in math) [Q12, Q13], reducing construct-irrelevant variance
 
 **Checklist:**
 
-- **IO-1**: Required categories for the deployment are mistake-remediation tutor turns in Grade 1–8 mathematics, which the benchmark covers [Q1, Q144]. The user confirmed curriculum-agnostic math errors are sufficient, so NCERT/CBSE-specific categories are not strictly required. — _Sources: Q1, Q144_
-- **IO-2**: No regionally-relevant categories are identified as missing by the user; the eight dimensions were accepted as necessary and sufficient. The taxonomy explicitly excluded grammaticality and empathy [Q131], which is consistent with the deployment's stated priorities. — _Sources: Q132, Q131_
-- **IO-3**: No categories are flagged as irrelevant. All eight dimensions [Q17–Q29] map to deployment-relevant constructs, though 'encouraging active learning' and 'answer non-revelation' are weighted equally with 'providing guidance' despite the user identifying guidance as uniquely critical (an OO weighting concern, not an IO category-relevance concern). — _Sources: Q17, Q24_
-- **IO-4**: No content-validity-harming category gaps identified at the ontology level for this deployment, given the user's explicit acceptance of the eight-dimension framework. — _Sources: Q132_
+- **IO-1**: Test case categories required for the deployment are mistake-remediation dialogues at Grade 1–8 math difficulty; the user accepted curriculum-agnostic errors as sufficient (elicitation Q1). The benchmark covers elementary [Q44, Q45] and middle-school [Q48, Q49] difficulty levels. — _Sources: Q12, Q44, Q48_
+- **IO-2**: No regionally-relevant categories are documented as omitted at the taxonomy level; the user confirmed the eight dimensions are necessary and sufficient (elicitation Q3). NCERT-specific topics and Indian conventions (e.g., lakhs/crores) are absent but explicitly deemed unnecessary by the user. — _Sources: Q132_
+- **IO-3**: No taxonomy categories are flagged as irrelevant; all eight dimensions [Q1, Q15] are accepted as applicable to the deployment. — _Sources: Q1, Q15_
+- **IO-4**: No category-level gaps that would harm content validity are identified given the user's curriculum-agnostic acceptance criterion. Sub-national board variation (CBSE/ICSE/State Board/IB) is a flagged gap but operates at content level rather than taxonomy level. — _Sources: Q117_
 
 <details>
 <summary><b>Evidence cited</b></summary>
 
 *Paper quotes:*
-- [Q1] 'we propose a unified evaluation taxonomy with eight pedagogical dimensions based on key learning sciences principles, which is designed to assess the pedagogical value of LLM-powered AI tutor responses grounded in student mistakes or confusions in the mathematical domain.' (p.1)
 - [Q117] 'The proposed taxonomy primarily focuses on the task of the student mistake remediation in the domain of mathematics.' (p.9)
+- [Q129] 'Through an iterative analysis of the taxonomy, we identify eight dimensions that comprehensively assess tutor response quality in the context of mistake remediation.' (p.12)
 - [Q132] 'our validation pilot study (see Section 4.2) confirmed that the selected eight dimensions are both necessary and sufficient for evaluating tutor response quality in dialogues aimed at mistake remediation.' (p.12)
+- [Q143] 'including both datasets in MRBench ensures diversity and provides for a good mix of easy and difficult mathematical problems' (p.14)
 - [Q144] 'The problems covered in the Bridge dataset are at the elementary school level, whereas those in MathDial are at the middle school level.' (p.14)
 
 </details>
 
 **Information gaps:**
-- Whether Indian-specific misconception categories (e.g., lakh/crore place-value errors, L1-interference errors) constitute distinct ontological categories rather than instances of existing categories — though user accepted curriculum-agnostic framing
+- Whether sub-national curriculum variation (CBSE vs. ICSE vs. Maharashtra State Board vs. IB) affects category-level coverage of mistake types relevant to specific teacher subgroups
 
 **Requires expert verification:**
-- Whether the user's acceptance of the eight dimensions generalizes across all CBSE/ICSE/State Board/IB sub-populations within Delhi and Mumbai
+- Confirmation from a broader Indian teacher pool (beyond the elicited user) that no additional pedagogical dimensions specific to Indian classrooms (e.g., exam-readiness framing as a distinct dimension) are needed
 
 ---
 
@@ -98,65 +100,68 @@ The benchmark scopes the input ontology tightly to student mistake remediation i
 **Confidence:** high
 
 **Justification:**
-Input content is the highest-priority concern alongside OC. Both source datasets reflect Western classroom dynamics: Bridge involves real Western tutor-student dialogues at elementary level [Q44], and MathDial uses an LLM acting as the student [Q48], further removing the data from authentic student behavior. The user explicitly confirmed that Indian Grade 1–8 students are briefer, more deferential, less likely to verbalize reasoning, and more procedurally focused than the Western-sourced conversations. Manual quality inspection [Q51] addressed quality but not cultural representativeness, and no documentation indicates Indian misconception types or interaction styles were considered. The corroborating WEIRD-population concern in the broader ITS literature [WEB-6] confirms this is a field-wide structural gap.
+This is a HIGH-priority dimension per elicitation. The benchmark content is drawn from Bridge [Q44–Q47] and MathDial [Q48, Q49], both Western-academic English-language datasets. The user explicitly confirmed (elicitation Q2) meaningful mismatches in student communication style: Indian Grade 1–8 students are briefer, more deferential, and procedure-focused, while MathDial features extended multi-turn structured dialogues [Q95]. The Bridge selection criterion centers on student last-utterance error [Q47] but does not document misconception types relevant to Indian rote-procedural traditions, L1-interference errors, or NCERT-specific algorithmic conventions. No documentation acknowledges cultural provenance as a limitation. MathDial's student is an LLM, not a real student [Q48], introducing an additional layer of cultural distance from authentic Indian student behavior. Field-level evidence confirms this is not a local artifact: no Indian-classroom-grounded math tutoring benchmark exists [WEB-16, WEB-19].
 
 **Strengths:**
-- Mathematical content itself is broadly familiar and curriculum-agnostic enough that the user accepted it as sufficient for deployment-relevant error scenarios [Q42, Q45, Q49]
-- Manual inspection ensured data quality, even if not cultural representativeness [Q51]
-- Both elementary and middle-school content provide range across the Grade 1–8 band [Q144]
+- Mathematical content is broadly familiar across cultures (user confirmed math content feels recognizable; elicitation Q2)
+- Both datasets are grounded in real student errors [Q41, Q42, Q43], providing authentic mistake-remediation contexts
+- Manual quality inspection [Q51] and selection criteria [Q47] ensure each instance contains a genuine mistake/confusion
 
 **Checklist:**
 
-- **IC-1**: Input dialogues are English-language and the deployment is English-medium, so no language transfer is required. However, the conversational register, turn length, and student verbalization patterns reflect Western classroom dynamics that the user identified as meaningfully mismatched with Indian metro classroom dynamics. — _Sources: Q41, Q48_
-- **IC-2**: Culturally sensitive content (interaction style, deference patterns, exam-orientation) does NOT align with the target deployment culture. The user confirmed Indian students are 'more brief and deferential and less likely to verbalize reasoning.' MathDial's LLM-as-student [Q48] further distances it from authentic Indian student behavior. — _Sources: Q48, WEB-6_
-- **IC-3**: Western-specific knowledge embedded in interaction style: extended Socratic exchanges, lengthy student verbalizations, and the constructivist exploration register characteristic of MathDial conversations [Q48, Q95] are not representative of typical Indian Grade 1–8 student behavior per user elicitation. — _Sources: Q48, Q95, WEB-10_
-- **IC-4**: INSUFFICIENT DOCUMENTATION — no documentation of regional annotator recruitment for content review. Would need stakeholder elicitation with Delhi/Mumbai teachers to identify specific culturally mismatched instances within the 192 dialogues.
-- **IC-5**: Documented content issues: (a) student communication register mismatch (Western-verbose vs. Indian-brief); (b) LLM-as-student in MathDial removes authentic student variability [Q48]; (c) absence of L1-interference and rote-procedural error patterns common in Indian classrooms; (d) absence of exam-oriented misconception framings. — _Sources: Q48, Q51, WEB-6_
+- **IC-1**: Inputs do not require region-specific cultural or geographic knowledge — math content is curriculum-agnostic [Q41–Q43]. However, recognizing realistic student communication patterns (brevity, deference, procedural focus) is regionally specific, and Indian teachers may find the depicted dialogue dynamics unrepresentative of their classrooms (elicitation Q2). — _Sources: Q41, Q42, Q43_
+- **IC-2**: Cultural alignment is partial. Math content aligns; conversational dynamics do not. The user identified meaningful mismatch in interaction norms (elicitation Q2). The paper does not acknowledge cultural provenance [no quote addresses this]. — _Sources: Q44, Q48, Q95, WEB-15_
+- **IC-3**: Inputs implicitly require familiarity with Western-style extended student verbalization [Q95] and Socratic dialogue framing. While teachers can read these dialogues fluently in English, judging realism may be affected. INSUFFICIENT DOCUMENTATION on whether specific dialogue exemplars contain culturally Western references; would require dataset-level inspection. — _Sources: Q95_
+- **IC-4**: No regional annotators were recruited; the annotation team was MBZUAI-based [Q31, Q6] with no documented Indian or South Asian educational expertise. — _Sources: Q31_
+- **IC-5**: Documented content issues harming content validity: (a) Western-sourced student communication dynamics [Q44, Q48, Q95] mismatched with Indian classroom norms (elicitation Q2); (b) absence of L1-interference and rote-procedural error types in selection criteria [Q47]; (c) MathDial uses LLM-as-student [Q48] rather than real students. Field-wide gap confirmed by [WEB-16] (MathTutorBench shares same Western provenance) and [WEB-19] (no India-specific ITS benchmark exists). — _Sources: Q44, Q48, Q95, WEB-16, WEB-19_
 
 <details>
 <summary><b>Evidence cited</b></summary>
 
 *Paper quotes:*
-- [Q41] 'We have compiled mistake remediation benchmark, MRBench, from the Bridge (Wang et al., 2024a) and MathDial (Macina et al., 2023) datasets.' (p.5)
 - [Q44] 'The Bridge dataset (Wang et al., 2024a) comprises partial dialogue interactions between real human tutors and students at the elementary level' (p.5)
 - [Q48] 'The dialogues in the MathDial dataset (Macina et al., 2023) consist of complete multi-turn conversations between a real human tutor and an LLM acting as a student' (p.5)
 - [Q95] 'In contrast, for MathDial, the contexts are longer, the mistakes are grounded in reasoning, and the responses are more structured.' (p.8)
-- [Q51] 'we manually inspected the data in order to retain only high-quality examples, which resulted in 132 instances for MRBench.' (p.6)
+- [Q47] 'the key one was that the student's last utterance (or last few utterances) should exhibit an error or confusion.' (p.5)
+- [Q97] 'Combining both types of data in MRBench makes it both challenging and comprehensive.' (p.8)
 
 *Web sources:*
-- [WEB-6] Comprehensive 2025 ITS evaluation review notes existing studies are 'conducted on small, homogeneous populations, primarily from WEIRD countries' — confirming the structural gap
-- [WEB-10] MathTutorBench (EMNLP 2025) is also grounded in Western-default datasets with Socratic scaffolding norms, confirming no India-adapted alternative exists
+- [WEB-16] MathTutorBench (EMNLP 2025) is also Western-sourced and operationalizes good tutoring as Socratic withholding, confirming field-wide cultural provenance gap
+- [WEB-19] 2025 ITS evaluation survey identifies absence of pedagogy-driven, cross-cultural evaluation frameworks; no India-specific ITS benchmark cited
+- [WEB-15] Indian teacher-AI collaboration study (Shiksha Copilot) confirms Indian teachers face structural misalignment with Western-default AI outputs
 
 </details>
 
 **Information gaps:**
-- No documented inventory of misconception types in the 192 dialogues, making it impossible to confirm whether Indian-relevant procedural error types appear
-- No published taxonomy of common Indian Grade 1–8 mathematics misconceptions to compare against
+- No empirical inspection of whether specific Bridge/MathDial dialogues contain culturally Western references (e.g., names, contexts, units beyond math)
+- No documentation of misconception type distribution and whether it covers Indian-prevalent error patterns
+- Whether L1-interference errors common in Indian Grade 1–8 students appear in either dataset
 
 **Requires expert verification:**
-- Indian teacher review of sample MRBench dialogues to confirm extent of perceived realism mismatch
-- Whether L1-interference error patterns common in Hindi/Marathi-medium contexts can be approximated by any subset of MRBench dialogues
+- Indian teacher review of a sample of Bridge and MathDial dialogues for realism of student communication style
+- Comparison of MRBench misconception types with NCERT-published error analysis [WEB-13]
 
 ---
 
-### Input Form — 5/5 (Strong alignment)
+### Input Form — 4/5 (Minor gaps)
 
 **Confidence:** high
 
 **Justification:**
-The benchmark and deployment are both text-based, English-language, and use multi-turn dialogue inputs of varying length [Q133, Q141, Q147]. The deployment is mobile-first text interface in English, and the target population is English-fluent. No script, modality, or signal-distribution mismatch exists.
+The benchmark is text-only English [Q133, Q134, Q147], matching the deployment's text-based English mobile/enterprise application interface. The target population is fluent in English professionally. No script mismatch, no multimodal mismatch, and adequate infrastructure (urban Tier-1 internet penetration ~80–88%, smartphone access near-universal for professional teachers) [WEB-5, WEB-6, WEB-7] support text-based English signal delivery. Minor concern: no multimodal capture of handwritten student work, which is common in actual Indian classrooms, but the evaluator-role deployment (teachers judging text dialogues) does not require this. The user weighted IF as LOWER priority.
 
 **Strengths:**
-- Text-only English format directly matches the deployment's text-based mobile interface
-- Multi-turn dialogue history representation [Q13, Q133] matches the deployment's conversational tutoring use case
-- No multimodal or non-Latin script handling required
+- Text-only English [Q133, Q134] matches deployment interface exactly
+- No script or modality mismatch — both benchmark and deployment are Latin-script English
+- Target population has fluent English and reliable mobile infrastructure [WEB-5, WEB-7]
+- Length and turn metadata documented per dataset [Q141, Q142, Q147]
 
 **Checklist:**
 
-- **IF-1**: Signal distributions match: both source and deployment use text-encoded English multi-turn dialogue. Length is measured in characters with varying turn counts [Q141, Q147], compatible with mobile text interfaces. — _Sources: Q133, Q141, Q147_
-- **IF-2**: Regional infrastructure supports text-based interaction; urban metro smartphone penetration is high and the user's target population uses English professionally. AI access disparity favors urban private metro schools [WEB-7]. — _Sources: WEB-7_
-- **IF-3**: No domain-specific form differences identified. Both contexts use text dialogue inputs without requiring math-specific notation rendering beyond what is captured in source data. — _Sources: Q133_
-- **IF-4**: No external-validity-harming form mismatches identified for this deployment. — _Sources: Q133_
+- **IF-1**: Signal distributions match: text-based English dialogues [Q133, Q134] correspond to deployment's text-based English interface. No image, audio, or specialized capture parameters required. — _Sources: Q133, Q134_
+- **IF-2**: Regional infrastructure supports the format: urban Indian metro internet penetration is high (~80–88%) and smartphone access is near-universal for professional teachers [WEB-5, WEB-6]. — _Sources: WEB-5, WEB-6, WEB-7_
+- **IF-3**: Domain-specific form differences are minimal. The benchmark does not include images of handwritten work [no quote], which is common in Indian classrooms; however, the evaluator-role deployment (teachers judging text-based AI+human responses) does not require multimodal input. — _Sources: Q141_
+- **IF-4**: No form mismatches significantly harm external validity for this deployment. Conversation length differences between Bridge and MathDial [Q141, Q142] are documented and do not introduce mismatch with the deployment. — _Sources: Q141, Q142_
 
 <details>
 <summary><b>Evidence cited</b></summary>
@@ -167,7 +172,9 @@ The benchmark and deployment are both text-based, English-language, and use mult
 - [Q147] 'In all cases, length is estimated using the number of characters.' (p.14)
 
 *Web sources:*
-- [WEB-7] Urban Tier-1 city schools (Delhi/Mumbai) show approximately 62% higher AI resource access than rural schools, supporting infrastructure adequacy
+- [WEB-5] Urban Tier-1 internet penetration ~88%, broadband >50% in urban households
+- [WEB-6] India had 660 million smartphone users as of 2024–2025
+- [WEB-7] National mobile data median speed 94.62 Mbps in early 2024
 
 </details>
 
@@ -178,44 +185,47 @@ The benchmark and deployment are both text-based, English-language, and use mult
 **Confidence:** high
 
 **Justification:**
-The eight-dimension ontology with three-tier labels [Q58, Q59] was accepted by the user as necessary and sufficient, which is a substantive endorsement. However, two structural concerns remain: (1) DAMR aggregates dimensions with equal analytical weight [Q64, Q65], which the user flagged as misaligned with their prioritization of 'providing guidance' as the dominant acceptability criterion; (2) the 'providing guidance' rubric is operationalized through Socratic scaffolding norms (hints, supporting questions, not revealing the answer immediately) [Q23, Q24], implicitly favoring Western constructivist tutoring. The user explicitly stated Indian teachers value direct correction and exam-readiness, raising the question of whether the 'providing guidance' label decisions encode the right decision rules. The factual-correctness gate for guidance [Q84] partially addresses the latter but not the Socratic vs. direct-correction distinction. The ontology also explicitly excludes downstream learning gains [Q119–Q121].
+MODERATE priority per elicitation. The eight dimensions and three-tier labeling [Q58, Q59] are accepted by the user as necessary and sufficient (elicitation Q3). However, two structural concerns affect deployment validity. First, DAMR weights all eight dimensions equally [Q64], whereas the user identified 'providing guidance' as the single most critical dimension; using DAMR directly as an acceptability proxy would dilute the signal Indian teachers care most about. Second, the 'providing guidance' rubric operationalizes guidance via Socratic scaffolding (hints, supporting questions, not revealing answers) [Q23, Q24], which the user (elicitation Q4) and field evidence [WEB-15, WEB-16] indicate may not match Indian direct-correction expectations — a structural validity concern about how the construct itself is operationalized. The decision rule for the most-critical dimension may encode a non-regional pedagogical value. Treating dimensions as orthogonal [Q30] is acknowledged as a simplification [Q116, Q120, Q121]. Tone label collapse to 'Non-offensive' [Q90] reaches 100% compliance, providing little discriminative signal.
 
 **Strengths:**
-- Eight dimensions accepted by the user as necessary and sufficient
-- Three-tier labeling system [Q58, Q59] gives more nuance than binary judgments
-- Factual-correctness gate ensures only factually correct guidance counts toward DAMR [Q84], a deployment-relevant safeguard
-- Independence-instructed annotation [Q30] preserves dimension-level signal that can be re-weighted post-hoc
+- Eight dimensions accepted as necessary and sufficient by the user (elicitation Q3) and pilot validation [Q132]
+- Per-dimension DAMR scores reported separately [Q67], enabling manual re-weighting toward 'providing guidance' [WEB-19 confirms re-weighting feasible]
+- Three-tier labeling [Q58, Q59] supports nuanced acceptability judgments rather than binary
+- Desired labels are explicitly documented [Q65, Q128], making the decision rule auditable
 
 **Checklist:**
 
-- **OO-1**: Output label categories are pedagogically coherent and accepted by the user as relevant. The three-tier 'yes / to some extent / no' scheme [Q59] is reasonable for binary acceptability re-mapping. — _Sources: Q58, Q59_
-- **OO-2**: No missing categories per user elicitation, but the ontology lacks a within-dimension distinction between Socratic-scaffolding guidance and direct-correction guidance. Both could receive 'yes' on 'providing guidance' [Q24] but be judged categorically different by Indian teachers. — _Sources: Q24_
-- **OO-3**: The 'providing guidance' definition [Q24] and the 'encouraging active learning' definition emphasizing answer non-revelation and scaffolding [Q17] encode constructivist Western pedagogical values. The user identified this as a guidance-operationalization mismatch. Confirmed field-wide via [WEB-10]. — _Sources: Q17, Q23, Q24, WEB-10_
-- **OO-4**: Stakeholder-driven taxonomy redesign is not strictly required (user accepted the dimensions) but dimension re-weighting and a within-dimension direct-vs-Socratic distinction would be high-value additions. — _Sources: Q64_
-- **OO-5**: Documented issues: (a) equal-weight DAMR [Q64, Q67] does not reflect deployment priority on 'providing guidance'; (b) Socratic-default guidance operationalization [Q17, Q23, Q24] may not align with Indian direct-correction norms; (c) ontology excludes downstream learning gains [Q120, Q121], limiting outcome validity. — _Sources: Q64, Q120, Q121, WEB-6_
+- **OO-1**: Output label categories are dimensionally relevant to the deployment — all eight are accepted by the user (elicitation Q3). However, the decision rule for 'providing guidance' favors Socratic scaffolding [Q23, Q24], which may not align with Indian direct-correction norms (elicitation Q4, [WEB-15]). — _Sources: Q58, Q59, Q23_
+- **OO-2**: No dimensions are flagged as missing per user elicitation (Q3). However, exam-readiness framing — culturally salient for Indian teachers per cultural notes — is not a separate dimension; it is implicitly subsumed under guidance/actionability without dedicated operationalization. — _Sources: Q132_
+- **OO-3**: The 'providing guidance' dimension's desired label encodes a Socratic/answer-withholding value [Q23 'a good tutor strategy is not to reveal the answer to the student immediately but rather provide helpful guidance']. This is a non-regional pedagogical assumption per elicitation Q4 and field evidence [WEB-15, WEB-16]. — _Sources: Q23, Q24, WEB-15, WEB-16_
+- **OO-4**: Stakeholder-driven taxonomy redesign is not required (user accepts dimensions) but rubric recalibration of the 'providing guidance' dimension and DAMR re-weighting are recommended. — _Sources: Q64_
+- **OO-5**: Structural validity concern: equal-weight DAMR [Q64] does not match the user's prioritization of 'providing guidance' as dominant. Content validity concern: the guidance dimension's decision rule may encode a Western pedagogical default [Q23, Q24] that diverges from Indian acceptability criteria. Both are documented limitations enabling targeted remediation. — _Sources: Q64, Q23, Q90, Q120_
 
 <details>
 <summary><b>Evidence cited</b></summary>
 
 *Paper quotes:*
-- [Q24] 'In addition to not revealing the answer immediately, a good tutor response should provide the student with relevant and helpful guidance, such as a hint, an explanation, or a supporting question.' (p.4)
-- [Q23] 'a good tutor strategy is not to reveal the answer to the student immediately but rather provide helpful guidance.' (p.4)
 - [Q58] 'Each dimension was annotated using a three-tier labeling system' (p.6)
 - [Q64] 'Desired Annotation Match Rate (DAMR): This metric quantifies the percentage of responses from each human or LLM-based tutor that received the desired annotation labels.' (p.6)
-- [Q84] 'we consider only factually correct guidance as useful' (p.8)
-- [Q120] 'However, one of the limitations is that it does not consider the tutoring dialogues' impact on the overall student learning.' (p.9)
+- [Q23] 'a good tutor strategy is not to reveal the answer to the student immediately but rather provide helpful guidance.' (p.4)
+- [Q24] 'a good tutor response should provide the student with relevant and helpful guidance, such as a hint, an explanation, or a supporting question.' (p.4)
+- [Q30] 'we explicitly instructed all annotators to treat each dimension as independent and orthogonal to minimize confounding factors' (p.4)
+- [Q90] 'When we combine these two labels into "Non-offensive", the DAMR score reaches 100% as we observe no offensive responses from any LLMs or humans.' (p.8)
+- [Q120] 'one of the limitations is that it does not consider the tutoring dialogues' impact on the overall student learning.' (p.9)
 
 *Web sources:*
-- [WEB-10] MathTutorBench (EMNLP 2025) similarly defines tutoring quality around withholding answers and Socratic questioning, confirming Western-constructivist default is field-wide
-- [WEB-6] WEIRD-population bias in ITS literature corroborates that ontologies in this space encode non-regional pedagogical assumptions
+- [WEB-15] Indian teachers value direct, curriculum-aligned outputs over Socratic scaffolding; misalignment with Western-default AI outputs documented
+- [WEB-16] MathTutorBench reward model also operationalizes good tutoring as Socratic withholding, confirming field-wide rubric default
+- [WEB-19] 2025 ITS survey notes no published weighted DAMR variants; per-dimension re-weighting remains an open methodological gap
 
 </details>
 
 **Information gaps:**
-- Whether the 'providing guidance' rubric, as operationalized in annotator guidelines (Table 4 referenced via Q128), explicitly rewards Socratic forms over direct-correction forms — paper text suggests yes via Q17/Q23/Q24 but full rubric language not in registry
+- Whether the 'providing guidance' rubric, when applied with Indian-specific definitions of acceptable guidance, would yield substantially different desired labels — requires Indian teacher rubric review
+- No published weighted DAMR methodology calibrated to specific evaluator populations [WEB-19]
 
 **Requires expert verification:**
-- Whether Indian teachers, given the same three-tier labels, would assign the same 'desired' label to a direct-correction response that does NOT scaffold via questioning
+- Indian teacher review of the 'providing guidance' rubric definition [Q24] to determine whether direct-correction responses would be appropriately rewarded under current desired labels
 
 ---
 
@@ -224,48 +234,49 @@ The eight-dimension ontology with three-tier labels [Q58, Q59] was accepted by t
 **Confidence:** high
 
 **Justification:**
-OC is the joint highest-priority concern. The annotation team comprised four CS post-graduates at MBZUAI in Abu Dhabi [Q6, Q31] with no required teaching experience [Q32], no documented South Asian educational expertise, and no documented familiarity with CBSE/NCERT pedagogy or exam-oriented correction norms. The user explicitly expects systematic differences between Indian teachers' guidance-quality judgments and the MBZUAI annotator pool's. While inter-annotator agreement was substantial within the team (Fleiss kappa 0.65, Cohen kappa 0.71) [Q39, Q61], this is internal homogeneity, not cross-cultural validity. LLM critics performed unreliably [Q107], so they cannot substitute for re-annotation. The WEIRD-population bias in ITS literature [WEB-6] corroborates that no India-specific educator annotation of AI tutor quality exists. Aggregation methods (DAMR) average across the four annotators, potentially erasing minority pedagogical perspectives even within the existing team.
+HIGH priority per elicitation. The annotation pool is four MBZUAI CS post-graduates [Q31] explicitly without required teaching experience [Q32], with no documented South Asian educational expertise. The user expects systematic divergence (elicitation Q4) between Indian teachers' guidance-quality judgments and this annotator pool's, particularly on direct correction vs. Socratic probing, exam-readiness framing, and teacher-directed pedagogy. Field evidence corroborates: Indian teachers structurally value direct, curriculum-aligned outputs over Western-default Socratic scaffolding [WEB-15]. Inter-annotator agreement (Cohen's κ=0.71, Fleiss' κ=0.65) [Q39, Q61] demonstrates internal consistency within the MBZUAI pool but provides no evidence of convergent validity with Indian teachers — the gold standard [Q68] reflects MBZUAI annotators' implicit pedagogical model. LLM-critic correlations were predominantly negative [Q107], confirming pedagogical judgments are not easily automatable. The most-critical dimension's labels were calibrated by annotators whose pedagogical priors likely diverge from Indian professional teachers'. No India-specific annotation study exists [WEB-19].
 
 **Strengths:**
-- Rigorous training protocol with two-phase pilot, interactive documents, oral instructions, and structured quiz [Q34, Q35, Q135–Q137]
-- In-house annotation avoiding crowdsourcing, supporting consistency [Q33]
-- Substantial inter-annotator agreement within the team [Q39, Q61]
-- Annotators proficient in English [Q31], matching the deployment evaluation language
+- Rigorous in-house training and validation protocols [Q33, Q34, Q35, Q36, Q135, Q136, Q137]
+- Substantial inter-annotator agreement within the MBZUAI pool (Cohen's κ=0.71) [Q61]
+- Annotator demographics are transparently documented [Q31, Q6, Q32], enabling regional gap analysis
+- Limitations on LLM-as-evaluator are explicitly reported [Q107, Q114]
 
 **Checklist:**
 
-- **OC-1**: Ground truth labels do NOT reflect Indian regional stakeholder perspectives. Annotators are CS-trained, MBZUAI-affiliated [Q6, Q31] with no documented Indian educator background; the user expects systematic divergence on guidance quality, exam-orientation, and direct-correction norms. — _Sources: Q6, Q31, Q32, WEB-6_
-- **OC-2**: Significant disagreement is expected between original annotators and the Indian teacher target population. The user explicitly stated Indian teachers value 'more direct correction, exam-readiness framing, and teacher-directed pedagogy over Socratic probing,' which directly conflicts with the constructivist priors implicit in the original labels [Q17, Q23]. — _Sources: Q31, Q32, WEB-6_
-- **OC-3**: Documented annotator demographics: four CS post-graduates, two male and two female, English-proficient, MBZUAI-affiliated [Q6, Q31]. Notably absent: teaching experience [Q32 explicitly waives this], regional/cultural background, board familiarity. No formal Datasheet/Data Statement is documented. — _Sources: Q6, Q31, Q32_
-- **OC-4**: Re-annotation by representative Indian Grade 1–8 mathematics teachers is strongly recommended for deployment validity. No such re-annotation has been performed in published literature [WEB-6]. — _Sources: WEB-6, WEB-10_
-- **OC-5**: Aggregation: DAMR is computed as percentage receiving desired label across annotators [Q64]; with 40 of 192 instances dual-annotated [Q57], minority perspectives among the four homogeneous annotators are likely already smoothed. For Indian-teacher re-annotation, aggregation choices would need to handle potential within-Indian-teacher heterogeneity (CBSE vs. ICSE vs. State Board vs. IB). — _Sources: Q57, Q64_
-- **OC-6**: Documented label issues: (a) annotator pool culturally homogeneous and non-Indian; (b) no teaching experience required, so labels reflect 'user' rather than 'teacher' perspectives [Q32]; (c) LLM critics unreliable as substitutes [Q107–Q109]; (d) systematic divergence on guidance quality is expected per user elicitation. — _Sources: Q32, Q107, Q108, Q109_
+- **OC-1**: Ground truth labels do not reflect Indian regional stakeholder perspectives. Annotators are MBZUAI CS post-graduates [Q31] with no required teaching experience [Q32] and no documented South Asian pedagogical expertise. — _Sources: Q31, Q32, Q6_
+- **OC-2**: Systematic disagreement is expected per user elicitation (Q4) and field evidence [WEB-15]. Indian teachers prioritize direct correction, exam-readiness, and teacher-directed pedagogy; MBZUAI annotators were instructed to judge from a 'student or potential AI tutor user' perspective [Q32], not a teacher's. — _Sources: Q32, WEB-15_
+- **OC-3**: Annotator demographics are documented [Q31, Q6]: four annotators, two male / two female, all post-graduate CS, MBZUAI Abu Dhabi. No teaching experience required [Q32]. No information on cultural/national background beyond institutional affiliation. — _Sources: Q31, Q6, Q32_
+- **OC-4**: Re-annotation by representative Indian Grade 1–8 teachers is strongly recommended for this deployment, particularly on the 'providing guidance' dimension. No such re-annotation exists [WEB-19]. — _Sources: WEB-19_
+- **OC-5**: Aggregation uses pairwise inter-annotator agreement on overlapping subset (40 of 192 instances) [Q57]; the remaining 152 instances are single-annotated. With a homogeneous annotator pool [Q31], minority pedagogical perspectives (e.g., direct-correction-favoring) cannot be detected. — _Sources: Q57, Q31_
+- **OC-6**: Convergent validity concern: gold labels [Q68] correlate with MBZUAI annotators' Western/generic-academic pedagogical priors, not Indian teachers' judgments. External validity concern: original judgments are unlikely to generalize to the Indian metro teacher target context (elicitation Q4, [WEB-15]). — _Sources: Q68, Q32, WEB-15_
 
 <details>
 <summary><b>Evidence cited</b></summary>
 
 *Paper quotes:*
-- [Q6] 'Mohamed bin Zayed University of Artificial Intelligence, Abu Dhabi, UAE.' (p.1)
 - [Q31] 'The annotation team consisted of two male and two female annotators, with all four annotators holding at least a post-graduate degree in Computer Science and being proficient in English.' (p.5)
 - [Q32] 'we do not require annotators to have direct teaching experience, as understanding of the mathematical tasks at the middle school level and being able to judge the responses from the perspective of a potential user of such AI tutors (or a student), rather than specifically a teacher, is sufficient.' (p.5)
-- [Q39] 'we computed Fleiss' kappa value, which for this annotation experiment equals 0.65, indicating substantial agreement.' (p.5)
-- [Q61] 'The annotators reached an average Cohen's kappa score of 0.71' (p.6)
-- [Q107] 'most of the correlation scores are negative (except for the human-likeness dimension), indicating that the annotations from the LLMs are unreliable for the challenging pedagogical dimensions.' (p.8)
+- [Q6] 'Mohamed bin Zayed University of Artificial Intelligence, Abu Dhabi, UAE.' (p.1)
+- [Q61] 'The annotators reached an average Cohen's kappa score of 0.71, which indicates substantial inter-annotator agreement' (p.6)
 - [Q68] 'We consider human-based evaluations as gold standard.' (p.7)
+- [Q107] 'Across both LLMs, it can be observed that most of the correlation scores are negative (except for the human-likeness dimension), indicating that the annotations from the LLMs are unreliable for the challenging pedagogical dimensions.' (p.8)
 
 *Web sources:*
-- [WEB-6] 2025 ITS evaluation review confirms existing studies use 'small, homogeneous populations, primarily from WEIRD countries' — corroborating the annotator representativeness gap
-- [WEB-10] MathTutorBench also relies on Western-default annotation; no India-adapted educator annotation exists in the field
+- [WEB-15] Indian teachers face structural misalignment with Western-default AI outputs; value curriculum-aligned, direct guidance
+- [WEB-19] No India-specific or cross-cultural ITS evaluation framework cited in 2025 survey
+- [WEB-16] MathTutorBench (related Western-default benchmark) shares same annotator-cultural-provenance pattern
 
 </details>
 
 **Information gaps:**
-- Magnitude of expected Indian-teacher vs. MBZUAI-annotator disagreement is not empirically measured; only directionally indicated by user elicitation
-- Whether dimension-level disagreement concentrates on 'providing guidance' as predicted, or also affects mistake identification, actionability, and tone
+- No measurement of inter-annotator agreement among Indian professional teachers on the same MRBench instances
+- No published cross-cultural comparison of pedagogical-quality judgments on AI tutor responses
+- No information on the annotators' national/cultural backgrounds beyond institutional affiliation
 
 **Requires expert verification:**
-- Indian Grade 1–8 math teacher re-annotation of a representative MRBench subsample to quantify divergence
-- Within-Indian-teacher agreement across CBSE/ICSE/Maharashtra State Board/IB sub-populations
+- Pilot re-annotation of a MRBench subset by Delhi/Mumbai Grade 1–8 mathematics teachers, with κ comparison to original labels
+- Targeted review of the 'providing guidance' dimension's desired labels by CBSE/NCERT-experienced educators
 
 ---
 
@@ -274,75 +285,75 @@ OC is the joint highest-priority concern. The annotation team comprised four CS 
 **Confidence:** high
 
 **Justification:**
-Output form is categorical three-tier labels per dimension aggregated into DAMR percentages and AC correlation scores [Q64, Q65, Q66, Q138], well-suited to the deployment's binary acceptability judgments. The form itself is appropriate; the only concern is structural — the equal-weight DAMR aggregate [Q67, Q149, Q150] does not surface the user's prioritization of 'providing guidance,' so the headline score cannot be used directly as a deployment validity proxy without re-weighting. This is an aggregation/reporting concern more than a modality mismatch.
+LOWER priority per elicitation. Output form (categorical labels [Q58, Q59], DAMR percentages, and Pearson correlations [Q64, Q66]) is appropriate for the deployment scenario where teachers render acceptability judgments on AI+human-augmented responses. The benchmark explicitly avoids unreliable NLG metrics like BLEU/BERTScore [Q4, Q7, Q8] in favor of pedagogically meaningful categorical scores. No mismatch with deployment output needs is identified. Minor concern: the benchmark reports per-dimension DAMR but no aggregate acceptability score weighted by deployment priorities; teams would need to compute their own weighted aggregate to map to a binary acceptable/unacceptable judgment, but this is straightforward.
 
 **Strengths:**
-- Categorical labels and percentage scores match the deployment's binary acceptability use case
-- Per-dimension reporting [Q67, Q149, Q150] preserves signal for downstream re-weighting
-- Separate DAMR scores for Bridge and MathDial subsets [Q149, Q150] support stratified analysis by complexity
-- Rejection of NLG metrics [Q4, Q7, Q8, Q9, Q10] reflects appropriate concern with pedagogical-construct validity
+- Categorical and percentage outputs map cleanly onto teachers' acceptability judgments
+- Per-dimension reporting [Q67] supports custom re-weighting toward 'providing guidance'
+- Explicit rejection of unreliable surface-level NLG metrics [Q4, Q7, Q8]
+- Both DAMR (per-tutor performance) and AC (LLM-evaluator reliability) metrics provided [Q64, Q66]
 
 **Checklist:**
 
-- **OF-1**: Expected output modality (categorical labels and aggregate percentages) matches regional deployment needs for teacher acceptability judgments. The deployment is text-based and the output form is scoring-based, with no modality mismatch. — _Sources: Q64, Q67_
-- **OF-2**: Not applicable — no speech-based output is required by the deployment. — _Sources: Q64_
-- **OF-3**: Target population is English-fluent and professionally literate [user elicitation]; no accessibility concerns affecting output form. — _Sources: Q64_
-- **OF-4**: No external-validity-harming form mismatches identified at the modality level. The structural concern is that equal-weight DAMR [Q64] does not surface deployment-relevant dimension prioritization, making direct use of the headline score for Indian-teacher acceptability prediction unreliable. — _Sources: Q64, Q67_
+- **OF-1**: Output modality (categorical labels and percentages) matches the deployment, where teachers judge acceptability of text responses [Q58, Q64]. No mismatch. — _Sources: Q58, Q64_
+- **OF-2**: Text-to-speech is not relevant — both benchmark and deployment are text-only. — _Sources: Q133_
+- **OF-3**: Target population is fluent in English with high literacy and professional qualifications [WEB-1, WEB-2]; accessibility is not a concern for the evaluator role. — _Sources: WEB-1, WEB-2_
+- **OF-4**: No form mismatches harming external validity. Categorical/percentage outputs are appropriate. Aggregating per-dimension DAMR into a deployment-relevant acceptability score requires user-side weighting but is methodologically simple. — _Sources: Q64, Q66_
 
 <details>
 <summary><b>Evidence cited</b></summary>
 
 *Paper quotes:*
+- [Q58] 'Each dimension was annotated using a three-tier labeling system' (p.6)
 - [Q64] 'Desired Annotation Match Rate (DAMR): This metric quantifies the percentage of responses from each human or LLM-based tutor that received the desired annotation labels.' (p.6)
 - [Q66] 'Annotation Correlation (AC): This metric is based on Pearson's correlation' (p.6)
-- [Q67] 'Table 3 shows DAMR scores for each LLM across all eight dimensions.' (p.7)
-- [Q149] 'Pedagogical ability assessment of different LLMs using the DAMR scores (in %) across eight evaluation dimensions with human evaluation on the Bridge data.' (p.16)
-- [Q4] 'General domain-agnostic natural language generation (NLG) metrics... are not well-suited for this context, as most of them fail to account for pedagogical values' (p.1)
+- [Q4] 'General domain-agnostic natural language generation (NLG) metrics ... are not well-suited for this context, as most of them fail to account for pedagogical values' (p.1)
+
+*Web sources:*
+- [WEB-1] Indian Grade 1–8 teachers in CBSE schools require B.Ed/D.El.Ed and pass CTET — high literacy and professional qualification
+- [WEB-2] CTET eligibility confirms English literacy among target population
 
 </details>
-
-**Information gaps:**
-- Whether per-dimension DAMR scores are released at instance level (not just aggregate), enabling user-side re-weighting
 
 ---
 
 ## Remediation Suggestions
 
+### Output Content ⚠
+
+**Gap:** Gold-standard labels were produced by MBZUAI CS post-graduates without required teaching experience [Q31, Q32] and no documented South Asian pedagogical expertise; user expects systematic divergence on guidance-quality judgments (elicitation Q4).
+
+**Recommendation:** Conduct re-annotation of a representative MRBench subset (e.g., 40–60 instances spanning Bridge and MathDial) by 3–4 Delhi/Mumbai Grade 1–8 mathematics teachers with CBSE/ICSE/State Board representation. Compute Cohen's κ between Indian teachers and original MBZUAI labels per dimension; treat per-dimension divergence (especially on 'providing guidance') as the deployment-relevant validity adjustment.
+
+### Output Content ⚠
+
+**Gap:** 152 of 192 MRBench instances are single-annotated [Q57], so minority pedagogical perspectives within an already-homogeneous annotator pool [Q31] cannot be detected.
+
+**Recommendation:** When recruiting Indian teacher re-annotators, ensure full overlap on the re-annotated subset (every instance labeled by ≥2 teachers) and report per-instance disagreement, not just aggregate κ. This surfaces minority-perspective patterns relevant to the diverse Indian metro teaching workforce.
+
 ### Input Content ⚠
 
-**Gap:** Source dialogues reflect Western classroom dynamics (extended student verbalization, Socratic exchanges, LLM-as-student in MathDial) that misrepresent Indian Grade 1–8 student behavior
+**Gap:** Bridge and MathDial conversations reflect Western academic settings with extended student verbalization [Q44, Q48, Q95]; Indian Grade 1–8 students are briefer, more deferential, and procedure-focused (elicitation Q2). L1-interference and rote-procedural error types absent from selection criteria [Q47].
 
-**Recommendation:** Augment MRBench with a supplementary set of short-turn, deferential, procedure-focused student-tutor dialogues collected from Delhi/Mumbai classrooms or simulated under Indian-pedagogy guidelines, and report deployment metrics separately on this Indian subset
+**Recommendation:** Pilot a small India-grounded supplement (~30–60 dialogues) collected from Delhi/Mumbai classrooms or simulated by Indian teachers, with student error types informed by NCERT error-analysis literature [WEB-13] and CBSE-EI competency-based items [WEB-14]. Use this supplement to test whether tutor performance rankings change relative to MRBench.
 
-### Output Content ⚠
+### Input Content ⚠
 
-**Gap:** Ground-truth labels reflect four CS-trained MBZUAI annotators with no required teaching experience and no Indian educator representation; systematic divergence from Indian teachers is expected on guidance quality
+**Gap:** Sub-national board variation (CBSE, ICSE, Maharashtra State Board, IB) is unresolved; pedagogical expectations differ across boards.
 
-**Recommendation:** Recruit a panel of 4–8 Delhi/Mumbai Grade 1–8 mathematics teachers (stratified across CBSE, ICSE, Maharashtra State Board, IB) to re-annotate at least the 192-instance benchmark on the eight dimensions, compute Indian-vs-original kappa, and use Indian-annotator labels as the deployment-validity gold standard
-
-### Output Content ⚠
-
-**Gap:** LLM critics (Prometheus2, Llama-3.1-8B) showed mostly negative correlation with human annotations [Q107] and cannot substitute for re-annotation
-
-**Recommendation:** Do not rely on LLM-as-judge for deployment scoring; budget for human-in-the-loop annotation by Indian teachers and explicitly report DAMR/AC stratified by annotator cohort
-
-### Input Ontology
-
-**Gap:** While the user accepted the eight dimensions, the iteratively derived taxonomy [Q15, Q129] received no documented Indian pedagogical input, leaving residual risk that board-specific or exam-oriented sub-criteria are subsumed implicitly
-
-**Recommendation:** Conduct a brief verification pilot with 2–3 Indian teachers from each board context (CBSE/ICSE/State/IB) to confirm dimension sufficiency at the sub-population level before scaling deployment
+**Recommendation:** Stratify Indian teacher annotators by board affiliation when conducting OC re-annotation. Report per-board DAMR alignment to detect whether deployment validity differs by school type, and use this to guide deployment scoping (e.g., initial rollout in CBSE schools where dominant pedagogical norm is best characterized).
 
 ### Output Ontology
 
-**Gap:** Equal-weight DAMR does not reflect the user's prioritization of 'providing guidance' as the dominant acceptability criterion, and the guidance rubric is operationalized in a Socratic-scaffolding frame
+**Gap:** DAMR weights all eight dimensions equally [Q64], but 'providing guidance' is the user-identified dominant acceptability criterion, and the guidance rubric encodes Socratic-scaffolding values [Q23, Q24] that may not match Indian direct-correction norms.
 
-**Recommendation:** Define a deployment-specific weighted-DAMR in which 'providing guidance' carries dominant weight, and split the guidance dimension into two sub-labels — Socratic-scaffolding-guidance and direct-correction-guidance — both eligible for the desired label, calibrated against Indian teacher annotations
+**Recommendation:** Implement deployment-specific weighted DAMR with 'providing guidance' as dominant weight. Additionally, recalibrate the 'providing guidance' desired labels through expert review: define what constitutes acceptable direct-correction guidance for Indian teachers and add this as an alternative acceptable response pattern, rather than treating answer revelation as monolithically negative.
 
 ### Output Ontology
 
-**Gap:** Ontology excludes downstream learning gains [Q120, Q121] and treats dimensions as orthogonal despite acknowledged interdependencies [Q30, Q116]
+**Gap:** The benchmark does not aggregate to a binary acceptability decision and does not consider cumulative learning impact [Q120, Q121].
 
-**Recommendation:** Pair MRBench-style turn-level scoring with a longitudinal learning-outcome evaluation (e.g., student post-conversation problem-solving) for deployment-relevant outcome validity, and report dimension-correlation diagnostics alongside DAMR
+**Recommendation:** Define a deployment-specific decision rule that maps weighted DAMR (or per-dimension thresholds) to a binary 'acceptable / not acceptable' label aligned with the deployment's evaluator-role requirement. Document the threshold transparently and audit against Indian teacher binary judgments on a held-out set.
 
 ## Evidence Registries
 
@@ -358,10 +369,10 @@ Output form is categorical three-tier labels per dimension aggregated into DAMR 
 | Q6 | 1 | output_content | "Kaushal Kumar Maurya, KV Aditya Srivatsa, Kseniia Petukhova and Ekaterina Kochmar. Mohamed bin Zayed University of Artificial Intelligence, Abu Dhabi, UAE." |
 | Q7 | 2 | output_form | "General domain-agnostic natural language generation (NLG) metrics like BLEU (Papineni et al., 2002), BERTScore (Lin, 2004), DialogRPT (Gao et al., 2020), and so on have been used as proxies to measure the coherence and human-likeness of AI tutor responses." |
 | Q8 | 2 | output_form | "However, these metrics do not account for pedagogical values (Jurenka et al., 2024; Liu et al., 2024) and often require a ground truth answer to evaluate matching responses." |
-| Q9 | 2 | output_form | "For a given input dialogue, there can be multiple valid, pedagogically correct ground truth responses, making detection of the optimal answer non-deterministic (Tack and Piech, 2022; Al-Hossami et al., 2024)." |
+| Q9 | 2 | output_content | "For a given input dialogue, there can be multiple valid, pedagogically correct ground truth responses, making detection of the optimal answer non-deterministic (Tack and Piech, 2022; Al-Hossami et al., 2024)." |
 | Q10 | 2 | output_form | "Additionally, these metrics can be easily manipulated; for instance, simple responses like "Hello" or "teacher:" (Baladón et al., 2023; Jurenka et al., 2024) can inflate scores." |
-| Q11 | 2 | input_ontology | "In this section, we first briefly overview and discuss the limitations of the existing general-purpose NLG metrics and then turn to pedagogically-oriented approaches to evaluation." |
-| Q12 | 3 | input_content | "In this work, we focus on educational dialogues between a student and a tutor in the mathematical domain. Specifically, the conversations are grounded in students' mistakes or confusions, and the AI tutor aims to respond in order to remediate such mistakes or confusions." |
+| Q11 | 2 | output_form | "In this section, we first briefly overview and discuss the limitations of the existing general-purpose NLG metrics and then turn to pedagogically-oriented approaches to evaluation." |
+| Q12 | 3 | input_ontology | "In this work, we focus on educational dialogues between a student and a tutor in the mathematical domain. Specifically, the conversations are grounded in students' mistakes or confusions, and the AI tutor aims to respond in order to remediate such mistakes or confusions." |
 | Q13 | 3 | input_ontology | "Formally, let's define the conversation history between a tutor and a student as H = {(T1, S1),(T2, S2), . . . ,(Tt, St)}, where Ti represents the i-th response from the tutor, and Si represents the i-th response from the student. Let Sk denote the student's most recent k utterances, where k ∈ [1, ..., t], containing a mistake or confusion. Then the objective of the tutor is to provide the most appropriate response Tt+1 to address this mistake or confusion." |
 | Q14 | 3 | input_ontology | "The evaluation taxonomy detailed in Section 4 assesses the appropriateness of the Tt+1 response across eight key pedagogical dimensions." |
 | Q15 | 3 | input_ontology | "In this section, we first present our approach, narrowing the evaluation taxonomy down to eight measurable dimensions aligned with key pedagogical strategies (Jurenka et al., 2024; Hennessy et al., 2016). These dimensions are most suitable for the student mistake remediation task and are based on the learning sciences principles." |
@@ -388,7 +399,7 @@ Output form is categorical three-tier labels per dimension aggregated into DAMR 
 | Q36 | 5 | output_content | "In this validation pilot study, all four annotators iteratively reviewed the annotation scheme and guidelines." |
 | Q37 | 5 | output_content | "Each annotator also independently labeled the same eight randomly sampled dialogues – four from each of the two datasets (Bridge and MathDial) – across the eight dimensions of the evaluation taxonomy." |
 | Q38 | 5 | output_content | "Given that each dialogue contained multiple responses from both LLMs and humans, and each response was annotated across eight evaluation dimensions, this resulted in a total of 544 annotations per annotator." |
-| Q39 | 5 | output_content | "To measure inter-annotator agreement, we computed Fleiss' kappa value, which for this annotation experiment equals 0.65, indicating substantial agreement." |
+| Q39 | 5 | output_form | "To measure inter-annotator agreement, we computed Fleiss' kappa value, which for this annotation experiment equals 0.65, indicating substantial agreement." |
 | Q40 | 5 | input_ontology | "None of the annotators identified any additional or redundant dimensions necessary for student mistake remediation." |
 | Q41 | 5 | input_content | "We have compiled mistake remediation benchmark, MRBench, from the Bridge (Wang et al., 2024a) and MathDial (Macina et al., 2023) datasets." |
 | Q42 | 5 | input_content | "Each instance in both datasets comprises educational dialogue interactions between students and tutors within the mathematical domain." |
@@ -402,7 +413,7 @@ Output form is categorical three-tier labels per dimension aggregated into DAMR 
 | Q50 | 5 | input_form | "To match the format of Bridge (partial conversations with the last few student's utterances exhibiting a mistake or confusion), we prepared the dataset by terminating a conversation where the student makes a mistake and considering the next tutor response as the expert tutor response (there are no associated novice" |
 | Q51 | 6 | input_content | "To further ensure the reliability of our benchmark, we manually inspected the data in order to retain only high-quality examples, which resulted in 132 instances for MRBench." |
 | Q52 | 6 | input_content | "Next, for the 192 instances in MRBench (60 from Bridge and 132 from MathDial), we generated appropriate subsequent responses based on the conversation history and the last utterance, which contained confusions or mistakes, using seven state-of-the-art LLMs." |
-| Q53 | 6 | input_ontology | "We consider state-of-the-art LLMs of various sizes and capabilities, including: GPT-4 (Achiam et al., 2023), Gemini (Reid et al., 2024), Sonnet (Anthropic, 2024), Mistral (Jiang et al., 2023), Llama-3.1-8B and Llama-3.1-405B (Dubey et al., 2024), and Phi3 (Abdin et al., 2024)." |
+| Q53 | 6 | input_content | "We consider state-of-the-art LLMs of various sizes and capabilities, including: GPT-4 (Achiam et al., 2023), Gemini (Reid et al., 2024), Sonnet (Anthropic, 2024), Mistral (Jiang et al., 2023), Llama-3.1-8B and Llama-3.1-405B (Dubey et al., 2024), and Phi3 (Abdin et al., 2024)." |
 | Q54 | 6 | input_form | "Furthermore, each LLM has associated responses for 192 dialogues, resulting in a benchmark of 192 × 7 (7 LLM responses) + 192 × 1 (expert responses) + 60 × 1 (novice responses) = 1,596 responses, which makes the evaluation benchmark reasonably large while still manageable for human annotation described in Section 5.2." |
 | Q55 | 6 | output_content | "Four trained annotators (see Section 4.2) annotated MRBench using the validated taxonomy." |
 | Q56 | 6 | output_content | "Each annotator was asked to annotate human and LLM-based tutor responses across 8 dimensions of the taxonomy in the context of 48 dialogues." |
@@ -414,7 +425,7 @@ Output form is categorical three-tier labels per dimension aggregated into DAMR 
 | Q62 | 6 | output_form | "We used Prometheus2 (Kim et al., 2024) because: (i) it was specifically trained as an evaluator using reinforcement learning with human feedback (RLHF), (ii) it has a high correlation with human annotations and GPT-4, and (iii) it does not belong to any of the LLM families considered as AI tutors in our framework." |
 | Q63 | 6 | output_form | "In addition, we also used Llama-3.1-8B as a lightweight LLM to assess the reliability of smaller models that were not fine-tuned for evaluation objectives as a critic." |
 | Q64 | 6 | output_form | "We utilize two key metrics to quantitatively assess the pedagogical effectiveness of LLMs and for comparative analysis: (1) Desired Annotation Match Rate (DAMR): This metric quantifies the percentage of responses from each human or LLM-based tutor that received the desired annotation labels." |
-| Q65 | 6 | output_form | "The desired labels for each dimension are detailed in Table 2." |
+| Q65 | 6 | output_ontology | "The desired labels for each dimension are detailed in Table 2." |
 | Q66 | 6 | output_form | "(2) Annotation Correlation (AC): This metric is based on Pearson's correlation (Sedgwick, 2012), and it estimates the correlation between LLM-generated and human annotations (Kim et al., 2024), allowing us to assess the reliability of LLMs as evaluators in the context of student mistake remediation." |
 | Q67 | 7 | output_form | "Table 3 shows DAMR scores for each LLM across all eight dimensions." |
 | Q68 | 7 | output_content | "We consider human-based evaluations as gold standard." |
@@ -434,13 +445,13 @@ Output form is categorical three-tier labels per dimension aggregated into DAMR 
 | Q82 | 7 | input_content | "*For the Novice, we have considered only 60 dialogues from the Bridge dataset." |
 | Q83 | 7 | output_form | "The DAMR scores for Novice are reported on these 60 instances, while for Expert and all LLMs, all 192 instances were considered." |
 | Q84 | 8 | output_ontology | "Can a tutor achieve a higher DAMR score for actionability while receiving a lower score for providing guidance? This is possible since we consider only factually correct guidance as useful (see Table 4)." |
-| Q85 | 8 | output_ontology | "At the same time, even incorrect or incomplete guidance can lead to certain actions on the part of the student and can foster their curiosity, thus providing them with learning opportunities." |
+| Q85 | 8 | output_content | "At the same time, even incorrect or incomplete guidance can lead to certain actions on the part of the student and can foster their curiosity, thus providing them with learning opportunities." |
 | Q86 | 8 | output_ontology | "This further demonstrates the need to treat the dimensions as independent." |
 | Q87 | 8 | output_content | "In terms of the other qualities of the Expert responses, they do not normally reveal the answer and tend to include scaffolding; however, there are a small number of instances where they failed to identify the mistake or its location." |
 | Q88 | 8 | output_content | "Overall, we conclude that human responses from Expert are significantly better than Novice." |
 | Q89 | 8 | output_form | "Our findings on the Tutor Tone align with those of Wang et al. (2024a) – in task-oriented conversations, AI tutors tend to be more Neutral than Encouraging." |
 | Q90 | 8 | output_ontology | "When we combine these two labels into "Non-offensive", the DAMR score reaches 100% as we observe no offensive responses from any LLMs or humans." |
-| Q91 | 8 | output_form | "We observe high scores for most of the LLMs on human-likeness, which demonstrates their capability to generate human-like output with minimal or no grammatical and fluency mistakes, showing the timely nature of our study, which focuses more on in-depth semantic and pedagogical aspects of tutor responses rather than only on superficial attributes like grammaticality and fluency." |
+| Q91 | 8 | input_ontology | "We observe high scores for most of the LLMs on human-likeness, which demonstrates their capability to generate human-like output with minimal or no grammatical and fluency mistakes, showing the timely nature of our study, which focuses more on in-depth semantic and pedagogical aspects of tutor responses rather than only on superficial attributes like grammaticality and fluency." |
 | Q92 | 8 | input_content | "As discussed in Section 5.1, the conversational contexts in the Bridge dataset are typically very short (see Table 7) and the dialogues are grounded in elementary math operations, so most models are able to identify the mistakes and their locations." |
 | Q93 | 8 | input_content | "However, they struggle to provide appropriate guidance without revealing the answer because the mistakes are generally related to quite basic operations like addition or multiplication, often in a one-step type of mathematical problems." |
 | Q94 | 8 | output_form | "Still, models like GPT-4 and Llama-3.1-405B are able to offer some reasonable guidance." |
@@ -459,7 +470,7 @@ Output form is categorical three-tier labels per dimension aggregated into DAMR 
 | Q107 | 8 | output_content | "Across both LLMs, it can be observed that most of the correlation scores are negative (except for the human-likeness dimension), indicating that the annotations from the LLMs are unreliable for the challenging pedagogical dimensions." |
 | Q108 | 8 | output_content | "Prometheus2 is not trained on our taxonomy dimensions, except for the general human-likeness dimension, where the model shows slightly better correlations with positive scores." |
 | Q109 | 8 | output_content | "We believe both LLMs have a limited understanding of rich pedagogical concepts, as they were not specifically trained on pedagogically rich datasets." |
-| Q110 | 8 | output_content | "At the same time, we acknowledge that the experiments presented in this work are preliminary" |
+| Q110 | 8 | output_form | "At the same time, we acknowledge that the experiments presented in this work are preliminary" |
 | Q111 | 9 | input_ontology | "This paper presents the first effort to unify AI tutor evaluation for the student mistake remediation task in the mathematics domain." |
 | Q112 | 9 | input_ontology | "Specifically, we propose an evaluation taxonomy with eight pedagogical dimensions based on the key learning sciences principles." |
 | Q113 | 9 | output_content | "We also release the MRBench benchmark with seven state-of-the-art LLM-as-tutors responses, along with gold human annotations." |
@@ -476,7 +487,7 @@ Output form is categorical three-tier labels per dimension aggregated into DAMR 
 | Q124 | 9 | output_content | "Although we do not foresee any ethical risks, we acknowledge that this work relies on the outputs from LLMs, and there are certain risks associated with such outputs in general since these models may generate responses that, although plausible, can be factually incorrect, nonsensical, or even offensive." |
 | Q125 | 9 | output_content | "Of particular importance for the educational domain is the fact that hallucinations can misguide students and propagate biases." |
 | Q126 | 10 | output_content | "This research is partially supported by Google through the Google Academic Research Award (GARA) 2024. We are grateful for their support. We also extend our gratitude to the campus supercomputing center at MBZUAI." |
-| Q127 | 10 | input_ontology | "strongly believe that this study will help shed light on the current capabilities of LLMs in the context of educational dialogues, and the insights gained from this study may help mitigate issues related to the use of LLMs in the educational domain in the future." |
+| Q127 | 10 | output_content | "strongly believe that this study will help shed light on the current capabilities of LLMs in the context of educational dialogues, and the insights gained from this study may help mitigate issues related to the use of LLMs in the educational domain in the future." |
 | Q128 | 12 | output_ontology | "The definitions, associated labels, and the desired labels for each dimension of the proposed taxonomy are provided in Table 4." |
 | Q129 | 12 | input_ontology | "Through an iterative analysis of the taxonomy, we identify eight dimensions that comprehensively assess tutor response quality in the context of mistake remediation." |
 | Q130 | 12 | input_ontology | "However, other educational settings, particularly those involving tutorial dialogues beyond mistake remediation, may require modifications, as discussed in the limitations section." |
@@ -510,17 +521,25 @@ Output form is categorical three-tier labels per dimension aggregated into DAMR 
 
 | ID | URL |
 |----|-----|
-| WEB-1 | https://www.cbse.gov.in/cbsenew/teacher_qual_num.html |
-| WEB-2 | https://www.superprof.co.in/blog/maths-tutoring-jobs-certificates/ |
-| WEB-3 | https://testbook.com/dsssb-teacher/eligibility-criteria |
-| WEB-4 | https://www.pib.gov.in/PressReleasePage.aspx?PRID=2234853 |
-| WEB-5 | https://www.tiwariacademy.com/ncert-solutions/class-8/maths/ |
-| WEB-6 | https://arxiv.org/html/2510.22581 |
-| WEB-7 | https://educationforallinindia.com/ai-tutors-and-human-teachers-in-indian-education-implementation-framework-under-samagra-shiksha-abhiyan/ |
-| WEB-8 | https://www.education.gov.in/sites/upload_files/mhrd/files/NEP_Final_English_0.pdf |
-| WEB-9 | https://edunovations.com/currentaffairs/national/cbse-ai-curriculum-for-classes/ |
-| WEB-10 | https://arxiv.org/abs/2502.18940 |
-| WEB-11 | https://aclanthology.org/2025.emnlp-main.11/ |
+| WEB-1 | https://www.asiancollegeofteachers.com/blogs/1524-Teaching-License-In-India-What-It-Is-And-How-Do-You-Renew-It-blog.php |
+| WEB-2 | https://testbook.com/ctet/eligibility-criteria |
+| WEB-3 | https://en.wikipedia.org/wiki/Central_Board_of_Secondary_Education |
+| WEB-4 | https://candidschools.com/icse-schools-in-india-a-state-wise-list/ |
+| WEB-5 | https://muftinternet.com/blog/usage-statistics-internet-and-mobile-users-in-india-2025/ |
+| WEB-6 | https://www.storyboard18.com/digital/660-million-smartphone-users-16-17-billion-monthly-upi-transactions-power-digital-bharat-report-89731.htm |
+| WEB-7 | https://datareportal.com/reports/digital-2024-india |
+| WEB-8 | https://www.pib.gov.in/PressReleasePage.aspx?PRID=2234853&reg=3&lang=1 |
+| WEB-9 | https://educationforallinindia.com/artificial-intelligence-in-indian-school-education-use-misuse-and-preventive-measures/ |
+| WEB-10 | https://www.myidcm.com/blog/artificial-intelligence-course-in-india |
+| WEB-11 | https://edurev.in/courses/118419_Mathematics-Ganita-Prakash-Class-8-New-NCERT |
+| WEB-12 | https://ciet.ncert.gov.in/activity/eaie |
+| WEB-13 | https://ejournals.ncert.gov.in/index.php/tpt/article/download/1323/1261 |
+| WEB-14 | https://www.scribd.com/document/628027385/CFPQ-Maths10 |
+| WEB-15 | https://arxiv.org/html/2507.00456v1 |
+| WEB-16 | https://arxiv.org/abs/2502.18940 |
+| WEB-17 | https://aclanthology.org/2025.emnlp-main.11/ |
+| WEB-18 | https://github.com/eth-lre/mathtutorbench |
+| WEB-19 | https://arxiv.org/html/2510.22581v1 |
 
 ---
 

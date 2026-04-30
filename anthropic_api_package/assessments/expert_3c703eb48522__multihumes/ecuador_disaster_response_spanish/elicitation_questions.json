@@ -1,0 +1,27 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IF",
+    "question": "Your source data is tweets from Ecuadorian social media during natural disasters. Tweets differ substantially from the formal humanitarian reports and news articles the benchmark was built on — they are short, noisy, use abbreviations, hashtags, emojis, colloquial Ecuadorian Spanish, and may include code-switching with Kichwa or other indigenous languages. How representative is this informal, short-form social media text of what your analysts actually need to process, and do you expect significant volumes of non-Spanish content (e.g., Kichwa, or bilingual posts) mixed into the tweet streams?"
+  },
+  {
+    "id": "IO",
+    "dimension": "IO",
+    "question": "Your deployment goal is timeline generation — tracking how affected populations' needs evolve across time — rather than single-document extractive summarization. This requires identifying temporal signals, event sequencing, and need-state transitions across many short posts. Does your system need to handle categories such as: evolving shelter or water needs post-earthquake, infrastructure recovery stages, shifting population movement patterns, or escalating health alerts? Are there disaster-specific phases (e.g., immediate rescue vs. recovery vs. reconstruction) that the timeline must distinguish?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "IC",
+    "question": "Ecuadorian Spanish in disaster contexts carries region-specific vocabulary — local place names (e.g., Esmeraldas, Manabí, Pichincha), local terms for disaster phenomena (e.g., specific words for landslides, flooding, or aftershocks used colloquially), and references to local institutions (e.g., SNGRE, COE cantonal). Would your analysts expect the system to correctly identify and extract snippets referencing these local entities and terms as informationally relevant, and are there Ecuadorian-specific needs categories (e.g., remittance disruption, informal housing, indigenous community access) that global humanitarian frameworks might not explicitly cover?"
+  },
+  {
+    "id": "Q4",
+    "dimension": "OO",
+    "question": "The benchmark scores outputs as extracted spans judged informative by humanitarian analysts using global frameworks (like DEEP's analytical tags). Your output is a timeline — presumably a ranked or ordered sequence of need-state snapshots attributed to time periods. Does your evaluation of a good timeline output depend on chronological coherence and need-evolution logic, rather than just snippet informativeness in isolation? Would your analysts accept multiple valid timeline orderings, or is there a single ground-truth narrative they expect the system to reconstruct?"
+  },
+  {
+    "id": "Q5",
+    "dimension": "OC",
+    "question": "The benchmark's annotations were made by humanitarian analysts working within global DEEP platform workflows, likely not focused on Latin American or Ecuadorian disaster contexts specifically. For your use case, should the judgment of what counts as an 'informative snippet' from a tweet align with what Ecuadorian civil society actors, local NGO field staff, or affected community members consider important — and would those judgments differ from what a global humanitarian analyst at UN OCHA would select?"
+  }
+]

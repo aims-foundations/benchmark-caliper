@@ -1,0 +1,22 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "The benchmark covers health documents, but clinical practice guidelines, vaccination schedules, and maternal-health booklets have specific structural features — numbered protocols, dosage tables, immunization timetables, warning boxes, and administrative forms. Does your deployment need to handle these structured document types, or is it primarily narrative/prose health content? Are there other document formats common in Ethiopian ministry-of-health materials that you'd consider critical to cover?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "IC",
+    "question": "Ethiopian clinical and maternal-health documents often reference locally specific content: Ethiopian calendar dates (e.g., vaccination schedules tied to Meskerem or Tikimt), endemic diseases prevalent in Ethiopia (e.g., malaria zones by region, kala-azar), local nutrition guidance, or Ethiopia-specific referral pathways. Would your source documents contain this kind of Ethiopia-specific clinical content, and would a system trained on more generic health text be expected to handle it correctly?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OC",
+    "question": "For ground-truth translation quality in your context, whose judgment should be authoritative — clinical translators trained by the Ministry of Health, Amharic-speaking physicians, community health extension workers, or patients? Would terminology choices that are acceptable to an Addis Ababa-based medical translator be trusted equally by health workers in Tigray, Oromia, or Somali regional bureaus, or do regional Amharic registers and health terminology vary enough to matter?"
+  },
+  {
+    "id": "Q4",
+    "dimension": "OO",
+    "question": "Clinical translation quality can be scored in different ways — faithfulness to source meaning, terminological consistency across a full document (e.g., the same drug name every time it appears), readability for a semi-literate patient, or compliance with Ministry of Health-approved glossaries. Which of these does your team treat as the primary success criterion, and does your evaluation process use a fixed approved glossary that translations must conform to?"
+  }
+]

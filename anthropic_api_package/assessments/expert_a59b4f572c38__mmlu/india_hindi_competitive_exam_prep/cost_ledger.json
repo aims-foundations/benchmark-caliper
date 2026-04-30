@@ -1,0 +1,46 @@
+{
+  "1_metadata": {
+    "haiku": {
+      "model_id": "claude-haiku-4-5-20251001",
+      "calls": 1,
+      "input_tokens": 5655,
+      "output_tokens": 218,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "3a_extract": {
+    "haiku": {
+      "model_id": "claude-haiku-4-5-20251001",
+      "calls": 27,
+      "input_tokens": 80782,
+      "output_tokens": 14913,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "3a_merge": {
+    "haiku": {
+      "model_id": "claude-haiku-4-5-20251001",
+      "calls": 7,
+      "input_tokens": 1709,
+      "output_tokens": 230,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "3a_consolidate": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 1,
+      "input_tokens": 13657,
+      "output_tokens": 2791,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  }
+}

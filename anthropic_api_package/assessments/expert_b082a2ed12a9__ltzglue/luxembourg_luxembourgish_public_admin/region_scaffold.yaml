@@ -1,394 +1,248 @@
 name: Luxembourg Public Administration — Civil Servant NLU Deployment
-abbreviation: LU-CIVSERV
+abbreviation: LU-PUBADMIN
 deployment_context:
-  country: Luxembourg
+  system_function: LLM-based automated classification of citizen correspondence for
+    routing to government departments and prioritization of urgent or frustrated messages,
+    with human-in-the-loop fallback for low-confidence cases.
+  benchmark_evaluated: LTZGLUE
+  primary_region: Luxembourg
   governance_levels:
-  - national (État)
-  - communal (communes)
-  eu_institutional_dimension: Luxembourg hosts major EU institutions (European Court
-    of Justice, European Commission DGs, European Parliament secretariat); EU-institutional
-    topic categories are operationally relevant to citizen correspondence routing.
-  system_purpose: LLM-based automatic classification of citizen feedback by topic,
-    named entity detection, intent identification, and sentiment/urgency gauging to
-    drive automated routing to government departments and prioritization of correspondence,
-    with human-in-the-loop fallback for low-confidence outputs.
+  - national (état)
+  - communal (commune)
+  institutional_scope: National ministries and communal administrations processing
+    digital citizen feedback channels
+  eu_dimension: Luxembourg hosts major EU institutions; a non-trivial share of incoming
+    correspondence may concern EU-adjacent administrative matters (frontier worker
+    regulation, EU residency rights, cross-border social security)
 target_population:
-  primary_users: Civil servants in Luxembourgish government agencies at national and
-    communal levels who process, review, and act on digitally routed citizen correspondence.
-    They are the direct consumers of the system's classification outputs and the human
-    auditors in the escalation loop.
-  secondary_users: 'Citizens and residents of Luxembourg submitting feedback or queries
-    to government agencies in written digital form. Their messages constitute the
-    system''s primary text input. This population includes:
-
-    - Luxembourgish nationals
-
-    - Long-term residents holding Luxembourg nationality or permanent residency
-
-    - Cross-border workers (frontaliers) who commute daily from France, Germany, or
-    Belgium and are subject to distinct tax, social security, and labor frameworks
-
-    - EU nationals resident in Luxembourg under freedom-of-movement provisions
-
-    - Third-country nationals with various residency statuses'
-  cross_border_worker_subpopulation:
-    description: A demographically significant subpopulation of workers residing in
-      neighboring countries (primarily France, Belgium, Germany) who cross into Luxembourg
-      daily for employment. They generate a distinct class of administrative queries
-      relating to frontier-worker tax treaties, cross-border social security coordination,
-      healthcare access, and commuter transport.
-    estimated_workforce_share: '[NEEDS VERIFICATION — commonly cited at ~45% of Luxembourg''s
-      employed workforce, verify current figure]'
-    primary_origin_countries:
-    - France
-    - Belgium
-    - Germany
-    relevant_administrative_domains:
-    - frontier-worker income tax treaties
-    - cross-border social security (détachement, affiliation)
-    - cross-border healthcare reimbursement
-    - commuter transport and rail passes
-    - childcare allocation portability
-geography:
-  country: Luxembourg
-  area_km2: '[NEEDS VERIFICATION]'
-  population: '[NEEDS VERIFICATION — approximately 660,000–680,000; verify current
-    official figure]'
-  administrative_divisions:
-    description: Luxembourg is divided into communes (municipalities), grouped historically
-      into cantons and districts. Responsibility for administrative services is split
-      between the national state and individual communes, creating a routing challenge
-      the system must resolve.
-    number_of_communes: '[NEEDS VERIFICATION — approximately 100 communes following
-      recent mergers; verify current count]'
-    state_vs_communal_competency_examples:
-      state_competencies:
-      - national identity documents (passeport, carte d'identité)
-      - income tax
-      - social security (CNAP, CNS, CCSS)
-      - national police
-      - immigration and residency permits
-      - labor law enforcement (ITM)
-      - EU treaty obligations
-      communal_competencies:
-      - local urban planning and construction permits
-      - communal taxes (taxe foncière)
-      - local road maintenance
-      - communal social services
-      - waste management
-      - local event permits
-      - birth/death/marriage registration at état civil
-  eu_institutional_presence: Luxembourg City hosts the Court of Justice of the European
-    Union, the General Court, the European Court of Auditors, the European Investment
-    Bank, and multiple European Commission and Parliament administrative bodies. Citizens
-    may conflate national and EU-institutional contacts in correspondence.
-  cross_border_catchment_regions:
-    France: '[NEEDS VERIFICATION — primarily Moselle and Meurthe-et-Moselle departments]'
-    Belgium: '[NEEDS VERIFICATION — primarily Arlon/Gaume region of Luxembourg province]'
-    Germany: '[NEEDS VERIFICATION — primarily Trier region and Eifel area of Rhineland-Palatinate]'
+  primary_users: Civil servants in Luxembourgish government agencies (national and
+    communal levels) reviewing automated routing decisions, auditing system flags,
+    and providing real-time feedback on model output quality via the human-in-the-loop
+    interface.
+  secondary_population: Citizens and residents writing digital correspondence to government
+    bodies; includes a significant sub-population of cross-border workers (frontaliers)
+    domiciled in France, Belgium, or Germany but employed and administratively active
+    in Luxembourg.
+  cross_border_worker_salience: Cross-border workers represent a substantial share
+    of the Luxembourg workforce [NEEDS VERIFICATION — current frontalier share of
+    total employment]; their administrative queries involve distinct legal, tax, and
+    social-security frameworks that differ materially from resident-citizen queries,
+    making this a high-priority sub-population for topic classification accuracy.
+  civil_servant_profile: Professionally multilingual; expected to work across Luxembourgish,
+    French, and German; familiar with both national administrative procedures and
+    EU regulatory context; primary consumers of the automated routing dashboard and
+    escalation queue.
+  citizen_writer_profile: Multilingual residents and non-resident workers; orthographically
+    non-standardized Luxembourgish is common; French and German code-switching frequent
+    even in formally intended messages; range from highly educated professionals to
+    residents with limited formal literacy in Luxembourgish.
+country: Luxembourg
 languages:
-  official_languages:
+  administrative_official:
   - Luxembourgish (Lëtzebuergesch)
   - French
   - German
-  national_language: Luxembourgish (Lëtzebuergesch / LTZ) — the sole national language
-    and primary spoken vernacular of Luxembourgish citizens
-  administrative_language_practice: French dominates written administrative law and
-    formal government correspondence; German is used in some administrative contexts
-    and is the language of instruction in early primary education; Luxembourgish is
-    increasingly used in informal and semi-formal government digital channels.
-  deployment_target_language: Luxembourgish (lb) — the benchmark (LTZGLUE) and the
-    system both target LTZ as the primary processing language.
-  code_switching_profile:
-    description: Citizens composing digital feedback in Luxembourgish habitually alternate
-      between French-derived and German-derived lexical variants for the same administrative
-      concepts, and may embed entire French or German phrases within an otherwise
-      Luxembourgish message.
-    documented_examples:
-    - Administratioun (French-derived) vs. Verwaltung (German-derived) for 'administration'
-    - Formulaire (French) vs. Formular (German) for 'form'
-    - Bréif (Luxembourgish) vs. lettre (French) for 'letter'
-    orthographic_variation: Luxembourgish orthographic standardization (Eis Sprooch
-      reform and predecessor conventions) is ongoing and unevenly adopted. Citizens
-      may apply idiosyncratic or older spelling conventions. No assumption of standard
-      OLO (Offiziell Lëtzebuerger Orthografie) compliance is warranted for citizen
-      input.
-  resident_non_ltz_speaker_fraction: '[NEEDS VERIFICATION — Luxembourg has one of
-    the EU''s highest foreign-born resident shares; verify current proportion of residents
-    who primarily write in French, Portuguese, or other languages]'
-  portuguese_community_note: Luxembourg has a very large Portuguese-origin resident
-    community. Their written administrative correspondence is likely in French or
-    Portuguese rather than Luxembourgish and falls outside the LTZ benchmark scope,
-    but may appear in the deployment input stream.
-  benchmark_language_note: LTZGLUE processes only Luxembourgish (lb) text; non-Luxembourgish
-    content was filtered during benchmark construction using OpenLID. Deployment inputs
-    that are French-only or German-only will not be validly classified by a model
-    calibrated on LTZGLUE alone.
+  primary_benchmark_language: Luxembourgish (lb / LTZ)
+  code_switching_patterns: Citizen correspondence routinely alternates between Luxembourgish,
+    French, and German within a single message. French-derived and German-derived
+    loanwords for identical administrative concepts coexist (e.g., 'Administratioun'
+    vs. 'Verwaltung'); a model trained on standardized Luxembourgish alone will encounter
+    significant out-of-distribution input.
+  orthographic_status: Luxembourgish orthography is not fully standardized as of the
+    benchmark's publication; substantial variation in spelling, punctuation, and capitalization
+    norms is attested in citizen-facing text.
+  note: The benchmark (LTZGLUE) targets standard written Luxembourgish; the deployment
+    input distribution is broader and includes informal, code-switched, and orthographically
+    variable text. This divergence is a primary validity risk flagged in the elicitation.
 writing_systems:
-  script: Latin alphabet with diacritics used in Luxembourgish (é, ë, ä, etc.)
-  directionality: left-to-right
-  citizen_orthographic_variance: Citizens may omit diacritics, apply inconsistent
-    capitalization (Luxembourgish capitalizes all nouns as in German), and use phonetic
-    approximations. Preprocessing pipelines must not over-normalize, as variation
-    is meaningful for dialect and register detection.
-  nls_note: No right-to-left script considerations; no script-mixing concerns beyond
-    Latin diacritics.
-demographic_and_literacy_profile:
-  general_literacy_rate: '[NEEDS VERIFICATION — Luxembourg overall literacy rate;
-    expected very high by EU standards]'
-  digital_literacy_among_civil_servants: Civil servants are the direct users of classification
-    outputs, not the text authors; high digital literacy is assumed for this subgroup
-    given Luxembourg's advanced e-government infrastructure.
-  citizen_digital_literacy: '[NEEDS VERIFICATION — Luxembourg digital skills statistics,
-    e.g. DESI index ranking]'
-  internet_penetration: '[NEEDS VERIFICATION — Luxembourg household internet access
-    rate; expected very high]'
-  mobile_internet_penetration: '[NEEDS VERIFICATION]'
-  language_skills_in_population: The majority of Luxembourg residents are functionally
-    multilingual (Luxembourgish, French, German). Trilingualism is institutionally
-    embedded through the educational system. Cross-border workers may be monolingual
-    French or German speakers.
-  educational_system_note: Luxembourg's educational system uses Luxembourgish as initial
-    instruction language, transitioning to German then French. This produces a specific
-    pattern of multilingual competence in citizens educated domestically that differs
-    from the competence profile of recently arrived residents or cross-border workers.
+  scripts:
+  - Latin alphabet with diacritics (ä, ë, é, etc. as used in Luxembourgish, French,
+    German)
+  note: All three administrative languages use Latin script. No script-direction mismatch.
+    Mixed-language text is common; tokenizers trained on monolingual Luxembourgish
+    corpora may underperform on French- or German-heavy passages within otherwise
+    Luxembourgish messages.
+population_size:
+  luxembourg_total_population: '[NEEDS VERIFICATION]'
+  resident_citizens_and_long_term_residents: '[NEEDS VERIFICATION]'
+  cross_border_workers_frontaliers: '[NEEDS VERIFICATION — approximate count and origin-country
+    breakdown: France, Belgium, Germany]'
+  civil_servants_national_level: '[NEEDS VERIFICATION]'
+  civil_servants_communal_level: '[NEEDS VERIFICATION]'
+literacy_and_digital_access:
+  general_literacy_rate: '[NEEDS VERIFICATION]'
+  digital_literacy_civil_servants: Expected high given professional context; civil
+    servants operate standard government IT infrastructure.
+  citizen_digital_access: '[NEEDS VERIFICATION — internet penetration rate Luxembourg]'
+  mobile_internet_penetration_pct: '[NEEDS VERIFICATION]'
+  note: Luxembourg is a high-income country with advanced digital infrastructure;
+    access disparities are more likely along age and linguistic-background dimensions
+    than income dimensions, but sub-population figures should be verified.
+cultural_norms_notes: '- Citizens writing to government bodies tend to use a formal
+  but often understated register; emotional frustration is typically signaled indirectly
+  rather than through explicit negative language, creating a challenge for sentiment
+  and urgency classifiers trained on less institutionally constrained text.
+
+  - Code-switching between Luxembourgish, French, and German is socially unmarked
+  and does not indicate informality or distress; models should not interpret language-mixing
+  as a sentiment signal.
+
+  - The distinction between national-level (ministère) and communal-level (commune)
+  competencies is institutionally significant and familiar to residents; misrouting
+  between these levels is a culturally salient administrative error.
+
+  - Cross-border workers have a strong community identity and distinct administrative
+  concerns; messages about frontier-worker tax status, social security, or cross-border
+  transport are a recognizable genre.
+
+  - Luxembourg''s multilingual civic culture means citizens may deliberately choose
+  French or German for formal complaints, reserving Luxembourgish for more familiar
+  or informal tones — though this norm is not universal.'
+administrative_domain_notes:
+  topic_taxonomy_requirements: 'The deployment requires a topic taxonomy that is substantially
+    more granular than LTZGLUE''s five RTL editorial categories (SPORTS, CULTURE,
+    TECHNOLOGY, BUSINESS, ANIMALS). Required administrative categories include at
+    minimum: cross-border worker / frontalier issues, housing and cost of living,
+    transport and mobility, tax and fiscal matters, social security and benefits,
+    EU institutional matters, national identity documents and residency permits, communal
+    services, and public health.'
+  routing_dimension_state_vs_communal: A core routing requirement is distinguishing
+    whether a message concerns a national (state) competency or a communal (commune)
+    competency. This distinction is not encoded in any LTZGLUE task and represents
+    a deployment-specific classification dimension requiring domain adaptation or
+    bespoke annotation.
+  cross_border_worker_legal_framework: '[NEEDS VERIFICATION — primary legal and tax
+    frameworks governing frontalier status in Luxembourg, e.g., bilateral agreements
+    with France, Belgium, Germany; OECD Model Tax Convention applicability; specific
+    Luxembourgish statutes]'
+  communal_vs_national_competency_split: '[NEEDS VERIFICATION — formal enumeration
+    of communal vs. national administrative competencies in Luxembourg law, e.g.,
+    which services are handled by communes vs. ministries]'
+  politically_sensitive_categories: Housing affordability and cost of living are flagged
+    as high-priority and politically sensitive in the elicitation; messages in these
+    categories may require elevated urgency scoring and careful sentiment handling.
+  eu_institutional_queries: Luxembourg's role as an EU institutional seat means some
+    citizen correspondence may address EU-institution-specific procedures (e.g., European
+    Court of Justice, European Commission employment, EU staff regulations); these
+    are unlikely to appear in any general LTZ benchmark.
+legal_and_regulatory_context:
+  data_protection_regime: '[NEEDS VERIFICATION — Luxembourg implementation of GDPR;
+    relevant CNPD (Commission Nationale pour la Protection des Données) guidelines
+    for automated public-sector processing]'
+  automated_decision_making_constraints: EU GDPR Article 22 restricts fully automated
+    decisions with significant effects on individuals; the deployment's human-in-the-loop
+    fallback is directly relevant to this constraint. Routing and prioritization do
+    not constitute final decisions but the boundary should be legally verified.
+  applicable_ai_act_classification: '[NEEDS VERIFICATION — whether this system falls
+    under EU AI Act high-risk category for public-sector AI affecting citizens'' access
+    to services]'
+  public_sector_procurement_standards: '[NEEDS VERIFICATION — Luxembourg public procurement
+    and IT standards applicable to LLM-based administrative tools, e.g., any requirements
+    from the Ministry of Digitalisation]'
+  language_law_obligations: '[NEEDS VERIFICATION — Luxembourg law on administrative
+    language use (Law of 24 February 1984 on language regime); whether citizens have
+    a legal right to receive responses in Luxembourgish, French, or German, and implications
+    for language-of-input detection in routing]'
 infrastructure_notes:
-  digital_government_maturity: '[NEEDS VERIFICATION — Luxembourg e-government index
-    ranking; Luxembourg is generally ranked highly in EU e-government maturity assessments]'
-  key_digital_platforms:
-    myguichet: MyGuichet.lu — Luxembourg's primary online administrative portal for
-      citizen-government interaction; likely a major channel for digital correspondence
-      captured by this deployment. [NEEDS VERIFICATION — confirm MyGuichet is in scope]
-    government_portal: gouvernement.lu [NEEDS VERIFICATION — confirm as source of
-      citizen feedback]
-  connectivity:
-    broadband_infrastructure: '[NEEDS VERIFICATION — Luxembourg fiber/broadband penetration
-      rates]'
-    mobile_network_coverage: '[NEEDS VERIFICATION — 4G/5G population coverage]'
-  text_processing_environment: Text-only deployment; no audio, image, or multimodal
-    input handling required. Inputs arrive as structured digital messages from e-government
-    portals.
-  system_architecture_note: Multi-label classifier with confidence scoring and human-escalation
-    fallback. LTZGLUE emits only single hard labels; the deployment requires model-level
-    adaptation beyond benchmark format — specifically calibrated probability outputs
-    and multi-label decoding.
-administrative_domain_profile:
-  topic_taxonomy_requirements:
-    description: The routing system requires a Luxembourg-specific administrative
-      topic taxonomy that LTZGLUE does not provide. The following categories are deployment-critical
-      and absent from LTZGLUE's five-class RTL news taxonomy (SPORTS, CULTURE, TECHNOLOGY,
-      BUSINESS, ANIMALS).
-    required_topic_categories:
-    - category: Cross-border worker / frontalier status
-      priority: HIGH
-      notes: 'Near-half of Luxembourg''s workforce; generates distinct query types
-        around frontier-worker tax treaties, social security affiliation, healthcare
-        portability. LTZGLUE: FULL GAP.'
-    - category: Housing and rental market
-      priority: HIGH — politically sensitive
-      notes: '[NEEDS VERIFICATION — confirm housing as a top-volume citizen complaint
-        category in Luxembourg government correspondence]'
-    - category: Cost of living and consumer prices
-      priority: HIGH — politically sensitive
-      notes: '[NEEDS VERIFICATION]'
-    - category: National identity and residency documents
-      priority: HIGH
-      notes: Passeport, carte d'identité, certificat de résidence — national state
-        competency (Ministère des Affaires étrangères, communes for état civil). [NEEDS
-        VERIFICATION — routing split between national and communal for specific sub-tasks]
-    - category: Income tax and fiscal matters
-      priority: HIGH
-      notes: Administration des contributions directes. Distinct sub-categories for
-        residents vs. non-resident frontaliers.
-    - category: Social security and health insurance
-      priority: HIGH
-      notes: CNS, CNAP, CCSS — national competency. Cross-border healthcare reimbursement
-        for frontaliers is a distinct sub-category.
-    - category: Urban planning and construction permits
-      priority: MODERATE
-      notes: Communal competency; routing must identify the relevant commune.
-    - category: Transport and mobility
-      priority: MODERATE
-      notes: '[NEEDS VERIFICATION — Luxembourg introduced free public transit in 2020;
-        this policy generates ongoing citizen queries] [NEEDS VERIFICATION — free
-        transit policy current status]'
-    - category: EU institutional matters
-      priority: MODERATE
-      notes: Citizen messages may erroneously address national government for EU-institution
-        matters or vice versa. Routing system needs a redirect/triage category.
-    - category: Labor law and employment
-      priority: MODERATE
-      notes: Inspection du Travail et des Mines (ITM) — national competency.
-    - category: Education and childcare
-      priority: MODERATE
-      notes: Childcare allocation (chèque-service accueil) is state-managed; school
-        enrollment may be communal. [NEEDS VERIFICATION — routing of education queries
-        between national and communal]
-    - category: Immigration and naturalization
-      priority: MODERATE
-      notes: Direction de l'immigration — national competency.
-  state_vs_communal_routing:
-    description: A primary routing challenge is distinguishing whether a citizen message
-      concerns a national-state competency or a communal competency. No existing NLU
-      benchmark encodes this distinction. It requires Luxembourg-specific administrative
-      knowledge not present in LTZGLUE.
-    ambiguous_boundary_cases:
-    - État civil (births, marriages, deaths) — performed by communes but governed
-      by national law
-    - Social housing — involves both national policy (SNHBM) and communal implementation
-    - Road infrastructure — national vs. communal road network split
-    benchmark_coverage: FULL GAP — LTZGLUE contains no administrative jurisdiction
-      categories of any kind.
-  sentiment_and_urgency_norms:
-    description: Luxembourgish administrative communication culture is characterized
-      by formal, understated expression even when citizens are frustrated or distressed.
-      Sentiment classifiers trained on general-purpose or media-domain data will systematically
-      underestimate negative sentiment and urgency in citizen correspondence.
-    known_benchmark_gap: LTZGLUE sentiment annotation used two native speakers (Cohen's
-      Kappa 0.45) annotating RTL commentary/letters-to-editor. No civil-service or
-      administrative-correspondence register was included. Annotator familiarity with
-      formal civil communication norms is undocumented.
-    implications_for_prioritization: The deployment uses sentiment/urgency outputs
-      for correspondence prioritization. Underdetection of frustration could cause
-      genuinely urgent messages to be deprioritized. The human-in-the-loop audit mechanism
-      is critical to recalibrate this progressively.
-    cultural_communication_notes: Citizens may express severe dissatisfaction through
-      understatement, formal complaint procedures, or legalistic framing rather than
-      explicit negative sentiment markers. Urgency may be signaled indirectly through
-      references to deadlines, legal rights, or administrative timelines rather than
-      emotional language.
-legal_and_regulatory_framework:
-  data_protection:
-    applicable_regulation: EU General Data Protection Regulation (GDPR) — Regulation
-      2016/679
-    national_implementation: '[NEEDS VERIFICATION — Luxembourg GDPR implementing legislation;
-      Commission nationale pour la protection des données (CNPD) as supervisory authority]'
-    ai_act_considerations: '[NEEDS VERIFICATION — EU AI Act applicability to automated
-      public-sector correspondence routing; likely classified as high-risk AI system
-      under Annex III (public administration) provisions]'
-  administrative_law:
-    primary_framework: '[NEEDS VERIFICATION — Luxembourg administrative procedure
-      law (loi du 1er décembre 1978 and subsequent reforms); verify current applicable
-      statutes for automated administrative decision-support]'
-    automated_decision_constraints: Automated routing that affects citizen rights
-      or service access may be subject to administrative law requirements for transparency,
-      contestability, and human review. The system's human-in-the-loop fallback is
-      directly relevant to compliance.
-    language_rights: '[NEEDS VERIFICATION — Luxembourg language law of 1984 (loi du
-      24 février 1984 sur le régime des langues) provisions governing which languages
-      may be used in administrative correspondence and government responses]'
-  cross_border_worker_legal_framework:
-    tax_treaties: '[NEEDS VERIFICATION — bilateral tax treaties between Luxembourg
-      and France, Belgium, Germany governing frontalier taxation; verify current treaty
-      texts and any recent amendments]'
-    social_security_coordination: EU Regulation 883/2004 on coordination of social
-      security systems — governs which country's social security applies to cross-border
-      workers
-    healthcare: '[NEEDS VERIFICATION — cross-border healthcare directive 2011/24/EU
-      implementation; CNS reimbursement procedures for frontaliers]'
-  free_public_transit:
-    policy_description: Luxembourg abolished fares on all public transport nationally
-    implementation_date: '[NEEDS VERIFICATION — verify March 2020 implementation date
-      and any subsequent policy changes]'
-    relevance: Generates a distinct class of citizen queries; may be a routing category
-      for Mobilité (CFL, RGTR, Luxtram operators vs. ministry)
-benchmark_validity_concerns_for_this_population:
-  input_ontology_gap:
-    severity: CRITICAL
-    summary: LTZGLUE topic taxonomy (5 RTL news categories) and intent taxonomy (voice-assistant
-      reminder/alarm commands) share zero overlap with the deployment's required administrative
-      routing categories. The benchmark cannot be used as a direct proxy for topic
-      classification performance in this deployment context.
-    recommended_investigation: '[NEEDS VERIFICATION — search for any Luxembourgish
-      civic/administrative NLP dataset that could supplement LTZGLUE for topic coverage
-      evaluation]'
-  output_format_gap:
-    severity: CRITICAL
-    summary: All LTZGLUE tasks emit single hard labels. The deployment requires multi-label
-      classification with calibrated confidence scores. No adaptation path exists
-      within the current benchmark format.
-    recommended_investigation: '[NEEDS VERIFICATION — confirm whether any LTZGLUE
-      task evaluation scripts support probabilistic output; investigate whether fine-tuned
-      encoder logit distributions can be used for confidence calibration]'
-  input_content_register_gap:
-    severity: HIGH
-    summary: LTZGLUE data sources are predominantly formal (RTL news, parliamentary
-      speeches, Wikipedia, LOD dictionary). Citizen correspondence is colloquial,
-      code-switched, and orthographically variable. The partial exception — Lothritz
-      et al. NER corpus from RTL news comments — covers informal register in a narrow
-      slice of the benchmark.
-    recommended_investigation: '[NEEDS VERIFICATION — quantify proportion of LTZGLUE
-      training data from informal/code-switched sources; assess whether RTL news comment
-      NER corpus provides meaningful register transfer]'
-  annotator_provenance_gap:
-    severity: HIGH
-    summary: Sentiment annotators are identified only as two native LTZ speakers (Cohen's
-      Kappa 0.45). No documentation of familiarity with civil administrative communication
-      norms. Student assistants are acknowledged without further background detail.
-    recommended_investigation: '[NEEDS VERIFICATION — contact LTZGLUE authors or inspect
-      supplementary materials for annotator recruitment criteria, residency, and occupation]'
-  benchmark_size_and_coverage:
-    severity: MODERATE
-    summary: Low-resource benchmark with small per-task dataset sizes. Rare administrative
-      sub-topics (e.g., EU institutional queries, frontalier-specific matters) are
-      entirely absent as categories and cannot be assessed for coverage adequacy.
-    recommended_investigation: '[NEEDS VERIFICATION — obtain per-task test set sizes
-      from LTZGLUE appendix tables; assess reliability of F1 estimates for minority
-      categories]'
-  llm_label_contamination:
-    severity: MODERATE
-    summary: RTE labels verified by ChatGPT-5-Mini; JUDGEWEL NER labels generated
-      with LLM judges and minimal human verification. LLM-induced label artifacts
-      may not reflect genuine Luxembourgish administrative or legal linguistic norms.
-    recommended_investigation: '[NEEDS VERIFICATION — assess proportion of NER and
-      RTE test data derived from LLM-annotated vs. human-annotated sources]'
-cultural_norms_notes: 'Luxembourg''s administrative culture reflects the country''s
-  trilingual institutional history and its position as both a small nation-state and
-  a major EU hub. Key norms relevant to this deployment:
-
-  - Civil communication with government is traditionally formal and legalistic, even
-  in digital channels.
-
-  - Citizens expect responses in the language they wrote in (Luxembourgish, French,
-  or German), with French dominant in formal administrative correspondence.
-
-  - Cross-border workers have a distinct civic identity and distinct administrative
-  needs; their messages may reference French or German administrative concepts by
-  habit.
-
-  - Luxembourg''s high cost of living and housing scarcity generate politically charged
-  correspondence that requires careful urgency/frustration calibration.
-
-  - The country''s EU identity means citizens sometimes conflate national and supranational
-  administrative channels.
-
-  - Understatement and formal complaint framing may mask genuine urgency or frustration
-  in citizen messages — a critical consideration for the sentiment/prioritization
-  subsystem.
-
-  - The Portuguese-origin community ([NEEDS VERIFICATION — estimated share of total
-  population]) primarily interacts in French rather than Luxembourgish, creating a
-  population segment whose correspondence may fall outside the LTZ model''s coverage.'
-domain_specific_operational_notes:
-  routing_architecture: The system routes messages to specific government departments
-    and differentiates between national and communal authority levels. A single message
-    may legitimately require multi-label routing (e.g., a housing query involving
-    both communal urban planning and national social housing allocation). The human-in-the-loop
-    fallback handles low-confidence and boundary cases.
-  high_stakes_decisions: 'Automated routing in a public administration context constitutes
-    a high-stakes application: misrouting delays citizen service delivery, and misclassification
-    of urgency/frustration can cause harm through deprioritization of urgent cases.
-    Assessment must weight error asymmetries — the cost of missing an urgent/frustrated
-    message is higher than the cost of over-escalating to human review.'
-  progressive_calibration: The deployment includes a civil servant feedback mechanism
-    to progressively align model outputs with actual administrative norms. This is
-    a critical mitigation for the benchmark's annotator provenance and sentiment calibration
-    gaps, but its effectiveness depends on sufficient volume and diversity of civil
-    servant feedback over time. [NEEDS VERIFICATION — document the feedback loop mechanism
-    design and expected calibration timeline]
-  luxembourgish_language_standardization: The ongoing OLO (Offiziell Lëtzebuerger
-    Orthografie) standardization effort affects how Luxembourgish is written in both
-    citizen messages and reference data. The benchmark was constructed largely before
-    or during early adoption periods. Assessment should account for potential orthographic
-    drift between benchmark data and current citizen writing conventions. [NEEDS VERIFICATION
-    — confirm OLO adoption timeline and current status]
+  deployment_modality: Text-only; citizen correspondence submitted via digital channels
+    (web forms, email, potentially messaging platforms). No speech or image modality
+    in scope.
+  expected_input_length: Short to medium-length messages (complaint letters, inquiries,
+    feedback forms); likely within LTZGLUE's 40–400 word preprocessing range for some
+    inputs, but formal complaint letters may exceed this.
+  government_it_environment: '[NEEDS VERIFICATION — Luxembourg government cloud or
+    on-premises hosting requirements; any restrictions on use of commercial LLM APIs
+    for processing citizen data]'
+  connectivity: National digital infrastructure is advanced; civil servant workstations
+    operate on standard government networks. No low-bandwidth considerations.
+  human_in_the_loop_interface: Civil servants interact with a routing dashboard that
+    surfaces low-confidence flags and escalated messages; the system collects real-time
+    feedback for progressive model alignment.
+nlp_tooling_and_model_context:
+  luxembourgish_nlp_ecosystem_maturity: Low-resource. Luxembourgish has limited NLP
+    tooling relative to French, German, or English. LTZGLUE represents the first unified
+    NLU benchmark; available encoder models include LUXEMBERT, LTZ-E1-mini, LTZ-E1-base,
+    and multilingual models (mBERT, XLM-R) with partial LTZ coverage.
+  benchmark_data_sources: Primarily RTL news articles; supplemented by the Luxembourgish
+    Online Dictionary, Wikipedia/Wikidata, and a machine-translated English intent
+    corpus. The formal/institutional register of most sources diverges from citizen
+    correspondence.
+  code_switching_coverage_in_benchmark: Partial — the human-annotated NER sub-corpus
+    covers informal and code-mixed writing; other tasks do not systematically represent
+    French/German code-switching or non-standard orthography.
+  multi_label_format_gap: All LTZGLUE tasks produce single hard labels; the deployment
+    requires multi-label classification with calibrated confidence scores. This is
+    a structural mismatch requiring model-level adaptation beyond benchmark evaluation
+    scope.
+  sentiment_task_limitations: 'LTZGLUE sentiment task: 3 classes (positive, neutral,
+    negative), Cohen''s Kappa 0.45 (moderate), annotated by two native speakers with
+    no documented administrative communication expertise. Does not capture urgency,
+    frustration intensity, or the formal-but-understated civil register.'
+  intent_detection_task_limitations: LTZGLUE intent labels are exclusively voice-assistant
+    commands (alarm, reminder, weather); no administrative intent categories (complaint,
+    document request, tax inquiry, urgent escalation) are present.
+benchmark_validity_risks_summary:
+  input_ontology_gap: LTZGLUE topic and intent taxonomies have no overlap with Luxembourg-specific
+    administrative categories required for routing. Domain adaptation or bespoke task
+    construction is needed.
+  input_content_gap: Benchmark inputs are drawn from formal/standardized sources;
+    deployment inputs will include code-switched, orthographically variable, and colloquial
+    Luxembourgish. NER sub-corpus provides partial coverage of informal register only.
+  output_ontology_gap: Single hard-label format across all tasks is incompatible with
+    multi-label routing logic and confidence-based escalation. Sentiment labels do
+    not map to urgency/frustration scales needed operationally.
+  output_content_gap: Annotator provenance for sentiment task is undocumented with
+    respect to administrative register familiarity; moderate inter-annotator agreement
+    (κ=0.45) limits label reliability for nuanced civil communication.
+  human_in_the_loop_mitigation: The deployment includes a civil-servant feedback mechanism
+    for progressive alignment; this partially mitigates OC and OO risks at runtime
+    but does not address pre-deployment benchmark validity gaps.
+flagged_items_for_web_search:
+- item: Current frontalier (cross-border worker) share of Luxembourg total employment
+    and origin-country breakdown
+  search_target: Luxembourg frontaliers statistics 2024 STATEC cross-border workers
+    France Belgium Germany
+- item: CNPD guidance on automated processing of citizen correspondence in public
+    sector
+  search_target: Luxembourg CNPD GDPR Article 22 automated decision-making public
+    sector guidance
+- item: EU AI Act high-risk classification applicability to public-sector NLU routing
+    systems
+  search_target: EU AI Act high-risk public administration automated routing citizen
+    correspondence classification
+- item: Luxembourg language law (Law of 24 February 1984) administrative language
+    obligations
+  search_target: Luxembourg loi du 24 février 1984 régime des langues administration
+    obligations réponse
+- item: Formal enumeration of communal vs. national administrative competencies in
+    Luxembourg
+  search_target: Luxembourg communes compétences nationales distinction loi commune
+    état administration
+- item: LTZGLUE benchmark data source register documentation and code-switching coverage
+  search_target: LTZGLUE Luxembourgish benchmark register code-switching informal
+    orthographic variation data sources
+- item: Existing Luxembourgish administrative NLP datasets or topic taxonomies for
+    civic/government domains
+  search_target: Luxembourgish administrative NLP dataset civic topic classification
+    cross-border worker government
+- item: Luxembourg Ministry of Digitalisation IT procurement and cloud policy for
+    LLM-based tools
+  search_target: Luxembourg Ministry of Digitalisation LLM AI procurement policy government
+    cloud citizen data
+- item: Current internet and smartphone penetration rates in Luxembourg
+  search_target: Luxembourg internet penetration rate 2024 digital access statistics
+    STATEC
+- item: Luxembourg civil servant workforce size at national and communal levels
+  search_target: Luxembourg fonctionnaires nombre administration nationale communale
+    STATEC 2023 2024
+- item: LTZGLUE annotator demographics and professional background for sentiment task
+  search_target: LTZGLUE sentiment annotation annotator demographics professional
+    background administrative register Luxembourgish
+- item: Multi-label NLU evaluation approaches for low-resource languages applicable
+    to Luxembourgish
+  search_target: multi-label classification low-resource NLU confidence calibration
+    Luxembourgish benchmark adaptation
+- item: Legal and bilateral tax treaty frameworks governing frontalier workers in
+    Luxembourg
+  search_target: Luxembourg frontaliers bilateral tax convention France Belgium Germany
+    social security administrative procedures

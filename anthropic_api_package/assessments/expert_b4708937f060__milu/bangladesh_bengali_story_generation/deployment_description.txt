@@ -1,0 +1,7 @@
+Use case and domain: The focus is region-dependent generic llm adaptation. 
+
+Task: domain-dependent language and dialect understanding
+LLMs evaluated: Generic frontier model vs small llms as well as region specific llms
+Domain: General llm capability on region-dependent and context driven task understanding
+Setting: Evaluating region-dependent llms to assess their capability on local-context tasks.
+Target population: A native bengali speaker (a university student doing bsc thesis in story generation) from Dhaka, Bangladesh is using a regional llm to generate local context-driven stories. So it is important to have Bangladesh specific entity presence in the evaluation of the bengali part of the benchmark.

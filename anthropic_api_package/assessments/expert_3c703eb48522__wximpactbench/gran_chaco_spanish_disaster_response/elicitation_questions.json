@@ -1,0 +1,22 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "The benchmark was built around Canadian historical newspaper content about weather impacts. Your deployment covers Gran Chaco disaster events — which may include flooding from the Pilcomayo and Bermejo rivers, droughts, locust outbreaks, chaco fires, or infrastructure failures in isolated rural areas. Do these event types and their local consequences (e.g., disrupted cattle routes, damage to dirt-road access to indigenous communities, cross-border displacement) map onto the impact categories your responders care about, or are there Gran Chaco-specific damage types that would be missing?"
+  },
+  {
+    "id": "IC",
+    "dimension": "IC",
+    "question": "The benchmark was constructed from Canadian English-language newspapers. Your source texts are Spanish-language local news and social media from Argentina, Bolivia, and Paraguay — including informal writing, regional slang, code-switching with indigenous languages (Guaraní, Quechua, Wichí), and platform-specific abbreviations. Would your responders consider damage reports written in these registers as representative of what the system needs to handle correctly?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OC",
+    "question": "The benchmark's impact labels (infrastructural, political, financial, ecological, agricultural, human health) were validated against Canadian newspaper content. For your responders in the Gran Chaco, would the boundary between these categories feel natural — for example, would a flooded dirt road that cuts off an indigenous community be classified as infrastructural, ecological, or human health? And who among your users — field gendarmes, civil protection technicians, national coordinators — should be the authoritative judge of correct label assignment in your context?"
+  },
+  {
+    "id": "Q4",
+    "dimension": "OO",
+    "question": "The benchmark outputs are multi-label classifications and ranked answers. Your responders need to quickly identify damage types from incoming news and social media. Does your system need to produce a ranked list of impact types, a simple set of simultaneous labels, a confidence score, or a structured alert that routes information to specific response units? Would the same output format serve a field gendarme in Salta and a national emergency coordinator in Buenos Aires equally well?"
+  }
+]

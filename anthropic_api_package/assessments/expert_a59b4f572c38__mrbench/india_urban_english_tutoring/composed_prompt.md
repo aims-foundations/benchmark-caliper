@@ -39,7 +39,7 @@ Citation rules for each source are in your system instructions.
 
 - **Name**: mrbench
 - **Full Name**: MRBench – A Benchmark for Evaluating AI Tutor Responses in Student Mistake Remediation
-- **Domain**: Pedagogical evaluation of AI tutor responses in mathematics education
+- **Domain**: Pedagogical quality evaluation of AI tutor responses in educational dialogue
 - **Languages**: en
 - **Porting Strategy**: none
 - **Year**: 2024
@@ -49,115 +49,108 @@ Citation rules for each source are in your system instructions.
 ## Key characteristics relevant to validity analysis:
 
 ### 1. Input Ontology
-MRBench is scoped to a single well-defined educational task: student mistake remediation in
-mathematics [Q1, Q111, Q112]. The benchmark formalizes the task as generating an appropriate
-tutor response Tt+1 to a student's most recent utterance(s) containing a mistake or
-confusion, given the full dialogue history [Q13, Q14]. The output of this task is assessed
-across eight pedagogical dimensions drawn iteratively from learning sciences literature
-[Q15, Q16, Q129]: encouraging active learning [Q17], adapting to student goals [Q18],
-managing cognitive load [Q19], fostering motivation [Q20], mistake identification [Q21, Q22],
-answer non-revelation [Q23], providing guidance [Q24], actionability [Q25], logical coherence
-[Q26], appropriate tone [Q27], and human-likeness [Q29]. The taxonomy was refined iteratively,
-with the pilot study confirming that these eight dimensions are necessary and sufficient for
-evaluating mistake remediation [Q132]; additional dimensions such as grammaticality and empathy
-were considered but excluded [Q131]. The benchmark covers both elementary and middle school
-content [Q144, Q143], providing a mix of difficulty levels. However, the taxonomy is explicitly
-scoped to mathematics and to mistake remediation only; the authors acknowledge it would need
-verification and likely adaptation for other tasks or subjects [Q117, Q118, Q130]. The equal
-analytical weight given to all eight dimensions does not encode the deployment-relevant
-priority of "providing guidance" as a uniquely critical acceptability criterion for Indian
-professional teachers.
+MRBench defines a specific and narrow task taxonomy: educational dialogues in
+mathematics in which the student's most recent utterance contains a mistake or
+confusion, and the benchmark evaluates the appropriateness of the AI tutor's next
+response [Q12, Q13, Q14]. The eight pedagogical dimensions — active learning,
+student-goal adaptation, cognitive-load management, motivation, mistake
+identification, answer non-revelation, guidance provision, actionability, logical
+coherence, tutor tone, and human-likeness — were derived through iterative analysis
+from learning science principles and validated by pilot annotation [Q1, Q15, Q129].
+Candidate dimensions such as grammaticality and empathy were explicitly excluded
+after the validation pilot confirmed the eight retained dimensions are both necessary
+and sufficient for this task [Q131, Q132]. The taxonomy is restricted to mistake
+remediation in mathematics and would require verification or adaptation for other
+tasks (e.g., concept learning) or other subjects [Q117, Q118, Q130]. Coverage
+spans two mathematical difficulty levels — elementary operations (Bridge) and
+middle-school reasoning (MathDial) — providing a mix of easy and challenging
+problems [Q143, Q144]. The taxonomy makes no reference to any specific national
+curriculum; it is curriculum-agnostic by construction [Q111, Q112]. No
+domain-specific subcategories reflect Indian curriculum topics (e.g., Indian
+place-value conventions, NCERT/CBSE problem types).
 
 ### 2. Input Content
-MRBench is compiled from two English-language datasets sourced from Western educational
-contexts [Q41]. Bridge provides 60 partial dialogue interactions between real human tutors
-and elementary-level students, grounded in fundamental mathematical operations like
-multiplication and addition, with characteristically short conversation turns [Q44, Q45, Q46,
-Q92]. MathDial provides 132 complete multi-turn conversations between a human tutor and an
-LLM acting as a student, grounded in middle-school reasoning problems, with longer and more
-structured response patterns [Q48, Q49, Q95]. Together these produce 192 benchmark instances
-[Q52], described as making MRBench "both challenging and comprehensive" [Q97]. The student
-communication register embedded in both source datasets reflects Western classroom dynamics:
-students verbalize reasoning at length across multiple turns, engage in extended Socratic
-dialogue, and present mistakes in forms characteristic of Western instructional environments.
-The brief, deferential, procedure-heavy interaction styles of Indian Grade 1–8 students are
-absent from the source data. Additionally, MathDial uses an LLM as the student interlocutor
-[Q48], further distancing the benchmark's conversation instances from authentic student
-behavior. Conversation topic metadata is available for Bridge but not for MathDial [Q145],
-limiting the ability to assess subject-matter coverage. Manual inspection was applied to
-ensure quality [Q51], but no documentation indicates that Indian classroom misconception
-types or culturally grounded error patterns were considered in data selection.
+MRBench is assembled from two existing English-language datasets: Bridge [Q44]
+and MathDial [Q48], both containing real educational dialogues in mathematics
+grounded in student errors or misconceptions [Q41, Q42, Q43]. Bridge comprises
+partial dialogues between real human tutors and students at the elementary level,
+with 60 high-quality instances selected from 700 dialogues on the criterion that
+the student's last utterance exhibits an error or confusion [Q45, Q46, Q47].
+MathDial consists of complete multi-turn conversations between a real human tutor
+and an LLM acting as a student in middle-school mathematical reasoning, with 132
+instances retained after manual quality inspection [Q48, Q49, Q51]. MathDial
+conversations are longer, structurally more complex, and grounded in reasoning
+tasks [Q95], while Bridge conversations are shorter and focused on fundamental
+operations [Q44, Q45, Q92]. Both source datasets were constructed in Western
+academic settings where student verbalization of reasoning is extensive; neither
+dataset was designed to capture the briefer, more deferential student communication
+styles characteristic of Indian classrooms. The paper does not acknowledge this
+cultural provenance as a limitation. The benchmark's claim to being "challenging and
+comprehensive" is defined exclusively in terms of mathematical difficulty level, not
+cultural or interactional diversity [Q97].
 
 ### 3. Input Form
-The benchmark is entirely text-based, with conversation inputs consisting of multi-turn
-English dialogue histories of varying length and turn count [Q133, Q134, Q141, Q142].
-Length is measured in characters, with Bridge conversations characteristically shorter
-than MathDial ones [Q147, Q141]. A standardized prompt template adapted from Wang et al.
-(2024a) was used to elicit LLM responses [Q133, Q134]. The text-only, English-language
-format is well-matched to both the benchmark's intended use and the target Indian metro
-deployment, where teachers and students are English-fluent and interaction is text-based.
-No spoken, multimodal, or non-Latin script modalities are present or required. MathDial
-conversations do not include topic metadata [Q145], which is a minor structural limitation
-but does not constitute a modality mismatch. No significant input form validity concerns
-arise for the target deployment.
+All benchmark data is text-only, consisting of English-language dialogue histories
+and tutor responses [Q133, Q134]. LLM responses were generated using a standardized
+prompt template adapted from Wang et al. (2024a) [Q133, Q134]. Conversation and
+response lengths differ systematically between the two datasets, with Bridge being
+shorter in character count and turn count, and MathDial longer and more structured
+[Q141, Q142]. Length is uniformly estimated in characters [Q147]. Conversation topic
+metadata is absent from MathDial [Q145]. The format is consistent with a text-based
+English deployment environment and presents no signal-distribution mismatch for
+Indian metro professional teachers who operate in English. No multimodal signals
+(e.g., images of handwritten work) are included, and no spoken or script-level
+variation is evaluated.
 
 ### 4. Output Ontology
-Each of the eight taxonomy dimensions is scored using a three-tier labeling system [Q58,
-Q59], exemplified by "yes / to some extent / no" for mistake identification [Q59, Q60].
-The desired label for each dimension is specified in the paper's Table 4 [Q128, Q65]. The
-ontology incorporates a factual correctness gate: only factually correct guidance is counted
-as useful for the DAMR score [Q84]. The "Tutor Tone" dimension collapses Neutral and
-Encouraging into a combined "Non-offensive" label, which achieves 100% DAMR across all
-tutors by construction [Q90]. The current annotation scheme focuses on the appropriateness
-of individual tutor turns rather than downstream student learning gains [Q119]; the output
-ontology explicitly does not capture post-conversation outcomes [Q120, Q121]. Dimension
-interdependencies are acknowledged but were suppressed during annotation by instructing
-annotators to treat all dimensions as orthogonal [Q30, Q116]. For the Indian deployment,
-the equal-weight DAMR reporting across all eight dimensions does not reflect the
-deployment-relevant prioritization of "providing guidance" as the dominant acceptability
-criterion, nor does the ontology encode distinctions between Socratic scaffolding and
-direct-correction guidance styles that Indian professional teachers would recognize as
-categorically different.
+Each tutor response is scored across the eight pedagogical dimensions using a
+three-tier labeling system (e.g., "yes," "to some extent," "no") [Q58, Q59]. The
+taxonomy specifies a "desired label" for each dimension [Q65, Q128], and these
+desired labels collectively underpin the Desired Annotation Match Rate (DAMR) metric
+[Q64, Q65]. The output taxonomy focuses on the appropriateness of individual tutor
+turns rather than cumulative learning impact [Q119, Q120, Q121], and all eight
+dimensions are treated analytically as independent and orthogonal despite
+acknowledged interdependencies [Q30, Q116]. The equal analytical weighting of all
+eight dimensions in DAMR does not reflect the user-identified emphasis on "providing
+guidance" as the single most critical dimension for Indian professional teachers.
+The label scheme collapses "neutral" and "encouraging" tutor tone into a
+"non-offensive" composite for DAMR purposes, achieving 100% compliance across all
+tutors [Q90]. The taxonomy is explicitly scoped to mathematics mistake remediation
+and may not generalize to other tasks or subjects [Q117, Q118].
 
 ### 5. Output Content
-The annotation team comprised four annotators — two male and two female — all holding at
-least a post-graduate degree in Computer Science and proficient in English [Q31]. The
-authors explicitly state that teaching experience was not required, as the task was designed
-to be assessable from the perspective of a potential user of AI tutors rather than a
-practitioner teacher [Q32]. Annotation was conducted in-house to ensure quality control,
-avoiding public crowdsourcing platforms [Q33], with comprehensive training including
-interactive documents, oral instructions, and a structured quiz [Q34, Q135, Q136, Q137].
-A two-phase pilot validated the taxonomy, with each annotator independently labeling the
-same eight dialogues across all eight dimensions, yielding 544 annotations per annotator
-[Q35, Q36, Q37, Q38]. Inter-annotator agreement reached Fleiss' kappa = 0.65 in the pilot
-[Q39] and Cohen's kappa = 0.71 in the main annotation phase [Q61], indicating substantial
-agreement — but this agreement is among a culturally homogeneous group of CS-educated
-annotators affiliated with MBZUAI in Abu Dhabi [Q6], not among Indian professional
-educators. No documentation indicates that any annotator had South Asian educational
-expertise, familiarity with CBSE/NCERT pedagogy, or experience with exam-oriented
-correction styles. LLM critics (Prometheus2 and Llama-3.1-8B) were also evaluated as
-automated annotators [Q105], but their annotations proved unreliable for most pedagogical
-dimensions, showing mostly negative correlation with human annotations [Q107, Q108, Q109].
-The ground-truth labels therefore reflect the pedagogical priors of CS-trained, likely
-non-Indian annotators, which the user has flagged as a source of systematic divergence from
-Indian professional teachers' judgments of guidance quality.
+The annotation team consisted of four individuals — two male, two female — all
+holding at least a post-graduate degree in Computer Science and proficient in English,
+affiliated with MBZUAI in Abu Dhabi [Q31, Q6]. Crucially, the authors explicitly
+state that direct teaching experience was not required; the ability to judge responses
+from the perspective of a student or potential AI tutor user was deemed sufficient
+[Q32]. Public crowdsourcing platforms were avoided in favor of rigorous in-house
+training protocols [Q33, Q34, Q135, Q136, Q137]. A validation pilot study yielded a
+Fleiss' kappa of 0.65 (substantial agreement) [Q37, Q38, Q39], and the full
+annotation achieved an average Cohen's kappa of 0.71 [Q56, Q57, Q61]. LLM-based
+annotation using Prometheus2 and Llama-3.1-8B was also conducted [Q105], but
+resulting correlations with human annotations were predominantly negative across
+pedagogical dimensions [Q107, Q108, Q109], indicating unreliability. No annotator
+had documented exposure to Indian educational norms, CBSE/NCERT curricula, or
+South Asian pedagogy, and the paper does not acknowledge this as a limitation.
+Because the "providing guidance" dimension's desired labels were calibrated by
+annotators whose implicit pedagogical model likely reflects Western or generic
+academic norms — favoring Socratic scaffolding over direct correction — the
+ground-truth labels for this most-critical dimension may systematically diverge
+from the judgments Indian professional teachers would render.
 
 ### 6. Output Form
-The benchmark produces categorical three-tier labels per dimension per response, aggregated
-into DAMR scores (percentage of responses receiving the desired label) [Q64, Q65] and
-Annotation Correlation (AC) scores based on Pearson's correlation between LLM and human
-annotations [Q66, Q138]. Human annotations are treated as the gold standard [Q68]. DAMR
-scores are reported separately for Bridge and MathDial subsets [Q149, Q150] and for each
-tutor condition (novice human, expert human, and each of the seven LLMs) [Q67, Q83]. General
-NLG metrics (BLEU, BERTScore, DialogRPT) are explicitly rejected as insufficient for
-pedagogical evaluation because they ignore pedagogical values and require gold references
-not always available [Q4, Q7, Q8], and because multiple valid responses may exist for any
-given input [Q9]. The output form — categorical labels and aggregate percentages — is
-well-suited to the deployment's binary acceptability judgments by professional teachers.
-No output modality mismatch is present. The primary output form concern for the deployment
-is structural rather than representational: the equal-weight DAMR summary statistic does
-not surface dimension-level prioritization, making it difficult to use the benchmark score
-directly as a proxy for Indian teachers' acceptability judgments without re-weighting.
+The benchmark employs two primary quantitative metrics: DAMR (percentage of
+responses receiving the desired annotation label per dimension) [Q64, Q65] and
+Annotation Correlation (Pearson's correlation between LLM-generated and human
+annotations) [Q66, Q138]. Human annotations are treated as the gold standard [Q68].
+Results are reported both overall and broken down by dataset [Q149, Q150]. The
+output form is categorical labels and percentage/correlation scores — consistent
+with a deployment scenario where teachers evaluate binary or graded acceptability.
+The benchmark does not evaluate free-form output quality through generative metrics;
+the paper explicitly notes that general NLG metrics like BLEU and BERTScore fail to
+capture pedagogical values [Q4, Q7, Q8]. LLM evaluators are assessed as unreliable
+critics for pedagogical dimensions [Q114, Q123].
 
 
 ### Verbatim Quote Registry
@@ -172,10 +165,10 @@ directly as a proxy for Indian teachers' acceptability judgments without re-weig
 | Q6 | 1 | output_content | "Kaushal Kumar Maurya, KV Aditya Srivatsa, Kseniia Petukhova and Ekaterina Kochmar. Mohamed bin Zayed University of Artificial Intelligence, Abu Dhabi, UAE." |
 | Q7 | 2 | output_form | "General domain-agnostic natural language generation (NLG) metrics like BLEU (Papineni et al., 2002), BERTScore (Lin, 2004), DialogRPT (Gao et al., 2020), and so on have been used as proxies to measure the coherence and human-likeness of AI tutor responses." |
 | Q8 | 2 | output_form | "However, these metrics do not account for pedagogical values (Jurenka et al., 2024; Liu et al., 2024) and often require a ground truth answer to evaluate matching responses." |
-| Q9 | 2 | output_form | "For a given input dialogue, there can be multiple valid, pedagogically correct ground truth responses, making detection of the optimal answer non-deterministic (Tack and Piech, 2022; Al-Hossami et al., 2024)." |
+| Q9 | 2 | output_content | "For a given input dialogue, there can be multiple valid, pedagogically correct ground truth responses, making detection of the optimal answer non-deterministic (Tack and Piech, 2022; Al-Hossami et al., 2024)." |
 | Q10 | 2 | output_form | "Additionally, these metrics can be easily manipulated; for instance, simple responses like "Hello" or "teacher:" (Baladón et al., 2023; Jurenka et al., 2024) can inflate scores." |
-| Q11 | 2 | input_ontology | "In this section, we first briefly overview and discuss the limitations of the existing general-purpose NLG metrics and then turn to pedagogically-oriented approaches to evaluation." |
-| Q12 | 3 | input_content | "In this work, we focus on educational dialogues between a student and a tutor in the mathematical domain. Specifically, the conversations are grounded in students' mistakes or confusions, and the AI tutor aims to respond in order to remediate such mistakes or confusions." |
+| Q11 | 2 | output_form | "In this section, we first briefly overview and discuss the limitations of the existing general-purpose NLG metrics and then turn to pedagogically-oriented approaches to evaluation." |
+| Q12 | 3 | input_ontology | "In this work, we focus on educational dialogues between a student and a tutor in the mathematical domain. Specifically, the conversations are grounded in students' mistakes or confusions, and the AI tutor aims to respond in order to remediate such mistakes or confusions." |
 | Q13 | 3 | input_ontology | "Formally, let's define the conversation history between a tutor and a student as H = {(T1, S1),(T2, S2), . . . ,(Tt, St)}, where Ti represents the i-th response from the tutor, and Si represents the i-th response from the student. Let Sk denote the student's most recent k utterances, where k ∈ [1, ..., t], containing a mistake or confusion. Then the objective of the tutor is to provide the most appropriate response Tt+1 to address this mistake or confusion." |
 | Q14 | 3 | input_ontology | "The evaluation taxonomy detailed in Section 4 assesses the appropriateness of the Tt+1 response across eight key pedagogical dimensions." |
 | Q15 | 3 | input_ontology | "In this section, we first present our approach, narrowing the evaluation taxonomy down to eight measurable dimensions aligned with key pedagogical strategies (Jurenka et al., 2024; Hennessy et al., 2016). These dimensions are most suitable for the student mistake remediation task and are based on the learning sciences principles." |
@@ -202,7 +195,7 @@ directly as a proxy for Indian teachers' acceptability judgments without re-weig
 | Q36 | 5 | output_content | "In this validation pilot study, all four annotators iteratively reviewed the annotation scheme and guidelines." |
 | Q37 | 5 | output_content | "Each annotator also independently labeled the same eight randomly sampled dialogues – four from each of the two datasets (Bridge and MathDial) – across the eight dimensions of the evaluation taxonomy." |
 | Q38 | 5 | output_content | "Given that each dialogue contained multiple responses from both LLMs and humans, and each response was annotated across eight evaluation dimensions, this resulted in a total of 544 annotations per annotator." |
-| Q39 | 5 | output_content | "To measure inter-annotator agreement, we computed Fleiss' kappa value, which for this annotation experiment equals 0.65, indicating substantial agreement." |
+| Q39 | 5 | output_form | "To measure inter-annotator agreement, we computed Fleiss' kappa value, which for this annotation experiment equals 0.65, indicating substantial agreement." |
 | Q40 | 5 | input_ontology | "None of the annotators identified any additional or redundant dimensions necessary for student mistake remediation." |
 | Q41 | 5 | input_content | "We have compiled mistake remediation benchmark, MRBench, from the Bridge (Wang et al., 2024a) and MathDial (Macina et al., 2023) datasets." |
 | Q42 | 5 | input_content | "Each instance in both datasets comprises educational dialogue interactions between students and tutors within the mathematical domain." |
@@ -216,7 +209,7 @@ directly as a proxy for Indian teachers' acceptability judgments without re-weig
 | Q50 | 5 | input_form | "To match the format of Bridge (partial conversations with the last few student's utterances exhibiting a mistake or confusion), we prepared the dataset by terminating a conversation where the student makes a mistake and considering the next tutor response as the expert tutor response (there are no associated novice" |
 | Q51 | 6 | input_content | "To further ensure the reliability of our benchmark, we manually inspected the data in order to retain only high-quality examples, which resulted in 132 instances for MRBench." |
 | Q52 | 6 | input_content | "Next, for the 192 instances in MRBench (60 from Bridge and 132 from MathDial), we generated appropriate subsequent responses based on the conversation history and the last utterance, which contained confusions or mistakes, using seven state-of-the-art LLMs." |
-| Q53 | 6 | input_ontology | "We consider state-of-the-art LLMs of various sizes and capabilities, including: GPT-4 (Achiam et al., 2023), Gemini (Reid et al., 2024), Sonnet (Anthropic, 2024), Mistral (Jiang et al., 2023), Llama-3.1-8B and Llama-3.1-405B (Dubey et al., 2024), and Phi3 (Abdin et al., 2024)." |
+| Q53 | 6 | input_content | "We consider state-of-the-art LLMs of various sizes and capabilities, including: GPT-4 (Achiam et al., 2023), Gemini (Reid et al., 2024), Sonnet (Anthropic, 2024), Mistral (Jiang et al., 2023), Llama-3.1-8B and Llama-3.1-405B (Dubey et al., 2024), and Phi3 (Abdin et al., 2024)." |
 | Q54 | 6 | input_form | "Furthermore, each LLM has associated responses for 192 dialogues, resulting in a benchmark of 192 × 7 (7 LLM responses) + 192 × 1 (expert responses) + 60 × 1 (novice responses) = 1,596 responses, which makes the evaluation benchmark reasonably large while still manageable for human annotation described in Section 5.2." |
 | Q55 | 6 | output_content | "Four trained annotators (see Section 4.2) annotated MRBench using the validated taxonomy." |
 | Q56 | 6 | output_content | "Each annotator was asked to annotate human and LLM-based tutor responses across 8 dimensions of the taxonomy in the context of 48 dialogues." |
@@ -228,7 +221,7 @@ directly as a proxy for Indian teachers' acceptability judgments without re-weig
 | Q62 | 6 | output_form | "We used Prometheus2 (Kim et al., 2024) because: (i) it was specifically trained as an evaluator using reinforcement learning with human feedback (RLHF), (ii) it has a high correlation with human annotations and GPT-4, and (iii) it does not belong to any of the LLM families considered as AI tutors in our framework." |
 | Q63 | 6 | output_form | "In addition, we also used Llama-3.1-8B as a lightweight LLM to assess the reliability of smaller models that were not fine-tuned for evaluation objectives as a critic." |
 | Q64 | 6 | output_form | "We utilize two key metrics to quantitatively assess the pedagogical effectiveness of LLMs and for comparative analysis: (1) Desired Annotation Match Rate (DAMR): This metric quantifies the percentage of responses from each human or LLM-based tutor that received the desired annotation labels." |
-| Q65 | 6 | output_form | "The desired labels for each dimension are detailed in Table 2." |
+| Q65 | 6 | output_ontology | "The desired labels for each dimension are detailed in Table 2." |
 | Q66 | 6 | output_form | "(2) Annotation Correlation (AC): This metric is based on Pearson's correlation (Sedgwick, 2012), and it estimates the correlation between LLM-generated and human annotations (Kim et al., 2024), allowing us to assess the reliability of LLMs as evaluators in the context of student mistake remediation." |
 | Q67 | 7 | output_form | "Table 3 shows DAMR scores for each LLM across all eight dimensions." |
 | Q68 | 7 | output_content | "We consider human-based evaluations as gold standard." |
@@ -248,13 +241,13 @@ directly as a proxy for Indian teachers' acceptability judgments without re-weig
 | Q82 | 7 | input_content | "*For the Novice, we have considered only 60 dialogues from the Bridge dataset." |
 | Q83 | 7 | output_form | "The DAMR scores for Novice are reported on these 60 instances, while for Expert and all LLMs, all 192 instances were considered." |
 | Q84 | 8 | output_ontology | "Can a tutor achieve a higher DAMR score for actionability while receiving a lower score for providing guidance? This is possible since we consider only factually correct guidance as useful (see Table 4)." |
-| Q85 | 8 | output_ontology | "At the same time, even incorrect or incomplete guidance can lead to certain actions on the part of the student and can foster their curiosity, thus providing them with learning opportunities." |
+| Q85 | 8 | output_content | "At the same time, even incorrect or incomplete guidance can lead to certain actions on the part of the student and can foster their curiosity, thus providing them with learning opportunities." |
 | Q86 | 8 | output_ontology | "This further demonstrates the need to treat the dimensions as independent." |
 | Q87 | 8 | output_content | "In terms of the other qualities of the Expert responses, they do not normally reveal the answer and tend to include scaffolding; however, there are a small number of instances where they failed to identify the mistake or its location." |
 | Q88 | 8 | output_content | "Overall, we conclude that human responses from Expert are significantly better than Novice." |
 | Q89 | 8 | output_form | "Our findings on the Tutor Tone align with those of Wang et al. (2024a) – in task-oriented conversations, AI tutors tend to be more Neutral than Encouraging." |
 | Q90 | 8 | output_ontology | "When we combine these two labels into "Non-offensive", the DAMR score reaches 100% as we observe no offensive responses from any LLMs or humans." |
-| Q91 | 8 | output_form | "We observe high scores for most of the LLMs on human-likeness, which demonstrates their capability to generate human-like output with minimal or no grammatical and fluency mistakes, showing the timely nature of our study, which focuses more on in-depth semantic and pedagogical aspects of tutor responses rather than only on superficial attributes like grammaticality and fluency." |
+| Q91 | 8 | input_ontology | "We observe high scores for most of the LLMs on human-likeness, which demonstrates their capability to generate human-like output with minimal or no grammatical and fluency mistakes, showing the timely nature of our study, which focuses more on in-depth semantic and pedagogical aspects of tutor responses rather than only on superficial attributes like grammaticality and fluency." |
 | Q92 | 8 | input_content | "As discussed in Section 5.1, the conversational contexts in the Bridge dataset are typically very short (see Table 7) and the dialogues are grounded in elementary math operations, so most models are able to identify the mistakes and their locations." |
 | Q93 | 8 | input_content | "However, they struggle to provide appropriate guidance without revealing the answer because the mistakes are generally related to quite basic operations like addition or multiplication, often in a one-step type of mathematical problems." |
 | Q94 | 8 | output_form | "Still, models like GPT-4 and Llama-3.1-405B are able to offer some reasonable guidance." |
@@ -273,7 +266,7 @@ directly as a proxy for Indian teachers' acceptability judgments without re-weig
 | Q107 | 8 | output_content | "Across both LLMs, it can be observed that most of the correlation scores are negative (except for the human-likeness dimension), indicating that the annotations from the LLMs are unreliable for the challenging pedagogical dimensions." |
 | Q108 | 8 | output_content | "Prometheus2 is not trained on our taxonomy dimensions, except for the general human-likeness dimension, where the model shows slightly better correlations with positive scores." |
 | Q109 | 8 | output_content | "We believe both LLMs have a limited understanding of rich pedagogical concepts, as they were not specifically trained on pedagogically rich datasets." |
-| Q110 | 8 | output_content | "At the same time, we acknowledge that the experiments presented in this work are preliminary" |
+| Q110 | 8 | output_form | "At the same time, we acknowledge that the experiments presented in this work are preliminary" |
 | Q111 | 9 | input_ontology | "This paper presents the first effort to unify AI tutor evaluation for the student mistake remediation task in the mathematics domain." |
 | Q112 | 9 | input_ontology | "Specifically, we propose an evaluation taxonomy with eight pedagogical dimensions based on the key learning sciences principles." |
 | Q113 | 9 | output_content | "We also release the MRBench benchmark with seven state-of-the-art LLM-as-tutors responses, along with gold human annotations." |
@@ -290,7 +283,7 @@ directly as a proxy for Indian teachers' acceptability judgments without re-weig
 | Q124 | 9 | output_content | "Although we do not foresee any ethical risks, we acknowledge that this work relies on the outputs from LLMs, and there are certain risks associated with such outputs in general since these models may generate responses that, although plausible, can be factually incorrect, nonsensical, or even offensive." |
 | Q125 | 9 | output_content | "Of particular importance for the educational domain is the fact that hallucinations can misguide students and propagate biases." |
 | Q126 | 10 | output_content | "This research is partially supported by Google through the Google Academic Research Award (GARA) 2024. We are grateful for their support. We also extend our gratitude to the campus supercomputing center at MBZUAI." |
-| Q127 | 10 | input_ontology | "strongly believe that this study will help shed light on the current capabilities of LLMs in the context of educational dialogues, and the insights gained from this study may help mitigate issues related to the use of LLMs in the educational domain in the future." |
+| Q127 | 10 | output_content | "strongly believe that this study will help shed light on the current capabilities of LLMs in the context of educational dialogues, and the insights gained from this study may help mitigate issues related to the use of LLMs in the educational domain in the future." |
 | Q128 | 12 | output_ontology | "The definitions, associated labels, and the desired labels for each dimension of the proposed taxonomy are provided in Table 4." |
 | Q129 | 12 | input_ontology | "Through an iterative analysis of the taxonomy, we identify eight dimensions that comprehensively assess tutor response quality in the context of mistake remediation." |
 | Q130 | 12 | input_ontology | "However, other educational settings, particularly those involving tutorial dialogues beyond mistake remediation, may require modifications, as discussed in the limitations section." |
@@ -355,25 +348,20 @@ target_population:
     grade_band: Grade 1–8 (elementary through lower secondary)
     employment_context: 'Formal school setting; likely includes government, private,
       and potentially international-board schools — specific distribution [NEEDS VERIFICATION
-      — deferred: low impact relative to other gaps; sub-national school-type distribution
-      data not published at city level for this specific teacher cohort]'
-    professional_standing: 'For CBSE-affiliated schools, Grade 1–5 teachers (PRT)
-      are typically required to hold D.El.Ed or equivalent; Grade 6–8 teachers (TGT
-      Mathematics) typically require a subject-specific degree (BA/BSc with Mathematics)
-      plus a B.Ed from an NCTE-recognised institution, and clearance of CTET or relevant
-      State TET. Private CBSE schools may accept equivalent qualifications. Government
-      Delhi schools recruit through DSSSB with similar criteria. (Source: CBSE teacher
-      qualification framework — [WEB-1];
-      Superprof India teacher roles overview — [WEB-2];
-      DSSSB eligibility — [WEB-3]).
-      ''High-end professional'' likely implies private metro school context where
-      B.Ed plus subject degree is standard; IB/ICSE schools may additionally require
-      international certifications.'
-  estimated_population_size: '[NOT FOUND — searched for total Grade 1–8 math teacher
-    count in Delhi and Mumbai formal sector; no city-specific disaggregated figure
-    for mathematics teachers at this grade band was located in UDISE+ or NCERT reports.
-    National figure is approximately 8–9 million school teachers total (UDISE+ 2021-22),
-    but no city-level math-teacher-specific count was published at the required granularity.]'
+      — deferred: below search budget; no publicly available disaggregated school-type
+      employment statistics by city and grade band found]'
+    professional_standing: 'For CBSE-affiliated schools (which include all Delhi government
+      schools per CBSE rules, and many private schools nationwide), teachers at Grade
+      1–8 must hold a B.Ed or D.El.Ed qualification and pass the Central Teacher Eligibility
+      Test (CTET Paper I or II). B.Ed is required for Classes VI–VIII (TGT level);
+      D.El.Ed or B.El.Ed for Classes I–V. High-end private and international schools
+      may additionally require subject-specific postgraduate degrees. Source: NCTE/CBSE
+      official qualification norms — [WEB-1];
+      CTET eligibility criteria — [WEB-2]'
+  estimated_population_size: '[NOT FOUND — searched general sources; no published
+    disaggregated figure for Grade 1–8 mathematics teachers specifically in Delhi
+    and Mumbai formal school sector found. National UDISE+ data tracks total teachers
+    by state but not by city, grade band, and subject combination.]'
 languages:
   primary_evaluation_language: English
   fluency_level: Fluent — the target population uses English professionally and can
@@ -388,15 +376,12 @@ languages:
   language_note: The benchmark is English-only, matching the deployment's evaluation
     interface. However, many students in these classrooms may be instructed in Hindi,
     Marathi, or other regional languages, and L1-interference in students' mathematical
-    communication is a flagged validity gap for the benchmark's source datasets. NCERT
-    has used AI/ML to translate Grade 1–2 textbooks into 22 Indian languages, indicating
-    awareness of the multilingual instructional reality (Government of India PIB —
-    [WEB-4]).
+    communication is a flagged validity gap for the benchmark's source datasets.
   hindi_math_register_notes: '[NEEDS VERIFICATION — deferred: likely unsearchable
-    (lived practice); the extent to which bilingual Hindi/Marathi-medium instruction
-    shapes Indian teachers'' interpretive frames for English-medium student errors
-    is a matter of pedagogical socialization, not documented in online sources. Requires
-    expert/stakeholder elicitation.]'
+    (lived practice); no published study found that specifically quantifies how Indian
+    math teachers conducting English-language evaluations interpret student errors
+    through the lens of Hindi/Marathi-medium instruction patterns. Requires stakeholder/expert
+    elicitation.]'
 writing_systems:
   script_used_in_deployment: Latin (English text only)
   script_notes: No script mismatch exists between the benchmark and the deployment.
@@ -411,19 +396,16 @@ pedagogical_culture:
     - ICSE (Indian Certificate of Secondary Education)
     - Maharashtra State Board (relevant to Mumbai government schools)
     - IB (International Baccalaureate, present in elite private schools in both cities)
-    board_distribution_in_target_cities: '[NEEDS VERIFICATION — deferred: below search
-      budget; no published city-level proportional split of CBSE/ICSE/state board/IB
-      schools for Grade 1–8 math teachers specifically found; national UDISE+ data
-      does not disaggregate by subject or board at city level]'
+    board_distribution_in_target_cities: 'All Delhi government schools are CBSE-affiliated
+      (confirmed by CBSE). In Mumbai, the Maharashtra State Board (SSC) dominates
+      government schools, while CBSE, ICSE, and a small number of IB schools operate
+      in private sector. Nationally, ICSE has approximately 2,891 affiliated schools
+      with Maharashtra leading at ~118 new schools, and IB schools remain a small
+      elite minority. No city-level proportional breakdown by teacher count is publicly
+      available. Source: CBSE affiliation rules — [WEB-3];
+      ICSE school count — [WEB-4]'
     curriculum_alignment_requirement: User confirmed curriculum-agnostic math errors
       are sufficient for this evaluation; strict NCERT/CBSE alignment is NOT required
-    ncert_textbook_revision_note: 'NCERT introduced a new textbook series ''Ganita
-      Prakash'' (Parts 1 and 2) for Class 8 effective from the 2026–27 academic year,
-      replacing the previous thirteen-chapter textbook. The previous textbook remains
-      relevant for students following the earlier syllabus. This revision may alter
-      the specific procedural content teachers expect students to master, though curriculum-agnostic
-      errors remain sufficient for this deployment. (Source: Tiwari Academy NCERT
-      Class 8 syllabus overview — [WEB-5])'
   pedagogical_norms:
     correction_style: Direct, explicit correction is preferred over extended Socratic
       dialogue; teachers are more likely to value responses that clearly identify
@@ -494,54 +476,55 @@ annotator_representativeness:
     are likely to apply different judgments of guidance quality than the MBZUAI annotator
     pool, particularly on what constitutes 'providing guidance' (direct correction
     vs. Socratic scaffolding), exam-readiness framing, and teacher-directed pedagogy.
-  india_specific_annotation_studies: '[NOT FOUND — searched for MRBench annotations
-    involving Indian educators, and for cross-cultural comparisons of teacher AI-tutoring
-    quality judgments; no such studies were located. This gap is corroborated by a
-    2025 comprehensive review of ITS evaluation which noted that existing studies
-    are ''conducted on small, homogeneous populations, primarily from WEIRD (Western,
-    Educated, Industrialized, Rich, and Democratic) countries'' (Pedagogy-Driven Evaluation
-    of Generative AI-Powered ITS, Springer/arXiv 2025 — [WEB-6]).
-    No India-specific educator annotation of AI tutor quality exists in the published
-    literature.]'
-  inter_annotator_agreement_among_indian_teachers: '[NOT FOUND — no studies measuring
-    Indian professional teachers'' agreement on AI tutor pedagogical quality judgments
-    were located. This is an open research gap not addressed in the current ITS evaluation
-    literature.]'
+  india_specific_annotation_studies: '[NOT FOUND — searched for cross-cultural annotation
+    studies and India-specific educator annotation of AI tutor quality; no studies
+    found involving Indian educators or South Asian pedagogy experts in MRBench annotation
+    or any directly comparable tutoring benchmark annotation exercise.]'
+  inter_annotator_agreement_among_indian_teachers: '[NOT FOUND — no published studies
+    found measuring Indian professional teachers'' inter-annotator agreement on AI
+    tutor pedagogical quality judgments. This remains an open empirical question requiring
+    primary research.]'
 infrastructure_notes:
   deployment_format: Mobile and/or enterprise application; text-based interface
   language_interface: English text only; no spoken or multimodal interface described
-  device_access: 'Mobile-first assumed; smartphone penetration in Delhi and Mumbai
-    professional workforce is high — urban India smartphone penetration broadly estimated
-    at over 75% (World Bank and GSMA data), with professional metro teachers likely
-    near full coverage. Specific teacher-cohort figure not published. (Caveat: national
-    figure; professional urban cohort penetration likely higher.)'
-  internet_connectivity: 'Urban professional population in Delhi and Mumbai; broadband
-    and mobile data access assumed adequate. A 2025 report noted that only 40% of
-    schools in India overall have reliable internet for real-time AI applications,
-    but this national average is heavily depressed by rural schools — urban private
-    metro schools in Delhi and Mumbai are substantially better connected. (Source:
-    educationforallinindia.com, citing NCERT 2023 data — [WEB-7]).
-    Specific connectivity figures for the urban professional teacher cohort in these
-    two cities not independently published.'
+  device_access: 'Mobile-first assumed. Urban Tier-1 cities (including Delhi and Mumbai)
+    show internet penetration rates as high as 88% and lead broadband adoption with
+    penetration exceeding 50% in urban households. India had 660 million smartphone
+    users as of 2024–2025. For professional urban teachers specifically, smartphone
+    access can be assumed near-universal. Source: muftinternet.com urban internet
+    stats 2025 — [WEB-5];
+    Storyboard18 Digital Bharat 2026 report — [WEB-6]'
+  internet_connectivity: 'Urban Tier-1 cities (Delhi NCR: ~80% internet penetration;
+    Mumbai: among top broadband cities nationally) show adequate connectivity for
+    the professional teacher cohort. National mobile data speeds as of early 2024
+    averaged 94.62 Mbps median. The specific urban professional teacher sub-cohort
+    can reasonably be assumed to have reliable mobile broadband. Source: muftinternet.com
+    — [WEB-5];
+    DataReportal Digital 2024 India — [WEB-7]'
   enterprise_vs_consumer_split: '[NEEDS VERIFICATION — deferred: below search budget;
-    likely unsearchable without internal deployment data from the application provider]'
+    no publicly available data distinguishes school-enterprise from individual teacher
+    consumer deployment for this application type in India.]'
 school_system_context:
   board_types_present_in_target_cities:
-    CBSE: Dominant national board; strong presence in Delhi; significant in Mumbai
-      private schools; NCERT textbooks and syllabus
+    CBSE: 'Dominant national board; all Delhi government schools are CBSE-affiliated;
+      significant in Mumbai private schools; NCERT textbooks and syllabus. Source:
+      Wikipedia/CBSE — [WEB-3]'
     ICSE: 'Present in elite private schools in both cities; more emphasis on conceptual
-      depth than state boards [NEEDS VERIFICATION — deferred: below search budget;
-      characterization is widely accepted but proportional data not found]'
+      depth and English proficiency than state boards; approximately 2,891 affiliated
+      schools nationally with Maharashtra having a notable share. Source: candidschools.com
+      — [WEB-4]'
     Maharashtra_State_Board: 'Dominant in Mumbai government and many private schools;
-      Marathi-medium instruction common [NEEDS VERIFICATION — deferred: below search
-      budget; proportion of target teachers from state board schools not published
-      at city-teacher level]'
-    Delhi_State_Board: '[NEEDS VERIFICATION — deferred: below search budget; Delhi
-      government schools use Delhi Board of School Education (DBSE) which co-exists
-      with CBSE; characteristics not searched]'
-    IB: 'Present in small number of elite private schools; very different pedagogical
-      norms; Socratic methods more valued [NEEDS VERIFICATION — deferred: below search
-      budget; proportion of target teachers from IB schools not published]'
+      Marathi-medium instruction common; proportion of target teachers from state
+      board schools not disaggregated at city level in available sources — [NEEDS
+      VERIFICATION — deferred: below search budget for precise Mumbai-level figure]'
+    Delhi_State_Board: 'Per CBSE rules, all Delhi state government schools are CBSE-affiliated,
+      meaning a separate ''Delhi State Board'' for primary/secondary education does
+      not exist as a competing exam board for Grade 1–8; the Delhi Board of Higher
+      Secondary Education was merged into CBSE in 1962. Source: Wikipedia/CBSE — [WEB-3]'
+    IB: 'Present in small number of elite private schools in both cities; very different
+      pedagogical norms; Socratic methods more valued; IB schools constitute a small
+      elite minority nationally. Exact proportion of target teachers from IB schools
+      not available — [NEEDS VERIFICATION — deferred: below search budget]'
   board_specific_pedagogical_variation_note: Each board carries distinct pedagogical
     expectations for what constitutes acceptable tutoring guidance. The acceptability
     criterion for AI-augmented tutor responses may differ meaningfully across CBSE,
@@ -549,31 +532,31 @@ school_system_context:
     which boards the target teacher population primarily serves, and this sub-national
     granularity is a flagged gap.
   relevant_policy_frameworks:
-    NEP_2020: 'NEP 2020 recognises AI''s potential for personalised learning and emphasises
-      technology integration across all educational levels, including at school stage.
-      It explicitly envisions AI-based software for student learning support. However,
-      NEP 2020 does not prescribe specific AI tutoring protocols for Grade 1–8 mathematics
-      nor does it mandate particular pedagogical models (direct instruction vs. Socratic)
-      — its guidance is broad and aspirational rather than operationally specific
-      for this deployment context. (Source: NEP 2020 full text, Ministry of Education
-      — [WEB-8];
-      PIB summary — [WEB-4])'
-    NCERT_curriculum_revision: 'NCERT introduced ''Ganita Prakash'' (Parts 1 and 2)
-      as the new Class 8 mathematics textbook series for 2026–27, continuing the NCF
-      2023-aligned textbook revision cycle. The revision is ongoing across grade levels;
-      Class 8 is the latest update. This may affect which specific procedural and
-      conceptual errors teachers consider grade-appropriate, though the user confirmed
-      curriculum-agnostic errors are sufficient. (Source: Tiwari Academy NCERT Class
-      8 overview — [WEB-5])'
-    digital_education_initiatives: 'India''s primary national digital education platform
-      is DIKSHA (Digital Infrastructure for Knowledge Sharing), a Ministry of Education
-      initiative that uses AI for inclusivity features (e.g., AI-based search, read-aloud).
-      CBSE has introduced a 15-hour AI skill module from Class VI onwards and AI as
-      an optional subject in Classes IX–XII. As of 2025, no specific NCERT or CBSE
-      regulatory guidance for AI-assisted tutoring tools in Grade 1–8 mathematics
-      classrooms was found; policy remains promotional rather than regulatory. (Source:
-      Government of India PIB — [WEB-4];
-      CBSE AI curriculum — [WEB-9])'
+    NEP_2020: 'NEP 2020 explicitly calls for AI and computational thinking integration
+      across all levels of schooling, and the Union Budget 2025–26 allocated ₹500
+      crore for a Centre of Excellence in AI for Education. AI and Computational Thinking
+      (AI & CT) is being introduced as a compulsory subject from Class 3 onwards starting
+      in academic year 2026–27. However, NEP 2020 does not materially alter Grade
+      1–8 mathematics pedagogical norms for the core CBSE curriculum relevant to this
+      deployment — its pedagogical language emphasises inquiry and learner-centred
+      approaches, potentially widening the gap between policy aspiration and prevailing
+      teacher-directed classroom norms. Source: PIB Government of India — [WEB-8];
+      educationforallinindia.com — [WEB-9]'
+    NCERT_curriculum_revision: 'NCERT approved India''s first AI-crafted school curriculum
+      for Classes 3–8 in July 2025, covering Mathematics, Science, and Social Science,
+      with adaptive content and multilingual support, to be rolled out via PM eVidya
+      and DIKSHA platforms. A new Class 8 Mathematics textbook (''Ganita Prakash'')
+      has been introduced, emphasising exploration of mathematical patterns alongside
+      procedural learning. These revisions are recent and may not yet have materially
+      altered teacher correction norms in deployment. Source: myidcm.com — [WEB-10];
+      EduRev on Ganita Prakash — [WEB-11]'
+    digital_education_initiatives: 'Key national platforms include DIKSHA (Digital
+      Infrastructure for Knowledge Sharing, used for AI-based content delivery and
+      teacher training), PM eVidya, and SWAYAM/SWAYAM Prabha for teacher upskilling.
+      No specific NCERT or CBSE regulatory guidance on AI-assisted one-on-one tutoring
+      tools (as distinct from AI curriculum content) was found. CBSE currently offers
+      a 15-hour AI skill module from Class VI onwards. Source: PIB — [WEB-8];
+      NCERT CIET — [WEB-12]'
 validity_gap_summary:
   IC_student_interaction_style:
     priority: HIGH
@@ -581,67 +564,72 @@ validity_gap_summary:
       dynamics with extended student verbalization. Indian Grade 1–8 students are
       briefer, more deferential, and procedure-focused. Benchmark conversation structures
       may not be recognizable as realistic to Indian teachers.
-    verification_target: '[NOT FOUND — no AI tutoring benchmarks specifically addressing
-      Indian student interaction styles were located. A 2025 comprehensive ITS review
-      confirmed that existing studies are conducted primarily on WEIRD-country populations
-      (Springer/arXiv 2025 — [WEB-6]). MRBench includes
-      no documentation of short-turn, low-verbalization student input scenarios; the
-      gap is confirmed unaddressed in the current benchmark landscape.]'
+    verification_target: '[NOT FOUND — no AI tutoring benchmark specifically designed
+      for Indian student interaction styles or short-turn, low-verbalization student
+      input scenarios exists in the literature reviewed. MathTutorBench (EMNLP 2025)
+      is a related new benchmark (see net-new fields below) but is also sourced from
+      Western academic datasets and does not address Indian classroom dynamics. This
+      gap remains fully open and requires primary data collection or India-specific
+      dataset creation.]'
   OC_annotator_representativeness:
     priority: HIGH
     description: Ground-truth labels reflect CS-trained MBZUAI annotators' pedagogical
       priors, not Indian professional teachers' judgments. Systematic divergence is
       expected on guidance quality, exam-orientation, and direct-correction norms.
-    verification_target: '[NOT FOUND — no India-specific educator annotation of AI
-      tutor quality, and no cross-cultural comparison of teacher judgments on tutoring
-      acceptability, were found in the published literature. The WEIRD-population
-      homogeneity concern is corroborated by a 2025 ITS survey (arXiv:2510.22581 —
-      [WEB-6]).]'
+    verification_target: '[NOT FOUND — no cross-cultural comparison of teacher judgments
+      on AI tutoring acceptability, and no India-specific educator annotation study
+      of tutoring quality, was found in literature search. Research on Indian teacher-AI
+      collaboration (Sebastian et al., 2024, cited in arxiv.org/html/2507.00456v1)
+      confirms Indian teachers face usability barriers and misalignment with generative
+      AI outputs, but does not directly address annotation-level agreement on pedagogical
+      quality rubrics. Requires primary research.]'
   OC_guidance_dimension_calibration:
     priority: HIGH
     description: MRBench's 'providing guidance' rubric implicitly favors Socratic
       scaffolding. Indian teachers may evaluate guidance quality by direct-correction
       and exam-readiness criteria not captured in the current rubric.
-    verification_target: '[NOT FOUND — no rubric variants addressing direct-correction
-      vs. Socratic scaffolding distinctions in an Indian pedagogical context were
-      found. MathTutorBench (EMNLP 2025, arXiv:2502.18940 — [WEB-10])
-      similarly defines tutoring quality around withholding answers and Socratic questioning,
-      confirming that the entire field default is Western-constructivist. No India-adapted
-      rubric exists.]'
+    verification_target: '[NOT FOUND — no MRBench rubric variant addressing direct-correction-style
+      guidance found. The MathTutorBench (2025) benchmark similarly operationalizes
+      good tutoring through Socratic questioning and withholding of answers (see net-new
+      field). No published rubric variant calibrated to Indian pedagogical norms was
+      identified. Requires expert elicitation with Indian mathematics educators.]'
   IC_misconception_types:
     priority: HIGH
     description: Bridge and MathDial misconception types are Western-sourced. Rote-procedural
       errors, L1-interference errors, and NCERT-specific algorithmic conventions common
       among Indian Grade 1–8 students are absent from documented selection criteria.
-    verification_target: '[NOT FOUND — no published taxonomy of common Indian Grade
-      1–8 math misconceptions was located in academic literature. The closest available
-      misconception taxonomy resources (e.g., Fen Rivers Academy UK, Mathnasium US)
-      are Western-sourced. This is a genuine documentation gap, not a null result
-      from poor search strategy. India-specific misconception research for this grade
-      band would require stakeholder or expert elicitation, or access to internal
-      NCERT/CBSE assessment data not published online.]'
+    verification_target: 'NCERT''s own journal (ejournals.ncert.gov.in) publishes
+      error-analysis research on Indian students, and CBSE has collaborated with Educational
+      Initiatives on competency-based assessment items explicitly designed to probe
+      common misconceptions in NCERT-aligned content. However, no published taxonomy
+      of Indian-specific Grade 1–8 mathematics misconceptions that maps to MRBench
+      error types was found. The CBSE-EI competency-based question booklets reference
+      conceptual vs. procedural error categories without a culturally-specific misconception
+      taxonomy. Source: NCERT journal error analysis — [WEB-13];
+      CBSE-EI competency booklets — [WEB-14]'
   OO_equal_weight_damr:
     priority: MODERATE
     description: DAMR scoring treats all eight dimensions equally. Indian teachers'
       acceptability judgments are anchored primarily on 'providing guidance.' The
       equal-weight aggregate score cannot be directly used as a deployment validity
       proxy without re-weighting.
-    verification_target: '[NOT FOUND — no MRBench extensions proposing dimension-weighted
-      DAMR variants were found. MathTutorBench (EMNLP 2025, arXiv:2502.18940 — [WEB-10])
-      uses a different reward-model approach but also does not address culture-specific
-      dimension weighting. The scoring infrastructure gap is confirmed as unaddressed
-      in the current literature.]'
+    verification_target: '[NOT FOUND — no published MRBench variant applying dimension-weighted
+      DAMR or any re-weighting calibrated to teacher populations found. A 2025 follow-on
+      survey paper on ITS evaluation (arxiv.org/html/2510.22581v1) cites MRBench but
+      does not propose weighted scoring. Per-dimension DAMR scores are reported separately
+      in MRBench, enabling manual re-weighting in analysis, but no systematic re-weighting
+      methodology has been published.]'
   IC_subnational_school_type_variation:
     priority: MODERATE
     description: Target population spans Delhi and Mumbai with unspecified board distribution
       (CBSE, ICSE, Maharashtra State Board, IB). Pedagogical expectations for acceptable
       guidance vary across boards. This granularity is unresolved.
-    verification_target: '[NOT FOUND — no studies on board-specific AI tutoring acceptance
-      criteria were located. City-level board-distribution data for Grade 1–8 math
-      teachers is not published in accessible form. Urban private schools in metro
-      cities show significantly higher AI resource access than national averages (approximately
-      62% higher than rural, per educationforallinindia.com citing NCERT 2023 — [WEB-7]),
-      but this does not resolve board-level pedagogical variation.]'
+    verification_target: 'Partial resolution: All Delhi government schools are CBSE-affiliated;
+      Mumbai government schools are predominantly Maharashtra State Board (SSC). Private
+      school distribution in both cities spans CBSE, ICSE, and a small number of IB
+      schools. No city-level proportional teacher count by board type is available
+      in public data. Source: CBSE Wikipedia — [WEB-3];
+      ICSE school count — [WEB-4]'
 cultural_norms_notes: 'Indian professional teachers in this deployment operate within
   a pedagogical culture that differs systematically from the Western-default assumptions
   embedded in MRBench:
@@ -663,7 +651,12 @@ cultural_norms_notes: 'Indian professional teachers in this deployment operate w
   - Language context: many teachers navigate between English (professional evaluation
   language) and Hindi, Marathi, or other regional languages in daily instruction,
   which may affect their sensitivity to L1-interference errors in student mathematical
-  communication'
+  communication
+
+  - India-based research on teacher-AI collaboration confirms that Indian educators
+  value time-saving potential of generative tools but face usability barriers including
+  misalignment with school routines and absence of vernacular content (Sebastian et
+  al., 2024, cited in [WEB-15])'
 domain_specific_notes:
   mathematics_education: Grade 1–8 mathematics in Indian metropolitan schools covers
     arithmetic, basic algebra, geometry, and early number theory, broadly aligned
@@ -675,95 +668,114 @@ domain_specific_notes:
     millions and billions; this is a culturally specific arithmetic convention. However,
     the user confirmed curriculum-agnostic errors are sufficient, so this is noted
     for context rather than as a blocking validity concern.
-  exam_culture: '[NEEDS VERIFICATION — deferred: likely unsearchable in the required
-    granularity; specific examination formats shaping what Indian teachers consider
-    ''exam-ready'' guidance are embedded in institutional practice and not aggregated
-    in searchable form. CBSE school-level test formats closely follow CBSE board patterns
-    (MCQ and descriptive); NCERT exercises are the primary reference. Stakeholder
-    elicitation recommended.]'
+  exam_culture: '[NEEDS VERIFICATION — deferred: below search budget; specific CBSE
+    board exam formats for Grade 1–8 (school-level annual exams, continuous assessment
+    patterns post-CCE) require detailed CBSE circular review beyond current budget.
+    The general structure is well-established but specific rubric formats relevant
+    to ''exam-ready guidance'' are not publicly catalogued in searchable form.]'
   private_tutoring_ecosystem: '[NEEDS VERIFICATION — deferred: likely unsearchable
-    (lived practice); the role of coaching centers such as FIITJEE, Byju''s, and similar
-    in shaping professional teacher expectations of effective one-on-one tutoring
-    is a cultural practice question not documented in academic literature in the required
-    specificity.]'
-  AI_in_education_india: 'NEP 2020 endorses AI integration in education; CBSE has
-    introduced a 15-hour AI skill module from Class VI and AI as an optional subject
-    in Classes IX–XII. NCERT has used AI to translate early-grade textbooks. The DIKSHA
-    platform provides AI-enhanced digital resources. As of 2026, no specific CBSE
-    or NCERT regulatory or pedagogical guidance on AI-assisted tutoring tools for
-    Grade 1–8 mathematics exists — policy is promotional, not prescriptive about tutoring
-    interaction models. Private metro schools show substantially higher AI adoption
-    rates than the national average. (Sources: PIB Government of India — [WEB-4];
-    CBSE AI curriculum update — [WEB-9];
-    educationforallinindia.com — [WEB-7])'
+    (lived practice); the role of the coaching/tutoring center ecosystem (e.g., Byju''s,
+    Vedantu, in-person coaching centers) in shaping teacher expectations of one-on-one
+    tutoring guidance norms is not documented in searchable form in ways that distinguish
+    metro professional teacher expectations from student/parent expectations.]'
+  AI_in_education_india: 'NEP 2020 explicitly supports AI integration; CBSE has introduced
+    AI as a formal subject from Class VI (15-hour module) and optional elective for
+    Classes IX–XII. The Union Budget 2025–26 allocated ₹500 crore for a dedicated
+    Centre of Excellence in AI for Education. DIKSHA platform uses AI for content
+    search and accessibility. No specific NCERT or CBSE regulatory guidance on AI-assisted
+    one-on-one tutoring tools (as distinct from AI as a curriculum subject) has been
+    issued as of available sources. India-based AI tutoring deployments (e.g., Shiksha
+    Copilot in Karnataka) highlight the importance of curriculum alignment, vernacular
+    support, and teacher agency as critical success factors. Source: PIB — [WEB-8];
+    arxiv Teacher-AI Collaboration — [WEB-15]'
 net_new_fields:
-  mathtutorbench_comparator:
-    description: 'MathTutorBench (EMNLP 2025, Macina et al., ETH Zurich; arXiv:2502.18940)
-      is a newer open-source benchmark for holistic LLM tutoring evaluation, covering
-      three high-level teacher skills and seven concrete tasks. It uses a reward model
-      trained on Bridge dataset expert/novice teacher responses to score open-ended
-      pedagogical quality automatically. Key finding: subject expertise and pedagogy
-      form a trade-off — math-specialist models often exhibit lower pedagogical quality.
-      Like MRBench, MathTutorBench is grounded entirely in Western-default (WEIRD-country)
-      datasets and Socratic scaffolding norms; no Indian context is included. Relevant
-      because it confirms the current field-wide absence of India-adapted tutoring
-      benchmarks and the universality of the Socratic scaffolding default. (Source:
-      arXiv — [WEB-10]; ACL Anthology EMNLP 2025 — [WEB-11])'
-    validity_relevance: Confirms OC and IC gaps are field-wide, not MRBench-specific;
-      no alternative benchmark resolves the India-pedagogy validity concern.
-  weird_population_bias_in_its_literature:
-    description: 'A 2025 comprehensive review of ITS evaluation (Springer/arXiv 2025,
-      arXiv:2510.22581) explicitly notes that existing studies on educational dialogue
-      ITS are ''conducted on small, homogeneous populations, primarily from WEIRD
-      (Western, Educated, Industrialized, Rich, and Democratic) countries, with variable
-      implementation parameters.'' This structural bias in the research base directly
-      corroborates the annotator representativeness gap and the student interaction
-      style gap in this assessment. (Source: arXiv:2510.22581 — [WEB-6])'
-    validity_relevance: Provides peer-reviewed corroboration that the IC and OC gaps
-      flagged for MRBench are systemic across the ITS evaluation field, not idiosyncratic
-      to MRBench.
-  teacher_qualification_framework:
-    description: 'Indian certification requirements for the Grade 1–8 band are stratified:
-      Grade 1–5 (PRT) requires D.El.Ed or equivalent and TET clearance; Grade 6–8
-      (TGT Mathematics) requires subject-specific graduation plus B.Ed (NCTE-recognised)
-      and CTET/STET. Private metro schools may accept equivalent qualifications (e.g.,
-      PgCTL, PGCE) in lieu of B.Ed. Delhi government school recruitment uses DSSSB.
-      ''High-end professional'' teachers in private metropolitan schools overwhelmingly
-      hold subject degrees plus B.Ed, with CTET certification. (Source: Superprof
-      India — [WEB-2];
-      DSSSB — [WEB-3])'
-    validity_relevance: Clarifies that the target population's professional formation
-      includes formal pedagogical training (B.Ed) aligned with NCTE norms, reinforcing
-      their likely adherence to CBSE/NCERT pedagogical frameworks rather than Western
-      constructivist models.
-  india_urban_school_ai_access_disparity:
-    description: 'Urban schools in Tier-1 cities (including Delhi and Mumbai) show
-      approximately 62% higher AI resource access than rural institutions, and private
-      schools implement AI solutions at nearly triple the rate of government schools,
-      according to NCERT 2023 data. Only 40% of Indian schools overall have reliable
-      internet for real-time AI applications, but this national average is heavily
-      depressed by rural schools. (Source: educationforallinindia.com citing NCERT
-      2023 — [WEB-7])'
-    validity_relevance: Supports the assumption of adequate infrastructure for the
-      target (urban private metro) teacher cohort, but flags that the deployment may
-      not generalize to government school teachers even within Delhi and Mumbai.
+  mathtutorbench_2025:
+    description: 'MathTutorBench (Macina et al., EMNLP 2025 Oral) is a directly relevant
+      new benchmark for holistic evaluation of open-ended pedagogical capabilities
+      of LLM tutors in mathematics, released after MRBench. It covers three high-level
+      teacher skills and seven concrete tasks, uses a reward model trained on expert
+      vs. novice teacher responses, and finds that subject expertise and pedagogical
+      ability trade off against each other. Like MRBench, MathTutorBench is grounded
+      in Western academic datasets and learning-science principles (including Socratic
+      questioning) with no documented adaptation to Indian classroom norms or non-Western
+      pedagogical models. Its reward model operationalizes ''good tutoring'' as withholding
+      answers and using Socratic questioning, reinforcing the same Western pedagogical
+      default as MRBench. Relevant as a validity comparator: a deployment seeking
+      India-appropriate benchmarking cannot directly substitute MathTutorBench for
+      MRBench without the same cultural validity concerns. Source: arXiv 2502.18940
+      — [WEB-16]; ACL Anthology EMNLP 2025 — [WEB-17];
+      GitHub — [WEB-18]'
+    deployment_relevance: 'Confirms that the field''s current best benchmarks for
+      math tutoring evaluation (MRBench, MathTutorBench) share the same cultural provenance
+      gap: both are Western-default, Socratic-scaffolding-oriented, and lack any Indian
+      or South Asian pedagogical adaptation. This strengthens the IC and OC gap assessments
+      in the validity summary.'
+  india_ai_tutoring_deployment_evidence:
+    description: 'A 2025 study on teacher-AI collaboration in Indian classrooms (Shiksha
+      Copilot, Karnataka) found that Indian teachers valued AI tools for time-saving
+      but faced critical barriers: misalignment with school routines, absence of vernacular
+      content, and long response times. Teachers required AI outputs to align with
+      state-mandated curriculum frameworks and the 5E pedagogical format. This is
+      direct evidence that Indian teachers'' pedagogical expectations for AI-generated
+      guidance differ structurally from Western defaults, corroborating the OC validity
+      gap. Source: arXiv 2507.00456 — [WEB-15]'
+    deployment_relevance: 'Provides empirical grounding (beyond elicitation) for the
+      OC gap: Indian teachers actively evaluate AI outputs against curriculum-specific
+      and institutional norms that benchmarks like MRBench do not operationalize.'
+  ncert_new_curriculum_ganita_prakash:
+    description: 'NCERT introduced a new Class 8 Mathematics textbook ''Ganita Prakash''
+      (2024–25) as part of NEP 2020 curriculum reform, emphasising exploration of
+      mathematical patterns and Indian mathematical heritage alongside procedural
+      learning. An AI-crafted curriculum for Classes 3–8 in Mathematics, Science,
+      and Social Science was approved in July 2025 for rollout via DIKSHA and PM eVidya.
+      These reforms signal a policy shift toward more conceptual and inquiry-based
+      learning, but teacher classroom practice typically lags curriculum reform by
+      several years. Source: EduRev Ganita Prakash — [WEB-11];
+      myidcm.com AI curriculum — [WEB-10]'
+    deployment_relevance: 'Caveat on the pedagogical norms described in this document:
+      the prevailing rote-procedural, exam-oriented norms described are accurate for
+      current practice, but NEP 2020 and NCERT reforms are actively pushing toward
+      more conceptual instruction. The deployment''s target teacher population may
+      be in transition, and this should be noted as a temporal caveat on the OC gap
+      characterization.'
+  pedagogy_driven_its_evaluation_survey_2025:
+    description: 'A 2025 survey paper on pedagogy-driven evaluation of generative
+      AI-powered ITS (accepted at Springer, arXiv 2510.22581) explicitly notes the
+      absence of reliable, universally accepted, pedagogy-driven evaluation frameworks
+      and confirms that most existing ITS evaluations rely on non-standardized benchmarks
+      with limited generalizability. It cites MRBench as a step toward unification
+      but identifies the lack of domain coverage and interaction depth as ongoing
+      limitations. No India-specific or cross-cultural ITS evaluation framework is
+      cited. Source: arXiv 2510.22581 — [WEB-19]'
+    deployment_relevance: 'Confirms the field-level assessment: there is no published
+      AI tutoring benchmark with documented validity for Indian classroom contexts.
+      The gap identified in this document (IC, OC) is not a local assessment artifact
+      but a field-wide limitation.'
 ```
 
 ### Web Source Registry
 
 | ID | URL |
 |----|-----|
-| WEB-1 | https://www.cbse.gov.in/cbsenew/teacher_qual_num.html |
-| WEB-2 | https://www.superprof.co.in/blog/maths-tutoring-jobs-certificates/ |
-| WEB-3 | https://testbook.com/dsssb-teacher/eligibility-criteria |
-| WEB-4 | https://www.pib.gov.in/PressReleasePage.aspx?PRID=2234853 |
-| WEB-5 | https://www.tiwariacademy.com/ncert-solutions/class-8/maths/ |
-| WEB-6 | https://arxiv.org/html/2510.22581 |
-| WEB-7 | https://educationforallinindia.com/ai-tutors-and-human-teachers-in-indian-education-implementation-framework-under-samagra-shiksha-abhiyan/ |
-| WEB-8 | https://www.education.gov.in/sites/upload_files/mhrd/files/NEP_Final_English_0.pdf |
-| WEB-9 | https://edunovations.com/currentaffairs/national/cbse-ai-curriculum-for-classes/ |
-| WEB-10 | https://arxiv.org/abs/2502.18940 |
-| WEB-11 | https://aclanthology.org/2025.emnlp-main.11/ |
+| WEB-1 | https://www.asiancollegeofteachers.com/blogs/1524-Teaching-License-In-India-What-It-Is-And-How-Do-You-Renew-It-blog.php |
+| WEB-2 | https://testbook.com/ctet/eligibility-criteria |
+| WEB-3 | https://en.wikipedia.org/wiki/Central_Board_of_Secondary_Education |
+| WEB-4 | https://candidschools.com/icse-schools-in-india-a-state-wise-list/ |
+| WEB-5 | https://muftinternet.com/blog/usage-statistics-internet-and-mobile-users-in-india-2025/ |
+| WEB-6 | https://www.storyboard18.com/digital/660-million-smartphone-users-16-17-billion-monthly-upi-transactions-power-digital-bharat-report-89731.htm |
+| WEB-7 | https://datareportal.com/reports/digital-2024-india |
+| WEB-8 | https://www.pib.gov.in/PressReleasePage.aspx?PRID=2234853&reg=3&lang=1 |
+| WEB-9 | https://educationforallinindia.com/artificial-intelligence-in-indian-school-education-use-misuse-and-preventive-measures/ |
+| WEB-10 | https://www.myidcm.com/blog/artificial-intelligence-course-in-india |
+| WEB-11 | https://edurev.in/courses/118419_Mathematics-Ganita-Prakash-Class-8-New-NCERT |
+| WEB-12 | https://ciet.ncert.gov.in/activity/eaie |
+| WEB-13 | https://ejournals.ncert.gov.in/index.php/tpt/article/download/1323/1261 |
+| WEB-14 | https://www.scribd.com/document/628027385/CFPQ-Maths10 |
+| WEB-15 | https://arxiv.org/html/2507.00456v1 |
+| WEB-16 | https://arxiv.org/abs/2502.18940 |
+| WEB-17 | https://aclanthology.org/2025.emnlp-main.11/ |
+| WEB-18 | https://github.com/eth-lre/mathtutorbench |
+| WEB-19 | https://arxiv.org/html/2510.22581v1 |
 
 ---
 

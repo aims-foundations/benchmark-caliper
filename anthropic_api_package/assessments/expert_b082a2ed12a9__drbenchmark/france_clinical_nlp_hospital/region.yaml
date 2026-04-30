@@ -1,542 +1,456 @@
-name: French Pharmaceutical Regulatory NLP — DrBenchmark Assessment
-abbreviation: fr-pharma-regulatory
+name: French Pharmaceutical Regulatory Affairs — Document Compliance NLP
+abbreviation: fr_pharma_regulatory
 deployment_context:
-  primary_country: France (Metropolitan)
-  secondary_regions:
-  - Martinique
-  - Guadeloupe
-  - French Guiana
-  - Réunion
-  - Mayotte
-  institutional_setting: Pharmaceutical companies and government health agencies (primarily
-    ANSM, secondarily EMA-interface roles)
-  system_description: Document management system using NER and semantic textual similarity
-    models to verify compliance of drug labeling documents and flag inconsistencies
-    in safety warnings. Outputs determine whether documentation meets professional
-    standards for official submission or requires manual revision.
-  human_in_loop: true
-  adjudication_design: Multi-candidate confidence-score output; borderline cases flagged
-    for manual review by regulatory affairs specialists or legal experts; physicians
-    and nurses retain decision authority in clinical support mode.
-  silver_standard_note: System is characterized as a 'Silver Standard' clinical support
-    tool, not an authoritative classifier. It maps pathologies to standardized axes
-    (e.g., ICD-10 chapters) with acknowledged imperfect alignment to hospital coding
-    conventions.
-target_population:
-  description: Regulatory affairs specialists, pharmacologists, and legal experts
-    at pharmaceutical companies or government health agencies in Metropolitan France,
-    operating on structured regulatory and biomedical text in French. Secondary users
-    may be located in French overseas territories where distinct disease prevalence
-    patterns (e.g., tropical pathologies) require system adaptation.
-  primary_user_roles:
-  - Regulatory affairs specialists
-  - Pharmacologists
-  - Legal experts (pharma-regulatory)
-  - Pharmacovigilance officers
-  secondary_user_roles:
-  - Physicians (adjudication role)
-  - Nurses (adjudication role)
-  professional_expertise_level: High — users are domain experts who retain final decision
-    authority; system outputs are advisory.
-  primary_use_tasks:
-  - Compliance verification of patient information leaflets (notices patient)
-  - Safety warning consistency checking across labeling documents
-  - NER on regulatory and biomedical text (INNs, posology, contraindications, excipients)
-  - Semantic textual similarity assessment for regulatory equivalence of safety phrasing
-  - Flagging documents requiring manual revision before official submission
-  deployment_language: 'French (high-resource, metropolitan standard; secondary: overseas
-    territory French variants)'
-  population_size_note: 'ANSM itself employs approximately 1,000 staff across multiple
-    sites (Source: IAOCR — [|https://iaocr.com/en/blog/french-regulatory-authority-for-clinical-trials|]);
-    some sources cite ~400 employees at ANSM headquarters (Source: Pharmablue — [|https://pharma-blue.com/glossary/ansm/|]).
-    The broader regulatory affairs workforce across the French pharmaceutical industry
-    (private sector companies plus ANSM) is not enumerated in a single authoritative
-    source; the Glassdoor market shows active open roles across major pharma employers
-    in France (Source: Glassdoor — [|https://www.glassdoor.com/Job/france-regulatory-affairs-jobs-SRCH_IL.0,6_IN86_KO7,25.htm|]).
-    [NOT FOUND — no single census-level figure for total regulatory affairs professionals
-    employed across French pharma industry and ANSM published by INSEE, LEEM, or ANSM
-    in retrievable form; stakeholder survey or industry body (e.g., LEEM) elicitation
-    required for a precise count.]'
-regulatory_framework:
-  primary_national_authority: ANSM (Agence Nationale de Sécurité du Médicament et
-    des produits de santé)
-  eu_level_authority: EMA (European Medicines Agency)
-  key_regulatory_procedures:
-    centralized_procedure: EMA centralized marketing authorization — applies to all
-      EU Member States including France
-    national_procedure: 'ANSM national authorization — France-specific, governed by
-      national circulars. ANSM is the competent authority for national, mutual recognition,
-      and decentralised procedure MAs valid in France (Source: Lexology — [|https://www.lexology.com/library/detail.aspx?g=9eb5298b-3d96-448a-b563-7135317d423c|]).'
-    ansm_ema_divergence_note: 'For centrally authorized products, SmPC, PIL, and labeling
-      text are identical across all EU member states; however, France-specific requirements
-      are added via a national ''blue-box'' on outer packaging (CIP codes, name of
-      the Exploitant, local prescription and delivery conditions) and a ''Feuille
-      de style'' template used for ANSM submission of translated product information.
-      France also imposes its own drug classification system (List I / List II) on
-      packaging regardless of the EU MA text (Source: PharmaLex — [|https://www.pharmalex.com/thought-leadership/blogs/the-complex-landscape-of-french-regulatory-affairs/|]).
-      These national additions are not represented in QUAERO EMEA labels or any DrBenchmark
-      corpus, representing a concrete gap for French regulatory NLP. No published
-      NLP study was found documenting the divergence in NLP terms; this slot requires
-      regulatory affairs expert elicitation for full specification.'
-  primary_document_genres:
-  - Summary of Product Characteristics (SmPC / RCP in French)
-  - Patient Information Leaflets (notice patient / PIL)
-  - Clinical Trial Documentation (CTD modules)
-  - Patent claims (secondary priority)
-  - Pharmacovigilance periodic safety update reports (PSURs)
-  key_regulatory_standards:
-    EMA_SmPC_guideline: 'Current EMA SmPC template is QRD (Quality Review of Documents)
-      template v10.4, published February 2024. The ongoing revision toward QRD v11
-      was launched in September 2023, focused on improving PIL structure and content
-      under Regulation (EU) 2023/1182. The QRD convention document is EMA/62470/2007
-      (rev. 8). SmPC structure follows 12 sections; sections 4.1–4.9 cover clinical
-      particulars including indications, dosing, contraindications, warnings, interactions,
-      pregnancy, effects on driving, undesirable effects, and overdose. (Source: EMA
-      QRD templates page — [|https://www.ema.europa.eu/en/human-regulatory-overview/marketing-authorisation/product-information-requirements/product-information-qrd-templates-human|];
-      EMA QRD template v10.4 PDF — [|https://www.ema.europa.eu/en/documents/template-form/qrd-product-information-template-version-104-highlighted_en.pdf|])'
-    ANSM_circulars: 'ANSM operates under the French Public Health Code (Code de la
-      santé publique), specifically Art. L. 5121-8 FPHC for national MA decisions.
-      ANSM uses a ''Feuille de style'' template (aligned with current QRD template)
-      for French product information submissions. For MRP/DCP procedures, the CMDh
-      annotated QRD template (March 2024, corrected September 2025) applies (Source:
-      HMA CMDh QRD — [|https://www.hma.eu/human-medicines/cmdh/templates/qrd.html|];
-      PharmaLex France regulatory overview — [|https://www.pharmalex.com/thought-leadership/blogs/the-complex-landscape-of-french-regulatory-affairs/|]).
-      Specific ANSM circular references for drug labeling compliance are published
-      on the ANSM website in French only and were not individually enumerated in available
-      English-language sources; direct retrieval from ansm.sante.fr required.'
-    ICH_guidelines: 'The EMA SmPC is tightly aligned with the ICH CTD (Common Technical
-      Document) structure. Under ICH M4E (efficacy), SmPC sections should mirror data
-      in the clinical overview and clinical summary. ICH M4Q (quality) guides SmPC
-      section 2 (composition) and section 6 information. ICH E3 governs clinical study
-      reports (CSR) used in CTD Module 5. (Source: PharmaCores SmPC analysis — [|https://pharmacores.com/smpc-summary-of-product-characteristics/|];
-      EMA product information reference documents — [|https://www.ema.europa.eu/en/human-regulatory-overview/marketing-authorisation/product-information-requirements/product-information-reference-documents-guidelines-0|])'
-  applicable_data_protection_regulation: 'RGPD (GDPR as transposed into French law
-    via Loi Informatique et Libertés, Law n° 78-17 of 6 January 1978, as amended).
-    For health data hosting, French law additionally requires HDS (Hébergeur de Données
-    de Santé) certification under Art. L.1111-8 of the Public Health Code — hosting
-    health data without HDS certification is prohibited (Source: CMS Digital Health
-    France — [|https://cms.law/en/int/expert-guides/cms-expert-guide-to-digital-health-apps-and-telemedicine/france|];
-    IntuitionLabs pharma IT compliance — [|https://intuitionlabs.ai/articles/compliance-frameworks-pharmaceutical-it-comparative-analysis|]).
-    ANSM and CNIL jointly oversee AI/health-system compliance (Source: ICLG Digital
-    Health France 2025 — [|https://iclg.com/practice-areas/digital-health-laws-and-regulations/france|]).
-    Under the EU AI Act (now in force), pharmaceutical AI decision-support systems
-    serving medical purposes are classified as high-risk under Annex III, triggering
-    data governance, transparency, human oversight, and accountability obligations
-    (Source: European Pharmaceutical Review — [|https://www.europeanpharmaceuticalreview.com/article/264445/ai-act-data-governance-and-compliance-strategy-implications-in-pharma/|]).'
-  icd_10_usage: System maps pathologies to ICD-10 chapter axes; alignment with hospital
-    coding conventions acknowledged as imperfect in complex multi-morbid cases.
-  atc_code_usage: '[NEEDS VERIFICATION — deferred: below search budget; whether ANSM
-    mandates ATC code annotation in specific labeling document sections is a detailed
-    regulatory procedural question best confirmed directly via ANSM''s published guidelines
-    on ansm.sante.fr or expert elicitation.]'
-regulatory_entity_vocabulary:
-  description: Highly specific, normatively loaded vocabulary required for deployment
-    NER tasks — largely absent from DrBenchmark's label taxonomies.
-  required_entity_types:
-  - International Non-proprietary Names (INNs)
-  - ATC (Anatomical Therapeutic Chemical) codes
-  - Excipient names (INCI / European Pharmacopoeia nomenclature)
-  - Posology expressions (dose, frequency, route of administration per EMA templates)
-  - Contraindication qualifiers (population subgroup exclusions, condition-specific
-    restrictions)
-  - EMA SmPC section identifiers (sections 4.1–4.9 structural markers)
-  - Pharmacovigilance signal terms
-  - Special warning and precaution phrases
-  - MedDRA terminology (per QRD Appendix II, used in SmPC section 4.8 undesirable
-    effects)
-  benchmark_coverage_of_entity_types: Partial — DEFT-2021 NER includes DOSAGE, MODE,
-    SUBSTANCE, TREATMENT categories; PxCorpus NER includes drug, dose, mode. No label
-    set enumerates INNs, ATC codes, excipient nomenclature, or EMA-specific contraindication
-    qualifier classes.
-  crosswalk_to_benchmark_labels: '[NOT FOUND — searched French biomedical NLP benchmark
-    literature and EMA/ANSM regulatory NER annotation scheme sources; no published
-    crosswalk between EMA/ANSM regulatory annotation guidelines and DrBenchmark NER
-    schemas was identified. The closest analogous resource is DART (Drug Annotation
-    from Regulatory Texts), a 2024 Italian-language structured corpus of SmPCs from
-    AIFA with NER and relation extraction for active substances, administration routes,
-    pharmacokinetic mechanisms, and pregnancy risk categories — but this is Italian,
-    not French, and no equivalent French regulatory SmPC NER corpus was found (Source:
-    arXiv DART — [|https://arxiv.org/abs/2510.18475|]). This null result is itself
-    informative: no French-language regulatory NER annotation scheme crosswalk appears
-    to exist in the published literature as of 2024–2025.]'
-  net_new_comparable_resource_note: 'DART (2024) — a structured Italian-language corpus
-    of ~95 million tokens derived from Italian RCPs (SmPCs) published by AIFA — provides
-    the closest existing model for what a French regulatory NLP benchmark would require.
-    It covers NER/RE for active substances, administration routes, contraindications,
-    adverse drug reactions, and drug-drug interactions, with high section coverage
-    (>90% across most SmPC sections). No equivalent French-language resource was identified.
-    This gap reinforces the IO/IC validity concerns for the deployment context. (Source:
-    arXiv DART paper — [|https://arxiv.org/abs/2510.18475|])'
+  system_description: A document management system using NER and semantic textual
+    similarity (STS) models to verify compliance of drug labeling documents and flag
+    inconsistencies in safety warnings. Outputs determine whether documentation meets
+    professional standards for official submission or requires manual revision.
+  operational_mode: Semi-automated compliance screening with human-in-the-loop adjudication
+    for borderline cases. The system produces multi-candidate labels with confidence
+    scores rather than single authoritative decisions.
+  quality_tier: Silver Standard — acknowledged imperfect alignment with authoritative
+    regulatory coding conventions in complex cases; not designed as an authoritative
+    classifier.
+  benchmark_assessed: DrBenchmark (French biomedical NLP, LREC-COLING 2024)
+primary_geography:
+  country: France
+  sub_national_scope: Metropolitan France (primary priority)
+  secondary_scope:
+    territories:
+    - Martinique
+    - Guadeloupe
+    - French Guiana
+    - Réunion
+    - Mayotte
+    rationale: French overseas territories identified by user as highest secondary
+      adaptation priority due to distinct disease prevalence patterns (e.g., tropical
+      pathologies) not reflected in mainland datasets.
+    constitutional_status_note: 'All five territories are DOM (Départements d''Outre-Mer)
+      under Article 73 of the French Constitution and are integral parts of the French
+      Republic with representation in Parliament. They are EU outermost regions. Source:
+      INSEE — [|https://www.insee.fr/en/metadonnees/definition/c2316|]'
 languages:
-  primary: French (Metropolitan standard)
-  secondary_variants:
-  - French as used in Martinique
-  - French as used in Guadeloupe
-  - French as used in French Guiana
-  - French as used in Réunion
-  - French as used in Mayotte
-  regulatory_latin_terminology: Extensive use of Latin-origin pharmaceutical terminology,
-    INN stems, IUPAC chemical nomenclature — standard across EU regulatory text regardless
-    of language variant.
-  note: No diglossia, script mismatch, or major dialectal divergence for the primary
-    metropolitan deployment. Overseas territory variants introduce some lexical specificity
-    but remain standard French. Regulatory text is highly formulaic and genre-constrained
-    rather than dialectally variable.
+  primary: French (Metropolitan, written formal register)
+  register_notes: The deployment operates exclusively on structured regulatory and
+    biomedical text in written French. Informal register, speech transcriptions, and
+    cross-lingual inputs are out of scope. Regulatory documents follow highly formulaic,
+    legally constrained language conventions distinct from clinical or research prose.
+  dialect_variation_relevance: Minimal for primary metropolitan scope. French overseas
+    territories may introduce regional terminology and tropical pathology vocabulary
+    not present in mainland training and benchmark data — flagged as a known adaptation
+    gap by the user.
+  language_code: fr
 writing_systems:
   scripts:
-  - Latin alphabet with diacritics (é, è, ê, ë, à, â, ô, î, ï, ù, û, ü, ç, œ, æ)
-  note: No script mismatch between benchmark and deployment. All regulatory and biomedical
-    text in scope uses standard French Latin orthography. Chemical formulae and abbreviations
-    (e.g., INN stems) follow IUPAC conventions within the Latin script.
-infrastructure_notes:
-  deployment_modality: Text-only document processing pipeline; no audio, image, or
-    cross-modality considerations.
-  it_environment: Institutional pharmaceutical or regulatory agency IT infrastructure
-    (metropolitan France). High-reliability enterprise environment expected.
-  internet_infrastructure_metropolitan_france: 'France is among Europe''s most digitally
-    developed markets. For health data hosting specifically, French law (Art. L.1111-8
-    Public Health Code) mandates HDS (Hébergeur de Données de Santé) certification
-    for any service hosting personal health data — a France-specific requirement beyond
-    GDPR that applies to pharmaceutical AI tools processing patient-linked regulatory
-    data (Source: IntuitionLabs — [|https://intuitionlabs.ai/articles/compliance-frameworks-pharmaceutical-it-comparative-analysis|]).
-    Enterprise pharma IT infrastructure in France is mature and well-connected; no
-    infrastructure bottleneck for the primary metropolitan deployment is anticipated.
-    [NOT FOUND — specific enterprise broadband penetration figures for major French
-    pharma companies and ANSM were not published in retrievable form; this slot is
-    low-impact for scoring.]'
-  nlu_tooling_ecosystem: 'French is a high-resource NLP language; French biomedical
-    models available (DrBERT-FS, DrBERT-CP, CamemBERT-bio, AliBERT). DrBERT pre-trains
-    from scratch on French biomedical data and outperforms continual-pretraining variants
-    on classification tasks; CamemBERT-bio (continual pre-training from CamemBERT)
-    shows slight advantage on NER tasks (Source: arXiv adaptation study — [|https://arxiv.org/html/2402.16689v1|]).
-    A 2024 long-document adaptation study introduced DrLongformer-CP, which achieves
-    higher average F1 across all tasks and has advantages for sequences >512 tokens
-    — relevant for full SmPC documents (Source: arXiv 2402.16689 — [|https://arxiv.org/html/2402.16689v1|]).
-    Regulatory-domain fine-tuned models are not documented in the benchmark.'
-  benchmark_toolkit: HuggingFace Datasets + Transformers; PyTorch-based; normalized
-    data loaders — compatible with standard institutional ML infrastructure.
-  overseas_territory_infrastructure: '[NEEDS VERIFICATION — deferred: below search
-    budget; IT infrastructure and connectivity figures for French overseas DROM are
-    likely available from INSEE or ARCEP but were not retrieved; low impact for scoring
-    given the primary deployment is metropolitan France.]'
-document_genre_coverage:
-  description: 'Central content-validity dimension: the benchmark''s input taxonomy
-    versus the deployment''s primary document genres.'
-  benchmark_genres_present:
-  - Clinical cases (CAS, DEFT-2021, E3C, DiaMed, CLISTER)
-  - Scientific literature abstracts and titles (QUAERO MEDLINE, MorFITT, Mantra-GSC
-    Medline)
-  - EMEA drug labels — as pre-existing NLP research corpus (QUAERO EMEA, Mantra-GSC
-    EMEA, DEFT-2020)
-  - Clinical trial protocols (ESSAI)
-  - Spoken drug prescriptions — transcribed (PxCorpus)
-  - Pharmacy specialization exam questions (FrenchMedMCQA)
-  deployment_genres_not_covered:
-  - Current-format EMA SmPC documents (RCP) with mandatory section structure 4.1–4.9
-    per QRD template v10.4
-  - Patient information leaflets conforming to current EMA/ANSM PIL template (QRD
-    v10.4, under revision to v11 since September 2023)
-  - CTD (Common Technical Document) modules for regulatory submission (ICH M4E/M4Q
-    aligned)
-  - ANSM-format national authorization dossiers (including 'Feuille de style' and
-    blue-box requirements)
-  - PSURs / pharmacovigilance periodic reports
-  - Patent claims with regulatory relevance
-  quaero_emea_caveat: QUAERO EMEA labels are a pre-existing research corpus, not live
-    regulatory submissions with current EMA QRD v10.4 formatting conventions; nested
-    annotations partially lost in preprocessing (6.06% annotation loss); long EMEA
-    documents sentence-split, disrupting document-level regulatory structure. The
-    EMEA source documents in QUAERO predate the current QRD template revision cycle
-    (v11 revision began September 2023).
-  genre_gap_severity: High — the benchmark's primary genres are clinical/research
-    NLP; the deployment's primary genres are legally constrained regulatory submissions.
-    This is the central content-validity gap identified by the assessment.
-  web_search_target: 'Confirmed — no DrBenchmark task derives from current EMA QRD-formatted
-    SmPCs, current PIL templates, CTD modules, or ANSM-format national submissions.
-    QUAERO EMEA and DEFT-2020 drug labels approach the domain but are pre-existing
-    research corpora not aligned to current QRD template conventions. The only existing
-    regulatory SmPC NLP corpus identified is DART (Italian, 2024); no French equivalent
-    was found (Source: arXiv DrBenchmark — [|https://arxiv.org/html/2402.13432|];
-    arXiv DART — [|https://arxiv.org/abs/2510.18475|]).'
-sts_scoring_calibration:
-  description: Regulatory equivalence scoring requirements versus benchmark STS calibration.
-  benchmark_sts_scale: 0–5 Likert continuous similarity score (Spearman correlation
-    + EDRM evaluation metrics)
-  benchmark_sts_sources: Clinical case sentence pairs (CLISTER), clinical cases /
-    encyclopedia / drug labels (DEFT-2020)
-  deployment_requirement: Scoring function must distinguish legally significant small-magnitude
-    differences (dose thresholds, subpopulation qualifiers, temporal modifiers) that
-    constitute distinct regulatory meaning under EMA/ANSM standards — not just general
-    semantic proximity.
-  gap_assessment: Full gap — benchmark STS scale reflects general semantic proximity;
-    no documentation of calibration for regulatory-legal equivalence distinctions.
-    DrBERT-FS does not excel on STS tasks, suggesting current scoring functions may
-    underperform for fine-grained legal discrimination.
-  regulatory_equivalence_threshold: '[NOT FOUND — searched regulatory affairs NLP
-    literature and EMA/ANSM guidance sources; no published scoring rubric or threshold
-    for EMA/ANSM safety-warning equivalence in NLP contexts was identified. The EMA
-    QRD template mandates standard statements ''whenever applicable'' and requires
-    case-by-case justification for deviations, but does not specify a numerical paraphrase-distance
-    threshold (Source: EMA QRD product information reference docs — [|https://www.ema.europa.eu/en/human-regulatory-overview/marketing-authorisation/product-information-requirements/product-information-reference-documents-guidelines-0|]).
-    This slot requires regulatory affairs expert or legal elicitation; it is unlikely
-    to be documented in machine-readable form.]'
-  mandatory_review_threshold: '[NEEDS VERIFICATION — deferred: likely unsearchable
-    (system-internal design parameter); the specific confidence-score threshold triggering
-    mandatory human regulatory review is a deployment implementation detail not published
-    externally.]'
-annotation_workforce_and_ground_truth:
-  description: Alignment between benchmark annotation expertise and the regulatory
-    expertise required for deployment ground truth.
-  benchmark_annotator_profiles:
-  - Clinical case reviewers
-  - Medical experts (one per DiaMed annotation team)
-  - NLP researchers
-  deployment_ground_truth_authority:
+  - Latin alphabet with French diacritics (é, è, ê, à, â, ù, û, ç, œ, æ)
+  note: No script mismatch concerns. All benchmark and deployment text is in standard
+    written French using the Latin alphabet. RTL or multi-script handling is not required.
+target_user_population:
+  professional_roles:
   - Regulatory affairs specialists
-  - Pharmacovigilance officers
-  - Legal experts applying EMA SmPC guidelines and ANSM circulars
-  gap_assessment: Full gap — no benchmark annotation process documentation mentions
-    regulatory affairs or legal expertise. The authority structure for what constitutes
-    a correct label in the deployment context (EMA/ANSM normative compliance) is categorically
-    different from the clinical/research expert judgment used in benchmark annotation.
-  inter_annotator_agreement_notes:
-    diamed: Cohen's Kappa and Gwet's AC1 computed over two sessions of 15 clinical
-      cases each — narrow validation base.
-    clister: Scores averaged across multiple annotators (number not specified).
-    cas: Automatic annotations at 98% precision — silver standard.
-    deft_2021: Manual annotation; no IAA statistics reported in benchmark paper.
-    others: '[NOT FOUND — IAA statistics for QUAERO, Mantra-GSC, E3C, MorFITT, ESSAI
-      are inherited from original source papers; a 2024 systematic benchmark evaluation
-      of French clinical NER (HAL 04523267) confirms that these source papers use
-      varying evaluation methodologies (token-level vs. entity-level, with/without
-      nested entities), making cross-task IAA comparison unreliable (Source: HAL benchmark
-      evaluation — [|https://hal.science/hal-04523267|]).]'
-  silver_standard_propagation: 'The CAS corpus uses automatic annotations validated
-    at 98% precision — a silver standard. A 2024 clinical NER study confirms that
-    silver-standard annotations from E3C layer 2 can be useful for training but evaluation
-    should use gold-standard layer 1 annotations (Source: HAL 04523267 — [|https://hal.science/hal-04523267|]).
-    Across the 20 tasks, annotation quality is uneven: DiaMed has the narrowest IAA
-    base (15 cases per session); DEFT-2021 reports no IAA; CLISTER averaging methodology
-    masks annotator disagreement. No single authoritative gold-standard IAA threshold
-    is documented for the full DrBenchmark suite.'
-overseas_territory_specifics:
-  territories:
+  - Pharmacologists
+  - Legal experts at pharmaceutical companies
+  - Staff at government health agencies (e.g., ANSM)
+  institutional_contexts:
+  - Pharmaceutical companies operating under French and EU regulatory frameworks
+  - French national health agency (ANSM — Agence nationale de sécurité du médicament
+    et des produits de santé)
+  - EU regulatory submission teams interfacing with EMA centralized procedures
+  user_expertise_level: High — users are domain professionals who retain decision
+    authority and adjudicate borderline model outputs. The system supports rather
+    than replaces expert judgment.
+  decision_authority: Regulatory affairs specialists and legal experts hold final
+    adjudication authority over borderline cases; clinicians and nurses retain decision
+    authority in the clinical support pathway.
+  human_in_the_loop_design: Confirmed. High-uncertainty entities and borderline STS
+    scores are flagged for manual review. The system outputs multiple candidate labels
+    with confidence scores.
+document_genres_in_scope:
+  primary_targets:
+  - Patient information leaflets (notices patient / PILs)
+  - Summary of Product Characteristics (SmPC / RCP — Résumé des Caractéristiques du
+    Produit)
+  - Scientific abstracts relevant to regulatory submissions
+  - 'Potentially: CTD (Common Technical Document) modules'
+  - 'Potentially: patent claims'
+  genre_characteristics: Highly formulaic, legally constrained language following
+    EMA template structures. Text is structurally distinct from clinical case narratives
+    or research prose — dense with standardized nomenclature, posology expressions,
+    contraindication qualifiers, and excipient declarations.
+  benchmark_genre_coverage_note: 'QUAERO corpus includes EMEA drug leaflet text for
+    NER; Mantra-GSC includes a drug label subset. Neither is used for STS compliance
+    tasks. No benchmark task explicitly addresses CTD modules, SmPCs as a compliance-checking
+    genre, or ANSM submission formats. Searched DrBenchmark paper (arXiv 2402.13432
+    and LREC-COLING 2024 proceedings) and confirmed: no DrBenchmark task uses SmPC
+    or CTD text as a compliance-checking genre. The QUAERO EMEA subset (drug leaflets)
+    is used only for NER with UMLS Semantic Group labels, not for STS or regulatory
+    equivalence tasks. Source: ACL Anthology — [|https://aclanthology.org/2024.lrec-main.478/|];
+    arXiv — [|https://arxiv.org/abs/2402.13432|]'
+regulatory_framework:
+  primary_national_authority: 'ANSM (Agence nationale de sécurité du médicament et
+    des produits de santé) — superseded AFSSAPS on 1 May 2012. Source: Wikipedia —
+    [|https://en.wikipedia.org/wiki/Agence_nationale_de_s%C3%A9curit%C3%A9_du_m%C3%A9dicament_et_des_produits_de_sant%C3%A9|]'
+  eu_level_authority: EMA (European Medicines Agency)
+  relevant_procedures:
+  - EMA centralized marketing authorization procedure
+  - ANSM national procedure
+  - Mutual recognition and decentralized procedures
+  key_regulatory_standards:
+  - EMA SmPC guideline (QRD template)
+  - EMA patient information leaflet template
+  - ICH CTD structure (M4)
+  - ANSM national circulars and guidance documents
+  ansm_ema_divergence_note: 'Partially resolved. France-specific divergences from
+    EMA templates are documented and operational: (1) ANSM requires a French-specific
+    ''Feuille de style'' submission template aligned to QRD but with national additions;
+    (2) packaging must include a ''blue-box'' for French-specific CIP codes, Exploitant
+    name, and national prescription/delivery conditions (List I / List II drug classification)
+    even where SmPC/PIL text is otherwise EU-harmonized; (3) any packaging wording
+    change post-authorization requires a regulatory variation submitted to ANSM or
+    EMA depending on MA type. Source: PharmaLex — [|https://www.pharmalex.com/thought-leadership/blogs/the-complex-landscape-of-french-regulatory-affairs/|];
+    Alhena Consult — [|https://alhena-consult.com/how-to-market-a-drug-in-france/|].
+    Deeper divergence in safety warning *content* standards (e.g., ANSM-specific contraindication
+    phrasing requirements beyond EMA QRD) requires expert elicitation; not fully documented
+    in publicly available sources.'
+  applicable_data_protection_regulation: 'Resolved. The applicable framework is GDPR
+    (RGPD — Règlement (UE) 2016/679) as transposed into French law by the Loi du 20
+    juin 2018 relative à la protection des données personnelles (amending Loi Informatique
+    et Libertés n°78-17 du 6 janvier 1978). Health data is classified as a special
+    category (''données sensibles'') under RGPD Art. 9 and Loi Informatique et Libertés
+    Art. 6 and 44, with processing generally prohibited except under specific derogations.
+    The CNIL (Commission nationale de l''informatique et des libertés) is the supervisory
+    authority and may require prior formalities for health data processing systems.
+    Pharmaceutical regulatory document processing systems handling personal health
+    data must comply with accountability requirements and may require CNIL notification
+    or authorization. Source: CNIL — [|https://www.cnil.fr/fr/quelles-formalites-pour-les-traitements-de-donnees-de-sante|];
+    G_NIUS/ANS — [|https://gnius.esante.gouv.fr/en/regulations/what-does-a-health-data-do|]'
+  pharmacovigilance_framework: 'Resolved. EU pharmacovigilance is governed by Regulation
+    (EU) No 1235/2010 (amending Regulation (EC) No 726/2004) and Directive 2010/84/EU,
+    effective from 2 July 2012. France implements additional ANSM-specific requirements:
+    MAHs/Exploitants must report ADRs directly to EudraVigilance and notify ANSM of
+    any safety information affecting benefit-risk assessment; off-label use not included
+    in RMP must be separately reported to ANSM; a French-specific Pharmacovigilance
+    System Master File (PSMF) is required unless the global PSMF covers all national
+    activities; additional risk minimization measures (aRMMs) must be validated and
+    translated by ANSM; urgent safety signals require ANSM notification within three
+    days; pharmacovigilance data must be archived for minimum 10 years. These ANSM-specific
+    requirements affect what safety warning content changes trigger compliance review
+    obligations. Source: Insuvia — [|https://insuvia.com/insights/pharmacovigilance-regulations-france/|];
+    EUR-Lex Regulation 1235/2010 — [|https://eur-lex.europa.eu/eli/reg/2010/1235/oj/eng|]'
+entity_vocabulary_requirements:
+  regulatory_entity_types:
+  - International Nonproprietary Names (INNs)
+  - ATC (Anatomical Therapeutic Chemical) codes
+  - Excipient names and nomenclature
+  - Posology expressions (dose, frequency, route of administration)
+  - Contraindication qualifiers (population subgroups, conditions)
+  - EMA-template safety warning phrases
+  - Adverse reaction terms (MedDRA preferred terms)
+  benchmark_entity_coverage: Benchmark NER label sets use UMLS Semantic Groups (QUAERO),
+    ICD-10 chapter labels (DiaMed), and MeSH Chapter C axes (DEFT-2021) — clinical/research
+    ontologies that do not directly map to regulatory labeling entity types. PxCorpus
+    NER covers drug, dose, and mode entities for prescription transcripts (38 classes),
+    which partially overlaps.
+  alignment_gap: 'Confirmed significant gap: user elicitation indicates the system
+    targets ICD-10 clinical mapping rather than regulatory entity types, and the benchmark
+    does not include INN, ATC code, or EMA posology template phrasing as primary NER
+    targets.'
+  crosswalk_to_regulatory_ontologies: 'Searched and not found as a published work
+    specifically bridging DrBenchmark NER schemas to EMA/ANSM regulatory annotation
+    guidelines. However, a directly relevant finding was identified: FDA/MITRE''s
+    ADE Eval shared task evaluated NLP systems on extracting adverse event terms from
+    drug labels and mapping to MedDRA Preferred Terms, achieving top F1 of 0.79 for
+    MedDRA coding — but concluded that NLP tools required modification before regulatory
+    use and that tools purpose-built for drug label AE extraction and MedDRA mapping
+    are needed. This English-language work has no French equivalent in the literature
+    searched. MedDRA is available in French translation (confirmed: BioPortal NCBO
+    — [|https://bioportal.bioontology.org/ontologies/MEDDRA|]) but no French-language
+    NER benchmark targets MedDRA preferred terms. Source for ADE Eval finding: PubMed
+    29860093 — [|https://pubmed.ncbi.nlm.nih.gov/29860093/|]; ScienceDirect — [|https://www.sciencedirect.com/science/article/pii/S1532046418301060|]
+
+    [NOT FOUND — no published crosswalk between DrBenchmark NER schemas and EMA/ANSM
+    regulatory annotation guidelines or MedDRA/EDQM nomenclatures found in searched
+    sources]'
+sts_compliance_requirements:
+  deployment_use_of_sts: STS scores are used to assess equivalence of safety warning
+    text across document versions — e.g., comparing proposed labeling phrasing against
+    approved reference text or between draft and final versions.
+  regulatory_equivalence_sensitivity: 'Minor lexical differences (altered dose thresholds,
+    modified population subgroup qualifiers, changed contraindication phrasing) carry
+    legal significance under EMA/ANSM standards even when a general biomedical STS
+    scorer would assign high similarity. Packaging wording changes require formal
+    regulatory variation submissions (Type IA, IB, or II), demonstrating that even
+    minor text changes have legally operative consequences. Source: Alhena Consult
+    — [|https://alhena-consult.com/how-to-market-a-drug-in-france/|]'
+  benchmark_sts_scoring: 'DrBenchmark STS tasks use a coarse 0–5 Likert-style scale
+    reflecting general semantic proximity (CLISTER: 1,000 clinical sentence pairs;
+    DEFT-2020: similarity + retrieval tasks). No evidence this rubric distinguishes
+    legally significant small-magnitude differences from semantically proximate but
+    legally equivalent variants.'
+  scoring_calibration_gap: 'Fully confirmed gap: benchmark scoring rubric is not calibrated
+    for regulatory-equivalence interpretation. The user''s elicitation answers did
+    not confirm that the deployment STS function is calibrated for this stricter standard
+    either.'
+  borderline_score_handling: Borderline STS scores trigger human review rather than
+    automatic rejection. The exact score threshold for mandatory escalation is not
+    benchmarked against regulatory workflow requirements.
+  threshold_documentation: '[NEEDS VERIFICATION — deferred: below search budget; likely
+    requires direct system documentation review rather than web search]'
+annotation_authority:
+  benchmark_annotator_profiles: Clinical professionals, NLP researchers, and one medical
+    expert (DiaMed). CAS POS labels are silver-standard (automatic via Tagex 3 with
+    98% precision validation). CLISTER STS labels are averaged scores from multiple
+    annotators.
+  regulatory_authority_gap: No annotator with regulatory affairs expertise, pharmacovigilance
+    specialization, or EMA/ANSM submission legal knowledge is identified in any DrBenchmark
+    dataset annotation team. Ground-truth labels reflect clinical and research norms
+    that may systematically diverge from regulatory-legal compliance standards.
+  iaa_documentation: The DrBenchmark paper (Table 4, Q45/Q46) documents inter-annotator
+    agreement for DiaMed using Cohen's Kappa and Gwet's AC1 across two annotation
+    sessions of 15 clinical cases each with 4 annotators. The specific numerical values
+    are reported in Table 4 of the paper but were not retrievable from search results
+    (table not rendered in indexed text). The benchmark paper is openly accessible
+    at the ACL Anthology for direct retrieval of these values. [NOT FOUND — specific
+    IAA kappa values for DiaMed Table 4 not surfaced in search results; available
+    in full paper PDF at [|https://aclanthology.org/2024.lrec-main.478/|]]
+  silver_vs_gold_standard: 'CAS POS annotations are confirmed silver-standard (automatic
+    Tagex 3 + 98% precision validation). DEFT-2021 NER and MLC are manually annotated
+    (gold-standard). CLISTER STS is manually annotated by multiple annotators with
+    averaged scores. DiaMed classification is manually annotated with IAA measurement.
+    ESSAI POS uses TreeTagger (automatic, silver-standard). No additional DrBenchmark
+    tasks with explicit silver-standard labeling were identified beyond CAS POS and
+    ESSAI POS; the NER tasks (QUAERO, E3C, Mantra-GSC) derive from pre-existing manually
+    annotated corpora. Source: arXiv 2402.13432 — [|https://arxiv.org/html/2402.13432v1|]'
+infrastructure_notes:
+  deployment_modality: Text-based document management system. No audio, image, or
+    cross-modal inputs. Standard written French text in structured document formats.
+  text_infrastructure: Metropolitan France — high-resource digital infrastructure
+    context consistent with benchmark assumptions. Standard Latin script rendering,
+    no RTL or bidirectional text concerns.
+  model_integration: System integrates NER and STS models (likely fine-tuned masked
+    language models such as DrBERT, CamemBERT-bio, or similar). HuggingFace ecosystem
+    assumed consistent with DrBenchmark toolkit.
+  tokenization_considerations: French biomedical terminology (long compound terms,
+    Latin-derived nomenclature, INN strings) may produce high sub-token fragmentation.
+    DrBERT-CP shows highest average segmentation (1.90 sub-tokens/word) in benchmark
+    experiments — performance impact on regulatory entity spans warrants assessment.
+  compute_requirements: '[NEEDS VERIFICATION — deferred: likely unsearchable (on-premises
+    vs. cloud decision is internal deployment configuration not publicly documented);
+    low impact for scoring]'
+  data_sensitivity: 'Pharmaceutical regulatory submissions are commercially sensitive
+    and may be subject to trade secret protections in addition to personal data regulations.
+    On-premises deployment is probable. Under French law, regulatory documents containing
+    personal health data are subject to RGPD/Loi Informatique et Libertés; health
+    data hosting must comply with Code de la santé publique Art. L.1111-8 and associated
+    hébergeur agréé (certified health data hosting) requirements. Source: G_NIUS/ANS
+    — [|https://gnius.esante.gouv.fr/en/regulations/what-does-a-health-data-do|]'
+overseas_territory_adaptation:
+  priority_territories:
   - Martinique
   - Guadeloupe
   - French Guiana
   - Réunion
   - Mayotte
-  regulatory_status: 'The five French overseas territories listed (Martinique, Guadeloupe,
-    French Guiana, Réunion, Mayotte) are all overseas departments and regions (DROM),
-    governed by Article 73 of the French Constitution. Under this article, French
-    laws and regulations — including ANSM pharmaceutical regulations and EU pharmaceutical
-    law — apply there under the same conditions as in metropolitan France, with the
-    possibility of adaptation to local characteristics. They are not separate regulatory
-    jurisdictions; ANSM authorization applies identically. (Source: Statista/INSEE
-    overseas France overview — [|https://www.statista.com/topics/10409/overseas-france/|];
-    Wikipedia DROM — [|https://en.wikipedia.org/wiki/Overseas_departments_and_regions_of_France|])'
-  disease_prevalence_gaps:
-    description: French overseas territories have distinct disease prevalence patterns
-      not reflected in mainland French biomedical datasets.
-    tropical_pathologies_not_covered:
-    - Dengue fever (dengue)
-    - Chikungunya
-    - Paludisme (malaria — relevant to French Guiana)
-    - Zika virus disease
-    - Leptospirosis
-    - Other vector-borne diseases endemic to Caribbean and Indian Ocean territories
-    benchmark_coverage: Full gap — no DrBenchmark data sources from overseas territories;
-      DiaMed (Pan African Medical Journal) covers sub-Saharan African clinical cases,
-      not French overseas department pathologies; tropical disease terminology absent
-      from all label sets.
-    vocabulary_adaptation_needed: '[NEEDS VERIFICATION — deferred: likely unsearchable
-      in searchable form; whether specific regulatory entity vocabulary or safety
-      warning phrasing differs for products with tropical-pathology indications in
-      French overseas territories requires expert elicitation with ANSM or pharmacovigilance
-      specialists covering DOM health authorities (ARS).]'
-  population_size_by_territory: 'Approximate populations (recent estimates): Réunion
-    ~901,000 (most populous overseas territory); Guadeloupe ~400,000; Martinique ~375,000
-    (declining since 2008 due to emigration); French Guiana ~306,000 (fastest-growing,
-    >2% growth 2014–2020); Mayotte ~279,000. Combined DROM population approximately
-    2.26 million. (Source: WorldAtlas overseas France — [|https://www.worldatlas.com/geography/french-overseas-territories.html|];
-    LCANews territories overview — [|https://www.lcanews.com/en/frances-overseas-territories-explained/|];
-    Statista INSEE 2024 — [|https://www.statista.com/statistics/1320629/population-french-overseas-regions/|])
+  tropical_pathology_vocabulary:
+  - Dengue
+  - Chikungunya
+  - Paludisme (malaria)
+  - Zika
+  - Leptospirose
+  - Leishmaniose (French Guiana)
+  benchmark_coverage_of_territories: No DrBenchmark data source is described as originating
+    from French overseas territories. DiaMed (Pan African Medical Journal) may incidentally
+    include tropical pathology cases but was not designed to represent overseas territory
+    populations or regulatory needs.
+  regulatory_variation_overseas: 'Partially resolved. The five priority territories
+    are DOM (Départements d''Outre-Mer) and as integral parts of the French Republic,
+    French and EU pharmaceutical law applies to them directly — ANSM has regulatory
+    authority over these territories. However, key France-specific packaging requirements
+    (CIP codes, Exploitant designation, List I/II drug classification labeling) apply
+    uniformly across metropolitan France and DOM. No published ANSM guidance specifically
+    modifying safety warning content standards for tropical disease indications in
+    overseas territories was found. The territories are EU outermost regions (Article
+    349 TFEU), meaning EMA centralized procedure regulations apply, but no documented
+    DOM-specific labeling divergence for safety content was identified. Source: INSEE
+    DOM definition — [|https://www.insee.fr/en/metadonnees/definition/c2316|]; PharmaLex
+    French regulatory overview — [|https://www.pharmalex.com/thought-leadership/blogs/the-complex-landscape-of-french-regulatory-affairs/|]
 
-    Note: These are general population figures. The regulatory affairs professional
-    workforce in these territories is a small fraction of total population; no territory-specific
-    count of pharma regulatory professionals was found.'
+    [NOT FOUND — no ANSM-published guidance specifically addressing labeling standard
+    modifications for tropical disease indications in French overseas territories]'
+  disease_prevalence_divergence: User confirmed that overseas territories have distinct
+    disease prevalence patterns not reflected in mainland datasets, making direct
+    transfer of mainland-trained models unreliable for territory-specific compliance
+    checking.
+  vocabulary_gap_assessment: Searched and confirmed gap. No DrBenchmark dataset is
+    described as including tropical pathology terminology (dengue, chikungunya, paludisme,
+    Zika, leptospirose, leishmaniose) as a deliberate coverage target. DiaMed's Pan
+    African Medical Journal origin may incidentally include some tropical disease
+    cases but this is not documented. The benchmark paper makes no mention of French
+    overseas territory vocabulary coverage. QUAERO (EMEA/MEDLINE sources) covers European
+    drug regulatory and biomedical literature contexts that would not systematically
+    include tropical pathology vocabulary for DOM territories. [NOT FOUND — no evidence
+    of tropical pathology vocabulary coverage in DrBenchmark datasets; absence confirmed
+    by review of all dataset descriptions in arXiv 2402.13432 — [|https://arxiv.org/abs/2402.13432|]]
 cultural_and_professional_norms:
-  professional_culture: Highly formalized regulatory affairs culture governed by EU
-    and national pharmaceutical law. Professional norms emphasize precision, legal
-    accountability, and documented decision trails. Outputs are used in high-stakes
-    submission contexts where errors carry regulatory and legal consequences.
-  language_register: Formal, highly technical, legally constrained regulatory French
-    — distinct from clinical or research prose. Formulaic section structures mandated
-    by EMA/ANSM templates.
-  tolerance_for_system_error: Low — system errors that pass non-compliant labeling
-    or generate false-positive flags have direct regulatory and patient-safety consequences.
-    Human-in-the-loop design reflects this risk intolerance.
-  professional_liability_context: 'French pharmaceutical liability is governed by
-    Articles 1245 et seq. of the Civil Code (strict product liability regardless of
-    authorization), Art. L.1142-1 of the Public Health Code (healthcare professional
-    liability), and GDPR/Loi Informatique et Libertés for data processing. AI-enabled
-    clinical decision support software in France is subject to: (1) Medical Device
-    Regulation (MDR) if it qualifies as a medical device; (2) GDPR for personal data;
-    (3) EU AI Act (high-risk classification under Annex III for medical-purpose AI);
-    and (4) the 2024 EU Product Liability Directive (EU 2024/2853), which must be
-    transposed by December 2026 and expands liability for defective AI-enabled products.
-    ANSM and CNIL jointly enforce compliance (Source: ICLG Digital Health France 2025
-    — [|https://iclg.com/practice-areas/digital-health-laws-and-regulations/france|];
-    Bird & Bird AI liability France — [|https://www.twobirds.com/en/insights/2026/france/ai-liability-in-light-of-the-new-2024-pld-expanded-liability-challenging-defences-and-new-evidentiar|];
-    Chambers Digital Healthcare France 2025 — [|https://practiceguides.chambers.com/practice-guides/digital-healthcare-2025/france/trends-and-developments|]).
-    For a regulatory document compliance tool (non-clinical, advisory), MDR classification
-    as a medical device may not apply, but GDPR and AI Act obligations remain relevant.'
-  decision_authority_norms: Physicians and nurses retain final clinical decision authority;
-    regulatory affairs specialists and legal experts retain submission compliance
-    authority. System operates in advisory capacity only.
-model_performance_context:
-  best_performing_benchmark_models:
-  - DrBERT-FS (highest on 8/20 tasks)
-  - DrBERT-CP (highest on 5/20 tasks)
-  - CamemBERT-bio (highest on 2/20 tasks)
-  sts_performance_concern: DrBERT-FS does not excel on MLC or STS tasks — the two
-    task categories most relevant to the deployment's compliance-checking and semantic
-    equivalence functions.
-  no_single_model_dominates: No single model excels across all 20 tasks; model selection
-    for regulatory deployment cannot rely on overall benchmark rank.
-  regulatory_domain_finetuning_availability: '[NOT FOUND — no French biomedical language
-    model fine-tuned specifically on EMA QRD-format SmPCs or ANSM regulatory submission
-    text was identified in the published literature. DrBERT and CamemBERT-bio pre-training
-    corpora include drug leaflets (EMEA source), scientific articles, and clinical
-    cases, but not current-format regulatory submission documents (Source: CamemBERT-bio
-    paper — [|https://arxiv.org/abs/2306.15550|]; DrBERT paper — [|https://arxiv.org/pdf/2304.00958|]).
-    The 2024 long-document adaptation study introduced DrLongformer-CP with advantages
-    for sequences >512 tokens, which is relevant for full SmPC documents but was not
-    evaluated on regulatory submission text (Source: arXiv 2402.16689 — [|https://arxiv.org/html/2402.16689v1|]).
-    This is a confirmed gap: no regulatory-domain fine-tuned French model exists in
-    the literature as of 2024–2025.]'
-  quaero_preprocessing_artifact: QUAERO EMEA preprocessing in DrBenchmark lost 6.06%–8.90%
-    of nested annotations and sentence-split long documents — systematic measurement
-    error particularly relevant for regulatory text where nested entity structures
-    may carry compliance significance.
-  net_new_model_note: 'CamemBERT 2.0 (CamemBERTv2 / CamemBERTav2) was released in
-    late 2024 as updated encoder models addressing temporal concept drift in the 2019
-    CamemBERT; these were not evaluated in DrBenchmark (2024) and represent a potential
-    performance improvement for regulatory NLP tasks (Source: arXiv CamemBERT 2.0
-    — [|https://arxiv.org/html/2411.08868v1|]). AliBERT (pre-trained primarily on
-    ScienceDirect articles and Sudoc theses) is also available and outperforms CamemBERT
-    and FlauBERT on two biomedical downstream tasks but was not evaluated in DrBenchmark
-    (Source: CamemBERT-bio paper — [|https://arxiv.org/abs/2306.15550|]).'
-dimension_priority_summary:
-  IO:
-    priority: HIGH
-    rationale: Benchmark genres (clinical notes, research abstracts, clinical trial
-      protocols) do not match deployment genres (SmPCs, PILs, CTD modules, ANSM submissions).
-      QUAERO EMEA labels approach but do not replicate current QRD v10.4 regulatory
-      submission formats. No French regulatory NLP benchmark exists; the closest is
-      Italian DART (2024).
-  IC:
-    priority: HIGH
-    rationale: Benchmark NER label inventories (UMLS Semantic Groups, MeSH, ICD-10)
-      do not include INNs, ATC codes, excipient nomenclature, or EMA-specific contraindication
-      qualifiers. System's own ICD-10 mapping focus suggests further category mismatch
-      with regulatory entity vocabulary. MedDRA terminology (required for SmPC section
-      4.8) is absent from all benchmark label sets.
-  IF:
-    priority: LOWER
-    rationale: Both benchmark and deployment are text-only, high-resource French,
-      Latin script. No modality, script, or infrastructure mismatch. Lowest validity
-      concern.
-  OO:
-    priority: HIGH
-    rationale: Benchmark STS 0–5 Likert scale reflects general semantic proximity;
-      deployment requires regulatory-equivalence judgments sensitive to legally significant
-      small differences. No published regulatory-equivalence scoring rubric exists
-      for EMA/ANSM standards in NLP. Full calibration gap confirmed.
-  OC:
-    priority: HIGH
-    rationale: Benchmark annotations produced by clinical/research professionals;
-      deployment ground truth requires regulatory affairs and legal expertise applying
-      EMA/ANSM normative frameworks. Direct convergent validity threat. IAA quality
-      is uneven across the 20 tasks; CAS uses silver-standard labels; DiaMed IAA covers
-      only 15 cases per session.
-  OF:
-    priority: MODERATE
-    rationale: Text-label and continuous-score output formats are structurally compatible
-      with deployment's multi-candidate confidence-score and human-review flagging
-      design. Gap remains in confidence score granularity and mandatory-review threshold
-      calibration. EU AI Act high-risk classification adds transparency and auditability
-      requirements not benchmarked in DrBenchmark.
-flagged_gaps_for_web_search:
-- gap_id: 1
-  topic: Regulatory document genre coverage in DrBenchmark
-  search_target: French biomedical NLP benchmark SmPC patient information leaflet
-    EMA regulatory NER evaluation dataset
-  resolution_status: RESOLVED — confirmed full gap. No DrBenchmark task derives from
-    current EMA QRD-formatted SmPCs or current PIL templates. QUAERO EMEA and DEFT-2020
-    drug labels are pre-existing research corpora predating QRD v10.4. No French regulatory
-    SmPC NLP corpus found; DART (Italian, 2024) is the closest analogous resource
-    in any language.
-- gap_id: 2
-  topic: Regulatory entity taxonomy alignment (INNs, ATC, excipients, posology, contraindications)
-    vs. DrBenchmark NER schemas
-  search_target: EMA ANSM regulatory NER annotation scheme INN ATC excipient contraindication
-    French NLP benchmark crosswalk
-  resolution_status: RESOLVED (null) — no published crosswalk found between EMA/ANSM
-    regulatory annotation guidelines and DrBenchmark NER schemas. MedDRA (used in
-    SmPC section 4.8) is confirmed absent from all benchmark label sets. DART (Italian)
-    provides a model entity schema but has no French equivalent.
-- gap_id: 3
-  topic: STS scoring calibration for regulatory equivalence
-  search_target: semantic textual similarity regulatory equivalence scoring EMA drug
-    labeling safety warning French NLP calibration
-  resolution_status: RESOLVED (null) — no published scoring rubric or NLP calibration
-    for EMA/ANSM safety-warning equivalence found. EMA QRD mandates standard statements
-    but specifies no numerical paraphrase threshold.
-- gap_id: 4
-  topic: Annotation workforce regulatory expertise for DrBenchmark ground truth
-  search_target: biomedical NLP annotation regulatory affairs pharmacovigilance ground
-    truth EMA ANSM French label quality expert annotator
-  resolution_status: RESOLVED — confirmed full gap. No regulatory affairs or legal
-    expertise in any benchmark annotation process. IAA variability across tasks confirmed
-    by independent 2024 clinical NER benchmark study.
-- gap_id: 5
-  topic: French overseas territories coverage and tropical disease vocabulary in DrBenchmark
-  search_target: French overseas territories biomedical NLP tropical pathology NER
-    dataset Martinique Guadeloupe Réunion French Guiana clinical NLP
-  resolution_status: RESOLVED (null) — no overseas territory data in DrBenchmark confirmed.
-    Population figures resolved. DROM regulatory status (Article 73 — same French/EU
-    law applies) resolved.
-- gap_id: 6
-  topic: ANSM versus EMA normative alignment for safety-warning compliance scoring
-  search_target: ANSM vs EMA safety warning divergence France national procedure centralized
-    procedure drug labeling compliance NLP evaluation
-  resolution_status: 'PARTIALLY RESOLVED — core divergence confirmed: France-specific
-    blue-box requirements (CIP codes, Exploitant, List I/II classification) and ''Feuille
-    de style'' template add national layer absent from QUAERO EMEA corpus. Full specification
-    of ANSM circular requirements requires direct retrieval from ansm.sante.fr or
-    expert elicitation.'
-- gap_id: 7
-  topic: Silver-standard label quality and inter-annotator agreement across DrBenchmark
-    tasks
-  search_target: DrBenchmark annotation quality inter-annotator agreement NER STS
-    gold standard silver standard French biomedical NLP
-  resolution_status: PARTIALLY RESOLVED — CAS silver-standard confirmed; IAA variability
-    confirmed by independent 2024 evaluation. E3C silver-standard layer confirmed
-    as supplementary to gold standard. Cross-task IAA comparison unreliable due to
-    methodological heterogeneity.
-- gap_id: 8
-  topic: French biomedical language models fine-tuned on regulatory text
-  search_target: DrBERT CamemBERT-bio fine-tuning SmPC regulatory submission EMA ANSM
-    French pharmaceutical NLP
-  resolution_status: RESOLVED (null) — no French biomedical LM fine-tuned on EMA SmPC
-    or ANSM regulatory submission text found. DrBERT and CamemBERT-bio pre-training
-    includes drug leaflets (EMEA source, not current QRD-formatted) but not regulatory
-    submissions. CamemBERT 2.0 and AliBERT are net-new models not covered in DrBenchmark.
-- gap_id: 9
-  topic: Mandatory human-review threshold calibration in regulatory NLP pipelines
-  search_target: automated compliance flagging threshold regulatory affairs NLP human
-    review pharmaceutical labeling ANSM EMA
-  resolution_status: DEFERRED — likely unsearchable (system-internal design parameter);
-    EU AI Act transparency requirements for high-risk AI systems create external pressure
-    for documenting such thresholds, but no published standard threshold was found.
+  professional_culture: French pharmaceutical regulatory affairs operates within a
+    highly formalized, rule-bound professional culture shaped by EMA and ANSM procedural
+    requirements. Regulatory specialists prioritize legal precision over semantic
+    approximation — small wording differences carry material compliance consequences.
+  language_formality: All deployment text is formal written French following standardized
+    regulatory templates. Informal register, abbreviations, or clinical shorthand
+    are out of scope; the system is confirmed to handle common abbreviations and clinical
+    shorthand moderately but is not designed for highly disorganized text.
+  institutional_hierarchy: Regulatory submissions are subject to multi-level review
+    within pharmaceutical companies (regulatory affairs, medical, legal, quality)
+    before submission to ANSM or EMA. The NLP system operates as a pre-review screening
+    layer, not a final gate.
+  liability_sensitivity: Incorrect safety warning classification or false equivalence
+    judgments in STS scoring carry potential regulatory, legal, and patient safety
+    consequences. This elevates the threshold for acceptable model confidence and
+    the importance of human review escalation.
+domain_specific_notes:
+  regulatory_legal: 'French pharmaceutical regulatory compliance operates under dual
+    national (ANSM) and EU (EMA) authority. SmPC and PIL content must conform to EMA
+    QRD templates while meeting ANSM national requirements. France-specific divergences
+    include: the ''Feuille de style'' submission template; the ''blue-box'' mechanism
+    for French-specific packaging elements (CIP codes, Exploitant details, List I/II
+    classification); and variation type classification (IA/IB/II) determining which
+    text changes require formal regulatory submission. Source: PharmaLex — [|https://www.pharmalex.com/thought-leadership/blogs/the-complex-landscape-of-french-regulatory-affairs/|]'
+  pharmacovigilance: 'Safety warnings in labeling documents are subject to ongoing
+    revision driven by pharmacovigilance signals. When Periodic Safety Update Reports
+    (PSURs) identify new signals, MAHs are legally obligated to update SmPC Sections
+    4.8 and potentially 4.4. Delays expose patients to unwarned risks; frequent updates
+    create ''label churn'' compliance risks. The compliance checking system must handle
+    versioned documents and detect unauthorized or unsubstantiated changes in safety
+    warning text between versions. ANSM requires urgent safety signal notification
+    within three days. Source: go.pharmazie.com SmPC overview — [|https://go.pharmazie.com/en/the-strategic-imperative-of-the-summary-of-product-characteristics-smpc-regulatory-frameworks-digital-transformation-and-ai-driven-compliance/|];
+    Insuvia pharmacovigilance France — [|https://insuvia.com/insights/pharmacovigilance-regulations-france/|]
+
+    [NEEDS VERIFICATION — deferred: whether the deployment tracks document versions
+    or performs single-document compliance checks requires system documentation review,
+    not web search]'
+  nomenclature_standards: 'INNs are governed by WHO INN Programme; ATC codes by WHO
+    Collaborating Centre for Drug Statistics Methodology; excipient names by European
+    Pharmacopoeia (EDQM). These are normatively distinct from clinical ontologies
+    (UMLS, ICD-10, MeSH) used in benchmark annotation. No DrBenchmark task explicitly
+    targets INN or ATC entity recognition — confirmed by review of all 20 task descriptions
+    and entity label sets in the benchmark paper. The closest overlap is PxCorpus
+    NER (drug, dose, mode) which is a prescription transcript corpus, not a regulatory
+    labeling corpus. Source: arXiv 2402.13432 — [|https://arxiv.org/html/2402.13432v1|]'
+  icd10_vs_regulatory_coding: The DiaMed dataset maps clinical cases to ICD-10 chapter-level
+    categories — a clinical coding ontology used for hospital reimbursement and epidemiology,
+    not for regulatory labeling compliance. The user's elicitation confirmed the system
+    performs ICD-10 chapter-level disease classification, which may represent a scope
+    narrower than or different from what strict regulatory label compliance checking
+    requires.
+  meddra_relevance: 'MedDRA (Medical Dictionary for Regulatory Activities) is the
+    standard terminology for adverse event and safety warning reporting in EMA submissions;
+    it is a subscription-based ICH product used by regulatory authorities and the
+    biopharmaceutical industry across the full regulatory lifecycle. MedDRA is available
+    in French translation. No DrBenchmark NER schema maps to or is described as compatible
+    with MedDRA preferred terms or System Organ Class (SOC) structure. Published English-language
+    NLP work (FDA/MITRE ADE Eval) shows that even purpose-built NLP systems for drug
+    label AE extraction to MedDRA PTs achieved only F1 ~0.79 and required human intervention,
+    underscoring the difficulty of this task and the absence of a French-language
+    equivalent benchmark. Source: Wikipedia MedDRA — [|https://en.wikipedia.org/wiki/MedDRA|];
+    PubMed ADE Eval — [|https://pubmed.ncbi.nlm.nih.gov/29860093/|]'
+net_new_fields:
+  ansm_france_specific_packaging_requirements: 'ANSM requires several France-specific
+    elements on product packaging beyond EMA QRD content: (1) CIP codes (national
+    registration numbers); (2) Exploitant name and status; (3) List I / List II prescription
+    classification labeling; (4) promotional material submission for ANSM approval
+    in defined slots (4 per year, 2-month response window). These elements appear
+    in the ''blue-box'' on outer packaging for centrally authorized products, or must
+    be embedded in nationally submitted packaging for decentralized/national procedures.
+    Any change to packaging wording requires a variation (Type IA: minor, no clinical
+    consequence; Type IB: moderate; Type II: major clinical/safety impact). This variation
+    classification directly determines the compliance threshold for STS-based text
+    change detection. Source: PharmaLex — [|https://www.pharmalex.com/thought-leadership/blogs/the-complex-landscape-of-french-regulatory-affairs/|];
+    Alhena Consult — [|https://alhena-consult.com/how-to-market-a-drug-in-france/|]'
+  smpc_versioning_and_label_churn: 'Post-market pharmacovigilance signals (via PSURs)
+    legally oblige MAHs to update SmPC Section 4.8 (adverse reactions) and Section
+    4.4 (special warnings). This creates ongoing document versioning pressure. Frequent
+    updates produce ''label churn'' where physical packaging becomes outdated relative
+    to the approved SmPC, creating compliance inspection risks. The NLP compliance
+    system must be robust to version-tracking scenarios where the reference document
+    itself changes over time. Source: go.pharmazie.com — [|https://go.pharmazie.com/en/the-strategic-imperative-of-the-summary-of-product-characteristics-smpc-regulatory-frameworks-digital-transformation-and-ai-driven-compliance/|]'
+  meddra_french_translation_availability: 'MedDRA is available in French translation,
+    confirming that French-language regulatory entity annotation using MedDRA terminology
+    is feasible in principle. However, MedDRA is a subscription-based product; no
+    open-access French MedDRA NER benchmark exists. A given adverse effect in France''s
+    national pharmacovigilance database can be coded under multiple MedDRA terms (a
+    French study found the effectiveness of MedDRA standardized queries is highly
+    variable depending on the adverse effect), complicating NLP-to-MedDRA mapping.
+    Source: BioPortal NCBO — [|https://bioportal.bioontology.org/ontologies/MEDDRA|];
+    PubMed MedDRA evaluation — [|https://pubmed.ncbi.nlm.nih.gov/30645835/|]'
+  eu_safety_communication_inconsistency: 'A cross-EU study found that national regulators
+    (including ANSM) inconsistently disseminate EMA-issued Dear Healthcare Professional
+    Communications (DHPCs), with safety DHPCs or withdrawals occurring for 28.6% of
+    EMA-approved medicines between 2001–2013 but not uniformly published by all national
+    agencies. This documents a real-world EMA–ANSM divergence in safety information
+    dissemination that affects what constitutes ''current'' safety warning content
+    in French labeling documents at any given time. Source: PMC4204813 — [|https://pmc.ncbi.nlm.nih.gov/articles/PMC4204813/|]'
+  drbenchmark_publication_venue: 'DrBenchmark was presented at LREC-COLING 2024 (Torino,
+    Italy, May 2024), published in the proceedings pages 5376–5390 by ELRA and ICCL.
+    The benchmark toolkit is released under CC0 1.0 open-source license; the underlying
+    datasets retain their original licenses unchanged. Source: ACL Anthology — [|https://aclanthology.org/2024.lrec-main.478/|];
+    HAL — [|https://hal.science/hal-04470938|]'
+flagged_verification_priorities:
+- priority: 1
+  gap: Regulatory document genre coverage in DrBenchmark
+  search_target: DrBenchmark NER STS tasks SmPC patient information leaflet CTD module
+    EMA ANSM regulatory text coverage
+  resolution_status: 'RESOLVED — confirmed no SmPC/CTD compliance-checking task exists
+    in DrBenchmark; QUAERO EMEA drug leaflets used only for NER. Source: [|https://aclanthology.org/2024.lrec-main.478/|]'
+- priority: 2
+  gap: Regulatory entity taxonomy alignment (INN, ATC, excipient, MedDRA vs. UMLS/ICD-10/MeSH)
+  search_target: NER benchmark INN ATC MedDRA excipient EMA regulatory entity annotation
+    French pharmaceutical labeling DrBenchmark crosswalk
+  resolution_status: 'RESOLVED (gap confirmed) — no DrBenchmark NER task targets INN,
+    ATC, or MedDRA entities; no published crosswalk found. English-language ADE Eval
+    benchmark for English drug labels exists but no French equivalent. Source: [|https://pubmed.ncbi.nlm.nih.gov/29860093/|]'
+- priority: 3
+  gap: STS scoring calibration for regulatory equivalence
+  search_target: semantic textual similarity regulatory equivalence drug labeling
+    fine-grained scoring EMA ANSM compliance French NLP dose threshold contraindication
+  resolution_status: 'RESOLVED (gap confirmed) — no published STS benchmark calibrated
+    for EU regulatory labeling equivalence found; variation type classification (IA/IB/II)
+    framework confirms legal significance of small text changes. Source: [|https://alhena-consult.com/how-to-market-a-drug-in-france/|]'
+- priority: 4
+  gap: Annotation authority — regulatory affairs and legal expertise in benchmark
+    ground truth
+  search_target: DrBenchmark annotation protocol regulatory affairs pharmacovigilance
+    legal expert annotator EMA SmPC ANSM NLP benchmark
+  resolution_status: 'RESOLVED (gap confirmed) — no regulatory affairs expert annotators
+    identified in any DrBenchmark dataset annotation team. Source: [|https://arxiv.org/html/2402.13432v1|]'
+- priority: 5
+  gap: ANSM vs. EMA normative divergence for safety warning standards
+  search_target: ANSM EMA divergence safety warning SmPC labeling standards France
+    national vs centralized marketing authorization procedure regulatory compliance
+  resolution_status: 'PARTIALLY RESOLVED — France-specific packaging/submission requirements
+    documented (Feuille de style, blue-box, CIP codes, List I/II, variation types
+    IA/IB/II). Specific divergence in safety warning *content* standards between ANSM
+    national circulars and EMA QRD requires expert elicitation. Source: [|https://www.pharmalex.com/thought-leadership/blogs/the-complex-landscape-of-french-regulatory-affairs/|]'
+- priority: 6
+  gap: French overseas territories — benchmark coverage and tropical pathology vocabulary
+  search_target: French overseas territories biomedical NLP tropical pathology dengue
+    paludisme chikungunya NER benchmark Martinique Réunion Guadeloupe French Guiana
+  resolution_status: 'RESOLVED (gap confirmed) — no DrBenchmark dataset covers French
+    overseas territories or tropical pathology vocabulary; regulatory framework applies
+    uniformly (DOM are integral France); no DOM-specific labeling divergence found.
+    Source: [|https://www.insee.fr/en/metadonnees/definition/c2316|]; [|https://arxiv.org/abs/2402.13432|]'
+- priority: 7
+  gap: Silver-standard label quality and IAA levels across DrBenchmark tasks
+  search_target: DrBenchmark inter-annotator agreement silver standard gold standard
+    annotation quality NER STS IAA kappa
+  resolution_status: 'PARTIALLY RESOLVED — silver-standard tasks confirmed (CAS POS,
+    ESSAI POS via TreeTagger); gold-standard tasks confirmed (DEFT-2021, DiaMed, CLISTER).
+    Specific numerical kappa values from DiaMed Table 4 not surfaced in search; available
+    in full paper PDF at [|https://aclanthology.org/2024.lrec-main.478/|]. Source:
+    [|https://arxiv.org/html/2402.13432v1|]'
+- priority: 8
+  gap: Confidence calibration and score thresholds for human review escalation
+  search_target: confidence calibration uncertainty quantification biomedical NLP
+    regulatory compliance human-in-the-loop STS NER threshold French pharmaceutical
+  resolution_status: '[NEEDS VERIFICATION — deferred: below search budget; requires
+    system documentation review rather than web search; low searchability]'

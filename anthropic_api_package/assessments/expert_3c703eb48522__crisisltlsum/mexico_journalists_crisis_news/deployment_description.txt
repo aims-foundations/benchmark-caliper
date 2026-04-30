@@ -1,0 +1,2 @@
+Use case and domain: Summarization of quick messages (e.g. tweets) for event reporting in the crisis domain for news writing in American English and Mexican Spanish mostly
+Target population: Journalists and media workers who monitor social media to cover breaking news from Mexico City. They would speak Mexican Spanish natively (possible neutral/standard regional variety), and English fluently. They would be expected to use the model in English and Spanish to cover news of disasters happening not only in Mexico, but also south of the United States and also Central America.

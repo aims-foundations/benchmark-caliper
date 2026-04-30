@@ -30,25 +30,20 @@ target_population:
     grade_band: Grade 1–8 (elementary through lower secondary)
     employment_context: 'Formal school setting; likely includes government, private,
       and potentially international-board schools — specific distribution [NEEDS VERIFICATION
-      — deferred: low impact relative to other gaps; sub-national school-type distribution
-      data not published at city level for this specific teacher cohort]'
-    professional_standing: 'For CBSE-affiliated schools, Grade 1–5 teachers (PRT)
-      are typically required to hold D.El.Ed or equivalent; Grade 6–8 teachers (TGT
-      Mathematics) typically require a subject-specific degree (BA/BSc with Mathematics)
-      plus a B.Ed from an NCTE-recognised institution, and clearance of CTET or relevant
-      State TET. Private CBSE schools may accept equivalent qualifications. Government
-      Delhi schools recruit through DSSSB with similar criteria. (Source: CBSE teacher
-      qualification framework — [|https://www.cbse.gov.in/cbsenew/teacher_qual_num.html|];
-      Superprof India teacher roles overview — [|https://www.superprof.co.in/blog/maths-tutoring-jobs-certificates/|];
-      DSSSB eligibility — [|https://testbook.com/dsssb-teacher/eligibility-criteria|]).
-      ''High-end professional'' likely implies private metro school context where
-      B.Ed plus subject degree is standard; IB/ICSE schools may additionally require
-      international certifications.'
-  estimated_population_size: '[NOT FOUND — searched for total Grade 1–8 math teacher
-    count in Delhi and Mumbai formal sector; no city-specific disaggregated figure
-    for mathematics teachers at this grade band was located in UDISE+ or NCERT reports.
-    National figure is approximately 8–9 million school teachers total (UDISE+ 2021-22),
-    but no city-level math-teacher-specific count was published at the required granularity.]'
+      — deferred: below search budget; no publicly available disaggregated school-type
+      employment statistics by city and grade band found]'
+    professional_standing: 'For CBSE-affiliated schools (which include all Delhi government
+      schools per CBSE rules, and many private schools nationwide), teachers at Grade
+      1–8 must hold a B.Ed or D.El.Ed qualification and pass the Central Teacher Eligibility
+      Test (CTET Paper I or II). B.Ed is required for Classes VI–VIII (TGT level);
+      D.El.Ed or B.El.Ed for Classes I–V. High-end private and international schools
+      may additionally require subject-specific postgraduate degrees. Source: NCTE/CBSE
+      official qualification norms — [|https://www.asiancollegeofteachers.com/blogs/1524-Teaching-License-In-India-What-It-Is-And-How-Do-You-Renew-It-blog.php|];
+      CTET eligibility criteria — [|https://testbook.com/ctet/eligibility-criteria|]'
+  estimated_population_size: '[NOT FOUND — searched general sources; no published
+    disaggregated figure for Grade 1–8 mathematics teachers specifically in Delhi
+    and Mumbai formal school sector found. National UDISE+ data tracks total teachers
+    by state but not by city, grade band, and subject combination.]'
 languages:
   primary_evaluation_language: English
   fluency_level: Fluent — the target population uses English professionally and can
@@ -63,15 +58,12 @@ languages:
   language_note: The benchmark is English-only, matching the deployment's evaluation
     interface. However, many students in these classrooms may be instructed in Hindi,
     Marathi, or other regional languages, and L1-interference in students' mathematical
-    communication is a flagged validity gap for the benchmark's source datasets. NCERT
-    has used AI/ML to translate Grade 1–2 textbooks into 22 Indian languages, indicating
-    awareness of the multilingual instructional reality (Government of India PIB —
-    [|https://www.pib.gov.in/PressReleasePage.aspx?PRID=2234853|]).
+    communication is a flagged validity gap for the benchmark's source datasets.
   hindi_math_register_notes: '[NEEDS VERIFICATION — deferred: likely unsearchable
-    (lived practice); the extent to which bilingual Hindi/Marathi-medium instruction
-    shapes Indian teachers'' interpretive frames for English-medium student errors
-    is a matter of pedagogical socialization, not documented in online sources. Requires
-    expert/stakeholder elicitation.]'
+    (lived practice); no published study found that specifically quantifies how Indian
+    math teachers conducting English-language evaluations interpret student errors
+    through the lens of Hindi/Marathi-medium instruction patterns. Requires stakeholder/expert
+    elicitation.]'
 writing_systems:
   script_used_in_deployment: Latin (English text only)
   script_notes: No script mismatch exists between the benchmark and the deployment.
@@ -86,19 +78,16 @@ pedagogical_culture:
     - ICSE (Indian Certificate of Secondary Education)
     - Maharashtra State Board (relevant to Mumbai government schools)
     - IB (International Baccalaureate, present in elite private schools in both cities)
-    board_distribution_in_target_cities: '[NEEDS VERIFICATION — deferred: below search
-      budget; no published city-level proportional split of CBSE/ICSE/state board/IB
-      schools for Grade 1–8 math teachers specifically found; national UDISE+ data
-      does not disaggregate by subject or board at city level]'
+    board_distribution_in_target_cities: 'All Delhi government schools are CBSE-affiliated
+      (confirmed by CBSE). In Mumbai, the Maharashtra State Board (SSC) dominates
+      government schools, while CBSE, ICSE, and a small number of IB schools operate
+      in private sector. Nationally, ICSE has approximately 2,891 affiliated schools
+      with Maharashtra leading at ~118 new schools, and IB schools remain a small
+      elite minority. No city-level proportional breakdown by teacher count is publicly
+      available. Source: CBSE affiliation rules — [|https://en.wikipedia.org/wiki/Central_Board_of_Secondary_Education|];
+      ICSE school count — [|https://candidschools.com/icse-schools-in-india-a-state-wise-list/|]'
     curriculum_alignment_requirement: User confirmed curriculum-agnostic math errors
       are sufficient for this evaluation; strict NCERT/CBSE alignment is NOT required
-    ncert_textbook_revision_note: 'NCERT introduced a new textbook series ''Ganita
-      Prakash'' (Parts 1 and 2) for Class 8 effective from the 2026–27 academic year,
-      replacing the previous thirteen-chapter textbook. The previous textbook remains
-      relevant for students following the earlier syllabus. This revision may alter
-      the specific procedural content teachers expect students to master, though curriculum-agnostic
-      errors remain sufficient for this deployment. (Source: Tiwari Academy NCERT
-      Class 8 syllabus overview — [|https://www.tiwariacademy.com/ncert-solutions/class-8/maths/|])'
   pedagogical_norms:
     correction_style: Direct, explicit correction is preferred over extended Socratic
       dialogue; teachers are more likely to value responses that clearly identify
@@ -169,54 +158,55 @@ annotator_representativeness:
     are likely to apply different judgments of guidance quality than the MBZUAI annotator
     pool, particularly on what constitutes 'providing guidance' (direct correction
     vs. Socratic scaffolding), exam-readiness framing, and teacher-directed pedagogy.
-  india_specific_annotation_studies: '[NOT FOUND — searched for MRBench annotations
-    involving Indian educators, and for cross-cultural comparisons of teacher AI-tutoring
-    quality judgments; no such studies were located. This gap is corroborated by a
-    2025 comprehensive review of ITS evaluation which noted that existing studies
-    are ''conducted on small, homogeneous populations, primarily from WEIRD (Western,
-    Educated, Industrialized, Rich, and Democratic) countries'' (Pedagogy-Driven Evaluation
-    of Generative AI-Powered ITS, Springer/arXiv 2025 — [|https://arxiv.org/html/2510.22581|]).
-    No India-specific educator annotation of AI tutor quality exists in the published
-    literature.]'
-  inter_annotator_agreement_among_indian_teachers: '[NOT FOUND — no studies measuring
-    Indian professional teachers'' agreement on AI tutor pedagogical quality judgments
-    were located. This is an open research gap not addressed in the current ITS evaluation
-    literature.]'
+  india_specific_annotation_studies: '[NOT FOUND — searched for cross-cultural annotation
+    studies and India-specific educator annotation of AI tutor quality; no studies
+    found involving Indian educators or South Asian pedagogy experts in MRBench annotation
+    or any directly comparable tutoring benchmark annotation exercise.]'
+  inter_annotator_agreement_among_indian_teachers: '[NOT FOUND — no published studies
+    found measuring Indian professional teachers'' inter-annotator agreement on AI
+    tutor pedagogical quality judgments. This remains an open empirical question requiring
+    primary research.]'
 infrastructure_notes:
   deployment_format: Mobile and/or enterprise application; text-based interface
   language_interface: English text only; no spoken or multimodal interface described
-  device_access: 'Mobile-first assumed; smartphone penetration in Delhi and Mumbai
-    professional workforce is high — urban India smartphone penetration broadly estimated
-    at over 75% (World Bank and GSMA data), with professional metro teachers likely
-    near full coverage. Specific teacher-cohort figure not published. (Caveat: national
-    figure; professional urban cohort penetration likely higher.)'
-  internet_connectivity: 'Urban professional population in Delhi and Mumbai; broadband
-    and mobile data access assumed adequate. A 2025 report noted that only 40% of
-    schools in India overall have reliable internet for real-time AI applications,
-    but this national average is heavily depressed by rural schools — urban private
-    metro schools in Delhi and Mumbai are substantially better connected. (Source:
-    educationforallinindia.com, citing NCERT 2023 data — [|https://educationforallinindia.com/ai-tutors-and-human-teachers-in-indian-education-implementation-framework-under-samagra-shiksha-abhiyan/|]).
-    Specific connectivity figures for the urban professional teacher cohort in these
-    two cities not independently published.'
+  device_access: 'Mobile-first assumed. Urban Tier-1 cities (including Delhi and Mumbai)
+    show internet penetration rates as high as 88% and lead broadband adoption with
+    penetration exceeding 50% in urban households. India had 660 million smartphone
+    users as of 2024–2025. For professional urban teachers specifically, smartphone
+    access can be assumed near-universal. Source: muftinternet.com urban internet
+    stats 2025 — [|https://muftinternet.com/blog/usage-statistics-internet-and-mobile-users-in-india-2025/|];
+    Storyboard18 Digital Bharat 2026 report — [|https://www.storyboard18.com/digital/660-million-smartphone-users-16-17-billion-monthly-upi-transactions-power-digital-bharat-report-89731.htm|]'
+  internet_connectivity: 'Urban Tier-1 cities (Delhi NCR: ~80% internet penetration;
+    Mumbai: among top broadband cities nationally) show adequate connectivity for
+    the professional teacher cohort. National mobile data speeds as of early 2024
+    averaged 94.62 Mbps median. The specific urban professional teacher sub-cohort
+    can reasonably be assumed to have reliable mobile broadband. Source: muftinternet.com
+    — [|https://muftinternet.com/blog/usage-statistics-internet-and-mobile-users-in-india-2025/|];
+    DataReportal Digital 2024 India — [|https://datareportal.com/reports/digital-2024-india|]'
   enterprise_vs_consumer_split: '[NEEDS VERIFICATION — deferred: below search budget;
-    likely unsearchable without internal deployment data from the application provider]'
+    no publicly available data distinguishes school-enterprise from individual teacher
+    consumer deployment for this application type in India.]'
 school_system_context:
   board_types_present_in_target_cities:
-    CBSE: Dominant national board; strong presence in Delhi; significant in Mumbai
-      private schools; NCERT textbooks and syllabus
+    CBSE: 'Dominant national board; all Delhi government schools are CBSE-affiliated;
+      significant in Mumbai private schools; NCERT textbooks and syllabus. Source:
+      Wikipedia/CBSE — [|https://en.wikipedia.org/wiki/Central_Board_of_Secondary_Education|]'
     ICSE: 'Present in elite private schools in both cities; more emphasis on conceptual
-      depth than state boards [NEEDS VERIFICATION — deferred: below search budget;
-      characterization is widely accepted but proportional data not found]'
+      depth and English proficiency than state boards; approximately 2,891 affiliated
+      schools nationally with Maharashtra having a notable share. Source: candidschools.com
+      — [|https://candidschools.com/icse-schools-in-india-a-state-wise-list/|]'
     Maharashtra_State_Board: 'Dominant in Mumbai government and many private schools;
-      Marathi-medium instruction common [NEEDS VERIFICATION — deferred: below search
-      budget; proportion of target teachers from state board schools not published
-      at city-teacher level]'
-    Delhi_State_Board: '[NEEDS VERIFICATION — deferred: below search budget; Delhi
-      government schools use Delhi Board of School Education (DBSE) which co-exists
-      with CBSE; characteristics not searched]'
-    IB: 'Present in small number of elite private schools; very different pedagogical
-      norms; Socratic methods more valued [NEEDS VERIFICATION — deferred: below search
-      budget; proportion of target teachers from IB schools not published]'
+      Marathi-medium instruction common; proportion of target teachers from state
+      board schools not disaggregated at city level in available sources — [NEEDS
+      VERIFICATION — deferred: below search budget for precise Mumbai-level figure]'
+    Delhi_State_Board: 'Per CBSE rules, all Delhi state government schools are CBSE-affiliated,
+      meaning a separate ''Delhi State Board'' for primary/secondary education does
+      not exist as a competing exam board for Grade 1–8; the Delhi Board of Higher
+      Secondary Education was merged into CBSE in 1962. Source: Wikipedia/CBSE — [|https://en.wikipedia.org/wiki/Central_Board_of_Secondary_Education|]'
+    IB: 'Present in small number of elite private schools in both cities; very different
+      pedagogical norms; Socratic methods more valued; IB schools constitute a small
+      elite minority nationally. Exact proportion of target teachers from IB schools
+      not available — [NEEDS VERIFICATION — deferred: below search budget]'
   board_specific_pedagogical_variation_note: Each board carries distinct pedagogical
     expectations for what constitutes acceptable tutoring guidance. The acceptability
     criterion for AI-augmented tutor responses may differ meaningfully across CBSE,
@@ -224,31 +214,31 @@ school_system_context:
     which boards the target teacher population primarily serves, and this sub-national
     granularity is a flagged gap.
   relevant_policy_frameworks:
-    NEP_2020: 'NEP 2020 recognises AI''s potential for personalised learning and emphasises
-      technology integration across all educational levels, including at school stage.
-      It explicitly envisions AI-based software for student learning support. However,
-      NEP 2020 does not prescribe specific AI tutoring protocols for Grade 1–8 mathematics
-      nor does it mandate particular pedagogical models (direct instruction vs. Socratic)
-      — its guidance is broad and aspirational rather than operationally specific
-      for this deployment context. (Source: NEP 2020 full text, Ministry of Education
-      — [|https://www.education.gov.in/sites/upload_files/mhrd/files/NEP_Final_English_0.pdf|];
-      PIB summary — [|https://www.pib.gov.in/PressReleasePage.aspx?PRID=2234853|])'
-    NCERT_curriculum_revision: 'NCERT introduced ''Ganita Prakash'' (Parts 1 and 2)
-      as the new Class 8 mathematics textbook series for 2026–27, continuing the NCF
-      2023-aligned textbook revision cycle. The revision is ongoing across grade levels;
-      Class 8 is the latest update. This may affect which specific procedural and
-      conceptual errors teachers consider grade-appropriate, though the user confirmed
-      curriculum-agnostic errors are sufficient. (Source: Tiwari Academy NCERT Class
-      8 overview — [|https://www.tiwariacademy.com/ncert-solutions/class-8/maths/|])'
-    digital_education_initiatives: 'India''s primary national digital education platform
-      is DIKSHA (Digital Infrastructure for Knowledge Sharing), a Ministry of Education
-      initiative that uses AI for inclusivity features (e.g., AI-based search, read-aloud).
-      CBSE has introduced a 15-hour AI skill module from Class VI onwards and AI as
-      an optional subject in Classes IX–XII. As of 2025, no specific NCERT or CBSE
-      regulatory guidance for AI-assisted tutoring tools in Grade 1–8 mathematics
-      classrooms was found; policy remains promotional rather than regulatory. (Source:
-      Government of India PIB — [|https://www.pib.gov.in/PressReleasePage.aspx?PRID=2234853|];
-      CBSE AI curriculum — [|https://edunovations.com/currentaffairs/national/cbse-ai-curriculum-for-classes/|])'
+    NEP_2020: 'NEP 2020 explicitly calls for AI and computational thinking integration
+      across all levels of schooling, and the Union Budget 2025–26 allocated ₹500
+      crore for a Centre of Excellence in AI for Education. AI and Computational Thinking
+      (AI & CT) is being introduced as a compulsory subject from Class 3 onwards starting
+      in academic year 2026–27. However, NEP 2020 does not materially alter Grade
+      1–8 mathematics pedagogical norms for the core CBSE curriculum relevant to this
+      deployment — its pedagogical language emphasises inquiry and learner-centred
+      approaches, potentially widening the gap between policy aspiration and prevailing
+      teacher-directed classroom norms. Source: PIB Government of India — [|https://www.pib.gov.in/PressReleasePage.aspx?PRID=2234853&reg=3&lang=1|];
+      educationforallinindia.com — [|https://educationforallinindia.com/artificial-intelligence-in-indian-school-education-use-misuse-and-preventive-measures/|]'
+    NCERT_curriculum_revision: 'NCERT approved India''s first AI-crafted school curriculum
+      for Classes 3–8 in July 2025, covering Mathematics, Science, and Social Science,
+      with adaptive content and multilingual support, to be rolled out via PM eVidya
+      and DIKSHA platforms. A new Class 8 Mathematics textbook (''Ganita Prakash'')
+      has been introduced, emphasising exploration of mathematical patterns alongside
+      procedural learning. These revisions are recent and may not yet have materially
+      altered teacher correction norms in deployment. Source: myidcm.com — [|https://www.myidcm.com/blog/artificial-intelligence-course-in-india|];
+      EduRev on Ganita Prakash — [|https://edurev.in/courses/118419_Mathematics-Ganita-Prakash-Class-8-New-NCERT|]'
+    digital_education_initiatives: 'Key national platforms include DIKSHA (Digital
+      Infrastructure for Knowledge Sharing, used for AI-based content delivery and
+      teacher training), PM eVidya, and SWAYAM/SWAYAM Prabha for teacher upskilling.
+      No specific NCERT or CBSE regulatory guidance on AI-assisted one-on-one tutoring
+      tools (as distinct from AI curriculum content) was found. CBSE currently offers
+      a 15-hour AI skill module from Class VI onwards. Source: PIB — [|https://www.pib.gov.in/PressReleasePage.aspx?PRID=2234853&reg=3&lang=1|];
+      NCERT CIET — [|https://ciet.ncert.gov.in/activity/eaie|]'
 validity_gap_summary:
   IC_student_interaction_style:
     priority: HIGH
@@ -256,67 +246,72 @@ validity_gap_summary:
       dynamics with extended student verbalization. Indian Grade 1–8 students are
       briefer, more deferential, and procedure-focused. Benchmark conversation structures
       may not be recognizable as realistic to Indian teachers.
-    verification_target: '[NOT FOUND — no AI tutoring benchmarks specifically addressing
-      Indian student interaction styles were located. A 2025 comprehensive ITS review
-      confirmed that existing studies are conducted primarily on WEIRD-country populations
-      (Springer/arXiv 2025 — [|https://arxiv.org/html/2510.22581|]). MRBench includes
-      no documentation of short-turn, low-verbalization student input scenarios; the
-      gap is confirmed unaddressed in the current benchmark landscape.]'
+    verification_target: '[NOT FOUND — no AI tutoring benchmark specifically designed
+      for Indian student interaction styles or short-turn, low-verbalization student
+      input scenarios exists in the literature reviewed. MathTutorBench (EMNLP 2025)
+      is a related new benchmark (see net-new fields below) but is also sourced from
+      Western academic datasets and does not address Indian classroom dynamics. This
+      gap remains fully open and requires primary data collection or India-specific
+      dataset creation.]'
   OC_annotator_representativeness:
     priority: HIGH
     description: Ground-truth labels reflect CS-trained MBZUAI annotators' pedagogical
       priors, not Indian professional teachers' judgments. Systematic divergence is
       expected on guidance quality, exam-orientation, and direct-correction norms.
-    verification_target: '[NOT FOUND — no India-specific educator annotation of AI
-      tutor quality, and no cross-cultural comparison of teacher judgments on tutoring
-      acceptability, were found in the published literature. The WEIRD-population
-      homogeneity concern is corroborated by a 2025 ITS survey (arXiv:2510.22581 —
-      [|https://arxiv.org/html/2510.22581|]).]'
+    verification_target: '[NOT FOUND — no cross-cultural comparison of teacher judgments
+      on AI tutoring acceptability, and no India-specific educator annotation study
+      of tutoring quality, was found in literature search. Research on Indian teacher-AI
+      collaboration (Sebastian et al., 2024, cited in arxiv.org/html/2507.00456v1)
+      confirms Indian teachers face usability barriers and misalignment with generative
+      AI outputs, but does not directly address annotation-level agreement on pedagogical
+      quality rubrics. Requires primary research.]'
   OC_guidance_dimension_calibration:
     priority: HIGH
     description: MRBench's 'providing guidance' rubric implicitly favors Socratic
       scaffolding. Indian teachers may evaluate guidance quality by direct-correction
       and exam-readiness criteria not captured in the current rubric.
-    verification_target: '[NOT FOUND — no rubric variants addressing direct-correction
-      vs. Socratic scaffolding distinctions in an Indian pedagogical context were
-      found. MathTutorBench (EMNLP 2025, arXiv:2502.18940 — [|https://arxiv.org/abs/2502.18940|])
-      similarly defines tutoring quality around withholding answers and Socratic questioning,
-      confirming that the entire field default is Western-constructivist. No India-adapted
-      rubric exists.]'
+    verification_target: '[NOT FOUND — no MRBench rubric variant addressing direct-correction-style
+      guidance found. The MathTutorBench (2025) benchmark similarly operationalizes
+      good tutoring through Socratic questioning and withholding of answers (see net-new
+      field). No published rubric variant calibrated to Indian pedagogical norms was
+      identified. Requires expert elicitation with Indian mathematics educators.]'
   IC_misconception_types:
     priority: HIGH
     description: Bridge and MathDial misconception types are Western-sourced. Rote-procedural
       errors, L1-interference errors, and NCERT-specific algorithmic conventions common
       among Indian Grade 1–8 students are absent from documented selection criteria.
-    verification_target: '[NOT FOUND — no published taxonomy of common Indian Grade
-      1–8 math misconceptions was located in academic literature. The closest available
-      misconception taxonomy resources (e.g., Fen Rivers Academy UK, Mathnasium US)
-      are Western-sourced. This is a genuine documentation gap, not a null result
-      from poor search strategy. India-specific misconception research for this grade
-      band would require stakeholder or expert elicitation, or access to internal
-      NCERT/CBSE assessment data not published online.]'
+    verification_target: 'NCERT''s own journal (ejournals.ncert.gov.in) publishes
+      error-analysis research on Indian students, and CBSE has collaborated with Educational
+      Initiatives on competency-based assessment items explicitly designed to probe
+      common misconceptions in NCERT-aligned content. However, no published taxonomy
+      of Indian-specific Grade 1–8 mathematics misconceptions that maps to MRBench
+      error types was found. The CBSE-EI competency-based question booklets reference
+      conceptual vs. procedural error categories without a culturally-specific misconception
+      taxonomy. Source: NCERT journal error analysis — [|https://ejournals.ncert.gov.in/index.php/tpt/article/download/1323/1261|];
+      CBSE-EI competency booklets — [|https://www.scribd.com/document/628027385/CFPQ-Maths10|]'
   OO_equal_weight_damr:
     priority: MODERATE
     description: DAMR scoring treats all eight dimensions equally. Indian teachers'
       acceptability judgments are anchored primarily on 'providing guidance.' The
       equal-weight aggregate score cannot be directly used as a deployment validity
       proxy without re-weighting.
-    verification_target: '[NOT FOUND — no MRBench extensions proposing dimension-weighted
-      DAMR variants were found. MathTutorBench (EMNLP 2025, arXiv:2502.18940 — [|https://arxiv.org/abs/2502.18940|])
-      uses a different reward-model approach but also does not address culture-specific
-      dimension weighting. The scoring infrastructure gap is confirmed as unaddressed
-      in the current literature.]'
+    verification_target: '[NOT FOUND — no published MRBench variant applying dimension-weighted
+      DAMR or any re-weighting calibrated to teacher populations found. A 2025 follow-on
+      survey paper on ITS evaluation (arxiv.org/html/2510.22581v1) cites MRBench but
+      does not propose weighted scoring. Per-dimension DAMR scores are reported separately
+      in MRBench, enabling manual re-weighting in analysis, but no systematic re-weighting
+      methodology has been published.]'
   IC_subnational_school_type_variation:
     priority: MODERATE
     description: Target population spans Delhi and Mumbai with unspecified board distribution
       (CBSE, ICSE, Maharashtra State Board, IB). Pedagogical expectations for acceptable
       guidance vary across boards. This granularity is unresolved.
-    verification_target: '[NOT FOUND — no studies on board-specific AI tutoring acceptance
-      criteria were located. City-level board-distribution data for Grade 1–8 math
-      teachers is not published in accessible form. Urban private schools in metro
-      cities show significantly higher AI resource access than national averages (approximately
-      62% higher than rural, per educationforallinindia.com citing NCERT 2023 — [|https://educationforallinindia.com/ai-tutors-and-human-teachers-in-indian-education-implementation-framework-under-samagra-shiksha-abhiyan/|]),
-      but this does not resolve board-level pedagogical variation.]'
+    verification_target: 'Partial resolution: All Delhi government schools are CBSE-affiliated;
+      Mumbai government schools are predominantly Maharashtra State Board (SSC). Private
+      school distribution in both cities spans CBSE, ICSE, and a small number of IB
+      schools. No city-level proportional teacher count by board type is available
+      in public data. Source: CBSE Wikipedia — [|https://en.wikipedia.org/wiki/Central_Board_of_Secondary_Education|];
+      ICSE school count — [|https://candidschools.com/icse-schools-in-india-a-state-wise-list/|]'
 cultural_norms_notes: 'Indian professional teachers in this deployment operate within
   a pedagogical culture that differs systematically from the Western-default assumptions
   embedded in MRBench:
@@ -338,7 +333,12 @@ cultural_norms_notes: 'Indian professional teachers in this deployment operate w
   - Language context: many teachers navigate between English (professional evaluation
   language) and Hindi, Marathi, or other regional languages in daily instruction,
   which may affect their sensitivity to L1-interference errors in student mathematical
-  communication'
+  communication
+
+  - India-based research on teacher-AI collaboration confirms that Indian educators
+  value time-saving potential of generative tools but face usability barriers including
+  misalignment with school routines and absence of vernacular content (Sebastian et
+  al., 2024, cited in [|https://arxiv.org/html/2507.00456v1|])'
 domain_specific_notes:
   mathematics_education: Grade 1–8 mathematics in Indian metropolitan schools covers
     arithmetic, basic algebra, geometry, and early number theory, broadly aligned
@@ -350,75 +350,86 @@ domain_specific_notes:
     millions and billions; this is a culturally specific arithmetic convention. However,
     the user confirmed curriculum-agnostic errors are sufficient, so this is noted
     for context rather than as a blocking validity concern.
-  exam_culture: '[NEEDS VERIFICATION — deferred: likely unsearchable in the required
-    granularity; specific examination formats shaping what Indian teachers consider
-    ''exam-ready'' guidance are embedded in institutional practice and not aggregated
-    in searchable form. CBSE school-level test formats closely follow CBSE board patterns
-    (MCQ and descriptive); NCERT exercises are the primary reference. Stakeholder
-    elicitation recommended.]'
+  exam_culture: '[NEEDS VERIFICATION — deferred: below search budget; specific CBSE
+    board exam formats for Grade 1–8 (school-level annual exams, continuous assessment
+    patterns post-CCE) require detailed CBSE circular review beyond current budget.
+    The general structure is well-established but specific rubric formats relevant
+    to ''exam-ready guidance'' are not publicly catalogued in searchable form.]'
   private_tutoring_ecosystem: '[NEEDS VERIFICATION — deferred: likely unsearchable
-    (lived practice); the role of coaching centers such as FIITJEE, Byju''s, and similar
-    in shaping professional teacher expectations of effective one-on-one tutoring
-    is a cultural practice question not documented in academic literature in the required
-    specificity.]'
-  AI_in_education_india: 'NEP 2020 endorses AI integration in education; CBSE has
-    introduced a 15-hour AI skill module from Class VI and AI as an optional subject
-    in Classes IX–XII. NCERT has used AI to translate early-grade textbooks. The DIKSHA
-    platform provides AI-enhanced digital resources. As of 2026, no specific CBSE
-    or NCERT regulatory or pedagogical guidance on AI-assisted tutoring tools for
-    Grade 1–8 mathematics exists — policy is promotional, not prescriptive about tutoring
-    interaction models. Private metro schools show substantially higher AI adoption
-    rates than the national average. (Sources: PIB Government of India — [|https://www.pib.gov.in/PressReleasePage.aspx?PRID=2234853|];
-    CBSE AI curriculum update — [|https://edunovations.com/currentaffairs/national/cbse-ai-curriculum-for-classes/|];
-    educationforallinindia.com — [|https://educationforallinindia.com/ai-tutors-and-human-teachers-in-indian-education-implementation-framework-under-samagra-shiksha-abhiyan/|])'
+    (lived practice); the role of the coaching/tutoring center ecosystem (e.g., Byju''s,
+    Vedantu, in-person coaching centers) in shaping teacher expectations of one-on-one
+    tutoring guidance norms is not documented in searchable form in ways that distinguish
+    metro professional teacher expectations from student/parent expectations.]'
+  AI_in_education_india: 'NEP 2020 explicitly supports AI integration; CBSE has introduced
+    AI as a formal subject from Class VI (15-hour module) and optional elective for
+    Classes IX–XII. The Union Budget 2025–26 allocated ₹500 crore for a dedicated
+    Centre of Excellence in AI for Education. DIKSHA platform uses AI for content
+    search and accessibility. No specific NCERT or CBSE regulatory guidance on AI-assisted
+    one-on-one tutoring tools (as distinct from AI as a curriculum subject) has been
+    issued as of available sources. India-based AI tutoring deployments (e.g., Shiksha
+    Copilot in Karnataka) highlight the importance of curriculum alignment, vernacular
+    support, and teacher agency as critical success factors. Source: PIB — [|https://www.pib.gov.in/PressReleasePage.aspx?PRID=2234853&reg=3&lang=1|];
+    arxiv Teacher-AI Collaboration — [|https://arxiv.org/html/2507.00456v1|]'
 net_new_fields:
-  mathtutorbench_comparator:
-    description: 'MathTutorBench (EMNLP 2025, Macina et al., ETH Zurich; arXiv:2502.18940)
-      is a newer open-source benchmark for holistic LLM tutoring evaluation, covering
-      three high-level teacher skills and seven concrete tasks. It uses a reward model
-      trained on Bridge dataset expert/novice teacher responses to score open-ended
-      pedagogical quality automatically. Key finding: subject expertise and pedagogy
-      form a trade-off — math-specialist models often exhibit lower pedagogical quality.
-      Like MRBench, MathTutorBench is grounded entirely in Western-default (WEIRD-country)
-      datasets and Socratic scaffolding norms; no Indian context is included. Relevant
-      because it confirms the current field-wide absence of India-adapted tutoring
-      benchmarks and the universality of the Socratic scaffolding default. (Source:
-      arXiv — [|https://arxiv.org/abs/2502.18940|]; ACL Anthology EMNLP 2025 — [|https://aclanthology.org/2025.emnlp-main.11/|])'
-    validity_relevance: Confirms OC and IC gaps are field-wide, not MRBench-specific;
-      no alternative benchmark resolves the India-pedagogy validity concern.
-  weird_population_bias_in_its_literature:
-    description: 'A 2025 comprehensive review of ITS evaluation (Springer/arXiv 2025,
-      arXiv:2510.22581) explicitly notes that existing studies on educational dialogue
-      ITS are ''conducted on small, homogeneous populations, primarily from WEIRD
-      (Western, Educated, Industrialized, Rich, and Democratic) countries, with variable
-      implementation parameters.'' This structural bias in the research base directly
-      corroborates the annotator representativeness gap and the student interaction
-      style gap in this assessment. (Source: arXiv:2510.22581 — [|https://arxiv.org/html/2510.22581|])'
-    validity_relevance: Provides peer-reviewed corroboration that the IC and OC gaps
-      flagged for MRBench are systemic across the ITS evaluation field, not idiosyncratic
-      to MRBench.
-  teacher_qualification_framework:
-    description: 'Indian certification requirements for the Grade 1–8 band are stratified:
-      Grade 1–5 (PRT) requires D.El.Ed or equivalent and TET clearance; Grade 6–8
-      (TGT Mathematics) requires subject-specific graduation plus B.Ed (NCTE-recognised)
-      and CTET/STET. Private metro schools may accept equivalent qualifications (e.g.,
-      PgCTL, PGCE) in lieu of B.Ed. Delhi government school recruitment uses DSSSB.
-      ''High-end professional'' teachers in private metropolitan schools overwhelmingly
-      hold subject degrees plus B.Ed, with CTET certification. (Source: Superprof
-      India — [|https://www.superprof.co.in/blog/maths-tutoring-jobs-certificates/|];
-      DSSSB — [|https://testbook.com/dsssb-teacher/eligibility-criteria|])'
-    validity_relevance: Clarifies that the target population's professional formation
-      includes formal pedagogical training (B.Ed) aligned with NCTE norms, reinforcing
-      their likely adherence to CBSE/NCERT pedagogical frameworks rather than Western
-      constructivist models.
-  india_urban_school_ai_access_disparity:
-    description: 'Urban schools in Tier-1 cities (including Delhi and Mumbai) show
-      approximately 62% higher AI resource access than rural institutions, and private
-      schools implement AI solutions at nearly triple the rate of government schools,
-      according to NCERT 2023 data. Only 40% of Indian schools overall have reliable
-      internet for real-time AI applications, but this national average is heavily
-      depressed by rural schools. (Source: educationforallinindia.com citing NCERT
-      2023 — [|https://educationforallinindia.com/ai-tutors-and-human-teachers-in-indian-education-implementation-framework-under-samagra-shiksha-abhiyan/|])'
-    validity_relevance: Supports the assumption of adequate infrastructure for the
-      target (urban private metro) teacher cohort, but flags that the deployment may
-      not generalize to government school teachers even within Delhi and Mumbai.
+  mathtutorbench_2025:
+    description: 'MathTutorBench (Macina et al., EMNLP 2025 Oral) is a directly relevant
+      new benchmark for holistic evaluation of open-ended pedagogical capabilities
+      of LLM tutors in mathematics, released after MRBench. It covers three high-level
+      teacher skills and seven concrete tasks, uses a reward model trained on expert
+      vs. novice teacher responses, and finds that subject expertise and pedagogical
+      ability trade off against each other. Like MRBench, MathTutorBench is grounded
+      in Western academic datasets and learning-science principles (including Socratic
+      questioning) with no documented adaptation to Indian classroom norms or non-Western
+      pedagogical models. Its reward model operationalizes ''good tutoring'' as withholding
+      answers and using Socratic questioning, reinforcing the same Western pedagogical
+      default as MRBench. Relevant as a validity comparator: a deployment seeking
+      India-appropriate benchmarking cannot directly substitute MathTutorBench for
+      MRBench without the same cultural validity concerns. Source: arXiv 2502.18940
+      — [|https://arxiv.org/abs/2502.18940|]; ACL Anthology EMNLP 2025 — [|https://aclanthology.org/2025.emnlp-main.11/|];
+      GitHub — [|https://github.com/eth-lre/mathtutorbench|]'
+    deployment_relevance: 'Confirms that the field''s current best benchmarks for
+      math tutoring evaluation (MRBench, MathTutorBench) share the same cultural provenance
+      gap: both are Western-default, Socratic-scaffolding-oriented, and lack any Indian
+      or South Asian pedagogical adaptation. This strengthens the IC and OC gap assessments
+      in the validity summary.'
+  india_ai_tutoring_deployment_evidence:
+    description: 'A 2025 study on teacher-AI collaboration in Indian classrooms (Shiksha
+      Copilot, Karnataka) found that Indian teachers valued AI tools for time-saving
+      but faced critical barriers: misalignment with school routines, absence of vernacular
+      content, and long response times. Teachers required AI outputs to align with
+      state-mandated curriculum frameworks and the 5E pedagogical format. This is
+      direct evidence that Indian teachers'' pedagogical expectations for AI-generated
+      guidance differ structurally from Western defaults, corroborating the OC validity
+      gap. Source: arXiv 2507.00456 — [|https://arxiv.org/html/2507.00456v1|]'
+    deployment_relevance: 'Provides empirical grounding (beyond elicitation) for the
+      OC gap: Indian teachers actively evaluate AI outputs against curriculum-specific
+      and institutional norms that benchmarks like MRBench do not operationalize.'
+  ncert_new_curriculum_ganita_prakash:
+    description: 'NCERT introduced a new Class 8 Mathematics textbook ''Ganita Prakash''
+      (2024–25) as part of NEP 2020 curriculum reform, emphasising exploration of
+      mathematical patterns and Indian mathematical heritage alongside procedural
+      learning. An AI-crafted curriculum for Classes 3–8 in Mathematics, Science,
+      and Social Science was approved in July 2025 for rollout via DIKSHA and PM eVidya.
+      These reforms signal a policy shift toward more conceptual and inquiry-based
+      learning, but teacher classroom practice typically lags curriculum reform by
+      several years. Source: EduRev Ganita Prakash — [|https://edurev.in/courses/118419_Mathematics-Ganita-Prakash-Class-8-New-NCERT|];
+      myidcm.com AI curriculum — [|https://www.myidcm.com/blog/artificial-intelligence-course-in-india|]'
+    deployment_relevance: 'Caveat on the pedagogical norms described in this document:
+      the prevailing rote-procedural, exam-oriented norms described are accurate for
+      current practice, but NEP 2020 and NCERT reforms are actively pushing toward
+      more conceptual instruction. The deployment''s target teacher population may
+      be in transition, and this should be noted as a temporal caveat on the OC gap
+      characterization.'
+  pedagogy_driven_its_evaluation_survey_2025:
+    description: 'A 2025 survey paper on pedagogy-driven evaluation of generative
+      AI-powered ITS (accepted at Springer, arXiv 2510.22581) explicitly notes the
+      absence of reliable, universally accepted, pedagogy-driven evaluation frameworks
+      and confirms that most existing ITS evaluations rely on non-standardized benchmarks
+      with limited generalizability. It cites MRBench as a step toward unification
+      but identifies the lack of domain coverage and interaction depth as ongoing
+      limitations. No India-specific or cross-cultural ITS evaluation framework is
+      cited. Source: arXiv 2510.22581 — [|https://arxiv.org/html/2510.22581v1|]'
+    deployment_relevance: 'Confirms the field-level assessment: there is no published
+      AI tutoring benchmark with documented validity for Indian classroom contexts.
+      The gap identified in this document (IC, OC) is not a local assessment artifact
+      but a field-wide limitation.'

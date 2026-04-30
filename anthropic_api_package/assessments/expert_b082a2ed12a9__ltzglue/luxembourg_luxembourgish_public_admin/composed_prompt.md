@@ -39,7 +39,7 @@ Citation rules for each source are in your system instructions.
 
 - **Name**: ltzglue
 - **Full Name**: LTZGLUE: The First Natural Language Understanding Benchmark for Luxembourgish
-- **Domain**: Natural Language Understanding for Luxembourgish
+- **Domain**: Low-resource NLU evaluation for Luxembourgish
 - **Languages**: lb
 - **Porting Strategy**: mixed
 - **Year**: 2025
@@ -49,133 +49,136 @@ Citation rules for each source are in your system instructions.
 ## Key characteristics relevant to validity analysis:
 
 ### Input Ontology
-LTZGLUE covers eight tasks — headline acceptability (HA), sentiment analysis (SA), linguistic
-acceptability in binary and multi-class forms (LA-BINARY, LA-MULTI), named entity recognition
-(NER), news topic classification (TC), intent detection (ID), and recognizing textual entailment
-(RTE) — explicitly modelled on the English GLUE benchmark [Q1, Q8, Q68]. The suite is designed
-to span "a broad spectrum of linguistic and semantic phenomena" [Q11] and covers "fundamentally
-different modelling paradigms" [Q71]. Appendix prompts enumerate exact label sets per task
-[Q143–Q155], confirming that all eight tasks emit single hard labels with fixed category sets.
+LTZGLUE assembles eight tasks spanning "binary and multi-class sentence and
+token-level classification tasks," including NER, topic classification, and
+intent classification [Q2, Q11]. The suite covers "four binary and four
+multi-class settings, sentence- and document-level inputs, as well as a
+token-level sequence-labelling task" [Q67], placing it in the same general
+range as the nine-task original GLUE benchmark [Q68]. A substantial proportion
+of tasks are "newly created for LTZ rather than direct translations or simple
+repackaging" [Q69].
 
-For the deployment use case, the input ontology presents critical gaps. The topic classification
-task covers only five editorial categories — SPORTS, CULTURE, TECHNOLOGY, BUSINESS, and
-ANIMALS — derived from RTL news [Q48, Q153], with no administrative, civic, housing,
-cross-border worker, EU-institutional, or state-vs-communal competency categories. The intent
-detection task covers a narrow set of reminder and alarm intents from a voice-assistant corpus
-[Q51, Q154], with no citizen-government communication intents. The NER task retains only four
-entity types (PER, ORG, LOC, MISC) after tag harmonisation [Q44, Q152], with no administrative
-jurisdiction or legal-status categories. Topic classification is reported as the easiest task
-with near-encoder-level LLM performance [Q99, Q100], while RTE is the hardest [Q103] — a
-difficulty distribution not calibrated to administratively relevant language understanding.
-The authors acknowledge these structural limitations: "Coverage across domains, registers, and
-demographic varieties may also be limited" [Q112].
+However, the topic classification taxonomy is drawn from RTL editorial
+categories and covers only five classes — SPORTS, CULTURE, TECHNOLOGY,
+BUSINESS, and ANIMALS [Q48, Q153] — none of which correspond to Luxembourg-
+specific administrative domains such as cross-border worker status, housing,
+communal vs. national competency routing, or EU institutional matters. The
+intent detection task uses nine labels drawn entirely from a voice-assistant
+corpus (alarm, reminder, weather sub-intents) [Q154], with no administrative
+intent categories. The benchmark contains no multi-label task formulation
+anywhere in its design [Q67], and the RTE task uses a logical entailment
+framing [Q59] unrelated to administrative routing decisions. The authors
+acknowledge that "no unified benchmark currently exists to evaluate LTZ
+language understanding consistently" [Q14] and that the benchmark does not
+claim complete coverage for any specific downstream deployment domain.
 
 ### Input Content
-The benchmark draws primarily on two main text sources: RTL (a Luxembourgish media outlet)
-and the Luxembourgish Online Dictionary (LOD) [Q12], supplemented by Wikipedia, Leipzig
-Collection web crawls, transcribed podcasts, transcribed political speeches from the Chambre
-des Députés, and Luxembourgish chat rooms [Q74, Q135]. The sentiment analysis data comes from
-RTL commentary and letters to the editor [Q24]; NER merges an automatically constructed
-Wikipedia/Wikidata corpus (JUDGEWEL) [Q34, Q38] with a human-annotated RTL news comment
-corpus [Q40, Q45]; topic classification is drawn from RTL editorial content [Q46]; and the
-intent detection task is a human-translated adaptation of the English xSID dataset [Q51], with
-a machine-translated German training set [Q54].
+Textual data across most tasks originates from a narrow set of sources,
+principally RTL news articles, with supplementary draws from the Luxembourgish
+Online Dictionary (LOD), Wikipedia/Wikidata, and a translated English intent
+dataset [Q12, Q16, Q24, Q30, Q34, Q46, Q51]. The NER corpus merges the
+automatically constructed JUDGEWEL dataset (Wikipedia/Wikidata) [Q34, Q38]
+with a human-annotated corpus from RTL online news comments [Q40]. The
+intent detection dataset is a translated version of the English xSID
+voice-assistant corpus, using a machine-translated German training set as
+a proxy [Q51, Q54]. The construction was "deliberately resource-conscious"
+[Q109], and the authors explicitly acknowledge that "LTZ is a small language
+community, and linguistic data often originate from a limited set of public
+domains" [Q119].
 
-For the deployment, this source profile is a serious validity concern. The authors explicitly
-acknowledge that "most data sources reflect formal writing or institutional usage and therefore
-do not fully represent informal and multilingual contexts" [Q112], and that "linguistic data
-often originate from a limited set of public domains" [Q119]. The intent detection register —
-user commands for a voice-controlled AI assistant — is acknowledged to have "no equivalent
-reference corpus in LTZ," making systematic terminology verification impossible [Q55, Q56].
-Code-switched, orthographically variable citizen correspondence — the primary input type in
-the deployment — is absent from nearly all task datasets. The RTE dataset was processed
-through ChatGPT-5.1 for quality improvement and then filtered, removing 22–28% of instances
-[Q60, Q66], introducing model-induced distributional artefacts into the content. The
-construction required "a deliberately resource-conscious approach" combining reuse, targeted
-annotation, and LLM assistance [Q109], reflecting structural constraints of the low-resource
-setting rather than principled domain selection.
+Critically, the authors themselves warn that "most data sources reflect formal
+writing or institutional usage and therefore do not fully represent informal
+and multilingual contexts" [Q112]. The intent detection source consists of
+"user commands for a voice-controlled AI assistant, representing a specialised
+spoken register for which there is no equivalent reference corpus in LTZ"
+[Q55], and the lack of LTZ references in this register meant "it was not
+possible to systematically verify the translated terminology" [Q56]. Code-
+switched and orthographically variable Luxembourgish — confirmed as essential
+for the deployment — is not documented as a feature of any task's input
+datapoints beyond a partial representation in RTL user comments used for NER
+[Q41].
 
 ### Input Form
-All benchmark tasks use plain text inputs in the Luxembourgish language, at sentence or
-document level, with BIO-tagged token sequences for NER and intent detection [Q35, Q57].
-The benchmark explicitly targets Luxembourgish as the input language [Q1], and the pre-training
-tokenizer is a BPE tokenizer trained on the full LTZ pre-training set with a vocabulary of
-50,368 tokens and a maximum sequence length of 1,024 [Q128, Q129]. Non-Luxembourgish articles
-were filtered using the OpenLID language identifier [Q47], and sentences with fewer than three
-words were removed [Q75].
-
-For the deployment, the input form dimension is partially valid: the benchmark is text-based
-and targets Luxembourgish, matching the deployment's text-only modality. However, the
-benchmark's text form reflects formal, edited prose from news and institutional sources, with
-no documented coverage of non-standard orthography, code-switching with French or German, or
-loanword alternation — all confirmed features of the target deployment's actual input
-distribution [Q7, Q112]. The authors flag "ongoing standardisation of the language" and "vast
-amounts of variation" as evaluation challenges [Q7], but the benchmark's preprocessing does
-not address these properties. The intent detection source register further diverges from
-citizen-correspondence form, using non-standard spelling conventions (all lowercase, missing
-punctuation) that were difficult to render in LTZ [Q55].
+All benchmark tasks are text-based, with Luxembourgish as the target language
+throughout. The benchmark's register is predominantly formal and edited:
+news articles, LOD dictionary examples, politically transcribed speeches, and
+translated commands. Pre-training data for LTZ-E1 is broader, including RTL
+user comments, webchat, and transcribed podcasts [Q74], but the downstream
+task datasets are filtered to remove non-Luxembourgish text (via OpenLID) and
+articles outside a 40–400 word length range [Q47]. The BPE tokenizer is
+trained on the full pre-training set with vocabulary size 50,368 and a max
+sequence length of 1,024 tokens [Q128, Q129]. For the linguistic acceptability
+task, sentences come from the LOD and are synthetically manipulated [Q30, Q31].
+There is no modality mismatch (deployment is text-only), but the formal,
+standardized register of most input datapoints diverges from the colloquial,
+orthographically variable, and code-switched inputs expected in real citizen
+correspondence. The authors acknowledge this gap directly [Q112] but do not
+document any effort to sample or augment task inputs to reflect non-standard
+or multilingual writing.
 
 ### Output Ontology
-The label ontology across all LTZGLUE tasks is entirely single-label and hard-classification
-[Q84]. Binary tasks use True/False or 0/1 encodings [Q147, Q148, Q150, Q155]. Multi-class
-tasks include three-class sentiment (positive, neutral, negative) [Q149], five-class linguistic
-acceptability (correct, verb, adj, syntax, ortho) [Q151], five-class topic classification
-(sports, culture, technology, business, animals) [Q153], a fixed set of reminder/alarm intents
-[Q154], and BIO NER tags covering LOC, PER, DATE, ORG, and MISC [Q152]. The benchmark did not
-use a multiple choice question answering setup, instead providing explicit label sets for output
-[Q84].
+The label ontologies across tasks are as follows: headline acceptability —
+binary (True/False) [Q148, Q147]; sentiment analysis — three-class (positive,
+neutral, negative) [Q149]; linguistic acceptability — binary (correct/incorrect)
+or four-class (verb, adjective, syntax, orthographic error) [Q31, Q33]; NER —
+BIO tags covering LOC, PER, DATE, ORG, MISC [Q152], with GPE merged into LOC
+[Q44]; topic classification — five classes (SPORTS, CULTURE, TECHNOLOGY,
+BUSINESS, ANIMALS) [Q48, Q153]; intent detection — nine voice-assistant
+intent labels [Q154]; RTE — binary entailment (0/1) [Q155, Q147].
 
-For the deployment, the output ontology presents three critical misalignments. First, there
-are no administrative, housing, cross-border worker, civic, or EU-institutional categories in
-any task taxonomy. Second, all tasks emit single hard labels, whereas the deployment requires
-multi-label outputs with calibrated confidence scores for routing — the benchmark produces no
-probabilistic or ranked outputs. Third, the sentiment labels (positive/neutral/negative) are
-generic and not calibrated to the formal-but-understated register of citizen-government
-correspondence. The NER tag set was simplified by merging GPE and LOC into a single location
-label [Q44], further reducing the administrative granularity available. The authors caution
-against using "benchmark performance as evidence of cultural or demographic coverage" [Q121]
-and advise inspecting task-specific subsets before deployment in public-facing settings [Q123].
+None of these label ontologies map to the administrative routing categories
+required by the deployment. The topic classes contain no civic, housing,
+transport, cross-border worker, or EU institutional category. The intent labels
+are exclusively voice-assistant commands. The sentiment labels do not capture
+urgency or frustration intensity. Crucially, all tasks produce a single hard
+label per input [Q67], whereas the confirmed deployment logic requires multi-
+label outputs with calibrated confidence scores for routing with human fallback
+[elicitation Q4]. This represents a fundamental structural mismatch between
+the benchmark's output ontology and the deployment's decision architecture.
 
 ### Output Content
-Annotation practices vary substantially across tasks. The sentiment analysis task was annotated
-by two native speakers of Luxembourgish [Q25], instructed to use an "unsure" category only
-when they would otherwise assign labels randomly [Q26], yielding a Cohen's Kappa of 0.45 [Q27],
-with disagreements resolved by annotator consensus [Q28]. The intent detection dataset was
-translated by a single native LTZ speaker with consultation of additional speakers in ambiguous
-cases [Q52]. The RTE dataset underwent a two-step LLM-based quality and label verification
-process using ChatGPT-5-Mini [Q63, Q64], with manual correction of cases where automatic
-improvement inadvertently altered logical contradictions [Q65]. The JUDGEWEL NER dataset relied
-on LLMs as judges with minimal human verification [Q37], while the Lothritz et al. NER dataset
-was fully human-annotated [Q42]. Annotator details are limited to a brief acknowledgement of
-student assistants [Q114], without documentation of linguistic background or domain familiarity.
+Annotation practices vary substantially across tasks. Sentiment analysis
+(4,583 sentences) was annotated by two native Luxembourgish speakers, with
+a Cohen's Kappa of 0.45 [Q25, Q26, Q27, Q28] — moderate agreement — and
+disagreements resolved by annotator consensus [Q28]. The human-annotated
+NER dataset was "conducted manually, yielding a smaller but high-precision
+dataset" [Q42]. The intent detection dataset was translated by a native LTZ
+speaker with consultation of additional native speakers in uncertain cases
+[Q52]. The JUDGEWEL NER corpus was constructed automatically using LLMs as
+judges with "minimal human verification to calibrate quality thresholds" [Q37].
+For RTE, ChatGPT-5-mini was used to filter low-quality translations [Q63]
+and to verify label correctness, finding nearly 10% incorrect labels [Q64].
 
-For the deployment, the annotation validity is a HIGH concern. The sentiment analysis Cohen's
-Kappa of 0.45 [Q27] — moderate agreement from only two annotators — falls below standard
-reliability thresholds. No annotators are documented as having familiarity with Luxembourgish
-administrative communication norms or civil-service registers. The LLM-assisted label
-verification for RTE [Q63, Q64] introduces uncertainty about whether labels reflect genuine
-Luxembourgish linguistic norms. The authors acknowledge that "some annotation decisions and
-class distributions are necessarily influenced by resource constraints" and that "automatic
-preprocessing may introduce biases that we cannot fully quantify" [Q113], and flag that "models
-may reproduce dominant norms while under-representing regional, sociolectal, or multilingual
-practices" [Q120].
+No information is provided about annotators' professional background, familiarity
+with administrative communication norms, or whether any were drawn from civil-
+service or public-administration domains. The Cohen's Kappa of 0.45 [Q27]
+represents only moderate agreement, which is concerning when nuanced register
+distinctions (formal frustration vs. neutral inquiry) are operationally
+significant. The heavy reliance on LLM-assisted annotation for RTE and JUDGEWEL
+[Q37, Q63, Q64] introduces uncertainty about whether ground-truth labels
+reflect Luxembourgish civil communication norms or model-biased interpretations.
+The authors themselves caution against "using benchmark performance as evidence
+of cultural or demographic coverage" [Q121] and acknowledge that "models may
+reproduce dominant norms while under-representing regional, sociolectal, or
+multilingual practices" [Q120].
 
 ### Output Form
-All tasks are evaluated using F1 scores [Q93, Q96]. Macro-F1 is reported for prompted LLMs
-evaluated once; encoder-based models report averaged F1 over three runs with standard deviations
-[Q96, Q89]. Class-balanced loss is applied during fine-tuning for imbalanced tasks [Q92].
-Invalid or malformed LLM outputs are discarded prior to evaluation [Q90, Q91]. Hyperparameter
-selection is performed via Bayesian search with early stopping, capped at 30 runs per
-model-task combination [Q138], with best hyperparameters selected on the validation set [Q137].
-Full results across validation and test sets are reported in appendix tables [Q156, Q158, Q159].
+The primary evaluation metric across all tasks is macro-F1, with full validation
+and test results reported per task [Q93, Q96, Q158, Q159]. Encoder-based model
+results are averaged over three runs with standard deviations reported [Q89,
+Q96]; prompted LLMs are evaluated once [Q96]. Invalid or malformed LLM outputs
+are discarded prior to evaluation [Q90, Q91]. Class-balanced loss (beta=0.99)
+is used during fine-tuning for imbalanced tasks [Q92]. Hyperparameter selection
+uses Bayesian search with early stopping over validation performance, capped at
+30 runs per model-task combination [Q136, Q137, Q138].
 
-For the deployment, the output form dimension has a functional gap: the benchmark produces
-single-label hard classifications evaluated with F1, while the deployment operationally requires
-confidence-scored and multi-label outputs for routing and escalation logic. The zero-shot LLM
-evaluation described [Q83, Q85] is methodologically relevant to the deployment but results
-should be treated as indicative only due to prompt sensitivity [Q86, Q87]. The exclusive
-reliance on single-label hard F1 scoring [Q84, Q93] means the benchmark provides no calibration
-data for the confidence-scored outputs the deployment requires.
+The benchmark's output format is exclusively single hard-label text classification
+or sequence labeling, with F1 as the sole reported metric. This is a standard
+and well-documented evaluation methodology for NLU tasks. However, the deployment
+requires multi-label outputs with calibrated confidence scores for routing and
+escalation logic; this functional requirement is not addressed anywhere in the
+benchmark's evaluation design and represents a gap between LTZGLUE's output form
+and operational deployment needs.
 
 
 ### Verbatim Quote Registry
@@ -186,7 +189,7 @@ data for the confidence-scored outputs the deployment requires.
 | Q2 | 1 | input_ontology | "Our tasks include common natural language processing tasks in binary and multi-class classification settings, including named entity recognition, topic classification, and intent classification." |
 | Q3 | 1 | output_form | "We evaluate various pre-trained language models for LTZ to present an overview of the current capabilities of these models on the LTZ language." |
 | Q4 | 1 | input_ontology | "Small and under-researched languages are particularly difficult to evaluate, as is the case with Luxembourgish (LTZ), the national language of Luxembourg, with around 400k speakers." |
-| Q5 | 1 | input_ontology | "LTZ only has a handful of NLU tasks available (Lothritz et al., 2022; Philippy et al., 2024; Plum et al., 2026)." |
+| Q5 | 1 | input_content | "LTZ only has a handful of NLU tasks available (Lothritz et al., 2022; Philippy et al., 2024; Plum et al., 2026)." |
 | Q6 | 1 | input_content | "As most of these are in the news domain, and the majority of the down-stream tasks comprise less than a thousand instances, model evaluation is not always dependable." |
 | Q7 | 1 | input_form | "Additional factors, such as the ongoing standardisation of the language (Gilles, 2019), vast amounts of variation (Lutgen et al., 2025), and decentralised resources, make it extremely challenging to evaluate LTZ language understanding in language models." |
 | Q8 | 1 | input_ontology | "Our contributions are: (1) LTZGLUE: the first unified GLUE benchmark for LTZ, with 8 tasks." |
@@ -194,7 +197,7 @@ data for the confidence-scored outputs the deployment requires.
 | Q10 | 1 | output_content | "Alistair Plum1, Felicia Körner2,3, Anne-Marie Lutgen1, Laura Bernardy1, Fred Philippy1, Emilia Milano1, Nils Rehlinger1, Cédric Lothritz4, Tharindu Ranasinghe5, Barbara Plank2,3, Christoph Purschke1 1University of Luxembourg, Luxembourg, 2LMU Munich, Germany 3Munich Center for Machine Learning, Germany 4LIST, Luxembourg, 5Lancaster University, UK" |
 | Q11 | 2 | input_ontology | "In this section, we introduce the eight tasks for LTZGLUE. The set spans binary and multi-class sentence and token-level classification tasks. Together, these tasks cover a broad spectrum of linguistic and semantic phenomena and provide the first unified benchmark for evaluating LTZ NLP models." |
 | Q12 | 2 | input_content | "Unless stated otherwise, the textual data used across most tasks stems from two main sources: (i)" |
-| Q13 | 2 | input_ontology | "LTZ, the focus of this benchmark, is regarded as under-researched, and research is ongoing. Joshi et al. (2020) classify Luxembourgish as one of the "scraping-by" languages: although some unlabeled data exists, meaningful progress will require coordinated efforts to raise awareness and collect labeled datasets, as such resources are currently almost nonexistent." |
+| Q13 | 2 | input_content | "LTZ, the focus of this benchmark, is regarded as under-researched, and research is ongoing. Joshi et al. (2020) classify Luxembourgish as one of the "scraping-by" languages: although some unlabeled data exists, meaningful progress will require coordinated efforts to raise awareness and collect labeled datasets, as such resources are currently almost nonexistent." |
 | Q14 | 2 | input_ontology | "Yet progress remains uneven across tasks, and existing resources vary widely in size, domain, and annotation quality. No unified benchmark currently exists to evaluate LTZ language understanding consistently, a gap we aim to fill." |
 | Q15 | 3 | input_ontology | "We formulate headline acceptability (HA) as a binary classification task where the model must decide whether a given headline matches the accompanying article body." |
 | Q16 | 3 | input_content | "To construct this dataset, we use RTL news articles. We keep only documents from the twenty most frequent categories. We then filter articles by body length and title length, remove exact duplicate titles, randomly shuffle the remaining instances, and retain a fixed subset of 30k examples." |
@@ -224,7 +227,7 @@ data for the confidence-scored outputs the deployment requires.
 | Q40 | 4 | input_content | "The NER dataset introduced by Lothritz et al. (2022), by contrast, is a fully human-annotated corpus derived from RTL online news comments." |
 | Q41 | 4 | input_content | "It covers a wider range of text types and registers, including informal and code-mixed writing, and focuses on four primary entity categories (PER, ORG, LOC, GPE)." |
 | Q42 | 4 | output_content | "Annotation was conducted manually, yielding a smaller but high-precision dataset." |
-| Q43 | 4 | input_content | "The two datasets are merged to increase both coverage and domain balance." |
+| Q43 | 4 | input_form | "The two datasets are merged to increase both coverage and domain balance." |
 | Q44 | 4 | output_ontology | "To ensure compatibility, the tag set is harmonised by merging the GPE and LOC categories into a single location label, while retaining PER, ORG, and MISC unchanged." |
 | Q45 | 4 | input_content | "This unified resource thus aligns the structured reliability of JUDGEWEL with the domain and stylistic breadth of the NER set by (Lothritz et al., 2022), providing a large-scale, multi-domain NER dataset for LTZ." |
 | Q46 | 4 | input_content | "To construct the news topic classification (TC) dataset, we collected news articles from RTL, which provides content pre-assigned to editorial categories." |
@@ -238,11 +241,11 @@ data for the confidence-scored outputs the deployment requires.
 | Q54 | 5 | input_content | "Since this task is originally intended to be crosslingual, we use the machine translated German training set (van der Goot et al., 2021)." |
 | Q55 | 5 | input_content | "The main challenge in translating the English dataset stems from its register. The source segments consist of user commands for a voice-controlled AI assistant, representing a specialised spoken register for which there is no equivalent reference corpus in LTZ. This register is marked by domain-specific terminology and collocations (e.g., set an alarm, set a reminder, add to playlist), as well as non-standard spelling (e.g., all lowercase, missing punctuation)." |
 | Q56 | 5 | input_content | "Due to the lack of LTZ references in this register, it was not possible to systematically verify the translated terminology." |
-| Q57 | 5 | input_form | "After translating the dataset, we transferred the BIO tags by first using token-level fuzzy matching between the LTZ and the German dataset, followed by manual verification." |
+| Q57 | 5 | output_form | "After translating the dataset, we transferred the BIO tags by first using token-level fuzzy matching between the LTZ and the German dataset, followed by manual verification." |
 | Q58 | 5 | output_ontology | "Table 5 shows the label distribution and size of each data split." |
 | Q59 | 5 | input_ontology | "Recognizing Textual Entailment (RTE) (Haim et al., 2006) is a classic NLU task featured in the original GLUE benchmark. Given a pair of texts A and B, the task consists of determining whether A is a logical premise of B." |
 | Q60 | 5 | input_content | "Lothritz et al. (2023) released a machine-translated Luxembourgish version of the dataset using Google Translate. However, due to numerous grammar and vocabulary related mistakes introduced in this process, we set out to improve the quality of the dataset." |
-| Q61 | 5 | input_content | "Specifically, we first prompted CHATGPT-5.1 to assess and improve the translated sentence pairs unless they were already of very high quality, while explicitly keeping the original meaning to avoid label conflicts (see Appendix 7.4)." |
+| Q61 | 5 | input_form | "Specifically, we first prompted CHATGPT-5.1 to assess and improve the translated sentence pairs unless they were already of very high quality, while explicitly keeping the original meaning to avoid label conflicts (see Appendix 7.4)." |
 | Q62 | 5 | output_content | "In addition, we perform two verification steps to make sure that (a) the quality of the improved texts is high enough and (b) that the labels are correct." |
 | Q63 | 5 | output_content | "To achieve (a), we prompted CHATGPT-5-MINI to judge the texts in the improved data and label their quality as either low, medium, or high, keeping only data rated at least medium, removing nearly 25% of the entire dataset (see Appendix 7.5)." |
 | Q64 | 5 | output_content | "For (b), we prompted CHATGPT-5-MINI to verify whether the dataset labels remained correct after the first translation and improvement, outputting true or false for each sentence pair (see Appendix 7.6). Nearly 10% of the labels were false." |
@@ -250,22 +253,22 @@ data for the confidence-scored outputs the deployment requires.
 | Q66 | 5 | input_content | "The filtering reduced between 22 and 28% of instances in the data, resulting in a final dataset of 1,876, 197, and 626 sentence pairs for the training, development, and test set, respectively." |
 | Q67 | 5 | input_ontology | "Together, the eight tasks in LTZGLUE form a broad and balanced evaluation suite, covering four binary and four multi-class settings, sentence- and document-level inputs, as well as a token-level sequence-labelling task." |
 | Q68 | 5 | input_ontology | "Despite the low-research status of LTZ, this places LTZGLUE in the same general range as the original English GLUE benchmark, which comprises nine diverse NLU tasks (Wang et al., 2019b)." |
-| Q69 | 5 | input_content | "In addition, a substantial proportion of the LTZGLUE tasks are newly created for LTZ rather than direct translations or simple repackaging, allowing the benchmark to reflect phenomena and usage patterns specific to the language." |
+| Q69 | 5 | input_ontology | "In addition, a substantial proportion of the LTZGLUE tasks are newly created for LTZ rather than direct translations or simple repackaging, allowing the benchmark to reflect phenomena and usage patterns specific to the language." |
 | Q70 | 6 | input_ontology | "In this landscape, supporting eight tasks for LTZ, including token-level NER and several newly constructed text-level tasks, is a strong indicator of the maturity and breadth of the emerging LTZ NLP ecosystem." |
 | Q71 | 6 | input_ontology | "This design allows us to assess current LTZ NLU performance across fundamentally different modelling paradigms, while maintaining a clear separation between task-specific supervision and general-purpose language understanding." |
-| Q72 | 6 | output_form | "We train two encoder language models for LTZ: LTZ-E1-mini with 68M and LTZ-E1-base with 110M non-embedding parameters." |
-| Q73 | 6 | output_form | "We closely follow the Ettin recipe (Weller et al., 2026), which is based on MODERNBERT (Warner et al., 2025)." |
+| Q72 | 6 | input_form | "We train two encoder language models for LTZ: LTZ-E1-mini with 68M and LTZ-E1-base with 110M non-embedding parameters." |
+| Q73 | 6 | input_form | "We closely follow the Ettin recipe (Weller et al., 2026), which is based on MODERNBERT (Warner et al., 2025)." |
 | Q74 | 6 | input_content | "The pre-training set is compiled from a variety of sources of LTZ. A large portion of the data stems from RTL (see Section 3), including news articles (News), transcribed radio interviews (Radio), and user comments (Comments). We also include transcribed podcasts (Podcasts) and transcribed political speeches and debates from the Chambre des Députés (Chamber). In addition, we use 1M sentences from the web crawl of the Leipzig Collection (Web, this excludes RTL), text crawled from LTZ chat rooms (Webchat), a Wikipedia crawl from October 2023 (Wikipedia), and finally, example sentences from the LOD retrieved in March 2024." |
 | Q75 | 6 | input_form | "We filter out sentences containing fewer than three words (as tokenized by whitespace), totalling 11.7M sentences, which corresponds to roughly 233M tokens using our tokenizer." |
-| Q76 | 6 | input_ontology | "We evaluate a set of supervised encoder-based models that explicitly support LTZ, either through direct pre-training or multilingual coverage." |
+| Q76 | 6 | output_form | "We evaluate a set of supervised encoder-based models that explicitly support LTZ, either through direct pre-training or multilingual coverage." |
 | Q77 | 6 | output_form | "As a representative baseline, we include multilingual BERT (MBERT-base) (Devlin et al., 2019), which still remains widely used for multilingual transfer and low-resource evaluation." |
 | Q78 | 6 | output_form | "We additionally evaluate a more recent multilingual BERT (MMBERT-base) variant with updated pre-training data and tokenisation." |
 | Q79 | 6 | output_form | "To complement these general-purpose multilingual models, we include LUXEMBERT, a language-specific model trained on LTZ data (Lothritz et al., 2022), which provides a stronger inductive bias for the language's lexical and orthographic properties." |
 | Q80 | 6 | output_form | "Finally, we evaluate XLM-RoBERTa (XLM-R-base) (Conneau et al., 2020), a large-scale multilingual model trained on substantially more data and languages than MBERT-base, and commonly used as a strong reference point for multilingual NLU." |
 | Q81 | 6 | output_form | "In addition to supervised encoder-based models, we evaluate a set of LLMs in a prompt-based zero-shot setting. This group includes QWEN3-235B, LLAMA-3.3, GEMMA-3-27B, and GPT5-MINI, which represent a range of model sizes, training regimes, and degrees of multilingual coverage." |
-| Q82 | 6 | output_content | "None of these models are fine-tuned on LTZGLUE, although some of the text data (RTL, Wikipedia) is very likely to have been processed during training." |
+| Q82 | 6 | input_content | "None of these models are fine-tuned on LTZGLUE, although some of the text data (RTL, Wikipedia) is very likely to have been processed during training." |
 | Q83 | 6 | output_form | "The models are evaluated using prompts that describe each task, allowing us to assess their ability to generalise to LTZ without task-specific supervision." |
-| Q84 | 6 | output_ontology | "We did not use a Multiple Choice Question Answering (MCQA)-setup, but provided the labels that should be used as output." |
+| Q84 | 6 | output_form | "We did not use a Multiple Choice Question Answering (MCQA)-setup, but provided the labels that should be used as output." |
 | Q85 | 6 | output_form | "This evaluation setting reflects the growing use of LLMs as general-purpose language understanding systems, particularly in scenarios where annotated data is scarce or unavailable." |
 | Q86 | 6 | output_form | "However, prompt-based evaluation introduces additional sources of variability, including prompt sensitivity and differences in instruction-following behaviour across models. As a result, performance should be interpreted as indicative rather than directly comparable to supervised results." |
 | Q87 | 6 | output_form | "Nevertheless, including these models provides a complementary perspective on the current capabilities of large-scale multilingual and instruction-tuned systems for LTZ NLU." |
@@ -292,7 +295,7 @@ data for the confidence-scored outputs the deployment requires.
 | Q108 | 9 | input_ontology | "This paper makes two central contributions to LTZ NLU. First, we introduce a new benchmark that provides the first comprehensive GLUE-style evaluation suite for LTZ. Second, we present a systematic evaluation of encoder-based models and prompted large language models across all tasks, offering concrete guidance on model choice in such a low-resource setting." |
 | Q109 | 9 | input_content | "The construction of the dataset required a deliberately resource-conscious approach. In the absence of large, task-diverse annotated resources, we combine the reuse of existing datasets with the targeted annotation of new data, carefully aligning annotation schemes across tasks, and using large language models as auxiliary tools." |
 | Q110 | 9 | input_content | "While LTZGLUE provides the first systematic benchmark for LTZ NLU, the dataset remains constrained by the availability and scope of existing resources. Several tasks rely on relatively small or domain-specific corpora, which limits the ecological validity of the results and restricts the range of linguistic phenomena covered." |
-| Q111 | 9 | output_content | "In addition, some of the data sources used in this benchmark may already be included, in whole or in part, in the pre-training corpora of the large language models evaluated in this work. While the exact composition of proprietary pre-training datasets is typically not fully disclosed, this potential overlap cannot be entirely ruled out and may inflate performance estimates." |
+| Q111 | 9 | input_content | "In addition, some of the data sources used in this benchmark may already be included, in whole or in part, in the pre-training corpora of the large language models evaluated in this work. While the exact composition of proprietary pre-training datasets is typically not fully disclosed, this potential overlap cannot be entirely ruled out and may inflate performance estimates." |
 | Q112 | 9 | input_content | "Coverage across domains, registers, and demographic varieties may also be limited. LTZ displays substantial orthographic and sociolinguistic variation, yet most data sources reflect formal writing or institutional usage and therefore do not fully represent informal and multilingual contexts." |
 | Q113 | 9 | output_content | "Although we draw on established GLUE-style tasks, some annotation decisions and class distributions are necessarily influenced by resource constraints. Certain tasks exhibit label imbalance or rely on automatic preprocessing, which may introduce biases that we cannot fully quantify." |
 | Q114 | 9 | output_content | "We would like to thank the student assistants for their annotation work." |
@@ -307,12 +310,12 @@ data for the confidence-scored outputs the deployment requires.
 | Q123 | 10 | output_content | "Researchers using LTZGLUE are encouraged to inspect task-specific subsets and consider downstream implications, especially in public-facing settings." |
 | Q124 | 12 | input_ontology | "For demonstration purposes, we present an example for each task in ltzGLUE in Table 7. The examples are intended to illustrate the task formulations and typical model inputs and outputs." |
 | Q125 | 12 | input_form | "We follow the Ettin recipe (Weller et al., 2026), based on ModernBERT (Warner et al., 2025), for training hyperpameters and model architecture." |
-| Q126 | 12 | output_form | "We train two sizes of LTZ-E1 models, mini and base, with 68M and 110M non-embedding parameters, respectively." |
-| Q127 | 12 | output_form | "LTZ-E1-mini has 19 hidden layers, a hidden size of 512, an intermediate size of 768, and 8 attention heads, whereas LTZ-E1-base has 22 hidden layers, a hidden size of 768, an intermediate size of 1152, and 12 attention heads." |
+| Q126 | 12 | input_form | "We train two sizes of LTZ-E1 models, mini and base, with 68M and 110M non-embedding parameters, respectively." |
+| Q127 | 12 | input_form | "LTZ-E1-mini has 19 hidden layers, a hidden size of 512, an intermediate size of 768, and 8 attention heads, whereas LTZ-E1-base has 22 hidden layers, a hidden size of 768, an intermediate size of 1152, and 12 attention heads." |
 | Q128 | 12 | input_form | "Both models share a GPTNeoXTokenizerFast tokenizer (Black et al., 2022), a BPE-based tokenizer, which we train on the entire pre-training set, using a minimum frequency of two and a vocabulary size of 50,368." |
 | Q129 | 12 | input_form | "We use a constant batch size of 1024 packed sequences, where both models have a max sequence length of 1024." |
-| Q130 | 12 | output_form | "We follow ModernBERT (Warner et al., 2025) and Ettin (Weller et al., 2026) in using the Warmup-Stable-Decay (WSD) scheduler (Zhai et al., 2022; Hu et al., 2024), though we use a shorter warmup and decay phase of 500 batches each, due to our smaller pre-training dataset size and larger number of epochs (10 vs. one)." |
-| Q131 | 12 | output_form | "Again following ModernBERT and Ettin's recipe, we use the StableAdamW optimizer (Wortsman et al., 2023), with a peak learning rate of 3e-3 with a weight decay of 3e-4 for LTZ-E1-mini and 8e-4 with a weight decay of 1e-5 for LTZ-E1-base." |
+| Q130 | 12 | input_form | "We follow ModernBERT (Warner et al., 2025) and Ettin (Weller et al., 2026) in using the Warmup-Stable-Decay (WSD) scheduler (Zhai et al., 2022; Hu et al., 2024), though we use a shorter warmup and decay phase of 500 batches each, due to our smaller pre-training dataset size and larger number of epochs (10 vs. one)." |
+| Q131 | 12 | input_form | "Again following ModernBERT and Ettin's recipe, we use the StableAdamW optimizer (Wortsman et al., 2023), with a peak learning rate of 3e-3 with a weight decay of 3e-4 for LTZ-E1-mini and 8e-4 with a weight decay of 1e-5 for LTZ-E1-base." |
 | Q132 | 12 | input_content | "As our pre-training set is small, we" |
 | Q133 | 13 | output_form | "We use a 20GB MIG partition of an NVIDIA A100-SXM4-80GB to pretrain each model, taking 47 hours for LTZ-E1-mini and 76 hours for LTZ-E1-base." |
 | Q134 | 13 | output_form | "However, we note that compute times were negatively impacted by concurrent jobs on the server cluster with suboptimal CPU thread management." |
@@ -326,12 +329,12 @@ data for the confidence-scored outputs the deployment requires.
 | Q142 | 14 | output_form | "Table 10: Hyperparameter sweep ranges used for all task and model combinations." |
 | Q143 | 14 | output_content | "You are an expert for the Luxembourgish language. I am giving you a sentence in Luxembourgish. You have to judge its quality and improve it while keeping the meaning intact. As output, write only the improved sentence or the original sentence if it is of very high quality." |
 | Q144 | 14 | output_content | "You are an expert for the Luxembourgish language. I am giving you two texts in Luxembourgish. You have to judge their quality. As output, simply write 'low', 'medium' or 'high' depending on the quality of both sentences, nothing else." |
-| Q145 | 14 | output_ontology | "You are an expert for the Luxembourgish language. I am giving you two texts TEXT1 and TEXT2 in Luxembourgish as well as a LABEL where 1 means that TEXT1 logically entails TEXT2 while 0 means the opposite. You have to check if the labels are correct. As output, simply write 'true' if the label is the correct one or 'false' if the label is incorrect." |
-| Q146 | 14 | output_ontology | "You are a classification and text-processing model specialized in NLP tasks for Luxembourgish (lb). Follow ALL rules strictly: 1. Respond ONLY in valid JSON. 2. Do NOT add explanations, comments or text outside of JSON. 3. Use field: "output": <model_answer>. 4. Use field: "task": "<task_name>". 5. Use field: "input": "<input example text>". 6. Predict only the requested outputs and" |
+| Q145 | 14 | output_content | "You are an expert for the Luxembourgish language. I am giving you two texts TEXT1 and TEXT2 in Luxembourgish as well as a LABEL where 1 means that TEXT1 logically entails TEXT2 while 0 means the opposite. You have to check if the labels are correct. As output, simply write 'true' if the label is the correct one or 'false' if the label is incorrect." |
+| Q146 | 14 | output_form | "You are a classification and text-processing model specialized in NLP tasks for Luxembourgish (lb). Follow ALL rules strictly: 1. Respond ONLY in valid JSON. 2. Do NOT add explanations, comments or text outside of JSON. 3. Use field: "output": <model_answer>. 4. Use field: "task": "<task_name>". 5. Use field: "input": "<input example text>". 6. Predict only the requested outputs and" |
 | Q147 | 15 | output_ontology | "If determined labels are 0 and 1 then 0 is used for False, 1 is used for True." |
-| Q148 | 15 | output_ontology | "headline_classification: Decide if the given title/headline fits the text. Output True or False." |
+| Q148 | 15 | input_ontology | "headline_classification: Decide if the given title/headline fits the text. Output True or False." |
 | Q149 | 15 | output_ontology | "sentiment_analysis: Classify sentiment of the text. Allowed labels: positive, neutral, negative." |
-| Q150 | 15 | output_ontology | "linguistic_acceptability_binary: Decide whether the sentence is linguistically acceptable in Luxembourgish. Output: 0 or 1." |
+| Q150 | 15 | input_ontology | "linguistic_acceptability_binary: Decide whether the sentence is linguistically acceptable in Luxembourgish. Output: 0 or 1." |
 | Q151 | 15 | output_ontology | "linguistic_acceptability_multilabel: Detect if the sentence is correct or if some element is wrong. If the sentence is correct, Output: correct. If it is not, Output the label referencing the wrong element: syntax, verb, ortho or adj." |
 | Q152 | 15 | output_ontology | "ner: Perform Named Entity Recognition on the given sequence of sentence tokens. Output tags as lists of ner_tags. Allowed Tags: O, B-LOC, I-LOC, B-PER,I-PER, B-DATE, I-DATE,B-ORG, I-ORG, B-MISC, I-MISC." |
 | Q153 | 15 | output_ontology | "topic_classification: Classify topic of the document by title and text. Allowed category_names: sports, animals, business, culture, technology." |
@@ -348,543 +351,382 @@ data for the confidence-scored outputs the deployment requires.
 
 ```yaml
 name: Luxembourg Public Administration — Civil Servant NLU Deployment
-abbreviation: LU-CIVSERV
+abbreviation: LU-PUBADMIN
 deployment_context:
-  country: Luxembourg
+  system_function: LLM-based automated classification of citizen correspondence for
+    routing to government departments and prioritization of urgent or frustrated messages,
+    with human-in-the-loop fallback for low-confidence cases.
+  benchmark_evaluated: LTZGLUE
+  primary_region: Luxembourg
   governance_levels:
-  - national (État)
-  - communal (communes)
-  eu_institutional_dimension: Luxembourg hosts major EU institutions (European Court
-    of Justice, European Commission DGs, European Parliament secretariat); EU-institutional
-    topic categories are operationally relevant to citizen correspondence routing.
-  system_purpose: LLM-based automatic classification of citizen feedback by topic,
-    named entity detection, intent identification, and sentiment/urgency gauging to
-    drive automated routing to government departments and prioritization of correspondence,
-    with human-in-the-loop fallback for low-confidence outputs.
+  - national (état)
+  - communal (commune)
+  institutional_scope: National ministries and communal administrations processing
+    digital citizen feedback channels
+  eu_dimension: Luxembourg hosts major EU institutions; a non-trivial share of incoming
+    correspondence may concern EU-adjacent administrative matters (frontier worker
+    regulation, EU residency rights, cross-border social security)
 target_population:
-  primary_users: Civil servants in Luxembourgish government agencies at national and
-    communal levels who process, review, and act on digitally routed citizen correspondence.
-    They are the direct consumers of the system's classification outputs and the human
-    auditors in the escalation loop.
-  secondary_users: 'Citizens and residents of Luxembourg submitting feedback or queries
-    to government agencies in written digital form. Their messages constitute the
-    system''s primary text input. This population includes:
-
-    - Luxembourgish nationals
-
-    - Long-term residents holding Luxembourg nationality or permanent residency
-
-    - Cross-border workers (frontaliers) who commute daily from France, Germany, or
-    Belgium and are subject to distinct tax, social security, and labor frameworks
-
-    - EU nationals resident in Luxembourg under freedom-of-movement provisions
-
-    - Third-country nationals with various residency statuses'
-  cross_border_worker_subpopulation:
-    description: A demographically significant subpopulation of workers residing in
-      neighboring countries (primarily France, Belgium, Germany) who cross into Luxembourg
-      daily for employment. They generate a distinct class of administrative queries
-      relating to frontier-worker tax treaties, cross-border social security coordination,
-      healthcare access, and commuter transport.
-    estimated_workforce_share: '47% of Luxembourg''s employed workforce (approximately
-      216,000–228,000 individuals out of ~489,000 total employees in 2024). Source:
-      STATEC Regards 01/25 — [WEB-1];
-      corroborated by ODT/LISER Maps and Figures 2023 — [WEB-2]'
-    primary_origin_countries:
-    - France (~52–53% of cross-border workers)
-    - Belgium (~23–24% of cross-border workers)
-    - Germany (~23–24% of cross-border workers)
-    relevant_administrative_domains:
-    - frontier-worker income tax treaties
-    - cross-border social security (détachement, affiliation)
-    - cross-border healthcare reimbursement
-    - commuter transport and rail passes
-    - childcare allocation portability
-geography:
-  country: Luxembourg
-  area_km2: 2,586 km² (Luxembourg official government portal — [WEB-3];
-    corroborated by multiple sources including alphatrad.co.uk — [WEB-4])
-  population: '672,050 as of 1 January 2024; 681,973 as of 1 January 2025 (+1.5% year-on-year).
-    Source: STATEC official population statistics — [WEB-5];
-    [WEB-6]'
-  administrative_divisions:
-    description: Luxembourg is divided into communes (municipalities), grouped historically
-      into cantons and districts. Responsibility for administrative services is split
-      between the national state and individual communes, creating a routing challenge
-      the system must resolve.
-    number_of_communes: 'Exactly 100 communes, following the mergers of Bous–Waldbredimus
-      and Grosbous–Wahl which took effect on 1 September 2023. Source: Luxembourg
-      Government official communiqué — [WEB-7];
-      confirmed by Luxembourg official elections portal — [WEB-8]'
-    state_vs_communal_competency_examples:
-      state_competencies:
-      - national identity documents (passeport, carte d'identité)
-      - income tax
-      - social security (CNAP, CNS, CCSS)
-      - national police
-      - immigration and residency permits
-      - labor law enforcement (ITM)
-      - EU treaty obligations
-      communal_competencies:
-      - local urban planning and construction permits
-      - communal taxes (taxe foncière)
-      - local road maintenance
-      - communal social services
-      - waste management
-      - local event permits
-      - birth/death/marriage registration at état civil
-  eu_institutional_presence: Luxembourg City hosts the Court of Justice of the European
-    Union, the General Court, the European Court of Auditors, the European Investment
-    Bank, and multiple European Commission and Parliament administrative bodies. Citizens
-    may conflate national and EU-institutional contacts in correspondence.
-  cross_border_catchment_regions:
-    France: 'Primarily Moselle department (Thionville area, where ~half of French
-      cross-border workers reside) and Meurthe-et-Moselle. Source: ODT/LISER employment/mobility
-      study 2023 — [WEB-2];
-      Paperjam cross-border worker analysis — [WEB-9]'
-    Belgium: 'Primarily Province de Luxembourg (Arlon/Gaume region); ~73% of Belgian
-      cross-border workers reside in Province de Luxembourg. Source: Paperjam/ASTI
-      cross-border worker study — [WEB-9]'
-    Germany: 'Primarily Trier region; ~half of German cross-border workers live in
-      or around Trier. Source: Paperjam/ASTI cross-border worker study — [WEB-9]'
+  primary_users: Civil servants in Luxembourgish government agencies (national and
+    communal levels) reviewing automated routing decisions, auditing system flags,
+    and providing real-time feedback on model output quality via the human-in-the-loop
+    interface.
+  secondary_population: Citizens and residents writing digital correspondence to government
+    bodies; includes a significant sub-population of cross-border workers (frontaliers)
+    domiciled in France, Belgium, or Germany but employed and administratively active
+    in Luxembourg.
+  cross_border_worker_salience: Cross-border workers represent approximately 47% of
+    total Luxembourg employment (STATEC 2024 — [WEB-1];
+    OECD Economic Survey Luxembourg 2025 — [WEB-2]).
+    Their administrative queries involve distinct legal, tax, and social-security
+    frameworks that differ materially from resident-citizen queries, making this a
+    high-priority sub-population for topic classification accuracy.
+  civil_servant_profile: Professionally multilingual; expected to work across Luxembourgish,
+    French, and German; familiar with both national administrative procedures and
+    EU regulatory context; primary consumers of the automated routing dashboard and
+    escalation queue.
+  citizen_writer_profile: Multilingual residents and non-resident workers; orthographically
+    non-standardized Luxembourgish is common; French and German code-switching frequent
+    even in formally intended messages; range from highly educated professionals to
+    residents with limited formal literacy in Luxembourgish.
+country: Luxembourg
 languages:
-  official_languages:
+  administrative_official:
   - Luxembourgish (Lëtzebuergesch)
   - French
   - German
-  national_language: Luxembourgish (Lëtzebuergesch / LTZ) — the sole national language
-    and primary spoken vernacular of Luxembourgish citizens
-  administrative_language_practice: French dominates written administrative law and
-    formal government correspondence; German is used in some administrative contexts
-    and is the language of instruction in early primary education; Luxembourgish is
-    increasingly used in informal and semi-formal government digital channels.
-  deployment_target_language: Luxembourgish (lb) — the benchmark (LTZGLUE) and the
-    system both target LTZ as the primary processing language.
-  code_switching_profile:
-    description: Citizens composing digital feedback in Luxembourgish habitually alternate
-      between French-derived and German-derived lexical variants for the same administrative
-      concepts, and may embed entire French or German phrases within an otherwise
-      Luxembourgish message.
-    documented_examples:
-    - Administratioun (French-derived) vs. Verwaltung (German-derived) for 'administration'
-    - Formulaire (French) vs. Formular (German) for 'form'
-    - Bréif (Luxembourgish) vs. lettre (French) for 'letter'
-    orthographic_variation: Luxembourgish orthographic standardization (Eis Sprooch
-      reform and predecessor conventions) is ongoing and unevenly adopted. Citizens
-      may apply idiosyncratic or older spelling conventions. No assumption of standard
-      OLO (Offiziell Lëtzebuerger Orthografie) compliance is warranted for citizen
-      input.
-  resident_non_ltz_speaker_fraction: '~47.3% of Luxembourg''s population as of 1 January
-    2024 are foreign nationals. The largest group are Portuguese nationals (~14.5%
-    of total population, ~92,000–94,000 individuals as of 2023–2024). The CIA World
-    Factbook (2021 est.) reports Luxembourgish as first language for 48.9% of residents,
-    Portuguese for 15.4%, French for 14.9%, Italian 3.6%, English 3.6%, German 2.9%,
-    other 10.8%. A significant share of residents primarily write in French or Portuguese
-    rather than Luxembourgish. Source: STATEC population statistics — [WEB-5];
-    World Factbook Luxembourg demographics — [WEB-10];
-    Wikipedia Portuguese in Luxembourg — [WEB-11]'
-  portuguese_community_note: 'Luxembourg has a very large Portuguese-origin resident
-    community (~14.5% of total population, ~93,659 Portuguese nationals as of January
-    2023, the single largest foreign nationality group). Portuguese is described as
-    the second most spoken primary language after Luxembourgish. Their written administrative
-    correspondence is likely in French or Portuguese rather than Luxembourgish and
-    falls outside the LTZ benchmark scope, but will appear in the deployment input
-    stream. Source: Portuguese in Luxembourg Wikipedia — [WEB-11];
-    Luxembourg demographics portal — [WEB-3]'
-  benchmark_language_note: LTZGLUE processes only Luxembourgish (lb) text; non-Luxembourgish
-    content was filtered during benchmark construction using OpenLID. Deployment inputs
-    that are French-only or German-only will not be validly classified by a model
-    calibrated on LTZGLUE alone.
+  primary_benchmark_language: Luxembourgish (lb / LTZ)
+  code_switching_patterns: Citizen correspondence routinely alternates between Luxembourgish,
+    French, and German within a single message. French-derived and German-derived
+    loanwords for identical administrative concepts coexist (e.g., 'Administratioun'
+    vs. 'Verwaltung'); a model trained on standardized Luxembourgish alone will encounter
+    significant out-of-distribution input.
+  orthographic_status: Luxembourgish orthography is not fully standardized as of the
+    benchmark's publication; substantial variation in spelling, punctuation, and capitalization
+    norms is attested in citizen-facing text.
+  note: The benchmark (LTZGLUE) targets standard written Luxembourgish; the deployment
+    input distribution is broader and includes informal, code-switched, and orthographically
+    variable text. This divergence is a primary validity risk flagged in the elicitation.
+  language_law_constitutional_status: Since 1 July 2023, Luxembourgish has been anchored
+    in the Constitution as the national language of the Grand Duchy, alongside French
+    and German as administrative languages (Luxembourg Government — [WEB-3]).
+    This elevates the political importance of Luxembourgish-language processing in
+    public-sector AI tools.
 writing_systems:
-  script: Latin alphabet with diacritics used in Luxembourgish (é, ë, ä, etc.)
-  directionality: left-to-right
-  citizen_orthographic_variance: Citizens may omit diacritics, apply inconsistent
-    capitalization (Luxembourgish capitalizes all nouns as in German), and use phonetic
-    approximations. Preprocessing pipelines must not over-normalize, as variation
-    is meaningful for dialect and register detection.
-  nls_note: No right-to-left script considerations; no script-mixing concerns beyond
-    Latin diacritics.
-demographic_and_literacy_profile:
-  general_literacy_rate: '[NEEDS VERIFICATION — deferred: below search budget; Luxembourg''s
-    general adult literacy is near-universal by all EU benchmarks but a specific authoritative
-    percentage was not retrieved in this pass]'
-  digital_literacy_among_civil_servants: Civil servants are the direct users of classification
-    outputs, not the text authors; high digital literacy is assumed for this subgroup
-    given Luxembourg's advanced e-government infrastructure.
-  citizen_digital_literacy: 'Luxembourg consistently ranks among the top EU member
-    states in digital skills (DESI). The 2024 DESI analysis identifies Luxembourg
-    as among the top three EU countries for ICT specialists as a share of employment
-    (8.0%, behind only Sweden at 8.7%), indicating a highly digitally skilled workforce.
-    The standalone DESI ranking was discontinued after 2022 and integrated into the
-    State of the Digital Decade report from 2023 onwards. Source: DESI 2024 analysis
-    — [WEB-12]; EC DESI Luxembourg profile — [WEB-13]'
-  internet_penetration: '~99% of Luxembourg households had internet access in 2023,
-    one of the highest rates in the EU. Urban household access reached ~99.9%, rural
-    household access ~98.3% — both figures among the highest in the EU. Source: Eurostat
-    ICT Household Survey 2023 via Statista — [WEB-14];
-    Eurostat Urban-Rural Digital Society analysis — [WEB-15]'
-  mobile_internet_penetration: '[NEEDS VERIFICATION — deferred: below search budget;
-    Luxembourg is consistently a top EU performer in broadband and mobile connectivity
-    per DESI data, but a specific 2023/2024 mobile internet penetration percentage
-    was not retrieved in this pass]'
-  language_skills_in_population: The majority of Luxembourg residents are functionally
-    multilingual (Luxembourgish, French, German). Trilingualism is institutionally
-    embedded through the educational system. Cross-border workers may be monolingual
-    French or German speakers.
-  educational_system_note: Luxembourg's educational system uses Luxembourgish as initial
-    instruction language, transitioning to German then French. This produces a specific
-    pattern of multilingual competence in citizens educated domestically that differs
-    from the competence profile of recently arrived residents or cross-border workers.
+  scripts:
+  - Latin alphabet with diacritics (ä, ë, é, etc. as used in Luxembourgish, French,
+    German)
+  note: All three administrative languages use Latin script. No script-direction mismatch.
+    Mixed-language text is common; tokenizers trained on monolingual Luxembourgish
+    corpora may underperform on French- or German-heavy passages within otherwise
+    Luxembourgish messages.
+population_size:
+  luxembourg_total_population: 672,050 as of 1 January 2024 (STATEC — [WEB-4])
+  resident_citizens_and_long_term_residents: '[NEEDS VERIFICATION — deferred: below
+    search budget; STATEC 2024 brochure exists but sub-national citizen vs. long-term-resident
+    breakdown not surfaced in available search results]'
+  cross_border_workers_frontaliers: 'Approximately 231,290 cross-border workers in
+    Q1 2024 (Paperjam/IGSS data — [WEB-5]),
+    representing ~47% of total employment. Origin-country breakdown: approximately
+    120,000 from France (majority), ~50,000 from Belgium, ~50,000 from Germany (STATEC
+    via alleyesonme.jobs — [WEB-6]).
+    OECD 2025 confirms: 50% from France, remaining split evenly between Belgium and
+    Germany (OECD Economic Survey Luxembourg 2025 — [WEB-2]).'
+  civil_servants_national_level: '[NEEDS VERIFICATION — deferred: below search budget;
+    specific national fonctionnaires headcount not surfaced; STATEC ''Luxembourg in
+    figures 2024'' (92-page edition) likely contains this but full text not accessible]'
+  civil_servants_communal_level: '[NEEDS VERIFICATION — deferred: below search budget;
+    communal-level civil servant headcount not found in available sources]'
+literacy_and_digital_access:
+  general_literacy_rate: '[NEEDS VERIFICATION — deferred: below search budget; Luxembourg
+    is a high-income country and adult literacy is effectively universal per OECD
+    assessments, but a verifiable formal figure was not surfaced]'
+  digital_literacy_civil_servants: Expected high given professional context; civil
+    servants operate standard government IT infrastructure.
+  citizen_digital_access: 99.0% internet penetration rate as of January 2024, with
+    651,700 internet users out of 658,300 total population (DataReportal / Kepios
+    analysis 2024 — [WEB-7];
+    corroborated by Eurostat/Statista household internet access figure of 99.06% for
+    2023 — [WEB-8]).
+  mobile_internet_penetration_pct: 886,100 cellular mobile connections active in early
+    2024, equivalent to 134.6% of the total population (multiple SIM cards per user),
+    with median mobile internet speed of 90.85 Mbps (DataReportal 2024 — [WEB-7]).
+  note: Luxembourg is a high-income country with advanced digital infrastructure;
+    access disparities are more likely along age and linguistic-background dimensions
+    than income dimensions, but sub-population figures should be verified.
+cultural_norms_notes: '- Citizens writing to government bodies tend to use a formal
+  but often understated register; emotional frustration is typically signaled indirectly
+  rather than through explicit negative language, creating a challenge for sentiment
+  and urgency classifiers trained on less institutionally constrained text.
+
+  - Code-switching between Luxembourgish, French, and German is socially unmarked
+  and does not indicate informality or distress; models should not interpret language-mixing
+  as a sentiment signal.
+
+  - The distinction between national-level (ministère) and communal-level (commune)
+  competencies is institutionally significant and familiar to residents; misrouting
+  between these levels is a culturally salient administrative error.
+
+  - Cross-border workers have a strong community identity and distinct administrative
+  concerns; messages about frontier-worker tax status, social security, or cross-border
+  transport are a recognizable genre.
+
+  - Luxembourg''s multilingual civic culture means citizens may deliberately choose
+  French or German for formal complaints, reserving Luxembourgish for more familiar
+  or informal tones — though this norm is not universal.'
+administrative_domain_notes:
+  topic_taxonomy_requirements: 'The deployment requires a topic taxonomy that is substantially
+    more granular than LTZGLUE''s five RTL editorial categories (SPORTS, CULTURE,
+    TECHNOLOGY, BUSINESS, ANIMALS). Required administrative categories include at
+    minimum: cross-border worker / frontalier issues, housing and cost of living,
+    transport and mobility, tax and fiscal matters, social security and benefits,
+    EU institutional matters, national identity documents and residency permits, communal
+    services, and public health.'
+  routing_dimension_state_vs_communal: A core routing requirement is distinguishing
+    whether a message concerns a national (state) competency or a communal (commune)
+    competency. This distinction is not encoded in any LTZGLUE task and represents
+    a deployment-specific classification dimension requiring domain adaptation or
+    bespoke annotation.
+  cross_border_worker_legal_framework: '[NEEDS VERIFICATION — deferred: below search
+    budget; the bilateral tax and social security conventions with France, Belgium
+    and Germany governing frontalier status are a specialist legal domain not fully
+    surfaced by available search results. Requires expert/stakeholder elicitation
+    or legal specialist review.]'
+  communal_vs_national_competency_split: '[NEEDS VERIFICATION — deferred: likely unsearchable
+    at adequate granularity (lived administrative practice); formal enumeration of
+    communal vs. national competencies exists in Luxembourg communal law but was not
+    surfaced in available search results at the level of specificity needed for a
+    routing taxonomy]'
+  politically_sensitive_categories: Housing affordability and cost of living are flagged
+    as high-priority and politically sensitive in the elicitation; messages in these
+    categories may require elevated urgency scoring and careful sentiment handling.
+  eu_institutional_queries: Luxembourg's role as an EU institutional seat means some
+    citizen correspondence may address EU-institution-specific procedures (e.g., European
+    Court of Justice, European Commission employment, EU staff regulations); these
+    are unlikely to appear in any general LTZ benchmark.
+legal_and_regulatory_context:
+  data_protection_regime: Luxembourg implements GDPR directly with no significant
+    national derogations from the Regulation's substantive provisions (Luther Law
+    Firm / DataGuidance — [WEB-9]).
+    The supervisory authority is the CNPD (Commission Nationale pour la Protection
+    des Données — [WEB-10]). DPIAs are mandatory per GDPR
+    Article 35; the CNPD has published a list of processing operations that always
+    require a DPIA. The CNPD published guidelines on artificial intelligence in 2023
+    (CNPD Annual Report 2023 — [WEB-11])
+    and is co-launching an AI Community of Practices with the Luxembourg AI Factory
+    (CNPD 2025 — [WEB-10]). No specific published CNPD guidance
+    on automated processing of citizen correspondence for routing was found; a DPIA
+    is highly advisable before deployment.
+  automated_decision_making_constraints: EU GDPR Article 22 restricts fully automated
+    decisions with significant effects on individuals; the deployment's human-in-the-loop
+    fallback is directly relevant to this constraint. Routing and prioritization do
+    not constitute final decisions but the boundary should be legally verified.
+  applicable_ai_act_classification: The deployment's AI Act risk classification depends
+    on whether the system evaluates citizen eligibility for public services or merely
+    routes correspondence. EU AI Act Annex III, Category 5(a) classifies as high-risk
+    AI systems 'intended to be used by public authorities … to evaluate the eligibility
+    of natural persons for essential public assistance benefits and services' (EU
+    AI Act Regulation (EU) 2024/1689, official text — [WEB-12]).
+    A pure routing/triage system that performs preparatory sorting without determining
+    eligibility may qualify for the Article 6(3) exception as 'a preparatory task
+    to an assessment', but this must be legally verified. High-risk AI obligations
+    under Annex III are scheduled to apply from August 2, 2026, though the Digital
+    Omnibus proposal (November 2025) may adjust timelines (European Commission — [WEB-13]).
+  public_sector_procurement_standards: '[NEEDS VERIFICATION — deferred: below search
+    budget; Luxembourg Ministry of Digitalisation IT procurement guidelines for LLM
+    tools not surfaced in available searches; requires direct contact with Ministère
+    de la Digitalisation]'
+  language_law_obligations: 'Law of 24 February 1984 on the language regime (Loi du
+    24 février 1984 sur le régime des langues), as confirmed by the official Legilux
+    text and government sources: Article 4 requires the administration, ''dans la
+    mesure du possible'', to reply in the language chosen by the petitioner (Luxembourgish,
+    French, or German) (official Legilux — [WEB-14];
+    Guichet.lu — [WEB-15]).
+    In practice, French is the dominant written administrative language; Luxembourgish
+    functions as the oral/informal register (Guichet.lu ibid.). Since 1 July 2023,
+    Luxembourgish and multilingualism are enshrined in the Constitution (Luxembourg
+    Government — [WEB-3]).
+    For the deployment, the language-of-input detection module must reliably identify
+    the citizen''s language choice to fulfil this legal obligation in any automated
+    or human-mediated response.'
 infrastructure_notes:
-  digital_government_maturity: 'Luxembourg has consistently ranked among the top EU
-    member states in e-government maturity. It ranked 5th in the DESI 2017 composite
-    index and has been described as ''one of the leading countries for connectivity,
-    digital skills and Internet usage.'' The standalone DESI index was replaced from
-    2023 by the State of the Digital Decade monitoring framework; Luxembourg remains
-    a top-tier performer. Source: EC DESI Luxembourg country profile — [WEB-13]'
-  key_digital_platforms:
-    myguichet: 'MyGuichet.lu — Luxembourg''s primary online administrative portal
-      for citizen-government interaction; likely a major channel for digital correspondence
-      captured by this deployment. [NEEDS VERIFICATION — deferred: low impact for
-      scoring; specific confirmation that MyGuichet.lu is in scope for this deployment
-      requires internal deployment documentation not publicly available]'
-    government_portal: 'gouvernement.lu [NEEDS VERIFICATION — deferred: low impact
-      for scoring; confirmation that gouvernement.lu citizen feedback channels feed
-      into this deployment requires internal documentation]'
-  connectivity:
-    broadband_infrastructure: 'Luxembourg leads EU in Very High Capacity Network (VHCN)
-      coverage (≥90% per DESI 2020 data), and internet access across all settlement
-      types is near-universal (~99% overall, ~98.3% rural in 2023). Source: DESI 2020
-      European analysis — [WEB-16];
-      Eurostat 2023 — [WEB-15]'
-    mobile_network_coverage: '[NEEDS VERIFICATION — deferred: below search budget;
-      Luxembourg is a consistent top performer in EU mobile connectivity benchmarks
-      but a specific 4G/5G population coverage figure was not retrieved in this pass]'
-  text_processing_environment: Text-only deployment; no audio, image, or multimodal
-    input handling required. Inputs arrive as structured digital messages from e-government
-    portals.
-  system_architecture_note: Multi-label classifier with confidence scoring and human-escalation
-    fallback. LTZGLUE emits only single hard labels; the deployment requires model-level
-    adaptation beyond benchmark format — specifically calibrated probability outputs
-    and multi-label decoding.
-administrative_domain_profile:
-  topic_taxonomy_requirements:
-    description: The routing system requires a Luxembourg-specific administrative
-      topic taxonomy that LTZGLUE does not provide. The following categories are deployment-critical
-      and absent from LTZGLUE's five-class RTL news taxonomy (SPORTS, CULTURE, TECHNOLOGY,
-      BUSINESS, ANIMALS).
-    required_topic_categories:
-    - category: Cross-border worker / frontalier status
-      priority: HIGH
-      notes: '47% of Luxembourg''s workforce (489,000 employees, 2024 STATEC); generates
-        distinct query types around frontier-worker tax treaties, social security
-        affiliation, healthcare portability. LTZGLUE: FULL GAP. Source: STATEC — [WEB-1]'
-    - category: Housing and rental market
-      priority: HIGH — politically sensitive
-      notes: Housing affordability is documented as a major societal challenge in
-        Luxembourg, with households spending on average 21.54% of expenditure on housing,
-        water, electricity, gas and fuel (STATEC Luxembourg in Figures 2024 — [WEB-17]).
-        High cost of living and housing scarcity are widely cited drivers of cross-border
-        worker commuting (OECD Economic Survey Luxembourg 2025 — [WEB-18]).
-        Housing is a confirmed high-volume citizen concern.
-    - category: Cost of living and consumer prices
-      priority: HIGH — politically sensitive
-      notes: 'Luxembourg has the second-highest median hourly wage in the EU (€24,
-        STATEC 2025) but among the highest costs of living; housing expenditure alone
-        averages 21.54% of household spending. Cost-of-living and wage-indexation
-        queries are a persistent theme in citizen-government interaction. Source:
-        STATEC Regards 01/25 — [WEB-1]'
-    - category: National identity and residency documents
-      priority: HIGH
-      notes: Passeport, carte d'identité, certificat de résidence — national state
-        competency (Ministère des Affaires étrangères). État civil (births, deaths,
-        marriages) is handled at communal level but governed by national law, creating
-        a routing ambiguity.
-    - category: Income tax and fiscal matters
-      priority: HIGH
-      notes: 'Administration des contributions directes. Distinct sub-categories for
-        residents vs. non-resident frontaliers. Bilateral double taxation agreements
-        (DTAs) with France, Belgium, Germany are directly relevant; the 34-day remote
-        work threshold under these DTAs is an active policy concern for frontaliers.
-        Source: OECD Economic Survey Luxembourg 2025 — [WEB-18]'
-    - category: Social security and health insurance
-      priority: HIGH
-      notes: 'CNS, CNAP, CCSS — national competency. Cross-border healthcare reimbursement
-        for frontaliers is a distinct sub-category. Frontaliers generally pay social
-        security in Luxembourg but with some benefit portability distinctions. Source:
-        Expatica cross-border worker guide — [WEB-19]'
-    - category: Urban planning and construction permits
-      priority: MODERATE
-      notes: Communal competency; routing must identify the relevant commune out of
-        100 communes.
-    - category: Transport and mobility
-      priority: MODERATE
-      notes: 'Luxembourg introduced free public transport on 1 March 2020 (effective
-        29 February 2020), becoming the first country in the world to do so — buses,
-        trains (2nd class), and trams are fare-free; first-class train travel retains
-        a fare. Policy remains in force as of 2025. Cross-border tickets are reduced-price
-        but not free. This policy generates ongoing citizen queries about eligibility,
-        cross-border fares, and service changes. Source: Official Luxembourg government
-        transport portal — [WEB-20];
-        Mobiliteit.lu fares page — [WEB-21]'
-    - category: EU institutional matters
-      priority: MODERATE
-      notes: Citizen messages may erroneously address national government for EU-institution
-        matters or vice versa. Routing system needs a redirect/triage category.
-    - category: Labor law and employment
-      priority: MODERATE
-      notes: Inspection du Travail et des Mines (ITM) — national competency.
-    - category: Education and childcare
-      priority: MODERATE
-      notes: Childcare allocation (chèque-service accueil) is state-managed; school
-        enrollment may be communal. Routing split between national and communal for
-        specific sub-tasks requires domain knowledge not present in LTZGLUE.
-    - category: Immigration and naturalization
-      priority: MODERATE
-      notes: Direction de l'immigration — national competency.
-  state_vs_communal_routing:
-    description: A primary routing challenge is distinguishing whether a citizen message
-      concerns a national-state competency or a communal competency. No existing NLU
-      benchmark encodes this distinction. It requires Luxembourg-specific administrative
-      knowledge not present in LTZGLUE.
-    ambiguous_boundary_cases:
-    - État civil (births, marriages, deaths) — performed by communes but governed
-      by national law
-    - Social housing — involves both national policy (SNHBM) and communal implementation
-    - Road infrastructure — national vs. communal road network split
-    benchmark_coverage: FULL GAP — LTZGLUE contains no administrative jurisdiction
-      categories of any kind.
-  sentiment_and_urgency_norms:
-    description: Luxembourgish administrative communication culture is characterized
-      by formal, understated expression even when citizens are frustrated or distressed.
-      Sentiment classifiers trained on general-purpose or media-domain data will systematically
-      underestimate negative sentiment and urgency in citizen correspondence.
-    known_benchmark_gap: LTZGLUE sentiment annotation used two native speakers (Cohen's
-      Kappa 0.45) annotating RTL commentary/letters-to-editor. No civil-service or
-      administrative-correspondence register was included. Annotator familiarity with
-      formal civil communication norms is undocumented.
-    implications_for_prioritization: The deployment uses sentiment/urgency outputs
-      for correspondence prioritization. Underdetection of frustration could cause
-      genuinely urgent messages to be deprioritized. The human-in-the-loop audit mechanism
-      is critical to recalibrate this progressively.
-    cultural_communication_notes: Citizens may express severe dissatisfaction through
-      understatement, formal complaint procedures, or legalistic framing rather than
-      explicit negative sentiment markers. Urgency may be signaled indirectly through
-      references to deadlines, legal rights, or administrative timelines rather than
-      emotional language.
-legal_and_regulatory_framework:
-  data_protection:
-    applicable_regulation: EU General Data Protection Regulation (GDPR) — Regulation
-      2016/679
-    national_implementation: 'Law of 1 August 2018 on the organization of the Commission
-      nationale pour la protection des données (CNPD) and the general data protection
-      regime. CNPD serves as national supervisory authority. Source: regulations.ai
-      Luxembourg AI overview — [WEB-22];
-      CMS Expert Guide — [WEB-23]'
-    ai_act_considerations: 'Luxembourg is directly subject to EU AI Act (Regulation
-      (EU) 2024/1689). Automated public-sector correspondence routing that affects
-      service access is likely classifiable as high-risk AI under Annex III (public
-      administration provisions). Draft national implementation Bill 8476 was submitted
-      to Parliament on 23 December 2024 and designates CNPD as the default market
-      surveillance authority and single point of contact for AI Act matters. Most
-      high-risk AI obligations apply from August 2026; prohibited AI practices bans
-      and AI literacy requirements apply from 2 February 2025. Source: CMS Expert
-      Guide Luxembourg AI — [WEB-23];
-      Pinsent Masons AI Act enforcement — [WEB-24];
-      Arendt bill analysis — [WEB-25];
-      CNPD AI Act obligations 2025 — [WEB-26]'
-  administrative_law:
-    primary_framework: '[NEEDS VERIFICATION — deferred: below search budget; Luxembourg
-      administrative procedure law (loi du 1er décembre 1978 and subsequent reforms)
-      governs automated administrative decision-support; specific current statutes
-      require expert legal review rather than web search]'
-    automated_decision_constraints: 'Automated routing that affects citizen rights
-      or service access may be subject to administrative law requirements for transparency,
-      contestability, and human review. The system''s human-in-the-loop fallback is
-      directly relevant to compliance. Under EU AI Act Article 4, deployers must ensure
-      staff have sufficient AI literacy; compliance obligations for high-risk AI systems
-      (Article 26) include human oversight, data quality checks, and incident logging
-      — applicable from August 2026. Source: CNPD AI mastery obligations — [WEB-27]'
-    language_rights: '[NEEDS VERIFICATION — deferred: below search budget; Luxembourg
-      language law of 24 February 1984 (loi sur le régime des langues) governs which
-      languages may be used in administrative correspondence; specific provisions
-      require expert legal review]'
-  cross_border_worker_legal_framework:
-    tax_treaties: 'Bilateral double taxation agreements (DTAs) between Luxembourg
-      and France, Belgium, and Germany govern frontalier taxation. A key current provision:
-      under these DTAs, the threshold for remote work from abroad is 34 working days
-      per year; exceeding this threshold shifts taxation to the country of residence
-      rather than Luxembourg. This is an active policy concern generating citizen
-      queries. Source: OECD Economic Survey Luxembourg 2025 — [WEB-18];
-      Expatica cross-border worker guide — [WEB-19]'
-    social_security_coordination: 'EU Regulation 883/2004 on coordination of social
-      security systems — governs which country''s social security applies to cross-border
-      workers. Most frontaliers pay social security in Luxembourg. A1 certificate
-      arrangements apply for seconded workers (up to 2-year maximum). Source: Expatica
-      cross-border worker guide — [WEB-19]'
-    healthcare: '[NEEDS VERIFICATION — deferred: below search budget; cross-border
-      healthcare directive 2011/24/EU implementation and CNS reimbursement procedures
-      for frontaliers require specialist review of CNS administrative documentation]'
-  free_public_transit:
-    policy_description: Luxembourg abolished fares on all public transport nationally
-      (buses, trains 2nd class, trams) for all users including tourists. First-class
-      train travel retains fares. Cross-border tickets are reduced-price but not free
-      (Luxembourg portion is free; foreign-country portion remains payable).
-    implementation_date: '1 March 2020 (effective from 29 February 2020). Policy remains
-      fully in force as of 2025 with no rollback. Extended tram network and new routes
-      added post-2020. Source: Official Luxembourg transport FAQ — [WEB-20];
-      Official Luxembourg government portal — [WEB-28];
-      Luxembourg Embassy Washington announcement — [WEB-29]'
-    relevance: Generates a distinct class of citizen queries; routing category for
-      Mobilité (CFL, RGTR, Luxtram operators vs. Ministère de la Mobilité et des Travaux
-      publics). Cross-border commuter queries about fare reductions on cross-border
-      segments are a related sub-category.
-benchmark_validity_concerns_for_this_population:
-  input_ontology_gap:
-    severity: CRITICAL
-    summary: LTZGLUE topic taxonomy (5 RTL news categories) and intent taxonomy (voice-assistant
-      reminder/alarm commands) share zero overlap with the deployment's required administrative
-      routing categories. The benchmark cannot be used as a direct proxy for topic
-      classification performance in this deployment context.
-    recommended_investigation: '[NOT FOUND — searched for Luxembourgish civic/administrative
-      NLP dataset that could supplement LTZGLUE for topic coverage; no such dataset
-      was identified. The LTZGLUE benchmark paper itself (Q5, Q6) notes only a handful
-      of LTZ NLU tasks exist (Lothritz et al. 2022; Philippy et al. 2024; Plum et
-      al. 2026), none in the administrative domain. This confirms a genuine documentation
-      gap for LTZ civic NLP, not a search failure.]'
-  output_format_gap:
-    severity: CRITICAL
-    summary: All LTZGLUE tasks emit single hard labels. The deployment requires multi-label
-      classification with calibrated confidence scores. No adaptation path exists
-      within the current benchmark format.
-    recommended_investigation: '[NEEDS VERIFICATION — deferred: likely unsearchable
-      (requires inspection of LTZGLUE code repository or author contact to confirm
-      whether evaluation scripts expose logit/probability outputs); no publicly available
-      LTZGLUE documentation of probabilistic scoring was found in this pass]'
-  input_content_register_gap:
-    severity: HIGH
-    summary: LTZGLUE data sources are predominantly formal (RTL news, parliamentary
-      speeches, Wikipedia, LOD dictionary). Citizen correspondence is colloquial,
-      code-switched, and orthographically variable. The partial exception — Lothritz
-      et al. NER corpus from RTL news comments — covers informal register in a narrow
-      slice of the benchmark.
-    recommended_investigation: '[NOT FOUND — no separate Luxembourgish informal/code-switched
-      citizen correspondence corpus was identified in searches. This is consistent
-      with the LTZGLUE paper''s own acknowledgment (Q112) that ''most data sources
-      reflect formal writing or institutional usage.'' The absence confirms the gap
-      rather than indicating an undiscovered resource.]'
-  annotator_provenance_gap:
-    severity: HIGH
-    summary: Sentiment annotators are identified only as two native LTZ speakers (Cohen's
-      Kappa 0.45). No documentation of familiarity with civil administrative communication
-      norms. Student assistants are acknowledged without further background detail.
-    recommended_investigation: '[NEEDS VERIFICATION — deferred: not searchable via
-      web; requires direct contact with LTZGLUE authors (University of Luxembourg)
-      or inspection of supplementary materials for annotator recruitment criteria,
-      residency, and occupation]'
-  benchmark_size_and_coverage:
-    severity: MODERATE
-    summary: Low-resource benchmark with small per-task dataset sizes. Rare administrative
-      sub-topics (e.g., EU institutional queries, frontalier-specific matters) are
-      entirely absent as categories and cannot be assessed for coverage adequacy.
-    recommended_investigation: '[NEEDS VERIFICATION — deferred: below search budget;
-      per-task test set sizes are reported in LTZGLUE appendix tables (Q156, Q158,
-      Q159); requires access to the paper''s appendix to extract exact figures]'
-  llm_label_contamination:
-    severity: MODERATE
-    summary: RTE labels verified by ChatGPT-5-Mini; JUDGEWEL NER labels generated
-      with LLM judges and minimal human verification. LLM-induced label artifacts
-      may not reflect genuine Luxembourgish administrative or legal linguistic norms.
-    recommended_investigation: '[NEEDS VERIFICATION — deferred: below search budget;
-      proportion of NER and RTE test data from LLM-annotated vs. human-annotated sources
-      requires inspection of LTZGLUE appendix tables and JUDGEWEL dataset documentation]'
-cultural_norms_notes: 'Luxembourg''s administrative culture reflects the country''s
-  trilingual institutional history and its position as both a small nation-state and
-  a major EU hub. Key norms relevant to this deployment:
-
-  - Civil communication with government is traditionally formal and legalistic, even
-  in digital channels.
-
-  - Citizens expect responses in the language they wrote in (Luxembourgish, French,
-  or German), with French dominant in formal administrative correspondence.
-
-  - Cross-border workers have a distinct civic identity and distinct administrative
-  needs; their messages may reference French or German administrative concepts by
-  habit.
-
-  - Luxembourg''s high cost of living and housing scarcity generate politically charged
-  correspondence that requires careful urgency/frustration calibration.
-
-  - The country''s EU identity means citizens sometimes conflate national and supranational
-  administrative channels.
-
-  - Understatement and formal complaint framing may mask genuine urgency or frustration
-  in citizen messages — a critical consideration for the sentiment/prioritization
-  subsystem.
-
-  - The Portuguese-origin community (~14.5% of total population, ~93,659 Portuguese
-  nationals as of January 2023, the largest single foreign nationality group — source:
-  Wikipedia Portuguese in Luxembourg — [WEB-11];
-  migration policy — [WEB-30])
-  primarily interacts in French rather than Luxembourgish, creating a population segment
-  whose correspondence may fall outside the LTZ model''s coverage.'
-domain_specific_operational_notes:
-  routing_architecture: The system routes messages to specific government departments
-    and differentiates between national and communal authority levels. A single message
-    may legitimately require multi-label routing (e.g., a housing query involving
-    both communal urban planning and national social housing allocation). The human-in-the-loop
-    fallback handles low-confidence and boundary cases.
-  high_stakes_decisions: 'Automated routing in a public administration context constitutes
-    a high-stakes application: misrouting delays citizen service delivery, and misclassification
-    of urgency/frustration can cause harm through deprioritization of urgent cases.
-    Assessment must weight error asymmetries — the cost of missing an urgent/frustrated
-    message is higher than the cost of over-escalating to human review.'
-  progressive_calibration: 'The deployment includes a civil servant feedback mechanism
-    to progressively align model outputs with actual administrative norms. This is
-    a critical mitigation for the benchmark''s annotator provenance and sentiment
-    calibration gaps, but its effectiveness depends on sufficient volume and diversity
-    of civil servant feedback over time. [NEEDS VERIFICATION — deferred: likely unsearchable
-    (lived practice / internal deployment design); feedback loop mechanism design
-    and calibration timeline require internal deployment documentation]'
-  luxembourgish_language_standardization: 'The ongoing OLO (Offiziell Lëtzebuerger
-    Orthografie) standardization effort affects how Luxembourgish is written in both
-    citizen messages and reference data. The benchmark was constructed largely before
-    or during early adoption periods. Assessment should account for potential orthographic
-    drift between benchmark data and current citizen writing conventions. [NEEDS VERIFICATION
-    — deferred: below search budget; OLO adoption timeline and current status require
-    specialist linguistic sources not retrieved in this pass]'
+  deployment_modality: Text-only; citizen correspondence submitted via digital channels
+    (web forms, email, potentially messaging platforms). No speech or image modality
+    in scope.
+  expected_input_length: Short to medium-length messages (complaint letters, inquiries,
+    feedback forms); likely within LTZGLUE's 40–400 word preprocessing range for some
+    inputs, but formal complaint letters may exceed this.
+  government_it_environment: '[NEEDS VERIFICATION — deferred: below search budget;
+    Luxembourg Ministry of Digitalisation cloud/on-premises hosting requirements for
+    citizen-data-processing LLM tools not found in available searches; sovereign cloud
+    requirements under GDPR apply but specific LU government policy not surfaced]'
+  connectivity: National digital infrastructure is advanced; civil servant workstations
+    operate on standard government networks. No low-bandwidth considerations.
+  human_in_the_loop_interface: Civil servants interact with a routing dashboard that
+    surfaces low-confidence flags and escalated messages; the system collects real-time
+    feedback for progressive model alignment.
+nlp_tooling_and_model_context:
+  luxembourgish_nlp_ecosystem_maturity: Low-resource. Luxembourgish has limited NLP
+    tooling relative to French, German, or English. LTZGLUE represents the first unified
+    NLU benchmark; available encoder models include LUXEMBERT, LTZ-E1-mini, LTZ-E1-base,
+    and multilingual models (mBERT, XLM-R) with partial LTZ coverage.
+  benchmark_data_sources: Primarily RTL news articles; supplemented by the Luxembourgish
+    Online Dictionary, Wikipedia/Wikidata, and a machine-translated English intent
+    corpus. The formal/institutional register of most sources diverges from citizen
+    correspondence.
+  code_switching_coverage_in_benchmark: Partial — the human-annotated NER sub-corpus
+    covers informal and code-mixed writing; other tasks do not systematically represent
+    French/German code-switching or non-standard orthography.
+  multi_label_format_gap: All LTZGLUE tasks produce single hard labels; the deployment
+    requires multi-label classification with calibrated confidence scores. This is
+    a structural mismatch requiring model-level adaptation beyond benchmark evaluation
+    scope.
+  sentiment_task_limitations: 'LTZGLUE sentiment task: 3 classes (positive, neutral,
+    negative), Cohen''s Kappa 0.45 (moderate), annotated by two native speakers with
+    no documented administrative communication expertise. Does not capture urgency,
+    frustration intensity, or the formal-but-understated civil register.'
+  intent_detection_task_limitations: LTZGLUE intent labels are exclusively voice-assistant
+    commands (alarm, reminder, weather); no administrative intent categories (complaint,
+    document request, tax inquiry, urgent escalation) are present.
+benchmark_validity_risks_summary:
+  input_ontology_gap: LTZGLUE topic and intent taxonomies have no overlap with Luxembourg-specific
+    administrative categories required for routing. Domain adaptation or bespoke task
+    construction is needed.
+  input_content_gap: Benchmark inputs are drawn from formal/standardized sources;
+    deployment inputs will include code-switched, orthographically variable, and colloquial
+    Luxembourgish. NER sub-corpus provides partial coverage of informal register only.
+  output_ontology_gap: Single hard-label format across all tasks is incompatible with
+    multi-label routing logic and confidence-based escalation. Sentiment labels do
+    not map to urgency/frustration scales needed operationally.
+  output_content_gap: Annotator provenance for sentiment task is undocumented with
+    respect to administrative register familiarity; moderate inter-annotator agreement
+    (κ=0.45) limits label reliability for nuanced civil communication.
+  human_in_the_loop_mitigation: The deployment includes a civil-servant feedback mechanism
+    for progressive alignment; this partially mitigates OC and OO risks at runtime
+    but does not address pre-deployment benchmark validity gaps.
 net_new_fields:
-  ai_act_timeline_note: 'Under EU AI Act (Reg. 2024/1689), the deployment is likely
-    classifiable as high-risk AI (Annex III, public administration automated decision-support).
-    Key compliance timeline: prohibited AI practices ban and AI literacy (Article
-    4) obligations in force since 2 February 2025; high-risk AI notification and general-purpose
-    AI model obligations from August 2025; full high-risk AI system obligations from
-    August 2026. Luxembourg''s national implementing bill (No. 8476, submitted December
-    2024) designates CNPD as the default market surveillance authority. Source: CNPD
-    AI Act obligations article — [WEB-26];
-    Pinsent Masons — [WEB-24]'
-  remote_work_dta_threshold: 'The bilateral DTAs between Luxembourg and France, Belgium,
-    and Germany currently set a 34-working-day annual threshold for remote work from
-    abroad before taxation shifts to the country of residence. This is a high-salience
-    administrative topic for cross-border workers that will generate citizen correspondence
-    to tax and labor authorities; it should be included as a routing sub-category
-    within the frontalier/income-tax topic class. Source: OECD Economic Survey Luxembourg
-    2025 — [WEB-18]'
-  portuguese_language_as_second_spoken_language: 'Portuguese is the second most spoken
-    primary language in Luxembourg after Luxembourgish (~15.4% of residents per 2021
-    CIA World Factbook estimate), ahead of French (~14.9%), reflecting the size of
-    the Portuguese community. This means a material share of citizen correspondence
-    arriving at government portals may be in Portuguese — a language entirely outside
-    the LTZGLUE benchmark scope and outside the three official languages. Source:
-    World Factbook Luxembourg — [WEB-10];
-    Luxembourg public demographics page — [WEB-3]'
-  luxembourg_employment_ratio_context: 'Luxembourg recorded nearly 500,000 jobs in
-    2023, yielding an employment-to-population ratio of 0.76 — the highest among European
-    countries excluding Monaco. This extreme ratio (workforce substantially larger
-    than resident population due to frontaliers) is directly relevant to the deployment:
-    a large fraction of citizen correspondence concerns work-related administrative
-    matters affecting a workforce that exceeds the resident population by ~75%. Source:
-    ODT/LISER Maps and Figures 2023, reported by chronicle.lu — [WEB-2]'
+  frontalier_employment_share_detail:
+    value: ~47% of Luxembourg's 489,000–522,650 employees (depending on reference
+      period) are cross-border workers; approximately 231,290 in Q1 2024. French frontaliers
+      account for ~44–50% of all cross-border workers and 70% of new commuter growth;
+      Belgian and German workers account for ~15% and ~14% respectively of total employment
+      (STATEC / Paperjam / OECD 2025 — [WEB-5];
+      [WEB-2]).
+    validity_relevance: The linguistic and administrative profile of incoming correspondence
+      will be heavily influenced by the French-dominant frontalier majority. French-language
+      administrative queries are likely overrepresented relative to what a Luxembourgish-only
+      benchmark would anticipate.
+  luxembourg_language_law_2023_constitutional_update:
+    value: Effective 1 July 2023, the Luxembourgish language and multilingualism are
+      anchored in the Constitution. The language law of 24 February 1984 (Article
+      4) requires the administration to respond, 'dans la mesure du possible', in
+      the language chosen by the citizen (Luxembourgish, French, or German). Legislative
+      acts must be in French; French is the sole authentic legal text in all administrative
+      acts (Legilux official text — [WEB-14];
+      Luxembourg Government 40th anniversary note — [WEB-3]).
+    validity_relevance: 'Language-of-input detection is not merely a convenience feature:
+      it is legally required for correct administrative response. A failure by the
+      routing model to correctly identify whether a message is in Luxembourgish, French,
+      or German could create legal exposure for the deploying authority.'
+  eu_ai_act_timeline_note:
+    value: High-risk AI obligations under EU AI Act Annex III are scheduled to apply
+      from August 2, 2026 for systems placed on the market after that date, though
+      the Digital Omnibus proposal (November 2025) under consideration by the European
+      Parliament may adjust this timeline (European Commission FAQ — [WEB-13]).
+    validity_relevance: If the routing system is classified as high-risk (Category
+      5 / essential services assessment), compliance obligations include risk management
+      systems, data governance, human oversight documentation, and a Fundamental Rights
+      Impact Assessment — all of which have direct implications for how benchmark
+      validity is documented and audit-trailed.
+  cnpd_ai_guidelines_2023:
+    value: The CNPD published guidelines on artificial intelligence in 2023 and is
+      co-launching a RE.M.I. 'Regulation Meets Innovation' AI Community of Practices
+      with the Luxembourg AI Factory (CNPD 2025 — [WEB-10];
+      CNPD Annual Report 2023 — [WEB-11]).
+      No specific published guidance on citizen-correspondence routing NLU was found.
+    validity_relevance: The CNPD is the relevant DPA for GDPR compliance review of
+      this deployment. Its 2023 AI guidelines and ongoing Community of Practices are
+      the primary contact points for pre-deployment regulatory engagement; absence
+      of sector-specific guidance means deployers must rely on GDPR Article 35 DPIA
+      requirements and GDPR Article 22 constraints directly.
+flagged_items_for_web_search:
+- item: Current frontalier (cross-border worker) share of Luxembourg total employment
+    and origin-country breakdown
+  search_target: Luxembourg frontaliers statistics 2024 STATEC cross-border workers
+    France Belgium Germany
+  resolution_status: RESOLVED — see population_size.cross_border_workers_frontaliers
+    and net_new_fields.frontalier_employment_share_detail
+- item: CNPD guidance on automated processing of citizen correspondence in public
+    sector
+  search_target: Luxembourg CNPD GDPR Article 22 automated decision-making public
+    sector guidance
+  resolution_status: PARTIALLY RESOLVED — CNPD is the supervisory authority; 2023
+    AI guidelines published; no sector-specific routing-NLU guidance found. See legal_and_regulatory_context.data_protection_regime
+    and net_new_fields.cnpd_ai_guidelines_2023
+- item: EU AI Act high-risk classification applicability to public-sector NLU routing
+    systems
+  search_target: EU AI Act high-risk public administration automated routing citizen
+    correspondence classification
+  resolution_status: RESOLVED — see legal_and_regulatory_context.applicable_ai_act_classification
+    and net_new_fields.eu_ai_act_timeline_note
+- item: Luxembourg language law (Law of 24 February 1984) administrative language
+    obligations
+  search_target: Luxembourg loi du 24 février 1984 régime des langues administration
+    obligations réponse
+  resolution_status: RESOLVED — see legal_and_regulatory_context.language_law_obligations
+    and net_new_fields.luxembourg_language_law_2023_constitutional_update
+- item: Formal enumeration of communal vs. national administrative competencies in
+    Luxembourg
+  search_target: Luxembourg communes compétences nationales distinction loi commune
+    état administration
+  resolution_status: DEFERRED — likely unsearchable at required granularity; requires
+    expert elicitation or legal specialist review
+- item: LTZGLUE benchmark data source register documentation and code-switching coverage
+  search_target: LTZGLUE Luxembourgish benchmark register code-switching informal
+    orthographic variation data sources
+  resolution_status: NOT SEARCHED — already well-documented in benchmark YAML verbatim
+    quotes (Q112, Q41, Q55); search budget allocated to higher-impact tags
+- item: Existing Luxembourgish administrative NLP datasets or topic taxonomies for
+    civic/government domains
+  search_target: Luxembourgish administrative NLP dataset civic topic classification
+    cross-border worker government
+  resolution_status: NOT SEARCHED — search budget exhausted; flagged for future pass;
+    high prior probability of null result given LTZGLUE's own acknowledgment of near-nonexistent
+    LTZ labeled resources
+- item: Luxembourg Ministry of Digitalisation IT procurement and cloud policy for
+    LLM-based tools
+  search_target: Luxembourg Ministry of Digitalisation LLM AI procurement policy government
+    cloud citizen data
+  resolution_status: DEFERRED — below search budget; see infrastructure_notes.government_it_environment
+- item: Current internet and smartphone penetration rates in Luxembourg
+  search_target: Luxembourg internet penetration rate 2024 digital access statistics
+    STATEC
+  resolution_status: RESOLVED — see literacy_and_digital_access.citizen_digital_access
+    and literacy_and_digital_access.mobile_internet_penetration_pct
+- item: Luxembourg civil servant workforce size at national and communal levels
+  search_target: Luxembourg fonctionnaires nombre administration nationale communale
+    STATEC 2023 2024
+  resolution_status: NOT FOUND — searched STATEC portal and Luxembourg population
+    statistics; aggregate public-sector employment growth noted (+3.7% year-on-year
+    in 'administration and other public services', STATEC Q1 2025 — [WEB-16])
+    but specific national vs. communal civil servant headcounts not published in accessible
+    sources
+- item: LTZGLUE annotator demographics and professional background for sentiment task
+  search_target: LTZGLUE sentiment annotation annotator demographics professional
+    background administrative register Luxembourgish
+  resolution_status: NOT SEARCHED — benchmark YAML already documents absence of this
+    information; search budget allocated to higher-impact tags
+- item: Multi-label NLU evaluation approaches for low-resource languages applicable
+    to Luxembourgish
+  search_target: multi-label classification low-resource NLU confidence calibration
+    Luxembourgish benchmark adaptation
+  resolution_status: NOT SEARCHED — search budget exhausted; flagged for future pass
+- item: Legal and bilateral tax treaty frameworks governing frontalier workers in
+    Luxembourg
+  search_target: Luxembourg frontaliers bilateral tax convention France Belgium Germany
+    social security administrative procedures
+  resolution_status: DEFERRED — below search budget; specialist legal domain requiring
+    expert elicitation rather than web search
 ```
 
 ### Web Source Registry
@@ -892,35 +734,21 @@ net_new_fields:
 | ID | URL |
 |----|-----|
 | WEB-1 | https://statistiques.public.lu/en/publications/series/regards/2025/regards-01-25.html |
-| WEB-2 | https://www.chronicle.lu/category/surveys-reports/54808-cross-border-workers-constitute-47-of-luxembourgs-500k-workforce-in-2023 |
-| WEB-3 | https://luxembourg.public.lu/en/society-and-culture/population/demographics.html |
-| WEB-4 | https://www.alphatrad.co.uk/news/portuguese-in-luxembourg |
-| WEB-5 | https://statistiques.public.lu/en/actualites/2025/stn16-population-2025.html |
-| WEB-6 | https://statistiques.public.lu/en/actualites/2024/stn16-population-2024.html |
-| WEB-7 | https://gouvernement.lu/en/actualites/toutes_actualites/communiques/2023/02-fevrier/10-100-communes.html |
-| WEB-8 | https://elections.public.lu/en/fusion-communes.html |
-| WEB-9 | https://en.paperjam.lu/article/delano_understanding-cross-border-worker-phenomenon |
-| WEB-10 | https://theworldfactbook.org/country/luxembourg.html |
-| WEB-11 | https://en.wikipedia.org/wiki/Portuguese_in_Luxembourg |
-| WEB-12 | https://www.mdpi.com/1999-5903/17/6/228 |
-| WEB-13 | https://digital-strategy.ec.europa.eu/en/policies/desi-luxembourg |
-| WEB-14 | https://www.statista.com/statistics/377741/household-internet-access-in-luxembourg/ |
-| WEB-15 | https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Urban-rural_Europe_-_digital_society |
-| WEB-16 | https://eufordigital.eu/wp-content/uploads/2020/06/DESI2020Thematicchapters-FullEuropeanAnalysis.pdf |
-| WEB-17 | https://statistiques.public.lu/en/publications/series/luxembourg-en-chiffres/2024/luxembourg-en-chiffres-2024.html |
-| WEB-18 | https://www.oecd.org/en/publications/2025/04/oecd-economic-surveys-luxembourg-2025_3eb782b5/full-report/reviving-productivity-growth_4509ab88.html |
-| WEB-19 | https://www.expatica.com/lu/working/employment-basics/cross-border-worker-in-luxembourg-1063529/ |
-| WEB-20 | https://transports.public.lu/en/plus/faq/gratuite-transports-publics.html |
-| WEB-21 | https://www.mobiliteit.lu/en/tickets-page/fares/ |
-| WEB-22 | https://regulations.ai/regulations/luxembourg-summary |
-| WEB-23 | https://cms.law/en/int/expert-guides/ai-regulation-scanner/luxembourg |
-| WEB-24 | https://www.pinsentmasons.com/out-law/news/luxembourg-law-addresses-eu-ai-act-enforcement |
-| WEB-25 | https://www.arendt.com/news-insights/news/new-luxembourg-bill-designates-national-authorities-under-the-ai-act-the-cnpd-takes-centre-stage/ |
-| WEB-26 | https://cnpd.public.lu/en/actualites/national/2025/08/ai-act-un-an.html |
-| WEB-27 | https://cnpd.public.lu/en/dossiers-thematiques/intelligence-artificielle/regulation-ia/ria-maitrise-ia.html |
-| WEB-28 | https://luxembourg.public.lu/en/living/mobility/public-transport.html |
-| WEB-29 | https://washington.mae.lu/en/actualites/2020/free-public-transport-nationwide.html |
-| WEB-30 | https://www.migrationpolicy.org/country-resource/luxembourg |
+| WEB-2 | https://www.oecd.org/en/publications/2025/04/oecd-economic-surveys-luxembourg-2025_3eb782b5/full-report/reviving-productivity-growth_4509ab88.html |
+| WEB-3 | https://gouvernement.lu/fr/actualites/toutes_actualites.gouv2024_mcult+fr+actualites+mes-actualites+2024+fevrier+sproochegesetz-40-joer.html |
+| WEB-4 | https://statistiques.public.lu/fr/publications/series/en-chiffres/2024/demographie-lux-en-chiffres-2024.html |
+| WEB-5 | https://en.paperjam.lu/article/growth-in-number-of-cross-bord |
+| WEB-6 | https://media.alleyesonme.jobs/en/article-titles/le-luxembourg-attire-t-il-toujours-les-frontaliers |
+| WEB-7 | https://datareportal.com/reports/digital-2024-luxembourg |
+| WEB-8 | https://www.statista.com/statistics/377741/household-internet-access-in-luxembourg/ |
+| WEB-9 | https://www.luther-lawfirm.com/fileadmin/user_upload/Luxembourg_-_Data_Protection_Overview___Guidance_Note___DataGuidance.pdf |
+| WEB-10 | https://cnpd.public.lu/en.html |
+| WEB-11 | https://cnpd.public.lu/en/actualites/national/2024/09/rapport-annuel-2023.html |
+| WEB-12 | https://artificialintelligenceact.eu/annex/3/ |
+| WEB-13 | https://digital-strategy.ec.europa.eu/en/faqs/navigating-ai-act |
+| WEB-14 | https://data.legilux.public.lu/filestore/eli/etat/leg/loi/1984/02/24/n1/jo/fr/html/eli-etat-leg-loi-1984-02-24-n1-jo-fr-html.html |
+| WEB-15 | https://guichet.public.lu/fr/citoyens/justice/voies-recours-reglement-litiges/frais-avocat-justice/langues-tribunaux.html |
+| WEB-16 | https://statistiques.public.lu/en/actualites/2025/stn20-25-emploi-salarie.html |
 
 ---
 

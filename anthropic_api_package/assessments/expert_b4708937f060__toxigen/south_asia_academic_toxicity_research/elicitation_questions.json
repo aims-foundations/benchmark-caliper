@@ -1,0 +1,22 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "TOXIGEN was built around 13 U.S.-defined minority groups (e.g., Black Americans, Jewish Americans, LGBTQ+ Americans). For your South Asian researchers, which target group categories are essential — for example, caste-based groups (Dalits, OBCs), religious communities (Muslims, Hindus, Sikhs, Christians), ethnic/linguistic communities (Bengalis, Tamils, Pashtuns), or regional migrant communities? Are there offense categories common in South Asia — such as casteist slurs, partition-era sectarian language, or anti-migrant rhetoric — that have no close U.S. equivalent in the benchmark's current taxonomy?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "IC",
+    "question": "Your deployment targets implicit and subtle toxicity, which is often highly context-dependent. In South Asian contexts, would the offensive content your researchers are studying include code-mixed language (e.g., Hinglish, Tanglish, Romanized Urdu), indirect casteist microaggressions that require caste-system knowledge to parse, or religious dog-whistles that are benign on the surface but toxic to in-group readers? Would purely English-language benchmark stimuli — generated from a U.S. cultural frame — be recognizable as offensive to South Asian annotators or LLMs, or would they require South-Asian-specific rewording to feel ecologically valid?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OC",
+    "question": "When your researchers label whether a statement is toxic in a South Asian context, whose judgment should serve as ground truth — South Asian academic safety researchers themselves, community members from the targeted group (e.g., Dalit activists, Muslim scholars), or a cross-regional consensus? Would you expect systematic disagreement in toxicity ratings between, say, Indian, Pakistani, and Sri Lankan annotators looking at the same text, given different political and social histories?"
+  },
+  {
+    "id": "Q4",
+    "dimension": "OO",
+    "question": "Your use case involves comparing how LLMs rate toxicity across language varieties and regional variants of similar content. Should the output scoring be a single toxicity score, a multi-dimensional rating (e.g., severity, target group specificity, implicitness level), or a comparative ranking between a South Asian and Western equivalent stimulus? Would a binary toxic/benign label — as TOXIGEN produces — be sufficient for your researchers' comparative analysis, or do they need finer-grained output to detect cross-regional rating differences in LLM behavior?"
+  }
+]

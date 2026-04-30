@@ -4,414 +4,394 @@
   "dimensions": {
     "input_ontology": {
       "score": 2,
-      "justification": "LTZGLUE provides eight GLUE-style NLU tasks [Q8, Q11, Q67] but its taxonomies are fundamentally misaligned with the deployment's administrative routing needs. Topic classification covers only five RTL editorial categories — SPORTS, CULTURE, TECHNOLOGY, BUSINESS, ANIMALS [Q48] — which share zero overlap with the deployment-critical categories of cross-border worker status, housing, cost-of-living, state-vs-communal competency, EU-institutional matters, and tax/social-security routing identified in elicitation. Intent detection is restricted to voice-assistant reminder/alarm intents [Q154], with no citizen-government communication intents. NER retains only PER/ORG/LOC/MISC after merging GPE into LOC [Q44, Q152], removing the administrative-jurisdiction granularity the routing system needs. The authors themselves caution against inferring cultural/demographic coverage from benchmark performance [Q121]. Given HIGH priority weighting for IO and the existence of ~47% cross-border workforce [WEB-1] and a 100-commune state/communal split [WEB-7], the benchmark's taxonomy substantially under-represents the construct of administrative-routing NLU.",
+      "justification": "LTZGLUE provides a GLUE-style suite of eight tasks covering binary and multi-class sentence- and token-level classification [Q11, Q67], which is a credible general-purpose NLU foundation for Luxembourgish. However, for the specific deployment — routing citizen correspondence to government departments — the taxonomies are misaligned. Topic classification covers only five RTL editorial categories (SPORTS, CULTURE, TECHNOLOGY, BUSINESS, ANIMALS) [Q48, Q153] with no administrative categories such as cross-border worker issues, housing, transport, tax, social security, or communal vs. national competency routing — all flagged as required in the elicitation and regional context. Intent detection labels are exclusively voice-assistant commands (alarm, reminder, weather) [Q154], with no administrative intents (complaint, document request, escalation). The benchmark contains no multi-label task formulation [Q67], whereas the deployment requires multi-label outputs [elicitation Q4]. The authors themselves acknowledge no unified benchmark currently exists for LTZ NLU [Q14]. Given IO is HIGH priority and the gaps span both omission (administrative categories) and irrelevance (voice-assistant intents) for this deployment, this constitutes significant taxonomic misalignment.",
       "strengths": [
-        "Provides a unified, GLUE-style suite spanning binary, multi-class, sentence-level, document-level, and token-level tasks [Q67, Q70], establishing a baseline of LTZ NLU capability that the deployment can use to gauge generic encoder performance.",
-        "Includes a token-level NER task [Q35, Q152] whose PER/ORG/LOC/MISC categories will partially transfer to entity extraction in citizen messages, even though jurisdiction-level entities are absent."
+        "Provides eight diverse NLU task formulations including NER, topic classification, sentiment, RTE, and acceptability, establishing a baseline construct coverage for Luxembourgish [Q11, Q67]",
+        "A substantial proportion of tasks are newly created for LTZ rather than direct translations, enabling some language-specific phenomena [Q69]",
+        "NER schema includes PER, ORG, LOC, MISC, DATE [Q152] which has partial overlap with entities relevant to administrative correspondence (named persons, organizations, locations)"
       ],
       "checklist_responses": {
-        "IO-1": "Required deployment categories include cross-border worker/frontalier status, housing, cost-of-living, national identity/residency documents, income tax (with frontalier sub-cases including the 34-day DTA threshold), social security/health insurance, urban planning/construction permits at communal level, transport (free public transit policy), EU institutional matters, labor law, education/childcare, and immigration/naturalization, plus a state-vs-communal competency distinction across 100 communes [WEB-1, WEB-7, WEB-18, WEB-20].",
-        "IO-2": "Yes — LTZGLUE's TC taxonomy (SPORTS, CULTURE, TECHNOLOGY, BUSINESS, ANIMALS) [Q48, Q153] omits all administrative categories required for deployment routing; intent detection covers only reminder/alarm voice-assistant intents [Q154]; NER omits administrative-jurisdiction and legal-status entity types [Q44, Q152].",
-        "IO-3": "The ANIMALS category [Q48, Q153] and the entire reminder/alarm intent set [Q154] are largely irrelevant to the citizen-correspondence routing context; the authors acknowledge the ID source register has 'no equivalent reference corpus in LTZ' [Q55].",
-        "IO-4": "Documented gaps: zero administrative topic categories, zero state-vs-communal jurisdiction distinction, zero frontalier-specific intents, zero EU-institutional category, zero housing/cost-of-living categories. These are construct-underrepresentation gaps that materially harm content validity for the target use case; authors explicitly flag that 'Coverage across domains, registers, and demographic varieties may also be limited' [Q112]."
+        "IO-1": "The deployment requires categories for cross-border worker / frontalier issues, housing/cost-of-living, transport, tax, social security, EU institutional matters, residency permits, communal services, public health, plus a state-vs-communal routing dimension and multi-label outputs with confidence scores [elicitation Q1, Q4; regional context administrative_domain_notes].",
+        "IO-2": "Yes — none of LTZGLUE's topic classes (SPORTS, CULTURE, TECHNOLOGY, BUSINESS, ANIMALS) [Q48, Q153] correspond to administrative routing categories, and intent detection covers only voice-assistant commands [Q154]. No state-vs-communal competency dimension or multi-label formulation exists [Q67].",
+        "IO-3": "Yes — the voice-assistant intent labels (alarm, reminder, weather sub-intents) [Q154] are construct-irrelevant for administrative correspondence routing. The RTE logical-entailment framing [Q59] is unrelated to routing decisions, though it may have ancillary value for general LLM evaluation.",
+        "IO-4": "Major content-validity gap: the benchmark cannot assess routing taxonomy performance for cross-border worker issues, housing, transport, tax, communal vs. national competencies — the categories that drive operational value [regional context benchmark_validity_risks_summary.input_ontology_gap]. The absence of multi-label formulation [Q67] additionally prevents evaluation of the deployment's required output structure."
       },
       "evidence_quotes": [
+        "[Q11] 'In this section, we introduce the eight tasks for LTZGLUE. The set spans binary and multi-class sentence and token-level classification tasks.' (p.2)",
+        "[Q14] 'No unified benchmark currently exists to evaluate LTZ language understanding consistently, a gap we aim to fill.' (p.2)",
         "[Q48] 'From the available categories, we focused on five principal domains: SPORTS, CULTURE, TECHNOLOGY, BUSINESS, and ANIMALS.' (p.4)",
+        "[Q67] 'Together, the eight tasks in LTZGLUE form a broad and balanced evaluation suite, covering four binary and four multi-class settings, sentence- and document-level inputs, as well as a token-level sequence-labelling task.' (p.5)",
         "[Q153] 'topic_classification: Classify topic of the document by title and text. Allowed category_names: sports, animals, business, culture, technology.' (p.15)",
-        "[Q154] 'slot_intent_detection: Detect the intent for the text given. Allowed intents: reminder/show_reminders, weather/find, reminder/set_reminder, ... alarm/set_alarm, ...' (p.15)",
-        "[Q44] 'the tag set is harmonised by merging the GPE and LOC categories into a single location label, while retaining PER, ORG, and MISC unchanged.' (p.4)",
-        "[Q112] 'Coverage across domains, registers, and demographic varieties may also be limited.' (p.9)",
-        "[Q121] 'We therefore caution against using benchmark performance as evidence of cultural or demographic coverage.' (p.10)",
-        "[Q67] 'Together, the eight tasks in LTZGLUE form a broad and balanced evaluation suite, covering four binary and four multi-class settings...' (p.5)"
+        "[Q154] 'slot_intent_detection: Detect the intent for the text given. Allowed intents: reminder/show_reminders, weather/find, reminder/set_reminder...' (p.15)"
       ],
       "evidence_web_sources": [
-        "[WEB-1] Cross-border workers constitute ~47% of Luxembourg's workforce — directly motivates a frontalier topic class absent from LTZGLUE",
-        "[WEB-7] Luxembourg comprises exactly 100 communes following 2023 mergers — motivates state-vs-communal routing absent from LTZGLUE",
-        "[WEB-18] OECD Economic Survey notes 34-day remote-work threshold under DTAs is an active frontalier policy concern",
-        "[WEB-20] Free public transport policy in force since 2020 generates a distinct citizen-query class"
+        "[WEB-5] ~231,290 cross-border workers in Q1 2024, ~47% of Luxembourg employment — supports salience of frontalier topic category",
+        "[WEB-2] OECD 2025: 50% of frontaliers from France, remainder split between Belgium and Germany — supports differentiated administrative-query profile"
       ],
       "evidence_dataset": [],
       "evidence_map": {
         "IO-1": [
-          "WEB-1",
-          "WEB-7",
-          "WEB-18",
-          "WEB-20"
+          "WEB-5",
+          "WEB-2"
         ],
         "IO-2": [
           "Q48",
           "Q153",
           "Q154",
-          "Q44",
-          "Q152"
+          "Q67"
         ],
         "IO-3": [
-          "Q48",
           "Q154",
-          "Q55"
+          "Q59"
         ],
         "IO-4": [
-          "Q112",
-          "Q121"
+          "Q67",
+          "Q14"
         ]
       },
       "confidence": "high",
       "information_gaps": [
-        "No publicly identified Luxembourgish administrative-domain NLP dataset exists to supplement LTZGLUE topic coverage."
+        "Whether any LTZ-specific administrative-domain benchmark or taxonomy exists outside LTZGLUE — flagged as not searched in regional context",
+        "Formal enumeration of communal vs. national competencies needed to define a routing taxonomy"
       ],
       "requires_expert_verification": [
-        "Definitive list of state-vs-communal competency boundary cases (e.g., état civil) requires Luxembourg administrative-law expert review."
+        "Final administrative topic taxonomy and multi-label structure must be co-designed with civil servants and legal/administrative experts"
       ]
     },
     "input_content": {
       "score": 2,
-      "justification": "Input content is sourced predominantly from formal/edited registers — RTL news, the LOD dictionary, Wikipedia, transcribed parliamentary speeches, and Leipzig web crawls [Q12, Q74, Q135] — which the authors explicitly acknowledge 'reflect formal writing or institutional usage and therefore do not fully represent informal and multilingual contexts' [Q112]. The deployment's primary input — citizen correspondence with French/German code-switching, loanword alternation (e.g., Administratioun vs. Verwaltung), and orthographic variation — is essentially absent. The Lothritz et al. NER comment corpus [Q40, Q41] is the only documented informal/code-mixed slice. Construct-irrelevant variance is further introduced by ChatGPT-5.1 sentence improvement and ChatGPT-5-Mini filtering on RTE [Q61, Q63, Q66], removing 22–28% of instances. The intent detection register (voice-assistant commands) has 'no equivalent reference corpus in LTZ' [Q55, Q56]. Given IC is a HIGH-priority dimension with explicit user concern about code-switching and orthographic variation, the alignment is poor.",
+      "justification": "Benchmark inputs are drawn predominantly from RTL news articles, the Luxembourgish Online Dictionary, Wikipedia/Wikidata, and a translated English voice-assistant corpus [Q12, Q16, Q24, Q30, Q34, Q46, Q51]. The authors explicitly warn that 'most data sources reflect formal writing or institutional usage and therefore do not fully represent informal and multilingual contexts' [Q112], and that LTZ data 'often originate from a limited set of public domains' [Q119]. The deployment, however, expects orthographically variable, code-switched (Luxembourgish/French/German) citizen correspondence [elicitation Q2; regional context languages.code_switching_patterns]. Only the human-annotated NER sub-corpus from RTL user comments provides partial coverage of informal and code-mixed writing [Q41]. The intent detection corpus uses a voice-assistant register that has no LTZ reference, so terminology could not be systematically verified [Q55, Q56]. Given that ~47% of Luxembourg's workforce are frontaliers (mostly French-speaking) [WEB-5, WEB-2] and the language law requires the administration to respond in the citizen's chosen language [WEB-14], the benchmark's content distribution is materially narrower than the deployment input distribution. IC is HIGH priority and the documented gaps are substantial.",
       "strengths": [
-        "The Lothritz et al. NER corpus drawn from RTL online news comments [Q40, Q41] does cover informal and code-mixed writing, providing a partial bridge to citizen-message register.",
-        "Pre-training data spans diverse LTZ sources including chat rooms (Webchat), comments, and transcribed speech [Q74, Q135], giving the encoder backbones some exposure to informal LTZ even if downstream task data is largely formal.",
-        "A substantial proportion of LTZGLUE tasks are newly created for LTZ rather than direct translations [Q69], reflecting some LTZ-specific phenomena."
+        "Lothritz et al. NER sub-corpus from RTL online news comments provides partial informal and code-mixed writing coverage [Q40, Q41]",
+        "Authors transparently document content limitations, register narrowness, and demographic-coverage caveats [Q110, Q112, Q119, Q121]",
+        "Pre-training corpus for LTZ-E1 includes broader registers (user comments, webchat, transcribed podcasts and political speeches) [Q74], which may benefit downstream model representations even if task evaluation is narrower"
       ],
       "checklist_responses": {
-        "IC-1": "Yes — Luxembourg-specific cultural, geographic, and administrative knowledge is required (commune names, administrative bodies like CNS/CNAP/CCSS/ITM, frontalier-specific concepts, OLO orthographic conventions). LTZGLUE inputs do not systematically encode these [Q12, Q74].",
-        "IC-2": "Partial — LTZGLUE content is in-region (RTL, parliamentary speeches, LOD) [Q74, Q135] so cultural alignment is broadly Luxembourgish, but it is biased toward formal/edited media culture rather than the citizen-administration interaction context [Q112, Q119].",
-        "IC-3": "Some Western/English-source artifacts: xSID intent dataset is translated from English voice-assistant commands [Q51] with non-LTZ register [Q55]; RTE was machine-translated then LLM-improved [Q60, Q61], potentially injecting English-centric phrasing.",
-        "IC-4": "INSUFFICIENT DOCUMENTATION — annotators are described only as 'two native speakers of LTZ' for SA [Q25] and 'student assistants' [Q114]; no documentation of demographic, regional, or administrative-domain familiarity. Would need annotator recruitment criteria from authors.",
-        "IC-5": "Documented content issues: (a) formal-register dominance excludes citizen-correspondence distribution [Q112]; (b) 22–28% of RTE instances filtered after LLM improvement [Q66] — distributional artifact; (c) JUDGEWEL NER labels generated by LLM judges with minimal human verification [Q37]; (d) no orthographic-variation or code-switching coverage in task data [Q7, Q112]."
+        "IC-1": "Yes — citizen correspondence requires handling of orthographically variable Luxembourgish, French/German code-switching, frontalier-specific terminology, and Luxembourg-specific institutional vocabulary [elicitation Q2; regional context languages.code_switching_patterns, cultural_norms_notes]. The benchmark inputs are dominated by RTL news and dictionary content [Q12, Q16, Q46], which do not encode this distribution.",
+        "IC-2": "Partially. Sources are Luxembourgish in origin so cultural framing is locally grounded, but the institutional/journalistic register diverges from citizen-government correspondence [Q112]. The voice-assistant intent corpus is translated from English without LTZ register reference [Q55, Q56], introducing alien register material.",
+        "IC-3": "Yes — the xSID-derived intent corpus (alarm/reminder/weather) [Q51, Q55] is Western voice-assistant content with no administrative analogue in Luxembourg; its inputs encode construct-irrelevant register. Authors note pre-training data overlap with LLMs may also inflate performance [Q111].",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — no Luxembourg civil-administration domain experts appear to have reviewed task inputs for representativeness; the elicitation flags this as needing real-time civil-servant feedback for progressive alignment [elicitation Q3].",
+        "IC-5": "Documented content-validity issues: (a) formal/institutional register dominance [Q112], (b) absence of systematic code-switching coverage outside NER [Q41], (c) voice-assistant register import without LTZ reference [Q55, Q56], (d) no representation of frontalier-specific administrative content [WEB-5]."
       },
       "evidence_quotes": [
-        "[Q12] 'Unless stated otherwise, the textual data used across most tasks stems from two main sources...' (p.2)",
-        "[Q74] 'A large portion of the data stems from RTL... transcribed political speeches and debates from the Chambre des Députés...' (p.6)",
-        "[Q112] 'most data sources reflect formal writing or institutional usage and therefore do not fully represent informal and multilingual contexts.' (p.9)",
-        "[Q119] 'LTZ is a small language community, and linguistic data often originate from a limited set of public domains.' (p.10)",
-        "[Q55] 'a specialised spoken register for which there is no equivalent reference corpus in LTZ' (p.5)",
-        "[Q66] 'The filtering reduced between 22 and 28% of instances in the data...' (p.5)",
-        "[Q41] 'It covers a wider range of text types and registers, including informal and code-mixed writing...' (p.4)",
-        "[Q7] 'the ongoing standardisation of the language..., vast amounts of variation..., and decentralised resources, make it extremely challenging to evaluate LTZ language understanding...' (p.1)"
+        "[Q12] 'Unless stated otherwise, the textual data used across most tasks stems from two main sources' (p.2)",
+        "[Q41] 'It covers a wider range of text types and registers, including informal and code-mixed writing' (p.4)",
+        "[Q55] 'The source segments consist of user commands for a voice-controlled AI assistant, representing a specialised spoken register for which there is no equivalent reference corpus in LTZ' (p.5)",
+        "[Q56] 'Due to the lack of LTZ references in this register, it was not possible to systematically verify the translated terminology.' (p.5)",
+        "[Q112] 'most data sources reflect formal writing or institutional usage and therefore do not fully represent informal and multilingual contexts' (p.9)",
+        "[Q119] 'LTZ is a small language community, and linguistic data often originate from a limited set of public domains.' (p.10)"
       ],
       "evidence_web_sources": [
-        "[WEB-11] Portuguese is the second-most-spoken primary language in Luxembourg (~15% of residents) — significant share of citizen messages may be outside LTZ entirely",
-        "[WEB-10] CIA World Factbook reports Luxembourgish as first language for only 48.9% of residents — code-switching/multilingual input is the norm"
+        "[WEB-5] ~231,290 frontaliers (~47% of employment) — citizen-input distribution will be heavily multilingual",
+        "[WEB-14] Law of 24 February 1984 Article 4 requires reply in citizen's chosen language — input language detection is legally salient",
+        "[WEB-3] Constitutional anchoring of Luxembourgish since 1 July 2023 — political weight on processing standardized and non-standardized LTZ"
       ],
       "evidence_dataset": [],
       "evidence_map": {
         "IC-1": [
           "Q12",
-          "Q74"
+          "Q112",
+          "WEB-5",
+          "WEB-14"
         ],
         "IC-2": [
-          "Q74",
           "Q112",
-          "Q119"
+          "Q55",
+          "Q56"
         ],
         "IC-3": [
           "Q51",
           "Q55",
-          "Q60",
-          "Q61"
+          "Q111"
         ],
         "IC-4": [],
         "IC-5": [
           "Q112",
-          "Q66",
-          "Q37",
-          "Q7"
+          "Q41",
+          "Q55",
+          "Q56",
+          "WEB-5"
         ]
       },
       "confidence": "high",
       "information_gaps": [
-        "Exact proportion of code-switched or informal-register instances within each task split is not reported.",
-        "No documentation of orthographic-variant coverage (OLO compliance vs. legacy spellings) in task data."
+        "No quantification of code-switching frequency in any task split",
+        "No measure of orthographic-variation coverage in task inputs",
+        "Whether RTL user-comment NER sub-corpus contains enough French/German switching to represent deployment distribution"
       ],
       "requires_expert_verification": [
-        "Whether sample citizen messages from MyGuichet.lu or other channels match any LTZGLUE input distribution requires inspection of internal deployment data."
+        "Sampling and qualitative review of LTZGLUE task inputs by civil-administration linguists to confirm representativeness for citizen-correspondence content"
       ]
     },
     "input_form": {
       "score": 3,
-      "justification": "Input form alignment is partial. The benchmark is text-only and targets Luxembourgish [Q1], matching the deployment's text-only digital-correspondence modality and target language. Tokenization uses a BPE tokenizer trained on the full LTZ pre-training set with vocabulary 50,368 and max sequence length 1,024 [Q128, Q129], which is technically appropriate. However, the form profile of benchmark text differs from the deployment input distribution: non-Luxembourgish content was filtered out via OpenLID [Q47] and short sentences (<3 words) were removed [Q75], whereas citizen messages routinely contain French/German embeddings, may be very short, and exhibit non-standard orthography. The authors flag 'ongoing standardisation' and 'vast amounts of variation' [Q7] as evaluation challenges but do not preprocess to address them. The intent-detection source diverges further with all-lowercase, missing-punctuation conventions [Q55]. Given IF is MODERATE priority, partial alignment yields a middle score.",
+      "justification": "Form mismatch is moderate. Both benchmark and deployment are text-only in Latin script, so there is no modality or script-direction violation [regional context infrastructure_notes.deployment_modality; writing_systems]. Tokenization (BPE, vocab 50,368, max sequence 1,024) [Q128, Q129] is suitable for typical citizen-correspondence lengths (40–400 words covers many but not all messages [regional context infrastructure_notes.expected_input_length, Q47]). However, signal-distribution mismatch persists at the form level: task inputs are filtered to remove non-Luxembourgish text via OpenLID and constrained to 40–400 words [Q47], which removes precisely the multilingual and length-extreme inputs the deployment will encounter. The benchmark's text register (formal news, dictionary examples, transcribed political speeches) [Q74, Q16, Q30] differs from informal, orthographically variable citizen messages. IF is MODERATE priority; the form-level alignment is partial because text-text matching is achieved, but distributional filtering and register narrowness reduce external validity.",
       "strengths": [
-        "Text-only, Luxembourgish-targeted modality matches the deployment's text-only digital-channel input [Q1].",
-        "Custom LTZ-trained BPE tokenizer with 50,368 vocab and 1,024 max sequence length [Q128, Q129] is appropriate for typical citizen-correspondence lengths.",
-        "Pre-training corpus includes transcribed speech and chat-room text [Q74], expanding signal diversity beyond pure edited prose."
+        "Text-only modality matches deployment exactly [regional context infrastructure_notes.deployment_modality]",
+        "Latin-script writing system aligns with all three administrative languages [regional context writing_systems]",
+        "BPE tokenizer trained on broad LTZ pre-training corpus including comments, webchat, podcasts may handle orthographic variation reasonably [Q74, Q128]",
+        "Sequence length cap of 1,024 tokens is sufficient for most short-to-medium correspondence"
       ],
       "checklist_responses": {
-        "IF-1": "Signal distribution differs: benchmark text is filtered for LTZ-only [Q47] and ≥3-word sentences [Q75], whereas deployment inputs include code-switched, multilingual, and very short messages.",
-        "IF-2": "Yes — text-only digital infrastructure is well-supported in Luxembourg (~99% household internet [WEB-14]; top-tier digital government [WEB-13]), so no capture-spec mismatch.",
-        "IF-3": "Domain-specific form differences: non-standard orthography, missing diacritics, French/German code-switching, and OLO-variant spellings are common in citizen messages but not represented systematically in LTZGLUE data [Q7, Q112]; xSID translation flags non-standard spelling difficulty [Q55].",
-        "IF-4": "Form mismatches that may harm external validity: (a) language-ID filtering removes the multilingual signal that real citizen messages contain; (b) minimum-length filtering excludes short queries; (c) no orthographic-variation augmentation. These are documentation-confirmed but their magnitude requires empirical assessment."
+        "IF-1": "Both source and target are text. Length filter (40–400 words) [Q47] excludes very short and very long messages that are realistic in administrative correspondence (e.g., one-line inquiries, multi-page complaints).",
+        "IF-2": "Yes — Luxembourg has 99.0% internet penetration [WEB-7] and advanced digital infrastructure [regional context infrastructure_notes.connectivity]; data-capture specifications match.",
+        "IF-3": "Use-case-specific differences: filtering of non-Luxembourgish text via OpenLID [Q47] removes code-switched inputs that the deployment must actually process. Pre-training data is broader [Q74] but downstream task data is narrower in register.",
+        "IF-4": "External-validity concerns from (a) length filtering excluding tail of distribution, (b) language-detection filtering removing multilingual inputs, (c) register narrowness in downstream task data [Q47, Q112]."
       },
       "evidence_quotes": [
-        "[Q1] 'This paper presents LTZGLUE, the first Natural Language Understanding (NLU) benchmark for Luxembourgish (LTZ)...' (p.1)",
-        "[Q47] 'we removed articles identified as non-Luxembourgish by OpenLID...' (p.4)",
-        "[Q75] 'We filter out sentences containing fewer than three words...' (p.6)",
+        "[Q47] 'we removed articles identified as non-Luxembourgish by OpenLID (Burchell et al., 2023), as well as those containing fewer than 40 words or more than 400 words.' (p.4)",
+        "[Q74] 'A large portion of the data stems from RTL... transcribed radio interviews... user comments... transcribed podcasts... transcribed political speeches and debates' (p.6)",
         "[Q128] 'a BPE-based tokenizer, which we train on the entire pre-training set, using a minimum frequency of two and a vocabulary size of 50,368.' (p.12)",
-        "[Q7] 'the ongoing standardisation of the language..., vast amounts of variation...' (p.1)",
-        "[Q55] 'non-standard spelling (e.g., all lowercase, missing punctuation).' (p.5)"
+        "[Q129] 'a max sequence length of 1024.' (p.12)",
+        "[Q112] 'most data sources reflect formal writing or institutional usage and therefore do not fully represent informal and multilingual contexts' (p.9)"
       ],
       "evidence_web_sources": [
-        "[WEB-14] ~99% household internet access in Luxembourg — digital text channel is the dominant deployment modality",
-        "[WEB-13] Luxembourg ranks among top EU member states in e-government maturity"
+        "[WEB-7] 99.0% internet penetration in Luxembourg as of January 2024 — confirms text-channel deployment is well-supported"
       ],
       "evidence_dataset": [],
       "evidence_map": {
         "IF-1": [
           "Q47",
-          "Q75"
+          "Q129"
         ],
         "IF-2": [
-          "WEB-14",
-          "WEB-13"
+          "WEB-7"
         ],
         "IF-3": [
-          "Q7",
-          "Q112",
-          "Q55"
+          "Q47",
+          "Q74",
+          "Q112"
         ],
         "IF-4": [
           "Q47",
-          "Q75",
-          "Q7"
+          "Q112"
         ]
       },
       "confidence": "medium",
       "information_gaps": [
-        "Length distribution of LTZGLUE task instances vs. expected citizen-message length is not directly reported.",
-        "Quantitative measure of orthographic variation in LTZGLUE data is not provided."
+        "Empirical length distribution of expected citizen correspondence",
+        "Empirical proportion of code-switched messages in real digital channels"
       ],
       "requires_expert_verification": [
-        "Whether citizen-correspondence form (length, code-mixing rate, diacritic usage) overlaps measurably with LTZGLUE distributions requires deployment-side text analysis."
+        "Sample-level review of incoming citizen messages to validate that benchmark form constraints (length, language-purity filtering) do not exclude operationally important inputs"
       ]
     },
     "output_ontology": {
       "score": 1,
-      "justification": "Output ontology presents three converging critical misalignments. First, the benchmark is single-label and hard-classification across all eight tasks [Q84], with explicit binary or fixed multi-class label sets [Q147–Q155], whereas the deployment requires multi-label outputs and calibrated confidence scores for routing [user A4]. Second, none of the label sets contain administrative, jurisdictional, frontalier-specific, housing, cost-of-living, or EU-institutional categories — the topic-classification labels are SPORTS/CULTURE/TECHNOLOGY/BUSINESS/ANIMALS [Q153] and intent labels are reminder/alarm/weather [Q154]. Third, sentiment labels are generic positive/neutral/negative [Q149] with no calibration to the formal-but-understated register of citizen-government correspondence — directly conflicting with the deployment's urgency-prioritization logic. The NER label set merges GPE into LOC [Q44, Q152], reducing administrative granularity. With OO marked HIGH priority and high-stakes routing decisions in scope, this is a fundamental structural-validity violation.",
+      "justification": "Severe structural misalignment between benchmark output ontology and deployment requirements. All eight LTZGLUE tasks produce single hard labels [Q67] across narrow label spaces: binary headline acceptability [Q148], three-class sentiment [Q149], binary/four-class linguistic acceptability [Q33, Q151], BIO-tagged NER over PER/ORG/LOC/MISC/DATE [Q44, Q152], five-class topic [Q48, Q153], nine voice-assistant intents [Q154], and binary entailment [Q155]. The deployment explicitly requires multi-label classification with confidence scores for routing and human-fallback escalation [elicitation Q4], and demands administrative topic categories (cross-border worker, housing, transport, tax, communal vs. national) and urgency/frustration scales — none of which appear in any task. Sentiment's three-class scheme [Q149] cannot encode urgency or formal-but-understated frustration cues that are operationally significant per the elicitation [elicitation Q3] and regional cultural notes. EU AI Act considerations [WEB-12] and the language law's requirement to detect citizen language choice [WEB-14] introduce further required output dimensions (language-of-input, possibly risk flags) absent from the benchmark. OO is HIGH priority. This is the most severe dimension violation.",
       "strengths": [
-        "Output label sets are explicitly enumerated with prompts [Q146, Q147–Q155], making the existing label space transparent and easy to map or extend.",
-        "BIO scheme for NER [Q35, Q152] is a standard format that supports re-annotation with extended administrative entity types."
+        "Standard, well-documented label schemas (BIO for NER, ternary sentiment) that are interoperable with downstream pipelines [Q44, Q149, Q152]",
+        "NER label set (PER, ORG, LOC, MISC, DATE) is partially useful for entity extraction within administrative messages [Q152]"
       ],
       "checklist_responses": {
-        "OO-1": "Output label categories have low regional relevance for routing: TC labels are editorial-news categories [Q153]; ID labels are voice-assistant intents [Q154]; SA labels are generic 3-class sentiment [Q149]; NER tags are PER/ORG/LOC/DATE/MISC [Q152].",
-        "OO-2": "Missing categories specific to Luxembourg administrative routing: cross-border worker status, housing, cost-of-living, identity/residency documents, income-tax (resident vs. frontalier), social security, urban planning, transport, EU-institutional, labor, education, immigration, plus state-vs-communal competency split across 100 communes [WEB-1, WEB-7, WEB-18].",
-        "OO-3": "TC labels reflect RTL editorial categorization [Q48] not administrative jurisdiction; ID labels reflect English voice-assistant ontology [Q51, Q154]; sentiment encodes a generic emotion taxonomy without urgency calibration relevant to formal Luxembourgish administrative communication.",
-        "OO-4": "Stakeholder-driven taxonomy redesign is required given the elicitation's HIGH priority on OO and the explicit need for multi-label, confidence-scored outputs [user A4].",
-        "OO-5": "Documented taxonomy issues harming structural and content validity: (a) single-label-only output paradigm [Q84] structurally incompatible with multi-label routing; (b) absence of all deployment-relevant administrative categories; (c) no probabilistic/ranked output schema; (d) GPE/LOC merge [Q44] erases jurisdictional granularity."
+        "OO-1": "Output labels are designed for general NLU evaluation, not administrative routing. Topic classes (sports, culture, technology, business, animals) [Q153] have no overlap with required routing categories.",
+        "OO-2": "Missing categories include: cross-border worker / frontalier issues, housing/cost-of-living, transport, tax, social security, EU institutional matters, residency permits, communal services, public health, plus a state-vs-communal routing axis and an urgency/escalation axis [regional context administrative_domain_notes; elicitation Q1, Q4].",
+        "OO-3": "The voice-assistant intent labels (alarm/reminder/weather) [Q154] encode a non-administrative, non-Luxembourg-public-sector value framing — they are operational categories from a consumer assistant context, not civic communication.",
+        "OO-4": "Stakeholder-driven taxonomy redesign is necessary; the elicitation confirms that routing logic requires multi-label outputs and confidence-based escalation [elicitation Q4], implying co-design with civil servants and legal experts.",
+        "OO-5": "Structural validity is violated: the benchmark's single-label space cannot represent the multi-label decision structure [Q67 vs. elicitation Q4]. Content validity is violated through the absence of required administrative categories. External validity is at risk because performance on these tasks does not predict performance on the operational decision structure."
       },
       "evidence_quotes": [
-        "[Q84] 'We did not use a Multiple Choice Question Answering (MCQA)-setup, but provided the labels that should be used as output.' (p.6)",
+        "[Q33] 'The binary dataset distinguishes between correct (1) and incorrect (0)' (p.4)",
+        "[Q44] 'the tag set is harmonised by merging the GPE and LOC categories into a single location label, while retaining PER, ORG, and MISC unchanged.' (p.4)",
+        "[Q67] 'Together, the eight tasks in LTZGLUE form a broad and balanced evaluation suite, covering four binary and four multi-class settings' (p.5)",
         "[Q149] 'sentiment_analysis: Classify sentiment of the text. Allowed labels: positive, neutral, negative.' (p.15)",
-        "[Q152] 'ner: ... Allowed Tags: O, B-LOC, I-LOC, B-PER,I-PER, B-DATE, I-DATE,B-ORG, I-ORG, B-MISC, I-MISC.' (p.15)",
+        "[Q152] 'ner: Perform Named Entity Recognition... Allowed Tags: O, B-LOC, I-LOC, B-PER,I-PER, B-DATE, I-DATE,B-ORG, I-ORG, B-MISC, I-MISC.' (p.15)",
         "[Q153] 'topic_classification: ... Allowed category_names: sports, animals, business, culture, technology.' (p.15)",
-        "[Q154] 'slot_intent_detection: ... Allowed intents: reminder/show_reminders, weather/find, ...' (p.15)",
-        "[Q44] 'merging the GPE and LOC categories into a single location label, while retaining PER, ORG, and MISC unchanged.' (p.4)"
+        "[Q154] 'slot_intent_detection: ... Allowed intents: reminder/show_reminders, weather/find, reminder/set_reminder, ...' (p.15)"
       ],
       "evidence_web_sources": [
-        "[WEB-1] ~47% cross-border workforce — frontalier label class required",
-        "[WEB-7] 100 communes — state vs. communal label dimension required",
-        "[WEB-18] OECD identifies frontalier 34-day DTA threshold and housing as active citizen concerns"
+        "[WEB-12] EU AI Act Annex III Category 5(a) high-risk classification potentially relevant — implies need for documented decision rules and oversight outputs not in benchmark",
+        "[WEB-14] Language law requires response in citizen's chosen language — implies language-of-input output dimension absent from benchmark"
       ],
       "evidence_dataset": [],
       "evidence_map": {
         "OO-1": [
-          "Q149",
-          "Q152",
           "Q153",
           "Q154"
         ],
         "OO-2": [
-          "WEB-1",
-          "WEB-7",
-          "WEB-18",
-          "Q48"
+          "WEB-12",
+          "WEB-14"
         ],
         "OO-3": [
-          "Q48",
-          "Q51",
-          "Q154",
-          "Q149"
+          "Q154"
         ],
-        "OO-4": [],
+        "OO-4": [
+          "Q67"
+        ],
         "OO-5": [
-          "Q84",
-          "Q44"
+          "Q67",
+          "Q149",
+          "Q153"
         ]
       },
       "confidence": "high",
       "information_gaps": [
-        "Whether LTZGLUE evaluation code exposes per-class probabilities or only argmax labels is not documented in the paper."
+        "Final list of required routing categories and confidence-threshold rules"
       ],
       "requires_expert_verification": [
-        "Final administrative routing taxonomy should be co-designed with civil servants from national and communal authorities."
+        "Co-design of administrative topic taxonomy and multi-label/confidence scheme with civil servants, legal counsel (CNPD), and AI Act compliance officers"
       ]
     },
     "output_content": {
       "score": 2,
-      "justification": "Annotation provenance and reliability are weak for the deployment context. Sentiment labels rest on two native LTZ annotators with Cohen's Kappa 0.45 [Q25, Q27] — moderate agreement at best — with disagreements resolved by consensus [Q28]; no documentation of administrative-domain familiarity or civil-service register competence. Intent translation was performed by a single LTZ native speaker [Q52]. RTE labels were generated through a ChatGPT-5.1 improvement step [Q61] followed by ChatGPT-5-Mini quality and label verification [Q63, Q64], with manual correction of cases where logical contradictions were inadvertently 'fixed' [Q65] — this introduces LLM-induced label artifacts. JUDGEWEL NER relies on LLM judges with minimal human verification [Q37]. The authors explicitly acknowledge 'some annotation decisions and class distributions are necessarily influenced by resource constraints' and that 'automatic preprocessing may introduce biases that we cannot fully quantify' [Q113], and warn 'models may reproduce dominant norms while under-representing regional, sociolectal, or multilingual practices' [Q120]. Annotator details are limited to a generic acknowledgement of student assistants [Q114]. Given OC HIGH priority and the user's explicit concern about civil-administrative sentiment calibration, convergent and external validity are substantially impaired.",
+      "justification": "Annotation provenance and quality are mixed and weakly tied to civil-administration norms. Sentiment was annotated by two native LTZ speakers with Cohen's Kappa 0.45 — moderate agreement — and disagreements resolved by consensus [Q25, Q26, Q27, Q28]; no documentation of administrative-register expertise. JUDGEWEL NER relies on LLM-as-judge with 'minimal human verification' [Q37]. RTE used ChatGPT-5-mini to verify labels, finding nearly 10% incorrect labels [Q63, Q64], with manual correction afterwards [Q65]. The intent detection translation lacked LTZ register references and could not be systematically verified [Q56]. Authors explicitly caution against 'using benchmark performance as evidence of cultural or demographic coverage' [Q121] and note 'models may reproduce dominant norms while under-representing regional, sociolectal, or multilingual practices' [Q120]. For a deployment where sentiment must capture formal-but-understated frustration in civil correspondence [elicitation Q3, regional context cultural_norms_notes], κ=0.45 with consumer-facing news comments as source material is insufficient. OC is HIGH priority.",
       "strengths": [
-        "Sentiment annotation used native LTZ speakers [Q25] and the Lothritz et al. NER corpus is fully human-annotated [Q42], providing some grounding in regional linguistic competence.",
-        "RTE label-correctness verification step [Q64, Q65] caught approximately 10% incorrect labels and the authors performed manual correction to preserve logical contradictions [Q65].",
-        "Authors transparently document limitations and caution against over-claiming demographic coverage [Q120, Q121, Q123]."
+        "Native LTZ speakers conducted sentiment annotation [Q25] and intent translation [Q52], grounding labels in language-native judgment",
+        "Lothritz et al. NER sub-corpus is fully human-annotated with 'high-precision' result [Q42]",
+        "RTE underwent multi-stage label verification with manual correction [Q63, Q64, Q65]",
+        "Authors transparently disclose annotation limitations [Q113, Q120, Q121]"
       ],
       "checklist_responses": {
-        "OC-1": "Ground truth labels do not demonstrably reflect Luxembourg civil-administrative stakeholder perspectives; no documentation indicates annotators were drawn from or consulted with civil-service domain experts [Q25, Q52, Q114].",
-        "OC-2": "High potential for disagreement on sentiment: formal/understated citizen-government correspondence likely receives more 'neutral' labels under generic sentiment annotation than civil servants would judge appropriate for prioritization [Q149]; this is a recognized risk in elicitation Q3/A3.",
-        "OC-3": "Annotator demographics are minimally documented: 'two native speakers' for SA [Q25], 'student assistants' acknowledged [Q114], single LTZ native speaker plus consultations for ID [Q52]. No Datasheet/Data Statement-level demographic detail.",
-        "OC-4": "Re-annotation by a representative civil-servant pool is recommended given the HIGH priority and the moderate-only Cohen's Kappa of 0.45 [Q27]; the deployment's human-in-the-loop feedback mechanism (elicitation A3) provides infrastructure for progressive recalibration.",
-        "OC-5": "Aggregation method for SA used annotator consensus on disagreements [Q28] — this can erase minority/edge-case judgments relevant to detecting subtle frustration cues. Class-balanced loss [Q92] addresses imbalance but not annotator-perspective minority preservation.",
-        "OC-6": "Documented label issues harming convergent and external validity: (a) Cohen's Kappa 0.45 [Q27]; (b) LLM-mediated RTE labels [Q63, Q64]; (c) LLM-judged JUDGEWEL labels [Q37]; (d) potential pre-training contamination of LLM evaluators with RTL/Wikipedia data [Q111]; (e) absence of administrative-domain annotator expertise."
+        "OC-1": "INSUFFICIENT DOCUMENTATION on whether labels reflect civil-administration stakeholder perspectives. Sentiment annotators are described only as native LTZ speakers [Q25]; no administrative or civil-service background is documented.",
+        "OC-2": "Likely disagreement risk is high for sentiment/urgency: regional culture features formal, understated expression of frustration [regional context cultural_norms_notes]; news-comment-trained annotators with κ=0.45 [Q27] are unlikely to encode that register reliably.",
+        "OC-3": "Documentation is partial — annotator counts and native-speaker status reported [Q25, Q52], but no demographic, professional, or domain-expertise breakdown provided. No Datasheet/Data Statement is referenced.",
+        "OC-4": "Re-annotation by civil-servant or administration-experienced annotators is recommended; the elicitation already provisions a real-time civil-servant feedback loop [elicitation Q3] but pre-deployment re-annotation would be additionally valuable.",
+        "OC-5": "Sentiment disagreements were resolved by consensus between two annotators [Q28], which can erase minority perspectives; this is a risk for a population with diverse linguistic backgrounds (frontaliers, non-native LTZ writers).",
+        "OC-6": "Convergent validity is at risk because labels may not correlate with civil-servant judgments of administrative correspondence; external validity is at risk because the source distribution (RTL comments, dictionary, voice-assistant) differs from citizen-administration correspondence [Q112, Q119]."
       },
       "evidence_quotes": [
         "[Q25] 'we extract 4,583 sentences, which are then annotated by two native speakers of LTZ.' (p.3)",
         "[Q27] 'We calculated Cohen's Kappa at 0.45.' (p.3)",
         "[Q28] 'For the final set, the annotators agree on a label in cases of label disagreement.' (p.3)",
-        "[Q37] 'evaluated using LLMs acting as judges, with minimal human verification to calibrate quality thresholds.' (p.4)",
+        "[Q37] 'The resulting sentences are then evaluated using LLMs acting as judges, with minimal human verification to calibrate quality thresholds.' (p.4)",
         "[Q52] 'The translations were performed by an LTZ native speaker. In cases of uncertainty, additional native LTZ speakers were consulted.' (p.4)",
-        "[Q63] 'we prompted CHATGPT-5-MINI to judge the texts in the improved data and label their quality...' (p.5)",
-        "[Q64] 'we prompted CHATGPT-5-MINI to verify whether the dataset labels remained correct... Nearly 10% of the labels were false.' (p.5)",
-        "[Q113] 'some annotation decisions and class distributions are necessarily influenced by resource constraints. Certain tasks exhibit label imbalance or rely on automatic preprocessing, which may introduce biases that we cannot fully quantify.' (p.9)",
-        "[Q114] 'We would like to thank the student assistants for their annotation work.' (p.9)",
+        "[Q56] 'Due to the lack of LTZ references in this register, it was not possible to systematically verify the translated terminology.' (p.5)",
+        "[Q64] 'Nearly 10% of the labels were false.' (p.5)",
         "[Q120] 'models may reproduce dominant norms while under-representing regional, sociolectal, or multilingual practices.' (p.10)",
-        "[Q117] 'some tasks draw on data originally produced in institutional or media contexts, which may reflect societal biases in representation.' (p.10)"
+        "[Q121] 'We therefore caution against using benchmark performance as evidence of cultural or demographic coverage.' (p.10)"
       ],
-      "evidence_web_sources": [
-        "[WEB-1] Cross-border workforce ~47% — annotators drawn from formal-media context unlikely to reflect frontalier-specific concerns"
-      ],
+      "evidence_web_sources": [],
       "evidence_dataset": [],
       "evidence_map": {
         "OC-1": [
-          "Q25",
-          "Q52",
-          "Q114"
+          "Q25"
         ],
         "OC-2": [
-          "Q149"
+          "Q27",
+          "Q120"
         ],
         "OC-3": [
           "Q25",
-          "Q52",
-          "Q114"
+          "Q52"
         ],
-        "OC-4": [
-          "Q27"
-        ],
+        "OC-4": [],
         "OC-5": [
-          "Q28",
-          "Q92"
+          "Q28"
         ],
         "OC-6": [
-          "Q27",
-          "Q63",
-          "Q64",
-          "Q37",
-          "Q111"
+          "Q112",
+          "Q119",
+          "Q121"
         ]
       },
       "confidence": "high",
       "information_gaps": [
-        "Annotator linguistic background, regional origin, and occupation are undocumented.",
-        "Proportion of LLM-annotated vs. human-annotated NER and RTE test instances not separable from public materials."
+        "Annotator demographics, professional background, civil-administration experience",
+        "Whether sentiment label boundaries were validated against civil-correspondence-specific examples",
+        "Granular agreement statistics by class (e.g., neutral vs. negative) to assess understated-frustration handling"
       ],
       "requires_expert_verification": [
-        "Calibration of sentiment/urgency labels against civil-servant judgments on representative citizen-message samples."
+        "Civil-servant review of a held-out sample of sentiment labels for civil-correspondence relevance",
+        "Re-annotation of a small evaluation set by administrative-domain annotators to estimate convergent validity"
       ]
     },
     "output_form": {
-      "score": 2,
-      "justification": "All LTZGLUE tasks are evaluated with macro-F1 over single-label predictions [Q84, Q93, Q96], with malformed LLM outputs discarded prior to scoring [Q90, Q91]. The deployment requires multi-label classification with calibrated confidence scores to drive routing thresholds and human-in-the-loop escalation [user A4] — an output form LTZGLUE never produces or evaluates. Prompted LLMs are evaluated once with macro-F1 [Q96] and the authors note results 'should be interpreted as indicative rather than directly comparable' due to prompt sensitivity [Q86, Q87]. There is no calibration analysis, no probabilistic scoring, no multi-label evaluation, and no per-class confidence reporting. Encoders report averages over three runs with standard deviations [Q89, Q96], which is methodologically sound but still single-label. With OF MODERATE priority and the deployment requiring confidence-aware multi-label outputs, this is a clear functional gap.",
+      "score": 3,
+      "justification": "Output form is text-classification labels evaluated by macro-F1 with results averaged over three runs and standard deviations reported [Q93, Q96]. This is a standard, well-documented evaluation methodology and matches the deployment's text-to-label format at surface level. However, the deployment requires confidence scores for routing thresholds and multi-label outputs for messages spanning multiple departments [elicitation Q4]. LTZGLUE reports only macro-F1 with no calibration metrics (e.g., ECE, Brier score), no per-class precision/recall thresholds, and no multi-label evaluation methodology. Invalid LLM outputs are simply discarded [Q90, Q91], which masks the operational reality that malformed outputs in deployment must be handled (escalated). OF is MODERATE priority. The form is text-to-text-label as required, but the metric set and label cardinality do not match the deployment's operational form.",
       "strengths": [
-        "Encoder evaluation reports averages over three runs with standard deviations [Q89, Q96], providing variance estimates useful for deployment risk assessment.",
-        "Class-balanced loss is applied to imbalanced tasks [Q92], and Bayesian hyperparameter search with early stopping is used [Q138] — sound methodology for low-resource fine-tuning.",
-        "Output modality (text label) and target literacy/digital channel match the deployment context (text-only digital correspondence; near-universal internet access [WEB-14])."
+        "Text-output modality matches deployment [Q93]",
+        "Multi-run evaluation with standard deviations reported for encoder models [Q89, Q96] supports meaningful comparison",
+        "Hyperparameter search via Bayesian optimization with early stopping is methodologically sound [Q136, Q138]",
+        "Class-balanced loss for imbalanced tasks [Q92] is a conscientious design choice"
       ],
       "checklist_responses": {
-        "OF-1": "Expected output modality is partially aligned: both benchmark and deployment use textual labels, but the deployment additionally requires multi-label outputs and confidence scores [user A4] that LTZGLUE does not produce or evaluate [Q84, Q93].",
-        "OF-2": "Not applicable — deployment is text-only with no speech-output requirement; civil-servant users are assumed digitally literate with high digital-government maturity [WEB-13].",
-        "OF-3": "Civil servants are the direct consumers of classification outputs and are assumed digitally proficient; literacy/accessibility constraints affect citizen authors but not the output modality, which is structured labels delivered to civil servants. INSUFFICIENT DOCUMENTATION on whether benchmark output formatting (e.g., JSON [Q146]) matches deployment integration requirements.",
-        "OF-4": "Form mismatches harming external validity: (a) single-label F1 evaluation provides no signal about confidence calibration; (b) malformed-output discarding [Q90, Q91] hides robustness failures relevant to production routing; (c) no multi-label scoring; (d) prompt-based LLM evaluation flagged as 'indicative' only [Q86]."
+        "OF-1": "Text output matches deployment, but the deployment additionally requires confidence scores and multi-label outputs [elicitation Q4], which the benchmark's macro-F1 single-label evaluation does not assess.",
+        "OF-2": "Not applicable — deployment is text-only [regional context infrastructure_notes.deployment_modality], and benchmark is text-only [Q93].",
+        "OF-3": "Civil servants are professionally literate [regional context target_population.civil_servant_profile]; literacy is not a constraint. Citizens have 99.0% internet penetration [WEB-7]. No accessibility-driven output modality concerns.",
+        "OF-4": "External-validity gap: macro-F1 alone cannot validate the calibration and multi-label behaviors required for routing escalation logic; invalid outputs being discarded [Q90, Q91] hides a deployment-relevant failure mode."
       },
       "evidence_quotes": [
-        "[Q84] 'We did not use a Multiple Choice Question Answering (MCQA)-setup, but provided the labels that should be used as output.' (p.6)",
-        "[Q93] 'Table 6 shows F1 scores for all models across all tasks...' (p.7)",
-        "[Q96] 'Encoder results are averaged over three runs with standard deviations as subscripts. Prompted LLMs were evaluated once; we report macro-F1 only.' (p.8)",
         "[Q90] 'Prompted LLMs do not always produce well-formed outputs and may return an incorrect number of predictions for a given task; such outputs are discarded prior to evaluation.' (p.7)",
-        "[Q86] 'prompt-based evaluation introduces additional sources of variability... performance should be interpreted as indicative rather than directly comparable to supervised results.' (p.6)",
-        "[Q92] 'we use class-balanced loss based on effective size...' (p.7)",
-        "[Q146] 'Respond ONLY in valid JSON. ... Use field: \"output\": <model_answer>...' (p.14)"
+        "[Q93] 'Table 6 shows F1 scores for all models across all tasks' (p.7)",
+        "[Q96] 'Encoder results are averaged over three runs with standard deviations as subscripts. Prompted LLMs were evaluated once; we report macro-F1 only.' (p.8)",
+        "[Q92] 'when fine-tuning on these tasks we use class-balanced loss based on effective size (Cui et al., 2019) with a beta of 0.99.' (p.7)"
       ],
       "evidence_web_sources": [
-        "[WEB-13] Luxembourg ranks among top EU member states in e-government maturity — civil-servant interface assumed structured-text",
-        "[WEB-14] ~99% household internet access — text-output channel is appropriate"
+        "[WEB-7] 99.0% internet penetration — confirms text-output channel is universally accessible"
       ],
       "evidence_dataset": [],
       "evidence_map": {
         "OF-1": [
-          "Q84",
-          "Q93"
+          "Q93",
+          "Q96"
         ],
         "OF-2": [
-          "WEB-13"
+          "Q93"
         ],
-        "OF-3": [],
+        "OF-3": [
+          "WEB-7"
+        ],
         "OF-4": [
           "Q90",
-          "Q91",
-          "Q86",
           "Q96"
         ]
       },
-      "confidence": "high",
+      "confidence": "medium",
       "information_gaps": [
-        "No reported calibration metrics (e.g., ECE, Brier score) for any task.",
-        "No multi-label evaluation or threshold-sensitivity analysis."
+        "No calibration metrics (ECE, reliability diagrams) reported",
+        "No multi-label evaluation methodology defined",
+        "No analysis of malformed-output rate as an operational signal"
       ],
       "requires_expert_verification": [
-        "Whether LTZGLUE evaluation scripts can be extended to expose probabilities for downstream multi-label/threshold use requires inspection of the project repository."
+        "Specification of operational confidence thresholds and escalation-rate targets by deployment owners"
       ]
     }
   },
-  "overall_summary": "LTZGLUE is the first unified LTZ NLU benchmark and a meaningful contribution to a 'scraping-by' language ecosystem [Q13], but its fitness for the Luxembourg civil-servant correspondence-routing deployment is poor across the dimensions weighted HIGH in elicitation (IO, IC, OO, OC). The taxonomy gaps are categorical: zero administrative topic categories, zero state-vs-communal jurisdiction split, zero frontalier-specific classes, no housing or cost-of-living categories, and a generic 3-class sentiment scheme that does not capture the formal-understated urgency profile of Luxembourgish citizen-government correspondence. The output paradigm is single-label hard classification with macro-F1 scoring [Q84, Q93, Q96], structurally incompatible with the deployment's multi-label, confidence-scored routing logic. Input content is biased toward formal/edited registers [Q112], with code-switching and orthographic variation — confirmed features of citizen messages — largely absent. Annotation reliability is moderate (Cohen's Kappa 0.45 [Q27]) with limited annotator provenance documentation [Q114] and notable LLM involvement in RTE and JUDGEWEL labels [Q37, Q63, Q64]. The benchmark is most useful as a generic LTZ encoder-quality signal, not as evidence of administrative-NLU readiness.",
+  "overall_summary": "LTZGLUE is a credible first GLUE-style NLU benchmark for Luxembourgish and a valuable resource for general LTZ NLP capability assessment. However, for the specific deployment of routing citizen correspondence in Luxembourg public administration, validity is materially limited across the four HIGH-priority dimensions (IO, IC, OO, OC). The most severe gap is output ontology: LTZGLUE produces single hard labels across taxonomies (RTL editorial topics, voice-assistant intents, ternary sentiment) that do not encode the administrative routing categories, multi-label structure, confidence scores, urgency scaling, or language-of-input axis the deployment requires. Input content reflects predominantly formal/institutional registers, with the authors themselves warning this does not represent informal and multilingual contexts — precisely the distribution of real citizen correspondence given Luxembourg's ~47% frontalier workforce and entrenched code-switching. Annotation quality is moderate (κ=0.45 on sentiment) and lacks documented administrative-domain expertise. Input form and output form mismatches are moderate: text-to-label alignment is preserved, but length/language filtering and absence of calibration/multi-label metrics weaken external validity. The benchmark's authors explicitly caution against using performance as evidence of cultural or demographic coverage [Q121], and this caution applies directly here.",
   "risk_assessment": "high",
   "practical_guidance": {
-    "what_this_benchmark_measures": "LTZGLUE measures generic Luxembourgish NLU capability across eight GLUE-style tasks [Q67] — useful for selecting an underlying LTZ encoder backbone. It provides defensible signal on whether a model can perform PER/ORG/LOC NER, basic sentiment, headline-body coherence, linguistic acceptability, and entailment in Luxembourgish, and identifies MMBERT-base and LUXEMBERT as competitive backbones [Q105, Q106]. The IF dimension (text-only LTZ modality match) and the encoder evaluation methodology (averaged runs with variance [Q89]) are the strongest signals for the deployment.",
-    "construct_depth": "Construct depth is shallow for the target deployment. Performance on LTZGLUE TC, ID, and SA gives no calibrated evidence about administrative-routing accuracy because the label spaces do not overlap with deployment categories [Q48, Q149, Q154]. Sentiment evaluation depth is limited by Cohen's Kappa 0.45 [Q27] and the absence of administrative-register annotators. RTE depth is partly compromised by LLM-mediated label processing [Q61, Q63, Q64]. The benchmark probes only single-label hard classification [Q84]; it provides no evidence on confidence calibration, multi-label decoding, or threshold robustness.",
-    "supplementation_needed": "To reach deployment readiness, supplement with: (1) a Luxembourg-administrative topic taxonomy co-designed with civil servants and a labeled corpus of citizen messages addressing IO and OO gaps; (2) a code-switched/orthographically-variable citizen-correspondence sample to address IC; (3) civil-servant re-annotation of sentiment and urgency to address OC, leveraging the human-in-the-loop feedback mechanism described in elicitation A3; (4) calibration analysis (ECE/Brier) and multi-label evaluation harness to address OF; and (5) explicit handling of non-LTZ content (Portuguese, French, German, [WEB-10, WEB-11]) outside benchmark scope."
+    "what_this_benchmark_measures": "LTZGLUE measures general Luxembourgish NLU capability of encoder models and prompted LLMs across eight tasks (NER, topic, sentiment, acceptability, intent, RTE, headline acceptability). It is a useful instrument for selecting a base model with strong LTZ representation (e.g., MMBERT-base, LUXEMBERT, LTZ-E1) and for screening basic linguistic competence. Its NER component, in particular, can support entity extraction in citizen correspondence at a foundational level.",
+    "construct_depth": "Depth is shallow for the deployment's specific constructs. The benchmark probes language-level NLU (lexical, syntactic, basic semantic) with reasonable rigor, but it does not probe administrative-domain construct dimensions: routing topic taxonomy, state-vs-communal competency discrimination, frontalier-specific terminology, formal-but-understated frustration detection, multi-label decisions, or language-of-input identification. Sentiment with κ=0.45 [Q27] and voice-assistant intents [Q154] cover only a thin slice of the operational construct space.",
+    "supplementation_needed": "(1) IO/OO: a Luxembourg-administrative topic taxonomy and multi-label dataset co-designed with civil servants, including state-vs-communal axis and confidence-threshold rules. (2) IC: a held-out evaluation set sampled from real citizen correspondence (anonymized under GDPR/CNPD guidance [WEB-9, WEB-10, WEB-11]) covering code-switched, orthographically variable, and frontalier-specific content. (3) OC: re-annotation by administrative-experienced annotators with reported per-class agreement and a register-aware sentiment/urgency scheme. (4) OF: calibration evaluation (ECE, reliability) and multi-label metrics (micro/macro-F1, hamming loss). (5) Compliance: a DPIA and EU AI Act risk classification analysis [WEB-12, WEB-13] before deployment."
   },
   "remediation_suggestions": [
     {
       "dimension": "input_ontology",
-      "gap": "LTZGLUE TC/ID/NER taxonomies contain zero administrative routing categories and no state-vs-communal jurisdiction split.",
-      "recommendation": "Co-design a Luxembourg administrative routing taxonomy with national and communal civil servants covering frontalier status, housing, cost-of-living, identity/residency, tax (with frontalier sub-cases), social security, urban planning (per-commune), transport, EU-institutional, labor, education/childcare, and immigration; collect a labeled evaluation set per category."
+      "gap": "No Luxembourg-administrative topic or intent taxonomy, no state-vs-communal routing axis, no multi-label formulation",
+      "recommendation": "Co-design an administrative topic taxonomy with national and communal civil servants covering at minimum: cross-border worker matters, housing/cost-of-living, transport, tax, social security, residency, communal services, EU institutional. Include a state-vs-communal routing dimension and a multi-label structure aligned with the deployment's actual case types."
     },
     {
       "dimension": "input_content",
-      "gap": "Benchmark content is dominated by formal RTL/parliamentary/Wikipedia/LOD sources [Q112]; citizen-correspondence register with code-switching and orthographic variation is essentially absent.",
-      "recommendation": "Construct an in-domain evaluation corpus from anonymized citizen messages received via MyGuichet.lu and similar channels, preserving code-switching, French/German loanword alternation (e.g., Administratioun/Verwaltung), and OLO/non-OLO orthographic variants."
+      "gap": "Benchmark inputs are dominated by formal/institutional registers and filter out non-Luxembourgish text; code-switching and orthographic variation are under-represented",
+      "recommendation": "Construct an internal evaluation corpus from anonymized real citizen correspondence (with CNPD-compliant DPIA) that explicitly preserves French/German code-switching, frontalier terminology, and orthographic variation. Use it as an out-of-distribution stress test alongside LTZGLUE."
     },
     {
       "dimension": "output_ontology",
-      "gap": "All tasks emit single hard labels [Q84]; deployment requires multi-label routing with confidence scores.",
-      "recommendation": "Define a multi-label output schema with calibrated probabilities; evaluate using ranking metrics (e.g., micro-F1@k, mean average precision) and calibration metrics (ECE, Brier) alongside macro-F1; expose argmax + per-class probabilities from the model."
+      "gap": "All tasks emit single hard labels with narrow non-administrative taxonomies; no confidence scores, no multi-label outputs, no urgency scale, no language-of-input output",
+      "recommendation": "Define a deployment-specific output schema with multi-label routing categories, calibrated confidence scores tied to escalation thresholds, an urgency scale validated against civil-servant judgments, and a language-of-input field to satisfy the 1984 language law obligation [WEB-14]."
     },
     {
       "dimension": "output_content",
-      "gap": "Sentiment annotation rests on two annotators with Cohen's Kappa 0.45 [Q27] and undocumented administrative-domain familiarity; LLM-mediated label processing in RTE/JUDGEWEL [Q37, Q63, Q64] introduces uncertainty.",
-      "recommendation": "Recruit ≥3 annotators with documented Luxembourgish civil-administrative experience; re-annotate a stratified sample of sentiment/urgency on citizen-correspondence data; report inter-annotator agreement with disagreement analysis preserved (avoid consensus-erasure of minority judgments [Q28]); leverage the human-in-the-loop feedback mechanism for progressive recalibration."
-    },
-    {
-      "dimension": "input_form",
-      "gap": "OpenLID filtering [Q47] and ≥3-word filtering [Q75] remove signal characteristics common in real citizen messages (multilingual content, short queries).",
-      "recommendation": "Add a deployment-side preprocessing audit that measures language-mix proportions and message-length distributions, and complement LTZGLUE-trained models with explicit detection of non-LTZ content (Portuguese/French/German [WEB-10, WEB-11]) routed to language-appropriate pipelines."
+      "gap": "Sentiment annotators lack documented administrative-register expertise; κ=0.45 is moderate; LLM-assisted labeling introduces uncertainty in RTE and JUDGEWEL",
+      "recommendation": "Re-annotate a calibration sample of sentiment and any new routing categories with civil servants or administration-experienced annotators; report per-class agreement and disagreement patterns; use the deployment's human-in-the-loop feedback to drive ongoing label refinement."
     },
     {
       "dimension": "output_form",
-      "gap": "Single-label macro-F1 evaluation with malformed outputs discarded [Q90, Q91, Q96] provides no calibration or robustness signal for production routing.",
-      "recommendation": "Add confidence-calibration evaluation (ECE, reliability diagrams), threshold-sweep analyses for routing decisions, and a separate report of malformed-output rates (rather than discarding) to surface production robustness."
+      "gap": "Macro-F1 only; no calibration metrics; invalid outputs are silently discarded; no multi-label evaluation",
+      "recommendation": "Add calibration metrics (ECE, reliability diagrams), multi-label metrics (micro/macro-F1, hamming loss, subset accuracy), and treat malformed-output rate as an explicit deployment KPI rather than discarding such cases."
+    },
+    {
+      "dimension": "input_form",
+      "gap": "Length filter (40–400 words) and language-purity filter (OpenLID) exclude tail-distribution inputs the deployment will face",
+      "recommendation": "Construct a supplementary evaluation slice without length and language-purity filters to characterize model behavior on very short, very long, and multilingual inputs; report performance separately on these slices."
     }
   ],
   "highest_concern_dimensions": [
     "output_ontology",
     "input_ontology",
-    "output_content",
-    "input_content"
+    "input_content",
+    "output_content"
   ],
   "strongest_dimensions": [
     "input_form",
