@@ -1,4 +1,15 @@
 {
+  "5b_da_per_dataset": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 24,
+      "input_tokens": 1073577,
+      "output_tokens": 101313,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
   "3a_consolidate": {
     "sonnet": {
       "model_id": "claude-sonnet-4-6",
@@ -54,23 +65,12 @@
       "web_search_requests": 7
     }
   },
-  "5b_da_per_dataset": {
-    "sonnet": {
-      "model_id": "claude-sonnet-4-6",
-      "calls": 12,
-      "input_tokens": 527986,
-      "output_tokens": 50908,
-      "cache_read_input_tokens": 0,
-      "cache_creation_input_tokens": 0,
-      "web_search_requests": 0
-    }
-  },
   "5b_da_interpret": {
     "sonnet": {
       "model_id": "claude-sonnet-4-6",
       "calls": 1,
-      "input_tokens": 76795,
-      "output_tokens": 10554,
+      "input_tokens": 76292,
+      "output_tokens": 11332,
       "cache_read_input_tokens": 0,
       "cache_creation_input_tokens": 0,
       "web_search_requests": 0
@@ -80,8 +80,8 @@
     "opus": {
       "model_id": "claude-opus-4-7",
       "calls": 1,
-      "input_tokens": 71557,
-      "output_tokens": 17142,
+      "input_tokens": 72695,
+      "output_tokens": 19541,
       "cache_read_input_tokens": 0,
       "cache_creation_input_tokens": 0,
       "web_search_requests": 0

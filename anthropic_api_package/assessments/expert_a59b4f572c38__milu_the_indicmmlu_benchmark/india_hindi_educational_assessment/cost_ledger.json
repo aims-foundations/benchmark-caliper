@@ -47,8 +47,8 @@
     "sonnet": {
       "model_id": "claude-sonnet-4-6",
       "calls": 1,
-      "input_tokens": 69162,
-      "output_tokens": 13274,
+      "input_tokens": 82832,
+      "output_tokens": 10237,
       "cache_read_input_tokens": 0,
       "cache_creation_input_tokens": 0,
       "web_search_requests": 0
@@ -58,8 +58,8 @@
     "opus": {
       "model_id": "claude-opus-4-7",
       "calls": 1,
-      "input_tokens": 50488,
-      "output_tokens": 14163,
+      "input_tokens": 47173,
+      "output_tokens": 13623,
       "cache_read_input_tokens": 0,
       "cache_creation_input_tokens": 0,
       "web_search_requests": 0

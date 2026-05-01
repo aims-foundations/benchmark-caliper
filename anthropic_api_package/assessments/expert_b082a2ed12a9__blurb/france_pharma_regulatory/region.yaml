@@ -1,0 +1,596 @@
+name: EU/French Pharmaceutical Regulatory NLP — BLURB Assessment
+abbreviation: eu_pharma_regulatory_fr
+deployment_population:
+  description: Regulatory affairs specialists, pharmacologists, and legal experts
+    at pharmaceutical companies or government health agencies (including ANSM and
+    EMA-affiliated bodies) operating under EU and French regulatory frameworks. End
+    users are highly trained domain professionals, not the general public. Literacy,
+    interface modality, and device access are not concerns; domain-specific precision,
+    regulatory normative alignment, and annotation authority are paramount.
+  occupational_roles:
+  - Regulatory affairs specialist
+  - Pharmacologist
+  - Legal/regulatory counsel
+  - Pharmacovigilance officer
+  - Medical writer (regulatory)
+  institutional_settings:
+  - Pharmaceutical company regulatory affairs departments
+  - Contract research organizations (CROs) with regulatory services
+  - ANSM (Agence nationale de sécurité du médicament et des produits de santé)
+  - EMA (European Medicines Agency) or national competent authority affiliates
+  - Hospital or academic pharmaceutical research units with regulatory remit
+  geographic_scope: European Union, with primary focus on France (ANSM jurisdiction)
+    and EU-wide EMA regulatory context
+  primary_country: France
+  regulatory_jurisdictions:
+  - EMA (centralized EU procedure)
+  - ANSM (national French procedure and mutual recognition)
+  - EU decentralized procedure NCAs
+languages:
+  primary_operational_language: French
+  secondary_operational_language: English (EMA scientific guidelines, international
+    patent claims, CTD modules)
+  note: The deployment targets French-language regulatory documents (SmPCs, patient
+    information leaflets, French CTD module prose) as primary inputs. The benchmark
+    (BLURB) is exclusively English. This language mismatch is a foundational external
+    validity problem for every benchmark task. No porting strategy is documented for
+    BLURB.
+writing_systems:
+  scripts:
+  - Latin alphabet with French diacritics (é, è, ê, ë, à, â, ù, û, ô, î, ï, ç, œ,
+    æ)
+  note: Standard Latin-script NLP tooling applies; no RTL or non-Latin script concerns.
+    However, French pharmaceutical and regulatory abbreviations, INN transliteration
+    conventions, and posology phrasing require French-specific tokenization and vocabulary
+    coverage absent from English-trained models.
+literacy_and_modality:
+  note: End-user population consists of university-educated domain professionals.
+    General literacy and interface modality are not assessment concerns. Domain literacy
+    (regulatory, legal, pharmacological) is at expert level and constitutes the normative
+    standard against which model outputs are evaluated.
+regulatory_framework:
+  primary_regulations_and_guidelines: 'Current key instruments confirmed as of 2024–2025:
+    (1) EMA QRD SmPC Template v10.4 (updated 29 February 2024; v11 draft open for
+    public consultation until 31 August 2025) — mandatory for all EU centralized,
+    decentralized, and mutual recognition procedure submissions. (2) EU Directive
+    2001/83/EC (as amended) — legal foundation for SmPC/PIL content requirements;
+    Article 59(4) report triggered the current QRD template revision. (3) Regulation
+    (EC) No 726/2004 — governs the centralized marketing authorization procedure.
+    (4) ICH CTD M4 series guidelines — govern Common Technical Document format for
+    regulatory submissions. (5) EU AI Act (entered into force 1 August 2024) — applies
+    to high-risk AI systems used in the pharmaceutical product lifecycle, including
+    NLP tools influencing regulatory decisions.
+
+    Sources: EMA QRD templates page — [|https://www.ema.europa.eu/en/human-regulatory-overview/marketing-authorisation/product-information-requirements/product-information-qrd-templates-human|];
+    EMA QRD v10.4 document — [|https://www.ema.europa.eu/en/documents/template-form/qrd-product-information-template-version-104-highlighted_en.pdf|];
+    EMA draft QRD v11 — [|https://www.ema.europa.eu/en/documents/template-form/quality-review-documents-qrd-annotated-template-v11-draft-public-consultation_en.pdf|]'
+  key_regulatory_bodies:
+  - EMA (European Medicines Agency)
+  - ANSM (Agence nationale de sécurité du médicament et des produits de santé)
+  - European Commission (marketing authorization decisions)
+  - ICH (International Council for Harmonisation — CTD format)
+  applicable_data_protection_regulation: 'GDPR (Regulation EU 2016/679) applies to
+    all personal data processing in the EU, including pharmaceutical document management
+    systems handling personal health data. Within the pharmaceutical regulatory context,
+    GDPR intersects with: EMA Policy 0070 (clinical data publication — relaunched
+    September 2023), EU Clinical Trials Regulation 536/2014 (which introduces derogations
+    to GDPR right-to-be-forgotten for safety data integrity), and EMA CTIS data protection
+    notices. For regulatory submission documents (SmPCs, CTD modules), the primary
+    data sensitivity concern is commercially confidential information (CCI) rather
+    than personal data — governed by EMA Policy 0043 and the CJEU case law on document
+    access. The EU AI Act (2024) further imposes requirements on high-risk AI systems
+    in the pharmaceutical lifecycle, including NLP tools influencing submission decisions.
+
+    Sources: EMA data protection page — [|https://www.ema.europa.eu/en/about-us/data-protection-privacy-ema|];
+    EMA Policy 0070 overview — [|https://rlsciences.com/ema-policy-0070-overview/|];
+    EMA AI Reflection Paper (October 2024) — [|https://www.ema.europa.eu/en/documents/scientific-guideline/reflection-paper-use-artificial-intelligence-ai-medicinal-product-lifecycle_en.pdf|]'
+  smpc_qrd_template_version_in_force: 'QRD SmPC template version 10.4, updated 29
+    February 2024 (current operative version for centralized procedure submissions).
+    A draft version 11 was released for public consultation in April 2025, with comments
+    due by 31 August 2025; v11 primarily revises the Package Leaflet structure and
+    introduces a potential ''Key Information'' section. Marketing Authorization Holders
+    are expected to implement v10.4 at the next regulatory procedure affecting SmPC/labelling/PIL.
+    The CMDh annotated QRD template for MRP/DCP was updated March 2024 with a correction
+    issued September 2025.
+
+    Sources: EMA QRD templates — [|https://www.ema.europa.eu/en/human-regulatory-overview/marketing-authorisation/product-information-requirements/product-information-qrd-templates-human|];
+    AxeRegel QRD update summary — [|https://www.axeregel.com/blog/45/brexit-impact-updates-on-qrd-templates|];
+    CMDh QRD — [|https://www.hma.eu/human-medicines/cmdh/templates/qrd.html|]'
+  ansm_circular_references: '[NEEDS VERIFICATION — deferred: below search budget.
+    ANSM-specific procedural circulars governing French-language SmPC and PIL requirements
+    are not systematically indexed online; requires direct consultation of ANSM''s
+    official publications portal (ansm.sante.fr) or expert elicitation from ANSM regulatory
+    affairs practitioners.]'
+document_genres_in_scope:
+  primary:
+  - Summary of Product Characteristics (SmPC) — French-language version under EMA
+    QRD template
+  - Patient Information Leaflet (PIL / notice patient) — French-language version
+  - Common Technical Document (CTD) module prose — applicable modules in French or
+    English
+  secondary:
+  - Patent claims (pharmaceutical, French and European patent office filings)
+  - Pharmacovigilance periodic safety update reports (PSURs)
+  - Risk management plans (RMPs)
+  - Clinical study reports (CSRs) — regulatory submission sections
+  note: 'These document genres are characterized by highly formulaic, legally constrained
+    language governed by EMA QRD templates and ANSM requirements. They are categorically
+    distinct from PubMed research abstracts, which constitute the entirety of BLURB''s
+    input corpus. A 2025 Frontiers in Medicine study on LLM-based extraction from
+    SmPC documents (English) confirms ATC Codes and specific excipient dosages are
+    frequently missed or misclassified even by state-of-the-art LLMs, underscoring
+    the specialized difficulty of regulatory NER in this genre. Source: Frontiers/Medicine
+    SmPC IDMP extraction study — [|https://www.frontiersin.org/journals/medicine/articles/10.3389/fmed.2025.1598979/full|]'
+entity_ontology_in_scope:
+  regulatory_ner_entity_types:
+  - International Nonproprietary Names (INNs)
+  - ATC codes (Anatomical Therapeutic Chemical classification)
+  - Excipient nomenclature (INCI names, E-numbers, Ph. Eur. nomenclature)
+  - Posology expressions (French-language, e.g., 'deux comprimés par jour', dose ranges,
+    weight-based dosing)
+  - EMA-template contraindication qualifiers (population specifiers, condition qualifiers)
+  - Safety warning phrases (Black Triangle designation, pregnancy category language,
+    special warnings)
+  - Pharmaceutical form descriptors (tablet, capsule, solution for injection — French
+    terminology)
+  - Route of administration terms (French regulatory vocabulary)
+  - Storage condition expressions
+  - Marketing authorization holder (MAH) identifiers
+  benchmark_entity_coverage: 'BLURB NER datasets cover: chemical entities (BC5-Chemical),
+    disease entities (BC5-Disease, NCBI-Disease), gene/protein mentions (BC2GM, JNLPBA).
+    No label space exists for INNs, ATC codes, excipient nomenclature, posology expressions,
+    or EMA-template phrasing. Coverage is partial at best for chemical entities only.'
+  inn_database_reference: '[NEEDS VERIFICATION — deferred: low impact for scoring
+    relative to resolved gaps. WHO INN list and EDQM Standard Terms are the operative
+    references for EMA submissions; current versions would require direct verification
+    at WHO and EDQM portals. This does not materially change the gap assessment —
+    the absence of INN-aware NER in BLURB is structural regardless of the specific
+    list version.]'
+  atc_code_taxonomy_version: '[NEEDS VERIFICATION — deferred: low impact for scoring.
+    WHO ATC/DDD Index is updated annually; current version (2025) would be confirmed
+    at WHO Collaborating Centre for Drug Statistics Methodology. The absence of ATC
+    code NER in BLURB is the scoring-relevant fact, not the specific index version.]'
+  smpc_ner_extraction_evidence: 'A 2025 study applying LLMs with RAG to extract IDMP-compliant
+    fields from SmPC documents found that ATC Codes and specific excipient dosages
+    were ''frequently missing or misclassified'' and that some fields such as Pharmaceutical
+    Product required semantic search to outperform rule-based retrieval, confirming
+    the difficulty of regulatory-specific entity extraction even for current LLMs.
+    This provides direct empirical support for the entity ontology gap assessment.
+
+    Source: Frontiers in Medicine SmPC IDMP extraction study — [|https://www.frontiersin.org/journals/medicine/articles/10.3389/fmed.2025.1598979/full|]'
+sts_and_equivalence_framework:
+  description: 'The deployment uses semantic textual similarity (STS) to verify regulatory
+    consistency across document versions (e.g., SmPC vs. patient leaflet, original
+    vs. revised label). Regulatory equivalence differs from general semantic proximity:
+    small lexical differences in dose thresholds, contraindicated population qualifiers,
+    or safety warning language carry legal consequence under EMA/ANSM standards.'
+  decision_function: Borderline or inconsistent STS scores trigger human review (manual
+    revision flag); automatic rejection is not triggered by borderline scores alone.
+  critical_mismatch_categories:
+  - Dose threshold discrepancies (numerical values, units, frequency)
+  - Contraindicated population qualifiers (age bands, renal/hepatic impairment grades,
+    pregnancy trimesters)
+  - Safety warning scope differences (absolute vs. relative contraindication language)
+  - Indication scope modifiers (adult vs. pediatric, specific comorbidity qualifiers)
+  benchmark_sts_analog: BIOSSES (100 PubMed sentence pairs, 0–4 similarity score,
+    Pearson correlation metric) — structurally analogous but operationalizes general
+    biomedical proximity, not regulatory equivalence. Legally determinative lexical
+    differences are not modeled in BIOSSES scoring.
+  regulatory_equivalence_benchmarks_available: '[NOT FOUND — searched for EMA/ANSM
+    annotated consistency-checking corpora, academic regulatory STS datasets, and
+    pharmacovigilance literature formalizing regulatory equivalence scoring. No dedicated
+    regulatory equivalence STS benchmark was identified. The EMA AI Observatory 2024
+    report documents internal regulatory NLP tools (Scientific Explorer, PICROSS,
+    EurEKA, AERGIA) but none are framed as public benchmarks for label consistency
+    checking. This confirms the gap identified by the scaffold: no publicly available
+    regulatory STS benchmark exists as of 2024–2025.
+
+    Source: EMA 2024 AI Observatory Report — [|https://www.ema.europa.eu/en/documents/report/2024-ai-observatory-report_en.pdf|];
+    EMA AI tools overview — [|https://www.ema.europa.eu/en/about-us/how-we-work/data-regulation-big-data-other-sources/artificial-intelligence|]]'
+annotator_population_and_norms:
+  deployment_ground_truth_authority: Regulatory affairs specialists and legal experts
+    operating under EMA/ANSM normative frameworks; annotation judgments governed by
+    regulatory guidelines, not clinical relevance criteria.
+  benchmark_annotator_population: Biomedical researchers, Amazon Mechanical Turkers
+    (EBM PICO training/dev), Upwork contributors with medical training (EBM PICO test),
+    biomedical experts (BioASQ, BIOSSES). No regulatory affairs specialists or legal
+    experts.
+  anticipated_annotation_norm_mismatch: 'Systematic disagreements expected on borderline
+    cases: BLURB-style annotators are likely to prioritize clinical relevance, while
+    the deployment''s ground truth prioritizes rigid legal constraint satisfaction
+    (EMA/ANSM standard). This mismatch directly undermines label validity for this
+    use case.'
+  inter_annotator_agreement_studies: '[NOT FOUND — searched for IAA studies comparing
+    biomedical NLP annotators vs. regulatory affairs specialists on pharmaceutical
+    NER or STS tasks. No published study directly comparing these two annotator populations
+    was identified. This absence is itself informative: the regulatory-expert annotator
+    population has not been systematically studied in NLP annotation contexts, reinforcing
+    the severity of the annotator norm gap flagged by the scaffold.]'
+  regulatory_expert_annotated_datasets: '[NOT FOUND — No published NER or STS datasets
+    annotated by regulatory affairs professionals under EMA/ANSM frameworks were identified.
+    The most relevant parallel is the Italian DART dataset (AIFA-sourced SmPC corpus
+    for NER/RE, 2025), which covers regulatory document genres but is Italian-language
+    and does not involve regulatory-expert annotators. No French equivalent was found.
+
+    Source: DART Italian SmPC NER dataset paper — [|https://arxiv.org/html/2510.18475|]]'
+infrastructure_notes:
+  deployment_environment: Enterprise pharmaceutical document management system; end
+    users are institution-connected professionals with full desktop/server infrastructure.
+    No mobile, low-bandwidth, or connectivity constraints.
+  system_integration: NER and STS models integrated into document management pipeline;
+    outputs trigger either automatic approval for submission or flagging for manual
+    revision review.
+  model_serving_requirements: 'On-premises or European sovereign cloud deployment
+    is strongly preferred in EU pharmaceutical regulatory NLP contexts, based on multiple
+    converging factors: (1) regulatory submission documents contain commercially sensitive
+    information (CCI) and trade secrets protected under EMA Policy 0043; (2) GDPR
+    and EU AI Act compliance requirements create strong data residency pressures;
+    (3) EU AI Act classifies AI systems with ''high regulatory impact'' in the pharmaceutical
+    lifecycle as requiring special controls; (4) industry practice shows pharmaceutical
+    companies consider three models — on-premise data centers, European sovereign
+    cloud providers (OVHcloud, Outscale, Scaleway), or US hyperscalers under reinforced
+    contractual guarantees. The EMA''s own AI Reflection Paper (October 2024) requires
+    MAHs to ensure all AI/ML datasets and pipelines are ''fit for purpose and in line
+    with legal, ethical, technical, scientific, and regulatory standards''.
+
+    Sources: EMA AI Reflection Paper — [|https://www.ema.europa.eu/en/documents/scientific-guideline/reflection-paper-use-artificial-intelligence-ai-medicinal-product-lifecycle_en.pdf|];
+    Sovereign AI pharma guide — [|https://www.chapsvision.com/blog/sovereign-ai-pharma-compliance/|]'
+  data_sensitivity: Regulatory submission documents contain commercially sensitive
+    and legally privileged information; data handling must comply with applicable
+    confidentiality obligations and GDPR. EMA Policy 0070 governs proactive publication
+    of clinical data (relaunched September 2023), but pre-authorization submission
+    documents (SmPCs drafts, CTD modules, internal RMPs) remain protected CCI. The
+    European Health Data Space (EHDS), which entered into force March 2025, creates
+    new secondary-use obligations but clinical trial data will not be subject to EHDS
+    provisions until March 2031.
+  french_biomedical_nlp_tooling_availability: 'Three principal French biomedical pretrained
+    language models are currently available: (1) DrBERT (Labrak et al., ACL 2023)
+    — pretrained from scratch on public and private French medical data, highest pretraining
+    breadth including drug leaflets and clinical cases; (2) CamemBERT-bio (Touchent
+    & de la Clergerie, LREC-COLING 2024) — continual pretraining of CamemBERT on French
+    biomedical data, competitive on NER tasks; (3) AliBERT (Berhe et al., BioNLP 2023)
+    — pretrained with Unigram-based tokenizer, state-of-the-art on some downstream
+    tasks with smaller pretraining footprint. A comprehensive evaluation on DrBenchmark
+    (20 French biomedical tasks including NER and STS) shows no single model dominates
+    all tasks, and none has been fine-tuned specifically on EMA/ANSM regulatory document
+    genres (SmPCs, PILs, CTD modules).
+
+    Sources: DrBERT paper — [|https://arxiv.org/abs/2304.00958|]; CamemBERT-bio paper
+    — [|https://arxiv.org/abs/2306.15550|]; AliBERT paper — [|https://aclanthology.org/2023.bionlp-1.19/|];
+    DrBenchmark — [|https://aclanthology.org/2024.lrec-main.478/|]'
+domain_specific_notes:
+  regulatory_science_context: 'EU pharmaceutical regulation is a highly codified domain
+    with explicit template governance (EMA QRD SmPC template, PIL readability guidelines).
+    Compliance determination is a legal act, not a clinical judgment. NLP system outputs
+    that influence submission decisions carry regulatory and legal liability implications.
+    The EMA Reflection Paper on AI (October 2024) explicitly addresses this: AI used
+    at the ''marketing-authorisation stage'' to ''draft, compile, translate, or review
+    data to be included in the product information of a medicine'' must comply with
+    GxP standards and current EMA guidelines, with MAHs retaining full responsibility.
+
+    Source: EMA AI Reflection Paper — [|https://www.ema.europa.eu/en/documents/scientific-guideline/reflection-paper-use-artificial-intelligence-ai-medicinal-product-lifecycle_en.pdf|]'
+  language_register: SmPC and PIL language is formulaic, constrained, and template-driven.
+    This differs substantially from both clinical notes (informal, variable) and PubMed
+    research prose (argumentative, citation-dense). Formulaic repetition across document
+    versions is a feature, not noise — and deviations from formula are precisely what
+    the system must detect.
+  posology_expression_complexity: French posology expressions combine numerical quantities,
+    pharmaceutical form names, route of administration, frequency adverbs, and conditional
+    clauses (e.g., patient population qualifiers). These are compositional regulatory
+    entities not present in BLURB training data.
+  cross_document_consistency_requirement: The deployment requires semantic consistency
+    verification across document pairs (SmPC ↔ PIL, original ↔ revised version). BLURB's
+    BIOSSES task covers 100 isolated sentence pairs from a single domain with no cross-document
+    regulatory consistency framing.
+  eudralex_and_ctd_structure: '[NEEDS VERIFICATION — deferred: below search budget.
+    EudraLex Volume 2B (Notice to Applicants — CTD format) is the operative reference
+    for CTD structure; current version would require verification at the European
+    Commission EudraLex portal. The distinction between structured data fields and
+    free-text prose amenable to NER/STS is well understood from domain knowledge (Modules
+    1–5; Module 1 contains the SmPC/PIL; Modules 2–5 contain scientific summaries
+    and study reports), but formal citation was not pursued given budget constraints.]'
+  pharmacovigilance_nlp_literature: 'The EMA 2024 AI Observatory Report confirms active
+    internal development of pharmacovigilance NLP tools: EurEKA (adverse reaction
+    data extraction), AERGIA (automated signal adjudication), and ERATO (generative
+    AI-based literature screening for safety signals). The Swedish MPA''s PICROSS
+    tool performs semantic cross-referencing of product information. None of these
+    are publicly available benchmarks, but their existence confirms that EU regulatory
+    bodies are actively deploying NLP/AI for pharmacovigilance — providing institutional
+    context for the deployment''s plausibility and raising the bar for validation
+    requirements.
+
+    Source: EMA 2024 AI Observatory Report — [|https://www.ema.europa.eu/en/documents/report/2024-ai-observatory-report_en.pdf|];
+    EMA AI page — [|https://www.ema.europa.eu/en/about-us/how-we-work/data-regulation-big-data-other-sources/artificial-intelligence|]'
+  eu_ai_act_applicability: 'The EU AI Act entered into force 1 August 2024. NLP systems
+    that influence regulatory submission decisions (classifying whether documents
+    meet EMA/ANSM standards for submission) may fall under high-risk AI classification
+    if used as safety components of regulated processes. The EMA Reflection Paper
+    (October 2024) distinguishes ''high patient risk'' and ''high regulatory impact''
+    as the operative risk tiers and requires MAHs to document that all AI pipelines
+    are ''fit for purpose.'' France''s CNIL has announced forthcoming guidance tailored
+    to AI deployment in healthcare, developed with Haute Autorité de Santé (HAS),
+    aimed at aligning AI Act requirements with GDPR for pharmaceutical contexts.
+
+    Sources: EMA AI Reflection Paper — [|https://www.ema.europa.eu/en/documents/scientific-guideline/reflection-paper-use-artificial-intelligence-ai-medicinal-product-lifecycle_en.pdf|];
+    European Pharmaceutical Review AI Act article — [|https://www.europeanpharmaceuticalreview.com/article/264445/ai-act-data-governance-and-compliance-strategy-implications-in-pharma/|]'
+benchmark_gap_summary:
+  language_gap:
+    severity: HIGH — foundational
+    description: BLURB is exclusively English. The deployment targets French-language
+      documents. No porting strategy exists.
+    web_search_target: 'RESOLVED — French biomedical/pharmaceutical NLP benchmarks
+      identified:
+
+
+      (1) QUAERO French Medical Corpus: The primary French biomedical NER benchmark,
+      initially developed for entity recognition and normalization, used in CLEF eHealth
+      2015 (Task 1b) and 2016 (Task 2). Covers 10 entity categories mapped to UMLS
+      Semantic Groups (including Chemical and Drugs) across MEDLINE titles and EMEA
+      regulatory documents. The EMEA subcorpus contains regulatory texts directly
+      relevant to the deployment, but entity categories are UMLS-based (not INN/ATC/posology-specific)
+      and annotation norms reflect biomedical research, not regulatory compliance.
+
+      Sources: QUAERO corpus — [|https://quaerofrenchmed.limsi.fr/|]; HuggingFace
+      dataset — [|https://huggingface.co/datasets/DrBenchmark/QUAERO|]
+
+
+      (2) DrBenchmark (LREC-COLING 2024): The first comprehensive French biomedical
+      NLP benchmark, comprising 20 tasks including NER, POS tagging, QA, STS, and
+      classification. Evaluates 8 state-of-the-art masked language models (CamemBERT-bio,
+      DrBERT, AliBERT, CamemBERT, FlauBERT, FrALBERT, mBERT) on French biomedical
+      corpora. Includes STS tasks relevant to the deployment''s semantic consistency
+      requirement. Does not include regulatory document genres (SmPCs, PILs) or regulatory-expert
+      annotation.
+
+      Source: DrBenchmark paper — [|https://aclanthology.org/2024.lrec-main.478/|];
+      DrBenchmark website — [|https://drbenchmark.univ-avignon.fr/|]
+
+
+      (3) CLEF eHealth shared tasks (2015–2016): Provided French biomedical NER evaluation
+      infrastructure used to establish QUAERO as a benchmark. Results show high performance
+      achievable on French biomedical NER.
+
+      Source: CLEF eHealth 2016 PMC paper — [|https://pmc.ncbi.nlm.nih.gov/articles/PMC5756095/|]
+
+
+      Critical caveat: None of these French benchmarks cover regulatory document genres
+      (SmPCs, PILs) or regulatory-specific entity types (INNs, ATC codes, posology).
+      The QUAERO EMEA subcorpus is the closest match, but its entity taxonomy and
+      annotation norms remain research-biomedical, not regulatory-legal. The French
+      language gap in BLURB is confirmed foundational; QUAERO/DrBenchmark partially
+      address language form but not regulatory domain gaps.'
+  document_genre_gap:
+    severity: HIGH — full gap
+    description: BLURB contains no SmPCs, PILs, CTD modules, or patent claims. All
+      inputs are PubMed research abstracts.
+    web_search_target: 'PARTIALLY RESOLVED — No public French-language EU regulatory
+      NLP benchmark covering SmPCs or PILs was found. Key findings:
+
+
+      (1) QUAERO EMEA subcorpus: Contains 4 EMEA regulatory documents (segmented into
+      15 sub-documents) with NER annotations. This is the only publicly available
+      French regulatory document NLP resource identified, but it is extremely small
+      (4 EMEA-source documents), uses UMLS-based entity categories rather than regulatory-specific
+      types, and is primarily used as a biomedical NER benchmark rather than a regulatory
+      compliance evaluation resource.
+
+      Source: QUAERO HuggingFace dataset documentation — [|https://huggingface.co/datasets/DrBenchmark/QUAERO|]
+
+
+      (2) DART (Italian, 2025): A recently published Italian SmPC corpus for NER/RE
+      (AIFA-sourced) with regulatory-relevant entity types including active substances,
+      administration routes, pharmacokinetic mechanisms, and pregnancy risk categories.
+      This is the closest analog to what would be needed for French regulatory NLP,
+      but is Italian-language and not validated against regulatory expert annotators.
+
+      Source: DART paper — [|https://arxiv.org/html/2510.18475|]
+
+
+      (3) NLP for regulatory labeling (2025 review): A practitioner review of NLP
+      applied to EU SmPC/prescribing information documents confirms that current use
+      is ''hybrid: AI assists with retrieval, initial drafts, formatting, and consistency
+      checks, while humans perform final authoring, quality control, and regulatory
+      compliance checks.'' No validated regulatory-specific benchmark is documented.
+
+      Source: IntuitionLabs NLP regulatory labeling review — [|https://intuitionlabs.ai/articles/nlp-regulatory-labeling|]
+
+
+      Conclusion: The document genre gap remains a full gap for French-language regulatory
+      genres. The QUAERO EMEA subcorpus is a marginal partial resource. The DART Italian
+      corpus is an informative parallel but not directly applicable.'
+  entity_ontology_gap:
+    severity: HIGH — partial at best
+    description: BLURB NER covers chemical, disease, gene entities. No INN, ATC code,
+      excipient, or posology label space exists.
+    web_search_target: 'PARTIALLY RESOLVED — No INN-specific, ATC-code-specific, or
+      posology-specific French-language NER dataset was identified. Key findings:
+
+
+      (1) QUAERO ''Chemical and Drugs'' category: Covers chemical/drug entity mentions
+      normalized to UMLS CUIs, which partially overlaps with INN recognition but uses
+      UMLS categories rather than EMA-specific nomenclature. No ATC code, excipient,
+      or posology subtype is annotated.
+
+      Source: QUAERO documentation — [|https://quaerofrenchmed.limsi.fr/|]
+
+
+      (2) SmPC IDMP extraction study (Frontiers in Medicine, 2025): Demonstrates empirically
+      that ATC Codes and excipient dosages are ''frequently missing or misclassified''
+      by LLMs even in English SmPC extraction, and that fields like Pharmaceutical
+      Product require semantic search to outperform rule-based retrieval. This confirms
+      the practical severity of the entity ontology gap even for current generation
+      models.
+
+      Source: Frontiers SmPC study — [|https://www.frontiersin.org/journals/medicine/articles/10.3389/fmed.2025.1598979/full|]
+
+
+      (3) DART Italian corpus: Includes active substances, administration routes,
+      and pregnancy risk categories as entity types in Italian SmPCs — structurally
+      closer to regulatory NER than BLURB, but Italian-language and not covering posology
+      or ATC codes as distinct NER targets.
+
+      Source: DART paper — [|https://arxiv.org/html/2510.18475|]
+
+
+      Conclusion: The entity ontology gap is confirmed. No French regulatory NER dataset
+      with INN, ATC, excipient, or posology label spaces exists publicly. The gap
+      is structural and would require bespoke corpus development under EMA/ANSM annotation
+      guidelines.'
+  sts_output_construct_gap:
+    severity: HIGH — qualitative mismatch
+    description: BIOSSES operationalizes general biomedical semantic proximity. The
+      deployment requires regulatory equivalence as a legally determinative scoring
+      function.
+    web_search_target: 'NOT FOUND — No regulatory equivalence STS benchmark, EMA/ANSM
+      annotated consistency-checking corpus, or academic formalization of regulatory
+      STS distinct from general biomedical STS was identified. The EMA''s internal
+      tools (Scientific Explorer, PICROSS) perform some form of semantic matching
+      on regulatory documents but are not public benchmarks. DrBenchmark includes
+      French STS tasks (DEFT-2020, CLISTER) evaluated with Spearman correlation and
+      EDRM metrics, but these cover general biomedical semantic similarity, not regulatory
+      equivalence. This confirms the scaffold''s assessment: regulatory equivalence
+      STS is an un-benchmarked construct.
+
+      Sources: DrBenchmark — [|https://aclanthology.org/2024.lrec-main.478/|]; EMA
+      AI Observatory 2024 — [|https://www.ema.europa.eu/en/documents/report/2024-ai-observatory-report_en.pdf|]'
+  annotator_norm_gap:
+    severity: HIGH — systematic mismatch anticipated
+    description: BLURB annotators are biomedical researchers; deployment ground truth
+      is regulatory affairs specialists under EMA/ANSM norms. Borderline case disagreements
+      are expected.
+    web_search_target: 'NOT FOUND — No IAA studies comparing biomedical NLP annotators
+      vs. regulatory affairs specialists on pharmaceutical NER or STS tasks were identified.
+      No regulatory-expert-annotated pharmaceutical NLP dataset (French or English)
+      was found in the literature. The closest analog is the DART Italian SmPC corpus
+      (2025), which uses AIFA regulatory document text as source material but does
+      not involve regulatory expert annotators or IAA studies comparing regulatory
+      vs. biomedical annotator populations. This null result confirms the gap is not
+      merely unresolved in BLURB but unaddressed in the NLP literature more broadly.
+
+      Source: DART paper — [|https://arxiv.org/html/2510.18475|]'
+  threshold_sensitivity_gap:
+    severity: MODERATE
+    description: BLURB reports aggregate metrics without confidence calibration or
+      threshold-sensitivity analysis. The deployment's human-review flagging logic
+      requires characterization of model behavior at decision boundaries.
+    web_search_target: '[NEEDS VERIFICATION — deferred: below search budget after
+      resolving higher-priority gaps. Confidence calibration in biomedical NLP is
+      an active research area; threshold-sensitive evaluation for regulatory human-in-the-loop
+      workflows has not been specifically searched. This gap is structural to BLURB''s
+      metric design and would not be resolved by any currently identified French or
+      EU regulatory benchmark.]'
+  regulatory_normative_validation_gap:
+    severity: HIGH — full gap
+    description: BLURB has not been validated against EMA guidelines, ANSM circulars,
+      or any EU regulatory normative framework.
+    web_search_target: 'PARTIALLY RESOLVED — No NLP benchmark has been validated against
+      EMA SmPC guidelines or ANSM circulars. However, the EMA has published the following
+      directly relevant normative framework that would govern any such validation:
+
+
+      (1) EMA Reflection Paper on AI in Medicinal Product Lifecycle (October 2024):
+      Establishes that AI tools used in product information drafting/reviewing must
+      be ''validated'' under GxP standards and current EMA guidelines, with human
+      oversight mechanisms. The paper specifies that ''quality review mechanisms should
+      be in place to ensure that AI-generated text (used for drafting, compiling,
+      editing, translating, tailoring or reviewing product information) is factually
+      and syntactically correct.''
+
+
+      (2) EMA-HMA Guiding Principles on LLMs (September 2024): Provides regulatory
+      network-level guidance on LLM use, covering data security, critical evaluation
+      of outputs, and governance structures.
+
+
+      (3) EMA LLM Guiding Principles note potential use of LLMs for ''processing extensive
+      documentation, automating data mining and optimising routine administrative
+      tasks'' while acknowledging risks of ''irrelevant or inaccurate responses and
+      posing potential data security risks.''
+
+
+      These documents collectively constitute the normative framework against which
+      any regulatory NLP benchmark validation would need to be assessed — and confirm
+      that no such benchmark validation has yet been conducted.
+
+      Sources: EMA AI Reflection Paper — [|https://www.ema.europa.eu/en/documents/scientific-guideline/reflection-paper-use-artificial-intelligence-ai-medicinal-product-lifecycle_en.pdf|];
+      EMA AI page (LLM guiding principles) — [|https://www.ema.europa.eu/en/about-us/how-we-work/data-regulation-big-data-other-sources/artificial-intelligence|]'
+net_new_fields:
+  ema_ai_governance_context:
+    description: 'The EMA and HMA published a multi-annual AI workplan (2023–2028)
+      and released in September 2024 guiding principles for LLM use by European regulatory
+      network staff. In October 2024, EMA adopted a Reflection Paper on AI in the
+      Medicinal Product Lifecycle, establishing that AI tools used in product information
+      drafting or reviewing must comply with GxP standards and EMA guidelines, with
+      MAHs retaining full responsibility for algorithm fitness. This is the directly
+      applicable normative framework for the deployment and provides a concrete validation
+      standard against which BLURB''s fitness should be assessed. The EMA also operates
+      internal NLP tools (Scientific Explorer, EurEKA, AERGIA, ERATO) demonstrating
+      institutional commitment to regulatory NLP, but none constitute public benchmarks.
+
+      Source: EMA AI Reflection Paper — [|https://www.ema.europa.eu/en/documents/scientific-guideline/reflection-paper-use-artificial-intelligence-ai-medicinal-product-lifecycle_en.pdf|];
+      EMA AI Observatory 2024 — [|https://www.ema.europa.eu/en/documents/report/2024-ai-observatory-report_en.pdf|]'
+    validity_dimension: OO, OC — directly affects how regulatory normative validation
+      of benchmark outputs should be framed in the assessment
+  french_biomedical_nlp_model_landscape:
+    description: 'Three French biomedical pretrained language models are available
+      as of 2024: DrBERT (from-scratch pretraining on French medical data including
+      drug leaflets; ACL 2023), CamemBERT-bio (continual pretraining; LREC-COLING
+      2024), and AliBERT (Unigram tokenizer, BioNLP 2023). All three are evaluated
+      in DrBenchmark across 20 French biomedical tasks. No model has been fine-tuned
+      on EMA/ANSM regulatory document genres. The DrBenchmark paper notes that training
+      corpus diversity is limited to publicly available scientific content, and performance
+      on private clinical/regulatory data may not be representative. CamemBERT-bio
+      shows slight advantage on NER tasks; DrBERT on classification tasks; no dominant
+      model across all tasks.
+
+      Sources: DrBERT — [|https://arxiv.org/abs/2304.00958|]; CamemBERT-bio — [|https://arxiv.org/abs/2306.15550|];
+      AliBERT — [|https://aclanthology.org/2023.bionlp-1.19/|]; DrBenchmark — [|https://aclanthology.org/2024.lrec-main.478/|]'
+    validity_dimension: IF — resolves the tooling availability question for French
+      biomedical NLP adaptation, though regulatory document fine-tuning remains an
+      open gap
+  quaero_emea_subcorpus:
+    description: 'The QUAERO French Medical Corpus includes a small EMEA-document
+      subcorpus (4 EMEA documents, segmented into 15 sub-documents) annotated with
+      10 UMLS-based entity categories including Chemical and Drugs. This is the only
+      publicly identified French-language regulatory document NLP resource. It is
+      extremely small and uses UMLS semantic groups rather than EMA-specific regulatory
+      entity types (no INN, ATC, posology, or excipient subtypes). It was used in
+      CLEF eHealth 2015–2016 shared tasks and is available in BRAT and BioC formats.
+      Its relevance is as a starting point for domain adaptation, not as a regulatory
+      equivalence benchmark.
+
+      Source: QUAERO corpus — [|https://quaerofrenchmed.limsi.fr/|]; HuggingFace —
+      [|https://huggingface.co/datasets/DrBenchmark/QUAERO|]'
+    validity_dimension: IC, IF — provides a marginal French regulatory document resource
+      for domain adaptation but does not address entity ontology or annotator norm
+      gaps
+  dart_italian_smpc_corpus_parallel:
+    description: 'DART (Drug Annotation from Regulatory Texts), published October
+      2025, is the first structured corpus of Italian SmPC documents derived from
+      the Italian Medicines Agency (AIFA), covering NER entities including active
+      substances, administration routes, pharmacokinetic mechanisms, and pregnancy
+      risk categories. It is Italian-language and does not involve regulatory-expert
+      annotators, but is the closest structural analog to what would be needed for
+      the French deployment context. Its existence demonstrates that national regulatory
+      SmPC NER corpus development is technically feasible and may inform a French
+      equivalent development roadmap.
+
+      Source: DART paper — [|https://arxiv.org/html/2510.18475|]'
+    validity_dimension: IC, OC — informative precedent for regulatory SmPC NER corpus
+      development; confirms the gap is not inherent to the domain but reflects absence
+      of resource investment for French
+  qrd_v11_consultation_in_progress:
+    description: 'EMA launched a public consultation on QRD SmPC/PIL template version
+      11 in April 2025, with comments due 31 August 2025. V11 primarily revises the
+      Package Leaflet structure (potential ''Key Information'' section) and clarifies
+      SmPC formatting. The current operative version for submissions is v10.4 (February
+      2024). Any NLP system trained or evaluated on SmPC/PIL text should account for
+      the ongoing template transition: text trained on pre-v10.4 documents may not
+      reflect current template requirements, and v11 changes may alter the formulaic
+      language patterns that the deployment''s NER/STS models depend on.
+
+      Source: EMA draft QRD v11 consultation — [|https://www.ema.europa.eu/en/documents/template-form/quality-review-documents-qrd-annotated-template-v11-draft-public-consultation_en.pdf|];
+      EMA QRD templates page — [|https://www.ema.europa.eu/en/human-regulatory-overview/marketing-authorisation/product-information-requirements/product-information-qrd-templates-human|]'
+    validity_dimension: IO, IC — template transitions affect the stability of the
+      formulaic language patterns that define regulatory NER/STS targets; a benchmark
+      or fine-tuning corpus built on pre-v10.4 data may already be partially obsolete

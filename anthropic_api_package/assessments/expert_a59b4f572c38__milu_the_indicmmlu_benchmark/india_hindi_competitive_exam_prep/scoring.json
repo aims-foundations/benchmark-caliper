@@ -4,398 +4,418 @@
   "dimensions": {
     "input_ontology": {
       "score": 3,
-      "justification": "MILU's 8-domain, 41-subject taxonomy was designed around Indian competitive exam content [Q22, Q42] and meaningfully overlaps with the deployment's priority subjects: Polity (Law & Governance), History (Social Sciences/Arts & Humanities), Economy (Business Studies), and GK. Dataset analysis empirically confirms strong representation of UPSC-relevant Polity, History, Economy, Hindi grammar, and even UPSC-style Ethics scenarios. However, MILU's macro-domain taxonomy does not separately enumerate Mathematics/Quantitative Aptitude, Logical Reasoning, or Current Affairs as named categories — three of the deployment's HIGH-priority subject areas for SSC/banking and UPSC CSAT. Dataset analysis partially mitigates this concern (reasoning items appear under Science domain, arithmetic under Business Studies), but pooling across MILU's 40+ exam types [Q27] means central-exam vs. state-PSC items are not separable, and the sample also reveals significant construct-irrelevant content (specialist Engineering/FORTRAN, South India–specific items) that is irrelevant to UPSC/SSC/banking syllabi.",
+      "justification": "MILU's 8 macro-domain / 41-subject taxonomy [Q42] aligns partially with central-exam priority subjects: Social Sciences and Law & Governance map to History/Polity, while Arts & Humanities covers cultural GK. However, the taxonomy does not separately enumerate Mathematics/Reasoning or Current Affairs as named categories — both heavily weighted in UPSC CSAT and SSC CGL Tier 1 [WEB-9, WEB-10, WEB-15]. Dataset analysis confirms reasoning and quantitative items exist (in the English partition: D8, D9), but the Hindi sample shows a heavy skew toward translated Engineering & Tech items (DC motor, half-wave rectifier, transformer, AM bandwidth, Fortran 77) that are peripheral to UPSC GS / SSC GA syllabi. State-level and central-level items are pooled without metadata distinguishing them [Q27], making it impossible to filter for central-exam scope (D24, D27).",
       "strengths": [
-        "Indian-exam-grounded taxonomy with explicit cultural subjects (local history, arts, festivals, laws) [Q12, Q42]",
-        "Empirical coverage of Polity, History, Economy, Hindi grammar, and UPSC-style ethics confirmed in the Hindi validation split [DATASET-D1, D2, D9, D56]",
-        "Reasoning and quantitative content present in actual data despite not being named macro-domains [DATASET-D13, D15, D17, D18]"
+        "Explicit India-first design covering Science, Social Sciences, Humanities, Arts, Business Studies, Law [Q23, Q74] aligns with multi-domain GK breadth required for UPSC/SSC.",
+        "Hierarchical 8-domain × 41-subject structure [Q42] supports per-subject performance analysis relevant to syllabus mapping.",
+        "Reasoning and quantitative aptitude content is present in MILU's taxonomy, confirmed empirically in the English partition (DATASET-D8, D9)."
       ],
       "checklist_responses": {
-        "IO-1": "Required categories per elicitation Q1: GK, Current Affairs, History, Mathematics/Reasoning, Polity, Hindi proficiency. MILU's taxonomy [Q42] explicitly covers History/Polity/GK domains; Mathematics/Reasoning and Current Affairs are not named macro-domains but appear empirically in data [DATASET-D13–D18, D19–D22].",
-        "IO-2": "Mathematics/Quantitative Aptitude, Logical Reasoning, and Current Affairs are not enumerated in the 8-domain taxonomy [Q42]; this is a documented partial gap, mitigated by empirical presence of reasoning/arithmetic items in the Hindi split [DATASET-D13, D15, D16, D17, D18].",
-        "IO-3": "Sample contains significant Engineering & Technology specialist content (DC motors, FORTRAN, AM/FM modulation, rectifiers) outside UPSC/SSC/banking syllabi [DATASET-D35, D36, D37, D38]; this is construct-irrelevant variance for the deployment.",
-        "IO-4": "Pooling of 40+ exam types [Q27] across national and state levels [Q92] without published per-tier breakdown means central-exam items cannot be isolated; this harms content validity for a central-exam-only deployment."
+        "IO-1": "For central-exam aspirants (UPSC/SSC/banking), priority categories are GK, Current Affairs, History, Polity, Mathematics/Reasoning, Hindi proficiency, Geography, Economics (elicitation Q1; [WEB-9, WEB-10, WEB-15]).",
+        "IO-2": "Mathematics/Reasoning and Current Affairs are not named as MILU macro-domains [Q42]; they may be subsumed under other domains but lack explicit enumeration. Dataset findings confirm reasoning/quant items exist in the English partition (DATASET-D8, D9) but not whether the Hindi partition has comparable representation. State-level vs. central-exam labeling is absent (DATASET-D24, D27).",
+        "IO-3": "MILU pools state-PSC and central-exam items [Q27, Q92] and the observed Hindi sample contains low-priority Engineering/Tech and niche CS items (Fortran 77, AM bandwidth) that are construct-irrelevant for UPSC/SSC GS (DATASET-D5, D6, D7, D16, D36).",
+        "IO-4": "Two notable gaps: (a) absence of explicit Current Affairs and Mathematics/Reasoning macro-domains hampers syllabus-aligned scoring; (b) inability to separate central-exam from state-PSC items at the metadata level injects construct-irrelevant variance for this deployment."
       },
       "evidence_quotes": [
-        "[Q22] 'MILU is a large, multi-domain test set containing multiple-choice based questions (MCQs) taken from over 41 subjects with an emphasis on India-specific knowledge.' (p.3)",
+        "[Q42] 'Following the manual merging of related clusters, we determine 41 distinct subject names, which fall into eight main domains: Arts and Humanities, Social Sciences, Environmental Sciences, Law and Governance, Health and Medicine, Science, Engineering and Technology, and Business Studies.' (p.4)",
+        "[Q23] 'This benchmark covers many domains, including Science, Social Sciences, Humanities, Arts, Business Studies, and Law, among others.' (p.3)",
         "[Q27] 'Our benchmark includes questions from over 40 different types of exams conducted both at the national and state levels over recent years.' (p.3)",
-        "[Q42] 'we determine 41 distinct subject names, which fall into eight main domains: Arts and Humanities, Social Sciences, Environmental Sciences, Law and Governance, Health and Medicine, Science, Engineering and Technology, and Business Studies.' (p.4)"
+        "[Q74] 'we introduced MILU—Multilingual Indic Language Understanding Benchmark-a comprehensive benchmark specifically designed to evaluate LLMs across 11 Indic languages, spanning diverse domains and culturally relevant subjects.' (p.8)"
       ],
       "evidence_web_sources": [
-        "[WEB-9] UPSC Prelims subject weightage analysis (Current Affairs, History, Polity, Geography, Economy, Environment each 10–25 questions)",
-        "[WEB-10] SSC CGL Tier 1 covers General Intelligence/Reasoning, General Awareness, Quantitative Aptitude, English Comprehension",
-        "[WEB-15] UPSC CSAT Paper 2 covers Quantitative Aptitude and Logical Reasoning"
+        "[WEB-9] UPSC Prelims subject weightage — Current Affairs, Economy, History, Geography, Polity, Environment each 10–25 questions/year",
+        "[WEB-10] SSC CGL Tier 1 covers Reasoning, General Awareness, Quantitative Aptitude, English Comprehension",
+        "[WEB-15] UPSC CSAT Paper 2 covers Quantitative Aptitude and Logical Reasoning (qualifying)"
       ],
       "evidence_dataset": [
-        "DATASET-D1, D2, D3, D5, D6: Strong Polity/Constitution coverage (Mandamus, 44th Amendment, voting age, Panchayati Raj)",
-        "DATASET-D9, D10, D11, D50, D52: Medieval and modern Indian history items aligned with UPSC syllabus",
-        "DATASET-D13, D14, D17, D18: Logical reasoning items (series, syllogism, seating) present in data despite no named taxonomy category",
-        "DATASET-D15, D16: Quantitative aptitude (interest, averages) present under Business Studies domain",
-        "DATASET-D35, D36, D37, D38: Specialist engineering/programming content irrelevant to UPSC/SSC/banking",
-        "DATASET-D31, D32, D33, D34: South India–specific items (Pandya, Tamil cartoons, Telangana) of low priority for North India central-exam focus"
+        "DATASET-D8: Logical Reasoning analogy item present in English partition — confirms reasoning subject exists in MILU taxonomy",
+        "DATASET-D9: Quantitative aptitude (compound interest) in English partition — confirms math subject coverage",
+        "DATASET-D5/D6/D7/D16/D36: Hindi sample contains Engineering and niche CS items (Fortran 77, AM bandwidth) — peripheral to UPSC/SSC GS",
+        "DATASET-D24: Maharashtra Legislative Committee question — state-level governance content not in central-exam scope",
+        "DATASET-D27: MP industrial geography question — state-level content commingled with central-exam items"
       ],
       "evidence_map": {
         "IO-1": [
-          "Q42",
           "WEB-9",
           "WEB-10",
           "WEB-15"
         ],
         "IO-2": [
           "Q42",
-          "DATASET-D13",
-          "DATASET-D15",
-          "DATASET-D16",
-          "DATASET-D17"
+          "DATASET-D8",
+          "DATASET-D9",
+          "DATASET-D24",
+          "DATASET-D27"
         ],
         "IO-3": [
-          "DATASET-D35",
-          "DATASET-D36",
-          "DATASET-D37",
-          "DATASET-D38",
-          "DATASET-D31",
-          "DATASET-D32"
+          "Q27",
+          "DATASET-D5",
+          "DATASET-D6",
+          "DATASET-D7",
+          "DATASET-D16",
+          "DATASET-D36"
         ],
         "IO-4": [
+          "Q42",
           "Q27",
-          "Q92"
+          "DATASET-D24"
         ]
       },
       "confidence": "high",
       "information_gaps": [
-        "Proportion of MILU Hindi items sourced from central exams (UPSC/SSC/banking) vs. state PSCs is not published",
-        "Item-level breakdown of Current Affairs vs. timeless GK is unavailable"
+        "Proportion of MILU Hindi items aligned to UPSC/SSC/banking vs. state PSC is not published.",
+        "Whether Mathematics/Reasoning and Current Affairs are present in the Hindi partition at central-exam syllabus weight is not quantifiable from the small validation sample."
       ],
       "requires_expert_verification": [
-        "Whether the empirical density of reasoning and quantitative items in the full Hindi test split is sufficient for SSC/banking evaluation"
+        "A subject-matter expert in UPSC/SSC syllabus design should map MILU's 41 subjects to central-exam syllabus weights and quantify representation in the Hindi partition's test split."
       ]
     },
     "input_content": {
       "score": 2,
-      "justification": "Input content is the HIGH-priority dimension per elicitation. MILU's documented sourcing from real Indian exam papers [Q24, Q25] and explicit India-first design [Q11] provide a strong foundation, and the dataset analysis confirms genuine North India regional content (UP minerals, Chikankari, Rajasthan literacy/geography, Kota painting) [DATASET-D23, D25, D27, D28, D29]. However, the dataset analysis surfaces several CRITICAL/MAJOR content-validity violations specific to this Hindi-medium central-exam deployment: (a) 100% of the 245 Hindi validation samples are flagged is_translated=True [Limitation #1], far exceeding the documented ~25% overall translation rate [Q47] and creating high risk of unnatural Hindi register from GPT-4O translation [Q44, Q45]; (b) English-vocabulary questions ('grim', 'didactic', 'Evangelize') are mislabeled as Hindi Language Studies content [DATASET-D40, D41, D42], directly violating the elicitation's 10% code-mixing ceiling for English-medium conventions; (c) Current Affairs items are dated 2018–2022 [DATASET-D19, D20, D21, D22], creating staleness for 2025–2026 aspirants — a documented benchmark limitation since MILU has no currency mechanism; (d) significant South India–specific content (Telangana, Tamil) and specialist engineering items appear in the Hindi pool, diluting deployment relevance.",
+      "justification": "MILU's stated design priorities — India-first sourcing, regional cultural content, sourcing from real exam papers [Q11, Q12, Q24, Q25] — are well aligned with the deployment's content needs. However, dataset analysis reveals two critical issues for the Hindi partition: (1) all 26 Hindi validation examples carry is_translated=True (DATASET-D13), suggesting the Hindi partition may contain a much higher translated proportion than the documented overall ~25% [Q47]; (2) cross-language item duplication is pervasive (DATASET-D14/D15/D29), reducing effective Hindi-specific content. North India sub-regional content is sparse in the observed Hindi sample (only DATASET-D3 on UP minerals). Current Affairs items are time-bounded to 2014–2022 events (DATASET-D4, D25, D33), creating staleness risk for 2025–26 exam cycles. While translated items use fluent Devanagari with low code-mixing (DATASET-D12, D21), the linguistic register may not match authentic Hindi-medium exam papers.",
       "strengths": [
-        "Source provenance from actual competitive exam papers via online portals [Q24, Q25, Q26]",
-        "Explicit India-first design with culturally relevant subjects [Q11, Q12]",
-        "Empirical North India regional content present (UP, Rajasthan items) [DATASET-D23, D25, D27, D28, D29]",
-        "UPSC-style Ethics scenario question type captured [DATASET-D56]"
+        "Source content is real Indian competitive exam papers [Q24, Q25], grounding the input in authentic exam ecosystems.",
+        "India-first design explicitly includes culturally relevant subjects — local history, arts, festivals, laws [Q12, Q2].",
+        "Constitutional law, Mughal/medieval North Indian history, and Indian GK are present in Hindi (DATASET-D1, D2, D3, D11, D18) — directly relevant to UPSC/SSC content.",
+        "Observed Hindi items use clean Devanagari with minimal English code-mixing (DATASET-D12, D21), respecting the deployment's ~10% ceiling."
       ],
       "checklist_responses": {
-        "IC-1": "Yes — central exams require both pan-India GK and North India sub-regional knowledge per elicitation Q2; dataset confirms partial regional coverage [DATASET-D23, D28] but Chhath Puja, zamindari, and key North Indian freedom fighters were not observed in the sample.",
-        "IC-2": "Generally aligned for Indian content [Q12], but cultural-fit issues exist: South Indian items (Tamil/Telangana) [DATASET-D31, D32, D33, D34] are pan-India GK at the periphery, and English-vocabulary items embedded in Hindi [DATASET-D40, D41, D42] mismatch the Hindi-medium register.",
-        "IC-3": "Western-specific knowledge is not a dominant concern, but English-medium textbook conventions surface via translation: dataset shows 100% translation rate in the validation sample [Limitation #1] and English vocabulary tests in Hindi-labeled content [DATASET-D40, D41, D42]; this exceeds the deployment's ~10% code-mixing ceiling [elicitation Q4].",
-        "IC-4": "INSUFFICIENT DOCUMENTATION — paper does not report annotator demographics for the Hindi subset; would need to know whether reviewers were Hindi-medium graduates familiar with central-exam idiom.",
-        "IC-5": "Documented violations: (a) heavy translation rate in observed Hindi split [Limitation #1, Q47]; (b) Current Affairs staleness [DATASET-D19, D20, D21, D22]; (c) English-vocabulary items in Hindi pool [DATASET-D40–D42]; (d) South India–specific content density [DATASET-D31–D34]. Each harms content validity for North-India Hindi-medium central-exam deployment."
+        "IC-1": "Yes, deployment requires both pan-India GK and North India sub-regional knowledge (elicitation Q2). MILU partially addresses this — pan-India GK is well represented (DATASET-D1, D11, D18, D22), but North India sub-regional content (Chhath Puja, zamindari, North Indian freedom fighters) is sparse in observed Hindi sample (only DATASET-D3).",
+        "IC-2": "Cultural alignment is partially achieved through India-first sourcing [Q11, Q24], but the dominant translation path for the Hindi partition (DATASET-D13: 100% is_translated in sample) means linguistic-cultural register may not match Hindi-medium exam conventions.",
+        "IC-3": "No Western-specific content was observed; the benchmark is India-centric. However, translated engineering items (DATASET-D5, D6, D7, D36) inject construct-irrelevant content that mismatches central-exam syllabus.",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — paper does not report whether annotators or reviewers were Hindi-medium graduates or domain experts familiar with central-exam content [Q87 mentions only 'AI4Bharat volunteers'].",
+        "IC-5": "Critical content issues: (a) probable over-representation of translated items in Hindi partition; (b) Current Affairs staleness (events 2014–2022 in a benchmark to be used for 2025–26 prep); (c) cross-language duplication (DATASET-D14/D15/D29) reducing genuine Hindi-source diversity; (d) sparse North India sub-regional items observed."
       },
       "evidence_quotes": [
         "[Q11] 'We designed MILU with an India-first perspective by collecting questions from various national, state, and regional exams.' (p.2)",
         "[Q24] 'collecting the questions from various public exams taken by individuals intending to either pursue higher studies or seek career advancements, such as qualification tests and national and state-level civil services exams' (p.3)",
+        "[Q25] 'We gathered exam-specific questions by scraping various online exam portals that offer previously released question papers from various exams in multiple different languages.' (p.3)",
         "[Q44] 'For subjects with insufficient questions, we sampled questions from the English set from that subject and translated them into the required language using GPT-4O.' (p.4)",
-        "[Q47] 'Of the total 79K questions, only 25% of questions are translated from English' (p.4)"
+        "[Q47] 'Of the total 79K questions, only 25% of questions are translated from English, with the remainder' (p.4)",
+        "[Q12] 'These questions include culturally relevant subjects such as local history, arts, festivals, and laws, alongside traditional academic subjects like science.' (p.2)"
       ],
       "evidence_web_sources": [
-        "[WEB-9] UPSC Current Affairs ranges 0–27 questions per year — high weight, currency-sensitive"
+        "[WEB-9] Current Affairs is heavily and variably weighted in UPSC GS Paper 1, raising staleness concerns for older exam scrapes"
       ],
       "evidence_dataset": [
-        "DATASET-D23, D25, D27, D28, D29: North India regional content (UP minerals, Chikankari, Rajasthan, Kota painting) confirmed",
-        "DATASET-D19, D20, D21, D22: Current Affairs items dated 2018–2022, stale for 2025–2026 aspirants",
-        "DATASET-D40, D41, D42: English vocabulary questions (grim, didactic, Evangelize) labeled as Hindi Language Studies — violates Hindi-medium register",
-        "DATASET-D31, D32, D33, D34: Telangana/Tamil-specific items reduce deployment relevance for North India central-exam focus",
-        "Limitation #1: 100% (245/245) of reviewed Hindi validation examples are is_translated=True, far above documented ~25% rate",
-        "DATASET-D53, D37: Engineering/FORTRAN content translated into Hindi inflates technical specialist proportion"
+        "DATASET-D13: All 26 Hindi validation examples carry is_translated=True — sample suggests Hindi partition translation rate substantially exceeds the documented 25% overall average",
+        "DATASET-D14/D15: Identical 1991 financial crisis question appears in English original and Hindi translation — confirms cross-language translation pipeline",
+        "DATASET-D29: 44th Constitutional Amendment question appears identically across Hindi, Tamil, Malayalam — cross-language item duplication reduces Hindi-specific diversity",
+        "DATASET-D3: UP minerals question — only observed North India sub-regional item in Hindi sample (1 of 26)",
+        "DATASET-D4/D25/D33: Current Affairs items reference 2022 events — stale for 2025–26 exam cycles",
+        "DATASET-D12/D21: Hindi items use clean Devanagari with minimal English intrusion — code-mixing within deployment ceiling",
+        "DATASET-D1/D2/D11/D18: Substantive Polity, Mughal history, Geography, Arts GK content present in Hindi"
       ],
       "evidence_map": {
         "IC-1": [
           "Q11",
           "Q12",
-          "DATASET-D23",
-          "DATASET-D28",
-          "DATASET-D29"
+          "DATASET-D1",
+          "DATASET-D2",
+          "DATASET-D3",
+          "DATASET-D11"
         ],
         "IC-2": [
-          "Q12",
-          "DATASET-D31",
-          "DATASET-D32",
-          "DATASET-D40"
+          "Q11",
+          "Q24",
+          "DATASET-D13"
         ],
         "IC-3": [
-          "Q44",
-          "Q47",
-          "DATASET-D40",
-          "DATASET-D41",
-          "DATASET-D42"
+          "DATASET-D5",
+          "DATASET-D6",
+          "DATASET-D7",
+          "DATASET-D36"
         ],
         "IC-4": [],
         "IC-5": [
+          "Q44",
           "Q47",
-          "DATASET-D19",
-          "DATASET-D20",
-          "DATASET-D40",
-          "DATASET-D31"
+          "DATASET-D13",
+          "DATASET-D14",
+          "DATASET-D15",
+          "DATASET-D29",
+          "DATASET-D4",
+          "DATASET-D25",
+          "WEB-9"
         ]
       },
       "confidence": "high",
       "information_gaps": [
-        "Code-mixing rate per Hindi item not quantified",
-        "Whether the validation split's 100% translation rate generalizes to the test split is unverified [Limitation #1]",
-        "Annotator demographics for Hindi audits not reported [Q87]",
-        "Density of Chhath Puja, zamindari, North Indian freedom-fighter content in the full Hindi test split not assessed"
+        "True translation rate in the Hindi test split (vs. observed 100% in 26-item validation sample) is unknown.",
+        "Proportion of MILU Hindi items aligned with central exams vs. state PSCs is undocumented.",
+        "Item-level North India sub-regional content breakdown is not published.",
+        "Annotator demographics — whether reviewers were Hindi-medium graduates familiar with the target student linguistic register — not reported."
       ],
       "requires_expert_verification": [
-        "Whether GPT-4O Hindi translations preserve Manak Hindi register expected by Hindi-medium aspirants",
-        "Whether the test split (vs. validation split) has substantially different translation rate and subject distribution"
+        "A Hindi-medium UPSC/SSC subject-matter expert should review a stratified sample of MILU Hindi test items for: (a) authenticity of register vs. authentic Hindi-medium exam papers, (b) translation artifact rate, (c) syllabus alignment with central exams, (d) North India sub-regional content presence."
       ]
     },
     "input_form": {
       "score": 4,
-      "justification": "Input form is LOWER priority per elicitation: deployment is text-only Hindi in Devanagari, matching MILU's text-based MCQ format [Q33, Q29]. Reading-comprehension, image-based, and >4-option items are explicitly excluded [Q33], language correctness is enforced via INDICLID + Unicode filtering [Q34], and duplicates are removed [Q35]. No signal-distribution mismatch concerns arise. The only form-level concern surfaced in dataset analysis is structural: a non-trivial fraction of items in the sample have answer options that reference statements/items absent from the question text [DATASET-D43, D44, D45, D46, D47, D48], indicating data-collection truncation artifacts that introduce construct-irrelevant variance.",
+      "justification": "MILU is text-only with explicit exclusion of reading-comprehension passages, image-based items, and >4-option items [Q33], plus INDICLID + Unicode-based language filtering [Q34], duplicate removal [Q35], and multi-stage manual cleaning [Q31, Q32, Q36]. This matches the deployment's text-only mobile interface and standard Devanagari script with no RTL/capitalization concerns. Observed Hindi items render in standard Devanagari with minimal Roman intrusion (DATASET-D12, D21). One residual concern: dataset analysis observed at least two malformed items with truncated stems across language partitions (DATASET-D34, D35), suggesting filtering imperfections.",
       "strengths": [
-        "Text-only MCQ format matches the deployment's mobile-app input modality [Q33]",
-        "Devanagari Unicode handling and language-identification filtering are explicitly applied [Q34]",
-        "Multiple cleaning passes including manual sampling [Q31, Q32, Q36]"
+        "Text-only MCQ format directly matches deployment input modality.",
+        "Devanagari script handling is well-supported [Q34], no signal-distribution mismatch for Hindi.",
+        "Multi-layer cleaning pipeline [Q31, Q32, Q36] reduces noise.",
+        "Observed code-mixing in Hindi items remains below the ~10% ceiling (DATASET-D12, D21)."
       ],
       "checklist_responses": {
-        "IF-1": "Signal distributions align: Hindi text in Devanagari is the deployment's input form and matches MILU's encoding [Q29, Q34].",
-        "IF-2": "Regional infrastructure (Android smartphones, Devanagari rendering) supports text-MCQ input; mature NLP tokenization for Hindi noted in regional context.",
-        "IF-3": "Truncation artifacts in some items [DATASET-D43–D48] are a form-level concern: option text references absent question content, harming usability.",
-        "IF-4": "Documented form mismatches: structurally truncated items [DATASET-D43–D48]; minor code-mixing via transliterated English letters in reasoning items [DATASET-D57]."
+        "IF-1": "Signal distribution matches: text-only Devanagari [Q33, Q34] aligns with the deployment's mobile text interface. No image/audio modality mismatch.",
+        "IF-2": "Regional infrastructure (Android-dominant smartphones, Devanagari Unicode standard) supports text-only MCQ ingestion. Bandwidth-sensitive but format-compatible [WEB-6].",
+        "IF-3": "Domain-specific form: MCQ-with-4-options matches central-exam Prelims pattern (UPSC, SSC, banking are MCQ-based). Reading-comprehension exclusion [Q33] removes one common exam format but is acceptable for the deployment's objective-prep scope.",
+        "IF-4": "Minor form mismatches: (a) some items have truncated stems suggesting reading-comprehension remnants (DATASET-D34, D35); (b) reading-comprehension exclusion means RC-style UPSC CSAT questions are not represented."
       },
       "evidence_quotes": [
-        "[Q29] 'we collected more than 150K questions across 11 Indian Languages- Bengali (bn), Gujarati (gu), Hindi (hi)... spanning 41 diverse subjects.' (p.3)",
-        "[Q33] 'we exclude any reading-comprehension-style questions, images-based questions, and those with more than four answer options to ensure uniformity and consistency.' (p.4)",
-        "[Q34] 'To remove incorrect language entries, we utilize a combination of INDICLID (Madhani et al., 2023) and Unicode-based filtering' (p.4)"
+        "[Q33] 'During the collection process, we exclude any reading-comprehension-style questions, images-based questions, and those with more than four answer options to ensure uniformity and consistency.' (p.4)",
+        "[Q34] 'To remove incorrect language entries, we utilize a combination of INDICLID (Madhani et al., 2023) and Unicode-based filtering (Khan et al., 2024), ensuring that the questions are in the correct language.' (p.4)",
+        "[Q31] 'we employ multiple layers of manual and automated cleaning filters.' (p.4)",
+        "[Q35] 'we remove any duplicate questions to retain only the unique ones.' (p.4)"
       ],
-      "evidence_web_sources": [],
+      "evidence_web_sources": [
+        "[WEB-6] TRAI data shows internet penetration patchy in Bihar — relevant to deployment connectivity assumptions"
+      ],
       "evidence_dataset": [
-        "DATASET-D43, D44, D45, D46, D47, D48: Items with answer options referencing absent statements/lists — structural truncation",
-        "DATASET-D57: Transliterated English letters (एमएनक्यू) in reasoning items — minor code-mixing"
+        "DATASET-D12: Pure Devanagari Hindi item, no English code-mixing",
+        "DATASET-D21: Hindi item with appropriate transliteration of loanwords (ओक/oak)",
+        "DATASET-D34: English item with truncated stem ('The owner of the textile shop brought a') — filtering imperfection",
+        "DATASET-D35: Malayalam item with truncated 'Directions:' stem — pattern repeats across languages"
       ],
       "evidence_map": {
         "IF-1": [
-          "Q29",
-          "Q34"
+          "Q33",
+          "Q34",
+          "DATASET-D12",
+          "DATASET-D21"
         ],
         "IF-2": [
-          "Q34"
+          "Q34",
+          "WEB-6"
         ],
         "IF-3": [
-          "DATASET-D43",
-          "DATASET-D44",
-          "DATASET-D45",
-          "DATASET-D46",
-          "DATASET-D47",
-          "DATASET-D48"
+          "Q33"
         ],
         "IF-4": [
-          "DATASET-D43",
-          "DATASET-D57"
+          "Q33",
+          "DATASET-D34",
+          "DATASET-D35"
         ]
       },
       "confidence": "high",
       "information_gaps": [
-        "Frequency of structurally truncated items in the full test split is unquantified"
+        "Frequency of malformed/truncated items in the full Hindi test split is unknown."
       ],
       "requires_expert_verification": []
     },
     "output_ontology": {
       "score": 1,
-      "justification": "Output ontology is HIGH-priority per elicitation Q3, which specifies that the deployment requires both a correct/incorrect verdict AND a substantive Hindi-language explanatory rationale. MILU's output ontology is a closed-form MCQ label space [Q33, Q55] — a single correct option index. The dataset analysis confirms empirically: every one of 245 reviewed examples has only question/option1–4/target fields with no rationale, explanation, or scoring dimension for free-text output [CRITICAL Concern 1]. Furthermore, MILU's documented pattern that models perform worst precisely in the deployment's priority domains — Arts & Humanities, Social Sciences, Law & Governance [Q6, Q20, Q62, Q71, Q77] — means the benchmark's accuracy ontology, even within its scope, gives weakest signal in the areas the deployment cares about most. This is a fundamental structural-validity violation.",
+      "justification": "This is a fundamental mismatch. MILU's output ontology is a single MCQ label — one of up to four options [Q33, Q55] — and the dataset schema confirms only a 'target' field with no rationale or explanation field (DATASET-D1, D9). The deployment requires a correct/incorrect verdict PLUS a substantive Hindi-language explanatory rationale (elicitation Q3). MILU has no rubric, no label set, and no scoring function for rationale quality. The 41-subject taxonomy [Q42] supports per-subject accuracy reporting but cannot validate explanation quality. Compounding this, the benchmark itself reports models perform worst in Arts & Humanities, Social Sciences, and Law & Governance [Q6, Q20, Q62, Q71, Q77] — precisely the deployment's priority subjects (History, Polity, GK).",
       "strengths": [
-        "41-subject hierarchical taxonomy enables domain-level performance analysis aligned with Indian exam structure [Q42]",
-        "MCQ label correctness from real exam keys provides a credible objective floor [Q26]"
+        "41-subject × 8-domain hierarchical taxonomy [Q42] supports per-subject diagnostic accuracy reporting, useful for identifying weak areas.",
+        "Closed-form MCQ accuracy is unambiguous for the verdict portion of the deployment's required output."
       ],
       "checklist_responses": {
-        "OO-1": "Output label categories are MCQ option indices only [Q33, Q55] — they do not include rationale-quality categories required by deployment.",
-        "OO-2": "Missing categories: rationale correctness, rationale fluency in Hindi, pedagogical clarity, and explanation appropriateness — all required by elicitation Q3 but absent from MILU [CRITICAL Concern 1].",
-        "OO-3": "Within MCQ scope, no Western-value-encoded categories observed; primary issue is omission, not encoding bias.",
-        "OO-4": "Stakeholder-driven taxonomy redesign is required: a rationale-quality rubric in Hindi must be added to evaluate the deployment's actual output.",
-        "OO-5": "Documented harm: MILU's output ontology omits the entire rationale-quality dimension, violating structural validity for this deployment. Additionally, weakest performance in culturally relevant domains [Q6, Q71, Q77] further limits utility for History/Polity/GK signal."
+        "OO-1": "MCQ option labels are regionally relevant only insofar as the questions are India-sourced [Q26]. The output category space is, however, structurally incomplete for this deployment.",
+        "OO-2": "Critical missing categories: rationale-quality dimensions (factual accuracy, fluency, pedagogical clarity, register appropriateness — listed in elicitation pedagogical_context). MILU has none of these.",
+        "OO-3": "MCQ-only ontology does not encode non-regional values per se, but encodes an evaluation philosophy (option-selection only) that is misaligned with pedagogical-feedback deployments.",
+        "OO-4": "Significant taxonomy redesign is required: a separate rationale-quality rubric must be developed, as MILU provides no foundation. The 2025 Hindi LLM benchmarking preprint [WEB-14] confirms no such Hindi rubric exists publicly.",
+        "OO-5": "MILU's MCQ-only output ontology violates structural validity for this deployment (the construct of pedagogical feedback has internal structure — verdict + rationale — that MILU cannot represent) and content validity (rationale-quality categories are entirely absent)."
       },
       "evidence_quotes": [
         "[Q33] 'we exclude any reading-comprehension-style questions, images-based questions, and those with more than four answer options to ensure uniformity and consistency.' (p.4)",
         "[Q55] 'For multiple choice questions, given k possible answer strings, we select the answer string (ai) with the highest conditional log probability' (p.5)",
+        "[Q42] 'we determine 41 distinct subject names, which fall into eight main domains' (p.4)",
         "[Q6] 'Domain-wise analysis indicates that models perform poorly in culturally relevant areas like Arts & Humanities and Law & Governance compared to general fields like STEM.' (p.1)",
         "[Q71] 'open models perform poorly in domains specific to Indian culture—such as Arts & Humanities, Social Sciences, and Law & Governance—but demonstrate higher performance in STEM fields.' (p.7)"
       ],
       "evidence_web_sources": [
-        "[WEB-14] 2025 Hindi LLM benchmarking preprint notes Hindi instruction-following/conversational benchmarks are 'largely unavailable publicly'"
+        "[WEB-14] arXiv:2508.19831 — Hindi instruction-following / conversational evaluation benchmarks 'largely unavailable publicly'; confirms no Hindi pedagogical rationale rubric exists",
+        "[WEB-13] IndicGenBench covers Hindi generation but not exam rationale quality"
       ],
       "evidence_dataset": [
-        "CRITICAL Concern 1: All 245 reviewed examples have schema (question, option1-4, target, is_translated, language, domain, subject) — no rationale field exists",
-        "DATASET-D1, D15, D56: Even canonical Polity/Math/Ethics items have only target labels with no worked solutions or reasoning chains"
+        "DATASET-D1: target='option1' is the only output label; no rationale field exists in schema",
+        "DATASET-D9: Compound interest answer is just 'option2' with no worked solution — confirms no explanation field"
       ],
       "evidence_map": {
         "OO-1": [
-          "Q33",
-          "Q55",
-          "CRITICAL Concern 1"
+          "Q55"
         ],
         "OO-2": [
-          "CRITICAL Concern 1",
+          "Q33",
+          "DATASET-D1",
+          "DATASET-D9",
           "WEB-14"
         ],
-        "OO-3": [],
+        "OO-3": [
+          "Q55"
+        ],
         "OO-4": [
+          "WEB-13",
           "WEB-14"
         ],
         "OO-5": [
+          "Q33",
+          "Q42",
           "Q6",
           "Q71",
-          "Q77",
-          "CRITICAL Concern 1"
+          "DATASET-D1"
         ]
       },
       "confidence": "high",
       "information_gaps": [],
       "requires_expert_verification": [
-        "Design of a Hindi rationale-quality rubric requires regional pedagogical expert input"
+        "A pedagogical-NLP expert should design a Hindi exam rationale rubric covering factual accuracy, fluency, and pedagogical clarity — this is wholly outside MILU's scope."
       ]
     },
     "output_content": {
       "score": 2,
-      "justification": "Output content priority is MODERATE. For MCQ correctness, MILU has a credible label-provenance chain: questions and answers come from online exam portals where subject experts ensure answer accuracy [Q26], with internal AI4Bharat manual audits [Q87]. However, several issues lower the score: (a) annotator demographics, IAA, and formal QA protocol are not reported — paper does not say whether auditors were Hindi-medium graduates or central-exam experts; (b) the deployment's PRIMARY output (Hindi-language explanatory rationale) has no ground-truth labels at all in MILU [CRITICAL Concern 1]; (c) dataset analysis surfaces at least one suspicious 'none of these' answer for a specific constitutional article query [DATASET-D49] suggesting some scraping data-quality issues; (d) for the ~5+ structurally truncated items observed [DATASET-D43–D48], the labeled answer cannot be validated without source content. Convergent validity for the rationale construct is undefined because the construct itself is not annotated.",
+      "justification": "For the MCQ-label correctness narrowly, MILU has reasonable provenance: answers are inherited from online exam portals where 'subject experts ensure the accuracy of the answers' [Q26], with AI4Bharat volunteer manual audits [Q87] and researcher review of subject-tag clusters [Q41]. However, the paper reports no annotator demographics, no inter-annotator agreement statistics, and no formal QA protocol beyond manual sampling. Critically, the deployment's core output (Hindi rationale) has no ground-truth labels in MILU at all. Dataset analysis surfaces additional concerns: cross-language item duplication (DATASET-D14/D15/D29) and malformed items with truncated stems (DATASET-D34, D35) suggest QA imperfections at the item level. ~55% of subject labels were assigned via machine translation + GPT-4O-MINI [Q37, Q38], an automated process that may not preserve Hindi-specific terminology fidelity.",
       "strengths": [
-        "MCQ answer keys inherited from established exam-portal QA processes [Q26]",
-        "Internal manual audits by AI4Bharat volunteers [Q87]",
-        "Manual review of topic-tag clusters before assigning subject labels [Q41]"
+        "Answer keys derive from established Indian competitive-exam ecosystems where subject experts validate correctness at source [Q26].",
+        "Multi-stage manual review applied to subject-tag clusters [Q41] and a manual audit pass [Q87].",
+        "Constitutional, historical, and GK answer labels in the observed Hindi sample appear factually correct (DATASET-D1, D2, D22)."
       ],
       "checklist_responses": {
-        "OC-1": "Ground truth MCQ labels reflect Indian exam-portal expert judgments [Q26], but no rationale labels exist for the deployment's primary output [CRITICAL Concern 1].",
-        "OC-2": "MCQ answer disagreement risk is low for canonical items; rationale-level disagreement cannot be assessed because no rationale annotations exist.",
-        "OC-3": "INSUFFICIENT DOCUMENTATION — paper acknowledges AI4Bharat volunteer audits [Q87] but does not report demographics, Hindi-medium status, or domain expertise of annotators.",
-        "OC-4": "Re-annotation needed for: (a) any items with 'none of these' answers [DATASET-D49]; (b) all structurally truncated items [DATASET-D43–D48]; (c) full rationale-quality annotation by Hindi-medium central-exam experts.",
-        "OC-5": "INSUFFICIENT DOCUMENTATION — paper does not describe aggregation methods or how disagreements between portal answers and audits were resolved.",
-        "OC-6": "Documented harms: rationale-quality construct entirely unannotated [CRITICAL Concern 1]; data-quality issues in specific items [DATASET-D49, D43–D48]; annotator demographic opacity limits convergent-validity assessment."
+        "OC-1": "MCQ answer labels reflect Indian exam-portal subject-expert consensus [Q26], which is reasonable for central-exam content. However, regional stakeholder perspectives on rationale quality have no representation since rationale labels do not exist.",
+        "OC-2": "INSUFFICIENT DOCUMENTATION on annotator-population disagreement risk for MCQ labels; annotator demographics are not reported beyond 'AI4Bharat volunteers' [Q87].",
+        "OC-3": "Paper does not provide a Datasheet or Data Statement with annotator demographics — gap for assessing convergent validity.",
+        "OC-4": "Re-annotation by Hindi-medium subject experts would be needed to (a) validate translation quality on the ~25%+ translated Hindi subset, (b) flag items where the answer is region-sensitive, (c) generate ground-truth Hindi rationales.",
+        "OC-5": "INSUFFICIENT DOCUMENTATION on aggregation methods; the paper describes manual cluster review [Q41] but not how disagreements were resolved.",
+        "OC-6": "Label issues: (a) no IAA statistics; (b) ~55% of topic labels assigned by automated MT+GPT pipeline [Q37, Q38]; (c) cross-language duplicates introduce identical labels across translated copies (DATASET-D14/D15); (d) malformed items have labels whose validity is questionable (DATASET-D34, D35); (e) rationale ground-truth wholly absent."
       },
       "evidence_quotes": [
         "[Q26] 'These portals typically tag questions manually with topic names and language details, and subject experts ensure the accuracy of the answers.' (p.3)",
         "[Q87] 'We are also immensely grateful to the volunteers from the AI4Bharat team for their motivation and meticulous efforts in conducting manual audits.' (p.9)",
-        "[Q41] 'We manually review these clusters and assign appropriate subject labels.' (p.4)"
+        "[Q41] 'We manually review these clusters and assign appropriate subject labels.' (p.4)",
+        "[Q37] 'we found that approximately 45% of questions were accurately labeled with a topic name, while the remaining questions lacked this information.' (p.4)",
+        "[Q38] 'we first translate the untagged questions into English using INDICTRANS2 (Gala et al., 2023) and then prompt GPT-4O-MINI model to assign an appropriate topic name to the question.' (p.4)"
       ],
       "evidence_web_sources": [],
       "evidence_dataset": [
-        "DATASET-D49: 'None of these' as correct answer for a specific constitutional article query — possible data quality issue",
-        "DATASET-D43, D44, D45, D46, D47, D48: Truncated items where label correctness cannot be independently verified",
-        "CRITICAL Concern 1: No rationale annotation exists for any item"
+        "DATASET-D14/D15: Identical 1991 crisis question across English and translated Hindi — labels are correct but duplicated",
+        "DATASET-D29: 44th Amendment question identical across Hindi/Tamil/Malayalam — confirms label propagation via translation",
+        "DATASET-D34: Truncated English stem with assigned label='option2' — label validity questionable for malformed item",
+        "DATASET-D35: Truncated Malayalam 'Directions:' stem with label assignment — same QA gap"
       ],
       "evidence_map": {
         "OC-1": [
-          "Q26",
-          "CRITICAL Concern 1"
-        ],
-        "OC-2": [
           "Q26"
         ],
-        "OC-3": [
-          "Q87"
-        ],
+        "OC-2": [],
+        "OC-3": [],
         "OC-4": [
-          "DATASET-D49",
-          "DATASET-D43",
-          "CRITICAL Concern 1"
+          "Q38"
         ],
         "OC-5": [],
         "OC-6": [
-          "CRITICAL Concern 1",
-          "DATASET-D49",
-          "DATASET-D43"
+          "Q37",
+          "Q38",
+          "DATASET-D14",
+          "DATASET-D15",
+          "DATASET-D29",
+          "DATASET-D34",
+          "DATASET-D35"
         ]
       },
       "confidence": "medium",
       "information_gaps": [
-        "Annotator demographics, IAA, and formal QA protocol not documented",
-        "Frequency of data-quality issues like 'none of these' answers and truncated items in the full test split"
+        "Annotator demographics, IAA statistics, and disagreement-resolution protocols are not reported.",
+        "Translation-quality verification for the Hindi partition is not documented.",
+        "No Hindi rationale ground truth exists in the benchmark."
       ],
       "requires_expert_verification": [
-        "Whether MCQ keys for North-India-relevant Polity/History items align with how Hindi-medium central-exam coaching answers them",
-        "Establishment of a regional Hindi-medium expert panel to spot-check labels and produce rationale ground truth"
+        "A Hindi-medium subject-matter expert should audit a representative Hindi sample for label correctness, especially for translated items and items with stems that may have been corrupted by RC-passage stripping."
       ]
     },
     "output_form": {
       "score": 1,
-      "justification": "Output form is HIGH-priority per elicitation. The deployment requires open-ended Hindi explanatory text alongside a verdict label. MILU evaluates models exclusively via MCQ label accuracy: log-likelihood option selection for non-API models [Q52, Q53, Q54, Q55] and JSON-structured single-answer generation for API models [Q56, Q57]. The benchmark authors themselves explicitly flag this as a limitation: 'our evaluation primarily relies on the log-likelihood approach, which may yield different results compared to other established methods, such as generation-based evaluation and chain-of-thought prompting' [Q85]. The dataset analysis confirms this empirically — no rationale or explanation field exists in any of 245 reviewed examples [CRITICAL Concern 1]. Web research confirms no Hindi-language exam-rationale evaluation benchmark currently exists [WEB-14, WEB-13]. MILU's output form fundamentally cannot validate the deployment's core output: fluency, factual accuracy, or pedagogical quality of Hindi-language rationales.",
+      "justification": "The output form mismatch is fundamental and acknowledged by the paper itself. MILU evaluates via log-likelihood option selection [Q52, Q53, Q54, Q55] or zero-shot JSON-formatted option choice for API models [Q56, Q57]. The authors note explicitly that this 'may yield different results compared to other established methods, such as generation-based evaluation and chain-of-thought (CoT) prompting' [Q85]. The deployment requires open-ended Hindi-language explanatory generation — a fundamentally different output form. Dataset analysis confirms the schema contains only a 'target' MCQ label field (DATASET-D1, D9) with no infrastructure for evaluating fluency, correctness, or pedagogical quality of free-text Hindi output. External evidence confirms no comparable Hindi-language NLG benchmark for exam rationale exists [WEB-13, WEB-14].",
       "strengths": [
-        "Reproducible MCQ scoring via LM Evaluation Harness [Q52]",
-        "0-shot, 1-shot, 5-shot evaluation protocols for sensitivity analysis [Q50]"
+        "MCQ accuracy can validate the verdict-correctness portion of the deployment's output.",
+        "Per-language, per-subject accuracy reporting [Q59, Q67] supports diagnostic identification of weak areas.",
+        "Multiple shot configurations (0/1/5-shot) [Q50] provide robustness checks on the verdict accuracy."
       ],
       "checklist_responses": {
-        "OF-1": "Mismatch — deployment requires Hindi free-text explanation alongside verdict [elicitation Q3]; MILU produces only MCQ accuracy [Q55, CRITICAL Concern 1].",
-        "OF-2": "Not applicable — deployment is text-only; no TTS requirement.",
-        "OF-3": "Target population is graduate-level and near-universally literate in Hindi; literacy is not the gating concern. The gating concern is Hindi NLG quality, which MILU does not evaluate.",
-        "OF-4": "Documented harms: MCQ-only scoring [Q55, Q85] cannot validate Hindi rationale fluency, coherence, or pedagogical fit; no Hindi exam-rationale benchmark exists [WEB-14] to supplement."
+        "OF-1": "Major mismatch: MILU outputs MCQ option labels [Q55, Q57]; deployment requires open-ended Hindi rationale plus verdict (elicitation Q3). The verdict portion is partially covered; the rationale portion is wholly uncovered.",
+        "OF-2": "Not applicable — deployment is text-only, no TTS requirement.",
+        "OF-3": "Target population is graduate-level (high literacy within cohort), so accessibility is not the bottleneck — the bottleneck is rationale quality, which MILU cannot evaluate.",
+        "OF-4": "Form mismatches: (a) MCQ vs. open-ended generation; (b) log-likelihood scoring [Q53] vs. free-text Hindi generation quality; (c) no fluency/coherence/pedagogical metrics. The paper itself flags this limitation [Q85]."
       },
       "evidence_quotes": [
+        "[Q52] 'For non-API-based models, we use the LM-EVALUATION-HARNESS' (p.5)",
         "[Q53] 'We use the log-likelihood method, where the probability of a given output string is computed by conditioning it on some provided input' (p.5)",
         "[Q55] 'For multiple choice questions, given k possible answer strings, we select the answer string (ai) with the highest conditional log probability' (p.5)",
+        "[Q56] 'The API-based models are evaluated using the generative approach due to the lack of support for prompt log probabilities.' (p.5)",
         "[Q57] 'We explicitly prompt these models to generate the correct response in a structured JSON format to simplify response parsing.' (p.5)",
         "[Q85] 'our evaluation primarily relies on the log-likelihood approach, which may yield different results compared to other established methods, such as generation-based evaluation and chain-of-thought (CoT) prompting.' (p.9)"
       ],
       "evidence_web_sources": [
         "[WEB-13] IndicGenBench (ACL 2024) covers Hindi generation but not exam rationale quality",
-        "[WEB-14] 2025 Hindi LLM benchmarking preprint notes Hindi instruction-following/conversational benchmarks are 'largely unavailable publicly'"
+        "[WEB-14] arXiv:2508.19831 confirms Hindi instruction-following / conversational benchmarks 'largely unavailable publicly'"
       ],
       "evidence_dataset": [
-        "CRITICAL Concern 1: No rationale/explanation field in any of 245 reviewed examples — schema is question/option1-4/target/is_translated/language/domain/subject only"
+        "DATASET-D1: Schema contains only 'target' field with MCQ option label — no rationale field",
+        "DATASET-D9: Quantitative answer is just option label, no worked solution — confirms output form is option-selection only"
       ],
       "evidence_map": {
         "OF-1": [
           "Q55",
-          "CRITICAL Concern 1"
+          "Q57",
+          "DATASET-D1",
+          "DATASET-D9"
         ],
         "OF-2": [],
-        "OF-3": [
-          "WEB-13"
-        ],
+        "OF-3": [],
         "OF-4": [
-          "Q55",
+          "Q53",
           "Q85",
-          "WEB-14",
-          "CRITICAL Concern 1"
+          "WEB-13",
+          "WEB-14"
         ]
       },
       "confidence": "high",
       "information_gaps": [],
       "requires_expert_verification": [
-        "Design and validation of a Hindi rationale-quality rubric (factual accuracy, fluency, pedagogical clarity, register) requires Hindi-medium pedagogy experts"
+        "A Hindi-language NLG evaluation specialist should design a custom rationale-quality rubric (factual accuracy, fluency, pedagogical clarity, register) since no off-the-shelf Hindi resource exists [WEB-13, WEB-14]."
       ]
     }
   },
-  "overall_summary": "MILU is a serious, India-grounded benchmark whose taxonomy and content provide partial coverage of the priority subjects (Polity, History, Economy, Hindi grammar, even UPSC-style Ethics) for North-India Hindi-medium central-exam aspirants, with empirical confirmation of meaningful regional content (UP, Rajasthan items) in the actual Hindi data. However, for THIS deployment its validity is severely constrained by three structural issues: (1) MILU evaluates only MCQ label accuracy [Q55, Q85] while the deployment requires a Hindi-language explanatory rationale [elicitation Q3] — a fundamental output-ontology and output-form mismatch confirmed by the absence of any rationale field in the dataset; (2) the observed Hindi validation sample is 100% machine-translated [Limitation #1] and contains English-vocabulary items mislabeled as Hindi content [DATASET-D40–D42], inflating construct-irrelevant variance for Hindi-medium students; (3) Current Affairs items are dated 2018–2022 [DATASET-D19–D22], making MILU stale on a heavily-weighted UPSC topic. Strengths in input ontology and partial regional content do not compensate for the output-side gaps. MILU can serve as a partial diagnostic for MCQ knowledge in History/Polity/Economy in Hindi, but cannot validate the deployment's primary product (Hindi rationale quality) at all.",
+  "overall_summary": "MILU is the most relevant publicly available benchmark for Indic-language knowledge evaluation and provides genuine value for a portion of this deployment's needs — particularly for measuring MCQ-level accuracy on Indian Polity, History, Geography, and Economics in Hindi. Its India-first design [Q11], real-exam sourcing [Q24, Q25], and 41-subject taxonomy [Q42] are well-suited to a central-exam preparation context in principle. However, two structural issues sharply limit its validity for THIS deployment: (1) Output form/ontology mismatch (Output Ontology=1, Output Form=1) — MILU evaluates only MCQ option selection, while the deployment requires open-ended Hindi explanatory rationales; this is a fundamental scope gap acknowledged by the paper itself [Q85] and confirmed by data inspection (DATASET-D1, D9). (2) Hindi partition content concerns (Input Content=2) — dataset analysis found 100% is_translated=True in the 26-item Hindi validation sample (DATASET-D13), heavy Engineering/Tech skew misaligned with UPSC/SSC syllabi (DATASET-D5/D6/D7/D16/D36), Current Affairs staleness (DATASET-D4/D25/D33), and pervasive cross-language item duplication. Input form (4) is the strongest dimension; output ontology and output form are the weakest. The benchmark can serve as a partial accuracy probe for a subset of priority subjects but cannot validate the deployment's core output.",
   "risk_assessment": "high",
   "practical_guidance": {
-    "what_this_benchmark_measures": "MILU provides domain- and subject-level MCQ accuracy scores in Hindi that meaningfully probe Indian Polity/Constitution, Indian History (ancient/medieval/modern), Indian Economy, Hindi grammar, and a sampling of UPSC-style ethics scenarios — all priority areas for the deployment. Logical Reasoning and Quantitative Aptitude are partially captured under Science and Business Studies domains. Strongest dimensions are input form (text-only Hindi MCQs match the deployment modality) and input ontology (Indian-exam-grounded taxonomy with confirmed empirical coverage of priority subjects).",
-    "construct_depth": "The construct depth is shallow for the deployment's actual task. MILU measures a model's ability to select the correct MCQ option in Hindi, but provides zero evidence on whether the model can produce factually accurate, fluent, or pedagogically appropriate Hindi explanations — which is what the deployed app actually delivers. Within the MCQ scope, depth is also limited: no separation of central-exam vs. state-PSC items, no Current Affairs currency mechanism, mixed translation-induced register risk, and weakest model performance reported precisely in the deployment's priority cultural domains [Q6, Q71].",
-    "supplementation_needed": "(1) Build or commission a Hindi rationale-quality evaluation rubric covering factual accuracy, fluency in Manak Hindi, pedagogical clarity, and code-mixing ceiling — directly addressing the OO/OF gaps [WEB-14 confirms no off-the-shelf option]. (2) Construct a current-affairs evaluation harness with rolling 12-month Indian GK content to address the staleness gap [DATASET-D19–D22]. (3) Filter the MILU Hindi subset to remove specialist Engineering/programming items, English-vocabulary items, and South India-specific items not in central-exam scope [DATASET-D31–D42] before computing deployment-relevant accuracy. (4) Recruit Hindi-medium central-exam coaching experts to spot-validate at least 200 items and to produce a small gold-standard rationale set."
+    "what_this_benchmark_measures": "MILU measures MCQ-label accuracy on Hindi-language Indian-domain knowledge across 8 macro-domains and 41 subjects. For this deployment, it provides moderate evidence for a model's ability to produce correct verdicts on UPSC/SSC-style Polity, History, Geography, and Economics MCQs in Hindi (Input Ontology partial coverage, Input Form strong, Input Content partial). It offers no evidence on the deployment's core output: the Hindi explanatory rationale (Output Ontology and Output Form both score 1).",
+    "construct_depth": "Construct depth is shallow for this deployment. MILU probes whether a model can rank the correct option among up to four — a necessary but far-from-sufficient signal for exam-feedback quality. It does not probe pedagogical clarity, factual rationale accuracy, fluency, register appropriateness, or robustness to authentic Hindi-medium exam phrasing. Combined with cross-language duplication, possible high translation rate in Hindi, and Current Affairs staleness, even the verdict-accuracy signal is partially construct-irrelevant for 2025–26 central-exam readiness.",
+    "supplementation_needed": "Three supplementations are essential: (1) A custom Hindi-language rationale-quality evaluation framework with rubric covering factual accuracy, fluency, pedagogical clarity, and register — no public resource exists [WEB-13, WEB-14]. (2) A central-exam-specific subset of MILU filtered to UPSC/SSC/banking items with explicit Mathematics/Reasoning and Current Affairs categories, ideally drawing on natively authored Hindi items rather than translated content. (3) A current-affairs evaluation set refreshed annually with 2024–2026 events to address staleness."
   },
   "remediation_suggestions": [
     {
-      "dimension": "output_ontology",
-      "gap": "No rationale-quality construct in MILU's output ontology, while deployment requires Hindi explanatory feedback [Q33, CRITICAL Concern 1, elicitation Q3]",
-      "recommendation": "Commission a rationale-evaluation rubric with Hindi-medium pedagogy experts covering factual accuracy, Manak Hindi fluency, pedagogical clarity, and code-mixing ceiling; use as a complementary evaluation alongside MILU's MCQ accuracy."
+      "dimension": "output_form",
+      "gap": "MILU evaluates only MCQ option selection; deployment requires open-ended Hindi rationale generation.",
+      "recommendation": "Design and operationalize a separate Hindi rationale-quality benchmark with (a) human-rated rubric (factual accuracy, fluency, pedagogical clarity, register), (b) ~500–1000 expert-authored gold rationales for a stratified sample of MILU Hindi items, (c) automated metrics (BLEURT/COMET-style for Hindi, plus LLM-as-judge calibrated against expert ratings)."
     },
     {
-      "dimension": "output_form",
-      "gap": "MCQ-only scoring (log-likelihood / JSON option selection) cannot validate Hindi free-text rationale [Q55, Q85]",
-      "recommendation": "Add a generation-based Hindi rationale evaluation using LLM-as-judge with the rubric above, plus periodic human evaluation; consider adapting IFEval-Hi/MT-Bench-Hi protocols [WEB-14] to exam-specific prompts."
+      "dimension": "output_ontology",
+      "gap": "No taxonomy or label set for rationale quality dimensions exists in MILU.",
+      "recommendation": "Adopt or develop a multi-axis rationale-quality taxonomy (e.g., 4-axis: factuality, fluency, pedagogical helpfulness, Manak Hindi register), informed by Hindi-medium coaching pedagogy conventions. Expert verification by Hindi-medium UPSC/SSC educators is required."
     },
     {
       "dimension": "input_content",
-      "gap": "100% translation rate observed in Hindi validation split [Limitation #1] plus English-vocabulary items mislabeled as Hindi content [DATASET-D40–D42] threaten the 10% code-mixing ceiling",
-      "recommendation": "Filter MILU Hindi to natively-sourced (is_translated=False) items where possible and exclude English-vocabulary Language-Studies items; sample remaining items for Manak Hindi register quality with a Hindi-medium reviewer."
+      "gap": "Hindi partition appears to contain a high proportion of translated items (DATASET-D13: 100% in observed sample), pervasive cross-language duplication, and stale Current Affairs.",
+      "recommendation": "Curate a deployment-specific Hindi subset: (a) prefer items with is_translated=False where they exist; (b) deduplicate across languages; (c) replace pre-2023 Current Affairs items with a fresh annual current-affairs probe; (d) ensure North India sub-regional items (Chhath Puja, zamindari, North Indian freedom fighters) are sufficiently represented via custom item authoring."
     },
     {
       "dimension": "input_ontology",
-      "gap": "Pooled 40+ exam types [Q27] and presence of specialist Engineering/South India content [DATASET-D35–D38, D31–D34] dilute central-exam relevance",
-      "recommendation": "Create a deployment-specific subset by filtering MILU items to Polity/Law&Governance, Social Sciences, Business Studies arithmetic, Science reasoning items, and Hindi grammar; explicitly drop Engineering & Technology specialist items not in UPSC/SSC/banking syllabi."
-    },
-    {
-      "dimension": "input_content",
-      "gap": "Current Affairs items dated 2018–2022 [DATASET-D19–D22] are stale for 2025–2026 aspirants; MILU has no currency mechanism",
-      "recommendation": "Build a parallel rolling Current Affairs MCQ set (last 12 months of pan-India GK and North-India events) and evaluate the model on it monthly; do not rely on MILU for Current Affairs signal."
+      "gap": "Mathematics/Reasoning and Current Affairs are not separately enumerated in MILU's 8 macro-domains; central-exam vs. state-PSC items are commingled without metadata.",
+      "recommendation": "Add metadata layer mapping each MILU item to (a) UPSC/SSC/banking syllabus category (including explicit Math/Reasoning, Current Affairs), (b) central-exam vs. state-PSC scope. This enables filtered evaluation aligned to syllabus weights [WEB-9, WEB-10, WEB-15]."
     },
     {
       "dimension": "output_content",
-      "gap": "Annotator demographics not reported [Q87]; some items appear truncated or have suspicious answers [DATASET-D43–D49]",
-      "recommendation": "Recruit a small Hindi-medium central-exam expert panel to audit a stratified 200-item sample for label correctness, register, and structural completeness; remove confirmed broken items from the deployment-evaluation subset."
+      "gap": "No annotator demographics, IAA statistics, or formal QA protocol reported; ~55% of topic labels assigned by automated GPT-4O-MINI [Q37, Q38]; malformed items observed (DATASET-D34, D35).",
+      "recommendation": "Conduct a Hindi-medium expert audit on a stratified sample of the Hindi test split: verify answer correctness, translation-register quality, item completeness, and subject-tag accuracy. Report IAA. Filter or repair malformed items prior to deployment-grade evaluation."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "North India sub-regional content (Chhath Puja, zamindari, regional freedom fighters) is sparsely observed in the Hindi sample (1 of 26 items).",
+      "recommendation": "Author or source ~200–500 additional Hindi items specifically covering North India sub-regional content within central-exam framing, drawing from authentic UPSC/SSC previous-year papers."
     }
   ],
   "highest_concern_dimensions": [

@@ -1,8 +1,8 @@
 ## Dataset Analysis Report
 
-**Dataset(s):** ai4bharat/MILU (Hindi config)
-**Analysis date:** 2025-01-31
-**Examples reviewed:** 245 from `validation` split
+**Dataset(s):** ai4bharat/MILU (configs: Bengali, English, Gujarati, Hindi, Kannada, Malayalam, Marathi, Odia, Punjabi, Tamil, Telugu)
+**Analysis date:** 2025-08-01
+**Examples reviewed:** 215 total (21 Bengali, 20 English, 24 Gujarati, 26 Hindi, 17 Kannada, 16 Malayalam, 21 Marathi, 21 Odia, 25 Punjabi, 19 Tamil, 25 Telugu) — all from `validation` split
 **Columns shown:** question, option1, option2, option3, option4, target, is_translated, language, domain, subject
 **Columns skipped (media):** none
 
@@ -12,145 +12,100 @@
 
 | ID | Dataset | Example # | Label | Excerpt | Interpretation | Dimension |
 |----|---------|-----------|-------|---------|----------------|-----------|
-| D1 | MILU/Hindi | 33 | option1 | "______ एक अदालत का आदेश है जो एक अधीनस्थ अदालत या सार्वजनिक प्राधिकरण को एक आधिकारिक कर्तव्य को सही ढंग से निभाने का निर्देश देता है।" | Mandamus writ definition question — Indian constitutional law | IO, IC |
-| D2 | MILU/Hindi | 6 | option1 | "राष्ट्रीय आपातकाल घोषित करने के लिए 'सशस्त्र विद्रोह' शब्द संविधान में कब जोड़ा गया?" | Constitutional amendment adding 'armed rebellion' — Indian Polity | IO, IC |
-| D3 | MILU/Hindi | 39 | option3 | "भारत में किस संवैधानिक संशोधन विधेयक द्वारा मतदान की आयु 21 वर्ष से घटाकर 18 वर्ष की गई थी?" | Constitutional amendment lowering voting age — Indian Polity | IO, IC |
-| D4 | MILU/Hindi | 42 | option3 | "निम्नलिखित में से कौन मसौदा समिति का सदस्य नहीं था?" | Drafting committee membership — Indian Constitution | IO, IC |
-| D5 | MILU/Hindi | 93 | option2 | "निम्नलिखित में से कौन सा तीन स्तरीय पंचायती राज प्रणाली की मध्य इकाई है?" | Three-tier Panchayati Raj middle unit — Indian Governance | IO, IC |
-| D6 | MILU/Hindi | 136 | option4 | "भारत के संविधान के अनुसार, संसद का कौन सा सदन संविधान संशोधन विधेयक पारित करता है?" | Which house passes constitutional amendment bill | IO, IC |
-| D7 | MILU/Hindi | 50 | option3 | "1882 में भारत में स्थानीय स्वशासन की शुरुआत किसने की?" | Who introduced local self-government in India 1882 | IO, IC |
-| D8 | MILU/Hindi | 199 | option4 | "1907 के कांग्रेस सत्र में उदारवादियों और उग्रवादियों के बीच मुख्य अंतर किस विषय पर था?" | 1907 Congress session — moderate vs extremist split | IO, IC |
-| D9 | MILU/Hindi | 32 | option4 | "_______ ने दिल्ली में कुतुब मीनार का निर्माण पूरा किया।" | Who completed Qutub Minar — Medieval Indian history | IO, IC |
-| D10 | MILU/Hindi | 96 | option2 | "कौन सा अधिनियम प्रांतों में द्वैध शासन प्रणाली स्थापित करता है?" | Which act established dyarchy in provinces — Modern India history | IO, IC |
-| D11 | MILU/Hindi | 158 | option3 | "'देवानांप्रिय' और 'प्रियदर्शी' वे उपाधियाँ थीं जिन्हें राजा ______ ने अपनाया था।" | Titles 'Devanampiya' and 'Priyadarshi' — Ashoka/Ancient India | IO, IC |
-| D12 | MILU/Hindi | 237 | option3 | "मोहनजोदड़ो और हड़प्पा के खंडहर दिखाते हैं कि ये शानदार और अच्छी तरह से योजनाबद्ध ________ थे।" | Harappan civilization characterized as merchant cities | IO, IC |
-| D13 | MILU/Hindi | 36 | option3 | "रिचा ने परीक्षा में निम्नलिखित श्रृंखला दी है। TAB, TTZBB, TTBBB, TTTYBBB, TTTCBBB, _______." | Letter series completion — Logical Reasoning | IO |
-| D14 | MILU/Hindi | 44 | option2 | "दिए गए अक्षर श्रृंखला के रिक्त स्थानों में क्रमिक रूप से रखे जाने पर श्रृंखला को पूरा करने वाले अक्षरों के संयोजन का चयन करें। _q p p_p p_p p q_" | Letter pattern completion — Logical Reasoning | IO |
-| D15 | MILU/Hindi | 84 | option3 | "सूरज ने अजय से एक निश्चित दर पर साधारण ब्याज पर दो वर्षों के लिए एक राशि उधार ली और उसे विनय को उसी दर पर वार्षिक चक्रवृद्धि ब्याज पर दो वर्षों के लिए उधार दिया।" | Simple vs. compound interest calculation — Quantitative Aptitude/Mathematics | IO |
-| D16 | MILU/Hindi | 120 | option4 | "किसी कंपनी में सभी कर्मचारियों का औसत वेतन रु. 10500 है। सभी पुरुष कर्मचारियों का औसत वेतन रु. 15000 है।" | Average salary mixture problem — Quantitative Aptitude | IO |
-| D17 | MILU/Hindi | 111 | option3 | "आठ लोग दो समानांतर पंक्तियों में बैठे हैं... A के ठीक विपरीत कौन बैठता है?" | Seating arrangement reasoning problem | IO |
-| D18 | MILU/Hindi | 208 | option4 | "कथन: I. कुछ पेन कप हैं। II. सभी कप प्लेट हैं। निष्कर्ष: I. सभी पेन प्लेट हैं।" | Syllogism — formal logical reasoning | IO |
-| D19 | MILU/Hindi | 74 | option4 | "जुलाई-सितंबर 2018 तिमाही के दौरान भारत की GDP की वृद्धि दर क्या थी?" | India GDP growth rate Q2 2018-19 — Current Affairs (dated) | IO, IC |
-| D20 | MILU/Hindi | 132 | option4 | "2018 तक, महिला और बाल विकास मंत्रालय (MWCD) के केंद्रीय मंत्री कौन हैं?" | WCD Ministry head as of 2018 — Current Affairs (dated) | IO, IC |
-| D21 | MILU/Hindi | 88 | option1 | "जुलाई 2019 में, जापान की अंतरिक्ष एजेंसी का एक अंतरिक्ष यान एक क्षुद्रग्रह पर उतरा। उस क्षुद्रग्रह का नाम है:" | JAXA asteroid landing 2019 — Current Affairs (dated) | IO, IC |
-| D22 | MILU/Hindi | 2 | option2 | "मई 2022 में इराक के सुलेमानिया में आयोजित तीरंदाजी एशिया कप 2022 स्टेज 2 अभियान में भारत ने कितने स्वर्ण पदक जीते?" | Archery Asia Cup 2022 India gold medals — Sports Current Affairs (dated) | IO, IC |
-| D23 | MILU/Hindi | 26 | option2 | "निम्नलिखित में से कौन सा खनिज उत्तर प्रदेश में नहीं पाया जाता है?" | Mineral not found in Uttar Pradesh — North India–specific geography | IC |
-| D24 | MILU/Hindi | 68 | option2 | "निम्नलिखित में से राजस्थान के किस जिले में 'बज्जू' आरक्षित क्षेत्र स्थित है?" | 'Bajju' reserve forest in Rajasthan — state-specific geography | IC |
-| D25 | MILU/Hindi | 156 | option1 | "2011 की जनगणना के अनुसार राजस्थान की कुल साक्षरता का लगभग प्रतिशत कितना है?" | Rajasthan literacy rate 2011 — state-specific GK | IC |
-| D26 | MILU/Hindi | 190 | option2 | "राजस्थान का आकार है-" | Shape of Rajasthan state — state-specific geography | IC |
-| D27 | MILU/Hindi | 182 | option1 | "निम्नलिखित में से किस राज्य ने 2011-12 में सबसे अधिक दूध उत्पादन दर्ज किया?" | Highest milk production state 2011-12 — UP-specific GK | IC |
-| D28 | MILU/Hindi | 242 | option4 | "______ उत्तर प्रदेश के महत्वपूर्ण शिल्पों में से एक है, जिसमें शिफॉन, मलमल, ऑर्गेंजा, ऑर्गेंडी और रेशम जैसे कपड़ों पर नाजुक पारंपरिक हाथ कढ़ाई की जाती है।" | Chikankari — UP traditional embroidery craft | IC |
-| D29 | MILU/Hindi | 193 | option3 | "कोटा के शासक के किस काल को कोटा चित्रकला स्कूल के लिए उत्कृष्ट काल माना जाता है?" | Kota painting school — Rajasthan art history | IC |
-| D30 | MILU/Hindi | 198 | option2 | "छत्तीसगढ़ के निम्नलिखित विद्रोहों में से किसे 'बस्तर का स्वतंत्रता संग्राम' भी कहा जाता है?" | Chhattisgarh tribal rebellion — Central India history (outside North India core states) | IC |
-| D31 | MILU/Hindi | 52 | option2 | "वह पांड्य राजा जिसने पांड्य साम्राज्य को कावेरी तक संगठित और विस्तारित किया था, वह था" | Pandya kingdom expansion — South Indian history, less relevant to UPSC North India focus | IC |
-| D32 | MILU/Hindi | 108 | option3 | "तमिल पत्रिका में सबसे पहले कार्टून चित्र किसने प्रस्तुत किए?" | First cartoons in Tamil magazine — Tamil literary history | IC |
-| D33 | MILU/Hindi | 126 | option3 | "निम्नलिखित में से किसने 'तेलंगाना राष्ट्रोदयमालु' पुस्तक लिखी?" | Telangana literary work — Telangana-specific cultural question | IC |
-| D34 | MILU/Hindi | 41 | option1 | "टी-हब तेलंगाना राज्य सरकार की एक पहल है" | T-Hub Telangana tech incubator — state-specific non-central content | IC |
-| D35 | MILU/Hindi | 1 | option2 | "जब एक डीसी सीरीज मोटर बिना लोड के चलती है: मोटर की गति बहुत अधिक होती है" | DC series motor behavior — Engineering, not UPSC/SSC priority | IO |
-| D36 | MILU/Hindi | 3 | option2 | "हाफ वेव रेक्टिफायर का आउटपुट क्या होता है: पल्सेटिंग डीसी" | Half-wave rectifier output — Electrical engineering technical content | IO |
-| D37 | MILU/Hindi | 8 | option1 | "फॉरट्रान 77 के फिक्स्ड फॉर्मेट में कॉलम 2 से 5 में संख्या का क्या उद्देश्य होता है?" | FORTRAN 77 fixed format — specialist programming, not UPSC/SSC priority | IO |
-| D38 | MILU/Hindi | 104 | option4 | "540 kHz से 1650 kHz तक ट्यूनिंग करने वाले रिसीवर्स के लिए सबसे लोकप्रिय इंटरमीडिएट फ्रीक्वेंसी (kHz में) कौन सी है" | Intermediate frequency for AM receivers — electronics engineering specialist content | IO |
-| D39 | MILU/Hindi | 7 | option2 | "विलियम वर्ड्सवर्थ _________ के कवि हैं।" | William Wordsworth's nationality — English literature, minimal India relevance | IC |
-| D40 | MILU/Hindi | 76 | option2 | "निर्देश: 'डिडैक्टिक' शब्द का अर्थ क्या है?" | English vocabulary question: 'didactic' meaning — Language Studies, English vocabulary in Hindi context | IC, IF |
-| D41 | MILU/Hindi | 90 | option3 | "शब्द 'grim' का पर्यायवाची लिखें।" | Synonym of English word 'grim' — English vocabulary tested in Hindi-labeled context | IC, IF |
-| D42 | MILU/Hindi | 105 | option4 | "निर्देश: निम्नलिखित प्रश्न में, चार विकल्पों में से उस शब्द का चयन करें जो दिए गए शब्द का अर्थ सबसे अच्छी तरह व्यक्त करता है। Evangelize" | English word 'Evangelize' meaning — English vocabulary question in Hindi dataset | IC, IF |
-| D43 | MILU/Hindi | 56 | option2 | "एथेनॉल के बारे में दिए गए चार कथनों पर विचार करें और दिए गए विकल्पों में से सही उत्तर चुनें: (1) और (3) केवल" | Ethanol statements question — options reference numbered statements absent from the question | IF |
-| D44 | MILU/Hindi | 86 | option2 | "भारत में सभी बहुआयामी गरीब व्यक्तियों में से आधे से अधिक निम्नलिखित राज्यों में रहते हैं: केवल A, B, D और E" | Multidimensional poverty states — options reference A/B/C/D/E labels with no list in question | IF |
-| D45 | MILU/Hindi | 94 | option4 | "निम्नलिखित में से कौन सी ऑक्सीकरण-अपचयन प्रतिक्रियाएँ हैं? (केवल a, d) / (केवल b, c)" | Redox reactions question — options reference a/b/c/d labels absent from question text | IF |
-| D46 | MILU/Hindi | 69 | option2 | "निम्नलिखित में से कौन सा एक शुद्ध पदार्थ है? (b), (c) और (d)" | Pure substance — options reference items (a)/(b)/(c)/(d) absent from question | IF |
-| D47 | MILU/Hindi | 95 | option1 | "विकल्प चुनें जो वाक्यों B, C, D और E को एक तार्किक क्रम में व्यवस्थित करता है। वाक्य A और F स्थिर हैं। AEDBCF" | Sentence ordering — sentences B/C/D/E absent from question text | IF |
-| D48 | MILU/Hindi | 106 | option2 | "निम्नलिखित पदार्थों को प्रयोगशाला में उनकी पहली संश्लेषण की कालानुक्रमिक क्रम में व्यवस्थित करें: 4 2 3 1" | Chronological ordering of substances — substance list absent from question | IF |
-| D49 | MILU/Hindi | 109 | option4 | "छत्तीसगढ़ में नगरपालिकाओं के सभी चुनावों के संचालन के लिए पर्यवेक्षण, दिशा और नियंत्रण का प्रावधान किस अनुच्छेद में है? इनमें से कोई नहीं" | Article on municipality elections in Chhattisgarh — answer is 'none of these' suggesting data quality issue | OC |
-| D50 | MILU/Hindi | 25 | option1 | "मुगल ग्रंथ 'मासिर-ए-आलमगीरी' के रचयिता कौन हैं?" | Author of Mughal text Maasir-i-Alamgiri — Mughal history relevant to UPSC | IC |
-| D51 | MILU/Hindi | 64 | option3 | "भारत के 'लौह पुरुष' के रूप में किसे जाना जाता है?" | 'Iron Man of India' — Sardar Patel, standard UPSC GK | IC |
-| D52 | MILU/Hindi | 100 | option2 | "मध्यकालीन काल की सरकार एक मिश्रित संरचना थी। यह किन तत्वों का समामेलन था? फारसी-अरबी, तुर्को-मंगोल - भारतीय तत्व" | Medieval Indian governance structure — UPSC History topic | IC |
-| D53 | MILU/Hindi | 1 | option2 | "जब एक डीसी सीरीज मोटर बिना लोड के चलती है" | is_translated=True — electrical engineering question translated from English | IC |
-| D54 | MILU/Hindi | 9 | option3 | "दिए गए वाक्य का सही अप्रत्यक्ष रूप चुनें। प्रबंधक ने अपने सहायक से कहा, तुम्हें अगले महीने बोनस मिलेगा।" | Indirect speech conversion — Hindi language grammar question | IC, IO |
-| D55 | MILU/Hindi | 51 | option2 | "दिए गए वाक्य का सही सक्रिय रूप चुनें। सभी को उसके शानदार नृत्य प्रदर्शन ने मोहित कर दिया।" | Active voice conversion — Hindi grammar | IC, IO |
-| D56 | MILU/Hindi | 83 | option1 | "एक वरिष्ठ सिविल अधिकारी के रूप में, आपको निजी रूप से संचालित वृद्धाश्रम के वार्षिक समारोह में अतिथि बनने के लिए आमंत्रित किया गया है... आदिवासी लोग जर्जर झोपड़ियों में रह रहे थे" | Ethics/governance scenario for senior civil officer — UPSC GS Paper IV Ethics | IO, IC |
-| D57 | MILU/Hindi | 145 | option2 | "कौन सा अक्षर समूह प्रश्न चिह्न (?) को बदलकर दी गई श्रृंखला को पूरा करेगा? एमएनक्यू / एमओक्यू" | Letter series in Hindi transliteration of English letters — code-mixing in reasoning | IC, IF |
-| D58 | MILU/Hindi | 18 | option3 | "1991 में वित्तीय संकट को ट्रिगर करने वाले विदेशी मुद्रा भंडार की हानि का तात्कालिक कारण क्या था?" | 1991 economic crisis trigger — Indian Economy/Current Affairs (historical) | IO, IC |
-| D59 | MILU/Hindi | 119 | option2 | "आरबीआई के नोट जारी करने वाले विभाग के पास हमेशा न्यूनतम कितने मूल्य का सोना होना चाहिए?" | RBI minimum gold reserve requirement — Indian Economy | IO, IC |
-| D60 | MILU/Hindi | 28 | option2 | "निम्नलिखित में से कौन खेरवार आंदोलन के नेता थे? भागीरथ मांझी" | Kherwar movement leader — tribal history in Jharkhand/Bihar context | IC |
+| D1 | Hindi, validation | 6 | option1 | "राष्ट्रीय आपातकाल घोषित करने के लिए 'सशस्त्र विद्रोह' शब्द संविधान में कब जोड़ा गया? … 44वें संविधान संशोधन अधिनियम द्वारा" | Polity/Constitution question in Hindi, about 44th Constitutional Amendment — UPSC core topic | IC, IO |
+| D2 | Hindi, validation | 25 | option1 | "मुगल ग्रंथ 'मासिर-ए-आलमगीरी' के रचयिता कौन हैं? … साकी मुस्तईद खान" | Mughal-period history question in Hindi — directly relevant to North India medieval history | IC, IO |
+| D3 | Hindi, validation | 26 | option2 | "निम्नलिखित में से कौन सा खनिज उत्तर प्रदेश में नहीं पाया जाता है? … अभ्रक" | State-specific GK question about Uttar Pradesh minerals — North India sub-regional content | IC, IO |
+| D4 | Hindi, validation | 2 | option2 | "मई 2022 में इराक के सुलेमानिया में आयोजित तीरंदाजी एशिया कप 2022 स्टेज 2 अभियान में भारत ने कितने स्वर्ण पदक जीते? … आठ" | Current Affairs question (2022) about archery medal count — time-bounded, may be stale | IC, IO |
+| D5 | Hindi, validation | 1 | option2 | "जब एक डीसी सीरीज मोटर बिना लोड के चलती है: … मोटर की गति बहुत अधिक होती है" | Engineering/Physics question in Hindi, `is_translated: True` — not in UPSC/SSC core syllabus | IC, IO |
+| D6 | Hindi, validation | 3 | option2 | "हाफ वेव रेक्टिफायर का आउटपुट क्या होता है: … पल्सेटिंग डीसी" | Technical engineering question in Hindi, `is_translated: True` — domain not central to UPSC/SSC GS | IC, IO |
+| D7 | Hindi, validation | 4 | option2 | "स्थिर धारा ट्रांसफार्मर _______ प्रकार का होता है। … शेल" | Electrical engineering, translated — technical domain not prioritized for Hindi-medium UPSC prep | IO |
+| D8 | English, validation | 6 | option3 | "Fill in the gap below with suitable word. Fruit ∶ Reap∶∶ Flower ∶ _____… Bloom" | Logical Reasoning/analogy question in English — confirms presence of reasoning subject | IO |
+| D9 | English, validation | 7 | option2 | "If Rs. 4000 becomes Rs. 5760 in 2 years at compound interest … what is the annual rate of interest? … 20 percent" | Mathematics/Quantitative Aptitude question (compound interest) — confirms presence in English partition | IO |
+| D10 | Hindi, validation | 17 | option4 | "निम्नलिखित में से कौन प्रत्यक्ष कर का उदाहरण है? … संपत्ति कर" | Economics/direct tax question in Hindi — Economics is relevant to GK syllabus | IC |
+| D11 | Hindi, validation | 13 | option1 | "'मानसून' शब्द की उत्पत्ति किस भाषा से हुई है? … अरबी भाषा" | General Knowledge question in Hindi (monsoon etymology) — accessible, pan-India GK | IC |
+| D12 | Hindi, validation | 19 | option3 | "रेडक्लिफ रेखा भारत की सीमाओं को निम्नलिखित में से किस देश के साथ विभाजित करती है? … पाकिस्तान" | Geography GK question in Hindi — relevant to UPSC/SSC syllabus, Devanagari script, no English terms | IC, IF |
+| D13 | Hindi (all examples) | all 26 | — | All 26 Hindi examples: is_translated = True | Every Hindi validation example in the sample is machine-translated from English | IC |
+| D14 | English, validation | 1 | option3 | "What was the immediate cause for loss of foreign reserves triggering the financial crisis in 1991? … Sharp rise in value of imports of oil & petroleum products" | English original; same question appears in Hindi (D15) and Bengali — confirms translation pipeline | IC |
+| D15 | Hindi, validation | 18 | option3 | "1991 में वित्तीय संकट को ट्रिगर करने वाले विदेशी मुद्रा भंडार की हानि का तात्कालिक कारण क्या था? … तेल और पेट्रोलियम उत्पादों के आयात के मूल्य में तीव्र वृद्धि" | Hindi translation of D14 — fluent Hindi, but `is_translated: True`, confirms translation pipeline | IC |
+| D16 | Hindi, validation | 8 | option1 | "फॉरट्रान 77 के फिक्स्ड फॉर्मेट में कॉलम 2 से 5 में संख्या का क्या उद्देश्य होता है? … एक जंप लेबल या फॉर्मेट लेबल" | Computer Science / Fortran programming question in Hindi — very niche for UPSC/SSC aspirants | IO |
+| D17 | Hindi, validation | 9 | option3 | "दिए गए वाक्य का सही अप्रत्यक्ष रूप चुनें। प्रबंधक ने अपने सहायक से कहा, तुम्हें अगले महीने बोनस मिलेगा। … प्रबंधक ने अपने सहायक से कहा कि उसे अगले महीने बोनस मिलेगा।" | Hindi Language Studies question (indirect speech) — tests Hindi grammar directly | IC, IF |
+| D18 | Hindi, validation | 22 | option4 | "निम्नलिखित में से कौन एक प्रसिद्ध भारतीय चित्रकार थीं, जिन्हें कभी-कभी भारत की फ्रिदा काहलो के नाम से जाना जाता है? … अमृता शेरगिल" | Arts & Culture GK in Hindi — pan-India Indian art figure | IC |
+| D19 | Marathi, validation | 16 | option3 | "हलषष्ठी सण का साजरा केला जातो? … मुलाच्या दीर्घायुष्यासाठी" | Regional festival question in Marathi — culturally specific, regional content (not Hindi/North India) | IC |
+| D20 | Gujarati, validation | 16 | option2 | "છત્તીસગઢના નીચેના કયા બળવાઓને 'બસ્તરનો સ્વાતંત્ર્ય સંઘર્ષ' પણ કહેવામાં આવે છે? … લિંગગિરી બળવો" | Chhattisgarh tribal revolt question — regional Indian history, culturally grounded | IC |
+| D21 | Hindi, validation | 5 | option1 | "एक भौगोलिक क्षेत्र में निम्नलिखित विशिष्ट विशेषताएँ हैं … सदाबहार ओक के पेड़ … भूमध्यसागरीय" | Geography question (Mediterranean climate) — translated, pan-India geography, no English code-mixing | IC, IF |
+| D22 | English, validation | 3 | option4 | "What was the first capital of the Bahamani Kingdom? … Gulbarga" | India-specific historical knowledge (Deccan Sultanate) — same question appears across all languages | OC |
+| D23 | Hindi, validation | 15 | option3 | "1950 में स्थापित, भारतीय रेलवे द्वारा स्वामित्व वाली औद्योगिक इकाइयों में से एक का नाम भारतीय स्वतंत्रता सेनानी के नाम पर रखा गया है: … चित्तरंजन दास" | Indian history/GK — freedom fighter named railway unit; is_translated: True | IC |
+| D24 | English, validation | 9 | option2 | "Which one of the following statements about Legislative Committee system of Maharashtra is not correct? … Estimate Committee: All members of this committee are from Assembly only." | State-level (Maharashtra) governance question in English partition — not central exam scope | IO |
+| D25 | Punjabi, validation | 5 | option4 | "ਫਰਵਰੀ - ਮਾਰਚ 2022 ਵਿੱਚ ਹੋਈ ਰਾਜ ਵਿਧਾਨਸਭਾ ਚੋਣਾਂ ਵਿੱਚ, ਆਮ ਆਦਮੀ ਪਾਰਟੀ (AAP) ਨੇ … ਪੰਜਾਬ" | Current Affairs (2022 state elections) in Punjabi — politically specific, time-bounded | IC |
+| D26 | Hindi, validation | 20 | option3 | "नेत्रगोलक लगभग गोलाकार होता है जिसकी व्यास लगभग कितनी होती है? … 2.3 सेमी" | Biology/Science question in Hindi — `is_translated: True`, basic science fact | IO |
+| D27 | Telugu, validation | 25 | option1 | "మధ్యప్రదేశ్‌లోని బన్మోర్ పారిశ్రామిక అభివృద్ధి కేంద్రం ఏ జిల్లాలో ఉంది? … మొరెనా" | State-level GK (Madhya Pradesh industrial geography) in Telugu — regional, not central exam | IO |
+| D28 | Hindi, validation | 24 | option4 | "तंगस्टन तत्व का प्रतीक क्या है? … W" | Chemistry/Science fact question in Hindi, `is_translated: True` — basic science, not UPSC priority | IO |
+| D29 | Malayalam, validation | 6 | option1 | "ദേശീയ അടിയന്തരാവസ്ഥ പ്രഖ്യാപിക്കാൻ 'സായുധ കലാപം' എന്ന പദം ഭരണഘടനയിൽ ചേർത്തത് എപ്പോൾ? … 44-ാമത് ഭരണഘടനാ ഭേദഗതി നിയമം വഴി" | Same Constitutional Amendment question appears in Hindi (D1), Tamil, and Malayalam — cross-language duplication | IC, OC |
+| D30 | Marathi, validation | 13 | option2 | "प्रांतांमध्ये द्वैधशासन प्रणाली कोणत्या कायद्याने स्थापन केली? … भारत सरकार अधिनियम 1919" | Indian constitutional history question (dyarchy) — India-specific, historically grounded | IC |
+| D31 | English, validation | 15 | option3 | "Founded in 1950, one of the industrial units owned by Indian Railways is named after the Indian freedom fighter: … Chittaranjan Das" | India-specific GK, English original — Chittaranjan Das is a pan-India figure relevant to GK | IC |
+| D32 | Hindi, validation | 11 | option2 | "संदीप माइकल निम्नलिखित में से किस खेल से जुड़े थे? … हॉकी" | Sports GK in Hindi — niche figure, is_translated: True | IC |
+| D33 | Bengali, validation | 5 | option4 | "ফেব্রুয়ারি - মার্চ ২০২২ এ অনুষ্ঠিত রাজ্য বিধানসভা নির্বাচনে, আম আদমি পার্টি (AAP) … পাঞ্জাব" | 2022 state elections Current Affairs — AAP, UP, Goa all named; time-bounded content | IC |
+| D34 | English, validation | 11 | option2 | "The owner of the textile shop brought a … Calculator" | Incomplete stem — "brought a" with no further context; question appears malformed | IC, OC |
+| D35 | Malayalam, validation | 14 | option4 | "ദിശകൾ: മാർബിൾ ഉപയോഗിക്കാവുന്നത് … ശിൽപ്പം" | Incomplete stem ("Directions: marble can be used") — same truncated structure appears across languages | IC, OC |
+| D36 | Hindi, validation | 16 | — | "एएम की बैंडविड्थ _________ है। … 1110 kHz" | AM bandwidth engineering question — highly technical, `is_translated: True`; unlikely in UPSC GS | IO |
 
 ---
 
 ### Deployment-Relevant Strengths
 
-#### Strength 1: Strong Indian Polity and Governance Coverage
+#### Strength 1: Core UPSC/SSC Polity and Constitutional Law Coverage in Hindi
 - **Dimension(s):** IO, IC
-- **Observation:** The sample contains numerous questions directly aligned with UPSC/SSC priority topic of Indian Polity and Constitution — covering constitutional amendments (44th, 42nd), parliamentary procedures, Panchayati Raj, writs, and governance acts.
-- **Deployment relevance:** Polity is one of the highest-weight subjects for UPSC GS Paper II and SSC General Awareness; these questions directly serve the deployment's primary subject requirements.
+- **Observation:** The Hindi partition includes substantive questions on Indian constitutional law — specifically the 44th Constitutional Amendment (adding 'armed rebellion' for national emergency declaration) and other governance questions. These directly address the high-priority UPSC/SSC subject of Indian Polity & Constitution.
+- **Deployment relevance:** For central exam aspirants, constitutional amendment questions are among the most tested areas in UPSC GS Paper 2 and SSC General Awareness. The Hindi rendering is clear and uses correct Devanagari terminology without excessive code-mixing.
 - **Datapoint citations:**
-  - [D1] Example 33 (MILU/Hindi, validation, option1): "______ एक अदालत का आदेश है जो एक अधीनस्थ अदालत या सार्वजनिक प्राधिकरण को एक आधिकारिक कर्तव्य को सही ढंग से निभाने का निर्देश देता है।" — Mandamus writ definition, UPSC standard question type
-  - [D2] Example 6 (MILU/Hindi, validation, option1): "राष्ट्रीय आपातकाल घोषित करने के लिए 'सशस्त्र विद्रोह' शब्द संविधान में कब जोड़ा गया?" — 44th Amendment question, core UPSC Polity
-  - [D3] Example 39 (MILU/Hindi, validation, option3): "भारत में किस संवैधानिक संशोधन विधेयक द्वारा मतदान की आयु 21 वर्ष से घटाकर 18 वर्ष की गई थी?" — 61st Amendment, standard Polity question
-  - [D5] Example 93 (MILU/Hindi, validation, option2): "निम्नलिखित में से कौन सा तीन स्तरीय पंचायती राज प्रणाली की मध्य इकाई है?" — Panchayati Raj, UPSC/SSC staple
-  - [D6] Example 136 (MILU/Hindi, validation, option4): "भारत के संविधान के अनुसार, संसद का कौन सा सदन संविधान संशोधन विधेयक पारित करता है?" — Constitutional amendment procedure
+  - [D1] Example 6 (Hindi, split=validation, label=option1): "राष्ट्रीय आपातकाल घोषित करने के लिए 'सशस्त्र विद्रोह' शब्द संविधान में कब जोड़ा गया? … 44वें संविधान संशोधन अधिनियम द्वारा" — UPSC-relevant Polity question in fluent Devanagari, no significant English intrusion.
 
-#### Strength 2: Meaningful Indian History Coverage Including Medieval and Modern Periods
+#### Strength 2: Mughal and North Indian Medieval History Coverage
 - **Dimension(s):** IO, IC
-- **Observation:** The sample includes questions on Mughal history, ancient Indian civilization, modern independence movement, and colonial-era governance acts — all core UPSC History syllabus areas.
-- **Deployment relevance:** History is a top-priority subject for central exams; these questions represent standard UPSC Prelims question types.
+- **Observation:** The Hindi partition contains Mughal-period history questions (e.g., the authorship of 'Masir-e-Alamgiri') and pan-India medieval history questions (e.g., who completed the Qutb Minar). These are directly in scope for UPSC GS Paper 1 Indian history, with emphasis on the Delhi Sultanate and Mughal era that is especially prominent in North Indian exam preparation.
+- **Deployment relevance:** Mughal administrative history and North Indian medieval landmarks are high-frequency topics in both UPSC and SSC GK sections. The Qutb Minar question also appears consistently across all language partitions, confirming it as a pan-India GK anchor.
 - **Datapoint citations:**
-  - [D9] Example 32 (MILU/Hindi, validation, option4): "_______ ने दिल्ली में कुतुब मीनार का निर्माण पूरा किया।" — Medieval Delhi Sultanate history
-  - [D10] Example 96 (MILU/Hindi, validation, option2): "कौन सा अधिनियम प्रांतों में द्वैध शासन प्रणाली स्थापित करता है?" — Government of India Act 1919, standard modern history
-  - [D11] Example 158 (MILU/Hindi, validation, option3): "'देवानांप्रिय' और 'प्रियदर्शी' वे उपाधियाँ थीं जिन्हें राजा ______ ने अपनाया था।" — Ashoka, Ancient Indian History
-  - [D50] Example 25 (MILU/Hindi, validation, option1): "मुगल ग्रंथ 'मासिर-ए-आलमगीरी' के रचयिता कौन हैं?" — Mughal history, North India–relevant
-  - [D52] Example 100 (MILU/Hindi, validation, option2): "मध्यकालीन काल की सरकार एक मिश्रित संरचना थी। यह किन तत्वों का समामेलन था?" — Medieval governance structure
-  - [D8] Example 199 (MILU/Hindi, validation, option4): "1907 के कांग्रेस सत्र में उदारवादियों और उग्रवादियों के बीच मुख्य अंतर किस विषय पर था?" — Surat Split, modern Indian history
+  - [D2] Example 25 (Hindi, split=validation, label=option1): "मुगल ग्रंथ 'मासिर-ए-आलमगीरी' के रचयिता कौन हैं? … साकी मुस्तईद खान" — Mughal literary history, directly relevant to UPSC GS1.
+  - [D22] Example 3 (English, split=validation, label=option4): "What was the first capital of the Bahamani Kingdom? … Gulbarga" — pan-India medieval history, same question appearing in all language partitions.
 
-#### Strength 3: Logical Reasoning Representation in the Dataset
+#### Strength 3: North India–Specific Regional GK Present in Hindi Partition
+- **Dimension(s):** IC, IO
+- **Observation:** The Hindi sample contains at least one question specifically about Uttar Pradesh's mineral resources, addressing sub-regional content within a central-exam framing. This is the type of India-within-India regional knowledge that the deployment requires the AI to handle.
+- **Deployment relevance:** Central exams (UPSC, SSC) occasionally test state-specific geography and resource questions. The presence of a UP-specific item in the Hindi partition confirms that MILU does include some North India sub-regional content, partially addressing the documented gap.
+- **Datapoint citations:**
+  - [D3] Example 26 (Hindi, split=validation, label=option2): "निम्नलिखित में से कौन सा खनिज उत्तर प्रदेश में नहीं पाया जाता है? … अभ्रक" — UP state GK question in Hindi; directly serves the North India sub-regional layer.
+
+#### Strength 4: Hindi Script Fidelity and Low Code-Mixing in Observed Examples
+- **Dimension(s):** IF, IC
+- **Observation:** Across all 26 Hindi examples examined, the questions and answer options are written in standard Devanagari. Technical terms are rendered in Hindi transliterations (e.g., "पल्सेटिंग डीसी" for "pulsating DC," "ट्रांसफार्मर" for transformer) or Hindi equivalents. Roman script or English-medium phrasing is minimal — the observed Hindi items do not appear to exceed the deployment's ~10% code-mixing ceiling.
+- **Deployment relevance:** The target student population can read standard Devanagari Hindi; the absence of heavy Roman-script intrusion in the observed sample is a positive signal for accessibility.
+- **Datapoint citations:**
+  - [D12] Example 19 (Hindi, split=validation, label=option3): "रेडक्लिफ रेखा भारत की सीमाओं को निम्नलिखित में से किस देश के साथ विभाजित करती है? … पाकिस्तान" — Pure Devanagari, no English terms.
+  - [D21] Example 5 (Hindi, split=validation, label=option1): "एक भौगोलिक क्षेत्र में निम्नलिखित विशिष्ट विशेषताएँ हैं … सदाबहार ओक के पेड़ … भूमध्यसागरीय" — "ओक" (oak) is retained as a transliterated loanword; "भूमध्यसागरीय" (Mediterranean) is a full Sanskrit-Hindi rendering — appropriate register.
+
+#### Strength 5: Breadth of India-Centric General Knowledge Subjects
+- **Dimension(s):** IO, IC
+- **Observation:** Across the Hindi and English partitions, the sample contains questions spanning Economics (direct tax, 1991 financial crisis), Geography (Radcliffe Line, Mediterranean climate), Biology (eyeball diameter, Blue Baby Syndrome), Arts & Culture (Amrita Shergil), and History — consistent with the multi-domain pan-India GK coverage required for UPSC and SSC.
+- **Deployment relevance:** The multi-domain spread matches the general awareness section tested across all central exams, confirming that the benchmark does not over-index on a single domain.
+- **Datapoint citations:**
+  - [D10] Example 17 (Hindi, split=validation, label=option4): "निम्नलिखित में से कौन प्रत्यक्ष कर का उदाहरण है? … संपत्ति कर" — Economics GK in Hindi, UPSC/SSC relevant.
+  - [D11] Example 13 (Hindi, split=validation, label=option1): "'मानसून' शब्द की उत्पत्ति किस भाषा से हुई है? … अरबी भाषा" — GK in Hindi, accessible register.
+  - [D18] Example 22 (Hindi, split=validation, label=option4): "निम्नलिखित में से कौन एक प्रसिद्ध भारतीय चित्रकार थीं, जिन्हें कभी-कभी भारत की फ्रिदा काहलो के नाम से जाना जाता है? … अमृता शेरगिल" — Indian arts culture GK.
+
+#### Strength 6: Presence of Logical Reasoning and Quantitative Questions (in English Partition)
 - **Dimension(s):** IO
-- **Observation:** The sample contains a meaningful number of logical reasoning question types including seating arrangements, syllogisms, blood relations, letter/number series, and coding-decoding — which together constitute a significant share of SSC CGL and banking exam papers.
-- **Deployment relevance:** Mathematics/Reasoning is flagged as a top-priority gap in MILU's documented taxonomy, but the actual data confirms Logical Reasoning is represented as a subject under the Science domain, partially addressing the gap for SSC/banking exam prep.
+- **Observation:** The English partition includes both Logical Reasoning (analogy questions, coding-decoding in Telugu) and Quantitative Aptitude (compound interest calculation). These subjects correspond to UPSC CSAT Paper 2 and SSC CGL Tier 1, which are priority areas the deployment must cover.
+- **Deployment relevance:** While these appear in the English partition specifically, their presence confirms that MILU's taxonomy does encompass the Reasoning and Mathematics domains that were flagged as potentially absent. The English partition is described as covering Indian-culture-specific content; the presence of reasoning questions here suggests the Hindi partition likely also has them.
 - **Datapoint citations:**
-  - [D13] Example 36 (MILU/Hindi, validation, option3): "रिचा ने परीक्षा में निम्नलिखित श्रृंखला दी है। TAB, TTZBB, TTBBB, TTTYBBB, TTTCBBB, _______." — Letter series completion
-  - [D17] Example 111 (MILU/Hindi, validation, option3): "आठ लोग दो समानांतर पंक्तियों में बैठे हैं...A के ठीक विपरीत कौन बैठता है?" — Seating arrangement
-  - [D18] Example 208 (MILU/Hindi, validation, option4): "कथन: I. कुछ पेन कप हैं। II. सभी कप प्लेट हैं। निष्कर्ष: I. सभी पेन प्लेट हैं।" — Syllogism reasoning
-  - [D14] Example 44 (MILU/Hindi, validation, option2): "दिए गए अक्षर श्रृंखला के रिक्त स्थानों में क्रमिक रूप से रखे जाने पर श्रृंखला को पूरा करने वाले अक्षरों के संयोजन का चयन करें। _q p p_p p_p p q_" — Letter pattern
+  - [D8] Example 6 (English, split=validation, label=option3): "Fill in the gap below with suitable word. Fruit ∶ Reap∶∶ Flower ∶ _____ … Bloom" — Analogy reasoning question confirming domain presence.
+  - [D9] Example 7 (English, split=validation, label=option2): "If Rs. 4000 becomes Rs. 5760 in 2 years at compound interest (compounded annually), then what is the annual rate of interest? … 20 percent" — Quantitative aptitude/compound interest.
 
-#### Strength 4: Quantitative Aptitude Content Present
-- **Dimension(s):** IO
-- **Observation:** Several questions involve arithmetic calculations (simple/compound interest, averages, mixture problems) that are representative of the Quantitative Aptitude sections in SSC and banking exams. While labeled under Business Studies/Economics, these are functional math questions.
-- **Deployment relevance:** Mathematics/Reasoning is the most critical undocumented gap in MILU's taxonomy; finding actual arithmetic content in the data partially mitigates this concern for SSC/banking preparation.
-- **Datapoint citations:**
-  - [D15] Example 84 (MILU/Hindi, validation, option3): "सूरज ने अजय से एक निश्चित दर पर साधारण ब्याज पर दो वर्षों के लिए एक राशि उधार ली...दो वर्षों के अंत में उसे 1230 रुपये का चक्रवृद्धि ब्याज प्राप्त हुआ।" — Simple vs. compound interest problem
-  - [D16] Example 120 (MILU/Hindi, validation, option4): "किसी कंपनी में सभी कर्मचारियों का औसत वेतन रु. 10500 है...कंपनी में कुल कर्मचारियों की संख्या कितनी है?" — Mixture/average problem
-
-#### Strength 5: North India–Specific Regional Content Present
-- **Dimension(s):** IC
-- **Observation:** Several questions address knowledge specifically relevant to North Indian states (UP, Rajasthan) — covering state-specific geography (minerals in UP), traditional crafts (Chikankari embroidery), literacy statistics (Rajasthan Census 2011), Rajasthan geography, and agricultural data (milk production leader UP).
-- **Deployment relevance:** The deployment requires the AI to handle both pan-India GK and North India sub-regional content. These examples confirm that some such content is present, partially addressing the documented partial gap.
-- **Datapoint citations:**
-  - [D23] Example 26 (MILU/Hindi, validation, option2): "निम्नलिखित में से कौन सा खनिज उत्तर प्रदेश में नहीं पाया जाता है?" — UP-specific mineral geography
-  - [D28] Example 242 (MILU/Hindi, validation, option4): "______ उत्तर प्रदेश के महत्वपूर्ण शिल्पों में से एक है, जिसमें शिफॉन, मलमल, ऑर्गेंजा, ऑर्गेंडी और रेशम जैसे कपड़ों पर नाजुक पारंपरिक हाथ कढ़ाई की जाती है।" — Chikankari (UP embroidery)
-  - [D25] Example 156 (MILU/Hindi, validation, option1): "2011 की जनगणना के अनुसार राजस्थान की कुल साक्षरता का लगभग प्रतिशत कितना है?" — Rajasthan state-specific statistics
-  - [D27] Example 182 (MILU/Hindi, validation, option1): "निम्नलिखित में से किस राज्य ने 2011-12 में सबसे अधिक दूध उत्पादन दर्ज किया? उत्तर प्रदेश" — UP agricultural data
-  - [D29] Example 193 (MILU/Hindi, validation, option3): "कोटा के शासक के किस काल को कोटा चित्रकला स्कूल के लिए उत्कृष्ट काल माना जाता है?" — Kota painting school (Rajasthan art)
-
-#### Strength 6: Hindi Grammar and Language Proficiency Questions
+#### Strength 7: Hindi Grammar and Language Proficiency Questions Present
 - **Dimension(s):** IO, IC
-- **Observation:** The dataset contains Hindi language grammar questions (active/passive voice, indirect speech, sentence structure) that align with the Hindi Language Proficiency component of central exams (UPSC Mains Hindi compulsory paper, SSC Hindi sections).
-- **Deployment relevance:** Hindi language proficiency is listed as a priority subject area; these questions are in pure Hindi and reflect standard Hindi grammar exercises appropriate for the target student.
+- **Observation:** The Hindi partition includes a Hindi Language Studies question testing indirect speech transformation (reported speech) — a topic directly tested in UPSC Hindi language paper and SSC Hindi proficiency sections.
+- **Deployment relevance:** Hindi language proficiency is explicitly listed as a priority subject for this deployment, and the benchmark contains at least some questions testing grammatical competence in Hindi.
 - **Datapoint citations:**
-  - [D54] Example 9 (MILU/Hindi, validation, option3): "दिए गए वाक्य का सही अप्रत्यक्ष रूप चुनें। प्रबंधक ने अपने सहायक से कहा, तुम्हें अगले महीने बोनस मिलेगा।" — Indirect speech conversion
-  - [D55] Example 51 (MILU/Hindi, validation, option2): "दिए गए वाक्य का सही सक्रिय रूप चुनें। सभी को उसके शानदार नृत्य प्रदर्शन ने मोहित कर दिया।" — Active voice question
-
-#### Strength 7: Ethics and Governance Scenarios (UPSC-Style)
-- **Dimension(s):** IO, IC
-- **Observation:** Example 83 presents a complex ethical scenario for a civil officer — a format directly mirroring UPSC GS Paper IV (Ethics, Integrity, Aptitude) case studies.
-- **Deployment relevance:** UPSC aspirants must prepare for ethics-based scenario questions; this confirms MILU captures this question type, which is otherwise rare in competitive exam benchmarks.
-- **Datapoint citations:**
-  - [D56] Example 83 (MILU/Hindi, validation, option1): "एक वरिष्ठ सिविल अधिकारी के रूप में, आपको निजी रूप से संचालित वृद्धाश्रम के वार्षिक समारोह में अतिथि बनने के लिए आमंत्रित किया गया है...आदिवासी लोग जर्जर झोपड़ियों में रह रहे थे।" — UPSC-style ethics scenario
-
-#### Strength 8: Indian Economy and Finance Coverage
-- **Dimension(s):** IO, IC
-- **Observation:** Questions on the 1991 economic crisis, RBI operations, MSP (Minimum Support Price), Five-Year Plans, PMMY (Pradhan Mantri Mudra Yojana), and banking sector are present — all standard Economics/GK topics in central exams.
-- **Deployment relevance:** Indian economy is a consistently tested area in UPSC GS Paper III and SSC/banking exams.
-- **Datapoint citations:**
-  - [D58] Example 18 (MILU/Hindi, validation, option3): "1991 में वित्तीय संकट को ट्रिगर करने वाले विदेशी मुद्रा भंडार की हानि का तात्कालिक कारण क्या था?" — 1991 crisis
-  - [D59] Example 119 (MILU/Hindi, validation, option2): "आरबीआई के नोट जारी करने वाले विभाग के पास हमेशा न्यूनतम कितने मूल्य का सोना होना चाहिए?" — RBI operations
+  - [D17] Example 9 (Hindi, split=validation, label=option3): "दिए गए वाक्य का सही अप्रत्यक्ष रूप चुनें। प्रबंधक ने अपने सहायक से कहा, तुम्हें अगले महीने बोनस मिलेगा। … प्रबंधक ने अपने सहायक से कहा कि उसे अगले महीने बोनस मिलेगा।" — Hindi indirect speech transformation, tests Hindi grammatical knowledge.
 
 ---
 
@@ -158,131 +113,112 @@
 
 #### CRITICAL
 
-#### CRITICAL Concern 1: Complete Output Format Mismatch — No Explanatory Rationale Infrastructure
-- **Dimension(s):** OO, OF
-- **Observation:** Every example in the sample is structured as a 4-option MCQ with a single correct label (`target`). There are no rationale fields, explanation columns, or any annotation supporting the deployment's core output requirement: a substantive Hindi-language explanation of why an answer is correct or incorrect.
-- **Deployment relevance:** The deployment explicitly requires "both a correct/incorrect label and a substantive explanation of why the answer is right or wrong, delivered in Hindi" (Elicitation Q3). MILU's schema (question, option1–4, target, is_translated, language, domain, subject) contains no field for rationale. This is a total mismatch with the deployed task; benchmark accuracy scores cannot validate whether a model produces accurate or coherent Hindi explanations. This is confirmed by the benchmark paper itself (Q85) and by the absence of any explanation field across all 245 reviewed examples.
+#### CRITICAL Concern 1: 100% Translation Rate in Hindi Validation Sample — No Natively Authored Hindi Questions Observed
+- **Dimension(s):** IC
+- **Observation:** All 26 Hindi validation examples in the sample carry `is_translated: True`. Not a single natively authored Hindi question appears in this sample. This means every Hindi question observed was originally written in English and translated via GPT-4O. The benchmark documentation states that only ~25% of the total dataset is translated; however, this sample suggests the Hindi validation partition may have a much higher translated proportion than the overall dataset average.
+- **Deployment relevance:** This is critical for the deployment. Translated questions may not reflect the vocabulary conventions, sentence structures, or idiomatic phrasing of Hindi-medium competitive exam papers (which have their own established register). Questions authored in Hindi for exams like UPSC Hindi medium, UPPSC, or Hindi SSC papers have characteristic patterns that differ from back-translated English. If the Hindi partition predominantly consists of translated items, the benchmark may poorly represent the linguistic environment of the target student — and models fine-tuned or evaluated on translated Hindi may perform differently on authentically authored Hindi exam content.
 - **Datapoint citations:**
-  - [D1] Example 33 (MILU/Hindi, validation, option1): "______ एक अदालत का आदेश है जो एक अधीनस्थ अदालत..." — Correct answer is option1, but no explanation of why mandamus fits the definition is provided
-  - [D15] Example 84 (MILU/Hindi, validation, option3): "सूरज ने अजय से एक निश्चित दर पर साधारण ब्याज पर दो वर्षों के लिए एक राशि उधार ली..." — Math problem with answer only; no worked solution or rationale
-  - [D56] Example 83 (MILU/Hindi, validation, option1): "एक वरिष्ठ सिविल अधिकारी के रूप में..." — Ethics scenario answer marked option1 with no reasoning explaining why option1 is preferred over other plausible options
+  - [D13] All 26 examples (Hindi, split=validation): is_translated = True for all — "जब एक डीसी सीरीज मोटर बिना लोड के चलती है…", "हाफ वेव रेक्टिफायर का आउटपुट क्या होता है…", "राष्ट्रीय आपातकाल घोषित करने के लिए 'सशस्त्र विद्रोह'…" — every item carries the translated flag.
+  - [D15] Example 18 (Hindi, split=validation, label=option3): "1991 में वित्तीय संकट को ट्रिगर करने वाले विदेशी मुद्रा भंडार की हानि का तात्कालिक कारण क्या था?" — direct translation of D14 (English: "What was the immediate cause for loss of foreign reserves…"), confirming the translation pipeline.
 
----
+#### CRITICAL Concern 2: Output Ontology Mismatch — MCQ Labels Only, No Explanatory Rationale Infrastructure
+- **Dimension(s):** OO, OF
+- **Observation:** Every datapoint in the dataset provides only a `target` field (one of option1–option4) as the ground-truth output. There is no rationale field, explanation field, or any annotation supporting the deployment's required output: a substantive Hindi-language explanation of why an answer is right or wrong.
+- **Deployment relevance:** The deployment's core output is a correct/incorrect label **plus** a Hindi-language explanatory rationale (elicitation Q3). MILU benchmark scores measure only whether a model selects the correct MCQ option — they cannot validate whether the model's Hindi explanations are factually accurate, fluent, or pedagogically appropriate. This is a fundamental scope mismatch confirmed by direct inspection of the data schema. The paper's own limitation section acknowledges the log-likelihood evaluation may differ from generation-based approaches (Q85), but even generation-based scoring in MILU only assesses option selection.
+- **Datapoint citations:**
+  - [D1] Example 6 (Hindi, split=validation, label=option1): target = "option1" — the only output label is the MCQ choice; no rationale, no explanation field exists in the schema.
+  - [D9] Example 7 (English, split=validation, label=option2): target = "option2" — compound interest answer with no worked solution or explanation provided; the schema has no field for this.
 
 #### MAJOR
 
-#### MAJOR Concern 1: Truncated/Self-Referential Questions — Construct-Irrelevant Variance
-- **Dimension(s):** IF, OC
-- **Observation:** A substantial number of questions (at minimum 5 identified in the 245-sample) have answer options that reference items, statements, or sentences that are absent from the question text itself. Options contain labels like "(a), (b), (c), (d)" or "1 2 3 4" or "AEDBCF" without the corresponding items being present in the question field. These appear to be reading-comprehension or list-based questions from which the source material was stripped during data collection, leaving the MCQ shell without the necessary context.
-- **Deployment relevance:** A student interacting with these questions cannot evaluate the answer options without the missing content. Any model evaluated on these items is effectively guessing. For the deployment, presenting such incomplete questions would actively harm the student's learning experience, and benchmark accuracy on these items does not measure genuine knowledge.
-- **Datapoint citations:**
-  - [D43] Example 56 (MILU/Hindi, validation, option2): "एथेनॉल के बारे में दिए गए चार कथनों पर विचार करें...विकल्प (1) और (3) केवल" — Options reference statements (1)(2)(3)(4) that are absent from question
-  - [D44] Example 86 (MILU/Hindi, validation, option2): "भारत में सभी बहुआयामी गरीब व्यक्तियों में से आधे से अधिक निम्नलिखित राज्यों में रहते हैं: केवल A, B, D और E" — Options reference states A/B/C/D/E with no list provided
-  - [D45] Example 94 (MILU/Hindi, validation, option4): "निम्नलिखित में से कौन सी ऑक्सीकरण-अपचयन प्रतिक्रियाएँ हैं? केवल a, d" — Options reference reactions a/b/c/d absent from question
-  - [D46] Example 69 (MILU/Hindi, validation, option2): "निम्नलिखित में से कौन सा एक शुद्ध पदार्थ है? (b), (c) और (d)" — Options reference items (a)–(d) absent
-  - [D48] Example 106 (MILU/Hindi, validation, option2): "निम्नलिखित पदार्थों को प्रयोगशाला में उनकी पहली संश्लेषण की कालानुक्रमिक क्रम में व्यवस्थित करें: 4 2 3 1" — Substances to be ordered are absent from question
-  - [D47] Example 95 (MILU/Hindi, validation, option1): "विकल्प चुनें जो वाक्यों B, C, D और E को एक तार्किक क्रम में व्यवस्थित करता है। वाक्य A और F स्थिर हैं। AEDBCF" — Sentences B/C/D/E absent from question
-
-#### MAJOR Concern 2: 100% Translation Rate in Observed Sample — Unknown Effect on Hindi Register
-- **Dimension(s):** IC, IF
-- **Observation:** Every single example in the 245-sample (all 245) has `is_translated=True`. This is the entire validation split reviewed. While the overall dataset is documented to have ~25% translated items, the validation split may have a substantially higher translation rate, or there may be a systematic sampling issue. All translated items were produced by GPT-4O, and the Hindi phrasing varies in naturalness.
-- **Deployment relevance:** The deployment specifies a ~10% English code-mixing ceiling for Hindi-medium students. Machine-translated questions may use unnatural Hindi phrasing, Sanskritized vocabulary, or carry over English-medium structural conventions. For example, engineering and computer science questions (DC motor, FORTRAN, rectifier) that are entirely technical/specialist in nature appear translated into Hindi with mixed terminology. This inflates the engineering/technical content proportion and may introduce phrasing patterns foreign to Hindi-medium exam-style content.
-- **Datapoint citations:**
-  - [D53] Example 1 (MILU/Hindi, validation, is_translated=True): "जब एक डीसी सीरीज मोटर बिना लोड के चलती है: मोटर की गति बहुत अधिक होती है" — Engineering question translated from English; typical Hindi-medium UPSC/SSC exam aspirants would not encounter DC motor questions
-  - [D37] Example 8 (MILU/Hindi, validation, is_translated=True): "फॉरट्रान 77 के फिक्स्ड फॉर्मेट में कॉलम 2 से 5 में संख्या का क्या उद्देश्य होता है?" — FORTRAN programming language question, translated; not in UPSC/SSC scope
-
-#### MAJOR Concern 3: English-Language Questions Classified as Hindi Content
-- **Dimension(s):** IC, IF
-- **Observation:** Multiple questions in the Hindi-labeled dataset are substantively about English vocabulary — testing the meaning of English words ('grim', 'didactic', 'Evangelize') or converting English sentences — rather than being Hindi-medium content questions. These are labeled `language=Hindi` and `subject=Language Studies` but require knowledge of English vocabulary, not Hindi.
-- **Deployment relevance:** The target student population has limited English exposure; a ~10% code-mixing ceiling applies. English vocabulary synonym questions embedded in the Hindi benchmark are a direct mismatch. A Hindi-medium student who cannot identify the synonym of 'grim' in English is not being tested on any UPSC/SSC competency — these exams do not test English vocabulary for Hindi-medium candidates. Benchmark performance on these items does not reflect the target student's actual exam competency.
-- **Datapoint citations:**
-  - [D41] Example 90 (MILU/Hindi, validation, option3): "शब्द 'grim' का पर्यायवाची लिखें।" — Asks for a synonym of the English word 'grim'; answer options are in Hindi, but the knowledge tested is English vocabulary
-  - [D40] Example 76 (MILU/Hindi, validation, option2): "निर्देश: 'डिडैक्टिक' शब्द का अर्थ क्या है?" — English vocabulary meaning question
-  - [D42] Example 105 (MILU/Hindi, validation, option4): "निर्देश: निम्नलिखित प्रश्न में, चार विकल्पों में से उस शब्द का चयन करें जो दिए गए शब्द का अर्थ सबसे अच्छी तरह व्यक्त करता है। Evangelize" — English word meaning question; options in Hindi but knowledge is English vocabulary
-
-#### MAJOR Concern 4: Substantial Over-Representation of Engineering/Technical Content Irrelevant to Deployment
+#### MAJOR Concern 1: Heavy Engineering/Technology Domain Skew in Hindi Sample — Misalignment with Central Exam Priority
 - **Dimension(s):** IO
-- **Observation:** The sample contains a high density of specialist engineering and computer science questions (electrical engineering, FORTRAN programming, AM/FM modulation, DC motors, TDM frame rates, transfer machines, chopper circuits) that fall outside the scope of UPSC/SSC/banking central exam syllabi. These items appear predominantly translated from English and constitute a significant fraction of the sample.
-- **Deployment relevance:** UPSC, SSC CGL, and banking exams do not test specialist engineering knowledge at this level. Benchmark accuracy on these items measures specialized engineering knowledge, not the GK/History/Polity/Reasoning competencies that the deployment targets. High model performance on engineering items inflates overall benchmark scores without corresponding validity for the deployment context.
+- **Observation:** Of the 26 Hindi validation examples, at least 7 are from Engineering & Tech (DC motor behavior, half-wave rectifier, constant current transformer, AM bandwidth, Fortran 77 column labels, wood swelling in timber, Materials Science) and 3 more are from Science (Computer Science, Biology). Together these constitute approximately 38% of the Hindi sample. By contrast, only 1 question is from Law & Governance (the 44th Amendment, D1) and only 2 are from Arts & Humanities with historical content (D2, D23).
+- **Deployment relevance:** For UPSC/SSC/banking central exam preparation, Engineering & Tech and advanced Computer Science questions (e.g., Fortran 77 syntax, D16) are low-priority relative to History, Polity, Geography, and Economics. The observed sample distribution suggests the Hindi partition may over-represent technical domains (possibly because English engineering exam content was translated to fill gaps), which does not reflect the actual subject distribution of UPSC GS or SSC General Awareness syllabi.
 - **Datapoint citations:**
-  - [D35] Example 1 (MILU/Hindi, validation): "जब एक डीसी सीरीज मोटर बिना लोड के चलती है: मोटर की गति बहुत अधिक होती है" — DC series motor behavior (Engineering)
-  - [D36] Example 3 (MILU/Hindi, validation): "हाफ वेव रेक्टिफायर का आउटपुट क्या होता है: पल्सेटिंग डीसी" — Half-wave rectifier (Engineering)
-  - [D37] Example 8 (MILU/Hindi, validation): "फॉरट्रान 77 के फिक्स्ड फॉर्मेट में कॉलम 2 से 5 में संख्या का क्या उद्देश्य होता है?" — FORTRAN programming (Engineering/Computer Science)
-  - [D38] Example 104 (MILU/Hindi, validation): "540 kHz से 1650 kHz तक ट्यूनिंग करने वाले रिसीवर्स के लिए सबसे लोकप्रिय इंटरमीडिएट फ्रीक्वेंसी (kHz में) कौन सी है" — Intermediate frequency for AM receivers (Engineering)
+  - [D5] Example 1 (Hindi, split=validation): "जब एक डीसी सीरीज मोटर बिना लोड के चलती है" — Engineering question, is_translated: True.
+  - [D6] Example 3 (Hindi, split=validation): "हाफ वेव रेक्टिफायर का आउटपुट क्या होता है" — Engineering question, is_translated: True.
+  - [D7] Example 4 (Hindi, split=validation): "स्थिर धारा ट्रांसफार्मर _______ प्रकार का होता है" — Engineering question, is_translated: True.
+  - [D16] Example 8 (Hindi, split=validation): "फॉरट्रान 77 के फिक्स्ड फॉर्मेट में कॉलम 2 से 5 में संख्या का क्या उद्देश्य होता है" — Niche Computer Science, is_translated: True; not in UPSC/SSC General Studies syllabus.
+  - [D36] Example 16 (Hindi, split=validation): "एएम की बैंडविड्थ _________ है। … 1110 kHz" — Electrical engineering bandwidth, is_translated: True.
 
-#### MAJOR Concern 5: Current Affairs Questions Are Significantly Dated
+#### MAJOR Concern 2: Current Affairs Questions Are Time-Bounded and May Be Stale
 - **Dimension(s):** IC, IO
-- **Observation:** Current Affairs is one of the most heavily weighted and dynamic UPSC GS areas. The sample contains multiple Current Affairs questions tied to specific dates in 2018–2022, including GDP growth rates for Q2 2018-19, cabinet minister assignments as of 2018, international events in 2019–2022. These questions would have stale or incorrect answers for students preparing for 2024-2026 exams.
-- **Deployment relevance:** UPSC Current Affairs directly covers the preceding year; questions about 2018-2022 events are outdated for students currently preparing. A model evaluated highly on these items may still fail on current 2024-2025 affairs questions, and the benchmark cannot capture this currency dimension at all.
+- **Observation:** Multiple examples contain Current Affairs questions tied to specific years (2022 state elections, May 2022 archery tournament, 2020 Filmfare Awards, 2021 Padma Awards, Hillary Clinton's June 2014 book). MILU was published in 2024, and these questions reference events from 2014–2022 — meaning a significant portion of "Current Affairs" content is already dated and may not represent the current affairs knowledge tested in 2025–2026 exam cycles.
+- **Deployment relevance:** Current Affairs is one of the most heavily weighted and variably tested areas of UPSC GS Paper 1 (confirmed in the web search context). For a deployment serving students preparing for 2025–2026 exam cycles, a benchmark sourced from exams up to ~2023 will have stale current affairs content. Model performance on MILU's Current Affairs items does not predict readiness for current exam cycles.
 - **Datapoint citations:**
-  - [D19] Example 74 (MILU/Hindi, validation, option4): "जुलाई-सितंबर 2018 तिमाही के दौरान भारत की GDP की वृद्धि दर क्या थी?" — GDP figure from 2018-19; outdated for current exam prep
-  - [D20] Example 132 (MILU/Hindi, validation, option4): "2018 तक, महिला और बाल विकास मंत्रालय (MWCD) के केंद्रीय मंत्री कौन हैं?" — Ministry head as of 2018; politically outdated
-  - [D21] Example 88 (MILU/Hindi, validation, option1): "जुलाई 2019 में, जापान की अंतरिक्ष एजेंसी का एक अंतरिक्ष यान एक क्षुद्रग्रह पर उतरा।" — 2019 space event Current Affairs
-  - [D22] Example 2 (MILU/Hindi, validation, option2): "मई 2022 में इराक के सुलेमानिया में आयोजित तीरंदाजी एशिया कप 2022 स्टेज 2 अभियान में भारत ने कितने स्वर्ण पदक जीते?" — 2022 sports event, dated
+  - [D4] Example 2 (Hindi, split=validation): "मई 2022 में इराक के सुलेमानिया में आयोजित तीरंदाजी एशिया कप 2022 स्टेज 2 अभियान में भारत ने कितने स्वर्ण पदक जीते?" — 2022 sports event; stale for 2025–26 exam prep.
+  - [D25] Example 5 (Punjabi, split=validation): "ਫਰਵਰੀ - ਮਾਰਚ 2022 ਵਿੱਚ ਹੋਈ ਰਾਜ ਵਿਧਾਨਸਭਾ ਚੋਣਾਂ ਵਿੱਚ, ਆਮ ਆਦਮੀ ਪਾਰਟੀ (AAP) ਨੇ … ਪੰਜਾਬ" — 2022 election results; dated.
 
-#### MAJOR Concern 6: Significant South India–Specific Content in Hindi Dataset
-- **Dimension(s):** IC
-- **Observation:** Several questions in the Hindi-labeled sample test knowledge that is specific to South Indian states (Telangana, Andhra Pradesh, Tamil Nadu) or South Indian literary/cultural heritage — including T-Hub Telangana, Tamil classical texts (Silappathikaram), Telangana book ('Telangana Rastrodayamalu'), Tamil cartoons, and Pandya kingdom history. While pan-India GK may include some of this, the density of Telangana/Tamil-specific items in a Hindi deployment is unexpected.
-- **Deployment relevance:** Central exam syllabi do cover pan-India GK, but North India–based Hindi-medium students would not encounter these as high-priority preparation topics. Moreover, the benchmark documents that regional state exam questions are pooled across language partitions via translation — these may originate from Telugu/Tamil state exam questions translated into Hindi, representing a category mismatch for central-exam preparation.
+#### MAJOR Concern 3: Cross-Language Item Duplication Reduces Effective Question Pool Size
+- **Dimension(s):** OC, IC
+- **Observation:** The same factual questions appear identically translated across multiple language partitions. Examples include: the 1991 financial crisis question (Bengali Ex.1, English Ex.1, Hindi Ex.18, Malayalam Ex.1); the Bahamani Kingdom capital (Bengali Ex.3, English Ex.3, Gujarati Ex.3, Malayalam Ex.3, Punjabi Ex.3); the Qutb Minar completion (Bengali Ex.18, English Ex.18, Gujarati Ex.18, Hindi, Kannada Ex.15, Punjabi Ex.18, Tamil Ex.18); the Mediterranean climate question (English Ex.5, Gujarati Ex.5, Hindi Ex.5, Kannada Ex.5, Malayalam Ex.5, Marathi Ex.5, Punjabi, Tamil Ex.5, Telugu Ex.5). This pattern strongly suggests that a significant fraction of MILU consists of the same items translated, not independently sourced questions for each language.
+- **Deployment relevance:** If the same items are used across language partitions via translation, the "79,000 questions" figure conflates distinct items with translated copies. For the Hindi partition specifically, the effective number of unique factual scenarios tested may be substantially smaller than the headline count suggests. Additionally, cross-language translation introduces a risk that questions originally designed for one language/exam context (e.g., SSC English) are not genuinely representative of the Hindi-medium exam ecosystem.
 - **Datapoint citations:**
-  - [D33] Example 126 (MILU/Hindi, validation, option3): "निम्नलिखित में से किसने 'तेलंगाना राष्ट्रोदयमालु' पुस्तक लिखी?" — Telangana-specific literary question
-  - [D34] Example 41 (MILU/Hindi, validation, option1): "टी-हब तेलंगाना राज्य सरकार की एक पहल है" — Telangana state government policy
-  - [D32] Example 108 (MILU/Hindi, validation, option3): "तमिल पत्रिका में सबसे पहले कार्टून चित्र किसने प्रस्तुत किए?" — Tamil literary history question
-  - [D31] Example 52 (MILU/Hindi, validation, option2): "वह पांड्य राजा जिसने पांड्य साम्राज्य को कावेरी तक संगठित और विस्तारित किया था" — Pandya kingdom (South Indian history)
+  - [D29] Example 6 (Malayalam, split=validation, label=option1): "ദേശീയ അടിയന്തരാവസ്ഥ പ്രഖ്യാപിക്കാൻ 'സായുധ കലാപം' എന്ന പദം ഭരണഘടനയിൽ ചേർത്തത് എപ്പോൾ?" — same 44th Amendment question as D1 (Hindi), D6 (Tamil), confirmed duplicate across Malayalam.
+  - [D14] Example 1 (English, split=validation) and [D15] Example 18 (Hindi, split=validation): "What was the immediate cause for loss of foreign reserves…" / "1991 में वित्तीय संकट को ट्रिगर करने वाले…" — literal translation confirmed by is_translated field.
 
----
+#### MAJOR Concern 4: Incomplete / Truncated Question Stems Observed
+- **Dimension(s):** OC, IC
+- **Observation:** At least two distinct examples contain severely truncated or incomplete question stems that do not provide enough context for meaningful answering. English Example 11 reads only "The owner of the textile shop brought a" with options including Computer, Calculator, Pencil, and Fountain pen — with no coherent question preceding this stem fragment. The marble/sculpture directions question appears similarly across Malayalam (Ex.14), Marathi (Ex.14), Telugu (Ex.14), Tamil (Ex.14) as "Directions: marble can be used" or equivalent, with options for painting, music, stones, and sculpture. These appear to be reading-comprehension remnants where the passage was stripped but the question fragment survived.
+- **Deployment relevance:** Malformed or incomplete items undermine the validity of the benchmark. A model that encounters such items cannot answer based on the question content — any response is essentially random. If such items appear in the test split, they will add noise to accuracy scores in a way that is not informative about model quality. For a deployment context where the AI must explain the reasoning behind an answer, such items are particularly problematic.
+- **Datapoint citations:**
+  - [D34] Example 11 (English, split=validation, label=option2): "The owner of the textile shop brought a … Calculator" — No coherent question is present; the stem is a sentence fragment.
+  - [D35] Example 14 (Malayalam, split=validation, label=option4): "ദിശകൾ: മാർബിൾ ഉപയോഗിക്കാവുന്നത് … ശിൽപ്പം" — Truncated "Directions:" stem without the relevant passage; same pattern in Marathi Ex.14, Telugu Ex.14, Tamil Ex.14.
 
 #### MINOR
 
-#### MINOR Concern 1: Reasoning Questions Use Transliterated English Letters, Introducing Mild Code-Mixing
-- **Dimension(s):** IC, IF
-- **Observation:** Some logical reasoning questions use transliterated English letter names in Hindi script (e.g., "एमएनक्यू", "एमओक्यू" for MNQ, MOQ) rather than Hindi-medium equivalent notation. While this is a minor form of code-mixing, it may create unnatural reading for students accustomed to Hindi-medium reasoning materials.
-- **Deployment relevance:** The ~10% code-mixing ceiling is set for content, not isolated letter labels in pattern sequences; this is likely acceptable. However, the transliteration may be less natural than using the Latin letters directly (which Hindi-medium exam books do routinely).
+#### MINOR Concern 1: State-Level Content Mixed with Central Exam Content Without Labeling
+- **Dimension(s):** IO
+- **Observation:** Some items clearly pertain to state-level governance rather than central exams — for example, the Maharashtra Legislative Committee question (English Ex.9) and the Madhya Pradesh Banmore industrial area question (Telugu Ex.25). These are not labeled in the metadata as "state-PSC" versus "central exam" items, making it impossible to filter the benchmark for central-exam-only use without manual review.
+- **Deployment relevance:** The deployment is explicitly scoped to central-level examinations (UPSC, SSC, banking), not state PSCs. Items about Maharashtra's legislative committee procedures or MP's industrial geography add noise if used for evaluating central-exam readiness but are not identifiable from the `domain` or `subject` metadata.
 - **Datapoint citations:**
-  - [D57] Example 145 (MILU/Hindi, validation, option2): "कौन सा अक्षर समूह प्रश्न चिह्न (?) को बदलकर दी गई श्रृंखला को पूरा करेगा? एमएनक्यू / एमओक्यू" — Transliterated letter group names
+  - [D24] Example 9 (English, split=validation, label=option2): "Which one of the following statements about Legislative Committee system of Maharashtra is not correct?" — state-level governance question, not central exam scope.
+  - [D27] Example 25 (Telugu, split=validation, label=option1): "మధ్యప్రదేశ్‌లోని బన్మోర్ పారిశ్రామిక అభివృద్ధి కేంద్రం ఏ జిల్లాలో ఉంది? … మొరెనా" — State-level (MP) geography question.
 
-#### MINOR Concern 2: Potential Answer Quality Issue — 'None of These' as Correct Answer for Factual Question
-- **Dimension(s):** OC
-- **Observation:** Example 109 asks about the constitutional article governing municipal election supervision in Chhattisgarh and the correct answer is "इनमें से कोई नहीं" (none of these). The provided options include Articles 243(ख), 243(क), and 241(ग). 'None of these' as the correct answer for a specific constitutional article question raises a potential data quality concern — either the correct article number was not included in the options, or the source portal recorded an ambiguous answer.
-- **Deployment relevance:** Questions where 'none of these' is the correct answer are inherently difficult to explain in a rationale-based deployment, and may reflect data quality issues from the scraping pipeline (correct option not included in the option set).
-- **Datapoint citations:**
-  - [D49] Example 109 (MILU/Hindi, validation, option4): "छत्तीसगढ़ में नगरपालिकाओं के सभी चुनावों के संचालन के लिए पर्यवेक्षण, दिशा और नियंत्रण का प्रावधान किस अनुच्छेद में है? इनमें से कोई नहीं" — 'None of these' as answer to specific constitutional article query
-
-#### MINOR Concern 3: Non-India–Specific Literary Questions with Low Deployment Relevance
+#### MINOR Concern 2: North India–Specific Sub-Regional Content Sparse in Observed Hindi Sample
 - **Dimension(s):** IC
-- **Observation:** A small number of questions test knowledge about non-Indian subjects that are tangentially connected to India's GK scope — such as the nationality of William Wordsworth or the 2019 Man Booker Prize winner (Bernadine Evaristo). These may appear in some competitive exam general awareness sections but are at the periphery of UPSC/SSC core content.
-- **Deployment relevance:** These items represent minor dilution of deployment-relevant content. Their presence is not harmful but adds noise for the target student population.
+- **Observation:** Only one question in the Hindi sample (D3, UP minerals) could be classified as specifically North India sub-regional. No questions about Chhath Puja, Bhojpuri culture, zamindari systems, North Indian freedom movement figures (Chandrashekhar Azad, Ram Prasad Bismil), or UP/Bihar/Rajasthan administrative specifics were observed. The Mughal history question (D2) is pan-India/pan-subcontinental rather than specifically North Indian.
+- **Deployment relevance:** The deployment must handle both pan-India GK and North India–specific content for central exams. The scarcity of observed North India sub-regional items (1 of 26) suggests this layer may be thinly represented in the Hindi partition, though a 26-item sample is insufficient to make a strong claim.
 - **Datapoint citations:**
-  - [D39] Example 7 (MILU/Hindi, validation, option2): "विलियम वर्ड्सवर्थ _________ के कवि हैं।" — Wordsworth's nationality, borderline relevance to central exam GK
+  - [D3] Example 26 (Hindi, split=validation, label=option2): "निम्नलिखित में से कौन सा खनिज उत्तर प्रदेश में नहीं पाया जाता है?" — the only observed North India–specific item in the Hindi sample.
+
+#### MINOR Concern 3: Regional/State-Specific Cultural Content Appears Only in Non-Hindi Partitions
+- **Dimension(s):** IC
+- **Observation:** Culturally specific regional content (the Halashashthi festival in Marathi Ex.16, Lokranjan Mahotsav in Marathi/Gujarati, Chhattisgarh Bastar revolt in Gujarati/Kannada/Punjabi/Telugu, Sindhi poet Vasdev Mohi in Gujarati, Telangana literature in Kannada) appears in non-Hindi partitions. In the Hindi partition, no comparably region-specific Hindi-belt cultural content (festivals, literary traditions specific to Hindi-speaking North India) was observed.
+- **Deployment relevance:** This creates a mild concern that MILU's culturally grounded content — which is a stated design strength — may be distributed toward South Indian and West Indian language partitions, where regional state exams provide richer locally sourced material. The Hindi partition, which is most important for this deployment, may rely more heavily on translated pan-India content than on natively sourced culturally specific Hindi exam content.
+- **Datapoint citations:**
+  - [D19] Example 16 (Marathi, split=validation, label=option3): "हलषष्ठी सण का साजरा केला जातो? … मुलाच्या दीर्घायुष्यासाठी" — Maharashtra-specific festival question; no equivalent Hindi-belt festival question observed.
+  - [D20] Example 16 (Gujarati, split=validation, label=option2): "છત્તીસગઢના નીચેના કયા બળવાઓને 'બસ્તરનો સ્વાતંત્ર્ય સંઘર્ષ' … લિંગગિરી બળવો" — Chhattisgarh tribal revolt; this question also appears in Kannada, Punjabi, Telugu but not observed in Hindi.
 
 ---
 
 ### Content Coverage Summary
 
-The 245-sample Hindi validation set covers a broad range of subjects with meaningful representation of Indian Polity/Constitution, Indian History (ancient, medieval, and modern), Indian Economy, Environmental Science/Geography, and Health/Medicine. Logical Reasoning (seating arrangements, syllogisms, blood relations, coding-decoding, series completion) is present as a subject under the Science domain, partially addressing the documented taxonomy gap. Quantitative arithmetic questions (simple/compound interest, averages) appear within Business Studies/Economics.
+The MILU dataset, as observed across 215 examples from the validation split, is a large-scale MCQ benchmark with broad subject coverage across 11 Indic languages. The Hindi partition (26 examples) demonstrates adequate rendering in standard Devanagari with low observed code-mixing, and contains substantive content relevant to UPSC/SSC central exam topics including Indian constitutional law, Mughal history, and general knowledge in Economics and Geography.
 
-North India–specific content is present but not dominant: examples covering UP minerals, Chikankari (UP embroidery), Rajasthan geography and literacy, Kota painting, and Bihar/UP agricultural data confirm some sub-regional coverage. However, the sample does not include Chhath Puja, zamindari/land-revenue history, or North Indian freedom movement figures beyond Sardar Patel and general mentions.
+However, two structural features substantially limit the benchmark's fit for this deployment. First, the entire Hindi validation sample is machine-translated (`is_translated: True` for all 26 items), raising questions about linguistic authenticity for the target population of Hindi-medium exam aspirants. Second, the observed domain distribution in the Hindi sample is skewed toward Engineering & Technology (DC motors, transformers, AM bandwidth, Fortran 77) — subjects that are peripheral to UPSC GS and SSC General Awareness. This skew likely results from the translation gap-filling strategy (translating English engineering exam questions to meet minimum thresholds) documented in the benchmark paper.
 
-A notable characteristic is that 100% of the 245 reviewed examples have `is_translated=True`, which may reflect the composition of the validation split specifically. The translated items include heavy representation of specialist Engineering & Technology and Computer Science content (DC motors, FORTRAN, AM/FM modulation, rectifiers) that falls outside UPSC/SSC/banking central exam syllabi. Several questions are structurally incomplete — answer options reference lists, statements, or sentences absent from the question text, likely artifacts of the source portal scraping process.
+The English partition shows broader subject coverage, including Logical Reasoning and Mathematics questions, confirming these domains exist within MILU's taxonomy — but their representation in the Hindi partition specifically remains unverified from this sample.
 
-Current Affairs content is present but dated to 2018–2022, creating a staleness concern for students preparing for 2025–2026 central exams. English vocabulary questions (synonym/meaning of 'grim', 'didactic', 'Evangelize') are labeled as Hindi Language Studies content but test English word knowledge, which is misaligned with Hindi-medium students' target exam requirements.
+Cross-language item duplication is pervasive: the same factual questions (Bahamani Kingdom capital, Qutb Minar, 1991 financial crisis, Mediterranean climate) appear identically translated across all 11 language partitions in the validation split. This is structurally expected for a translated benchmark but means the effective number of unique factual scenarios is smaller than the total item count implies.
 
-The benchmark has no rationale or explanation fields — every item is a bare MCQ with a correct label only.
+Two malformed items with truncated stems were observed across multiple language partitions, suggesting imperfect filtering of reading-comprehension remnants from the scraping process.
+
+The benchmark's output schema (MCQ `target` field only) provides no infrastructure for evaluating the Hindi-language explanatory rationale that constitutes the deployment's core output — a fundamental mismatch that cannot be remedied by data inspection alone.
 
 ---
 
 ### Limitations
 
-1. **Translation rate in validation split**: All 245 reviewed examples have `is_translated=True`. It is unclear whether this reflects the full validation split composition or a systematic ordering in the parquet file. The test split (14,831 examples) likely has a substantially different translation rate and subject distribution; findings about over-representation of engineering content and translation artifacts may not fully generalize.
+1. **Sample size and representativeness:** Only validation split examples were examined (26 Hindi, 20–25 per other language). The test split contains approximately 6,600–10,000 examples per language config; the observed 100% translation rate in the Hindi validation sample cannot be generalized to the full test split without examining a larger sample. The actual distribution of natively authored vs. translated Hindi items in the test set requires direct inspection.
 
-2. **Sample size relative to total dataset**: 245 examples from a 14,831-example test set and 812-example validation set; topic distribution within the full dataset may differ from the sample. Rare subjects (Chhath Puja, land-revenue systems, specific North Indian historical figures) may be present in the full test set but absent from this sample.
+2. **Subject distribution cannot be quantified from this sample:** The 26 Hindi examples are insufficient to estimate the true proportion of Engineering/Tech vs. History/Polity/GK/Reasoning items in the Hindi test partition. The observed skew may be an artifact of the small validation sample.
 
-3. **No inspection of test split**: The test set (14,831 examples) was not reviewed. Domain/subject distribution, translation rates, and data quality issues (truncated questions) in the test split are unconfirmed.
+3. **No test split content inspected:** All examples are from the validation split, which is used for few-shot examples in the benchmark's evaluation protocol. The test split (which is the actual evaluation set) was not sampled, and subject distributions may differ.
 
-4. **Code-mixing cannot be quantified**: While specific English terms (RMS, AM, PCM, RBI, GDP, FORTRAN) appear in questions, a systematic quantitative estimate of English term density per question is not possible from manual review of 245 examples.
+4. **Translation quality unassessable from inspection alone:** While observed Hindi items are fluent Devanagari, the quality of GPT-4O translations for technical domains (especially Electrical Engineering, Computer Science) relative to authentic Hindi exam register cannot be assessed through casual reading — it would require review by a Hindi-medium domain expert.
 
-5. **Answer correctness not independently verifiable**: The target labels are inherited from exam portal answer keys. For the ~5 structurally truncated questions (where option lists are absent), the correctness of the labeled answer cannot be assessed without the original source.
+5. **No audio or image modality:** These are excluded by MILU's design; no inspectability concern applies.
 
-6. **North India sub-regional coverage**: The sample confirms some UP/Rajasthan content but cannot establish whether Chhath Puja, zamindari abolition, specific North Indian freedom fighters, or Bihar-specific history appear in the test set at deployable density.
-
-7. **Validation split composition uncertainty**: The fact that all 245 validation examples are translated may indicate the validation split was specifically constructed from translated items, or may be a coincidence of sampling order. This cannot be resolved without examining the full split statistics.
+6. **Rationale quality entirely outside data scope:** The deployment's core output (Hindi explanatory rationale) is wholly absent from the dataset schema. No amount of data inspection can assess this dimension; it requires a separate evaluation framework.

@@ -1,0 +1,5 @@
+Use case and domain: Deployment scenario: A GPT-4 model is implemented in a one-on-one tutoring session, where its responses are augmented with a human tutor’s input. The tutor evaluates the pedagogical quality of the combined response, particularly in terms of how well it provides guidance. The goal is to assess whether the augmented GPT-4 responses are acceptable to the tutor.
+
+Domain: Educational tutoring
+Setting: Mobile application / enterprise software
+Target population: High-end professional teacher teaching grade 1-8 in major metropolitan cities in India, such as Delhi and Mumbai, who is fluent in English.

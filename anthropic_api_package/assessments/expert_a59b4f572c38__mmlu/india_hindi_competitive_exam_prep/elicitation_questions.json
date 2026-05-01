@@ -2,21 +2,21 @@
   {
     "id": "Q1",
     "dimension": "IO",
-    "question": "For a graduate student in North India preparing for competitive job exams (e.g., UPSC, SSC, state PSC, banking exams), which subject areas are most critical — General Knowledge, Current Affairs, Indian Polity & Constitution, Hindi language proficiency, regional history of North Indian states (UP, Bihar, Rajasthan, MP), or Mathematics/Reasoning? Are there specific exam types (Central vs. state-level) that your deployment must prioritize?"
+    "question": "For a graduate student in North India preparing for competitive job exams (e.g., UPSC, SSC, state PSC, banking exams), which subject areas are most critical \u2014 General Knowledge, Current Affairs, Indian Polity & Constitution, Hindi language proficiency, regional history of North Indian states (UP, Bihar, Rajasthan, MP), or Mathematics/Reasoning? Are there specific exam types (Central vs. state-level) that your deployment must prioritize?"
   },
   {
     "id": "Q2",
     "dimension": "IC",
-    "question": "Competitive exam questions for North Indian students often draw on culturally specific knowledge — e.g., festivals like Chhath Puja, regional administrative units like tehsils or mandals, state-specific historical figures, or North Indian legal and land-revenue traditions. Does your deployment expect the AI to handle this kind of regionally grounded content, or is the focus on pan-India general knowledge content?"
+    "question": "Competitive exam questions for North Indian students often draw on culturally specific knowledge \u2014 e.g., festivals like Chhath Puja, regional administrative units like tehsils or mandals, state-specific historical figures, or North Indian legal and land-revenue traditions. Does your deployment expect the AI to handle this kind of regionally grounded content, or is the focus on pan-India general knowledge content?"
   },
   {
     "id": "Q3",
     "dimension": "OO",
-    "question": "When the AI provides feedback on a student's response, what should that feedback look like — a simple correct/incorrect label, an explanation of why an answer is right or wrong, a hint toward the correct answer, or an encouragement message in Hindi? Competitive exam prep often benefits from explanatory feedback, but if the benchmark only scores label accuracy (MCQ), there may be a mismatch with what your deployment needs the model to actually produce."
+    "question": "When the AI provides feedback on a student's response, what should that feedback look like \u2014 a simple correct/incorrect label, an explanation of why an answer is right or wrong, a hint toward the correct answer, or an encouragement message in Hindi? Competitive exam prep often benefits from explanatory feedback, so if the benchmark under assessment only scores label accuracy, there may be a mismatch with what your deployment needs the model to actually produce."
   },
   {
     "id": "Q4",
     "dimension": "IC",
-    "question": "Since your target student has limited English exposure and interacts primarily in Hindi, would it be a problem if some benchmark questions — even in the Hindi portion — contain English technical terms, code-mixed phrasing, or assume familiarity with English-medium textbook conventions? Or does your deployment require that all content be fully accessible to a Hindi-medium educated student?"
+    "question": "Since your target student has limited English exposure and interacts primarily in Hindi, would it be a problem if some benchmark questions contain English technical terms, code-mixed phrasing, or assume familiarity with English-medium textbook conventions? Or does your deployment require that all content be fully accessible to a Hindi-medium educated student?"
   }
 ]

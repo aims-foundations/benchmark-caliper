@@ -1,0 +1,22 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "Citizen feedback to Luxembourgish government agencies likely spans topics specific to local governance \u2014 such as cross-border worker issues, multilingual administrative procedures (French/German/Luxembourgish coexistence), housing, transport like the free public transit policy, or EU institutional matters. Does the benchmark's topic coverage address these Luxembourg-specific administrative domains, or does it focus on other areas not typical of local government correspondence?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "IC",
+    "question": "Citizen messages to public administration are often written in non-standard Luxembourgish \u2014 code-switching with French or German, informal orthography, or dialect forms. Does your deployment need to handle this kind of mixed or non-standardized language input, or can you assume messages are written in reasonably standard Luxembourgish prose?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OC",
+    "question": "For sentiment and frustration detection specifically, the judgment of what counts as 'disgruntled' or 'urgent' can vary by annotator background. Were the benchmark's sentiment or tone labels validated by people familiar with Luxembourgish civil communication norms \u2014 for example, the typically understated or formal register citizens use when writing to government bodies \u2014 or were they produced by a broader, potentially non-Luxembourg-resident annotator pool?"
+  },
+  {
+    "id": "Q4",
+    "dimension": "OO",
+    "question": "Your system triggers automated routing and prioritization decisions based on classified intent and sentiment. If the benchmark's scoring assumes a single label per message, does that capture enough nuance \u2014 for example, a message that is both a formal complaint (intent) and moderately frustrated (sentiment) about a specific named entity (a department)? Or does your routing logic require multi-label or confidence-scored outputs rather than a single hard classification?"
+  }
+]
