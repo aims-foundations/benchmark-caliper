@@ -349,8 +349,9 @@ Citation rules for each source are in your system instructions.
 
 The following empirical findings were produced by automated profiling scripts that
 sampled the benchmark's actual dataset on HuggingFace. Observations cite specific
-datapoints using `DATASET-D{{n}}` IDs (e.g., QUAERO-D3). Findings tagged CRITICAL
-should be treated as strong evidence for lower scores on the affected dimensions.
+datapoints using `DATASET-D{{n}}` IDs (e.g., QUAERO-D3). Both deployment-relevant
+strengths and potential concerns are included; weigh CRITICAL-tagged concerns and
+well-evidenced strengths accordingly when scoring the affected dimensions.
 
 {dataset_analysis_text}
 

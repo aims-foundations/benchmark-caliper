@@ -120,9 +120,22 @@ def _register_fonts():
     for base in FONT_PATHS:
         regular = Path(base) / "FreeSans.ttf"
         bold = Path(base) / "FreeSansBold.ttf"
+        oblique = Path(base) / "FreeSansOblique.ttf"
+        bold_oblique = Path(base) / "FreeSansBoldOblique.ttf"
         if regular.exists() and bold.exists():
             pdfmetrics.registerFont(TTFont("FreeSans", str(regular)))
             pdfmetrics.registerFont(TTFont("FreeSansBold", str(bold)))
+            if oblique.exists():
+                pdfmetrics.registerFont(TTFont("FreeSansOblique", str(oblique)))
+            if bold_oblique.exists():
+                pdfmetrics.registerFont(TTFont("FreeSansBoldOblique", str(bold_oblique)))
+            pdfmetrics.registerFontFamily(
+                "FreeSans",
+                normal="FreeSans",
+                bold="FreeSansBold",
+                italic="FreeSansOblique",
+                boldItalic="FreeSansBoldOblique",
+            )
             return
     print(
         "WARNING: FreeSans fonts not found. PDF generation will use Helvetica "
@@ -247,7 +260,7 @@ def parse_quote_registry(composed_text):
     registry = {}
     in_table = False
     for line in composed_text.splitlines():
-        if "Verbatim Quote Registry" in line:
+        if "Verbatim Quote Registry" in line and line.lstrip().startswith("#"):
             in_table = True
             continue
         if in_table and line.startswith("|"):
@@ -273,7 +286,7 @@ def parse_web_registry(composed_text):
     registry = {}
     in_table = False
     for line in composed_text.splitlines():
-        if "Web Source Registry" in line:
+        if "Web Source Registry" in line and line.lstrip().startswith("#"):
             in_table = True
             continue
         if in_table and line.startswith("|"):
@@ -444,14 +457,80 @@ def load_registries(tuple_dir, scoring):
 
 # === Citation Extraction ===
 
-def extract_citation_ids(text):
-    """Extract all citation IDs from text. Handles:
-    - [Q42], [Q24, Q25, Q26]
-    - [WEB-9], [WEB-1, WEB-5]
-    - [DATASET-D40], [DATASET-D40-D42] (range), [D23, D28]
-    - [PREFIX-D1], [QUAERO-D11, QUAERO-D12] (org-mode prefixed)
-    - [Limitation #1], [CRITICAL Concern 1]
+def normalize_citations(text):
+    """Convert parenthetical citations to bracket form and slashes to commas.
+
+    Clean parenthetical patterns:
+      (DATASET-D14/D15/D29) → [DATASET-D14, D15, D29]
+      (DATASET-D13)         → [DATASET-D13]
+      (DATASET-D1, D2, D3)  → [DATASET-D1, D2, D3]
+      (elicitation Q2)      → [elicitation Q2]
+
+    Slash-separated DATASET refs inside brackets:
+      [DATASET-D14/D15/D29] → [DATASET-D14, D15, D29]
     """
+    def _slash_to_comma(m):
+        parts = m.group(1).split("/")
+        return "[" + ", ".join(parts) + "]"
+
+    # Slash-separated in parens or brackets
+    text = re.sub(r"\(DATASET-(D\d+(?:/D?\d+)+)\)", _slash_to_comma, text)
+    text = re.sub(r"\[DATASET-(D\d+(?:/D?\d+)+)\]", _slash_to_comma, text)
+
+    # Parenthetical DATASET refs
+    text = re.sub(
+        r"\(DATASET-(D\d+(?:,\s*D\d+)*)\)", r"[DATASET-\1]", text)
+
+    # Parenthetical plain D refs (only when all items are D-refs)
+    text = re.sub(r"\((D\d+(?:,\s*D\d+)+)\)", r"[\1]", text)
+
+    # Parenthetical elicitation refs
+    text = re.sub(r"\((elicitation\s+Q\d+)\)", r"[\1]", text)
+
+    return text
+
+
+def colorize_citations(escaped_text):
+    """Wrap citation references in blue font tags for PDF rendering.
+
+    Colors any bracket group [...] that contains at least one citation token.
+    """
+    color = "#2d6a9f"
+
+    def _blue_if_citation(m):
+        inner = m.group(0)
+        if re.search(r"Q\d+|WEB-\d+|D\d+|Limitation #\d+|CRITICAL Concern \d+",
+                      inner):
+            return f'<font color="{color}">{inner}</font>'
+        return inner
+
+    escaped_text = re.sub(r"\[[^\]]+\]", _blue_if_citation, escaped_text)
+
+    # Standalone citation tokens outside brackets (e.g. "only DATASET-D3 on")
+    def _blue_if_not_wrapped(m):
+        pre = escaped_text[:m.start()]
+        if pre.count("<font") > pre.count("</font>"):
+            return m.group(0)
+        return f'<font color="{color}">{m.group(0)}</font>'
+
+    escaped_text = re.sub(r"DATASET-D\d+", _blue_if_not_wrapped, escaped_text)
+    return escaped_text
+
+
+def render_text(text):
+    """Normalize citations, escape XML, then colorize for PDF rendering."""
+    return colorize_citations(escape(normalize_citations(text)))
+
+
+def extract_citation_ids(text):
+    """Extract citation IDs using token-level scanning.
+
+    Finds Q, WEB, D, and DATASET-D tokens anywhere in the text regardless
+    of surrounding delimiters (brackets, parens, explanatory text). Handles
+    ranges like Q60–Q66 and D40–D42.
+    """
+    text = normalize_citations(text)
+
     ids = []
     seen = set()
 
@@ -460,46 +539,40 @@ def extract_citation_ids(text):
             seen.add(cid)
             ids.append(cid)
 
-    # Paper quotes: [Q11] or [Q24, Q25, Q26]
-    for m in re.finditer(r"\[(Q\d+(?:,\s*Q\d+)*)\]", text):
-        for qid in re.findall(r"Q\d+", m.group(1)):
-            _add(qid)
+    # === Q ranges first (Q60–Q66, Q43-Q45) — expand before individual scan ===
+    for m in re.finditer(r"Q(\d+)[–\-]Q(\d+)", text):
+        for i in range(int(m.group(1)), int(m.group(2)) + 1):
+            _add(f"Q{i}")
 
-    # Web sources: [WEB-9] or [WEB-1, WEB-5]
-    for m in re.finditer(r"\[(WEB-\d+(?:,\s*WEB-\d+)*)\]", text):
-        for wid in re.findall(r"WEB-\d+", m.group(1)):
-            _add(wid)
+    # === Individual Q refs (word-boundary guard to skip e.g. "FAQ1") ===
+    for m in re.finditer(r"(?<![A-Za-z])(Q\d+)", text):
+        _add(m.group(1))
 
-    # Dataset citations with DATASET- prefix: [DATASET-D40] or range [DATASET-D40-D42]
-    for m in re.finditer(r"\[DATASET-(D\d+)[–\-](D?\d+)\]", text):
-        start = int(re.search(r"\d+", m.group(1)).group())
-        end_str = m.group(2)
-        end = int(re.search(r"\d+", end_str).group())
-        for i in range(start, end + 1):
+    # === WEB- refs ===
+    for m in re.finditer(r"(WEB-\d+)", text):
+        _add(m.group(1))
+
+    # === DATASET-D refs (extract the D-number) ===
+    for m in re.finditer(r"DATASET-(D\d+)", text):
+        _add(m.group(1))
+
+    # === D ranges (D40–D42, D1-D22) ===
+    for m in re.finditer(r"(?<![A-Za-z])D(\d+)[–\-]D?(\d+)", text):
+        for i in range(int(m.group(1)), int(m.group(2)) + 1):
             _add(f"D{i}")
 
-    for m in re.finditer(r"\[DATASET-(D\d+(?:,\s*D\d+)*)\]", text):
-        for did in re.findall(r"D\d+", m.group(1)):
-            _add(did)
+    # === Standalone D refs (not part of DATASET- or other word) ===
+    for m in re.finditer(r"(?<![A-Za-z\-])(D\d+)", text):
+        _add(m.group(1))
 
-    # Standalone plain D refs: [D23, D28] (not inside DATASET- prefix)
-    for m in re.finditer(r"\[(D\d+(?:,\s*D\d+)*)\]", text):
-        for did in re.findall(r"D\d+", m.group(1)):
-            _add(did)
+    # === Org-mode prefixed (QUAERO-D1, DIAMED-D9, but not DATASET-D) ===
+    for m in re.finditer(r"([A-Za-z][A-Za-z0-9_]*-D\d+)", text):
+        if not m.group(1).startswith("DATASET"):
+            _add(m.group(1))
 
-    # Org-mode prefixed dataset citations: [QUAERO-D1], [QUAERO-D11, DIAMED-D9]
-    for m in re.finditer(
-        r"\[([A-Za-z][A-Za-z0-9_]*-D\d+(?:,\s*[A-Za-z][A-Za-z0-9_]*-D\d+)*)\]",
-        text,
-    ):
-        for pid in re.findall(r"[A-Za-z][A-Za-z0-9_]*-D\d+", m.group(1)):
-            _add(pid)
-
-    # Limitations: [Limitation #1]
+    # === Limitation / CRITICAL Concern (still require brackets) ===
     for m in re.finditer(r"\[Limitation #(\d+)\]", text):
         _add(f"Limitation #{m.group(1)}")
-
-    # CRITICAL Concerns: [CRITICAL Concern 1]
     for m in re.finditer(r"\[CRITICAL Concern (\d+)\]", text):
         _add(f"CRITICAL Concern {m.group(1)}")
 
@@ -667,8 +740,8 @@ def build_dimension_pdf(dim_key, scoring, registries, output_path, styles):
         styles["ScoreLine"],
     ))
     story.append(Paragraph(
-        f"<i>Benchmark: {escape(benchmark)} &nbsp;|&nbsp; "
-        f"Context: {escape(region)}</i>",
+        f"<i><b>Benchmark:</b> {escape(benchmark)} &nbsp;|&nbsp; "
+        f"<b>Context:</b> {escape(region)}</i>",
         styles["Body"],
     ))
     story.append(Spacer(1, 6))
@@ -679,15 +752,28 @@ def build_dimension_pdf(dim_key, scoring, registries, output_path, styles):
 
     # === Definition ===
     story.append(Paragraph(
-        f"Definition: {escape(DIM_DEFINITIONS[dim_key])}",
+        f"<b>{escape(label)} definition:</b> {escape(DIM_DEFINITIONS[dim_key])}",
         styles["Body"],
     ))
+    story.append(Spacer(1, 4))
+
+    # === Evidence preamble ===
+    story.append(Paragraph(
+        "Each section below is followed by an evidence table. Three types of "
+        "evidence are cited: "
+        "<b>[QN]</b> — verbatim quotes extracted from the benchmark paper; "
+        "<b>[WEB-N]</b> — web sources consulted during assessment; "
+        "<b>[DN]</b> / <b>[DATASET-DN]</b> — sampled datapoints from the "
+        "benchmark dataset, with an interpretation note.",
+        styles["GapText"],
+    ))
+    story.append(Spacer(1, 4))
 
     # === Justification ===
     justification = dim_data.get("justification", "")
     if justification:
         story.append(Paragraph("Justification", styles["SectionHead"]))
-        story.append(Paragraph(escape(justification), styles["Body"]))
+        story.append(Paragraph(render_text(justification), styles["Body"]))
         story.append(Spacer(1, 4))
         _add_inline_evidence(story, justification, registries, content_width,
                              styles)
@@ -696,12 +782,16 @@ def build_dimension_pdf(dim_key, scoring, registries, output_path, styles):
     strengths = dim_data.get("strengths", [])
     if strengths:
         story.append(Paragraph("Strengths", styles["SectionHead"]))
+        all_strength_ids = []
         for s in strengths:
             story.append(
-                Paragraph(f"• {escape(s)}", styles["BulletItem"])
+                Paragraph(f"• {render_text(s)}", styles["BulletItem"])
             )
-            _add_inline_evidence(story, s, registries, content_width, styles,
-                                 indent=18)
+            all_strength_ids.extend(extract_citation_ids(s))
+        all_strength_ids = list(dict.fromkeys(all_strength_ids))
+        _add_inline_evidence_from_ids(
+            story, all_strength_ids, registries, content_width, styles,
+        )
 
     # === Checklist ===
     checklist = dim_data.get("checklist_responses", {})
@@ -745,23 +835,24 @@ def build_dimension_pdf(dim_key, scoring, registries, output_path, styles):
             story.append(def_table)
             story.append(Spacer(1, 10))
 
-        # Responses with inline evidence
+        # Responses with consolidated evidence table
         story.append(
             Paragraph("Checklist responses:", styles["SubHead"])
         )
         evidence_map = dim_data.get("evidence_map", {})
+        all_checklist_ids = []
         for item_id, response in checklist.items():
             story.append(Paragraph(
-                f"<b>{escape(item_id)}</b>: {escape(response)}",
+                f"<b>{escape(item_id)}</b>: {render_text(response)}",
                 styles["Body"],
             ))
-            # Merge evidence_map IDs + inline text IDs, dedupe
             map_ids = evidence_map.get(item_id, [])
             text_ids = extract_citation_ids(response)
-            all_ids = list(dict.fromkeys(map_ids + text_ids))
-            _add_inline_evidence_from_ids(
-                story, all_ids, registries, content_width, styles,
-            )
+            all_checklist_ids.extend(map_ids + text_ids)
+        all_checklist_ids = list(dict.fromkeys(all_checklist_ids))
+        _add_inline_evidence_from_ids(
+            story, all_checklist_ids, registries, content_width, styles,
+        )
 
     # === Information Gaps ===
     gaps = dim_data.get("information_gaps", [])
@@ -769,7 +860,7 @@ def build_dimension_pdf(dim_key, scoring, registries, output_path, styles):
         story.append(Paragraph("Information Gaps", styles["SectionHead"]))
         for gap in gaps:
             story.append(
-                Paragraph(f"• {escape(gap)}", styles["GapText"])
+                Paragraph(f"• {render_text(gap)}", styles["GapText"])
             )
         story.append(Spacer(1, 4))
 
@@ -781,7 +872,7 @@ def build_dimension_pdf(dim_key, scoring, registries, output_path, styles):
         )
         for item in expert_items:
             story.append(
-                Paragraph(f"• {escape(item)}", styles["GapText"])
+                Paragraph(f"• {render_text(item)}", styles["GapText"])
             )
         story.append(Spacer(1, 4))
 
@@ -798,11 +889,11 @@ def build_dimension_pdf(dim_key, scoring, registries, output_path, styles):
         story.append(Paragraph("Remediation", styles["SectionHead"]))
         for i, rem in enumerate(remediation_items, 1):
             story.append(Paragraph(
-                f"<b>Gap {i}:</b> {escape(rem.get('gap', ''))}",
+                f"<b>Gap {i}:</b> {render_text(rem.get('gap', ''))}",
                 styles["RemedGap"],
             ))
             story.append(Paragraph(
-                f"<b>Recommendation:</b> {escape(rem.get('recommendation', ''))}",
+                f"<b>Recommendation:</b> {render_text(rem.get('recommendation', ''))}",
                 styles["RemedRec"],
             ))
 

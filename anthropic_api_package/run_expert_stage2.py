@@ -255,11 +255,11 @@ def process_tuple(row: dict, tuple_idx: int, answers: dict,
     assessment_dir = ASSESSMENTS_DIR / paper_stem / slug
 
     # === Idempotency check ===
-    # scoring.json is the final output of step 8; if it exists, the pipeline
+    # report.md is the final output of step 8; if it exists, the pipeline
     # already ran to completion for this tuple. Skip unless --force is set.
-    scoring_out = assessment_dir / "scoring.json"
-    if scoring_out.exists() and not force:
-        print(f"[skip tuple {tuple_idx}] scoring output already exists")
+    report_out = assessment_dir / "report.md"
+    if report_out.exists() and not force:
+        print(f"[skip tuple {tuple_idx}] report already exists")
         return "skipped"
 
     # Check that elicitation questions exist (stage 1 prerequisite)
@@ -335,7 +335,7 @@ def main() -> None:
                    choices=[1, 2, 3, 4],
                    help="Only process the given tuple index.")
     p.add_argument("--force", action="store_true",
-                   help="Re-run tuples whose scoring output already exists.")
+                   help="Re-run tuples whose report already exists.")
     p.add_argument("--parse-only", action="store_true",
                    help="Write answers JSON only; skip pipeline execution.")
     p.add_argument("--dry-run", action="store_true",

@@ -246,14 +246,20 @@ def main() -> None:
     # === Extract comparator metadata (step 1) ===
     metadata_text = ensure_comparator_metadata(paper_stem, pdf_path)
 
-    # === Load Q&A from source ===
+    # === Load deployment description and Q&A from source ===
+    deploy_path = source_dir / "deployment_description.txt"
+    if not deploy_path.exists():
+        print(f"ERROR: {deploy_path} not found", file=sys.stderr)
+        sys.exit(1)
+    deployment_text = deploy_path.read_text().strip()
+
     questions = json.loads((source_dir / "elicitation_questions.json").read_text())
     answers = json.loads((source_dir / "elicitation_answers.json").read_text())
     qa_block = assemble_qa_block(questions, answers)
 
     # === Build prompt ===
     # System prompt: fixed instructions parameterized by benchmark names
-    # User message: comparator metadata + Q&A block (variable data)
+    # User message: comparator metadata + deployment description + Q&A block
     system_template = PROMPT_PATH.read_text()
     system_prompt = (system_template
                      .replace("{{REGIONAL_NAME}}", regional_name)
@@ -264,6 +270,8 @@ def main() -> None:
     user_message = (
         f"## Comparator Benchmark Metadata\n\n"
         f"{metadata_text}\n\n"
+        f"## Deployment Description\n\n"
+        f"{deployment_text}\n\n"
         f"## Original Q&A Pairs\n\n"
         f"{qa_block}"
     )
@@ -276,7 +284,6 @@ def main() -> None:
         user=user_message,
         max_tokens=4096,
         step="sanitize_qa",
-        temperature=0.0,
     )
 
     if args.dry_run:
@@ -300,11 +307,12 @@ def main() -> None:
     trace = {
         "step": "sanitize_qa",
         "model": client.MODELS["opus"],
-        "temperature": 0.0,
+        "temperature": "API default",
         "system_prompt_path": str(PROMPT_PATH.relative_to(PACKAGE_ROOT)),
         "regional_benchmark": {"name": regional_name, "full_name": regional_full_name},
         "comparator_benchmark": {"name": comp_name, "full_name": comp_full_name},
         "comparator_metadata": metadata_text,
+        "deployment_description": deployment_text,
         "input_qa_block": qa_block,
         "raw_output": result,
         "cleaned_questions": cleaned_questions,
@@ -317,6 +325,12 @@ def main() -> None:
                               f"model: {client.MODELS['opus']}\n"
                               f"regional: {regional_name}\n"
                               f"comparator: {comp_name}\n")
+
+    # === Cost report ===
+    print(f"\n{client.format_cost_report()}")
+    ledger_path = target_dir / "cost_ledger_sanitize.json"
+    client.dump_cost_ledger(ledger_path)
+    print(f"[clean] cost ledger written to {ledger_path}")
 
     # === Report ===
     print(f"\nReady to run:")

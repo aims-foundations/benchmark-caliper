@@ -69,14 +69,29 @@ def main():
     # yaml.safe_load is used instead of full_load to block arbitrary Python
     # object construction — important when processing untrusted model output.
     try:
-        parsed = json.loads(cleaned) if args.format == "json" else yaml.safe_load(cleaned)
-    except Exception as e:
-        # Echo the cleaned (not raw) input so the caller can see what the parser
-        # actually received, which is more useful for debugging than the raw LLM text.
-        print(f"ERROR: failed to parse {args.format}: {e}", file=sys.stderr)
-        print("--- cleaned input (first 500 chars) ---", file=sys.stderr)
-        print(cleaned[:500], file=sys.stderr)
-        sys.exit(1)
+        if args.format == "json":
+            cleaned = re.sub(r",\s*([}\]])", r"\1", cleaned)
+            parsed = json.loads(cleaned)
+        else:
+            parsed = yaml.safe_load(cleaned)
+    except (json.JSONDecodeError, Exception) as e:
+        if args.format == "json":
+            try:
+                from json_repair import repair_json
+                parsed = repair_json(cleaned, return_objects=True)
+                print(f"WARN: strict JSON parse failed, repaired with json_repair: {e}",
+                      file=sys.stderr)
+            except Exception as e2:
+                print(f"ERROR: failed to parse {args.format} (also failed repair): {e}",
+                      file=sys.stderr)
+                print("--- cleaned input (first 500 chars) ---", file=sys.stderr)
+                print(cleaned[:500], file=sys.stderr)
+                sys.exit(1)
+        else:
+            print(f"ERROR: failed to parse {args.format}: {e}", file=sys.stderr)
+            print("--- cleaned input (first 500 chars) ---", file=sys.stderr)
+            print(cleaned[:500], file=sys.stderr)
+            sys.exit(1)
 
     # === Optional JSON schema validation ===
     # jsonschema is a soft dependency — warn and continue rather than crash,

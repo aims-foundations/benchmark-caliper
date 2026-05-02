@@ -165,7 +165,11 @@ def _metadata_path(name: str) -> Path:
 
 
 # Full paper summary: Sonnet narrative + appended Quote Registry
-def _paper_summary_path(name: str) -> Path:
+# Tuple-scoped: each deployment context gets its own summary (elicitation
+# guides narrative depth), stored in the assessment directory.
+def _paper_summary_path(name: str, slug: str = "") -> Path:
+    if slug:
+        return _assessment_dir(name, slug) / "paper_summary.md"
     return _paper_dir(name) / "paper_summary.md"
 
 
@@ -722,7 +726,8 @@ def step_3a_assemble(name: str) -> Path:
     return registry_path
 
 
-def step_3a_consolidate(name: str, elicitation_summary: str = "") -> Path:
+def step_3a_consolidate(name: str, elicitation_summary: str = "",
+                        slug: str = "") -> Path:
     """Sonnet writes Narrative Context given the pre-assembled Quote Registry.
 
     The registry (from step_3a_assemble) is provided as input. Sonnet writes
@@ -735,7 +740,7 @@ def step_3a_consolidate(name: str, elicitation_summary: str = "") -> Path:
     Returns path to the written paper_summary.md.
     """
     _paper_dir(name).mkdir(parents=True, exist_ok=True)
-    summary_path = _paper_summary_path(name)
+    summary_path = _paper_summary_path(name, slug)
     if summary_path.exists():
         print(f"[3a-consolidate] Paper summary already exists: {summary_path}")
         return summary_path
@@ -819,21 +824,28 @@ def step_3b_synthesize(
     paper_summary: str,
     name: str,
     elicitation_summary: str = "",
+    slug: str = "",
 ) -> Path:
     """Sonnet writes the benchmark YAML from selected references + elicitation context.
 
-    When an elicitation summary is provided, the YAML includes a
-    coverage_gap_analysis section cross-referencing user priorities against
-    benchmark documentation. Quote text is backfilled from the mechanical
-    registry after synthesis to avoid LLM transcription errors.
+    When an elicitation summary is provided, the YAML includes
+    coverage_strengths and coverage_gap_analysis sections cross-referencing
+    user priorities against benchmark documentation. Quote text is backfilled
+    from the mechanical registry after synthesis to avoid LLM transcription
+    errors.
 
-    Returns path to the written benchmarks/<name>.yaml.
+    Tuple-scoped: each deployment context gets its own YAML (coverage
+    analysis depends on elicitation priorities). Stored in the assessment
+    directory when slug is provided.
     """
-    out_path = BENCHMARKS / f"{name}.yaml"
+    if slug:
+        out_path = _assessment_dir(name, slug) / "benchmark.yaml"
+    else:
+        out_path = BENCHMARKS / f"{name}.yaml"
     if out_path.exists():
         print(f"[3b-synthesize] Benchmark YAML already exists: {out_path}")
         return out_path
-    BENCHMARKS.mkdir(exist_ok=True)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     refs_path = _benchmark_refs_path(name)
     if not refs_path.exists() and not client.DRY_RUN:
         print(
@@ -854,9 +866,11 @@ def step_3b_synthesize(
             f"\n\n---\n\n"
             f"## Elicitation Summary\n\n{elicitation_summary}\n\n"
             f"Use the dimension priority weights and cultural topic priorities "
-            f"above when writing the coverage_gap_analysis section. For each "
-            f"HIGH-priority dimension and each cultural topic priority, assess "
-            f"whether the benchmark documents relevant content."
+            f"above when writing the coverage_strengths and "
+            f"coverage_gap_analysis sections. For each HIGH-priority dimension "
+            f"and each cultural topic priority, assess whether the benchmark "
+            f"documents relevant content — noting both where coverage aligns "
+            f"well and where it diverges."
         )
 
     print("[3b-synthesize] Sonnet synthesizing benchmark YAML...")
@@ -1281,13 +1295,17 @@ def step_5_web_search(scaffold_path: Path, region_path: Path,
 HF_LINKS_FILE = ROOT / "benchmarks" / "hf_links.json"
 DA_SCRIPTS = ROOT / "scripts" / "dataset_analysis"
 DA_CACHE = ROOT / "benchmarks" / "da_cache"
+_DEFAULT_CHAR_BUDGET = 50_000
 
 
-def _da_script_cache_path(hf_dataset: str, hf_config: str | None = None) -> Path:
+def _da_script_cache_path(hf_dataset: str, hf_config: str | list[str] | None = None) -> Path:
     """Filesystem path for caching deterministic script outputs for one HF dataset."""
     key = hf_dataset.replace("/", "__")
     if hf_config:
-        key += f"__{hf_config}"
+        if isinstance(hf_config, list):
+            key += "__" + "_".join(sorted(hf_config))
+        else:
+            key += f"__{hf_config}"
     return DA_CACHE / key / "script_outputs.json"
 
 
@@ -1296,15 +1314,46 @@ def _da_summary_cache_path(hf_dataset: str) -> Path:
     return DA_CACHE / hf_dataset.replace("/", "__") / "summary.md"
 
 
+def _requires_remote_code(hf_dataset_id: str) -> bool:
+    """Check whether a HF dataset uses a custom loading script.
+
+    Datasets with loading scripts are incompatible with datasets 4.x and
+    produce unreliable results even on 3.x (schema casting failures,
+    config discovery issues). We skip DA for these datasets entirely.
+    """
+    import requests as _req
+    try:
+        resp = _req.get(
+            f"https://huggingface.co/api/datasets/{hf_dataset_id}",
+            params={"full": "true"}, timeout=15,
+        )
+        if resp.status_code != 200:
+            return False
+        siblings = resp.json().get("siblings", [])
+        repo_name = hf_dataset_id.split("/")[-1]
+        for s in siblings:
+            fname = s.get("rfilename", "")
+            if fname.endswith(".py") and not fname.startswith("_"):
+                if fname == f"{repo_name}.py" or fname == "__init__.py":
+                    return True
+        return False
+    except Exception:
+        return False
+
+
 def _resolve_hf_info(args: argparse.Namespace, name: str) -> dict | None:
     """Resolve dataset analysis target from CLI args or hf_links.json.
 
     Returns a dict with either:
       {"mode": "single", "hf_dataset_id": "...", "hf_config": "..."}
       {"mode": "org",    "hf_org": "DrBenchmark"}
-    or None if no HF info is available.
+    or None if no HF info is available or the dataset requires remote code.
     """
     if args.hf_dataset:
+        if _requires_remote_code(args.hf_dataset):
+            print(f"[5b] skipping DA: {args.hf_dataset} uses a custom loading "
+                  f"script (incompatible with datasets 4.x)")
+            return None
         return {"mode": "single",
                 "hf_dataset_id": args.hf_dataset,
                 "hf_config": args.hf_config}
@@ -1321,16 +1370,26 @@ def _resolve_hf_info(args: argparse.Namespace, name: str) -> dict | None:
             if tuple_key:
                 per_tuple = entry.get("per_tuple", {}).get(tuple_key, {})
                 if per_tuple.get("hf_dataset_id"):
+                    ds_id = per_tuple["hf_dataset_id"]
+                    if _requires_remote_code(ds_id):
+                        print(f"[5b] skipping DA: {ds_id} uses a custom loading "
+                              f"script (incompatible with datasets 4.x)")
+                        return None
                     return {"mode": "single",
-                            "hf_dataset_id": per_tuple["hf_dataset_id"],
+                            "hf_dataset_id": ds_id,
                             "hf_config": per_tuple.get("hf_config")}
             # Org-level resolution
             if entry.get("hf_org"):
                 return {"mode": "org", "hf_org": entry["hf_org"]}
             # Single dataset
             if entry.get("hf_dataset_id"):
+                ds_id = entry["hf_dataset_id"]
+                if _requires_remote_code(ds_id):
+                    print(f"[5b] skipping DA: {ds_id} uses a custom loading "
+                          f"script (incompatible with datasets 4.x)")
+                    return None
                 return {"mode": "single",
-                        "hf_dataset_id": entry["hf_dataset_id"],
+                        "hf_dataset_id": ds_id,
                         "hf_config": entry.get("hf_config")}
 
     return None
@@ -1364,18 +1423,23 @@ def _run_da_script(script_name: str, *extra_args: str) -> str:
     return result.stdout
 
 
-def _profile_single_dataset(hf_dataset: str, hf_config: str | None) -> dict:
+def _profile_single_dataset(hf_dataset: str, hf_config: str | list[str] | None) -> dict:
     """Run DA scripts on one dataset and return {script_name: json_str}.
 
     Runs hf_metadata unconditionally; adds content_sample and audio_stats
     when the modality/schema warrants. Stops early if metadata returns errors
     (e.g. private/non-existent dataset).
+
+    Config resolution:
+      - hf_config is a list  → sample from those configs
+      - hf_config is a string → sample from that single config
+      - hf_config is None    → auto-discover all configs via metadata and
+                                sample uniformly across them
     """
     script_outputs = {}
 
+    # Metadata: always run without --config to get the full config map
     meta_args = ["--repo_id", hf_dataset]
-    if hf_config:
-        meta_args += ["--config", hf_config]
     print(f"    hf_metadata...")
     meta_json = _run_da_script("hf_metadata.py", *meta_args)
     script_outputs["hf_metadata"] = meta_json
@@ -1386,26 +1450,81 @@ def _profile_single_dataset(hf_dataset: str, hf_config: str | None) -> dict:
         return script_outputs
 
     splits_by_config = meta.get("splits_info", {}).get("splits_by_config", {})
-    available_splits = splits_by_config.get(hf_config, next(iter(splits_by_config.values()), []))
-    split = "train" if "train" in available_splits else (available_splits[0] if available_splits else "train")
-    sample_args = ["--repo_id", hf_dataset, "--split", split]
-    if hf_config:
-        sample_args += ["--config", hf_config]
-    print(f"    content_sample (split={split})...")
-    script_outputs["content_sample"] = _run_da_script(
-        "content_sample.py", *sample_args)
+
+    # Resolve configs: explicit list/string > auto-discover from metadata
+    if isinstance(hf_config, list):
+        configs = hf_config
+        resolve_mode = "explicit"
+    elif hf_config:
+        configs = [hf_config]
+        resolve_mode = "explicit"
+    elif splits_by_config:
+        configs = sorted(splits_by_config.keys())
+        resolve_mode = "auto"
+    else:
+        configs = [None]
+        resolve_mode = "auto"
+
+    if len(configs) > 1:
+        print(f"    {'Auto-discovered' if resolve_mode == 'auto' else 'Explicit'} "
+              f"{len(configs)} configs: {', '.join(str(c) for c in configs)}")
+
+    # Content sampling: fan out across configs, splitting char budget evenly
+    per_config_budget = _DEFAULT_CHAR_BUDGET // max(len(configs), 1)
+    if len(configs) > 1:
+        print(f"    Char budget: {_DEFAULT_CHAR_BUDGET} total, "
+              f"~{per_config_budget} per config")
+    merged_md_parts = []
+    merged_n_exported = 0
+    merged_total_chars = 0
+
+    for cfg in configs:
+        cfg_splits = splits_by_config.get(cfg, next(iter(splits_by_config.values()), []))
+        split = "train" if "train" in cfg_splits else (cfg_splits[0] if cfg_splits else "train")
+        sample_args = ["--repo_id", hf_dataset, "--split", split,
+                        "--char_budget", str(per_config_budget)]
+        if cfg:
+            sample_args += ["--config", cfg]
+        label = f"config={cfg}, " if cfg else ""
+        print(f"    content_sample ({label}split={split}, budget={per_config_budget})...")
+        raw_json = _run_da_script("content_sample.py", *sample_args)
+        try:
+            parsed = json.loads(raw_json)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"markdown": raw_json}
+
+        md = parsed.get("markdown", "")
+        if cfg and md:
+            md = f"## Config: `{cfg}`\n\n{md}"
+        merged_md_parts.append(md)
+        merged_n_exported += parsed.get("n_exported", 0)
+        merged_total_chars += parsed.get("total_chars", 0)
+
+    merged_result = {
+        "script": "content_sample",
+        "repo_id": hf_dataset,
+        "config": hf_config,
+        "n_exported": merged_n_exported,
+        "total_chars": merged_total_chars,
+        "char_budget": _DEFAULT_CHAR_BUDGET,
+        "markdown": "\n\n---\n\n".join(merged_md_parts),
+    }
+    script_outputs["content_sample"] = json.dumps(merged_result, indent=2)
 
     modalities = meta.get("modality", [])
     features = meta.get("schema", {}).get("features", {})
 
     if "audio" in modalities:
-        # Identify the audio column from the schema and run duration/language stats
         audio_cols = [col for col, dtype in features.items() if "Audio" in str(dtype)]
         if audio_cols:
-            audio_args = ["--repo_id", hf_dataset, "--split", split,
+            # Audio stats: run on first config only (schema is typically uniform)
+            first_cfg = configs[0]
+            first_splits = splits_by_config.get(first_cfg, next(iter(splits_by_config.values()), []))
+            a_split = "train" if "train" in first_splits else (first_splits[0] if first_splits else "train")
+            audio_args = ["--repo_id", hf_dataset, "--split", a_split,
                           "--column", audio_cols[0], "--sample_size", "50"]
-            if hf_config:
-                audio_args += ["--config", hf_config]
+            if first_cfg:
+                audio_args += ["--config", first_cfg]
             print(f"    audio_stats on '{audio_cols[0]}'...")
             script_outputs["audio_stats"] = _run_da_script(
                 "audio_stats.py", *audio_args)
@@ -1448,7 +1567,7 @@ def _sonnet_per_dataset_summary(
             f"## Deployment Context (Elicitation Summary)\n\n{elicitation_summary}\n\n"
             f"## Dataset Content\n\n{data_block}"
         ),
-        max_tokens=4096,
+        max_tokens=8192,
         step="5b_da_per_dataset",
     )
 
@@ -1720,13 +1839,19 @@ def step_5b_dataset_analysis(
         hf_dataset = hf_info["hf_dataset_id"]
         hf_config = hf_info.get("hf_config")
 
+        if isinstance(hf_config, list):
+            cfg_label = f" | configs: {hf_config}"
+        elif hf_config:
+            cfg_label = f" | config: {hf_config}"
+        else:
+            cfg_label = " | configs: auto-discover"
+
         script_cache = _da_script_cache_path(hf_dataset, hf_config)
         if script_cache.exists():
-            print(f"[5b] {hf_dataset} (script cache hit)")
+            print(f"[5b] {hf_dataset}{cfg_label} (script cache hit)")
             script_outputs = json.loads(script_cache.read_text())
         else:
-            print(f"[5b] Running dataset analysis on {hf_dataset}"
-                  f"{f' (config={hf_config})' if hf_config else ''}...")
+            print(f"[5b] Running dataset analysis on {hf_dataset}{cfg_label}...")
             script_outputs = _profile_single_dataset(hf_dataset, hf_config)
             script_cache.parent.mkdir(parents=True, exist_ok=True)
             script_cache.write_text(json.dumps(script_outputs, indent=2))
@@ -1759,7 +1884,7 @@ def step_5b_dataset_analysis(
                 f"## Web Search Findings\n\n{web_search_text}\n\n"
                 f"## Dataset Content\n\n{data_block}"
             ),
-            max_tokens=8192,
+            max_tokens=16384,
             step="5b_da_interpret",
         )
 
@@ -1838,6 +1963,7 @@ def step_7_score(composed_path: Path, name: str, slug: str) -> Path:
     if client.DRY_RUN:
         return out_path
     cleaned = _run_script("parse_llm_output.py", "--format", "json", "-", stdin=raw)
+    cleaned = _run_script("repair_scoring_json.py", "-", stdin=cleaned)
     out_path.write_text(cleaned)
     print(f"[7] Results written to {out_path}")
     return out_path
@@ -1872,6 +1998,11 @@ def step_8_report(results_path: Path) -> None:
 # new usage during the call, and saves. After any run the file reflects the
 # "final" cost of each step executed so far — a running total of one full
 # pipeline run's expected cost even if reached via many re-tries.
+
+# Entries cleared by _ledger_begin but not repopulated by new API calls
+# (i.e. the step's output was already cached and it skipped). _ledger_end
+# restores these so a no-op re-run doesn't erase historical cost data.
+_cleared_but_unused: dict = {}
 
 # Mapping from public step identifiers (used with --step) to the ledger step
 # labels that the step's API calls emit. Re-running a step clears its labels.
@@ -1910,7 +2041,12 @@ def _ledger_begin(name: str, *step_keys: str) -> None:
 
     Called at the start of each step so a re-run replaces rather than
     accumulates. No-ops in dry-run mode to leave the real ledger untouched.
+
+    Snapshots cleared entries into _cleared_but_unused so _ledger_end can
+    restore them if the step turns out to be a cache-hit (no new API calls).
     """
+    global _cleared_but_unused
+    _cleared_but_unused = {}
     if client.DRY_RUN:
         return  # don't touch the real ledger in dry-run mode
     slug = _read_slug(name)
@@ -1925,6 +2061,11 @@ def _ledger_begin(name: str, *step_keys: str) -> None:
     for k in step_keys:
         labels.extend(STEP_LABELS.get(k, []))
     if labels:
+        # Snapshot entries we're about to clear so they can be restored if the
+        # step skips (cached output exists) — prevents no-op re-runs from
+        # erasing historical cost data.
+        snap = client.ledger_snapshot()
+        _cleared_but_unused = {l: snap[l] for l in labels if l in snap}
         client.clear_steps(*labels)
         # Keep the trace log in sync with the ledger: drop prior entries for
         # these step labels so the JSONL always matches a clean final-run view.
@@ -1932,12 +2073,27 @@ def _ledger_begin(name: str, *step_keys: str) -> None:
 
 
 def _ledger_end(name: str) -> None:
-    """Persist the in-memory ledger to disk after a step completes."""
+    """Persist the in-memory ledger to disk after a step completes.
+
+    If _ledger_begin cleared entries that were never replaced by new API
+    calls (step was a cache-hit), restore them before saving so historical
+    cost data is preserved.
+    """
+    global _cleared_but_unused
     if client.DRY_RUN:
+        _cleared_but_unused = {}
         return
     slug = _read_slug(name)
     if not slug:
+        _cleared_but_unused = {}
         return
+    # Restore entries that were cleared but never replaced by new API calls.
+    if _cleared_but_unused:
+        snap = client.ledger_snapshot()
+        to_restore = {l: v for l, v in _cleared_but_unused.items() if l not in snap}
+        if to_restore:
+            client.graft_snapshot(to_restore)
+        _cleared_but_unused = {}
     path = client.save_ledger(_cost_ledger_path(name, slug))
     print(f"[cost] Ledger updated: {path}")
 
@@ -2221,7 +2377,7 @@ def main() -> None:
         _ledger_end(name)
 
         _ledger_begin(name, "3a-consolidate")
-        summary_path = step_3a_consolidate(name, elicitation_summary)
+        summary_path = step_3a_consolidate(name, elicitation_summary, slug)
         paper_summary = summary_path.read_text()
         _ledger_end(name)
 
@@ -2231,7 +2387,7 @@ def main() -> None:
         _ledger_end(name)
 
         _ledger_begin(name, "3b-synthesize")
-        benchmark_path = step_3b_synthesize(paper_summary, name, elicitation_summary)
+        benchmark_path = step_3b_synthesize(paper_summary, name, elicitation_summary, slug)
         benchmark_yaml_text = benchmark_path.read_text()
         _ledger_end(name)
 
@@ -2295,8 +2451,6 @@ def _run_single_step(args: argparse.Namespace, pdf_path: Path, name: str) -> Non
     appropriate step_* function. Cost ledger is loaded/saved via _ledger_begin
     / _ledger_end in the try/finally.
     """
-    benchmark_path = BENCHMARKS / f"{name}.yaml"
-    summary_path = _paper_summary_path(name)
     metadata_path = _metadata_path(name)
 
     if args.step == "0":
@@ -2316,6 +2470,9 @@ def _run_single_step(args: argparse.Namespace, pdf_path: Path, name: str) -> Non
         sys.exit(1)
     if slug:
         _init_assessment_paths(name)
+
+    summary_path = _paper_summary_path(name, slug or "")
+    benchmark_path = _assessment_dir(name, slug) / "benchmark.yaml" if slug else BENCHMARKS / f"{name}.yaml"
 
     try:
         if args.step == "1":
@@ -2378,7 +2535,7 @@ def _run_single_step(args: argparse.Namespace, pdf_path: Path, name: str) -> Non
             elicitation_path = _elicitation_summary_path(name, slug)
             elicitation_summary = elicitation_path.read_text() if elicitation_path.exists() else ""
             _ledger_begin(name, "3a-consolidate")
-            step_3a_consolidate(name, elicitation_summary)
+            step_3a_consolidate(name, elicitation_summary, slug or "")
         elif args.step == "3b-select":
             if not summary_path.exists() and not client.DRY_RUN:
                 print(f"ERROR: run --step 3a-consolidate first ({summary_path} missing)",
@@ -2396,7 +2553,7 @@ def _run_single_step(args: argparse.Namespace, pdf_path: Path, name: str) -> Non
             elicitation_path = _elicitation_summary_path(name, slug)
             elicitation_summary = elicitation_path.read_text() if elicitation_path.exists() else ""
             _ledger_begin(name, "3b-synthesize")
-            step_3b_synthesize(paper_summary, name, elicitation_summary)
+            step_3b_synthesize(paper_summary, name, elicitation_summary, slug or "")
         elif args.step == "3c-verify":
             if not benchmark_path.exists() or not summary_path.exists():
                 print("ERROR: run --step 3a-consolidate + 3b-synthesize first",
