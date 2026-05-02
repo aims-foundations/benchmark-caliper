@@ -1,0 +1,500 @@
+name: Argentina — Buenos Aires Policy Maker Cohort (Disaster Reporting Reliability)
+abbreviation: ARG-BA-PolicyDisaster
+country: Argentina
+sub_national_focus: Buenos Aires Metropolitan Area (AMBA), with secondary relevance
+  to Pampa/Patagonia agricultural zones, Río de la Plata river basin communities,
+  and informal settlement (villa) populations
+deployment_use_case: AI-assisted evaluation of disaster-related reporting reliability
+  and trustworthiness across news, social media, and press channels, for consumption
+  by policy makers and government agencies in Buenos Aires assessing crisis communication
+  quality.
+target_population:
+  description: Argentine policy makers, emergency management officials, and government
+    analysts concentrated in the Buenos Aires metropolitan area. This is a high-education,
+    professionally specialized cohort (master's degree or above), operating within
+    government ministries and emergency management agencies. They consume and evaluate
+    crisis communications across formal press, institutional releases, and social
+    media channels.
+  education_level: Master's degree or above
+  socioeconomic_profile: Upper-middle class; institutional professional context
+  primary_role: Crisis communication assessment, disaster response policy, emergency
+    management analysis
+  english_proficiency: Intermediate-to-advanced; comfortable reading English-language
+    benchmarks, methodological documentation, and international standards
+  geographic_concentration: Buenos Aires Metropolitan Area (AMBA); Ciudad Autónoma
+    de Buenos Aires (CABA) and Gran Buenos Aires (GBA)
+  secondary_geographic_relevance:
+  - Informal settlement zones (villas) within AMBA
+  - Pampa agricultural hinterlands
+  - Patagonian zones
+  - Río de la Plata and Paraná river basin communities
+languages:
+  primary: Rioplatense Spanish
+  variant_notes: Rioplatense Spanish is distinguished by voseo (use of 'vos' instead
+    of 'tú'), yeísmo rehilado (distinct /ll/ and /y/ pronunciation), significant Italian
+    loanword influence, and distinctive intonation patterns. Argentine Twitter/X discourse
+    features heavy use of lunfardo slang, political satire conventions, and code-switching
+    with English technical vocabulary in professional contexts.
+  secondary: English (intermediate-to-advanced, professional reading proficiency)
+  benchmark_language_alignment: CrisisBench experiments are English-only; the deployment
+    population reads English but produces and evaluates Spanish-language content.
+    Social media and informal channels are Rioplatense Spanish-dominant. Formal press
+    content may follow international conventions more closely.
+  social_media_register_notes: Argentine social media discourse — particularly Twitter/X
+    — features distinctive registers including political satire, institutional irony,
+    colloquial Rioplatense vocabulary, and strong intertextual references to local
+    political actors and events. These conventions are absent from the benchmark's
+    English North American training corpus.
+  script: Latin alphabet with standard Spanish diacritics (á, é, í, ó, ú, ü, ñ)
+literacy_and_education:
+  national_literacy_rate: '98.08% (INDEC Censo 2022 — [|https://www.perfil.com/noticias/sociedad/el-censo-argentino-arrojo-98-de-alfabetizacion-en-el-pais-pero-no-se-refleja-en-las-aulas.phtml|]).
+    Note: the 2022 census did not include a direct literacy question; the figure derives
+    from prior INDEC estimates carried forward. The 2010 census reported 1.9% illiteracy.
+    Consistently cited at 98–99% by UNESCO and regional sources (e.g., [|https://es.theglobaleconomy.com/Argentina/Literacy_rate/|]).'
+  target_cohort_literacy: Effectively 100% — master's degree or above professional
+    population
+  digital_literacy: High within target cohort; intermediate-to-advanced digital and
+    media literacy expected among policy professionals
+  notes: Literacy gap for informal settlement (villa) populations is relevant as secondary
+    context for assessing coverage of impact populations, but the primary analyst
+    cohort is uniformly high-literacy. Functional literacy (comprehension-level reading)
+    is estimated to be noticeably lower than headline rates, a distinction relevant
+    to how crisis communications are designed for general public consumption — though
+    not directly affecting the professional analyst cohort.
+infrastructure_notes:
+  internet_penetration_argentina_national: 88.4% of total population (40.58 million
+    internet users) as of January 2024, per DataReportal/CABASE — [|https://datareportal.com/reports/digital-2024-argentina|];
+    corroborated by U.S. ITA country guide — [|https://www.trade.gov/country-commercial-guides/argentina-digital-economy|].
+    Freedom House (2024) reports approximately 38 million mobile internet users and
+    8.17 million fixed-line subscriptions as of Q1 2024 — [|https://freedomhouse.org/country/argentina/freedom-net/2024|].
+    UNESCO CETyS assessment records household penetration at 90% — [|https://www.unesco.org/en/articles/assessing-internet-development-argentina|].
+  internet_penetration_buenos_aires_metro: 'AMBA and Buenos Aires province are the
+    most connected regions: 71% of fixed-line internet subscriptions nationally are
+    concentrated in five jurisdictions — CABA, Buenos Aires province, Córdoba, Santa
+    Fe, and Mendoza (CABASE 2023 survey, cited in Freedom House 2024 — [|https://freedomhouse.org/country/argentina/freedom-net/2024|]).
+    CABA and Buenos Aires province together account for the largest share. Sub-national
+    AMBA-specific penetration figure not published separately; national average (88.4%)
+    is a floor estimate for AMBA; actual AMBA rate is materially higher given urban
+    concentration.'
+  mobile_internet_share: Approximately 60% of Argentina's web traffic originates from
+    mobile devices; mobile internet users exceed 38 million nationally (Statista 2024
+    — [|https://www.statista.com/topics/6709/internet-usage-in-argentina/|]; Freedom
+    House 2024 — [|https://freedomhouse.org/country/argentina/freedom-net/2024|]).
+    62.14 million cellular connections active in early 2024 (135.3% of population),
+    reflecting multi-SIM use.
+  dominant_devices_target_cohort: Desktop/laptop workstations in government offices;
+    smartphones for social media monitoring
+  social_media_platforms_relevant:
+  - Twitter/X (primary for real-time crisis discourse)
+  - WhatsApp (informal inter-agency coordination; difficult to monitor formally)
+  - Facebook (broader public communication, older demographics)
+  - Instagram (visual disaster documentation)
+  - Telegram (institutional channels and civil society)
+  news_and_press_channels_relevant:
+  - 'Télam — CLOSED/DISSOLVED: Télam (Argentina''s state news agency) was suspended
+    in March 2024 by President Milei, officially dissolved by Decree 548/2024 in July
+    2024, and transformed into ''Agencia de Publicidad del Estado S.A.U.'' (APE S.A.U.),
+    which no longer operates as a news wire service. Source: Wikipedia — [|https://en.wikipedia.org/wiki/T%C3%A9lam|];
+    official Boletín Oficial Decreto 548/2024 — [|https://www.boletinoficial.gob.ar/detalleAviso/primera/309815/20240701|].
+    This is a significant institutional change: Télam was Latin America''s largest
+    public news agency and a primary wire source for ~500 daily dispatches. Its absence
+    restructures the formal press source landscape for the deployment.'
+  - Major national newspapers (e.g., La Nación, Clarín, Infobae, Página 12)
+  - Provincial and municipal press offices
+  - 'SECOM (Secretaría de Comunicación) official releases — current structure: the
+    Secretaría de Comunicación Pública (formerly SECOM) operates under the Jefatura
+    de Gabinete de Ministros; Milei''s administration restructured media-subsidy flows
+    and halted national advertising expenditure to private media in December 2023
+    (Freedom House 2024 — [|https://freedomhouse.org/country/argentina/freedom-net/2024|])'
+  input_modality_for_deployment: Text-only (tweets, news articles, press releases,
+    institutional communications); no multimodal requirement
+  connectivity_notes: High broadband and mobile connectivity in AMBA professional
+    government settings. Rural and villa populations (relevant as impact subjects,
+    not primary system users) have lower connectivity — household connectivity below
+    60% in remote northern provinces (Corrientes, Formosa, Santiago del Estero) per
+    Freedom House 2024 — [|https://freedomhouse.org/country/argentina/freedom-net/2024|].
+    AMBA professional context faces no material connectivity constraint.
+institutional_and_regulatory_context:
+  emergency_management_agencies:
+  - 'SINAGIR (Sistema Nacional para la Gestión Integral del Riesgo y la Protección
+    Civil) — established by Law 27,287 (2016); comprises the National Council and
+    Federal Council for Comprehensive Risk Management and Civil Protection. Operates
+    the National Disaster Risk Reduction Plan (PNRRD 2025–2029). Source: MHEWC Argentina
+    profile — [|https://www.mhewc.org/argentina/|].'
+  - 'AFE (Agencia Federal de Emergencias) — created in 2025 by Decree 225/2025 to
+    coordinate disaster response and manage SINAGIR, superseding previous coordination
+    arrangements. Source: MHEWC Argentina profile — [|https://www.mhewc.org/argentina/|].
+    This is a net-new institutional change post-scaffold.'
+  - SENAPRED — [NOT FOUND — 'SENAPRED' appears to be the Chilean agency (Servicio
+    Nacional de Prevención y Respuesta ante Desastres); no Argentine agency by this
+    name was identified. The scaffold tag may have been a mis-attribution. Argentina's
+    equivalent function is covered by SINAGIR/AFE structures above.]
+  - 'Buenos Aires Province emergency directorate — [NEEDS VERIFICATION — deferred:
+    below search budget; sub-national agency name not confirmed in searches; provincial
+    civil defense falls under SINAGIR federal structure]'
+  - 'CABA emergency management — [NEEDS VERIFICATION — deferred: below search budget;
+    CABA has its own emergency management directorate under the Ministerio de Justicia
+    y Seguridad de CABA but specific current structure not confirmed]'
+  relevant_data_protection_regulation: 'Argentina''s primary data protection law remains
+    Ley 25.326 (2000). Post-2021 developments: Disposición 2/2023 issued non-binding
+    ''Recomendaciones para una Inteligencia Artificial Fiable'' covering AI systems
+    in the public sector, including data protection requirements. Resolución 161/2023
+    (AAIP) established a program on transparency and personal data protection in AI
+    use. A 2024 Guide for Public and Private Entities on Transparency and Protection
+    of Personal Data for Responsible AI further operationalizes these principles.
+    Comprehensive binding AI legislation (Bills 3003-D-2024, Senado 1747/23) remains
+    under congressional deliberation as of 2025. Source: Regulations.AI Argentina
+    overview — [|https://regulations.ai/regulations/argentina-summary|]; Nemko/Digital
+    2025 AI regulation guide — [|https://digital.nemko.com/regulations/ai-regulation-argentina|].'
+  press_freedom_and_media_regulation: ENACOM (Ente Nacional de Comunicaciones) remains
+    the regulatory body for media and communications. The Milei government halted
+    national advertising expenditure to private media in December 2023 (Freedom House
+    2024 — [|https://freedomhouse.org/country/argentina/freedom-net/2024|]). Télam's
+    dissolution (July 2024) was flagged by Reporters Without Borders as a 'worrisome
+    symbolic act' for press freedom (Al Arabiya, July 2024 — [|https://english.alarabiya.net/News/world/2024/07/02/argentina-government-shuts-state-news-agency-telam|]).
+    No AI-in-media-specific ENACOM policy identified in searches.
+  international_standards_orientation: Argentine policy professionals treat Global
+    North (North American, UN/OCHA, IFRC) disaster communication standards as reference
+    frameworks. Label agreement with internationally-normed benchmarks is expected
+    to be moderate-to-high for formal press content.
+  label_norm_alignment: International disaster communication taxonomies (ISCRAM-derived,
+    OCHA-derived) are recognized reference points for Argentine emergency management
+    professionals, reducing expected systematic label disagreement with CrisisBench
+    annotations for formal content. Edge cases arise in Argentine public discourse,
+    political framing of government response, and informal-channel content.
+  government_ai_policy: 'Argentina has a multi-layered, predominantly non-binding
+    AI governance framework as of 2025. Key enacted instruments: Disposición 2/2023
+    (''Recomendaciones para una Inteligencia Artificial Fiable'' — non-binding public
+    sector guidance); Decisión Administrativa 750/2023 (Interministerial AI Table
+    within Jefatura de Gabinete); Resolución 161/2023 AAIP (AI transparency and data
+    protection program); Resolución 710/2024 (AI Applied to Security Unit — UIAAS).
+    Buenos Aires Province issued Resolución 4/2025 with binding guidelines for generative
+    AI use in provincial agencies. Santa Fe issued a provincial decree (2726/2025)
+    on generative AI in public administration. Comprehensive national AI legislation
+    (Bills 3003-D-2024 and Senado 1747/23) remains under deliberation — both adopt
+    EU AI Act-style risk tiers but are not yet enacted. Argentina joined GPAI and
+    signed UNESCO AI ethics recommendation. Current Milei administration favors lighter
+    regulatory touch to support innovation. Sources: Regulations.AI Argentina — [|https://regulations.ai/regulations/argentina-summary|];
+    Oxford Institute of Technology and Justice Argentina profile — [|https://www.techandjustice.bsg.ox.ac.uk/research/argentina|].'
+cultural_norms_notes: '- Argentine public discourse exhibits high political polarization;
+  crisis reporting is frequently inflected by political framing of government response,
+  which differs from more institutionally neutral North American disaster communication
+  norms.
+
+  - Argentine journalism tradition features strong opinion and interpretive reporting
+  alongside straight news, which may affect informativeness classification at the
+  margins.
+
+  - Social media discourse — particularly Twitter/X — features heavy use of political
+  satire, irony, lunfardo slang, and referential humor that may misclassify as ''not
+  informative'' under North American annotation norms.
+
+  - Institutional credibility cues in Argentine media differ from those in the benchmark
+  training corpus: official government sources carry variable credibility depending
+  on political context; international organizations (UN, IFRC, Médicos Sin Fronteras)
+  may carry higher perceived credibility than domestic agencies in some contexts.
+
+  - Argentine public strongly uses WhatsApp for informal crisis communication; this
+  channel is not captured in the benchmark and presents monitoring challenges.
+
+  - Villas (informal settlements) are a structurally distinct impact population with
+  specific communicative norms, community radio and neighborhood association channels,
+  and vulnerability profiles not represented in benchmark data.
+
+  - The dissolution of Télam (July 2024) materially alters the formal press source
+  landscape: the primary state wire service is gone, creating a gap in nationally
+  federated official disaster reporting that was previously fed to ~500 media outlets.'
+hazard_and_disaster_context:
+  primary_hazard_types_for_deployment:
+  - Urban flash floods (Buenos Aires city and AMBA — drainage system failures)
+  - Río de la Plata and Paraná river basin flooding (sudestada events)
+  - Pampero windstorms (rapid cold front passages affecting AMBA and Pampa region)
+  - ENSO-driven droughts (agricultural impact on Pampa/Patagonia hinterlands)
+  - Heatwaves (urban heat island effects in AMBA)
+  - Industrial and infrastructure accidents (port, petrochemical, rail)
+  benchmark_hazard_coverage_gap: CrisisBench covers North American and globally reported
+    events (Joplin tornado, Hurricane Sandy, 2017 international disasters). No Argentine
+    or Latin American disaster events are documented in the eight constituent datasets.
+    Pampero events, sudestada flooding, and ENSO-cycle agricultural impact are absent
+    from the taxonomy.
+  sub_label_gaps_flagged_by_users:
+  - Pampero windstorm events (distinct meteorological signature and impact pattern)
+  - ENSO-driven drought cycles affecting Pampa agricultural zones
+  - Río de la Plata / Paraná flooding and sudestada events
+  - Villa (informal settlement) impact framing — distinct vulnerability profile and
+    communicative context
+  - Urban flash flood in dense metropolitan AMBA context
+  iscram_taxonomy_adaptation_status: '[NOT FOUND — searched ISCRAM, OCHA, and humanitarian
+    taxonomy literature; no evidence of a South American or Ibero-American adaptation
+    of ISCRAM or OCHA humanitarian classification taxonomies specifically addressing
+    Argentine hazard sub-types (pampero, sudestada, ENSO-drought) was identified.
+    TREC-IS developed a 25-category ontology in collaboration with emergency management
+    practitioners (2018–2021 — [|https://trecis.github.io/|]), but coverage is North
+    American/European and does not include Argentine hazard types. This absence confirms
+    a genuine taxonomy gap rather than a documentation gap.]'
+benchmark_alignment_notes:
+  benchmark: CrisisBench (2021)
+  domain: Crisis/disaster social media classification
+  deployment_channel_vs_benchmark_channel: Deployment spans Twitter/X, news articles,
+    and press releases. CrisisBench is exclusively tweet-derived. Cross-channel generalization
+    to longer-form news and institutional press content is not evaluated in the benchmark
+    and represents a structural gap.
+  language_alignment: Benchmark experiments are English-only. Deployment primary channel
+    is Rioplatense Spanish. Formal press content may tolerate this gap better than
+    social media; informal social media content is the highest-risk channel for misclassification.
+  spanish_content_in_benchmark: 'CrisisLex (a CrisisBench constituent) does include
+    a small Spanish-language subset: approximately 2,100 tweets in Spanish from the
+    2010 Chilean earthquake (ChileEarthquakeT1 collection), labeled by six annotators
+    for relatedness. Source: CrisisLex data collections — [|https://crisislex.org/data-collections.html|].
+    However, this content is: (a) Chilean, not Argentine/Rioplatense Spanish; (b)
+    2010 vintage; (c) labeled only for binary relatedness, not humanitarian type;
+    and (d) not the primary benchmark split used in CrisisBench classification experiments
+    (which are English-only). A 2022 arXiv paper (Sánchez et al., arXiv:2209.02139)
+    explicitly studies cross-lingual and cross-domain crisis classification for low-resource
+    scenarios, including Spanish, but does not cover Rioplatense-specific conventions
+    — [|https://arxiv.org/abs/2209.02139|]. The Spanish content in CrisisBench is
+    thus negligibly relevant to Argentine Rioplatense deployment.'
+  output_space_gap: The deployment's core requirement is source credibility and signal-to-noise
+    reliability scoring, which is absent from the benchmark's output taxonomy (binary
+    informativeness + multi-class humanitarian type). The user intends to construct
+    credibility scoring downstream by combining model outputs with external metadata
+    (source popularity, institutional affiliation). This represents a user-acknowledged
+    but structurally significant gap.
+  output_form_gap: Benchmark produces discrete classification labels (weighted F1).
+    Deployment envisions an aggregated continuous credibility score. Downstream transformation
+    pipeline is required.
+  annotator_population_gap: Annotation provenance is minimally documented for six
+    of eight source datasets. The CrisisNLP paper (Imran et al. 2016) confirms that
+    most datasets used crowdsourced workers with three independent labels per tweet
+    required for task finalization — [|https://aclanthology.org/L16-1259.pdf|]. Expected
+    annotator population is North American/European crowdsourced workers. Argentine
+    institutional and journalistic norms for what constitutes a credible or informative
+    disaster signal are not represented. Cross-dataset F1 degradation (14.3%) signals
+    label conventions are not fully portable across event contexts.
+  temporal_gap: CrisisBench events span 2010–2017. Argentine crisis communication
+    practices, social media norms, and institutional landscape have evolved since
+    2017. Current Twitter/X platform changes (post-2022) are not reflected.
+  credibility_scoring_extensions: TREC Incident Streams (TREC-IS, 2018–2021) introduced
+    a priority/criticality scoring dimension (Low/Medium/High/Critical) for disaster
+    tweets alongside a 25-category information-type ontology, developed in collaboration
+    with emergency management practitioners — [|https://trecis.github.io/|]; [|https://www.dcs.gla.ac.uk/~richardm/TREC_IS/2018/Evaluation.html|].
+    This is the closest existing benchmark extension to the deployment's credibility/priority
+    scoring requirement. TREC CrisisFACTS (2022–2023) extends TREC-IS into multi-stream
+    (Twitter, Facebook, Reddit, online news) event summarization with fact-based evaluation,
+    covering 8–18 crisis events — [|https://crisisfacts.github.io/|]. Neither TREC-IS
+    nor CrisisFACTS covers Argentine or Latin American events, and both remain primarily
+    North American in geographic scope. A 2024 survey (arXiv:2410.21360) systematically
+    reviews 175 NLP works on credibility assessment, identifying research fragmentation
+    and a lack of integrated multi-signal approaches — [|https://arxiv.org/html/2410.21360v2|].
+    No single post-2021 crisis NLP benchmark provides an end-to-end credibility/veracity
+    scoring layer directly applicable to the Argentine deployment.
+  cross_channel_transfer_studies: No dedicated study was identified that evaluates
+    CrisisBench-trained classifiers on news articles or press releases. Domain adaptation
+    literature in crisis NLP is primarily cross-event or cross-language (tweet-to-tweet),
+    not cross-channel (tweet-to-news-article). TREC CrisisFACTS (2022–2023) incorporates
+    multi-stream data including online news alongside social media — [|https://crisisfacts.github.io/|]
+    — and is the closest available framework for cross-channel crisis NLP, but does
+    not provide transfer performance benchmarks between tweet classifiers and news
+    article classifiers. This gap remains unresolved in the literature.
+  cross_lingual_crisis_classification_note: A 2022 arXiv paper (Sánchez et al., arXiv:2209.02139)
+    directly studies cross-lingual and cross-domain crisis classification for low-resource
+    scenarios, framing the challenge of applying English-trained models to other languages
+    and unseen event types — [|https://arxiv.org/abs/2209.02139|]. Findings are relevant
+    to the Argentine deployment but do not specifically address Rioplatense Spanish
+    register, Argentine hazard types, or the political-satire/irony dimensions of
+    Argentine social media.
+dimension_priority_weights:
+  input_ontology:
+    priority: MODERATE
+    rationale: Top-level disaster categories broadly adequate; absence of Argentine
+      hazard sub-labels and informal-settlement impact framing is a coverage gap users
+      flagged as desirable to fill but not blocking.
+  input_content:
+    priority: HIGH
+    rationale: Social media channel — central to deployment — carries Rioplatense
+      Spanish conventions, political satire, lunfardo register, and Argentine institutional
+      credibility cues absent from the benchmark's English North American training
+      corpus. The only Spanish content in CrisisBench constituent datasets is a small
+      Chilean earthquake collection (~2,100 tweets, 2010), not Rioplatense and not
+      used in classification experiments.
+  input_form:
+    priority: LOWER
+    rationale: Deployment is text-only; target cohort has strong English proficiency;
+      benchmark is likewise text-only. No signal-distribution mismatch anticipated
+      at the input modality level, though cross-channel (tweet vs. news article) generalization
+      is an open question with no published benchmark resolution.
+  output_ontology:
+    priority: HIGH
+    rationale: Deployment's core requirement — source credibility and signal-to-noise
+      reliability scoring — is not natively present in the benchmark's output taxonomy,
+      requiring downstream construction. TREC-IS offers the closest precedent (priority
+      criticality labels) but covers no Argentine events and is tweet-only.
+  output_content:
+    priority: MODERATE
+    rationale: Argentine professionals largely accept international disaster communication
+      label conventions for formal content, limiting systematic disagreement; informal
+      content channels introduce annotator-population mismatch risk at margins. CrisisNLP
+      annotation protocol used crowdsourcing with three-annotator agreement threshold
+      — annotator demographics not published but almost certainly non-Argentine.
+  output_form:
+    priority: MODERATE
+    rationale: Benchmark's discrete classification label output requires downstream
+      transformation to the aggregated credibility score the deployment envisions;
+      this gap is user-acknowledged but structurally real.
+flagged_gaps_for_web_search:
+- gap_id: 1
+  dimension: input_content
+  description: Spanish-language and Argentine social media content in CrisisBench
+  search_target: CrisisBench Spanish-language Argentine disaster tweets Latin America
+    crisis NLP benchmark CrisisLex non-English subset
+  resolution_status: RESOLVED
+  finding: CrisisLex includes a small Chilean earthquake Spanish-language collection
+    (~2,100 tweets, 2010) labeled for binary relatedness only, not used in CrisisBench
+    classification experiments. No Argentine or Rioplatense Spanish content is present
+    in the benchmark. A cross-lingual/cross-domain crisis NLP paper (arXiv:2209.02139,
+    2022) addresses low-resource Spanish but not Rioplatense-specific conventions.
+    Gap confirmed as full.
+- gap_id: 2
+  dimension: input_ontology
+  description: Sub-label granularity for Argentine hazard types and informal-settlement
+    impact framing in ISCRAM or OCHA taxonomies
+  search_target: ISCRAM humanitarian taxonomy South America Argentina disaster classification
+    pampero flooding informal settlements adaptation
+  resolution_status: RESOLVED (not found)
+  finding: No South American or Ibero-American adaptation of ISCRAM or OCHA taxonomies
+    addressing pampero, sudestada, or ENSO-drought sub-types was found. TREC-IS 25-category
+    ontology (developed 2018–2021 with emergency practitioners) does not include Argentine
+    hazard types. Gap confirmed as full.
+- gap_id: 3
+  dimension: output_ontology
+  description: Source credibility and reliability scoring dimensions in post-2021
+    crisis NLP benchmarks
+  search_target: crisis NLP credibility scoring benchmark CREDBANK CrisisMMD TREC-IS
+    veracity disaster social media post-2021
+  resolution_status: RESOLVED (partial coverage found)
+  finding: TREC-IS (2018–2021) introduced priority/criticality labels (Low/Medium/High/Critical)
+    for disaster tweets alongside 25 information types — the closest existing benchmark
+    extension to the deployment's priority scoring need. TREC CrisisFACTS (2022–2023)
+    extends this to multi-stream (social media + news) event summarization. Neither
+    covers Argentine events. A 2024 NLP credibility survey (arXiv:2410.21360) documents
+    research fragmentation in this space. No single benchmark provides an end-to-end
+    credibility/veracity scoring layer applicable to the deployment.
+- gap_id: 4
+  dimension: output_content
+  description: Annotator demographics, inter-annotator agreement, and label provenance
+    for CrisisBench constituent datasets
+  search_target: CrisisLex CrisisNLP annotator demographics inter-annotator agreement
+    crowdsourcing crisis dataset annotation protocol Argentina
+  resolution_status: RESOLVED (partial)
+  finding: CrisisNLP (Imran et al. 2016, LREC) confirms crowdsourced annotation with
+    three-annotator agreement threshold, using volunteers/paid workers via platforms.
+    Annotator demographics are not published for any constituent dataset. CrisisLex
+    T6 used crowdsourcing workers for relatedness labels. No Argentine annotators
+    or Argentine-norm calibration is documented anywhere in the provenance chain.
+    Gap confirmed.
+- gap_id: 5
+  dimension: input_form
+  description: Cross-channel generalization from tweets to news articles and press
+    releases
+  search_target: crisis NLP tweet to news article domain adaptation transfer disaster
+    classification press release generalization
+  resolution_status: RESOLVED (not found)
+  finding: No dedicated study evaluating CrisisBench-trained classifiers on news articles
+    or press releases was identified. TREC CrisisFACTS (2022–2023) incorporates multi-stream
+    data including news but does not provide cross-channel transfer benchmarks. Cross-channel
+    (tweet-to-news) generalization remains an unresolved gap in the crisis NLP literature.
+- gap_id: 6
+  dimension: output_form
+  description: Aggregated credibility score construction combining classification
+    outputs with external metadata
+  search_target: disaster classification credibility aggregation external metadata
+    source popularity institutional affiliation humanitarian NLP policy maker score
+  resolution_status: RESOLVED (partial — general credibility aggregation literature
+    exists, no disaster-specific pipeline found)
+  finding: The 2024 NLP credibility survey (arXiv:2410.21360) reviews 175 works on
+    automatic credibility assessment, identifying that aggregating multiple credibility
+    signals into a unified score remains fragmented and underspecified. No published
+    pipeline specifically combining CrisisBench classification outputs with external
+    source metadata (institutional affiliation, popularity) for policy-maker consumption
+    was identified. The downstream construction step is user-acknowledged and remains
+    a research gap.
+- gap_id: 7
+  dimension: institutional_context
+  description: Current Argentine emergency management agency structure (SINAGIR, SENAPRED)
+    and Télam operational status
+  search_target: Argentina SINAGIR emergency management structure 2024 Télam news
+    agency status ENACOM AI media regulation
+  resolution_status: RESOLVED
+  finding: SINAGIR (Law 27,287, 2016) remains the national system. AFE (Agencia Federal
+    de Emergencias) was created by Decree 225/2025 as the new operational emergency
+    response coordinator under SINAGIR. Télam was suspended March 2024 and officially
+    dissolved by Decree 548/2024 in July 2024, replaced by APE S.A.U. (Agencia de
+    Publicidad del Estado), a state advertising entity with no news-wire function.
+    'SENAPRED' is a Chilean agency; no Argentine equivalent by that name exists.
+- gap_id: 8
+  dimension: institutional_context
+  description: Argentine national AI policy and ministry-level guidelines for AI-assisted
+    monitoring systems
+  search_target: Argentina national AI strategy 2023 2024 ministry government AI adoption
+    guidelines crisis communication
+  resolution_status: RESOLVED
+  finding: 'Argentina has a multi-instrument, primarily non-binding AI governance
+    framework. Key enacted: Disposición 2/2023 (public sector AI ethical principles);
+    Decisión Administrativa 750/2023 (Interministerial AI Table); Resolución 161/2023
+    AAIP (AI transparency program); Resolución 710/2024 (UIAAS security AI unit);
+    Buenos Aires Province Resolución 4/2025 (binding generative AI guidelines for
+    provincial agencies). Comprehensive binding national AI legislation remains under
+    congressional deliberation. The Milei administration favors lighter regulatory
+    touch. An AI-assisted disaster communication monitoring system would currently
+    be governed primarily by Ley 25.326 data protection, sector-level guidance from
+    AAIP, and any applicable provincial Buenos Aires Province resolution.'
+net_new_fields:
+  telam_dissolution_impact: 'Télam — Argentina''s state news wire, which distributed
+    ~500 daily reports to ~300 media subscribers and served as the primary formally-attributed
+    institutional source for disaster and emergency reporting — was dissolved in July
+    2024 (Decree 548/2024). Its replacement, APE S.A.U., is an advertising agency
+    with no news-wire function. This materially changes the formal press source landscape
+    the deployment will monitor: a key institutional credibility anchor for official
+    disaster communications is absent from post-July 2024 content. Deployment systems
+    trained or evaluated on pre-2024 Argentine press content will encounter a structurally
+    different source distribution. Source: Boletín Oficial Decreto 548/2024 — [|https://www.boletinoficial.gob.ar/detalleAviso/primera/309815/20240701|];
+    IDEA.int March 2024 — [|https://www.idea.int/democracytracker/report/argentina/march-2024|].'
+  afe_creation_2025: 'The Agencia Federal de Emergencias (AFE) was created by Decree
+    225/2025 as the new operational federal emergency response coordinator, responsible
+    for deploying disaster response resources and coordinating SINAGIR. This supersedes
+    previous fragmented coordination arrangements. Policy makers in the deployment
+    context will interact with AFE as the primary federal counterpart for crisis communications,
+    replacing older coordination structures. Source: MHEWC Argentina profile — [|https://www.mhewc.org/argentina/|].'
+  trec_is_priority_scoring_precedent: 'TREC Incident Streams (2018–2021) is the closest
+    existing benchmark to the deployment''s credibility/priority requirement: it classifies
+    disaster tweets into 25 information types AND assigns a priority label (Low/Medium/High/Critical)
+    evaluated via priority-centric DCG. The dataset spans 98 crisis events with 136,000+
+    labeled tweets. However, it covers no Argentine or Latin American events and is
+    Twitter-only. TREC CrisisFACTS (2022–2023) extends this to multi-stream (Twitter,
+    Reddit, Facebook, online news) summarization with 18 events. Both tracks offer
+    reusable ontologies and evaluation frameworks that could inform the deployment''s
+    credibility scoring construction. Sources: TREC-IS 2021 — [|https://trecis.github.io/|];
+    CrisisFACTS — [|https://crisisfacts.github.io/|].'
+  crisislex_chilean_spanish_subset: 'CrisisLex includes a Chilean earthquake Spanish-language
+    collection (ChileEarthquakeT1: ~2,100 tweets, 2010, labeled for binary relatedness
+    by six annotators). This is the only Spanish-language South American disaster
+    content in the CrisisBench ecosystem. It is not used in CrisisBench classification
+    experiments, predates modern Argentine Twitter norms by over a decade, and reflects
+    Chilean (not Rioplatense) Spanish. Its presence provides negligible mitigation
+    of the Spanish-language input content gap. Source: CrisisLex data collections
+    — [|https://crisislex.org/data-collections.html|].'
+  cross_lingual_crisis_classification_paper: 'A 2022 arXiv paper (Sánchez et al.,
+    ''Cross-Lingual and Cross-Domain Crisis Classification for Low-Resource Scenarios'',
+    arXiv:2209.02139) directly addresses the challenge of applying English-trained
+    crisis classifiers to low-resource languages and unseen event types, which is
+    structurally similar to the Argentine deployment challenge. The paper does not
+    specifically address Rioplatense Spanish register or Argentine hazard types, but
+    provides methodological grounding for cross-lingual transfer approaches that could
+    be adapted for Argentine deployment. Source: [|https://arxiv.org/abs/2209.02139|].'
+  buenos_aires_province_ai_resolution_2025: 'Buenos Aires Province issued Resolución
+    4/2025, establishing binding guidelines for generative AI use by provincial government
+    agencies. This is directly relevant to the deployment context (AMBA policy makers
+    operating within Buenos Aires Province government). Requirements include human
+    oversight and data protection safeguards. This resolution constitutes the most
+    immediately applicable regulatory instrument for the deployment. Source: Regulations.AI
+    Argentina — [|https://regulations.ai/regulations/argentina-summary|].'

@@ -1,0 +1,941 @@
+name: crisisbench
+full_name: 'CrisisBench: Benchmarking Crisis-related Social Media Datasets for Humanitarian Information Processing'
+source_url: https://github.com/firojalam/CrisisBench
+paper_url: https://ojs.aaai.org/index.php/ICWSM/article/view/18115
+year: 2021
+domain: Crisis/disaster social media classification
+porting_strategy: none
+languages:
+- en
+- es
+- it
+primary_region: Global North / North America
+description: 'CrisisBench consolidates eight publicly available, human-annotated tweet datasets
+
+  (CrisisLexT26, CrisisLexT6, CrisisNLP, SWDM2013, ISCRAM2013, DRD, DSM, CrisisMMD,
+
+  and AIDR) into a unified resource of 166,100 tweets for informativeness classification
+
+  and 141,500 tweets for humanitarian-type classification. The benchmark addresses
+
+  long-standing reproducibility gaps in crisis NLP — lack of standard splits, noisy
+
+  duplicates, inconsistent label schemas — and provides benchmarks using CNN, fastText,
+
+  and transformer models (BERT, DistilBERT, RoBERTa). Disaster events span 2010–2017
+
+  and are concentrated in North American and globally reported crises; experiments are
+
+  English-only. The benchmark is not designed for Argentine or Latin American disaster
+
+  communication contexts.
+
+  '
+documentation_excerpts: '## Key characteristics relevant to validity analysis
+
+
+  ### 1. Input Ontology
+
+  CrisisBench organizes its task taxonomy around three canonical crisis-NLP categories:
+
+  informativeness (binary: informative vs. not-informative), humanitarian information
+
+  types (multi-class, e.g., affected individuals, infrastructure damage), and event types
+
+  (e.g., flood, earthquake, fire) [Q3]. Of these, only the first two are implemented and
+
+  benchmarked in the current study; event-type classification is explicitly deferred to
+
+  future work [Q22, Q23]. The humanitarian task is described as substantially harder than
+
+  the binary informativeness task due to its multi-class nature [Q89], and experiments
+
+  demonstrate that disaster-specific context shapes performance [Q93]. Class labels deemed
+
+  non-humanitarian — such as "animal management" and "not labeled" — are excluded from
+
+  consolidated experiments but retained in released data [Q34, Q57, Q58]. Some class
+
+  labels have extremely low support (e.g., only 17 "terrorism related" tweets in CrisisNLP
+
+  [Q52]; "disease related" appears only in CrisisNLP [Q53]), and heterogeneous training
+
+  data from diverse global disaster events may produce suboptimal classifiers [Q80]. The
+
+  taxonomy does not include sub-labels for regional Argentine hazard types (pampero
+
+  windstorms, ENSO-driven drought, Río de la Plata flooding) or informal-settlement
+
+  impact framing — categories explicitly flagged as desirable by deployment users [Q61].
+
+  Individual dataset subsets (CrisisLex with six class labels; CrisisNLP with eleven)
+
+  illustrate significant variability in categorical granularity across source datasets [Q76].
+
+
+  ### 2. Input Content
+
+  The benchmark consolidates eight publicly available, human-annotated tweet datasets
+
+  yielding 166,100 tweets for informativeness and 141,500 for humanitarian classification
+
+  [Q1, Q7, Q10]. Source datasets span disaster events from 2010 through 2017, providing
+
+  temporal breadth [Q100, Q105]. Geographic coverage is concentrated in North American
+
+  and globally reported events: SWDM2013 and ISCRAM2013 draw from the Joplin, Missouri
+
+  tornado (2011) and Hurricane Sandy (2012) [Q27, Q28]; DRD covers events in 2010 and
+
+  2012 [Q29]; CrisisMMD covers seven 2017 international disasters [Q31]; and AIDR was
+
+  annotated by domain experts across different events [Q32]. No Latin American or
+
+  Argentine disaster events are documented as represented. English tweets constitute
+
+  94.46% of the informativeness set [Q46], and non-English content is largely confined
+
+  to the CrisisLex dataset [Q47], meaning Spanish-language social media content —
+
+  especially Rioplatense Spanish informal discourse — is negligibly represented. The
+
+  dataset covers time-span 2010–2017 [Q100], which is temporally dated for current
+
+  Argentine crisis communication norms. Future research directions acknowledge the
+
+  potential value of multilingual pre-trained models on the full multilingual dataset
+
+  [Q98], but all current experiments are English-only [Q59]. This English-language,
+
+  North America-concentrated content base constitutes the most significant validity gap
+
+  for the Argentine social media deployment channel.
+
+
+  ### 3. Input Form
+
+  The input modality is exclusively Twitter text (tweets). Preprocessing applies a
+
+  modified Tweet NLP tokenizer with lowercasing, URL removal, punctuation stripping,
+
+  and user-ID removal [Q38]. Near-duplicate detection uses a bag-of-ngrams cosine-
+
+  similarity approach with a manually validated threshold of 0.75 [Q39, Q40, Q112],
+
+  reducing the dataset by approximately 25% for informativeness and 20% for humanitarian
+
+  tasks [Q41]. Although the consolidated dataset retains multilingual content including
+
+  Spanish and Italian tweets without explicit language tags [Q42, Q43], the benchmark
+
+  assigns language tags via Google Cloud API [Q44, Q45] and restricts all classification
+
+  experiments to English [Q59]. Data is split 70/10/20 for train/dev/test [Q60]. The
+
+  tweet-length constraint and Twitter-specific preprocessing pipeline mean that
+
+  generalization to longer-form news articles, press releases, or institutional
+
+  communications — additional channels in the Argentine deployment — is not evaluated
+
+  and is not natively supported by the benchmark''s input infrastructure. Preprocessing
+
+  details for symbol and emoticon removal are also documented [Q74], and duplicate
+
+  flagging conventions are reported [Q126, Q127].
+
+
+  ### 4. Output Ontology
+
+  The label ontology was constructed by manually mapping semantically similar class
+
+  labels across eight source datasets into a common schema oriented toward humanitarian
+
+  aid relevance [Q18, Q33]. Specific mappings are fully documented (e.g., "building
+
+  damaged" → "infrastructure and utilities damage" [Q33]; mapping tables for all
+
+  constituent datasets [Q106, Q107, Q108, Q109, Q110, Q123, Q124, Q125]). The output
+
+  space is limited to two tasks: binary informativeness and multi-class humanitarian type
+
+  [Q12]. Critically, the benchmark does not include a source credibility, misinformation
+
+  likelihood, or signal-to-noise reliability dimension. For the Argentine deployment, the
+
+  output taxonomy is treated as a necessary but insufficient foundation: policy makers
+
+  require a trustworthiness or reliability score, which the user envisions constructing
+
+  downstream by combining model outputs with external metadata. The DSM dataset
+
+  contributes only a relevant/not-relevant binary [Q109], while CrisisMMD required minor
+
+  remapping [Q110], illustrating variation in original label granularity. Class
+
+  distributions remain imbalanced even after consolidation, with "not humanitarian"
+
+  comprising 37.40% of the humanitarian set [Q55, Q56], and some humanitarian class
+
+  labels carry very low support [Q52, Q53, Q54]. Results for individual datasets report
+
+  only the classes for which models are able to classify [Q88], further constraining the
+
+  reliability of minority-class outputs.
+
+
+  ### 5. Output Content
+
+  The annotation process is minimally documented in the paper. The single directly
+
+  attested fact is that the AIDR dataset was labeled by domain experts using the AIDR
+
+  system across different events [Q111]. For the remaining seven source datasets, the
+
+  paper cites original publications but does not reproduce annotator demographics,
+
+  recruitment methods, inter-annotator agreement (IAA) statistics, or quality assurance
+
+  protocols. Social media data is acknowledged as noisy and posing challenges for
+
+  labeling and training classifiers [Q94]. The absence of documented annotator backgrounds
+
+  makes it impossible to assess how well label judgments reflect Argentine institutional
+
+  or journalistic norms for what constitutes a credible or informative disaster signal.
+
+  Cross-dataset evaluation reveals substantial performance degradation (14.3% F1 drop
+
+  for informativeness when training on CrisisLex and evaluating on CrisisNLP [Q87]),
+
+  signaling that label conventions are not fully portable across disaster event contexts —
+
+  raising further concern about portability to Argentine discourse. The elicitation
+
+  summary flags annotator-population mismatch as a key gap, and the paper provides no
+
+  evidence to mitigate this concern.
+
+
+  ### 6. Output Form
+
+  The benchmark evaluates classifiers using weighted average precision, recall, and
+
+  F1-measure; weighting is chosen explicitly to account for class imbalance [Q75]. Three
+
+  model families are benchmarked: CNN [Q63], fastText with Common Crawl pre-trained
+
+  English embeddings [Q64], and transformer models BERT, DistilBERT, and RoBERTa [Q66].
+
+  The best-performing system achieves 0.866 F1 for informativeness and 0.829 F1 for
+
+  humanitarian classification on the consolidated English test set [Q84], with transformer
+
+  models generally outperforming CNN and fastText [Q90, Q91]. Multilingual experiments
+
+  (not the primary benchmark) show an ~8% F1 drop for humanitarian classification using
+
+  BERT [Q99]. Event-aware training improves humanitarian classification by 1.3 F1 points
+
+  using CNN [Q92]. The output is a discrete classification label; the deployment envisions
+
+  an aggregated credibility score combining model output with external metadata [Q2, Q96].
+
+  Pre-trained models were primarily trained on non-Twitter text, a limitation the authors
+
+  acknowledge [Q65], and transformer model instability requires ten re-runs per experiment
+
+  [Q72]. Hyperparameter documentation is fully reported [Q113–Q121]. The gap between the
+
+  benchmark''s discrete classification output form and the deployment''s need for a
+
+  continuous or aggregated credibility signal is user-acknowledged as a downstream
+
+  construction step, not something the benchmark itself addresses.
+
+  '
+verbatim_quotes:
+- id: Q1
+  page: 1
+  dimension: input_content
+  text: We consolidate eight human-annotated datasets and provide 166.1k and 141.5k tweets for informativeness and humanitarian
+    classification tasks, respectively.
+- id: Q2
+  page: 1
+  dimension: output_form
+  text: We provide benchmarks for both binary and multiclass classification tasks using several deep learning architectures
+    including, CNN, fastText, and transformers.
+- id: Q3
+  page: 1
+  dimension: input_ontology
+  text: Typical classification tasks in the community include (i) informativeness (i.e., informative vs. not-informative messages),
+    (ii) humanitarian information types (e.g., affected individual reports, infrastructure damage reports), and (iii) event
+    types (e.g., flood, earthquake, fire).
+- id: Q4
+  page: 1
+  dimension: output_form
+  text: First, few efforts have been invested to develop standard datasets (specifically, train/dev/test splits) and benchmarks
+    for the community to compare their results, models, and techniques.
+- id: Q5
+  page: 1
+  dimension: input_content
+  text: Secondly, most of the published datasets are noisy, e.g., CrisisLex (Olteanu et al. 2014) contains duplicate and near-duplicate
+    content, which produces misleading classification performance.
+- id: Q6
+  page: 1
+  dimension: input_form
+  text: Moreover, some datasets (e.g., CrisisLex) consist of tweets from several languages without any explicit language tag,
+    to separate the data of a particular language of interest.
+- id: Q7
+  page: 1
+  dimension: input_content
+  text: We consolidate eight publicly available datasets (see Section 3).
+- id: Q8
+  page: 1
+  dimension: output_ontology
+  text: One of the challenges is the inconsistent class labels across various data sources.
+- id: Q9
+  page: 1
+  dimension: output_content
+  text: Firoj Alam, Hassan Sajjad, Muhammad Imran, Ferda Ofli, Qatar Computing Research Institute, HBKU, Qatar
+- id: Q10
+  page: 2
+  dimension: input_content
+  text: We consolidate eight publicly available disaster-related datasets by manually mapping semantically similar class labels,
+    which leads to a larger dataset.
+- id: Q11
+  page: 2
+  dimension: input_form
+  text: We carefully cleaned various forms of duplicates, and assigned a language tag to each tweet.
+- id: Q12
+  page: 2
+  dimension: input_ontology
+  text: We provide benchmark results on English tweets set using state-of-the-art machine learning algorithms such as Convolutional
+    Neural Networks (CNN), fastText (Joulin et al. 2017) and pre-trained transformer models (Devlin et al. 2019) for two classifications
+    tasks, i.e., Informativeness (binary) and Humanitarian type (multi-class) classification.
+- id: Q13
+  page: 2
+  dimension: input_form
+  text: For the research community, we aim to release the dataset in multiple forms as, (i) a consolidated class label mapped
+    version, (ii) exact- and near-duplicate filtered version obtained from previous versions, (iii) a subset of the filtered
+    data used for the classification experiments in this study.
+- id: Q14
+  page: 2
+  dimension: input_content
+  text: A major limitation of the work by Alam, Muhammad, and Ferda (2019) is that the issue of duplicate and near-duplicate
+    content have not been addressed when combining the different datasets.
+- id: Q15
+  page: 2
+  dimension: input_content
+  text: Kersten et al. (2019) focused only on informativeness classification and combined five different datasets. This study
+    has also not focused on exact- and near-duplicate content, which exist in different datasets.
+- id: Q16
+  page: 2
+  dimension: output_form
+  text: A fair comparison of the classification experiment is also difficult with previous studies as their train/dev/test
+    splits are not public, except the dataset by Wiegmann et al. (2020).
+- id: Q17
+  page: 2
+  dimension: input_content
+  text: We address such limitations in this study, i.e., we consolidate the datasets, eliminate duplicates, and release standard
+    dataset splits with benchmark results.
+- id: Q18
+  page: 2
+  dimension: output_ontology
+  text: In this study, we use the class labels that are important for humanitarian aid for disaster response tasks, which
+    are common across the publicly available resources.
+- id: Q19
+  page: 2
+  dimension: output_form
+  text: The study of (Nguyen et al. 2017) and (Neppalli, Caragea, and Caragea 2018) performed comparative experiments between
+    different classical and deep learning algorithms including Support Vector Machines, Logistic Regression, Random Forests,
+    Recurrent Neural Networks, and Convolutional Neural Networks (CNN).
+- id: Q20
+  page: 2
+  dimension: output_form
+  text: Their experimental results suggest that CNN outperforms other algorithms.
+- id: Q21
+  page: 2
+  dimension: output_form
+  text: Though in another study, (Burel and Alani 2018) reports that SVM and CNN can provide very competitive results in some
+    cases.
+- id: Q22
+  page: 2
+  dimension: input_ontology
+  text: We only focused on two tasks for this study and we aim to address event types task in a future study.
+- id: Q23
+  page: 3
+  dimension: input_ontology
+  text: 'We consolidate eight datasets that were labeled for different disaster response classification tasks and whose labels
+    can be mapped consistently for two tasks: informativeness and humanitarian information type classification.'
+- id: Q24
+  page: 3
+  dimension: output_ontology
+  text: 'In doing so, we deal with two major challenges: (i) discrepancies in the class labels used across different datasets,
+    and (ii) exact- and near-duplicate content that exists within as well as across different datasets.'
+- id: Q25
+  page: 3
+  dimension: input_content
+  text: CrisisLex is one of the largest publicly-available datasets, which consists of two subsets, i.e., CrisisLexT26 and
+    CrisisLexT6 (Olteanu et al. 2014). CrisisLexT26 comprises data from 26 different crisis events that took place in 2012
+    and 2013 with annotations for informative vs. not-informative as well as humanitarian categories (six classes) classification
+    tasks among others. CrisisLexT6, on the other hand, contains data from six crisis events that occurred between October
+    2012 and July 2013 with annotations for related vs. not-related binary classification task.
+- id: Q26
+  page: 3
+  dimension: input_content
+  text: CrisisNLP is another large-scale dataset collected during 19 different disaster events that happened between 2013
+    and 2015, and annotated according to different schemes including classes from humanitarian disaster response and some
+    classes related to health emergencies (Imran, Mitra, and Castillo 2016).
+- id: Q27
+  page: 3
+  dimension: input_content
+  text: 'SWDM2013 dataset consists of data from two events: (i) the Joplin collection contains tweets from the tornado that
+    struck Joplin, Missouri on May 22, 2011; (ii) The Sandy collection contains tweets collected from Hurricane Sandy that
+    hit Northeastern US on Oct 29, 2012 (Imran et al. 2013a).'
+- id: Q28
+  page: 3
+  dimension: input_content
+  text: ISCRAM2013 dataset consists of tweets from two different events occurred in 2011 (Joplin 2011) and 2012 (Sandy 2012).
+    Note that this set of tweets are different than SWDM2013 set even though they are collected from same events (Imran et
+    al. 2013b).
+- id: Q29
+  page: 3
+  dimension: input_content
+  text: Disaster Response Data (DRD) consists of tweets collected during various crisis events that took place in 2010 and
+    2012. This dataset is annotated using 36 classes that include informativeness as well as humanitarian categories.
+- id: Q30
+  page: 3
+  dimension: input_content
+  text: Disasters on Social Media (DSM) dataset comprises 10K tweets collected and annotated with labels related vs. not-related
+    to the disasters.
+- id: Q31
+  page: 3
+  dimension: input_content
+  text: 'CrisisMMD is a multimodal dataset consisting of tweets and associated images collected during seven disaster events
+    that happened in 2017 (Alam et al. 2018). The annotations for this dataset is targeted for three classification tasks:
+    (i) informative vs. not-informative, (ii) humanitarian categories (eight classes) and (iii) damage severity assessment.'
+- id: Q32
+  page: 3
+  dimension: input_content
+  text: AIDR dataset is obtained from the AIDR system (Imran et al. 2014) that has been annotated by domain experts for different
+    events and made available upon requests. We only retained labeled data that are relevant to this study.
+- id: Q33
+  page: 3
+  dimension: output_ontology
+  text: The datasets come with different class labels. We create a set of common class labels by manually mapping semantically
+    similar labels into one cluster. For example, the label "building damaged," originally used in the AIDR system, is mapped
+    to "infrastructure and utilities damage" in our final dataset.
+- id: Q34
+  page: 3
+  dimension: output_ontology
+  text: Some of the class labels in these datasets are not annotated for humanitarian aid purposes, therefore, we have not
+    included them in the consolidated dataset. For example, we do not select tweets labeled as "animal management" or "not
+    labeled" that appear in CrisisNLP and CrisisLex26.
+- id: Q35
+  page: 3
+  dimension: output_ontology
+  text: This causes a drop in the number of tweets for both informativeness and humanitarian tasks as can be seen in Table
+    1 (Mapping column). The large drop in the CrisisLex dataset for the informativeness task is due to the 3,103 unlabeled
+    tweets (i.e., labeled as "not labeled").
+- id: Q36
+  page: 3
+  dimension: output_ontology
+  text: The other significant drop for the informativeness task is in the DRD dataset. This is because many tweets were annotated
+    with multiple labels,
+- id: Q37
+  page: 4
+  dimension: input_form
+  text: To develop a machine learning model, it is important to design non-overlapping train/dev/test splits. A common practice
+    is to randomly split the dataset into train/dev/test sets. This approach does not work with social media data as it generally
+    contains duplicates and near duplicates. Such duplicate content, if present in both train and test sets, often leads to
+    overestimated test results during classification.
+- id: Q38
+  page: 4
+  dimension: input_form
+  text: We first tokenize the text before applying any filtering. For tokenization, we used a modified version of the Tweet
+    NLP tokenizer (O'Connor, Krieger, and Ahn 2010). Our modification includes lowercasing the text and removing URL, punctuation,
+    and user id mentioned in the text. We then filter tweets having only one token.
+- id: Q39
+  page: 4
+  dimension: input_form
+  text: We then use a similarity-based approach to remove the near-duplicates. To do this, we first convert the tweets into
+    vectors using bag-of-ngram approach as a vector representation. We use uni- and bi-grams with their frequency-based representations.
+    We then use cosine similarity to compute a similarity score between two tweets and flag them as duplicate if their similarity
+    score is greater than the threshold value of 0.75.
+- id: Q40
+  page: 4
+  dimension: input_form
+  text: To determine a plausible threshold value, we manually checked the tweets in different threshold bins (i.e., 0.70 to
+    1.0 with 0.05 interval) as shown in Figure 1, which we selected from consolidated informativeness dataset. By investigating
+    the distribution and manual checking, we concluded that a threshold value of 0.75 is a reasonable choice.
+- id: Q41
+  page: 4
+  dimension: input_form
+  text: As indicated in Table 1, there is a drop after filtering, e.g., ∼25% for informativeness and ∼20% for humanitarian
+    tasks. It is important to note that failing to eradicate duplicates from the consolidated dataset would potentially lead
+    to
+- id: Q42
+  page: 5
+  dimension: input_form
+  text: Some of the existing datasets contain tweets in various languages (i.e., Spanish and Italian) without explicit assignment
+    of a language tag.
+- id: Q43
+  page: 5
+  dimension: input_form
+  text: In addition, many tweets have codeswitched (i.e., multilingual) content.
+- id: Q44
+  page: 5
+  dimension: input_form
+  text: We decided to provide a language tag for each tweet if it is not available with the respective dataset.
+- id: Q45
+  page: 5
+  dimension: input_form
+  text: We used the language detection API of Google Cloud Services for this purpose.
+- id: Q46
+  page: 5
+  dimension: input_content
+  text: Among different languages of informativeness tweets, English tweets appear to be highest in the distribution compared
+    to any other language, which is 94.46% of 156,899.
+- id: Q47
+  page: 5
+  dimension: input_content
+  text: Note that most of the non-English tweets appear in the CrisisLex dataset.
+- id: Q48
+  page: 5
+  dimension: output_ontology
+  text: Distribution of class labels is an important factor for developing the classification model.
+- id: Q49
+  page: 5
+  dimension: output_ontology
+  text: It is clear that there is an imbalance in class distributions in different datasets and some class labels are not
+    present.
+- id: Q50
+  page: 5
+  dimension: output_ontology
+  text: For example, the distribution of "not informative" class is very low in SWDM2013 and ISCRAM2013 datasets.
+- id: Q51
+  page: 5
+  dimension: output_ontology
+  text: For the humanitarian task, some class labels are not present in different datasets.
+- id: Q52
+  page: 5
+  dimension: output_ontology
+  text: Only 17 tweets with the label "terrrorism related" are present in CrisisNLP.
+- id: Q53
+  page: 5
+  dimension: output_ontology
+  text: Similarly, the class "disease related" only appears in CrisisNLP.
+- id: Q54
+  page: 5
+  dimension: output_ontology
+  text: The scarcity of the class labels poses a great challenge to design the classification model using individual datasets.
+- id: Q55
+  page: 5
+  dimension: output_ontology
+  text: Even after combining the datasets, the imbalance in class distribution seems to persist (last column in Table 4).
+- id: Q56
+  page: 5
+  dimension: output_ontology
+  text: For example, the distribution of "not humanitarian" is relatively higher (37.40%) than other class labels.
+- id: Q57
+  page: 5
+  dimension: output_ontology
+  text: In Table 4, we highlighted some class labels, which we dropped in the rest of the classification experiments conducted
+    in this study.
+- id: Q58
+  page: 5
+  dimension: output_ontology
+  text: However, tweets with those class labels will be available in the released datasets.
+- id: Q59
+  page: 6
+  dimension: input_form
+  text: Although our consolidated dataset contains multilingual tweets, we only use tweets in English language in our experiments.
+- id: Q60
+  page: 6
+  dimension: input_form
+  text: We split data into train, dev, and test sets with a proportion of 70%, 10%, and 20%, respectively, also reported in
+    Table 5.
+- id: Q61
+  page: 6
+  dimension: input_ontology
+  text: As mentioned earlier we have not selected the tweets with highlighted class labels in Table 4 for the classification
+    experiments.
+- id: Q62
+  page: 6
+  dimension: output_form
+  text: For the experiments, we use CNN, fastText, and pre-trained transformer models.
+- id: Q63
+  page: 6
+  dimension: output_form
+  text: The current state-of-the-art disaster classification model is based on the CNN architecture.
+- id: Q64
+  page: 6
+  dimension: output_form
+  text: For the fastText (Joulin et al. 2017), we used pre-trained embeddings trained on Common Crawl, which is released by
+    fastText for English.
+- id: Q65
+  page: 6
+  dimension: input_content
+  text: Though the pre-trained models are mainly trained on non-Twitter text, we hypothesize that their rich contextualized
+    embeddings would be beneficial for the disaster domain.
+- id: Q66
+  page: 6
+  dimension: output_form
+  text: In this work, we choose the pre-trained models BERT (Devlin et al. 2019), DistilBERT (Sanh et al. 2019), and RoBERTa
+    (Liu et al. 2019) for the classification tasks.
+- id: Q67
+  page: 6
+  dimension: output_form
+  text: We train the CNN models using the Adam optimizer (Kingma and Ba 2014).
+- id: Q68
+  page: 6
+  dimension: output_form
+  text: The batch size is 128 and maximum number of epochs is set to 1000.
+- id: Q69
+  page: 6
+  dimension: output_form
+  text: We use a filter size of 300 with both window size and pooling length of 2, 3, and 4, and a dropout rate 0.02.
+- id: Q70
+  page: 6
+  dimension: output_form
+  text: We set early stopping criterion based on the accuracy of the development set with a patience of 200.
+- id: Q71
+  page: 6
+  dimension: output_form
+  text: 'For the experiments with fastText, we used default parameters except: (i) the dimension is set to 300, (ii) minimal
+    number of word occurrences is set to 3, and (iii) number of epochs is 50.'
+- id: Q72
+  page: 6
+  dimension: output_form
+  text: Due to the instability of the pre-trained models as reported in (Devlin et al. 2019), we perform ten re-runs for each
+    experiment using different seeds, and we select the model that performs best on the dev set.
+- id: Q73
+  page: 6
+  dimension: output_form
+  text: For transformer-based models, we used a learning rate of 2e − 5, and a batch size of 8.
+- id: Q74
+  page: 6
+  dimension: input_form
+  text: Prior to the classification experiment, we preprocess tweets to remove symbols, emoticons, invisi-
+- id: Q75
+  page: 7
+  dimension: output_form
+  text: To measure the performance of each classifier, we use weighted average precision (P), recall (R), and F1-measure (F1).
+    The rationale behind choosing the weighted metric is that it takes into account the class imbalance problem.
+- id: Q76
+  page: 7
+  dimension: input_ontology
+  text: The motivation of these experiments is to investigate whether model trained with consolidated dataset generalizes
+    well across different sets. For the individual dataset classification experiments, we selected CrisisLex and CrisisNLP
+    as they are relatively larger in size and have a reasonable number of class labels, i.e., six and eleven class labels,
+    respectively.
+- id: Q77
+  page: 7
+  dimension: input_form
+  text: Note that these are subsets of the consolidated dataset reported in Table 5. We selected them from train, dev and
+    test splits of the consolidated dataset to be consistent across different classification experiments.
+- id: Q78
+  page: 7
+  dimension: output_form
+  text: To understand the effectiveness of the smaller datasets, we run experiments by training the model using smaller datasets
+    and evaluating using the consolidated test set.
+- id: Q79
+  page: 7
+  dimension: input_content
+  text: The availability of annotated data for a disaster event is usually scarce. One of the advantages of our compiled data
+    is to have identical classes across several disaster events. This enables us to combine the annotated data from all previous
+    disasters for the classification.
+- id: Q80
+  page: 7
+  dimension: input_content
+  text: Though this increases the size of the training data substantially, the classifier may result in sub-optimal performance
+    due to the inclusion of heterogeneous data (i.e., a variety of disaster types and occurs in a different part of the world).
+- id: Q81
+  page: 7
+  dimension: input_form
+  text: We append a disaster event type as a token to each annotated tweet ti. More concretely, say tweet ti consists of k
+    words {w1, w2, ..., wk}. We append a disaster event type tag di to each tweet so that ti would become {di, w1, w2, ...,
+    wk}. We repeat this step for all disaster event types present in our dataset.
+- id: Q82
+  page: 7
+  dimension: input_ontology
+  text: The event-aware training requires the knowledge of the disaster event type at the time of the test. If we do not provide
+    a disaster event type, the classification performance will be suboptimal due to a mismatch between train and test.
+- id: Q83
+  page: 7
+  dimension: input_form
+  text: Instead of appending the disaster event type to all tweets of a disaster, we randomly append disaster event type UNK
+    to 5% of the tweets of every disaster. Note that UNK is now distributed across all disaster event types and is a good
+    representation of an unknown event.
+- id: Q84
+  page: 8
+  dimension: output_form
+  text: The model trained using the consolidated dataset achieves 0.866 (F1) for informativeness and 0.829 for humanitarian,
+    which is better than the models trained using individual datasets.
+- id: Q85
+  page: 8
+  dimension: output_form
+  text: Between CrisisLex and CrisisNLP, the performance is higher on CrisisLex dataset for both informativeness and humanitarian
+    tasks (1st vs. 4th row in Table 6 for the informativeness, and 10th vs. 13th row for the humanitarian task in the same
+    table.).
+- id: Q86
+  page: 8
+  dimension: input_content
+  text: This might be due to the CrisisLex dataset being larger than the CrisisNLP dataset.
+- id: Q87
+  page: 8
+  dimension: output_content
+  text: The cross dataset (i.e., train on CrisisLex and evaluate on CrisisNLP) results shows that there is a drop in performance.
+    For example, there is 14.3% difference in F1 on CrisisNLP data using the CrisisLex model for the informativeness task.
+- id: Q88
+  page: 8
+  dimension: output_ontology
+  text: In the humanitarian task, for different datasets in Table 6, we have different number of class labels. We report the
+    results of those classes only for which the model is able to classify.
+- id: Q89
+  page: 8
+  dimension: input_ontology
+  text: Note that humanitarian task is a multi-class classification problem, which makes it a much more difficult task than
+    the binary informativeness classification.
+- id: Q90
+  page: 8
+  dimension: output_form
+  text: The transformer based models achieve higher performance compared to the CNN and fastText. We used three transformer
+    based models, which varies in the parameter sizes. However, in terms of performance, they are quite similar.
+- id: Q91
+  page: 8
+  dimension: output_form
+  text: BERT performs better than or on par with CNN across all classes. More importantly, BERT performs substantially better
+    than CNN in the case of minority classes as highlighted in the table.
+- id: Q92
+  page: 8
+  dimension: output_form
+  text: The event-aware training improves the classification performance by 1.3 points (F1) using CNN for the humanitarian
+    task compared to the results without using event information (see Table 6). However, no improvement has been observed
+    for the informativeness task.
+- id: Q93
+  page: 8
+  dimension: input_ontology
+  text: The training using event information enables the system to use data of all disasters while preserving the disaster-specific
+    distribution.
+- id: Q94
+  page: 9
+  dimension: output_content
+  text: Social media data is noisy and it often poses a challenge for labeling and training classifiers.
+- id: Q95
+  page: 9
+  dimension: input_form
+  text: Our analysis on publicly available datasets reveals that one should follow a number of steps before preparing and
+    labeling any social media dataset, not just the dataset for crisis computing. Such steps include (i) tokenization to help
+    in the subsequent phase, (ii) remove exact- and near-duplicates, (iii) check for existing data where the same tweet might
+    be annotated for the same task, and then (iv) labeling.
+- id: Q96
+  page: 9
+  dimension: output_form
+  text: For designing the classifier, we postulate checking the overlap between training and test splits to avoid any misleading
+    performance.
+- id: Q97
+  page: 9
+  dimension: input_form
+  text: It is important to emphasize the fact that the results reported in this study are reliable as they are obtained on
+    a dataset that has been cleaned from duplicate content, which might have led to misleading performance results otherwise.
+- id: Q98
+  page: 9
+  dimension: input_content
+  text: Our initial consolidated datasets (i.e., Table 3 and 4) contains multilingual content with more class labels and different
+    types of content (e.g., disease-related), therefore, an interesting future research could be to try different pre-trained
+    multilingual models to classify tweets in different languages.
+- id: Q99
+  page: 9
+  dimension: output_form
+  text: We observe that performance dropped significantly for the humanitarian task compared to English-only dataset. For
+    example, ∼8% drop using BERT model.
+- id: Q100
+  page: 9
+  dimension: input_content
+  text: The resulting dataset covers a time-span starting from 2010 to 2017, which can be used to study temporal aspects in
+    crisis scenarios.
+- id: Q101
+  page: 9
+  dimension: input_form
+  text: We tried to bridge this gap by consolidating existing datasets, filtering exact- and near-duplicates, and providing
+    benchmarks based on state-of-the-art CNN, FastText, and transformer-based models.
+- id: Q102
+  page: 9
+  dimension: input_content
+  text: The developed consolidated labeled dataset is curated from different publicly available sources.
+- id: Q103
+  page: 10
+  dimension: input_content
+  text: We release the dataset by maintaining the license of existing resources.
+- id: Q104
+  page: 11
+  dimension: input_content
+  text: In Table 11, we report the events associated with the respective datasets such as ISCRAM2013, SWDM2013 CrisisLex and
+    CrisisNLP.
+- id: Q105
+  page: 11
+  dimension: input_content
+  text: The time-period is from 2011 to 2015, which is a good representative of temporal aspects.
+- id: Q106
+  page: 11
+  dimension: output_ontology
+  text: In Table 12, we report class label mapping for ISCRAM2013, SWDM2013, CrisisLex and CrisisNLP datasets.
+- id: Q107
+  page: 11
+  dimension: output_ontology
+  text: Note that all humanitarian class labels also mapped to informative, and not humanitarian labels mapped to not-informative
+    in the data preparation step.
+- id: Q108
+  page: 11
+  dimension: output_ontology
+  text: In Table 13, we report the class label mapping for informativeness and humanitarian tasks for DRD dataset.
+- id: Q109
+  page: 11
+  dimension: output_ontology
+  text: The DSM dataset only contains tweets labeled as relevant vs not-relevant, which we mapped for informativeness task
+    as shown in Table 14.
+- id: Q110
+  page: 11
+  dimension: output_ontology
+  text: The CrisisMMD dataset has been annotated for informativeness and humanitarian task, therefore, very minor label mapping
+    was needed as shown in Table in 15.
+- id: Q111
+  page: 11
+  dimension: output_content
+  text: The AIDR data has been labeled by domain experts using AIDR system and has been labeled during different events.
+- id: Q112
+  page: 11
+  dimension: input_form
+  text: We have chosen a value of > 0.75 to filter duplicate tweets.
+- id: Q113
+  page: 11
+  dimension: output_form
+  text: In this section, we report parameters for CNN and BERT model.
+- id: Q114
+  page: 11
+  dimension: output_form
+  text: 'All experimental scripts will be publicly Hyper-parameters include:'
+- id: Q115
+  page: 11
+  dimension: output_form
+  text: 'Batch size: 8'
+- id: Q116
+  page: 11
+  dimension: output_form
+  text: 'Number of epochs: 10'
+- id: Q117
+  page: 11
+  dimension: output_form
+  text: 'Max seq length: 128'
+- id: Q118
+  page: 11
+  dimension: output_form
+  text: 'Learning rate (Adam): 2e-5'
+- id: Q119
+  page: 11
+  dimension: output_form
+  text: 'BERT (bert-base-uncased): L=12, H=768, A=12, total parameters = 110M; where L is number of layers (i.e., Transformer
+    blocks), H is the hidden size, and A is the number of self-attention heads.'
+- id: Q120
+  page: 11
+  dimension: output_form
+  text: 'DistilBERT (distilbert-base-uncased): it is a distilled version of the BERT model consists of 6-layer, 768-hidden,
+    12-heads, 66M parameters.'
+- id: Q121
+  page: 11
+  dimension: output_form
+  text: 'RoBERTa (roberta-large): it is using the BERT-large architecture consists of 24-layer, 1024-hidden, 16-heads, 355M
+    parameters.'
+- id: Q122
+  page: 11
+  dimension: output_form
+  text: In Table 18 and 19, we provide detail results for different datasets (English Tweets) with different models.
+- id: Q123
+  page: 13
+  dimension: output_ontology
+  text: 'Table 12: Class label mapping and grouping for CrisisLex, CrisisNLP, ISCRAM2013, and SWDM2013 datasets. The symbol
+    (✗) indicates we do not map the tweets with that label for this study.'
+- id: Q124
+  page: 14
+  dimension: output_ontology
+  text: The symbol (✗) indicates we do not map the tweets with that label for this study.
+- id: Q125
+  page: 15
+  dimension: output_ontology
+  text: 'Table 16: Class label mapping for AIDR system.'
+- id: Q126
+  page: 16
+  dimension: input_form
+  text: Sim. refers to similarity value. Dup. refers to whether we consider them as duplicate and filtered.
+- id: Q127
+  page: 16
+  dimension: input_form
+  text: The symbol (✗) indicates a duplicate, which we dropped and the symbol (✓) indicates a not duplicate, which we have
+    included in our dataset.
+coverage_strengths:
+- user_priority: Top-level disaster classification categories (informativeness, humanitarian type) adequate for Argentine
+    triage
+  benchmark_coverage: Benchmark implements binary informativeness and multi-class humanitarian type classification across
+    166,100 and 141,500 tweets respectively, providing a consolidated, deduplicated, and standardized schema [Q1, Q3, Q23]
+  dimension: input_ontology
+- user_priority: Text-only input modality matching Argentine deployment channel
+  benchmark_coverage: Benchmark is exclusively tweet-text based with standardized preprocessing (tokenization, deduplication,
+    language tagging), aligning with text-based input requirements of the deployment [Q38, Q59]
+  dimension: input_form
+- user_priority: Transformer-based models as foundation for downstream credibility scoring
+  benchmark_coverage: Benchmark provides BERT, DistilBERT, and RoBERTa baselines achieving 0.866 F1 (informativeness) and
+    0.829 F1 (humanitarian) on consolidated English test set, establishing a strong classification foundation on which credibility
+    scoring can be layered [Q84, Q90, Q91]
+  dimension: output_form
+- user_priority: Temporal breadth of disaster event coverage
+  benchmark_coverage: Consolidated dataset covers disaster events from 2010 through 2017 across eight source datasets, providing
+    temporal breadth for model training [Q100, Q105]
+  dimension: input_content
+- user_priority: Label schema transparency and reproducibility for adaptation
+  benchmark_coverage: Full label mapping tables are documented for all eight constituent datasets [Q106, Q107, Q108, Q109,
+    Q110, Q123, Q124, Q125], and the dataset is released in multiple forms (mapped, duplicate-filtered, experiment-ready)
+    to support reproducibility and downstream adaptation [Q13]
+  dimension: output_ontology
+coverage_gap_analysis:
+- user_priority: Spanish-language / Rioplatense social media content (HIGH — Input Content)
+  benchmark_coverage: English tweets constitute 94.46% of the informativeness set [Q46]; non-English content is largely confined
+    to CrisisLex [Q47]; all classification experiments are English-only [Q59]. No Argentine or Latin American disaster events
+    are documented as represented across any of the eight source datasets [Q27, Q28, Q29, Q30, Q31].
+  gap_type: full
+  web_search_target: CrisisBench Spanish-language Argentine disaster tweets Latin America crisis NLP benchmark
+- user_priority: Source credibility and reliability scoring dimension (HIGH — Output Ontology)
+  benchmark_coverage: Output space is limited to binary informativeness and multi-class humanitarian type; no credibility,
+    misinformation likelihood, or signal-to-noise reliability label is present [Q12, Q18]. User acknowledges this requires
+    downstream construction combining model outputs with external metadata [Q2, Q96].
+  gap_type: full
+  web_search_target: crisis NLP credibility scoring benchmark CREDBANK CrisisMMD TREC-IS veracity disaster social media
+- user_priority: Sub-label granularity for Argentine hazard types (pampero, ENSO drought, Río de la Plata flooding, informal-settlement
+    impacts)
+  benchmark_coverage: Humanitarian taxonomy covers broad ISCRAM-derived categories (infrastructure damage, affected individuals,
+    etc.) but does not include sub-labels for regional Argentine hazard types or informal-settlement framing [Q3, Q61]. Some
+    rare labels (terrorism, disease) have very low support even in existing taxonomy [Q52, Q53].
+  gap_type: full
+  web_search_target: ISCRAM humanitarian taxonomy South America Argentina disaster classification sub-labels informal settlements
+- user_priority: Annotator demographics and label provenance for Argentine institutional norms (MODERATE — Output Content)
+  benchmark_coverage: Annotation process is minimally documented; the only attested detail is that AIDR data was labeled by
+    domain experts [Q111]. No annotator demographics, IAA statistics, or cultural calibration are reported for any of the
+    seven remaining source datasets. Social media noisiness is acknowledged as a labeling challenge [Q94] but not addressed
+    through annotator diversity.
+  gap_type: full
+  web_search_target: CrisisLex CrisisNLP annotator demographics inter-annotator agreement crowdsourcing crisis dataset annotation
+    protocol
+- user_priority: Cross-channel generalization from tweets to news articles and press releases (MODERATE — Input Form)
+  benchmark_coverage: Benchmark is exclusively tweet-derived; preprocessing pipeline is Twitter-specific (Tweet NLP tokenizer,
+    URL/user-ID removal) [Q38]. No evaluation of generalization to longer-form news or institutional press content is documented.
+    Pre-trained models trained on non-Twitter text are used [Q65], but this is not framed as a cross-channel transfer study.
+  gap_type: full
+  web_search_target: crisis NLP tweet to news article transfer domain adaptation disaster classification press release generalization
+- user_priority: Aggregated credibility score output form for policy maker consumption (MODERATE — Output Form)
+  benchmark_coverage: Benchmark produces discrete classification labels evaluated by weighted F1 [Q75]. No continuous credibility
+    score, confidence calibration, or aggregation methodology is provided. Cross-dataset F1 drop of 14.3% [Q87] and transformer
+    instability requiring ten re-runs [Q72] further limit reliability of output as a stable foundation for downstream scoring.
+  gap_type: partial
+  web_search_target: disaster classification credibility aggregation policy maker score F1 calibration reliability humanitarian
+    NLP

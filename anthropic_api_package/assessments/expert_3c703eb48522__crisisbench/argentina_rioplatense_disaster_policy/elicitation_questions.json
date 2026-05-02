@@ -1,0 +1,22 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "The benchmark under assessment provides a fixed set of disaster/impact categories. For disaster reporting reliability in Argentina, are there impact categories that matter to your policy makers but might not appear in a benchmark of this kind \u2014 for example, impacts on informal settlements (villas), agricultural disruption in Pampa or Patagonia, or flooding along the R\u00edo de la Plata basin? Are there disaster types (e.g., pampero windstorms, ENSO-driven droughts, urban flash floods in Buenos Aires) whose reporting patterns your users need to evaluate?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "IC",
+    "question": "The benchmark's input content is drawn from a specific source culture and media environment that may reflect particular disaster framing, infrastructure norms, and institutional actors. For your Argentine policy makers assessing reporting reliability, would culturally embedded assumptions in such data \u2014 such as which agencies are cited as authoritative, what counts as 'normal' disaster response, or how agricultural loss is framed \u2014 misalign with what Argentine news sources or government communications typically convey?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OO",
+    "question": "Your deployment centers on distinguishing noisy or unreliable signals from verified disaster reporting \u2014 a reliability or trustworthiness judgment \u2014 rather than simply classifying impact type or content type. Does your use case require a scoring dimension for source credibility, misinformation likelihood, or signal-to-noise quality, which may not map onto the benchmark's output space and scoring dimensions?"
+  },
+  {
+    "id": "Q4",
+    "dimension": "OC",
+    "question": "The benchmark's ground-truth labels were likely produced by annotators familiar with disaster communication norms from a different cultural context than your deployment. For your context, would Argentine policy experts, emergency management officials, or journalists plausibly disagree with those labels \u2014 for instance, on whether a given report constitutes a 'real signal' of disaster impact versus noise \u2014 especially given differences in how Argentine media covers government response or social vulnerability?"
+  }
+]

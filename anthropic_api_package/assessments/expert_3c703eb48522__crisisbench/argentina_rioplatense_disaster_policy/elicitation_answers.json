@@ -1,0 +1,6 @@
+{
+  "Q1": "No, the examples provided could use the labels from the benchmark. But it is true that sub label or categories would be very interesting to have.",
+  "Q2": "I think it depends on the type of data. I would not expect concerning assumptions in press and new articles but I do think social media information or other type of informal data to convey meaning not represented in the benchmark",
+  "Q3": "Th ideal use case would need a scoring dimension for source credibility, however I believe this could be built upon the outputs of the model in a way that user can verify/aggregate model's results, considering other external factors and metadata to score it (such as the relevance/popularity of the source)",
+  "Q4": "I believe in the Argentinian context there are less established norms of crisis communication (the public space is more fluctuant than in Canada/North America). Probably policy experts and emergency officials get inspired in those communication standards developed at international organizations or in the Global North, to later adapt them to the local context. I believe the use of models and identifying how they fail could potentially help to define more specific labels/sub labels. I also think local press tend to follow patterns from those areas, so I don't think local users would disagree with labels applied to the Canadian data"
+}

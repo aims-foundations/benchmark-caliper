@@ -1,0 +1,349 @@
+name: Ecuador Humanitarian Crisis Tweet Analysis — NGO/IO Analyst Deployment
+abbreviation: ECU-HumTweet
+scope_note: 'This region document is scoped to the specific deployment population
+  described in the elicitation summary: social and data analysts at NGOs and international
+  organizations (Red Cross, UN OCHA) processing Spanish-language Ecuadorian crisis
+  tweets to generate operational timelines, together with the affected Ecuadorian
+  populations who author those tweets. It is not a general Latin America or Ecuador
+  country profile.'
+primary_country: Ecuador
+deployment_geography:
+  national_level: Ecuador
+  sub_national_administrative_hierarchy:
+    levels:
+    - provincia
+    - cantón
+    - parroquia
+    note: Operational anchoring requires disambiguation to all three levels. Parroquia-level
+      precision is frequently required for field coordination decisions.
+    salient_provinces_for_disaster_response: '[NEEDS VERIFICATION — identify the provinces
+      most frequently implicated in large-scale emergencies: e.g., Manabí (coastal
+      flooding), Tungurahua/Cotopaxi (volcanic), Esmeraldas, El Oro, Loja, Chimborazo,
+      Pastaza — verify against SGR historical event data]'
+    total_provincias: '[NEEDS VERIFICATION]'
+    total_cantones: '[NEEDS VERIFICATION]'
+    total_parroquias: '[NEEDS VERIFICATION]'
+  tweet_authorship_geography: Tweets originate from across Ecuador, including both
+    urban centers (Quito, Guayaquil, Cuenca) and rural and peri-urban areas affected
+    by crisis events; geographic spread of authorship is expected to be uneven and
+    event-driven.
+target_population:
+  primary_users:
+    description: Social and data analysts at NGOs and international humanitarian organizations
+      — primarily Red Cross Ecuador and UN OCHA — who consume system outputs as decision-support
+      tools for operational coordination. Includes field coordinators, domain experts
+      (health, WASH, shelter, logistics), and social analysts who collectively form
+      the authoritative inter-operational judgment panel for output quality.
+    language_profile: Fluent in American English and Spanish; comfortable reading
+      formal and semi-formal humanitarian reporting in both languages; may include
+      speakers of varied Latin American Spanish accents and a range of English-language
+      national backgrounds.
+    roles_in_quality_judgment:
+    - Field coordinators — assess operational relevance and geographic anchoring precision
+    - Social analysts — assess tweet-level signal quality and register coverage
+    - Domain experts — assess humanitarian taxonomy accuracy and needs-evolution tracking
+    note: No single annotator archetype is authoritative; inter-operational consensus
+      is the ground-truth standard per the elicitation.
+  tweet_author_population:
+    description: Ecuadorian residents affected by or witnessing disaster and humanitarian
+      crisis events who post to Twitter/X during or immediately following emergencies.
+      Includes direct crisis-affected populations, community observers, informal journalists,
+      local NGO volunteers, and municipal officials.
+    language_profile: Ecuadorian Spanish in mixed informal-to-semi-formal register;
+      crisis-time abbreviations and non-standard orthography expected; indigenous-language
+      terms (primarily Kichwa) appear in place names and entity references.
+    digital_access_notes: Twitter authorship during crises is skewed toward urban
+      and peri-urban populations with smartphone access; rural and indigenous community
+      voices may be underrepresented in the tweet stream relative to their share of
+      crisis-affected populations.
+languages:
+  primary_operational_languages:
+  - Ecuadorian Spanish (tweet input stream and analyst bilingual fluency)
+  - American English (analyst reporting and benchmark/system documentation)
+  indigenous_language_presence:
+    primary_indigenous_language: Kichwa (Ecuadorian variant of Quechua)
+    role_in_deployment: Kichwa terms appear principally as components of place names,
+      community names, and entity references embedded within Spanish-language tweets
+      — not as full-sentence code-switching. Examples include cantón, parroquia, and
+      community names of Kichwa origin.
+    other_indigenous_languages_possible: '[NEEDS VERIFICATION — determine whether
+      Shuar, Tsafiki, Achuar, Awá, or other indigenous languages of Ecuador contribute
+      place-name or entity tokens to crisis-time tweets]'
+    kichwa_nlp_resources: '[NEEDS VERIFICATION — assess availability of Kichwa-Spanish
+      NLP tools, tokenizers, and entity recognizers for social media text]'
+  register_and_dialect_notes: 'The tweet stream is predominantly Ecuadorian Spanish.
+    Key register characteristics include: crisis-specific abbreviations (e.g., referencing
+    emergency agencies), informal orthographic variation (vowel elision, phonetic
+    spelling), and the use of local geographic shorthand. A system trained only on
+    generic Spanish or English social media would be expected to miss dialect-specific
+    signals. Costeño (coastal) and Serrano (highland) dialectal variation may appear
+    within the same event dataset.'
+  code_switching_pattern: Indigenous-language mixing is primarily lexical and onomastic
+    (place and entity names), not full code-switching at the sentence level. This
+    is diagnostically important for NER systems that must resolve ambiguous entity
+    boundaries at Kichwa-Spanish token interfaces.
+writing_systems:
+  scripts:
+  - Latin alphabet (Spanish and Kichwa as written in Ecuador)
+  orthographic_variation_notes: 'Kichwa orthography in Ecuador is not fully standardized;
+    place names may appear in variant spellings (e.g., historical Spanish-influenced
+    vs. modern unified Kichwa orthography). Crisis-time tweets exhibit additional
+    non-standard orthography: phonetic spelling, truncation, missing diacritics, all-caps
+    for urgency, and SMS-era abbreviations. NLP systems must handle this variation
+    robustly.'
+  unicode_notes: Spanish diacritics (á, é, í, ó, ú, ñ, ü) are frequently omitted in
+    informal tweet text; systems should not assume consistent diacritic usage.
+literacy_and_digital_access:
+  ecuador_national_literacy_rate: '[NEEDS VERIFICATION]'
+  ecuador_internet_penetration_pct: '[NEEDS VERIFICATION]'
+  ecuador_smartphone_penetration_pct: '[NEEDS VERIFICATION]'
+  twitter_x_active_users_ecuador: '[NEEDS VERIFICATION]'
+  rural_urban_connectivity_gap: '[NEEDS VERIFICATION — assess differential internet
+    and smartphone access between Quito/Guayaquil and rural crisis-affected provinces
+    such as Manabí, Esmeraldas, Cotopaxi]'
+  crisis_time_connectivity_notes: 'Disaster events may degrade mobile and internet
+    infrastructure precisely when the tweet stream is most operationally relevant.
+    Coverage gaps in affected areas introduce survivorship bias in the tweet corpus:
+    areas with destroyed infrastructure are underrepresented in the signal. This is
+    a deployment-specific validity concern independent of benchmark coverage.'
+  analyst_digital_literacy: High — primary users are professional data and social
+    analysts at international organizations with full digital tool proficiency.
+institutional_landscape:
+  primary_humanitarian_actors:
+    international:
+    - UN OCHA Ecuador
+    - International Federation of Red Cross and Red Crescent Societies (IFRC)
+    - Cruz Roja Ecuatoriana (Red Cross Ecuador)
+    - UNICEF Ecuador
+    - WFP Ecuador
+    - IOM Ecuador
+    national_emergency_management:
+    - name: Servicio Nacional de Gestión de Riesgos y Emergencias (SGR)
+      role: Primary national emergency management authority; issues official alerts,
+        activation levels, and situation reports
+      twitter_presence: '[NEEDS VERIFICATION — verify SGR official handles and whether
+        SGR tweets are included in monitored streams]'
+    - name: Cuerpo de Bomberos
+      role: Municipal firefighting and emergency response; separate corps per cantón
+      note: References in tweets typically specify the cantón-level corps (e.g., Bomberos
+        Quito, Bomberos Guayaquil)
+    - name: Policía Nacional del Ecuador
+      role: Law enforcement; disaster perimeter control, evacuation enforcement
+      twitter_presence: '[NEEDS VERIFICATION]'
+    - name: Fuerzas Armadas del Ecuador
+      role: Military support to civilian emergency management; logistics and search
+        and rescue
+      twitter_presence: '[NEEDS VERIFICATION]'
+    - name: Ministerio de Salud Pública (MSP)
+      role: Health emergency response, epidemiological monitoring, medical supply
+        coordination
+      twitter_presence: '[NEEDS VERIFICATION]'
+    - name: Secretaría Nacional de Planificación (SENPLADES / successor entity)
+      role: '[NEEDS VERIFICATION — confirm current name and crisis coordination role
+        after institutional restructuring]'
+    municipal_and_prefectural: Governments of affected cantones and provincias (GAD
+      municipales and GAD provinciales) frequently post updates; analysts must disambiguate
+      official municipal accounts from citizen accounts using similar geographic handles.
+    note: System must correctly anchor tweets mentioning these actors to their institutional
+      identity and geographic jurisdiction — rough regional geolocation is insufficient
+      per the elicitation.
+  humanitarian_coordination_mechanism:
+    cluster_system: '[NEEDS VERIFICATION — confirm whether Ecuador activates the UN
+      OCHA cluster system during large-scale emergencies and which clusters are typically
+      active (Health, WASH, Shelter, Food Security, Logistics, Emergency Telecommunications)]'
+    sitrep_cadence: '[NEEDS VERIFICATION — typical situation report frequency during
+      active emergencies in Ecuador]'
+    data_sharing_frameworks: '[NEEDS VERIFICATION — identify any Humanitarian Data
+      Exchange (HDX) datasets for Ecuador, ReliefWeb coverage, and data-sharing agreements
+      relevant to tweet-stream analysis]'
+crisis_taxonomy_for_deployment:
+  prioritization_principle: Events are prioritized by population impact and response-gap
+    severity, not by disaster category alone. Compound and socio-political crises
+    are in scope alongside natural hazards.
+  hazard_types_with_ecuadorian_context:
+    volcanic:
+      key_volcanoes: '[NEEDS VERIFICATION — confirm current activity status of Cotopaxi,
+        Tungurahua, Reventador, Sangay, Pichincha]'
+      typical_affected_zones: '[NEEDS VERIFICATION — verify official hazard zones
+        and affected parroquias/cantones per volcano]'
+    seismic:
+      note: Ecuador sits on the Pacific Ring of Fire; major earthquakes (e.g., 2016
+        Manabí earthquake) generate large tweet volumes with precise location references
+      relevant_faults_and_zones: '[NEEDS VERIFICATION]'
+    flooding_landslides:
+      seasonal_pattern: '[NEEDS VERIFICATION — verify La Niña / El Niño influence
+        on flooding seasons in Costa and Sierra regions]'
+      historically_affected_provinces: '[NEEDS VERIFICATION — confirm Manabí, Esmeraldas,
+        El Oro, Napo, Pastaza as high-risk provinces]'
+    socio_political:
+      examples: Social protests blocking road access, fuel or medicine supply chain
+        disruptions, internal displacement from conflict or insecurity
+      note: These events generate humanitarian needs structurally similar to natural
+        disasters and must be captured by the system taxonomy.
+    compound_crises: Cascading events (e.g., earthquake followed by landslide, flooding
+      compounding pre-existing food insecurity) are operationally critical and may
+      not be captured by single-hazard benchmarks.
+  needs_dimensions_tracked:
+  - Access to affected areas (road conditions, bridge status)
+  - Health and medical supply needs
+  - Water, sanitation, and hygiene (WASH)
+  - Shelter and displacement
+  - Food security
+  - Protection (including gender-based violence risk elevation during displacement)
+  - Telecommunications and power restoration
+  - Evacuation and search-and-rescue status
+tweet_signal_characteristics:
+  input_register: Mixed informal-to-semi-formal Ecuadorian Spanish; crisis-time orthographic
+    degradation expected
+  signal_types_in_scope:
+  - Eyewitness reports from affected populations
+  - Official agency updates (SGR, municipal governments, Red Cross)
+  - Journalist and media organization posts
+  - NGO field volunteer reports
+  - Retweets and quote-tweets that propagate information with potential distortion
+  - Informal community radio or WhatsApp content transcribed to Twitter
+  operational_relevance_signals:
+    high_value_low_visibility_signals:
+    - Road access status for rural communities (high operational value; may not trend)
+    - Community-level water/food shortage reports in informal register
+    - Local place names at parroquia or community level (not provincial capitals)
+    note: Per elicitation, a tweet about road access to a rural community carries
+      high operational value for an NGO coordinator even if it would score low by
+      external annotation standards. This is a population-specific relevance calibration
+      that no existing general-purpose benchmark is likely to encode.
+  entity_types_requiring_anchoring:
+  - Administrative units (provincia, cantón, parroquia, sector/barrio)
+  - Emergency management institutions (SGR, Cuerpo de Bomberos by cantón)
+  - Humanitarian organization branches (Cruz Roja Ecuador, UN OCHA Ecuador)
+  - Infrastructure references (named roads, bridges, rivers, hospitals, health centers)
+  - Kichwa-origin place and community names
+  - Colloquial geographic shorthand specific to Ecuadorian users
+  crisis_specific_abbreviations: '[NEEDS VERIFICATION — compile Ecuadorian Spanish
+    crisis-time Twitter abbreviations: e.g., SGR, COE (Comité de Operaciones de Emergencia),
+    EDAN (Evaluación de Daños y Análisis de Necesidades), and informal abbreviations
+    used by affected populations]'
+output_task_requirements:
+  primary_output_type: Temporally ordered narrative timeline summarizing how affected
+    populations' needs evolve over the course of a crisis event
+  output_consumers: Inter-operational teams at Red Cross and UN OCHA; outputs feed
+    into situation reports, coordination meeting briefings, and resource allocation
+    decisions
+  quality_dimensions:
+  - Geographic anchoring precision (parroquia/cantón level where possible)
+  - Institutional attribution accuracy (correct identification of responding agencies)
+  - Temporal coherence (events correctly sequenced; phase transitions identified)
+  - Operational relevance calibration (high-value low-visibility signals surfaced)
+  - Humanitarian needs taxonomy coverage (all relevant needs dimensions represented)
+  - Register sensitivity (informal signals not filtered out as noise)
+  ground_truth_validation_structure: Inter-operational team consensus across field
+    coordinators, social analysts, and domain experts; no single annotator archetype
+    is authoritative
+  no_analog_in_benchmark: The CNN/Daily Mail benchmark's Cloze entity fill-in task
+    has no structural, ontological, or metric correspondence to this output requirement.
+cultural_and_operational_norms:
+  humanitarian_coordination_culture: UN OCHA cluster system norms; situation report
+    conventions; information management standards (e.g., 3W — Who does What Where);
+    need-gap framing rather than damage-only framing
+  ecuadorian_social_media_norms: Twitter/X is used by both official actors and affected
+    populations during crises; hashtag conventions for Ecuadorian emergencies are
+    event-specific and may emerge organically within hours of an event onset
+  indigenous_community_representation: Kichwa and other indigenous communities in
+    Ecuador may be disproportionately affected by certain hazard types (highland volcanic,
+    Amazon flooding) but underrepresented in the tweet stream; analysts must account
+    for this survivorship bias in timeline interpretation
+  trust_and_verification_norms: Humanitarian analysts apply source credibility judgment;
+    official agency accounts (SGR, Cruz Roja) are weighted differently from unverified
+    citizen accounts; the system must preserve or surface source metadata to support
+    this judgment
+  language_of_official_reporting: Spanish is the language of all official Ecuadorian
+    emergency management communications; English is used in UN OCHA inter-agency reporting;
+    system outputs may need to support bilingual workflows
+infrastructure_and_technical_context:
+  tweet_stream_access: '[NEEDS VERIFICATION — confirm current Twitter/X API access
+    terms for humanitarian organizations, rate limits for real-time disaster monitoring,
+    and any existing Ecuador-focused crisis monitoring pipelines at UN OCHA or Red
+    Cross]'
+  existing_humanitarian_nlp_tools:
+    crisis_tweet_corpora: '[NEEDS VERIFICATION — assess CrisisNLP, HumAID, CrisisLex,
+      TREC-IS coverage of Spanish-language and specifically Ecuadorian events]'
+    spanish_language_nlp_infrastructure: '[NEEDS VERIFICATION — assess availability
+      of fine-tuned Spanish-language BERT/transformer models for social media; evaluate
+      coverage of Ecuadorian Spanish dialect specifically]'
+    kichwa_nlp_resources: '[NEEDS VERIFICATION — as noted in languages section]'
+    ecuador_ner_geolocation_tools: '[NEEDS VERIFICATION — assess whether any NER or
+      geotagging tools cover Ecuador''s sub-national administrative hierarchy at parroquia
+      level]'
+  humanitarian_data_platforms:
+    hdx: '[NEEDS VERIFICATION — confirm availability of Ecuador administrative boundary
+      data, P-codes, and crisis datasets on the Humanitarian Data Exchange]'
+    reliefweb: '[NEEDS VERIFICATION — confirm ReliefWeb coverage of Ecuador emergencies
+      as a ground-truth reference for event timeline validation]'
+    ocha_ecuador_resources: '[NEEDS VERIFICATION — identify any existing OCHA Ecuador
+      information management products that could serve as reference outputs for timeline
+      quality assessment]'
+  device_and_connectivity_context_for_analysts: Primary users (NGO/IO analysts) work
+    in professional office or field coordination hub environments with reliable internet
+    access; no mobile-only or low-bandwidth constraint applies to the analyst-facing
+    output interface.
+regulatory_and_data_governance_context:
+  ecuador_data_protection_law: '[NEEDS VERIFICATION — identify applicable Ecuadorian
+    data protection legislation governing processing of social media data from crisis-affected
+    populations; assess consent and anonymization requirements for tweet-derived humanitarian
+    datasets]'
+  humanitarian_data_responsibility_principles: '[NEEDS VERIFICATION — confirm which
+    humanitarian data responsibility frameworks (ICRC, OCHA) apply to this deployment
+    and whether they impose constraints on storing or processing tweets from affected
+    populations]'
+  twitter_x_terms_of_service_for_humanitarian_use: '[NEEDS VERIFICATION — confirm
+    current Twitter/X policies on humanitarian and research use of tweet data, especially
+    for crisis response applications]'
+benchmark_gap_summary_for_this_population:
+  note: This section summarizes the most deployment-critical gaps between the CNN/Daily
+    Mail benchmark and the Ecuador humanitarian tweet analysis deployment. It is derived
+    from the elicitation summary and provided for downstream search targeting.
+  gaps:
+  - gap_id: 1
+    dimension: IF
+    description: Benchmark is formal English news; deployment is informal-to-semi-formal
+      Ecuadorian Spanish tweets with crisis abbreviations, non-standard orthography,
+      and Kichwa entity tokens
+    search_target: Ecuadorian Spanish crisis tweet NLP benchmark informal register
+      social media disaster language model evaluation
+  - gap_id: 2
+    dimension: IC
+    description: Benchmark content is US/UK institutional news with no Ecuadorian
+      administrative, geographic, or institutional entity coverage
+    search_target: Ecuador named entity recognition geolocation parroquia cantón SGR
+      Cuerpo de Bomberos NLP sub-national
+  - gap_id: 3
+    dimension: IC
+    description: No coverage of Kichwa-Spanish entity mixing in place names and NER
+      contexts
+    search_target: Kichwa Spanish code-switching NLP entity recognition social media
+      Ecuador indigenous language Twitter
+  - gap_id: 4
+    dimension: IO
+    description: Benchmark has no humanitarian crisis taxonomy; deployment requires
+      compound and socio-political crisis classification scored by population impact
+      and response-gap severity
+    search_target: humanitarian crisis tweet classification benchmark Latin America
+      CrisisNLP HumAID TREC-IS disaster taxonomy compound crises
+  - gap_id: 5
+    dimension: OO + OF
+    description: Benchmark output is Cloze entity fill-in; deployment requires temporally
+      ordered multi-sentence narrative timeline generation
+    search_target: timeline generation disaster response humanitarian NLP benchmark
+      temporal summarization crisis event tracking annotation
+  - gap_id: 6
+    dimension: OC
+    description: Benchmark labels are algorithmically generated from anglophone editorial
+      conventions; deployment requires inter-operational team validation by field
+      coordinators, social analysts, and domain experts
+    search_target: humanitarian NLP annotation framework UN OCHA IFRC data-for-good
+      inter-annotator agreement crisis relevance multi-role validation
+  - gap_id: 7
+    dimension: IF
+    description: Spanish-language disaster tweet corpora with informal register may
+      not exist for Ecuador specifically
+    search_target: CrisisLex Spanish disaster tweets corpus CrisisNLP Latin America
+      Ecuador informal register social media emergency NLP benchmark
