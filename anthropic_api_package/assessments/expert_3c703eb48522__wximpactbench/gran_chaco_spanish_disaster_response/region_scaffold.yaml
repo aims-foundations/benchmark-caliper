@@ -1,0 +1,370 @@
+name: Gran Chaco Tri-Border Emergency Response Zone
+abbreviation: GranChaco-TriBorder
+deployment_context:
+  use_case: AI-assisted disaster damage-type identification from local Spanish-language
+    news and social media posts, supporting triage and routing of information during
+    active disaster events in the Gran Chaco tri-border region.
+  system_role: Multi-label classification of incoming text by societal impact category
+    (Infrastructural, Agricultural, Ecological, Financial, Human Health, Political),
+    with potential extensions for operational routing.
+  benchmark_being_assessed: wximpactbench
+geography:
+  primary_zone: Gran Chaco tri-border region spanning Northwest Argentina, Gran Chaco
+    Paraguay, and South Bolivia
+  constituent_jurisdictions:
+    argentina:
+      provinces:
+      - Salta
+      - Formosa
+      - Chaco
+      notes: Salta is the primary provincial hub for Northwest Argentina; Formosa
+        and Chaco provinces extend into the lowland Chaco. Sub-national institutional
+        structures, infrastructure, and dialect variation across these provinces are
+        significant and underdocumented in the benchmark.
+    paraguay:
+      departments: '[NEEDS VERIFICATION — identify Gran Chaco-side departments (likely
+        Boquerón, Alto Paraguay, Presidente Hayes) and their administrative emergency
+        structures]'
+      notes: Paraguayan Chaco is among the most sparsely populated sub-regions; institutional
+        presence is thin outside Villa Hayes and Filadelfia.
+    bolivia:
+      departments: '[NEEDS VERIFICATION — identify South Bolivia departments relevant
+        to the Gran Chaco zone (likely Tarija, Chuquisaca, Santa Cruz lowlands) and
+        their civil protection structures]'
+      notes: Bolivian Chaco includes indigenous Guaraní-speaking communities and is
+        distinct from the Andean Quechua-speaking areas also represented in the broader
+        deployment population.
+  settlement_typology:
+    semi_urban_provincial_centers: Key nodes for information aggregation and institutional
+      response (e.g., Salta city, Tartagal, Embarcación in Argentina; [NEEDS VERIFICATION
+      — equivalents in Paraguayan and Bolivian Chaco])
+    rural_communities: Dispersed agrarian and ranching settlements connected by dirt
+      roads (ripio/tierra); flood-vulnerable and seasonally isolated
+    indigenous_territories: Wichí, Guaraní-speaking, and Quechua-speaking communities;
+      may have distinct communication channels, languages, and access constraints;
+      road access frequently disrupted by flooding events
+  key_waterways:
+  - Pilcomayo River (Argentina/Paraguay border)
+  - Bermejo River (Argentina/Bolivia border)
+  border_salience: 'International borders of operational significance: the Pilcomayo
+    and Bermejo rivers are both flood corridors and jurisdictional boundaries. Cross-border
+    displacement and border integrity are primary disaster news categories for responders
+    in this zone.'
+target_population:
+  description: National emergency responders, gendarmerie, civil protection forces,
+    and technical practitioners who use the AI system to triage and classify disaster
+    damage reports during active events in the Gran Chaco tri-border zone. Users range
+    from field gendarmes needing rapid event-specific lookups to national coordinators
+    in Buenos Aires requiring aggregate situational awareness across concurrent events.
+  user_roles:
+    field_gendarmes:
+      location: Deployed in the field across Salta, Formosa, Chaco provinces and tri-border
+        zone
+      output_needs: Fast, event-specific lookup during ongoing incidents (e.g., locating
+        stranded vehicles, school buses, flooded communities); needs low latency and
+        high precision on individual events
+      technical_profile: '[NEEDS VERIFICATION — typical device type, connectivity
+        conditions, and UI constraints for field gendarmerie in Northwest Argentina]'
+    national_coordinators:
+      location: Buenos Aires (national coordination center) and potentially provincial
+        capitals
+      output_needs: Aggregate, scalable multi-label output for resource allocation
+        decisions across multiple concurrent events; authoritative labelers for ground-truth
+        in this deployment
+      technical_profile: '[NEEDS VERIFICATION — standard operational platform and
+        dashboard infrastructure used by Argentine national emergency coordinators]'
+    civil_protection_technicians:
+      location: Provincial and departmental offices across the tri-border zone
+      output_needs: Intermediate between field gendarmerie and national coordinators;
+        may triage incoming social media feeds
+      technical_profile: '[NEEDS VERIFICATION]'
+  authoritative_labelers: National coordinators in Buenos Aires are designated as
+    the authoritative ground-truth labelers for this deployment. This population has
+    zero representation in the wximpactbench annotation process.
+  english_proficiency: Intermediate English proficiency noted for technical practitioners,
+    but the system operates exclusively in Spanish.
+languages:
+  primary_operational_language: Rio Platense Spanish (Rioplatense dialect, including
+    Northwest Argentine regional variation)
+  regional_vocabulary_notes: 'The target text corpus is Spanish but routinely includes:
+
+    - Place names (toponyms) derived from Guaraní, Quechua, and Wichí (e.g., Pilcomayo,
+    Bermejo, Tartagal, Embarcación, Yacuiba)
+
+    - Common nouns and descriptors borrowed from indigenous languages into regional
+    Spanish
+
+    - Platform-specific abbreviations and informal orthography characteristic of social
+    media (WhatsApp, Twitter/X, Facebook groups used for community reporting)
+
+    Full code-switching into indigenous languages is not the primary use case, but
+    lexical borrowing is routine and must be handled correctly by any evaluated model.'
+  indigenous_languages_present_in_region:
+    wichi:
+      speaker_population: '[NEEDS VERIFICATION — estimated Wichí speakers in Salta,
+        Formosa, Chaco provinces]'
+      territory: Primarily Northwest Argentina (Salta, Formosa, Chaco provinces)
+      relevance_to_system: Wichí place names and occasional vocabulary appear in Spanish-language
+        social media posts about events affecting Wichí communities; not a primary
+        system input language
+    guarani_chaqueno:
+      speaker_population: '[NEEDS VERIFICATION — estimated Guaraní-speaking population
+        in Paraguayan Chaco and Bolivian Chaco]'
+      territory: Paraguayan Chaco, South Bolivia, Formosa and Chaco provinces of Argentina
+      relevance_to_system: Guaraní-derived place names are ubiquitous across the region;
+        Paraguayan sources may include more Guaraní lexical mixing given national
+        bilingualism
+    quechua:
+      speaker_population: '[NEEDS VERIFICATION — Quechua speakers in Salta province
+        and South Bolivia Andean fringe]'
+      territory: Primarily Salta province Andean areas and South Bolivia highland-lowland
+        transition zone
+      relevance_to_system: Quechua-derived toponyms and vocabulary appear in reports
+        from Andean-adjacent areas of the deployment zone
+  nlp_tool_availability:
+    rio_platense_spanish: General Spanish NLP tools exist but Rio Platense and Northwest
+      Argentine regional variants are underrepresented in most Spanish NLP training
+      corpora. [NEEDS VERIFICATION — identify any benchmarks or models specifically
+      evaluated on Argentine regional Spanish]
+    indigenous_lexical_integration: '[NEEDS VERIFICATION — identify any NLP tools
+      or datasets that handle Guaraní/Quechua/Wichí lexical borrowing within Spanish
+      text in Argentine or Paraguayan contexts]'
+writing_systems:
+  scripts:
+  - Latin alphabet (Spanish and written forms of all regional indigenous languages)
+  register_variation: 'Target inputs span formal local news articles (structured prose,
+    150–800 words estimated) to highly informal social media posts (Twitter/X character-limited
+    posts, WhatsApp forwards, Facebook community group reports). Informal posts may
+    include:
+
+    - Non-standard spelling and abbreviation
+
+    - Hashtags referencing local place names or event types
+
+    - Mixed-media references (links to photos, voice notes transcribed)
+
+    - Platform-specific shorthand (e.g., ''x eso'', ''q pasa'', ''tmbn'')'
+  token_length_profile: 'Social media posts: typically 20–280 tokens. Local news fragments:
+    150–600 tokens estimated. Both are substantially shorter than the wximpactbench
+    long-context format (avg. 2,987 tokens) and closer to the mixed-context format
+    (avg. 781 tokens). [NEEDS VERIFICATION — characterize actual token length distribution
+    of Gran Chaco disaster social media posts]'
+disaster_event_ontology:
+  primary_event_types_for_deployment:
+  - type: Riverine flooding
+    key_rivers:
+    - Pilcomayo
+    - Bermejo
+    gran_chaco_specific_consequences:
+    - Cross-border displacement along international river borders
+    - Cutoff of dirt-road (ripio/tierra) access to indigenous communities
+    - Disruption of cattle routes and agrarian supply chains
+    - Stranded vehicles, school buses, and isolated settlements
+    - Border integrity concerns (Pilcomayo as Argentina/Paraguay border)
+  - type: Drought
+    gran_chaco_specific_consequences:
+    - Livestock mortality and pasture loss
+    - Water scarcity in isolated indigenous communities
+    - Agricultural supply chain disruption
+  - type: Locust outbreaks
+    coverage_in_benchmark: ABSENT from wximpactbench — not represented in any of the
+      15 LDA-derived weather event types
+    gran_chaco_specific_consequences:
+    - Crop destruction across large semi-arid areas
+    - Cross-border spread requiring coordinated response
+    - Pastoralist and smallholder livelihood loss
+  - type: Chaco fires (incendios)
+    gran_chaco_specific_consequences:
+    - Destruction of indigenous territorial lands
+    - Smoke affecting semi-urban centers
+    - Access road closures
+    - Wildlife habitat destruction (ecological)
+  - type: Infrastructure failure in isolated areas
+    gran_chaco_specific_consequences:
+    - Loss of bridge access across seasonal rivers
+    - Communication blackouts in remote indigenous communities
+    - Fuel and supply chain disruption
+  - type: Cross-border displacement events
+    coverage_in_benchmark: ABSENT from wximpactbench — not represented in any impact
+      category definition
+    gran_chaco_specific_consequences:
+    - Population movement across Argentina/Paraguay or Argentina/Bolivia borders
+    - Jurisdictional complexity for response coordination
+    - International border integrity as a primary responder concern
+  benchmark_ontology_gap_summary: 'The wximpactbench six-category impact ontology
+    (Infrastructural, Agricultural, Ecological, Financial, Human Health, Political)
+    was derived from Canadian newspaper content and lacks: (1) any cross-border displacement
+    or border integrity exemplars in the Political category; (2) any locust or Chaco
+    fire event types in the 15 LDA-derived weather types; (3) any mechanism for consequence-framing-dependent
+    label assignment as practiced by Gran Chaco national coordinators.'
+  consequence_framing_dependency: Label assignment in the Gran Chaco deployment is
+    consequence-framing-dependent rather than event-type-determined. The same event
+    (e.g., a flooded Pilcomayo-area road) may attract Infrastructural, Human Health,
+    or Agricultural labels depending on which downstream consequences are reported
+    in the source text (casualties, supply chain disruption, blocked commercial routes).
+    This is structurally incompatible with the wximpactbench approach of assigning
+    labels based on 'explicit mentions' of direct physical effects.
+infrastructure_notes:
+  connectivity:
+    semi_urban_centers: '[NEEDS VERIFICATION — mobile internet penetration and 4G/LTE
+      coverage in Salta city, Tartagal, Embarcación, and Paraguayan/Bolivian Chaco
+      equivalents]'
+    rural_areas: '[NEEDS VERIFICATION — mobile connectivity and data access rates
+      in rural Chaco communities; likely 2G/3G patchwork with significant dead zones]'
+    indigenous_territories: '[NEEDS VERIFICATION — connectivity status in Wichí, Chaco
+      Guaraní, and Quechua community territories; likely very limited]'
+    disaster_conditions: Connectivity frequently disrupted during active flood events;
+      social media posts may be delayed, geographically misattributed, or transmitted
+      via satellite phone or relay
+  device_profile:
+    social_media_sources: '[NEEDS VERIFICATION — dominant platforms and device types
+      used for disaster reporting in Salta, Formosa, Chaco, and Paraguayan Chaco;
+      likely Facebook, WhatsApp, Twitter/X on Android mid-range devices]'
+    responder_devices: '[NEEDS VERIFICATION — operational devices for Argentine gendarmerie
+      field units and national coordination platforms]'
+  road_infrastructure: Significant proportion of access routes in the deployment zone
+    are unpaved (ripio/tierra); seasonal flooding renders these impassable and this
+    constitutes a primary category of Infrastructural damage in local reporting. Benchmark
+    content does not represent this road type or its consequences.
+  electricity: '[NEEDS VERIFICATION — electricity coverage rates in indigenous and
+    rural Chaco communities across the three countries]'
+institutional_and_regulatory_context:
+  argentina:
+    national_emergency_coordination: '[NEEDS VERIFICATION — identify current Argentine
+      national emergency management agency (likely SINAGIR or successor), its relationship
+      to Gendarmería Nacional, and coordination protocols for Gran Chaco events]'
+    gendarmeria_nacional: Primary Argentine federal security and border force with
+      operational presence across the tri-border zone; field gendarmes are a primary
+      end-user group for this system
+    provincial_civil_defense: '[NEEDS VERIFICATION — civil defense structures in Salta,
+      Formosa, and Chaco provinces and their coordination with national coordinators]'
+    data_protection_regulation: '[NEEDS VERIFICATION — applicable Argentine data protection
+      law for processing social media content in emergency contexts (likely Ley 25.326
+      and any updates)]'
+  paraguay:
+    national_emergency_coordination: '[NEEDS VERIFICATION — identify Paraguayan national
+      emergency management agency (likely SEN - Secretaría de Emergencia Nacional)
+      and Gran Chaco departmental structures]'
+    data_protection_regulation: '[NEEDS VERIFICATION — applicable Paraguayan data
+      protection framework for this use case]'
+  bolivia:
+    national_emergency_coordination: '[NEEDS VERIFICATION — identify Bolivian national
+      emergency management agency (likely VIDECI or successor) and South Bolivia departmental
+      civil protection structures]'
+    data_protection_regulation: '[NEEDS VERIFICATION — applicable Bolivian data protection
+      framework for this use case]'
+  cross_border_coordination:
+    existing_mechanisms: '[NEEDS VERIFICATION — identify any existing tri-border emergency
+      coordination agreements between Argentina, Paraguay, and Bolivia relevant to
+      Gran Chaco disaster events]'
+    border_management_salience: Border integrity and cross-border displacement are
+      explicitly prioritized as primary disaster news categories by the deployment
+      user. This has no equivalent in the wximpactbench Political impact category
+      definitions.
+socioeconomic_context:
+  primary_livelihoods: Cattle ranching (ganado bovino), smallholder agriculture, subsistence
+    farming, and seasonal labor in agrarian supply chains. Indigenous communities
+    maintain subsistence-oriented land use. Strategic economic routes (roads linking
+    agricultural production zones to processing centers) are of primary salience to
+    responders.
+  agrarian_supply_chain_vulnerability: Disruption to dirt-road access and river crossings
+    during flood events directly interrupts cattle and crop transport; this type of
+    Agricultural/Infrastructural consequence is common in local news and social media
+    but absent from wximpactbench's Canadian agricultural framing.
+  indigenous_community_access: Access to indigenous communities (Wichí, Chaco Guaraní,
+    Quechua-adjacent) is a specific operational concern for responders; road cutoffs
+    affecting these communities are regularly reported in local media and social media
+    and require Human Health and Infrastructural classification.
+  poverty_and_marginalization: '[NEEDS VERIFICATION — poverty rates and service access
+    indices for rural Chaco communities and indigenous territories in Salta, Formosa,
+    and Chaco provinces and Paraguayan/Bolivian equivalents]'
+cultural_norms_notes: '- Responder culture in Argentine gendarmerie and civil protection
+  forces is hierarchical and operationally focused; output formats must match field
+  decision-making workflows, not academic classification conventions.
+
+  - Indigenous communities (Wichí, Chaco Guaraní, Quechua-adjacent) have distinct
+  land tenure systems and disaster vulnerability profiles that may not be reflected
+  in mainstream news coverage but appear in community social media.
+
+  - Regional identity in Northwest Argentina is distinct from Buenos Aires; national
+  coordinators based in Buenos Aires may have different framings of Gran Chaco events
+  than local field responders.
+
+  - Social media in the region includes community-run Facebook groups and WhatsApp
+  broadcast channels as primary informal information channels during disasters; these
+  are not equivalent to formal news sources and carry different signal-to-noise characteristics.
+
+  - Cross-border community ties exist across the Argentina/Paraguay and Argentina/Bolivia
+  borders; displacement and community support are often reported informally through
+  social networks before appearing in formal news.'
+output_format_requirements:
+  minimum_acceptable_form: Simultaneous multi-label classification across all relevant
+    impact categories (matching wximpactbench's classification task structure)
+  ranking_task_status: Explicitly rejected by deployment users as insufficiently reliable
+    for direct operational use without human review; wximpactbench ranking task results
+    are therefore of limited relevance to this deployment
+  role_differentiated_needs:
+    field_gendarmes: Require rapid, event-specific output with high precision on individual
+      events; aggregate metrics are not operationally useful at this level
+    national_coordinators: Require aggregate, scalable output supporting resource
+      allocation across multiple concurrent events; are the authoritative labelers
+      for ground-truth validation
+  confidence_scores: Not produced by wximpactbench (binary true/false output only);
+    deployment users indicated human review is needed for ambiguous cases, suggesting
+    confidence gradations would be valuable
+  benchmark_scoring_relevance_to_field_role: The wximpactbench F1/row-wise accuracy
+    framework does not distinguish between field gendarme and national coordinator
+    use cases; its relevance to the field gendarme rapid-lookup use case is unclear
+    and should be assessed separately.
+sub_national_variation:
+- jurisdiction: Salta province, Argentina
+  notes: '[NEEDS VERIFICATION — sub-national dialect variation, institutional structure,
+    and disaster corpus availability specific to Salta]'
+- jurisdiction: Formosa province, Argentina
+  notes: '[NEEDS VERIFICATION — Wichí community presence, connectivity conditions,
+    and institutional emergency structures in Formosa]'
+- jurisdiction: Chaco province, Argentina
+  notes: '[NEEDS VERIFICATION — disaster text corpus availability and indigenous community
+    profiles in Chaco province]'
+- jurisdiction: Boquerón and Alto Paraguay departments, Paraguay
+  notes: '[NEEDS VERIFICATION — institutional emergency presence, dialect, and social
+    media landscape in Paraguayan Chaco departments]'
+- jurisdiction: Tarija and Chuquisaca departments, Bolivia (Gran Chaco lowlands)
+  notes: '[NEEDS VERIFICATION — Bolivian Chaco departmental civil protection structures,
+    Guaraní community presence, and disaster reporting landscape]'
+flagged_gaps_for_web_search:
+- gap_id: 1
+  description: Gran Chaco-specific event ontology
+  search_target: Spanish-language disaster NLP benchmark Gran Chaco Argentina Paraguay
+    Bolivia flooding locust outbreak Pilcomayo Bermejo
+- gap_id: 2
+  description: Rio Platense Spanish register and social media disaster content
+  search_target: Rio Platense Spanish NLP benchmark social media disaster emergency
+    Argentina Bolivia Paraguay informal register
+- gap_id: 3
+  description: Indigenous-language toponyms and lexical borrowing within Spanish disaster
+    text
+  search_target: Guaraní Quechua Wichí Spanish NLP lexical borrowing indigenous toponym
+    disaster text Argentina Paraguay benchmark
+- gap_id: 4
+  description: Practitioner-validated label annotation by Southern Cone emergency
+    professionals
+  search_target: practitioner-validated NLP disaster annotation Argentina emergency
+    management gendarmerie civil protection coordinator labeling
+- gap_id: 5
+  description: Sub-national disaster text corpora for the tri-border zone
+  search_target: disaster text corpus Salta Formosa Chaco province Argentina Paraguay
+    Boquerón Bolivia department emergency reporting
+- gap_id: 6
+  description: Cross-border displacement and border integrity as disaster impact categories
+    in NLP
+  search_target: cross-border displacement disaster impact NLP classification South
+    America tri-border Argentina Paraguay Bolivia border integrity
+- gap_id: 7
+  description: Role-differentiated output formats for emergency AI systems
+  search_target: role-differentiated disaster AI output format operational emergency
+    response field coordinator NLP evaluation situational awareness
+- gap_id: 8
+  description: Consequence-framing-dependent label assignment in disaster NLP
+  search_target: consequence-framing disaster impact classification ambiguous multi-label
+    NLP evaluation framing-dependent annotation

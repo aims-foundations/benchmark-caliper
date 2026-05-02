@@ -1,0 +1,412 @@
+{
+  "benchmark": "crisisltlsum",
+  "region": "Mexico City and Central America Bilingual Crisis Journalism",
+  "dimensions": {
+    "input_ontology": {
+      "score": 1,
+      "justification": "The benchmark's input ontology is restricted to four crisis domains — wildfire, local fire, traffic, and storm [Q1, Q53, Q122] — explicitly chosen because they are the most frequent in the selected US and Australian states [Q124]. For the target deployment, the elicitation and regional research identify earthquakes, volcanic activity, tropical-system flooding, civil unrest, and CDMX-specific transportation infrastructure failures as structurally important crisis types. Earthquakes are central to CDMX coverage given the 1985, 2017, and 2022 events, and Popocatépetl produces near-continuous low-level activity that yields a constant tweet stream rather than discrete spike events [WEB-7, WEB-20, WEB-26]. Even nominally overlapping categories (storms) carry different regional profiles: Mexican/Central American tropical systems use distinct alert vocabularies (semáforo phases, SMN/CONRED naming) that are not represented [WEB-19]. The 'local' definition (building/street/county, short-lived) [Q12] also conflicts with persistent volcanic phenomena and multi-day tropical systems. The taxonomy is therefore both under-representative (missing required categories) and structurally mismatched on the categories it does include.",
+      "strengths": [
+        "Three of the four covered domains (local fire, traffic, storms) have at least nominal applicability to CDMX urban crisis coverage [Q53, Q122], so timeline/summarization patterns learned on those event types may partially transfer for those specific event types in urban contexts."
+      ],
+      "checklist_responses": {
+        "IO-1": "Required categories for the target region include earthquakes, volcanic activity (with semáforo phase vocabulary), tropical-system flooding, civil unrest/protests, organized-crime-related public-safety events, and CDMX transportation infrastructure failures, in addition to fire/traffic/storm [WEB-7, WEB-20, elicitation A1].",
+        "IO-2": "Yes — earthquakes, volcanic activity, tropical-system flooding, and civil unrest are entirely absent from the benchmark's four-domain ontology [Q1, Q53, Q122]. The Popocatépetl semáforo vocabulary and SASMEX seed-tweet conventions have no analog in the benchmark [WEB-7, WEB-20].",
+        "IO-3": "No category in the benchmark is wholly irrelevant to the target region — wildfires, local fires, traffic, and storms all have regional analogs [Q122] — but the 'storm' category as operationalized via US keyword lists [Q126, Q127] carries US-specific damage profiles that may not transfer.",
+        "IO-4": "Construct underrepresentation is severe: four of the highest-priority crisis types in the deployment area (earthquake, volcanic, tropical flooding, civil unrest) are missing. The 'local' scope definition [Q12] also excludes persistent volcanic activity, which is structurally central to CDMX coverage [WEB-26]."
+      },
+      "evidence_quotes": [
+        "[Q1] 'CrisisLTLSum contains 1,000 crisis event timelines across four domains: wildfires, local fires, traffic, and storms.' (p.1)",
+        "[Q12] 'The term \"local\" indicates that an event is bound to an exact location, such as a building, a street, or a county, and usually lasts for a short period.' (p.2)",
+        "[Q53] 'The selected clusters cover events mainly from four crisis domains, including wildfire, local fire, storm, and traffic.' (p.5)",
+        "[Q122] 'We build CrisisLTLSum by limiting the search to four crisis domains: wildfire, local fire, traffic, and storm.' (p.12)",
+        "[Q124] 'These states are selected as they are some of the areas subject to the most events falling into our crisis domains of interest.' (p.13)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-7] SASMEX disseminates earthquake alerts via standardized hashtags (#TenemosSismo, #AlertaSismica) reaching ~25M people — a structurally distinct seed-tweet ecosystem absent from the benchmark",
+        "[WEB-20] CENAPRED's Popocatépetl semáforo system uses a seven-phase color-coded volcanic alert vocabulary not represented in benchmark categories",
+        "[WEB-26] Popocatépetl is at Amarillo Fase 2 with ongoing daily exhalations (167 on April 28, 2026), indicating persistent rather than spike-event tweet streams"
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "IO-1": [
+          "WEB-7",
+          "WEB-20"
+        ],
+        "IO-2": [
+          "Q1",
+          "Q53",
+          "Q122",
+          "WEB-7",
+          "WEB-20"
+        ],
+        "IO-3": [
+          "Q122",
+          "Q124"
+        ],
+        "IO-4": [
+          "Q1",
+          "Q12",
+          "WEB-26"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Frequency of cartel/organized-crime crisis events in tweet streams is undocumented in indexed sources",
+        "Relative weighting of missing categories vs. the four covered ones in actual journalist workflow not quantified"
+      ],
+      "requires_expert_verification": [
+        "Whether outlet-specific editorial priorities further alter category importance ranking"
+      ]
+    },
+    "input_content": {
+      "score": 1,
+      "justification": "All input content was collected from seven US states and two Australian states during 2020–2021 [Q123], using English-language keyword lists curated from English news and social media [Q126, Q127], English Twitter NER models [Q35], and OpenStreetMap location augmentation anchored to US/Australian gazetteers [Q30, Q36]. The authors themselves note that replication for other languages or regions would be difficult [Q119]. For the target deployment, no Mexican or Central American content is present; Mexican administrative geography (16 alcaldías, colonias, 32 estados, municipios) and Central American departamentos/municipios are entirely absent. The web research confirms that no Spanish-language crisis tweet corpus anchored to Mexican or Central American events exists [WEB-3, WEB-4, WEB-6]. Mexican Spanish Twitter conventions (diacritic dropping, regional vocabulary like 'temblor'/'sismo'/'edomex', SASMEX hashtags #TenemosSismo, voseo in Central America, code-switching at the border) are entirely unrepresented in the benchmark's content [WEB-7, WEB-8]. The keyword-filtering pipeline is also acknowledged as not comprehensive [Q132], and its effectiveness depends on English-curated lists [Q128].",
+      "strengths": [
+        "The general principle of geographic and temporal focus (specific area × domain × time period) [Q29, Q32] is methodologically transferable, even though the specific filters used are US-anchored.",
+        "The benchmark explicitly acknowledges its non-replicability for other languages/regions [Q119], providing transparency that supports informed adaptation decisions."
+      ],
+      "checklist_responses": {
+        "IC-1": "Yes — target inputs require Mexican Spanish dialectal knowledge, alcaldía/colonia/municipio toponymy, Central American voseo, indigenous-language place names (Nahuatl, Zapotec, Maya, Mam, K'iche'), and SASMEX/CENAPRED hashtag conventions, none of which are present in benchmark content [Q123, WEB-4, WEB-7].",
+        "IC-2": "No — the benchmark's English-language US/Australian content does not align culturally or linguistically with bilingual Mexican/Central American crisis journalism [Q123, Q126].",
+        "IC-3": "Yes — input content is filtered through English-language keyword lists [Q126, Q127] and US/Australian location lists [Q30] that would not transfer to Spanish-language Mexican crisis tweets. The OpenStreetMap-based location augmentation [Q36] requires Spanish-language gazetteer adaptation not provided.",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — no Spanish-speaking annotators or regional reviewers were involved in content selection [Q52, Q61]. Recruitment of Mexican/Central American journalists or linguists would be required to identify culturally sensitive instances.",
+        "IC-5": "Content validity is severely compromised: the benchmark contains zero Spanish-language content, zero Mexican/Central American geographic anchors, and uses an English-only NER + OSM pipeline that the authors explicitly note is not portable [Q119]."
+      },
+      "evidence_quotes": [
+        "[Q30] 'The location filtering relies on a list of location candidates created by gathering cities, towns, and famous neighborhoods in a big area of interest.' (p.3)",
+        "[Q35] 'we further developed a BERT-based NER model tuned on Twitter data to detect location mentions.' (p.4)",
+        "[Q36] 'We use OpenStreetMap API to map location mentions to physical addresses.' (p.4)",
+        "[Q119] 'replicating the same process for other language or based on other locations may be hard because of such dependencies.' (p.10)",
+        "[Q123] 'We collect CrisisLTLSum across seven states in the USA and two states of Australia during 2020 and 2021.' (p.12)",
+        "[Q126] 'We carefully curate a keyword list for each of our categories of interest by employing expert knowledge gathered through over-viewing crisis stories in news, social media, and related big disaster events of the past.' (p.13)",
+        "[Q132] 'This approach will not be comprehensive or exhaustive but rather representative of each crisis domain.' (p.13)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-3] HumAID is English-only despite including a 2017 Mexico earthquake subset — confirming the gap in Spanish-language Mexican crisis tweet content",
+        "[WEB-4] Curiel et al. (PMC 2019) is the only known Mexican-Spanish crisis NER/geolocation resource and is not a timeline/summarization dataset",
+        "[WEB-7] SASMEX hashtag conventions (#TenemosSismo, #AlertaSismica) are the standard CDMX seed-tweet vocabulary absent from benchmark",
+        "[WEB-8] @SASMEX X account provides structured earthquake seed tweets with no analog in benchmark content"
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "IC-1": [
+          "Q123",
+          "WEB-4",
+          "WEB-7"
+        ],
+        "IC-2": [
+          "Q123",
+          "Q126"
+        ],
+        "IC-3": [
+          "Q30",
+          "Q36",
+          "Q126",
+          "Q127"
+        ],
+        "IC-4": [
+          "Q52"
+        ],
+        "IC-5": [
+          "Q119",
+          "Q132",
+          "WEB-3"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Frequency of indigenous-language place names in crisis tweets unknown",
+        "Voseo penetration in Central American crisis tweets unquantified"
+      ],
+      "requires_expert_verification": [
+        "Mexican/Central American journalist review of which colonia/municipio/landmark references are most frequent in crisis tweet streams",
+        "Linguist review of code-switching patterns at US-Mexico border"
+      ]
+    },
+    "input_form": {
+      "score": 3,
+      "justification": "The modality match is good: both the benchmark and target deployment operate on text-only tweets [Q2, Q18], and the elicitation explicitly marks this dimension as LOWER priority because no modality mismatch exists. However, the linguistic form of inputs is exclusively English [Q35, Q86], with preprocessing (lemmatization, lowercasing, fuzzy duplicate matching) implemented for English [Q129, Q136], and a 512-token BERT ceiling [Q92]. For a Spanish-language deployment, tokenization, lemmatization, and morphological handling must accommodate Spanish diacritics, accented-character variants, and informal diacritic-dropping in tweets — none of which is documented as supported. The 512-token sequence ceiling and tweet-text format are technically appropriate for the target. Per the elicitation, the linguistic-form mismatch is captured under IC and OF rather than IF; the modality dimension itself is well-aligned.",
+      "strengths": [
+        "Text-only tweet modality matches the target deployment exactly [Q2, Q18, elicitation IF-priority=LOWER].",
+        "Standard tweet preprocessing pipeline (lemmatization, deduplication) [Q129, Q136] is methodologically applicable, even if its specific implementation is English-only.",
+        "BERT-style 512-token sequence handling [Q86, Q92] is compatible with multilingual transformer backbones used for Spanish."
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal distribution match is acceptable at the modality level (text tweets) [Q2, Q18]. Within-modality differences (English vs. Spanish character set, diacritic handling, tweet-register orthography) require Spanish-specific preprocessing not documented in the benchmark [Q129].",
+        "IF-2": "Yes — Mexican mobile/Twitter infrastructure supports the same text-tweet capture format. Mexico has ~152M mobile connections (1.2 phones/person) [WEB-14], indicating high source-tweet generation capacity. Central America country-level data was not retrieved [WEB-15].",
+        "IF-3": "Domain-specific differences include: SASMEX-formatted seed tweets have a structured machine-readable form [WEB-7, WEB-8] that the benchmark's pipeline does not specifically handle; Spanish accented-character handling is required but undocumented; tweet-register diacritic-dropping is a known phenomenon requiring graceful handling.",
+        "IF-4": "Form mismatches at the modality level are minor. The substantive linguistic-form mismatches (English-only preprocessing, English NER) materially affect IC and OF rather than IF per the elicitation framing."
+      },
+      "evidence_quotes": [
+        "[Q2] 'we built CrisisLTLSum using a semi-automated cluster-then-refine approach to collect data from the public Twitter stream.' (p.1)",
+        "[Q18] 'CrisisLTLSum is developed through a two-step semi-automated process to create 1,000 local crisis timelines from the public Twitter stream.' (p.2)",
+        "[Q86] 'we fine-tune BERT (Devlin et al., 2019) on the tweet sequences where every training example would have the form of \"t0 [SEP] si\"' (p.7)",
+        "[Q92] 'the BERT-based sequence classification model has a limitation when extracting long timelines due to its limited size of 512 positional embeddings' (p.7)",
+        "[Q129] 'we maintain both a lower-cased and a lemittized version of the keywords and the tweet's text.' (p.13)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-14] Mexico mobile-phone penetration ~1.2 phones/person supports tweet-stream input form expectations",
+        "[WEB-7] SASMEX standardized seed-tweet format introduces a structured input subtype absent from benchmark"
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "IF-1": [
+          "Q2",
+          "Q18",
+          "Q129"
+        ],
+        "IF-2": [
+          "WEB-14"
+        ],
+        "IF-3": [
+          "WEB-7",
+          "WEB-8"
+        ],
+        "IF-4": [
+          "Q86",
+          "Q92"
+        ]
+      },
+      "confidence": "medium",
+      "information_gaps": [
+        "Country-specific Central America mobile/internet penetration figures not retrieved",
+        "Spanish tweet diacritic-dropping rates in crisis contexts not quantified"
+      ],
+      "requires_expert_verification": []
+    },
+    "output_ontology": {
+      "score": 2,
+      "justification": "The output ontology consists of (a) a binary timeline-membership label governed by three conditions — relevant, informative, non-repetitive [Q58] — and (b) a four-axis summary quality rubric (Coherence, Accuracy, Coverage, Overall Quality) rated 1–5 [Q106, Q151]. The three relevance conditions are conceptually generalizable, but were validated only on US English tweets by Anglophone annotators [Q61], and cross-lingual transfer validity to Mexican Spanish tweets covering different event types is unestablished. Critically, the Coherence rubric is explicitly anchored to English: 'A summary is coherent if when read by itself, it's easy to understand and free of English errors' [Q153, Q154]. This makes the coherence axis structurally invalid for Spanish-language output. Additionally, the informativeness criterion encodes US-centric judgments about what constitutes a meaningful crisis update; the Mexican context includes documented genres (community solidarity posts, citizen verification posts like #Verificado19S) that have distinct informativeness profiles [WEB-23, WEB-24]. No category captures editorial dimensions (source attribution to CENAPRED/SSN/SASMEX, casualty framing, AP Español alignment) that are central to the target deployment.",
+      "strengths": [
+        "The three-criterion relevance/informativeness/non-redundancy schema [Q58] is conceptually portable and provides a transferable starting point for Spanish-language label adaptation.",
+        "The four-axis summary rubric (Coherence, Accuracy, Coverage, Overall) [Q106] decomposes summary quality in a way that supports targeted adaptation — Accuracy and Coverage axes [Q155, Q157] are linguistically more neutral than Coherence."
+      ],
+      "checklist_responses": {
+        "OO-1": "The binary timeline-membership label and four-axis quality rubric are partially relevant, but the Coherence axis is explicitly English-anchored [Q153] and the relevance/informativeness conditions [Q58] were validated only on US tweets.",
+        "OO-2": "Missing categories include: source-attribution quality (whether CENAPRED/SSN/CNPC are cited correctly), AP Español register conformance, verification-tweet detection (a specific genre in #19S contexts) [WEB-23], and seismic/volcanic alert-vocabulary correctness (semáforo phases, SASMEX hashtag usage) [WEB-7, WEB-20].",
+        "OO-3": "The Coherence axis encodes 'free of English errors' [Q153] as the criterion, which directly encodes Anglophone language norms. The informativeness criterion [Q58] implicitly encodes US news-reading conventions about what counts as a 'fact' versus 'personal point of view,' and was validated only by Anglophone annotators [Q61].",
+        "OO-4": "Significant misalignment exists. Stakeholder-driven taxonomy redesign is warranted: a Spanish-language coherence rubric, a register/style axis aligned with AP Español, and addition of source-attribution and verification-correctness axes are needed.",
+        "OO-5": "Structural validity is compromised by the English-anchored coherence rubric; content validity is compromised by missing axes for register, attribution, and verification quality. External validity transfer is therefore not supported."
+      },
+      "evidence_quotes": [
+        "[Q58] 'A tweet is labeled as part of the timeline only if it satisfies all the following three conditions: relevant: talks about the same event indicated in the seed tweet, informative: provides facts about the event but not only contains personal points of view, not repetitive: brings in new information.' (p.5)",
+        "[Q106] 'Each summary was evaluated by five different workers on a scale from 1 to 5 across four axes: Coherence, Accuracy, Coverage, and Overall quality' (p.8)",
+        "[Q151] 'You will rate the quality of each of the eight summaries by four axes: coherence, accuracy, coverage, and overall quality.' (p.21)",
+        "[Q153] 'A summary is coherent if when read by itself, it's easy to understand and free of English errors.' (p.21)",
+        "[Q155] 'Does the factual information in the summary accurately match the information in the timeline?' (p.21)",
+        "[Q157] 'How well does the summary cover the important information in the timeline?' (p.21)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-23] Flores-Saviaga & Savage document #Verificado19S verification-tweet genre that has no analog in the benchmark's informativeness ontology",
+        "[WEB-7] SASMEX vocabulary defines a specific seed-tweet/follow-up structure not addressed by benchmark output categories",
+        "[WEB-20] CENAPRED semáforo phase vocabulary is essential output-ontology content for volcanic crises"
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "OO-1": [
+          "Q58",
+          "Q106",
+          "Q153"
+        ],
+        "OO-2": [
+          "WEB-23",
+          "WEB-7",
+          "WEB-20"
+        ],
+        "OO-3": [
+          "Q58",
+          "Q153",
+          "Q154"
+        ],
+        "OO-4": [
+          "Q151",
+          "Q153"
+        ],
+        "OO-5": [
+          "Q153",
+          "Q155",
+          "Q157"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "AP Español operationalizable criteria not openly accessible — flagged for expert elicitation",
+        "Whether Mexican journalists' relevance judgments diverge systematically from the benchmark's three-criterion definition is empirically unverified"
+      ],
+      "requires_expert_verification": [
+        "Mexican journalist review of relevance/informativeness boundaries on Spanish crisis tweets",
+        "AP Español editor input on register and source-attribution rubric"
+      ]
+    },
+    "output_content": {
+      "score": 1,
+      "justification": "Ground-truth labels were determined by majority vote among three MTurk workers [Q70] recruited under QC1, which restricted workers to 'countries where native English speakers are most likely to be found' [Q61, Q105]. Reference summaries were written by the two workers who agreed most on extraction labels [Q87, Q88]. While inter-annotator agreement was high (90.06% [Q77], 91.77% against experts [Q78, Q79]), no Spanish-speaking annotators, no journalists, and no individuals with Latin American crisis knowledge contributed to ground truth. The elicitation explicitly confirms that journalistic relevance judgments, attribution norms, and summary scope differ from US conventions (Q3/A3). Therefore the labels and reference summaries cannot be assumed to reflect Mexican/Central American journalistic stakeholder perspectives. The aggregation method (majority vote on binary labels [Q70]; selecting the two most-agreeing workers' summaries [Q87, Q88]) further erases minority perspectives — a particular concern when no annotator represents the target population at all. Documented Mexican-context phenomena like #Verificado19S verification posts and community solidarity posts [WEB-23] would likely be judged differently by Mexican journalists than by Anglophone MTurk workers.",
+      "strengths": [
+        "Documentation of annotator quality control (QC1–QC4) is detailed [Q60–Q66], providing transparency about who did label and enabling targeted re-annotation planning.",
+        "High inter-annotator agreement (90.06% [Q77]) and expert validation (91.77% [Q79]) demonstrate internal consistency of labels within the Anglophone population.",
+        "Compensation transparency ($3/HIT, >$10/hour effective rate) [Q67, Q68] is documented."
+      ],
+      "checklist_responses": {
+        "OC-1": "No — ground-truth labels reflect Anglophone MTurk worker judgments [Q61, Q70], not Mexican/Central American journalist perspectives. The elicitation (A3) confirms divergent relevance and attribution norms.",
+        "OC-2": "Substantial disagreement is likely. Mexican journalists operating under AP Español norms apply distinct attribution standards (CENAPRED/SSN/CNPC) [WEB-1, WEB-12] and may judge community solidarity posts and verification posts [WEB-23] as more informative than US MTurk workers would.",
+        "OC-3": "Annotator demographics are documented only at the level of 'countries where native English speakers are most likely to be found' [Q61, Q105]. No information on age, gender, occupation, or journalistic background is provided. No Datasheet or Data Statement is referenced.",
+        "OC-4": "Re-annotation by a representative pool — Spanish-speaking journalists familiar with Mexican/Central American crisis contexts — is required for validity in the target deployment [elicitation A3].",
+        "OC-5": "Aggregation by majority vote on binary labels [Q70] and selection of the two most-agreeing workers' summaries [Q87, Q88] erases minority perspectives. When the entire annotator pool is non-representative of the target population, this aggregation compounds rather than mitigates the validity gap.",
+        "OC-6": "Convergent validity with regional stakeholders is unsupported; external validity to Mexican journalist judgments cannot be assumed."
+      },
+      "evidence_quotes": [
+        "[Q61] 'we use location restriction (QC1) to limit the pool of workers to countries where native English speakers are most likely to be found.' (p.5)",
+        "[Q70] 'To make the ground-truth on whether each tweet is part of the timeline or not, we take the majority label among the three workers.' (p.6)",
+        "[Q77] 'The average timeline-level agreement between those two workers is 90.06%.' (p.6)",
+        "[Q79] 'The average timeline-level agreement rate of this analysis is 91.77%.' (p.6)",
+        "[Q87] 'Since each timeline in our dataset is annotated by three workers (§3.2), it includes three summaries.' (p.7)",
+        "[Q88] 'we pick the two summaries written by the two workers who agree the most based on the timeline extraction labels they assign to the tweets in each timeline.' (p.7)",
+        "[Q105] 'we recruit a group of workers from MTurk with the same Location restriction (QC1)' (p.8)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-1] CENAPRED is the authoritative Mexican source for crisis attribution — distinct from US norms",
+        "[WEB-12] Central American national civil-protection agencies (CONRED, COPECO, DGPC, SINAPRED, CNE, SINAPROC) define the local source-attribution ecosystem",
+        "[WEB-23] #Verificado19S citizen-verification genre would be judged differently by Mexican journalists than US MTurk workers"
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "OC-1": [
+          "Q61",
+          "Q70"
+        ],
+        "OC-2": [
+          "WEB-1",
+          "WEB-12",
+          "WEB-23"
+        ],
+        "OC-3": [
+          "Q61",
+          "Q105"
+        ],
+        "OC-4": [
+          "Q61"
+        ],
+        "OC-5": [
+          "Q70",
+          "Q87",
+          "Q88"
+        ],
+        "OC-6": [
+          "Q61",
+          "Q70",
+          "WEB-23"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Specific MTurk worker demographics beyond country of residence are undocumented",
+        "The magnitude of disagreement between Anglophone MTurk workers and Mexican journalists is empirically unmeasured"
+      ],
+      "requires_expert_verification": [
+        "Pilot re-annotation study with Mexican journalists to quantify disagreement rates on representative Spanish-language crisis tweets",
+        "AP Español editor review of summary references for register and attribution conformance"
+      ]
+    },
+    "output_form": {
+      "score": 1,
+      "justification": "The benchmark evaluates only English-language output: timeline-extraction accuracy is measured against expert annotations on English tweets [Q91, Q94, Q96]; timeline summaries are evaluated using SacreROUGE [Q98, Q100] against English-language reference summaries written by Anglophone MTurk workers [Q99]; the human-evaluation rubric is written in English and scores coherence against English-language writing norms [Q106, Q153]. The target deployment requires bilingual output (Mexican Spanish + American English) with the elicitation specifying that English summaries should be more directly publication-ready and Spanish summaries adapted by journalists (A4). The benchmark provides no Spanish-language reference summaries, no Spanish coherence rubric, no bilingual evaluation protocol, no AP Español alignment metric, and no register-appropriateness scoring. The web research further documents that ROUGE correlates poorly with human judgments for Spanish summarization, with BERTScore-precision (multilingual) and LLM-as-judge being current best practice [WEB-17, WEB-18] — none of which the benchmark uses. The mismatch with the deployment's bilingual output requirement is total for Spanish.",
+      "strengths": [
+        "The English-language output evaluation [Q98, Q106] is methodologically sound and directly applicable to the deployment's English-output evaluation needs, where English summaries are expected to be higher-quality and more publication-ready (elicitation A4).",
+        "Multi-reference ROUGE [Q99, Q100] and the four-axis human evaluation [Q106] together provide a defensible English evaluation framework that can be reused for the English half of bilingual output."
+      ],
+      "checklist_responses": {
+        "OF-1": "Partial match — output modality (free-form text summary) matches deployment requirements, but the language coverage (English-only) misses 50% of the bilingual requirement [Q99, Q106; elicitation A4].",
+        "OF-2": "Not applicable — deployment does not require text-to-speech output (journalists work with text artifacts).",
+        "OF-3": "Not applicable — target users are professional journalists with high literacy; no accessibility constraints alter the form requirement.",
+        "OF-4": "Form mismatch: complete absence of Spanish-language summarization evaluation [Q99, Q106, Q153] directly contradicts the bilingual deployment requirement, severely harming external validity for the Spanish output channel."
+      },
+      "evidence_quotes": [
+        "[Q91] 'For evaluation, we use the average timeline-level accuracy.' (p.7)",
+        "[Q96] 'The best timeline extraction model achieves 73.51 average timeline accuracy, whereas the human-level performance is 88.98.' (p.8)",
+        "[Q98] 'We evaluate all timeline summarization models with ROUGE (Lin and Och, 2004).' (p.8)",
+        "[Q99] 'The summarization output of each model is evaluated in a multi-reference setting against the two summaries written by the two workers who agree the most' (p.8)",
+        "[Q100] 'We use SacreROUGE (Deutsch and Roth, 2020) to compute multi-reference ROUGE scores.' (p.8)",
+        "[Q106] 'Each summary was evaluated by five different workers on a scale from 1 to 5 across four axes: Coherence, Accuracy, Coverage, and Overall quality' (p.8)",
+        "[Q153] 'A summary is coherent if when read by itself, it's easy to understand and free of English errors.' (p.21)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-17] Standard ROUGE variants correlate weakly with human judgments for Spanish summarization; BERTScore-precision with multilingual models is recommended",
+        "[WEB-18] LLM-as-judge approaches show strong correlation with human judgments in multilingual summarization evaluation"
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "OF-1": [
+          "Q99",
+          "Q106"
+        ],
+        "OF-2": [],
+        "OF-3": [],
+        "OF-4": [
+          "Q98",
+          "Q100",
+          "Q153",
+          "WEB-17",
+          "WEB-18"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Operationalizable AP Español rubric criteria not openly accessible",
+        "No Spanish crisis-summarization reference dataset exists to enable bilingual evaluation construction"
+      ],
+      "requires_expert_verification": [
+        "AP Español editor input to construct a Spanish coherence/register rubric",
+        "Mexican journalist evaluation panel to validate any Spanish-language summarization quality framework"
+      ]
+    }
+  },
+  "overall_summary": "CrisisLTLSum is a fundamentally English-language, US/Australian-anchored crisis-tweet benchmark whose four-domain ontology (wildfire/local fire/traffic/storm) [Q1, Q122], English-keyword-filtered content [Q126], English NER + OpenStreetMap pipeline [Q35, Q36], Anglophone MTurk annotators [Q61], English-anchored coherence rubric [Q153], and English-only ROUGE evaluation [Q99, Q100] together create severe validity gaps for the target deployment of bilingual crisis journalism in Mexico City and Central America. The structurally important crisis types for the deployment area — earthquakes, volcanic activity (Popocatépetl), tropical-system flooding, civil unrest, and CDMX transportation infrastructure failures — are entirely absent from the benchmark [WEB-7, WEB-20, WEB-23]. The Spanish-language output requirement (one of two deployment languages) receives zero coverage from the benchmark's evaluation framework. Of the six dimensions, five are scored 1–2 (high concern) and only Input Form scores 3 due to modality match. The authors themselves acknowledge non-portability to other languages and regions [Q119].",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "CrisisLTLSum measures, for English-language US/Australian tweets in four crisis domains (wildfire, local fire, traffic, storm), how well systems can (a) extract relevant non-redundant updates from a noisy tweet stream given a seed tweet [Q5, Q83] and (b) produce abstractive summaries scored against multi-reference human summaries [Q98, Q99]. Within that English/US scope, it provides defensible signal: 90%+ inter-annotator agreement [Q77] and a 73.51% vs. 88.98% model-vs-human gap [Q96] indicate the tasks are non-trivial and well-instrumented. For the target deployment, the benchmark's English-output evaluation framework can serve as a starting point for the English half of the bilingual requirement.",
+    "construct_depth": "Construct depth is shallow for the target deployment. The benchmark probes timeline extraction and summarization only on English tweets in four event types with no Spanish content, no journalist annotators, no editorial-style axes, no semáforo or SASMEX vocabulary, and no register-appropriateness metric. Even where the benchmark provides defensible signal (English summarization quality on fire/traffic/storm events), it does not address whether systems handle Mexican Spanish, voseo, code-switching, alcaldía/colonia toponymy, CENAPRED/SSN attribution, the #Verificado19S verification-tweet genre, or AP Español register conformance. The Coherence rubric [Q153] is structurally inapplicable to Spanish output. Strongest dimension is Input Form (modality match); weakest are Input Ontology, Input Content, Output Content, and Output Form — all of which would need substantial supplementation.",
+    "supplementation_needed": "A complete assessment requires: (1) construction of a Spanish-language crisis tweet corpus anchored to Mexican/Central American events covering earthquakes, volcanic activity, tropical flooding, and civil unrest (no such corpus currently exists per [WEB-3, WEB-4]); (2) re-annotation by Mexican journalist annotators using an extended relevance/informativeness rubric that accounts for verification posts [WEB-23] and community solidarity posts; (3) a Spanish coherence rubric and AP Español–aligned register/attribution axes to replace [Q153]; (4) a bilingual summarization evaluation protocol using BERTScore-multilingual and LLM-as-judge alongside ROUGE [WEB-17, WEB-18]; (5) Spanish gazetteer integration for alcaldía/colonia/municipio resolution to replace the OSM-English pipeline [Q36]; and (6) explicit handling of SASMEX/CENAPRED hashtag and semáforo vocabulary as seed-tweet types [WEB-7, WEB-20].",
+    "dimension_anchoring": "These guidance points correspond to: Input Ontology (1, 6), Input Content (1, 5), Output Ontology (3), Output Content (2), Output Form (4)."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "Earthquake, volcanic activity, tropical-system flooding, civil unrest, and CDMX transportation infrastructure failures are absent from the four-domain taxonomy [Q122]",
+      "recommendation": "Extend the ontology with these crisis types and curate Spanish-language seed-tweet/keyword lists for each, including SASMEX (#TenemosSismo, #AlertaSismica) [WEB-7] and CENAPRED semáforo vocabulary [WEB-20]. Recognize persistent (e.g., volcanic) vs. spike-event temporal profiles [WEB-26] in the 'local' definition [Q12]."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "Zero Spanish-language Mexican/Central American content; English NER + English-OSM pipeline is non-portable [Q35, Q36, Q119]",
+      "recommendation": "Build or commission a Spanish-language crisis tweet corpus anchored to Mexican (CDMX alcaldías, key estados) and Central American (departamentos/municipios) events. Adapt the Curiel et al. (PMC 2019) Mexican-Spanish NER pipeline [WEB-4] for georesolution, and integrate a Spanish-language gazetteer that includes colonias, alcaldías, and indigenous-language place names."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "Coherence rubric is explicitly anchored to English [Q153]; missing axes for source attribution, AP Español register, and verification-tweet detection",
+      "recommendation": "Construct a Spanish coherence rubric referencing Spanish-language writing norms; add an AP Español–aligned register axis (requires expert elicitation from AP Español editors) and a source-attribution axis covering CENAPRED/SSN/CNPC/SASMEX [WEB-1, WEB-7]; add a verification-quality axis informed by the #Verificado19S model [WEB-23]."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Reference labels and summaries authored entirely by Anglophone MTurk workers under QC1 location restriction [Q61]; no journalist or Mexican stakeholder representation",
+      "recommendation": "Re-annotate a representative subset using Mexican Spanish-speaking journalists familiar with Mexican/Central American crisis contexts and AP Español. Quantify disagreement against the original labels and report convergent-validity statistics. Avoid majority-vote aggregation that erases minority perspectives when annotator pools are small."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "No Spanish-language summarization evaluation; English-only ROUGE [Q99, Q100] and English coherence rubric [Q153]",
+      "recommendation": "Implement a bilingual evaluation protocol: BERTScore with multilingual backbone (XLM-R or mBERT) and LLM-as-judge for Spanish summaries [WEB-17, WEB-18], alongside human evaluation by Spanish-speaking journalists. Maintain the existing English ROUGE pipeline for the English output channel where it remains defensible."
+    },
+    {
+      "dimension": "input_ontology",
+      "gap": "The 'local' scope definition (building/street/county, short period) [Q12] excludes persistent volcanic activity and multi-day tropical systems",
+      "recommendation": "Generalize the temporal-scope definition to support persistent and multi-phase events, with explicit handling of semáforo phase transitions and tropical-system alert lifecycles."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_ontology",
+    "input_content",
+    "output_content",
+    "output_form"
+  ],
+  "strongest_dimensions": [
+    "input_form"
+  ]
+}

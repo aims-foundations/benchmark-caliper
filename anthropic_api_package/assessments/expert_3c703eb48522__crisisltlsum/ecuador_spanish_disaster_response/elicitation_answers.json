@@ -1,0 +1,6 @@
+{
+  "Q1": "Definitively, there are other types of event that would not be covered. They focus on social and humanitarian crisis, those that affect a larger number of population. Specially when the impact exceeds what the local effort can cover",
+  "Q2": "The analyst would expect the system to achor events to those Ecuador specific entities",
+  "Q3": "A inter-operational team would be in charge of judgment, not only someone with an specific role (a local field coordinator, a social analyst, a domain-expert analyst)",
+  "Q4": "The predominant would be Ecuadorian Spanish, possibly with some local entities names in those local languages. I would expect a mix of informal and semi formal register. So yes, if the system is trained only on English social media (and potentially fine-tuned on local Spanish) it would probably miss local characteristics of Ecuadorian social media data."
+}

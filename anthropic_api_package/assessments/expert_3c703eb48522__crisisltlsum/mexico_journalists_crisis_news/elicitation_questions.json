@@ -5,7 +5,7 @@
     "question": "The benchmark covers four crisis types: wildfires, local fires, traffic incidents, and storms — all drawn from US contexts. For your journalists covering Mexico City, Central America, and the US-Mexico border region, are there crisis types that matter but likely fall outside those four categories — for example, volcanic activity (Popocatépetl), earthquakes, flooding from tropical systems, or civil unrest? And within the shared categories like storms, do the local sub-types (e.g., hurricane landfalls on Pacific vs Gulf coasts of Mexico) differ meaningfully from US storm patterns your journalists would need covered?"
   },
   {
-    "id": "IC",
+    "id": "Q2",
     "dimension": "IC",
     "question": "The benchmark's crisis events are tied to specific US locations — named streets, buildings, and counties. For your journalists covering Mexican and Central American crises, how place-specific does the system need to be? For instance, would it need to correctly identify and contextualize references to colonias, municipios, delegaciones (like Iztapalapa or Tlalpan in CDMX), or regional landmarks that would appear in Spanish-language social media posts but not in US-sourced training data?"
   },

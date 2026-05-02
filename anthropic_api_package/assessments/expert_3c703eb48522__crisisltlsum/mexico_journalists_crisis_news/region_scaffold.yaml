@@ -1,0 +1,426 @@
+name: Mexico City and Central America Bilingual Crisis Journalism
+abbreviation: CDMX-CrisisJourn
+assessment_context:
+  benchmark: crisisltlsum
+  use_case: AI summarization system processing social-media posts (primarily tweets)
+    about crisis events to assist journalists and media workers in writing breaking-news
+    articles. Covers events in Mexico City, Central America, and the US–Mexico border
+    region.
+  deployment_population: Journalists and media workers based primarily in Mexico City,
+    fluent in both Mexican Spanish (native, neutral/standard variety) and English,
+    covering breaking news across Mexico, Central America, and the southern United
+    States under outlet-specific or wire-service editorial guidelines (e.g., AP Español).
+primary_countries:
+- Mexico (primary — Mexico City as hub)
+- Guatemala
+- Honduras
+- El Salvador
+- Nicaragua
+- Costa Rica
+- Panama
+- United States (southern border region — Texas, California, Arizona, New Mexico)
+primary_region_description: Deployment is centered on Mexico City (CDMX) as the journalistic
+  hub, with coverage extending southward through Central America and northward to
+  the US–Mexico border. The core user is a bilingual, professionally trained journalist
+  operating in a high-stakes breaking-news newsroom environment, not a general public
+  user.
+languages:
+  primary_working_languages:
+  - Mexican Spanish (native; neutral/standard Latin American variety acceptable as
+    system baseline; final register adaptation performed by journalist)
+  - American English (high-proficiency; expected to be the higher-quality output language
+    for direct use)
+  language_notes: Users are bilingual professionals. English summaries are expected
+    to be more directly publication-ready; Spanish summaries will require journalist
+    revision for register and Mexican journalistic style. Neutral Latin American Spanish
+    is acceptable as a system baseline. AP Español guidelines govern Spanish-language
+    wire-service output for many outlets.
+  regional_spanish_varieties:
+    mexico_city: Neutral urban Mexican Spanish; basis for broadcast and print norms
+    central_america: '[NEEDS VERIFICATION — assess degree of dialectal variation (e.g.,
+      voseo in Guatemala/Honduras/Costa Rica) that may appear in source tweets from
+      these regions]'
+    border_region: High incidence of Spanglish and code-switching in social-media
+      source content, particularly in tweets from Texas and California border communities
+  code_switching_notes: Social-media source content (tweets) from border regions and
+    some Central American users may include English–Spanish code-switching, Spanglish
+    constructions, and informal registers that differ substantially from the professional
+    output register expected by journalists.
+  indigenous_language_considerations: Tweets from non-CDMX regions of Mexico (Oaxaca,
+    Chiapas, Yucatán, etc.) and from Guatemala may embed indigenous-language place
+    names or lexical items (Nahuatl, Maya, Zapotec, Mam, K'iche', etc.) in otherwise
+    Spanish-language text. Whether the deployed system must handle these is unresolved
+    — flagged for further investigation. [NEEDS VERIFICATION — assess frequency and
+    impact of indigenous-language borrowings in crisis-related tweets from coverage
+    area]
+writing_systems:
+  scripts:
+  - Latin alphabet (Spanish and English — both deployment languages)
+  - Standard Spanish diacritics (á, é, í, ó, ú, ñ, ü) required for correct Spanish
+    output
+  - No RTL or non-Latin script requirements in this deployment
+  notes: Spanish tokenization, lemmatization, and NLP preprocessing infrastructure
+    must handle accented characters and Spanish-specific morphology. Tweet-register
+    input may omit diacritics (a common informal practice); the system must handle
+    diacritic-dropped input gracefully.
+professional_context:
+  user_role: Journalists and media workers — professionally trained, deadline-driven,
+    operating in breaking-news workflow
+  editorial_standards:
+    wire_service_reference: AP Español (cited by user as the relevant style standard
+      for many outlets)
+    ap_espanol_notes: '[NEEDS VERIFICATION — retrieve current AP Español guidelines
+      covering casualty framing, official source attribution, community impact language,
+      and crisis event terminology applicable to Mexican and Central American coverage]'
+    outlet_level_variation: Individual outlets may apply their own house style on
+      top of AP Español or in lieu of it; the system is expected to produce broad
+      summaries that journalists adapt rather than style-compliant copy
+    preferred_output_posture: Less restrictive, broader summaries that journalists
+      can then edit — the system should not pre-constrain to a single editorial voice
+  workflow_position: System output is an intermediate artifact in a journalist's research
+    and drafting process, not a publishable final product. Journalists perform final
+    register adaptation, fact-verification, and editorial shaping.
+  professional_norms_diverging_from_us_norms:
+    casualty_framing: '[NEEDS VERIFICATION — research Mexican and Latin American journalistic
+      norms for reporting casualties, injuries, and missing persons in crisis events
+      vs. US AP Style conventions]'
+    official_source_attribution: '[NEEDS VERIFICATION — assess conventions for attributing
+      statements to government agencies (Protección Civil, CENAPRED, municipal authorities)
+      vs. US norms for fire departments / FEMA / NWS]'
+    community_impact_language: '[NEEDS VERIFICATION — assess Latin American journalistic
+      conventions for describing affected populations, displacement, and community
+      disruption in crisis reporting]'
+    political_sensitivity: Crisis events in Mexico and Central America may carry political
+      dimensions (government response accountability, organized crime involvement
+      in border incidents, migration-related emergencies) that affect what information
+      is foregrounded in summaries. These editorial judgments are absent from the
+      benchmark's US-centric annotation framework.
+crisis_ontology:
+  benchmark_covered_types:
+  - Wildfires (partial overlap — present in Mexico's dry season, but different geographic/ecological
+    contexts)
+  - Local fires (overlapping — structural fires in urban Mexico City context are broadly
+    similar)
+  - Traffic incidents (overlapping — but CDMX traffic and accident reporting has distinct
+    local context, including metro/transit system)
+  - Storms (partial overlap — hurricane/tropical-system storms on Pacific and Gulf
+    coasts differ substantially from US storm profiles in the benchmark)
+  benchmark_missing_types_high_priority:
+  - crisis_type: Earthquakes
+    regional_relevance: Mexico City sits on a seismically active zone with a history
+      of major earthquakes (1985, 2017, 2022 Michoacán); earthquakes are among the
+      highest-priority crisis types for CDMX journalists
+    notes: '[NEEDS VERIFICATION — identify existing NLP/Twitter datasets for earthquake
+      crisis events in Spanish or Mexico specifically]'
+  - crisis_type: Volcanic activity
+    regional_relevance: Popocatépetl (active volcano near CDMX) generates ongoing
+      alert phases; Volcán de Fuego (Guatemala) produces periodic eruptions with high
+      casualty potential; Colima also relevant
+    notes: '[NEEDS VERIFICATION — identify crisis NLP resources covering volcanic
+      event Twitter monitoring in Spanish]'
+  - crisis_type: Tropical-system flooding (hurricanes, tropical storms, depressions)
+    regional_relevance: Both Pacific (Baja California, Guerrero, Oaxaca, Chiapas)
+      and Gulf/Caribbean (Veracruz, Yucatán, Tabasco, all of Central America) coasts
+      are affected; flooding associated with these systems is distinct from convective
+      storm flooding in the benchmark's US data
+    notes: '[NEEDS VERIFICATION — identify Spanish-language hurricane/tropical-flooding
+      crisis datasets; assess CENAPRED, SMN, and NHC Twitter monitoring practices]'
+  - crisis_type: Civil unrest / social protests / political violence
+    regional_relevance: Mexico City is a hub for national protests; Central American
+      contexts include politically motivated violence, migration-related crises, and
+      gang/cartel activity that intersects with humanitarian crisis reporting
+    notes: '[NEEDS VERIFICATION — assess whether any crisis NLP datasets cover social
+      unrest in Latin America; note that this category raises distinct editorial and
+      safety concerns for journalists]'
+  - crisis_type: Organized crime / cartel-related incidents (road blockades, violence
+      affecting civilian movement)
+    regional_relevance: In Mexico and parts of Central America, certain crisis events
+      that impede civilian movement or create public safety emergencies are crime-related
+      rather than purely natural-disaster or accident-related; these require distinct
+      sourcing and framing norms
+    notes: '[NEEDS VERIFICATION — assess journalistic and NLP community handling of
+      crime-adjacent crisis events in Mexico]'
+  - crisis_type: Transportation infrastructure failures (CDMX metro/trен ligero collapses,
+      road subsidence due to relleno/land subsidence)
+    regional_relevance: Mexico City's metro system has experienced serious structural
+      incidents; the city sits on former lakebed with chronic subsidence; these are
+      locally specific crisis types with no US analog in the benchmark
+    notes: '[NEEDS VERIFICATION]'
+  storm_category_transferability_notes: Even for the nominally overlapping 'storms'
+    category, the benchmark's keyword lists and event profiles reflect US meteorological
+    conventions. Mexican and Central American tropical systems (naming conventions,
+    alert phases used by SMN and CONRED/NHC, wind speed thresholds, Saffir-Simpson
+    vs. regional scales, storm surge vocabulary in Spanish) differ in ways that may
+    invalidate keyword-transfer assumptions. [NEEDS VERIFICATION — compare US vs.
+    Mexican/Central American storm crisis vocabulary used in Spanish social media]
+geographic_entities:
+  mexico_city_administrative_structure:
+    description: Mexico City (CDMX) is organized into 16 alcaldías (formerly delegaciones),
+      each subdivided into colonias. These are the primary sub-city location references
+      in local crisis reporting and in social-media posts about CDMX events.
+    alcaldias:
+    - Iztapalapa
+    - Gustavo A. Madero
+    - Álvaro Obregón
+    - Tlalpan
+    - Xochimilco
+    - Tláhuac
+    - Coyoacán
+    - Cuauhtémoc
+    - Miguel Hidalgo
+    - Benito Juárez
+    - Venustiano Carranza
+    - Iztacalco
+    - Azcapotzalco
+    - Cuajimalpa de Morelos
+    - Magdalena Contreras
+    - Milpa Alta
+    notable_colonias_for_crisis_coverage: '[NEEDS VERIFICATION — identify colonias
+      with historically high incidence of flooding, seismic vulnerability, industrial
+      risk, or dense population relevant to crisis event reporting]'
+    location_resolution_challenge: The benchmark's location pipeline uses US/Australian
+      city and neighborhood lists plus English-language OpenStreetMap queries. Mexican
+      colonia names (e.g., Doctores, Tepito, Vallejo, Del Valle) and alcaldía names
+      are absent; Spanish-language OSM queries and dedicated Mexican gazetteer resources
+      are required.
+  national_mexico_administrative_structure:
+    description: Mexico is organized into 31 estados plus CDMX, each subdivided into
+      municipios. Crisis reporting beyond CDMX requires resolution of municipio-level
+      location references, which have no direct analog in the US county-level schema
+      used by the benchmark.
+    key_states_for_crisis_coverage:
+    - Estado de México (borders CDMX, high seismic and Popocatépetl risk)
+    - Puebla (Popocatépetl corridor)
+    - Morelos (Popocatépetl corridor)
+    - Veracruz (Gulf coast, flooding, industrial risk)
+    - Oaxaca (seismic, Pacific coast, indigenous-language place names)
+    - Guerrero (Pacific coast, storm risk, organized crime context)
+    - Chiapas (border with Guatemala, tropical flooding, migrant crisis)
+    - Tabasco (flooding, historically affected by tropical systems)
+    - Jalisco (second city Guadalajara, wildfires, cartel activity)
+    - Baja California / Sonora (US border, cross-border incidents)
+    indigenous_place_names: '[NEEDS VERIFICATION — assess frequency of Nahuatl, Zapotec,
+      Maya, Mam, and other indigenous-origin place names in crisis-related tweets
+      from non-CDMX Mexican states and Guatemala; determine whether the deployment
+      system requires a dedicated indigenous toponymy resolver]'
+  central_america_administrative_structure:
+    description: Central American coverage spans six countries, each with distinct
+      administrative terminologies (departamentos, municipios, distritos). Landmark
+      and regional references in tweets may use informal geographic nicknames rather
+      than formal administrative names.
+    key_administrative_units: '[NEEDS VERIFICATION — surface the primary departamento/municipio
+      level structures for Guatemala, Honduras, El Salvador, Nicaragua, Costa Rica,
+      and Panama relevant to crisis event reporting]'
+    notable_landmarks_for_crisis_coverage: '[NEEDS VERIFICATION — identify regionally
+      known geographic landmarks (volcanoes, river systems, border crossings, urban
+      zones) relevant to crisis event location identification in Central American
+      tweets]'
+  us_mexico_border_region:
+    description: Cross-border crisis events (bridge closures, flooding of the Rio
+      Grande/Río Bravo, border-crossing incidents, industrial accidents in maquiladora
+      zones) require resolving location references that span two national administrative
+      systems and two languages simultaneously.
+    key_locations: '[NEEDS VERIFICATION — identify the primary border crossing points
+      and adjacent urban areas (Tijuana–San Diego, Ciudad Juárez–El Paso, Nuevo Laredo–Laredo,
+      Reynosa–McAllen, Matamoros–Brownsville) most relevant to crisis event coverage]'
+social_media_context:
+  platform: Twitter/X (primary per elicitation summary)
+  spanish_twitter_crisis_corpora:
+    known_resources: '[NEEDS VERIFICATION — search for: TREC-IS Spanish subsets; CLEF-HIPE
+      Spanish crisis content; IULA crisis corpus; CrisisNLP Spanish data; any Mexico-
+      or Central America–specific crisis tweet datasets; assess geographic and temporal
+      coverage of each]'
+    gap_assessment: No Spanish-language crisis tweet corpus anchored to Mexican or
+      Central American events is documented in the benchmark; this is a primary data
+      gap requiring web search.
+  mexican_spanish_twitter_conventions:
+    informal_register: Crisis-related tweets in Mexican Spanish routinely omit diacritics,
+      use colloquial vocabulary (e.g., 'temblor' vs. 'sismo', 'neza' for Nezahualcóyotl,
+      'edomex' for Estado de México), and employ hashtag conventions specific to Mexican
+      events
+    common_crisis_hashtags: '[NEEDS VERIFICATION — identify historically used and
+      currently active Mexican crisis/emergency hashtags (e.g., #Sismo, #PopoActivo,
+      #AlertaSísmica, #Inundación) relevant to system keyword-filtering and timeline
+      extraction]'
+    official_account_ecosystem: '[NEEDS VERIFICATION — identify key Mexican government
+      and emergency-management Twitter accounts (CENAPRED, PC Nacional, SMN, CONAGUA,
+      SCT) whose tweets carry high authority weight for journalist verification]'
+  noise_characteristics: Crisis tweet streams in Mexico and Central America include
+    retweets of government alerts, citizen reports of variable reliability, misinformation
+    propagation (historically significant in Mexican earthquake events), and politically
+    motivated framing. The US-derived relevance/informativeness annotation framework
+    may not correctly weight these local noise patterns.
+regulatory_and_institutional_context:
+  emergency_management_agencies:
+    mexico_national: '[NEEDS VERIFICATION — confirm current names, mandates, and Twitter
+      presence of: Sistema Nacional de Protección Civil; CENAPRED (Centro Nacional
+      de Prevención de Desastres); CONAGUA; SMN (Servicio Meteorológico Nacional);
+      SEGOB crisis coordination]'
+    mexico_cdmx: '[NEEDS VERIFICATION — confirm current CDMX Secretaría de Gestión
+      Integral de Riesgos y Protección Civil structure and communication channels]'
+    central_america: '[NEEDS VERIFICATION — identify national civil protection agencies
+      for Guatemala (CONRED), Honduras (COPECO), El Salvador (DGPC), Nicaragua (SINAPRED),
+      Costa Rica (CNE), Panama (SINAPROC) and their social-media presence]'
+    us_border_relevant: FEMA, NWS (National Weather Service), CBP — relevant for cross-border
+      crisis events
+  data_and_press_law_context:
+    mexico_press_freedom: '[NEEDS VERIFICATION — assess current press freedom context
+      in Mexico; journalist safety considerations that may affect how crisis summaries
+      reference certain event types (organized crime, government response failures)]'
+    data_protection: '[NEEDS VERIFICATION — identify applicable Mexican data protection
+      framework (Ley Federal de Protección de Datos Personales en Posesión de los
+      Particulares or successor legislation) relevant to processing tweet content
+      about identified individuals in crisis events]'
+infrastructure_notes:
+  journalist_infrastructure: Target users are professional journalists in a newsroom
+    setting — high-quality internet connectivity, desktop/laptop primary devices,
+    professional publication-grade output expectations. No mobile-first or low-bandwidth
+    constraints apply to the end user.
+  source_tweet_infrastructure: Tweets being processed originate from a broader population
+    (citizens, officials, emergency services) that may include users on mobile-only,
+    lower-bandwidth connections, particularly in rural Central America and remote
+    Mexican states. This affects tweet length, attachment type, and linguistic register
+    of source content.
+  mobile_internet_penetration_mexico: '[NEEDS VERIFICATION]'
+  mobile_internet_penetration_central_america: '[NEEDS VERIFICATION]'
+  twitter_penetration_mexico: '[NEEDS VERIFICATION — confirm current active Twitter/X
+    user base in Mexico and relative usage compared to other social platforms for
+    crisis information dissemination (WhatsApp, Facebook, TikTok)]'
+  nlp_tooling_for_mexican_spanish:
+    general_availability: Spanish is a high-resource NLP language globally, but Mexican
+      Spanish–specific resources (trained on Mexican Twitter, covering Mexican place
+      names and crisis vocabulary) are substantially less common than general Spanish
+      resources
+    crisis_specific_gap: '[NEEDS VERIFICATION — identify available Spanish-language
+      NER models trained on Twitter data; assess coverage of Mexican geographic entities;
+      review any Spanish crisis-NLP models from CrisisNLP, TREC-IS, or academic groups]'
+evaluation_framework_implications:
+  output_language_gap: The benchmark provides no Spanish-language reference summaries,
+    no Spanish coherence rubric, and no bilingual evaluation protocol. Any assessment
+    of Spanish-language output quality requires constructing a parallel evaluation
+    framework.
+  bilingual_rouge_notes: '[NEEDS VERIFICATION — identify whether multilingual ROUGE
+    variants (e.g., using multilingual tokenizers) or alternative metrics (BERTScore
+    with multilingual models, METEOR with Spanish stemmer) are established for Spanish
+    crisis summarization evaluation]'
+  ap_espanol_alignment_rubric: '[NEEDS VERIFICATION — assess whether AP Español or
+    comparable Latin American news-writing style guides provide operationalizable
+    criteria that could be incorporated into a supplementary human evaluation rubric
+    for Spanish-language crisis summaries]'
+  ground_truth_annotation_requirements: Any localized benchmark adaptation would require
+    Spanish-speaking annotators with familiarity with Mexican crisis event types,
+    Mexican geographic entities, and Latin American journalistic norms — a substantially
+    different annotator profile from the English-speaking MTurk workers used in the
+    original benchmark.
+  relevance_label_transferability: The benchmark's three-way relevance/informativeness/non-redundancy
+    label schema is conceptually sound but was validated only on US English tweets
+    by Anglophone annotators. Cross-lingual transfer validity to Mexican Spanish tweets
+    covering earthquake, volcanic, or civil-unrest events is unestablished and should
+    be empirically assessed.
+  coherence_rubric_language_adaptation: The benchmark's coherence rubric explicitly
+    references 'English errors' as the evaluation criterion. A Spanish-language analog
+    must be constructed that references Spanish-language writing norms and, where
+    relevant, Mexican journalistic register conventions.
+cultural_and_editorial_norms:
+  crisis_reporting_culture: Mexican and Latin American crisis journalism operates
+    in a context of complex institutional trust dynamics — official government agency
+    statements (Protección Civil, CENAPRED) carry authority but are also subject to
+    scrutiny; citizen social-media reports are a primary source for speed but require
+    verification framing.
+  seismic_alert_system_context: Mexico City's SASMEX seismic alert system generates
+    real-time public alerts that drive a distinctive tweet-stream pattern around earthquake
+    events — a pattern with no analog in the benchmark's event data. [NEEDS VERIFICATION
+    — characterize the typical SASMEX-triggered Twitter cascade for CDMX earthquake
+    events]
+  volcanic_alert_level_vocabulary: '[NEEDS VERIFICATION — document CENAPRED''s semáforo
+    de alerta volcánica color-coded vocabulary for Popocatépetl and how it appears
+    in Spanish-language social media]'
+  community_solidarity_conventions: Mexican crisis social media often features community
+    coordination posts (offering shelter, requesting blood donations, organizing volunteer
+    rescue brigades — as notably observed after the 2017 earthquake). These posts
+    have distinct informativeness profiles that may differ from the benchmark's US-centric
+    informativeness judgments.
+  political_and_institutional_sensitivity: Crisis summaries touching on government
+    response adequacy, infrastructure failure, or migration-adjacent emergencies carry
+    political weight in the Mexican journalistic context that has no direct analog
+    in the benchmark's fire/traffic/storm framing.
+  misinformation_dynamics: '[NEEDS VERIFICATION — assess documented patterns of crisis
+    misinformation in Mexican Twitter (e.g., post-earthquake false rescue rumors)
+    and implications for timeline extraction relevance/informativeness criteria]'
+dimension_priority_summary:
+  IO:
+    priority: HIGH
+    notes: The benchmark's four-category ontology is deeply misaligned with the target
+      coverage area. Earthquakes, volcanic events, tropical flooding, and civil unrest
+      are absent entirely. Even overlapping categories (storms) carry different regional
+      profiles.
+  IC:
+    priority: HIGH
+    notes: All benchmark input content is English-language US/Australian tweets. Mexican
+      administrative geography (colonias, alcaldías, municipios) and Spanish-language
+      social-media conventions are entirely absent from the benchmark's input content
+      and processing pipeline.
+  IF:
+    priority: LOWER
+    notes: Both benchmark and deployment operate on text-only social-media posts.
+      No modality mismatch. Linguistic form mismatch (English vs. Spanish) is captured
+      under IC and OF.
+  OO:
+    priority: HIGH
+    notes: The relevance/informativeness/non-redundancy label schema was developed
+      and validated on US English tweets; transfer validity to Mexican Spanish crisis
+      tweets covering different event types is unestablished.
+  OC:
+    priority: HIGH
+    notes: Reference summaries were authored by Anglophone MTurk workers using US
+      news conventions. No journalists, no Spanish speakers, and no individuals with
+      Latin American crisis knowledge contributed to ground truth.
+  OF:
+    priority: HIGH
+    notes: The benchmark provides no Spanish-language summarization evaluation whatsoever.
+      Bilingual output is a core deployment requirement. The entire Spanish evaluation
+      dimension is a gap.
+flagged_investigation_items:
+- item_id: 1
+  topic: Spanish-language crisis tweet corpora for Mexico and Central America
+  search_target: TREC-IS Spanish subsets; CrisisNLP Spanish data; CLEF-HIPE; IULA
+    crisis corpus; any Mexico- or Central America–specific crisis tweet datasets;
+    assess geographic and temporal coverage
+- item_id: 2
+  topic: Crisis NLP benchmarks covering earthquakes, volcanic activity, tropical flooding,
+    civil unrest in Spanish
+  search_target: Crisis NLP benchmark earthquake volcanic flooding civil unrest Spanish
+    Latin America Twitter dataset
+- item_id: 3
+  topic: NER and geo-resolution tools for Mexican administrative geography
+  search_target: Mexican administrative geography NER benchmark colonias municipios
+    alcaldías delegaciones georesolution Spanish NLP gazetteer
+- item_id: 4
+  topic: Bilingual or Spanish-language crisis summarization evaluation frameworks
+  search_target: Bilingual crisis summarization evaluation English Spanish benchmark
+    AP Español multilingual ROUGE BERTScore
+- item_id: 5
+  topic: AP Español and Latin American crisis journalism style guidelines
+  search_target: AP Español crisis journalism guidelines Mexico Latin America casualty
+    framing attribution community impact language
+- item_id: 6
+  topic: Mexican and Central American emergency management agency Twitter ecosystems
+  search_target: CENAPRED CONRED COPECO SMN Protección Civil Twitter social media
+    crisis communication Mexico Central America
+- item_id: 7
+  topic: Indigenous-language place name frequency in Mexican and Guatemalan crisis
+    tweets
+  search_target: Mexican Spanish Twitter Nahuatl Zapotec Maya place names crisis NLP
+    code-switching indigenous toponymy
+- item_id: 8
+  topic: Misinformation patterns in Mexican crisis Twitter (especially post-earthquake)
+  search_target: Mexico earthquake Twitter misinformation 2017 2022 crisis social
+    media false rumors NLP detection
+- item_id: 9
+  topic: SASMEX seismic alert system and associated Twitter cascade patterns
+  search_target: SASMEX Mexico City seismic alert Twitter response pattern sismo hashtag
+    crisis tweet cascade
+- item_id: 10
+  topic: Popocatépetl volcanic alert vocabulary and Twitter conventions
+  search_target: Popocatépetl CENAPRED semáforo volcánico Twitter social media alert
+    vocabulary Spanish

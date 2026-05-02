@@ -5,7 +5,7 @@
     "question": "The benchmark was built around Canadian historical newspaper content about weather impacts. Your deployment covers Gran Chaco disaster events — which may include flooding from the Pilcomayo and Bermejo rivers, droughts, locust outbreaks, chaco fires, or infrastructure failures in isolated rural areas. Do these event types and their local consequences (e.g., disrupted cattle routes, damage to dirt-road access to indigenous communities, cross-border displacement) map onto the impact categories your responders care about, or are there Gran Chaco-specific damage types that would be missing?"
   },
   {
-    "id": "IC",
+    "id": "Q2",
     "dimension": "IC",
     "question": "The benchmark was constructed from Canadian English-language newspapers. Your source texts are Spanish-language local news and social media from Argentina, Bolivia, and Paraguay — including informal writing, regional slang, code-switching with indigenous languages (Guaraní, Quechua, Wichí), and platform-specific abbreviations. Would your responders consider damage reports written in these registers as representative of what the system needs to handle correctly?"
   },

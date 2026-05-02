@@ -5,19 +5,19 @@
 
 # Validity Analysis: drbenchmark
 **Target context:** EU Pharmaceutical Regulatory NLP — French
-**Overall risk:** N/A
+**Overall risk:** HIGH
 
 ## Dimension Scores
 
 | Dimension | Score | Rating | Confidence |
 |-----------|:-----:|--------|:----------:|
-| Input Ontology | 2 | Significant gaps | high |
-| Input Content | 2 | Significant gaps | high |
-| Input Form | 4 | Minor gaps | high |
-| Output Ontology | 1 | Serious concern | N/A |
-| Output Content | N/A |  | N/A |
-| Output Form | N/A |  | N/A |
-| **Average** | **2.2** | | |
+| Input Ontology ⚠ | 2 | Significant gaps | high |
+| Input Content ⚠ | 2 | Significant gaps | high |
+| Input Form ✓ | 4 | Minor gaps | high |
+| Output Ontology ⚠ | 1 | Serious concern | high |
+| Output Content ⚠ | 2 | Significant gaps | high |
+| Output Form ✓ | 4 | Minor gaps | high |
+| **Average** | **2.5** | | |
 
 > ⚠ = highest concern &nbsp; ✓ = strongest dimension
 
@@ -31,6 +31,24 @@
 | OO | Output Ontology | Whether the benchmark's output categories and scoring criteria reflect regionally valid decision boundaries. |
 | OC | Output Content | Whether ground-truth labels align with the judgments of regional stakeholders. |
 | OF | Output Form | Whether the expected output modality matches regional deployment needs and accessibility. |
+
+## Overall Summary
+
+DrBenchmark is the most comprehensive French biomedical NLU benchmark currently available [Q16, Q83], and parts of its content (QUAERO EMEA, Mantra-GSC fr_emea, DEFT2020 drug-leaflet pairs, PxCorpus posology schema) provide partial signal for the EU pharmaceutical regulatory deployment. However, the deployment's HIGH-priority dimensions — input ontology, input content, output ontology, and output content — show severe misalignment. The benchmark is calibrated for clinical and research French biomedical NLP, not for EMA/ANSM regulatory affairs workflows: (i) regulatory document genres (SmPCs, CTD modules, EU-RMPs) are absent; (ii) regulatory-specific entity types (INN as distinct from excipient, ATC codes, EMA-templated posology, contraindication qualifiers) are not annotated as distinct classes; (iii) STS scoring is calibrated for general semantic proximity and demonstrably tolerates legally significant micro-differences (2×–60× numeric divergences score 3.0–4.0); (iv) annotators are biomedical NLP / clinical experts, not regulatory affairs specialists, and elicitation explicitly anticipates systematic disagreement on borderline cases. Lower-priority dimensions (input form, output form) are well aligned. Web search confirms several of these gaps are field-level, not just benchmark-level [WEB-11, WEB-12, WEB-16].
+
+## Practical Guidance
+
+### What This Benchmark Measures
+
+DrBenchmark provides credible measurement of general French biomedical NLU capabilities in clinical and research register: clinical NER (UMLS Semantic Groups), POS, MeSH-axis classification, ICD-10 chapter classification, MCQA over pharmacy exam knowledge, and clinical STS. For the deployment, it offers partial signal on (a) coarse pharmaceutical entity recognition over EMEA leaflet text via QUAERO EMEA and Mantra-GSC fr_emea, (b) French-language STS capability over biomedical sentence pairs including some drug-leaflet content via CLISTER and DEFT2020, and (c) compositional posology recognition via PxCorpus and DEFT2021. Output form (IO-2) is fully aligned, and input form (IF) is mostly aligned.
+
+### Construct Depth
+
+Construct probing for the deployment's core needs is shallow. Regulatory-equivalence STS — the deployment's central decision rule — is not measured at all; CLISTER and DEFT2020 measure general semantic proximity, and dataset analysis empirically shows the calibration is incompatible (CLISTER-D12, DEFT2020-D16). Regulatory entity NER is measured only as conflated CHEM/SUBSTANCE classes; INN/ATC/excipient sub-distinctions are unevaluated. Annotation provenance for the most deployment-relevant subsets (QUAERO, Mantra-GSC, CLISTER) is undocumented, so even successful benchmark scores carry unquantified construct-validity risk for borderline regulatory cases.
+
+### What Else You Need
+
+To complete the assessment, the deployment team would need: (1) a regulatory-affairs-annotated SmPC/PIL/CTD evaluation set covering INN, ATC, excipient, posology, and contraindication-qualifier entity types — addressing Input Ontology, Input Content, and Output Ontology gaps; (2) a regulatory-equivalence STS rubric and dataset with annotator guidelines that penalize dose-threshold and population-qualifier divergences — addressing Output Ontology calibration and Output Content (annotator alignment); (3) a re-annotation of QUAERO EMEA and Mantra-GSC fr_emea spans by regulatory affairs specialists to quantify systematic disagreement — addressing Output Content; (4) integration of EMA QRD v10.4 [WEB-7, WEB-18] and IDMP [WEB-16, WEB-17] structural extraction targets as evaluation tasks. Given that web search confirms these are field-level gaps [WEB-11, WEB-12], supplementation will require new resource creation, not just resource discovery.
 
 ## Dimension Details
 
@@ -196,7 +214,7 @@ Input form is largely well-aligned. Both deployment and benchmark operate on Fre
 
 ### Output Ontology — 1/5 (Serious concern)
 
-**Confidence:** N/A
+**Confidence:** high
 
 **Justification:**
 Output ontology shows fundamental misalignment with the deployment, which the elicitation marked HIGH priority. Two critical violations are present. (1) STS scoring uses general semantic proximity on a 0–5 scale [Q41, Q54], whereas the deployment requires regulatory-equivalence scoring sensitive to dose-threshold and population-qualifier micro-differences (elicitation A3). The dataset analysis empirically demonstrates the calibration is incompatible: a 2× quantitative difference scores 4.0, a 14× difference scores 3.75, and a 60× PSA difference scores 3.0 (CLISTER-D12, CLISTER-D14, CLISTER-D13); legally significant additions of specific opioid names or 'sous stricte surveillance médicale' qualifiers are not penalized in DEFT2020 (DEFT2020-D16, DEFT2020-D17, DEFT2020-D20). (2) NER label categories are calibrated to clinical/UMLS taxonomies that conflate distinct regulatory entity types: QUAERO and Mantra-GSC's CHEM tag merges INN, brand name, and excipient (QUAERO-D10, QUAERO-D11, MANTRAGSC-D5, MANTRAGSC-D14); ATC codes and EMA administrative identifiers receive O tag (QUAERO-D12); contraindication qualifiers are tagged by entity type rather than as regulatory contraindication structure (QUAERO-D16, MANTRAGSC-D4). Web search confirms no French NLP benchmark with INN/ATC/excipient/contraindication-specific schemas exists [WEB-11, WEB-12]. The leading model also does not excel at MLC or STS [Q82] — the dimensions on which the deployment most depends. This is a structural validity violation.
@@ -209,20 +227,195 @@ Output ontology shows fundamental misalignment with the deployment, which the el
 
 **Checklist:**
 
-- **OO-1**: Output label categories reviewed: NER schemas span UMLS Semantic Groups (10–11 classes in QUAERO/Mantra-GSC) [Q35, Q103, Q106], clinical entity layers (CLINENTITY/EVENT/ACTOR/etc. in E3C) [Q104], 38-class pharmaceutical schema (PxCorpus) [Q108], 13-type fine-grained NER (DEFT2021) [Q28], and classification schemas (MeSH-C 23 axes [Q27], 12 specialties [Q105], 22 ICD-10 chapters [Q45]). STS uses 0–5 continuous scale [Q41].
-- **OO-2**: Missing categories specific to the regional regulatory context: (a) INN as distinct from brand name and excipient — absent across all NER schemas (QUAERO-D7, QUAERO-D10, MANTRAGSC-D5); (b) ATC code as entity class — absent (QUAERO-D12), and confirmed by [WEB-11] as field-level gap; (c) excipient name as distinct regulatory entity — absent (QUAERO-D11, MANTRAGSC-D8); (d) EMA-templated posology structure — absent at template-fidelity level; (e) contraindication qualifier as regulatory construct — absent (QUAERO-D16, MANTRAGSC-D4); (f) regulatory-equivalence STS scale — absent; CLISTER calibration is incompatible (CLISTER-D12, CLISTER-D13, CLISTER-D14).
-- **OO-3**: Categories encoding non-regional or non-deployment values: ICD-10 chapter classification (DiaMED) reflects clinical disease taxonomy not regulatory document structure; MeSH-C axes (DEFT2021) reflect biomedical literature indexing not regulatory data attributes; UMLS Semantic Groups [Q35] are research-oriented and conflate regulatory-distinct chemicals into single CHEM class.
-- **OO-4**: Stakeholder-driven taxonomy redesign is required: regulatory affairs specialists would need to define a regulatory entity schema (INN/ATC/excipient/posology/contraindication-qualifier) and a regulatory-equivalence STS rubric, neither of which currently exists in DrBenchmark or, per web search, in any French NLP benchmark [WEB-11, WEB-12].
-- **OO-5**: Taxonomy issues harming structural and content validity: STS scoring rule fundamentally mismatches the deployment's regulatory-equivalence decision rule (CLISTER-D12, CLISTER-D13, CLISTER-D14, DEFT2020-D16, DEFT2020-D17, DEFT2020-D20); NER label space conflates regulatorily distinct entity types (QUAERO-D10, QUAERO-D11, MANTRAGSC-D14); regulatory-specific entity types are absent from all schemas (QUAERO-D12).
-- **evidence_quotes**: ["[Q35] '10 entity categories corresponding to the UMLS Semantic Groups ... were annotated' (p.3)", "[Q41] 'similarity scores ranging from 0 to 5 to each pair. The scores were then averaged together to obtain a floating-point number' (p.4)", "[Q54] 'For STS tasks, the models' performance was assessed using ... Spearman correlation, and ... mean relative solution distance accuracy (EDRM)' (p.6)", "[Q82] 'the leading model, DrBERT-FS, does not excel in tasks such as MLC or STS.' (p.8)", "[Q103] 'O, GEOG, PHEN, DISO, ANAT, OBJC, PHYS, PROC, DEVI, CHEM and LIVB' (p.14)", "[Q106] 'Medline: ANAT, PROC, CHEM, PHYS, GEOG, DEVI, LIVB, OBJC, DISO, PHEN and O. EMEA and Patents: ANAT, PROC, CHEM, PHYS, DEVI, LIVB, OBJC, DISO, PHEN and O.' (p.14)", "[Q108] 'O, ANATOMY, DATE, DOSAGE, DURATION, MEDICAL EXAM, FREQUENCY, MODE, MOMENT, PATHOLOGY, SOSY, SUBSTANCE, TREATMENT and VALUE' (p.14)"]
-- **evidence_web_sources**: ["[WEB-11] Kadi et al. 2025 — ATC codes and excipient dosages 'frequently missing or misclassified' in LLM extraction from EMA SmPCs, confirming regulatory entity extraction is unsolved", "[WEB-12] Bayer et al. 2021 — general drug-label NLP systems 'would need to be modified or reconfigured to lower error rates to support their use in a regulatory setting'", "[WEB-8] EMA QRD v11 draft mandates INN inclusion in SmPC Section 1, confirming INN's distinct regulatory salience"]
-- **evidence_dataset**: ['CLISTER-D12: 2× quantitative difference scored 4.0 — incompatible with regulatory equivalence', 'CLISTER-D13: 60× PSA magnitude difference scored 3.0', 'CLISTER-D14: 14× PSA difference scored 3.75', 'CLISTER-D17: Different INNs scored 2.0 due to structural template; regulatory judgment would score near 0', 'DEFT2020-D16: Specific opioid names added in safety warning not penalized in score 4.0', "DEFT2020-D17: 'sous stricte surveillance médicale' absent in source not flagged in 3.6 score", "DEFT2020-D20: '(potentialisation réciproque)' mechanism qualifier dropped not flagged in 3.8 score", 'QUAERO-D10: Excipients tagged identically to INNs as CHEM', 'QUAERO-D11: Excipient and INN both tagged CHEM, no distinction', "QUAERO-D12: EMA product number 'EMEA/H/C/122' tagged O — missing regulatory identifier class", 'QUAERO-D16: Pregnancy contraindication tagged LIVB by entity type, not as regulatory contraindication structure', 'MANTRAGSC-D5: travoprost INN and timolol salt form both CHEM', "MANTRAGSC-D14: 'Renagel 800 mg sevelamer' brand and INN both CHEM", 'PXCORPUS-D17: Replace intent class severely underrepresented (~3 examples in 500-buffer)']
-- **evidence_map**: {'OO-1': ['Q35', 'Q41', 'Q54', 'Q103', 'Q106', 'Q108'], 'OO-2': ['WEB-11', 'QUAERO-D7', 'QUAERO-D10', 'QUAERO-D12', 'MANTRAGSC-D5', 'QUAERO-D16', 'CLISTER-D12', 'CLISTER-D13', 'CLISTER-D14'], 'OO-3': ['Q27', 'Q35', 'QUAERO-D10'], 'OO-4': ['WEB-11', 'WEB-12'], 'OO-5': ['Q82', 'CLISTER-D12', 'DEFT2020-D16', 'DEFT2020-D17', 'DEFT2020-D20', 'QUAERO-D10', 'QUAERO-D12', 'MANTRAGSC-D14']}
-- **confidence**: high
-- **information_gaps**: ["No quantification of how often clinical and regulatory NER label decisions would diverge on the same span (e.g., would CHEM-tagged 'natalizumab' match an INN-class regulatory annotation in a controlled comparison)."]
-- **requires_expert_verification**: ["Whether DEFT2021's SUBSTANCE/DOSAGE/MODE/DURATION schema, when applied to actual SmPC text, would yield acceptable regulatory-grade extraction or would require relabeling.", 'Whether the EDRM metric [Q54] could be re-purposed for regulatory-equivalence scoring with a new annotation rubric.']
+- **OO-1**: Output label categories reviewed: NER schemas span UMLS Semantic Groups (10–11 classes in QUAERO/Mantra-GSC) [Q35, Q103, Q106], clinical entity layers (CLINENTITY/EVENT/ACTOR/etc. in E3C) [Q104], 38-class pharmaceutical schema (PxCorpus) [Q108], 13-type fine-grained NER (DEFT2021) [Q28], and classification schemas (MeSH-C 23 axes [Q27], 12 specialties [Q105], 22 ICD-10 chapters [Q45]). STS uses 0–5 continuous scale [Q41]. — _Sources: Q35, Q41, Q54, Q103, Q106, Q108_
+- **OO-2**: Missing categories specific to the regional regulatory context: (a) INN as distinct from brand name and excipient — absent across all NER schemas (QUAERO-D7, QUAERO-D10, MANTRAGSC-D5); (b) ATC code as entity class — absent (QUAERO-D12), and confirmed by [WEB-11] as field-level gap; (c) excipient name as distinct regulatory entity — absent (QUAERO-D11, MANTRAGSC-D8); (d) EMA-templated posology structure — absent at template-fidelity level; (e) contraindication qualifier as regulatory construct — absent (QUAERO-D16, MANTRAGSC-D4); (f) regulatory-equivalence STS scale — absent; CLISTER calibration is incompatible (CLISTER-D12, CLISTER-D13, CLISTER-D14). — _Sources: WEB-11, QUAERO-D7, QUAERO-D10, QUAERO-D12, MANTRAGSC-D5, QUAERO-D16, CLISTER-D12, CLISTER-D13, CLISTER-D14_
+- **OO-3**: Categories encoding non-regional or non-deployment values: ICD-10 chapter classification (DiaMED) reflects clinical disease taxonomy not regulatory document structure; MeSH-C axes (DEFT2021) reflect biomedical literature indexing not regulatory data attributes; UMLS Semantic Groups [Q35] are research-oriented and conflate regulatory-distinct chemicals into single CHEM class. — _Sources: Q27, Q35, QUAERO-D10_
+- **OO-4**: Stakeholder-driven taxonomy redesign is required: regulatory affairs specialists would need to define a regulatory entity schema (INN/ATC/excipient/posology/contraindication-qualifier) and a regulatory-equivalence STS rubric, neither of which currently exists in DrBenchmark or, per web search, in any French NLP benchmark [WEB-11, WEB-12]. — _Sources: WEB-11, WEB-12_
+- **OO-5**: Taxonomy issues harming structural and content validity: STS scoring rule fundamentally mismatches the deployment's regulatory-equivalence decision rule (CLISTER-D12, CLISTER-D13, CLISTER-D14, DEFT2020-D16, DEFT2020-D17, DEFT2020-D20); NER label space conflates regulatorily distinct entity types (QUAERO-D10, QUAERO-D11, MANTRAGSC-D14); regulatory-specific entity types are absent from all schemas (QUAERO-D12). — _Sources: Q82, CLISTER-D12, DEFT2020-D16, DEFT2020-D17, DEFT2020-D20, QUAERO-D10, QUAERO-D12, MANTRAGSC-D14_
+
+<details>
+<summary><b>Evidence cited</b></summary>
+
+*Paper quotes:*
+- [Q35] '10 entity categories corresponding to the UMLS Semantic Groups ... were annotated' (p.3)
+- [Q41] 'similarity scores ranging from 0 to 5 to each pair. The scores were then averaged together to obtain a floating-point number' (p.4)
+- [Q54] 'For STS tasks, the models' performance was assessed using ... Spearman correlation, and ... mean relative solution distance accuracy (EDRM)' (p.6)
+- [Q82] 'the leading model, DrBERT-FS, does not excel in tasks such as MLC or STS.' (p.8)
+- [Q103] 'O, GEOG, PHEN, DISO, ANAT, OBJC, PHYS, PROC, DEVI, CHEM and LIVB' (p.14)
+- [Q106] 'Medline: ANAT, PROC, CHEM, PHYS, GEOG, DEVI, LIVB, OBJC, DISO, PHEN and O. EMEA and Patents: ANAT, PROC, CHEM, PHYS, DEVI, LIVB, OBJC, DISO, PHEN and O.' (p.14)
+- [Q108] 'O, ANATOMY, DATE, DOSAGE, DURATION, MEDICAL EXAM, FREQUENCY, MODE, MOMENT, PATHOLOGY, SOSY, SUBSTANCE, TREATMENT and VALUE' (p.14)
+
+*Web sources:*
+- [WEB-11] Kadi et al. 2025 — ATC codes and excipient dosages 'frequently missing or misclassified' in LLM extraction from EMA SmPCs, confirming regulatory entity extraction is unsolved
+- [WEB-12] Bayer et al. 2021 — general drug-label NLP systems 'would need to be modified or reconfigured to lower error rates to support their use in a regulatory setting'
+- [WEB-8] EMA QRD v11 draft mandates INN inclusion in SmPC Section 1, confirming INN's distinct regulatory salience
+
+*Dataset analysis:*
+- CLISTER-D12: 2× quantitative difference scored 4.0 — incompatible with regulatory equivalence
+- CLISTER-D13: 60× PSA magnitude difference scored 3.0
+- CLISTER-D14: 14× PSA difference scored 3.75
+- CLISTER-D17: Different INNs scored 2.0 due to structural template; regulatory judgment would score near 0
+- DEFT2020-D16: Specific opioid names added in safety warning not penalized in score 4.0
+- DEFT2020-D17: 'sous stricte surveillance médicale' absent in source not flagged in 3.6 score
+- DEFT2020-D20: '(potentialisation réciproque)' mechanism qualifier dropped not flagged in 3.8 score
+- QUAERO-D10: Excipients tagged identically to INNs as CHEM
+- QUAERO-D11: Excipient and INN both tagged CHEM, no distinction
+- QUAERO-D12: EMA product number 'EMEA/H/C/122' tagged O — missing regulatory identifier class
+- QUAERO-D16: Pregnancy contraindication tagged LIVB by entity type, not as regulatory contraindication structure
+- MANTRAGSC-D5: travoprost INN and timolol salt form both CHEM
+- MANTRAGSC-D14: 'Renagel 800 mg sevelamer' brand and INN both CHEM
+- PXCORPUS-D17: Replace intent class severely underrepresented (~3 examples in 500-buffer)
+
+</details>
+
+**Information gaps:**
+- No quantification of how often clinical and regulatory NER label decisions would diverge on the same span (e.g., would CHEM-tagged 'natalizumab' match an INN-class regulatory annotation in a controlled comparison).
+
+**Requires expert verification:**
+- Whether DEFT2021's SUBSTANCE/DOSAGE/MODE/DURATION schema, when applied to actual SmPC text, would yield acceptable regulatory-grade extraction or would require relabeling.
+- Whether the EDRM metric [Q54] could be re-purposed for regulatory-equivalence scoring with a new annotation rubric.
 
 ---
+
+### Output Content — 2/5 (Significant gaps)
+
+**Confidence:** high
+
+**Justification:**
+Annotator alignment with regulatory standards is largely undocumented and where documented, is inconsistent with the deployment's ground-truth norms. Annotation provenance is documented for only three datasets — DEFT-2021 (manual NER and MLC) [Q25], CLISTER (multiple annotators averaged) [Q41], DiaMED (several annotators including one medical expert, with Cohen's Kappa and Gwet's AC1) [Q45, Q46], and CAS POS (automatic via Tagex 3) [Q42]. None of these involve regulatory affairs or pharmacovigilance specialists; benchmark author affiliations are academic NLP and clinical medicine [Q8]. The elicitation (A4) confirms systematic disagreement is anticipated on borderline cases. Empirical dataset evidence corroborates: CLISTER scoring patterns are inconsistent with regulatory-equivalence norms (CLISTER-D12, CLISTER-D17, CLISTER-D18); DEFT2020 annotators score legally significant qualifier additions/deletions as near-equivalent (DEFT2020-D16, DEFT2020-D17, DEFT2020-D20); QUAERO/Mantra-GSC clinical UMLS conventions tag pregnancy contraindications by entity type rather than regulatory construct (QUAERO-D16, MANTRAGSC-D4). Convergent and external validity are both threatened. The score is 2 rather than 1 because some annotation processes are documented with multi-annotator IAA (DiaMED) and CLISTER's exact-paraphrase ceiling behavior shows annotator reliability on unambiguous cases (DEFT2020-D8).
+
+**Strengths:**
+- DiaMED documents inter-annotator agreement using both Cohen's Kappa and Gwet's AC1 across two sessions [Q45, Q46]
+- CLISTER uses multiple annotators with score averaging, providing variance signal that could be analyzed for borderline cases [Q41] (DEFT2020-D7)
+- CAS POS annotation was validated against manual annotations at 98% precision [Q42], establishing baseline annotation quality for that subtask
+- DiaMED includes one medical expert annotator [Q45]
+
+**Checklist:**
+
+- **OC-1**: Ground truth labels do not reflect regulatory affairs stakeholder perspectives. No annotation guidelines reference EMA/ANSM regulatory standards in the benchmark paper. Author affiliations [Q8] are academic NLP and clinical medicine institutions. The one documented medical expert (DiaMED) annotated ICD-10 classification, not the NER or STS tasks the deployment relies on [Q45]. — _Sources: Q8, Q45_
+- **OC-2**: Systematic disagreement is expected per elicitation A4. Empirical dataset evidence shows specific divergence patterns: STS scoring tolerates 2×–60× quantitative differences (CLISTER-D12, CLISTER-D13, CLISTER-D14); legally significant qualifier additions/deletions are not penalized (DEFT2020-D16, DEFT2020-D17, DEFT2020-D20); different INNs receive non-zero similarity scores due to structural template matching (CLISTER-D17, CLISTER-D18); clinical UMLS conventions tag contraindication populations by entity type rather than as regulatory contraindication structure (QUAERO-D16, MANTRAGSC-D4). — _Sources: CLISTER-D12, CLISTER-D13, CLISTER-D14, DEFT2020-D16, DEFT2020-D17, DEFT2020-D20, QUAERO-D16, MANTRAGSC-D4_
+- **OC-3**: Annotator demographics are NOT DOCUMENTED for the majority of corpora. The benchmark paper provides no Datasheet- or Data-Statement-level demographic breakdown. Documented information is limited to: CLISTER 'multiple annotators' [Q41], DiaMED 'several annotators including one medical expert' [Q45], DEFT-2021 'manually annotated' [Q25], CAS automatic Tagex 3 with manual validation [Q42]. Professional backgrounds beyond 'medical expert' (DiaMED) are not characterized. — _Sources: Q25, Q41, Q42, Q45_
+- **OC-4**: Re-annotation by a representative regional pool (regulatory affairs specialists, EMA/ANSM-trained pharmacologists, regulatory legal experts) would be required to align ground truth with the deployment's interpretive norms. This is consistent with elicitation A4's expectation of systematic disagreement on borderline cases. — _Sources: WEB-11, WEB-12_
+- **OC-5**: Aggregation methods: CLISTER averages annotator scores into a floating-point reference [Q41], which can erase minority/borderline disagreement. DEFT2020-D7 illustrates high inter-annotator variance (scores [2.0, 4.5, 0.0, 1.0, 0.0]) collapsed to mean 1.5, hiding the disagreement that would be diagnostic for regulatory borderline cases. — _Sources: Q41, DEFT2020-D7_
+- **OC-6**: Label issues harming convergent and external validity: STS labels do not converge with regulatory-equivalence judgments (CLISTER-D12–14, DEFT2020-D16–D20); NER labels do not converge with regulatory-entity granularity (QUAERO-D10–D12, MANTRAGSC-D5, MANTRAGSC-D14); aggregation by averaging hides borderline disagreements that are precisely the deployment's high-stakes flag cases. — _Sources: CLISTER-D12, DEFT2020-D16, QUAERO-D10, MANTRAGSC-D14_
+
+<details>
+<summary><b>Evidence cited</b></summary>
+
+*Paper quotes:*
+- [Q8] 'LIA, Avignon Université, Zenidoc, Nantes Université, CHU Nantes, Clinique des données, INSERM, CIC 1413, École Centrale Nantes, CNRS, LS2N, ... Université de Lille' (p.1)
+- [Q25] 'This dataset is manually annotated in two tasks: (i) multi-label classification and (ii) NER.' (p.3)
+- [Q41] 'manually annotated by several annotators, who assigned similarity scores ranging from 0 to 5 to each pair. The scores were then averaged together' (p.4)
+- [Q42] 'CAS ... POS tagging with 31 classes using automatic annotations through Tagex 3 ... 98% precision.' (p.4)
+- [Q45] 'manually annotated by several annotators, one of which is a medical expert, into 22 chapters of the International Classification of Diseases, 10th Revision (ICD-10)' (p.4)
+- [Q46] 'Inter-annotator agreement statistics. κ is referring to Kappa Cohen and G to Gwet's AC1.' (p.4)
+
+*Web sources:*
+- [WEB-11] Kadi et al. 2025 — confirms field-level gap; no regulatory-grade annotation rubric for SmPC extraction is established
+- [WEB-12] Bayer et al. 2021 — used pharmacovigilance evaluators for ADE extraction but not regulatory equivalence scoring; closest comparator confirms gap
+
+*Dataset analysis:*
+- CLISTER-D12: Annotators scored 2× difference as 4.0 — clinical norm, not regulatory norm
+- CLISTER-D17: Different INNs scored 2.0 — clinical structural-similarity norm, not regulatory equivalence
+- DEFT2020-D7: High inter-annotator variance ([2.0, 4.5, 0.0, 1.0, 0.0]) averaged to 1.5 — minority signal erased
+- DEFT2020-D8: Identical pair unanimously scored 5.0 — confirms annotator reliability on exact match (strength)
+- DEFT2020-D16: Specific opioid names added not penalized — clinical NLP annotator norm vs. regulatory norm
+- DEFT2020-D19: Annotators are NLP community members, not regulatory specialists
+- QUAERO-D16: Pregnancy contraindication tagged LIVB — UMLS clinical convention, not regulatory contraindication construct
+- MANTRAGSC-D4: Population qualifier tagged DISO rather than contraindication-type
+- ESSAI-D18: POS machine-generated; no human regulatory expert annotation
+- CAS-D12: Negation annotation boundary decisions undocumented
+
+</details>
+
+**Information gaps:**
+- No demographic breakdown of annotator pools across the majority of corpora.
+- No published comparison study of biomedical NLP annotators vs. regulatory affairs specialists on the same regulatory text — confirmed field-level gap [annotator_alignment_verification, NOT FOUND].
+
+**Requires expert verification:**
+- Magnitude of disagreement between benchmark labels and regulatory affairs judgments on a sampled set of QUAERO EMEA / Mantra-GSC fr_emea spans.
+- Whether DiaMED's IAA methodology could serve as a template for re-annotating regulatory-relevant subsets with regulatory affairs annotators.
+
+---
+
+### Output Form — 4/5 (Minor gaps)
+
+**Confidence:** high
+
+**Justification:**
+Output form is well-aligned. The deployment consumes label and score outputs in modalities the benchmark produces: IOB2 sequence labels via SeqEval [Q52], multiple-choice selections, multi-label classification labels, and continuous similarity scores [Q54]. Models predict only the first token label per word for tokenizer-agnostic evaluation [Q53]. Hyperparameters are documented [Q49, Q99] and best models saved on validation metrics [Q100]; results averaged over four runs with Student's t-test [Q51]. No output representation mismatch exists. Two minor concerns: (1) the EDRM metric [Q54] is calibrated for DEFT-2020 task design and has no documented regulatory calibration — this is a calibration concern that cuts across to OO; (2) compute requirements (~2,500 GPU hours [Q93], 36.9 kgCO2eq [Q94]) raise reproducibility concerns for resource-constrained users [Q92], though HuggingFace toolkit and documented hyperparameters [Q49] mitigate this. The output-form modality match is strong, justifying score 4 rather than 5.
+
+**Strengths:**
+- IOB2 sequence labels via SeqEval are a deployment-compatible NER output format [Q52]
+- Tokenizer-agnostic evaluation by predicting first-token label per word [Q53]
+- Continuous STS scores with Spearman correlation provide compatible output modality even if scoring rule mismatches [Q54]
+- Reproducibility supported by documented hyperparameters [Q49, Q99] and best-model saving on validation metric [Q100]
+- Statistical significance reported via Student's t-test over four runs [Q51]
+
+**Checklist:**
+
+- **OF-1**: Output modality matches: deployment consumes label outputs (NER spans, classification decisions) and continuous scores (STS for safety-warning equivalence). Benchmark produces both [Q52, Q54]. No modality mismatch. — _Sources: Q52, Q54_
+- **OF-2**: Not applicable — deployment is text-only document management with no speech-output requirement [infrastructure_notes interface_modality].
+- **OF-3**: Target population is regulatory affairs specialists, pharmacologists, and legal experts — a professional cohort with full literacy. No accessibility requirement diverges from general French professional norms [target_population description].
+- **OF-4**: Form mismatches harming external validity: minimal at the representation level. The substantive concern (EDRM and Spearman correlation are not calibrated for regulatory equivalence detection) is properly attributed to OO (scoring rule), not OF (representation). — _Sources: Q54_
+
+<details>
+<summary><b>Evidence cited</b></summary>
+
+*Paper quotes:*
+- [Q49] 'we have integrated all the training details, including hyperparameters, in Appendix A.' (p.5)
+- [Q51] 'The reported results are obtained by averaging the scores from four separate runs ... statistical significance computed using Student's t-test.' (p.5)
+- [Q52] 'we chose the SeqEval metric in conjunction with the IOB2 format and the training of all the models to predict only the label on the first token of each word' (p.6)
+- [Q53] 'It provides a tokenizer-agnostic evaluation and mitigates any correlation between models' performances and the tokenization process.' (p.6)
+- [Q54] 'For STS tasks, the models' performance was assessed using two metrics: (1) the Spearman correlation, and (2) the mean relative solution distance accuracy (EDRM)' (p.6)
+- [Q92] 'although the benchmark is easily reproducible and customizable, it required a substantial amount of computational power to execute all runs.' (p.9)
+- [Q93] 'approximately 2,500 hours on V100 GPUs' (p.9)
+- [Q100] 'we locally save the best model based on its validation metric.' (p.13)
+
+*Dataset analysis:*
+- MORFITT-D6: Multi-label one-hot output format technically consistent and deployment-compatible
+
+</details>
+
+---
+
+## Remediation Suggestions
+
+### Output Ontology ⚠
+
+**Gap:** STS scoring is calibrated for general semantic proximity and demonstrably tolerates regulatorily significant differences (CLISTER 60× quantitative divergence scores 3.0; DEFT2020 specific drug-name additions score 4.0).
+
+**Recommendation:** Develop a complementary regulatory-equivalence STS rubric with explicit penalties for dose-threshold changes, population-qualifier changes, and INN substitutions. Annotate a held-out evaluation set of EMA SmPC safety-warning sentence pairs against this rubric and report Spearman correlation separately from clinical CLISTER/DEFT2020 STS.
+
+### Output Ontology ⚠
+
+**Gap:** NER schemas conflate INN, brand name, and excipient under a single CHEM tag and do not annotate ATC codes or EMA administrative identifiers (QUAERO-D10, QUAERO-D12, MANTRAGSC-D14).
+
+**Recommendation:** Define a regulatory NER schema with distinct INN, brand-name, excipient, ATC-code, EMA-identifier, and contraindication-qualifier classes. Re-annotate QUAERO EMEA and Mantra-GSC fr_emea (the only EMA-sourced subsets) using this schema, with regulatory affairs specialists as annotators.
+
+### Input Ontology ⚠
+
+**Gap:** No task category covers IDMP-driven structured extraction or regulatory-equivalence STS, both of which are central to the deployment [WEB-11, WEB-16].
+
+**Recommendation:** Add two task categories to the evaluation suite: (a) IDMP attribute extraction from SmPC text targeting ATC, INN, excipient dose, therapeutic indication; (b) regulatory-equivalence STS over EMA-templated safety-warning pairs. Both can be designed as extensions of the existing HuggingFace toolkit [Q48].
+
+### Input Content ⚠
+
+**Gap:** No SmPC, CTD module, or EU-RMP text is present in any DrBenchmark dataset; QUAERO EMEA holds only ~10 segmented PIL documents [WEB-3, WEB-4].
+
+**Recommendation:** Construct a supplementary corpus of French-translated EMA SmPCs (centralized procedure outputs are publicly available) covering at least the major ATC therapeutic classes, with stratified train/dev/test splits and regulatory-register-aware sentence segmentation that preserves section 4.x boundaries.
+
+### Output Content ⚠
+
+**Gap:** Annotator demographics and professional backgrounds are undocumented for most corpora; no regulatory affairs annotators are documented anywhere in the benchmark [Q8, Q41, Q45].
+
+**Recommendation:** Conduct a calibration study: have a panel of regulatory affairs specialists re-score a stratified sample of CLISTER, DEFT2020 drug-leaflet pairs, and QUAERO EMEA spans against benchmark labels. Quantify systematic disagreement and use the magnitude to weight or correct benchmark performance estimates.
+
+### Input Form
+
+**Gap:** Sentence-splitting of long EMEA documents [Q37] removes document-level structural context (QUAERO-D19, QUAERO-D20) that SmPC/CTD reasoning depends on.
+
+**Recommendation:** Augment the QUAERO EMEA loader with a section-aware splitter that preserves SmPC section identifiers (4.1–4.9) as input metadata, and evaluate models with and without this structural context to quantify document-level reasoning effects.
 
 ## Evidence Registries
 

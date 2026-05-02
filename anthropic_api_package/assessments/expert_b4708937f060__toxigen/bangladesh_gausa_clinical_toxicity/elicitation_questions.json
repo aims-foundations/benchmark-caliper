@@ -5,7 +5,7 @@
     "question": "TOXIGEN was built around 13 U.S.-defined minority groups (e.g., Black Americans, Jewish Americans, LGBTQ+ Americans). For your Gazipur deployment, the relevant identity-based attack targets are likely very different — for example, attacks targeting Hindu or Christian minorities in a Muslim-majority context, caste-based slurs, anti-indigenous (e.g., Adivasi) content, or gendered attacks framed through local social norms. Which identity groups or social fault lines should your content moderation system actually be robust against?"
   },
   {
-    "id": "IC",
+    "id": "Q2",
     "dimension": "IC",
     "question": "Implicit toxicity in Bangladesh is culturally encoded differently from U.S. implicit hate speech — for example, indirect insults via religious references, caste-coded language, regionally specific slang from Gazipur's industrial or rural context, or Sylheti/Chittagongian code-switching that embeds hostility in ways Standard Bengali classifiers would miss. Does your system need to handle any of these forms of implicit toxicity, and are there other locally grounded patterns of indirect harmful language your users or adversarial actors are likely to exploit?"
   },

@@ -5,7 +5,7 @@
     "question": "The benchmark categories cover infrastructural, political, financial, ecological, agricultural, and human health impacts of weather events. For disaster reporting reliability in Argentina, are there impact categories that matter to your policy makers but might not appear here — for example, impacts on informal settlements (villas), agricultural disruption in Pampa or Patagonia, or flooding along the Río de la Plata basin? Are there disaster types (e.g., pampero windstorms, ENSO-driven droughts, urban flash floods in Buenos Aires) whose reporting patterns your users need to evaluate?"
   },
   {
-    "id": "IC",
+    "id": "Q2",
     "dimension": "IC",
     "question": "The benchmark is built from historical Canadian newspaper articles, which reflect Northern Hemisphere disaster framing, infrastructure norms, and institutional actors. For your Argentine policy makers assessing reporting reliability, would culturally embedded assumptions in the data — such as which agencies are cited as authoritative, what counts as 'normal' disaster response, or how agricultural loss is framed — misalign with what Argentine news sources or government communications typically convey?"
   },

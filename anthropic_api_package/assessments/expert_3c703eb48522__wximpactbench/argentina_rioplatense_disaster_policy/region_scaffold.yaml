@@ -1,0 +1,361 @@
+name: Argentine Government Disaster Reporting Reliability — Policy Staff
+abbreviation: ARG-DisasterPolicy
+assessment_context:
+  benchmark: wximpactbench
+  deployment_use_case: An AI system evaluates the reliability and trustworthiness
+    of disaster-related reporting across news, social media, and press channels in
+    Argentina, distinguishing verified disaster impact signals from noisy or unverified
+    content, for use by Argentine policy makers and government agency staff.
+  primary_country: Argentina
+  primary_city: Buenos Aires
+  relevant_sub_national_regions:
+  - Buenos Aires metropolitan area (AMBA) — primary deployment context
+  - Río de la Plata flooding corridor — key disaster exposure zone
+  - Pampa region — agricultural drought and storm exposure
+  - Patagonia — pampero windstorm and drought exposure
+  - Northwest Argentina (NOA) — ENSO-driven drought and flood exposure
+target_population:
+  description: Argentine policy makers and government agency staff with emergency
+    management or disaster risk reduction responsibilities. Users are highly educated
+    (master's degree minimum), upper-middle-class, and based primarily in Buenos Aires.
+    They consume disaster communications in both Spanish and English, and they use
+    AI-assisted tools to triage and assess the reliability of incoming reporting across
+    formal news, social media, and government press channels.
+  occupational_profile: Emergency management officials, disaster risk reduction analysts,
+    ministry staff, and senior agency personnel. Likely affiliated with or interacting
+    with institutions such as SINAGIR (Sistema Nacional para la Gestión Integral del
+    Riesgo), SMN (Servicio Meteorológico Nacional), CONAE, INDEC, and provincial civil
+    defense bodies.
+  institutional_affiliations:
+  - 'SINAGIR — [NEEDS VERIFICATION: confirm current structure and relevant ministerial
+    home]'
+  - 'Servicio Meteorológico Nacional (SMN) — [NEEDS VERIFICATION: confirm current
+    institutional status]'
+  - 'CONAE (Comisión Nacional de Actividades Espaciales) — [NEEDS VERIFICATION: confirm
+    role in disaster monitoring]'
+  - 'Secretaría de Gestión del Riesgo y Protección Civil — [NEEDS VERIFICATION: confirm
+    current name and ministerial home]'
+  - Provincial civil defense bodies in Buenos Aires province — [NEEDS VERIFICATION]
+  education_level: Advanced (minimum master's degree); domain expertise in emergency
+    management, public administration, or related fields
+  socioeconomic_profile: Upper-middle class; consistent access to devices, stable
+    connectivity, and professional digital infrastructure
+  age_range: '[NEEDS VERIFICATION — no data specified; likely 30–60 based on professional
+    profile]'
+  gender_distribution: '[NEEDS VERIFICATION]'
+languages:
+  primary: Rioplatense Spanish
+  secondary: English (intermediate-to-advanced proficiency among target users)
+  source_content_language: Predominantly Argentine Spanish; English present in international
+    press and some government technical documents
+  note: Target users operate bilingually for professional tasks. The AI system evaluates
+    source content predominantly in Rioplatense Spanish, including informal registers,
+    social media abbreviations, and local vernacular. The benchmark is English-only;
+    cross-lingual transfer to Spanish is a key validity gap.
+  rioplatense_features: Voseo (use of 'vos' instead of 'tú'), yeísmo rehilado (distinctive
+    'zh/sh' pronunciation of 'll' and 'y'), River Plate lexicon, Italian-influenced
+    vocabulary. Informal social media content may include lunfardo slang and heavy
+    abbreviation.
+  informal_register_characteristics: Social media posts (Twitter/X, WhatsApp broadcast
+    messages, Facebook) may include colloquialisms, hashtags, regional slang, incomplete
+    sentences, and OCR-absent text formats that differ substantially from formal journalism.
+writing_systems:
+  scripts:
+  - Latin alphabet (Spanish and English)
+  - Standard Spanish orthography with regional conventions
+  note: No right-to-left or non-Latin script concerns. Social media content may include
+    emoji, non-standard capitalization, and informal punctuation that may affect tokenization
+    or classification.
+literacy_and_education:
+  national_adult_literacy_rate: '[NEEDS VERIFICATION]'
+  target_population_literacy: Near-universal among the professional policy-maker cohort;
+    not a deployment constraint
+  university_enrollment_rate: '[NEEDS VERIFICATION]'
+  note: Literacy and education are not limiting factors for this user population.
+    The relevant challenge is not user literacy but rather the literacy of source
+    content being evaluated, which spans professional journalism to informal social
+    media.
+digital_infrastructure:
+  national_internet_penetration_pct: '[NEEDS VERIFICATION]'
+  buenos_aires_internet_penetration_pct: '[NEEDS VERIFICATION]'
+  mobile_internet_penetration_pct: '[NEEDS VERIFICATION]'
+  smartphone_penetration_pct: '[NEEDS VERIFICATION]'
+  dominant_device_type: Desktop and laptop for professional policy users in Buenos
+    Aires; mobile dominant for source content producers (journalists, social media
+    users) whose output the system evaluates
+  connectivity_quality_buenos_aires: '[NEEDS VERIFICATION — fiber and 4G/5G availability
+    in AMBA]'
+  connectivity_quality_interior_provinces: '[NEEDS VERIFICATION — relevant because
+    disaster events trigger reporting from Pampa, Patagonia, NOA regions with variable
+    connectivity]'
+  major_platforms_for_disaster_content:
+  - 'Twitter/X — [NEEDS VERIFICATION: Argentine usage share during disaster events]'
+  - 'WhatsApp — [NEEDS VERIFICATION: role in informal disaster communication and rumor
+    spread]'
+  - 'Facebook — [NEEDS VERIFICATION: usage among Argentine news consumers]'
+  - 'Infobae, Clarín, La Nación, Página 12 — major online news outlets [NEEDS VERIFICATION:
+    relative reach and disaster coverage patterns]'
+  - 'TELAM (state news agency) — [NEEDS VERIFICATION: current operational status and
+    credibility standing]'
+  - 'SMN official channels — [NEEDS VERIFICATION: platform presence and follower base]'
+  note: The deployment explicitly includes social media alongside formal press; the
+    AI system must handle content from all these channels. Infrastructure quality
+    for the policy-user interface (Buenos Aires) is high; infrastructure quality for
+    disaster-zone content producers (interior provinces) is variable.
+cultural_norms_notes: '- Argentine political culture is polarized, with strong partisan
+  divides between Peronist/Kirchnerist and non-Peronist blocs; disaster reporting
+  can be politically instrumentalized, with government response narratives contested
+  across ideological lines.
+
+  - Crisis communication norms are less institutionalized than in Canada or the United
+  States; the public information space is more fluid and subject to rapid shifts in
+  official messaging.
+
+  - Argentine professional officials draw on international (Global North) standards
+  for emergency management frameworks, meaning benchmark label categories grounded
+  in North American frameworks are not expected to produce systematic label disagreement
+  for formal press content.
+
+  - Social media and informal channels carry culturally embedded communication patterns
+  — solidarity networks, humor as coping mechanism, distrust of official sources,
+  neighborhood-level self-organization (barrio networks) — not represented in formal
+  journalism norms.
+
+  - Villas miseria (informal settlements) in the AMBA represent a distinct policy-relevant
+  population whose disaster vulnerability and communication practices differ from
+  formal urban and rural populations; impacts on this group are a known blind spot
+  in North American-derived disaster framing.
+
+  - Institutional actors cited in Argentine disaster reporting differ from Canadian
+  equivalents: SINAGIR, SMN, provincial civil defense bodies, municipios, barrio juntas.
+  LLMs trained on North American corpora may not reliably recognize these actors as
+  authoritative sources.
+
+  - Political sensitivity around ENSO-driven agricultural droughts (Pampa soybean
+  and grain production) is high given Argentina''s export-dependent economy and recurring
+  fiscal crises.'
+disaster_types_and_reporting_ecosystems:
+  primary_disaster_types:
+  - type: Urban flash floods — Buenos Aires and AMBA
+    notes: 'Triggered by intense rainfall overwhelming drainage infrastructure; reporting
+      spans SMN alerts, municipal civil defense notices, social media eyewitness posts,
+      and mainstream press. Villa miseria neighborhoods face disproportionate impact.
+      [NEEDS VERIFICATION: frequency, recent major events, key institutional response
+      actors]'
+  - type: Río de la Plata flooding (sudestada)
+    notes: 'Storm surge events driven by sustained southeasterly winds; affects coastal
+      Buenos Aires and the Paraná-Plata river system. Distinct institutional reporting
+      ecosystem involving Prefectura Naval Argentina and provincial actors. [NEEDS
+      VERIFICATION: recent major events, key reporting actors]'
+  - type: Pampero windstorms
+    notes: Sudden cold-front wind events affecting the Pampa and Buenos Aires; associated
+      with infrastructure damage and agricultural disruption. Reporting patterns may
+      differ from major flood events. [NEEDS VERIFICATION]
+  - type: ENSO-driven agricultural drought (Pampa)
+    notes: 'Multi-season droughts affecting soybean, maize, wheat production in Buenos
+      Aires, Córdoba, Santa Fe, Entre Ríos provinces; high political and financial
+      salience. Reporting ecosystem includes agroindustrial media (Agro Radio, La
+      Rural), commodity markets, and INDEC crop reports. [NEEDS VERIFICATION: recent
+      major drought events and their reporting patterns]'
+  - type: Patagonian wind events and wildfire
+    notes: High-intensity wind events and drought-driven wildfires in Neuquén, Río
+      Negro, Chubut, Santa Cruz; less densely covered by national media relative to
+      Buenos Aires events. [NEEDS VERIFICATION]
+  - type: Northwest Argentina (NOA) flooding and drought
+    notes: ENSO-linked events affecting Tucumán, Salta, Jujuy, Santiago del Estero;
+      sugarcane, citrus, tobacco agriculture exposed. Reporting ecosystem involves
+      provincial governments and is less visible nationally. [NEEDS VERIFICATION]
+  note: The benchmark covers no Argentine disaster events or geographic areas; all
+    six disaster types listed above are absent from WXImpactBench ground-truth data.
+    Sub-national reporting ecosystems differ substantially in institutional actor
+    prominence, social media penetration, and informal-versus-formal content mix.
+source_content_taxonomy:
+  formal_press:
+    description: National and regional newspapers, wire services (TELAM), online news
+      outlets; structured journalism with editorial standards
+    benchmark_alignment: Closest match to benchmark's historical Canadian newspaper
+      corpus; cultural and framing differences noted but not expected to produce systematic
+      label disagreement
+    key_outlets: '[NEEDS VERIFICATION — confirm current reach and editorial orientation
+      of Clarín, Infobae, La Nación, Página 12, Crónica, regional outlets]'
+  social_media:
+    description: Twitter/X posts, Facebook updates, WhatsApp broadcast messages; highly
+      variable register, length, and reliability
+    benchmark_alignment: No coverage in benchmark; benchmark's formal historical narrative
+      style is easier for LLMs to classify, suggesting performance estimates may substantially
+      overstate model capability on social media inputs
+    key_platforms: '[NEEDS VERIFICATION — confirm Argentine platform usage shares
+      during disaster events]'
+  government_press_releases:
+    description: Official communications from SMN, SINAGIR, municipal civil defense,
+      provincial governments; formal but shorter than newspaper articles
+    benchmark_alignment: Partial match in formality but shorter-form; institutional
+      actor names unfamiliar to North American-trained models
+  informal_community_networks:
+    description: Barrio-level social media groups, neighborhood WhatsApp chains, villa-based
+      community communicators; high local specificity, low verification
+    benchmark_alignment: No coverage in benchmark; represents the highest-noise content
+      type in the deployment
+regulatory_and_policy_context:
+  national_disaster_risk_reduction_framework: '[NEEDS VERIFICATION — confirm current
+    SINAGIR legal basis, e.g., Ley 27.287 or subsequent reforms]'
+  data_protection_regulation: '[NEEDS VERIFICATION — confirm current Argentine data
+    protection law, e.g., Ley 25.326 and any reform status as of 2024-2025]'
+  ai_governance_framework: '[NEEDS VERIFICATION — confirm whether Argentina has enacted
+    any AI-specific regulatory framework or guidelines applicable to government use]'
+  public_information_access_law: '[NEEDS VERIFICATION — confirm current access to
+    public information framework, e.g., Ley 27.275]'
+  emergency_communication_standards: '[NEEDS VERIFICATION — confirm whether SMN or
+    SINAGIR has codified crisis communication protocols that define authoritative
+    sources]'
+  note: Argentine crisis communication norms are noted by elicitation as less institutionalized
+    than Canadian equivalents; regulatory instability (including frequent policy changes
+    across administrations) means any named regulation should be verified for current
+    status.
+benchmark_validity_dimensions:
+  input_ontology:
+    priority: MODERATE
+    summary: The six top-level impact categories (Infrastructural, Political, Financial,
+      Ecological, Agricultural, Human Health) are broadly applicable to Argentine
+      disaster types. Absence of sub-labels is a recognized gap for local policy granularity.
+      The benchmark's task ontology covers only formal newspaper articles; social
+      media and press release input types are absent.
+    key_gaps:
+    - No sub-labels within the six categories for Argentine-specific policy needs
+      (e.g., informal settlement infrastructure vs. formal, agricultural product-specific
+      loss, political framing by Argentine institutional actors)
+    - No task type targeting social media posts, short-form press bulletins, or informal
+      content
+    - Disaster event types in the benchmark (Canadian weather events) do not include
+      pampero windstorms, sudestada, ENSO-driven Pampa drought, or Argentine urban
+      flash floods
+  input_content:
+    priority: HIGH
+    summary: The benchmark corpus is exclusively English-language historical Canadian
+      newspaper text. No Argentine, Latin American, or Spanish-language content is
+      represented. Social media and informal channel content — a primary deployment
+      data type — is entirely absent from the benchmark.
+    key_gaps:
+    - No Spanish-language or Rioplatense Spanish content
+    - No social media or informal text
+    - No Argentine institutional actors, geographic references, or local disaster
+      framing
+    - No representation of informal settlement (villa miseria) reporting context
+  input_form:
+    priority: MODERATE
+    summary: Benchmark is text-only, matching the deployment's text modality. However,
+      the benchmark's long-form formal historical newspaper register (avg. 2,987 tokens)
+      diverges substantially from short-form social media posts and press bulletins
+      in the deployment. The benchmark paper notes that formal historical style is
+      actually easier for LLMs to classify, suggesting performance estimates may not
+      generalize to noisier informal inputs.
+    key_gaps:
+    - No short-form content evaluation (tweet-length, press bulletin-length)
+    - No evaluation of informal register, slang, abbreviations, or emoji
+    - No multilingual or code-switched input handling
+  output_ontology:
+    priority: HIGH
+    summary: The deployment's core task — reliability and credibility scoring of disaster
+      reports — is structurally absent from the benchmark's output space. The benchmark
+      produces six binary impact labels and ranked article lists. The credibility
+      layer is envisioned as an external downstream aggregation step, creating a gap
+      between benchmark outputs and primary decision-support need.
+    key_gaps:
+    - No credibility, trustworthiness, or signal-to-noise dimension in benchmark output
+    - No misinformation likelihood scoring
+    - No source authority scoring
+    - Output transformation from binary labels to credibility scores is non-trivial
+      and unaddressed in benchmark documentation
+  output_content:
+    priority: MODERATE
+    summary: All benchmark annotators specialize in historical Canadian/North American
+      climate records with no representation of Argentine or Latin American disaster
+      communication perspectives. The benchmark paper acknowledges that demographic
+      and contextual factors may influence annotation but does not address this gap.
+      The user does not anticipate systematic label disagreement for formal press,
+      but informal and politically charged Argentine content may drift from Canadian
+      ground-truth assumptions.
+    key_gaps:
+    - No annotator familiarity with Argentine institutional actors or regional disaster
+      communication norms
+    - No representation of social vulnerability framing relevant to Argentine informal
+      settlements
+    - Potential drift for politically charged or informally framed Argentine disaster
+      reports
+  output_form:
+    priority: MODERATE
+    summary: Benchmark outputs (binary label vectors, ranked article lists) are usable
+      as upstream inputs to the deployment's credibility aggregation workflow. However,
+      the transformation from benchmark output to credibility score requires a non-trivial
+      aggregation step with external source metadata, not addressed in the benchmark.
+    key_gaps:
+    - No native credibility or reliability score produced
+    - Output aggregation pipeline design is outside benchmark scope
+    - Integration with Argentine source metadata (outlet reach, account verification
+      status, institutional affiliation) is not specified
+flagged_gaps_for_web_search:
+- gap_id: 1
+  label: Social media and informal channel content
+  search_target: disaster impact classification benchmark social media informal text
+    Spanish language Argentina Twitter flood storm
+- gap_id: 2
+  label: Rioplatense Spanish and Spanish-language disaster NLP
+  search_target: Spanish language disaster NLP benchmark Argentina climate weather
+    impact Rioplatense LLM evaluation cross-lingual transfer
+- gap_id: 3
+  label: Credibility and misinformation scoring infrastructure
+  search_target: disaster misinformation detection benchmark credibility scoring source
+    reliability Spanish Latin America LLM evaluation
+- gap_id: 4
+  label: Argentine institutional actors and sub-national disaster geography in NLP
+    evaluation data
+  search_target: Argentina SINAGIR SMN CONAE disaster risk reduction NLP benchmark
+    Buenos Aires flood risk evaluation sub-national
+- gap_id: 5
+  label: Informal settlement and social vulnerability framing
+  search_target: informal settlement disaster vulnerability Argentina villa miseria
+    urban flood impact NLP classification benchmark social vulnerability
+- gap_id: 6
+  label: Short-form and informal register text classification
+  search_target: short-form disaster text classification benchmark social media tweet
+    length Spanish informal NLP LLM register
+- gap_id: 7
+  label: Complementary Spanish-language disaster benchmarks
+  search_target: Spanish disaster benchmark NLP Latin America weather climate impact
+    text classification evaluation dataset 2023 2024 2025
+- gap_id: 8
+  label: Argentine crisis communication norms and institutional standards
+  search_target: Argentina crisis communication standards SINAGIR emergency management
+    information protocols disaster reporting norms official channels
+domain_specific_notes: '- Emergency management: Argentine institutional actors (SINAGIR,
+  SMN, provincial civil defense) are not represented in the benchmark corpus or annotation
+  guidelines. LLMs evaluated on WXImpactBench may not reliably recognize these actors
+  as authoritative sources when applied to Argentine content.
+
+  - Agricultural reporting: Pampa agricultural drought impacts are policy-critical
+  given Argentina''s export economy; the benchmark''s Agricultural Impact category
+  is broadly applicable but Canadian grain/livestock framing may not map cleanly onto
+  Argentine soybean/maize/wheat commodity reporting or INDEC agricultural statistics.
+
+  - Urban flooding: The combination of formal infrastructure damage and informal settlement
+  vulnerability (villas miseria) in AMBA flooding events creates a classification
+  challenge not represented in the benchmark; the Political Impact category may need
+  to capture social vulnerability dimensions absent from the Canadian framing.
+
+  - Social media noise: The deployment explicitly requires distinguishing verified
+  signals from noisy or unverified social media content; the benchmark provides no
+  tools for this and performs best on formal long-form text — the inverse of the highest-noise
+  deployment inputs.
+
+  - Political polarization: Argentine disaster reporting frequently becomes politically
+  instrumentalized across Kirchnerist/non-Kirchnerist lines; Political Impact classification
+  in this context may require sensitivity to domestic partisan framing not present
+  in the benchmark''s Canadian government-response framing.
+
+  - Credibility aggregation: The downstream credibility scoring layer envisioned by
+  the user requires source metadata (outlet reach, account verification, institutional
+  affiliation) that is Argentine-specific and not addressed by the benchmark; this
+  integration layer represents a significant deployment engineering task beyond benchmark
+  application.
+
+  '
