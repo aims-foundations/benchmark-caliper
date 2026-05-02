@@ -1,0 +1,708 @@
+name: asap_plus_plus
+full_name: 'ASAP++: Enriching the ASAP Automated Essay Grading Dataset with Essay Attribute Scores'
+source_url: https://cfilt.iitb.ac.in/~egdata/
+year: 2018
+domain: Automated Essay Grading / Writing Quality Assessment
+porting_strategy: none
+languages:
+- en
+primary_region: United States (US middle-school curriculum, Grades 7–10)
+description: 'ASAP++ extends the original ASAP Automated Essay Grading (AEG) dataset by adding
+
+  attribute-level scores — such as content, organization, word choice, sentence fluency,
+
+  and conventions — to the 6 of 8 ASAP prompts that previously had only holistic scores.
+
+  The resulting dataset covers approximately 10,400 English-language essays written by
+
+  native English-speaking US students in Grades 7–10 across three essay types:
+
+  argumentative/persuasive, source-dependent, and narrative/descriptive. Attribute scores
+
+  were produced by a small team of India-based English-language annotators and validated
+
+  against the original ASAP holistic scores using Quadratic Weighted Kappa (QWK).
+
+  The resource is intended as a gold standard for future attribute-score prediction
+
+  experiments in automated essay scoring research.
+
+  '
+documentation_excerpts: '## Key characteristics relevant to validity analysis
+
+
+  ### 1. Input Ontology
+
+  ASAP++ covers three essay types: argumentative/persuasive, source-dependent, and
+
+  narrative/descriptive [Q12, Q13, Q14, Q15]. Within each type, the benchmark measures
+
+  a fixed set of writing attributes — content, organization, word choice, sentence fluency,
+
+  and conventions for narrative essays [Q19], with analogous attributes for the other
+
+  two types [Q18]. The taxonomy was designed to broaden prior attribute-level work that
+
+  covered only a handful of traits such as organization, prompt adherence, and coherence
+
+  [Q7], and ASAP++ extends this across 6 prompts [Q4, Q5].
+
+
+  From a deployment validity perspective, this taxonomy is severely misaligned with the
+
+  target use case of Qatari and Arab high school students. The three essay types are drawn
+
+  entirely from a US middle-school context and do not include literary analysis,
+
+  religious-text commentary, or cultural commentary — genres that are standard in Arab
+
+  high school curricula [Q13, Q14, Q15]. Feature analysis also confirms that the scoring
+
+  logic is type-specific and embedded in English-language US pedagogical norms: source-
+
+  dependent essays weight length for content, while argumentative essays prioritize
+
+  coherence and cohesion [Q43, Q44, Q45]. Deep learning systems are additionally
+
+  constrained by the small number of prompts available [Q6], further limiting coverage.
+
+  There is no mention of Islamic rhetorical conventions, Arabic genre norms, or
+
+  curricular frameworks beyond the US context. This represents a fundamental Input
+
+  Ontology gap: the benchmark''s category inventory does not contain the test-case types
+
+  the deployment requires.
+
+
+  ### 2. Input Content
+
+  The underlying dataset comprises approximately 13,000 essays written across 8 prompts
+
+  by US students in Grades 7–10, each originally evaluated by 2 raters [Q3]. ASAP++
+
+  adds attribute annotations to the 6 prompts — approximately 10,400 essays — that
+
+  previously had only holistic scores [Q8]. Critically, all essays were written by
+
+  native English-speaking children [Q10]. The annotated dataset is publicly available
+
+  for non-commercial research use [Q51].
+
+
+  From a deployment validity perspective, the source population is entirely incompatible
+
+  with the deployment target. The essays originate from native English-speaking US
+
+  middle-schoolers writing to culturally embedded American prompts [Q10, Q3]; the
+
+  deployment targets Arabic-language high school students (Grades 10–12) in Qatar and
+
+  other Arab countries writing to prompts grounded in Arab cultural, literary, and
+
+  religious contexts. There is no overlap in language, nationality, curriculum, or
+
+  cultural frame of reference. The benchmark presents this as a data resource [Q46],
+
+  but makes no claim of cross-lingual or cross-cultural transferability, and no
+
+  Arabic-language instances are present anywhere in the dataset.
+
+
+  ### 3. Input Form
+
+  For feature extraction, ASAP++ uses the attribute-independent feature set from Zesch
+
+  et al. (2015), supplemented by entity grid coherence features from Barzilay and
+
+  Lapata (2005), with all features extracted using Stanford CoreNLP [Q31, Q32, Q33].
+
+  Essays were batched for annotation in sets of approximately 100 [Q21]. The benchmark
+
+  operates entirely on English plain text.
+
+
+  From a deployment validity perspective, the benchmark is built on an exclusively
+
+  English-language signal chain. The deployment operates in Modern Standard Arabic (MSA),
+
+  which uses a right-to-left Arabic script, a richer root-and-pattern morphological
+
+  system, and an entirely different NLP preprocessing ecosystem. The feature pipeline —
+
+  including entity grids, coherence features, and the Zesch et al. attribute-independent
+
+  features — was designed and validated for English and cannot be directly applied to
+
+  Arabic text [Q33]. No Arabic tokenization, morphological analysis, or diacritical
+
+  handling is mentioned anywhere in the paper. This represents the most fundamental
+
+  form of Input Form invalidity: not a resolution or encoding mismatch, but a complete
+
+  language-script incompatibility.
+
+
+  ### 4. Output Ontology
+
+  ASAP++ uses the same score range as the original ASAP holistic scores [Q11]. Two sets
+
+  of attributes are defined based on essay type [Q18]: the narrative set (content,
+
+  organization, word choice, sentence fluency, conventions) was already present in the
+
+  original ASAP dataset [Q16], while ASAP++ adds analogous attribute scores for
+
+  argumentative/persuasive and source-dependent essay prompts [Q17]. These annotations
+
+  are described as a gold standard for future attribute-score prediction [Q50].
+
+
+  From a deployment validity perspective, the label taxonomy is misaligned on multiple
+
+  axes. First, categories like "word choice" and "sentence fluency" carry implicit
+
+  English-language assumptions — vocabulary range and syntactic variety in English —
+
+  that do not map cleanly onto MSA writing quality criteria, where morphological
+
+  correctness, diacritical accuracy, and adherence to Arabic rhetorical structure may
+
+  be more salient. Second, and more critically, the deployment requires natural-language
+
+  revision suggestions with explanatory rationale rather than numeric trait scores
+
+  [Q11, Q50]. The benchmark''s output ontology was never designed to validate a
+
+  feedback-generation system, and using it as such would constitute a fundamental
+
+  validity category error.
+
+
+  ### 5. Output Content
+
+  Each essay was scored by a single annotator [Q20, Q22]. Quality control required a
+
+  second annotator when any attribute score differed from either original ASAP rater by
+
+  2 or more points [Q24], with the final label chosen as the score closest to the
+
+  original holistic score [Q25]; in practice only about one-sixth of essays required
+
+  a second pass [Q40]. Ground truth was anchored to the original ASAP raters'' overall
+
+  scores [Q23]. Three annotators were used in total [Q27, Q53]: all were India-based
+
+  English-language specialists with MA-level English training [Q30], editorial experience
+
+  at English-language publications [Q29], and high English exam scores or TOEFL
+
+  performance [Q28]. Annotators were instructed to substitute plausible placeholders
+
+  for anonymized named entities rather than penalizing essays for the anonymization
+
+  [Q42], though the anonymization itself posed interpretive difficulties [Q41].
+
+
+  From a deployment validity perspective, the annotator profile reveals a significant
+
+  mismatch with the target deployment context [Q9]. The annotators are India-based
+
+  English specialists judging US student essays by inferred US curriculum standards
+
+  using ground-truth anchoring on original US rater scores [Q23]. None of the described
+
+  qualifications — English MA training, Indian newspaper editorial experience, TOEFL
+
+  scores — confer expertise in Arabic writing quality assessment or Qatari/Arab
+
+  curriculum norms. The quality-control mechanism of anchoring to holistic scores [Q25]
+
+  further embeds US rater judgments as the normative standard, with no mechanism for
+
+  capturing how Arab teachers or curriculum bodies would evaluate writing quality.
+
+  Label transfer to an Arabic-language Qatari deployment is highly unreliable under
+
+  this annotator profile.
+
+
+  ### 6. Output Form
+
+  The primary evaluation metric is Quadratic Weighted Kappa (QWK), chosen over accuracy
+
+  and F-score because it accounts for both random agreement and the ordinal distance
+
+  between predicted and actual scores [Q34, Q35, Q36]. QWK is the dominant metric
+
+  across all prior work using the ASAP dataset [Q37]. The baseline uses an Ordinal
+
+  Class Classifier in Weka with a Random Forest internal classifier, evaluated via
+
+  5-fold cross-validation [Q38, Q39]. Inter-annotator agreement between ASAP++ annotators
+
+  and the original ASAP raters is also reported using QWK [Q2, Q34].
+
+
+  From a deployment validity perspective, the benchmark''s evaluation framework is entirely
+
+  built around ordinal numeric scores and agreement metrics between human raters and
+
+  predicted scores. The deployment requires free-text, actionable revision suggestions
+
+  with explanatory rationale — not numeric labels. QWK has no mechanism for evaluating
+
+  the quality, actionability, or pedagogical appropriateness of natural-language feedback.
+
+  This is not a minor gap but a complete mismatch: there is no output form overlap
+
+  between what the benchmark measures (numeric trait score agreement) and what the
+
+  deployment produces (explanatory revision suggestions for student writers).
+
+
+  ### Stated Limitations
+
+  The authors acknowledge that the original ASAP dataset''s lack of attribute-specific
+
+  scores limits its utility for attribute-level prediction research [Q5], and that deep
+
+  learning systems are further constrained by the small number of prompts [Q6]. They
+
+  note a high Pearson correlation (~0.9) between holistic and attribute scores as
+
+  justification for the quality-control anchoring mechanism [Q26], though this
+
+  circularity is not critically examined. Annotators faced difficulty with anonymized
+
+  named entities [Q41]. The dataset is released under a Creative Commons
+
+  Attribution-ShareAlike License restricted to non-commercial research use [Q52].
+
+  None of the stated limitations address linguistic, cultural, or geographic scope —
+
+  there is no acknowledgment that the benchmark is limited to English-language essays,
+
+  US curriculum contexts, or native English-speaking students.
+
+  '
+verbatim_quotes:
+- id: Q1
+  page: 1
+  dimension: output_content
+  text: In this paper, we describe the creation of a resource - ASAP++ - which is basically annotations of the Automatic Student
+    Assessment Prize's Automatic Essay Grading dataset. These annotations are scores for different attributes of the essays,
+    such as content, word choice, organization, sentence fluency, etc. Each of these essays is scored by an annotator.
+- id: Q2
+  page: 1
+  dimension: output_form
+  text: We also report the results of each of the attributes using a Random Forest Classifier using a baseline set of attribute
+    independent features as described by Zesch et al. (2015).
+- id: Q3
+  page: 1
+  dimension: input_content
+  text: The ASAP AEG dataset comprises of approximately 13,000 essays, written across 8 prompts. The essays were written by
+    students of class 7 to 10. Each essay was evaluated by 2 evaluators. 6 out of the 8 prompts only have overall scores.
+    Only 2 of them have scores for individual essay attributes, like content, organization, style, etc.
+- id: Q4
+  page: 1
+  dimension: input_ontology
+  text: Our contribution is the scoring of individual attributes of the essays, like content, organization, style, etc. in
+    the ASAP dataset for the remainder of the essays.
+- id: Q5
+  page: 1
+  dimension: input_ontology
+  text: A lot of the work in essay grading today makes use of the ASAP AEG dataset. However, most of the essays only have
+    an overall score, not attribute-specific scores. This limitation limits the utility of this dataset for predicting the
+    scores of particular attributes of essays.
+- id: Q6
+  page: 1
+  dimension: input_ontology
+  text: However, most of them (in particular the deep learning systems) are constrained by the fact that there are very few
+    prompts to handle scoring of individual attributes.
+- id: Q7
+  page: 1
+  dimension: input_ontology
+  text: While there has been a lot of work done in overall essay scoring, not much has been done with respect to scoring particular
+    attributes of essays. Some of the attributes that have been scored include organization (Persing et al., 2010), prompt
+    adherence (Persing and Ng, 2014), coherence (Somasundaran et al., 2014).
+- id: Q8
+  page: 1
+  dimension: input_content
+  text: The entire ASAP dataset has nearly 13,000 essays across 8 prompts. 6 of those 8 prompts, comprising nearly 10,400
+    essays, only have an overall score.
+- id: Q9
+  page: 1
+  dimension: output_content
+  text: Sandeep Mathias, Pushpak Bhattacharyya Department of Computer Science and Engineering Indian Institute of Technology,
+    Bombay
+- id: Q10
+  page: 2
+  dimension: input_content
+  text: All the essays were written by native English speaking children from classes 7 to 10.
+- id: Q11
+  page: 2
+  dimension: output_ontology
+  text: We use the same score range as the overall score range of the essays.
+- id: Q12
+  page: 2
+  dimension: input_ontology
+  text: There are 3 types of essays in the dataset.
+- id: Q13
+  page: 2
+  dimension: input_ontology
+  text: Argumentative / Persuasive essays - These are essays where the prompt is one in which the writer has to convince the
+    reader about their stance for or against a topic (for example, free speech in public colleges).
+- id: Q14
+  page: 2
+  dimension: input_ontology
+  text: Source-dependent responses - These essays are responses to a source text, where the writer responds to a question
+    about the text (for instance, describing the writer's opinion about an incident that happened to him in the text).
+- id: Q15
+  page: 2
+  dimension: input_ontology
+  text: Narrative / Descriptive essays - These are essays where the prompt requires us to describe / narrate a story.
+- id: Q16
+  page: 2
+  dimension: output_ontology
+  text: The ASAP dataset already contains attribute scores for the narrative essays, namely content, organization, word choice,
+    sentence fluency, conventions, etc.
+- id: Q17
+  page: 2
+  dimension: output_ontology
+  text: Since we already have scores present for the narrative essays, we describe the scores for the other types of essays.
+- id: Q18
+  page: 2
+  dimension: output_ontology
+  text: Based on the types of essays, there are 2 sets of attributes.
+- id: Q19
+  page: 2
+  dimension: output_ontology
+  text: 'There are 5 attributes for narrative essays, namely 1. Content: The quantity of relevant text present in the essay.
+    2. Organization: The way the essay is structured. 3. Word Choice: The choice and aptness of the vocabulary used in the
+    essay.'
+- id: Q20
+  page: 3
+  dimension: output_content
+  text: Each of the essays in a particular prompt were scored by an annotator.
+- id: Q21
+  page: 3
+  dimension: input_form
+  text: Each prompt was split into sets of 100 essays each, with the assumption that a set would correspond to a week's worth
+    of time for the annotator.
+- id: Q22
+  page: 3
+  dimension: output_content
+  text: Unlike the ASAP AEG dataset in which every essay was annotated by 2 annotators, we use only 1 annotator here for each
+    essay.
+- id: Q23
+  page: 3
+  dimension: output_content
+  text: For the ground truth, we make use of the overall score of the essays given by the original annotators of the ASAP
+    AEG dataset.
+- id: Q24
+  page: 3
+  dimension: output_content
+  text: In case the scoring of a particular attribute for a particular prompt differs from either of the original scorers
+    by 2 or more points, the essay is then annotated by another annotator.
+- id: Q25
+  page: 3
+  dimension: output_content
+  text: The final score that is chosen is the one from the annotator that is closest to the overall scores.
+- id: Q26
+  page: 3
+  dimension: output_content
+  text: One of the reasons that we do this is because, in the 2 prompts that were rated by the original raters, there is a
+    very high Pearson correlation (nearly 0.9) between the overall scores and the individual attribute scores.
+- id: Q27
+  page: 3
+  dimension: output_content
+  text: We made use of a total of three annotators to annotate the essays.
+- id: Q28
+  page: 3
+  dimension: output_content
+  text: Each of the annotators had competence in English, either by scoring quite high marks in their high school exams (over
+    90% in English), or scoring over 110 in ToEFL.
+- id: Q29
+  page: 3
+  dimension: output_content
+  text: Each of them also had some experience in evaluating texts, such as interning at The Hindu (a top English newspaper
+    in India), being the chief editor of the college magazine, etc.
+- id: Q30
+  page: 3
+  dimension: output_content
+  text: All the annotators have either studied or are studying English at a Master of Arts (MA) level.
+- id: Q31
+  page: 3
+  dimension: input_form
+  text: We used the attribute independent feature set provided by Zesch et al. (2015).
+- id: Q32
+  page: 3
+  dimension: input_form
+  text: In addition to those features, we also made use of entity grid features described in Barzilay and Lapata (2005).
+- id: Q33
+  page: 3
+  dimension: input_form
+  text: All the features were extracted using Stanford Core NLP (Manning et al., 2014).
+- id: Q34
+  page: 4
+  dimension: output_form
+  text: We evaluate each of the annotators using Cohen's Kappa, with quadratic weights - i.e. Quadratic Weighted Kappa (QWK)
+    (Cohen, 1968).
+- id: Q35
+  page: 4
+  dimension: output_form
+  text: 'We chose this as the evaluation metric (as compared to accuracy and weighted F-Score) because of the following reasons:
+    Unlike accuracy and F-Score, Kappa takes into account random agreement.'
+- id: Q36
+  page: 4
+  dimension: output_form
+  text: Weighted Kappa, takes into account the distance between the actual score and the reported score. Quadratic weights
+    reward matches and penalize mismatches more than linear weights.
+- id: Q37
+  page: 4
+  dimension: output_form
+  text: Due to these reasons, this is one of the most used evaluation metrics to evaluate the performance of essay grading
+    systems. To the best of our knowledge, all of the papers using the ASAP dataset make use of this as the evaluation metric.
+- id: Q38
+  page: 4
+  dimension: output_form
+  text: We made use of the Ordinal Class Classifier (Frank and Hall, 2001) in Weka (Frank et al., 2016). This classifier is
+    a meta-classifier, that first converts ordinal data into categorical data, before running an internal classifier on the
+    data. We used the Random Forest classifier (Breiman, 2001) as the internal classifier.
+- id: Q39
+  page: 4
+  dimension: output_form
+  text: We used 5-fold cross validation to get the results for each attribute for each prompt.
+- id: Q40
+  page: 4
+  dimension: output_content
+  text: Most of the essays required only a single annotator. Only about a sixth of the essays required a second annotator.
+- id: Q41
+  page: 4
+  dimension: input_content
+  text: One of the major problems that the annotators faced was the fact that all the essays were anonymized. Named entities,
+    like The New York Times would be referred to as @ORGANIZATION1, Donald Trump would be referred to as @PERSON1, etc.
+- id: Q42
+  page: 4
+  dimension: output_content
+  text: The annotators were instructed not to penalize the essays because of the anonymizations, but were told to replace
+    them with placeholders (like @PERSON1 being replaced by either Joe, or Jane, etc. wherever applicable).
+- id: Q43
+  page: 4
+  dimension: input_ontology
+  text: For source-dependent essays, we found out that the most important feature for content was length, while for argumentative
+    / persuasive essays, it was coherence and cohesion features, followed by length.
+- id: Q44
+  page: 4
+  dimension: input_ontology
+  text: For source-dependent essays, the coherence and cohesion feature set is the most important feature set for each of
+    the other 3 attributes.
+- id: Q45
+  page: 4
+  dimension: input_ontology
+  text: For persuasive / argumentative essays, coherence and cohesion features are the most important features for 4 of the
+    5 attributes.
+- id: Q46
+  page: 5
+  dimension: input_content
+  text: In this paper, we present a manually annotated dataset for automated essay grading.
+- id: Q47
+  page: 5
+  dimension: output_content
+  text: The annotation was done for different attributes of the essays.
+- id: Q48
+  page: 5
+  dimension: output_content
+  text: Most of the essays were annotated by a single annotator.
+- id: Q49
+  page: 5
+  dimension: output_content
+  text: However, about a sixth of them were annotated by a second annotator.
+- id: Q50
+  page: 5
+  dimension: output_ontology
+  text: These annotations can be used as a gold standard for future experiments in predicting different attribute scores.
+- id: Q51
+  page: 5
+  dimension: input_content
+  text: The resource is available online at https://cfilt.iitb.ac.in/˜egdata/.
+- id: Q52
+  page: 5
+  dimension: input_content
+  text: The resource is available for non-commercial research use under the Creative Commons Attribution-ShareAlike License.
+- id: Q53
+  page: 5
+  dimension: output_content
+  text: We thank the annotators of our task - Advaith Jayakumar, Janice Pereira and Elaine Mathias - for their help in creating
+    this resource.
+- id: Q54
+  page: 5
+  dimension: output_content
+  text: We also thank members of CFILT at IIT Bombay for their valuable comments and suggestions.
+coverage_strengths:
+- user_priority: Attribute-level essay scoring taxonomy
+  benchmark_coverage: 'ASAP++ explicitly adds attribute-level scores (content, organization, word choice,
+
+    sentence fluency, conventions) across 6 prompts [Q4, Q16, Q19], providing a richer
+
+    scoring taxonomy than holistic scores alone. This multi-trait structure is conceptually
+
+    analogous to what a formative feedback system would need to explain trait-by-trait
+
+    performance, even though the specific attributes were designed for English writing.
+
+    '
+  dimension: input_ontology
+- user_priority: Multiple essay genre types
+  benchmark_coverage: 'The benchmark documents three distinct essay types — argumentative/persuasive,
+
+    source-dependent, and narrative/descriptive [Q12, Q13, Q14, Q15] — demonstrating
+
+    awareness that different genres require different evaluative logic. Feature importance
+
+    analysis confirms type-specific scoring patterns [Q43, Q44, Q45], a methodological
+
+    precedent relevant to any multi-genre deployment.
+
+    '
+  dimension: input_ontology
+- user_priority: Ordinal scoring with inter-rater reliability reporting
+  benchmark_coverage: 'The benchmark consistently uses Quadratic Weighted Kappa (QWK) as its inter-rater
+
+    and system evaluation metric [Q34, Q35, Q36, Q37], with documented rationale for
+
+    this choice over accuracy and F-score. This provides a concrete methodological
+
+    template for measuring annotator agreement on writing quality traits, should a
+
+    comparable Arabic annotation effort be undertaken.
+
+    '
+  dimension: output_form
+- user_priority: Publicly available dataset for research
+  benchmark_coverage: 'The resource is publicly available at https://cfilt.iitb.ac.in/~egdata/ [Q51]
+
+    under a Creative Commons Attribution-ShareAlike License for non-commercial
+
+    research use [Q52], making it accessible as a methodological reference point
+
+    even where direct use is inappropriate.
+
+    '
+  dimension: input_content
+coverage_gap_analysis:
+- user_priority: Arabic-language essay content (MSA)
+  benchmark_coverage: 'NOT DOCUMENTED — all essays are in English, written by native English-speaking
+
+    US students [Q10]. No Arabic-language instances, prompts, or annotations exist
+
+    in the dataset.
+
+    '
+  gap_type: full
+  web_search_target: Arabic automated essay scoring dataset MSA Modern Standard Arabic AES benchmark
+- user_priority: Qatar national curriculum essay genres (literary analysis, religious text, cultural commentary)
+  benchmark_coverage: 'The benchmark covers only argumentative/persuasive, source-dependent, and
+
+    narrative/descriptive essay types drawn from a US middle-school context [Q12,
+
+    Q13, Q14, Q15]. Literary analysis, religious-text commentary, and cultural
+
+    commentary genres — standard in Qatari and Arab high school curricula — are
+
+    entirely absent.
+
+    '
+  gap_type: full
+  web_search_target: Qatar national curriculum Arabic writing genres Grades 10-12 literary analysis Quranic text essay MOE
+    Qatar Arabic language standards
+- user_priority: Natural-language revision suggestions as output (not numeric scores)
+  benchmark_coverage: 'The benchmark produces only ordinal numeric trait scores and evaluates them using
+
+    QWK [Q11, Q34, Q37, Q50]. Actionable natural-language revision suggestions with
+
+    explanatory rationale are not part of the benchmark''s output schema or evaluation
+
+    framework at any point in the paper.
+
+    '
+  gap_type: full
+  web_search_target: Arabic essay writing feedback generation NLP natural language revision suggestions automated formative
+    feedback Arabic student writing
+- user_priority: Arab/Qatari student population as source of essay instances
+  benchmark_coverage: 'All essays were written by native English-speaking US students in Grades 7–10
+
+    [Q10, Q3]. No Qatari, Gulf Arab, or Arab student writing of any kind is present.
+
+    The demographic mismatch is complete.
+
+    '
+  gap_type: full
+  web_search_target: Qatari high school student Arabic writing corpus Gulf Arabic student essays NLP dataset
+- user_priority: Arab/Qatari curriculum scoring rubrics and quality norms
+  benchmark_coverage: 'Ground-truth labels are anchored to US raters'' holistic scores [Q23, Q25], and
+
+    annotators are India-based English specialists [Q9, Q28, Q29, Q30] with no
+
+    documented expertise in Qatari, Gulf, or Arab curriculum norms. No Arab curriculum
+
+    rubric is referenced anywhere in the paper.
+
+    '
+  gap_type: full
+  web_search_target: Qatar Ministry of Education Arabic language writing rubric grading criteria Grades 10-12 ADEC MOE Arabic
+    assessment standards
+- user_priority: Cross-Arab rubric variation (Saudi, Egyptian, Jordanian, Lebanese norms)
+  benchmark_coverage: 'NOT DOCUMENTED — the benchmark contains no information about Arab curriculum
+
+    variation. Its entire annotation framework is anchored to a single US-origin
+
+    scoring standard.
+
+    '
+  gap_type: full
+  web_search_target: comparative Arabic writing instruction rubrics Arab countries Tawjihi Thanaweya Amma writing assessment
+    pan-Arab curriculum norms
+- user_priority: MSA vs. Gulf dialect code-mixing in student writing
+  benchmark_coverage: 'NOT DOCUMENTED — the benchmark assumes monolingual English with no dialectal
+
+    variation [Q10]. No discussion of code-mixing, register variation, or dialect
+
+    interference in student writing appears anywhere in the paper.
+
+    '
+  gap_type: full
+  web_search_target: Gulf Arabic MSA code-mixing student writing NLP tools Qatari Arabic dialect formal writing detection
+- user_priority: Genre coverage — Quranic and religious text commentary essays
+  benchmark_coverage: 'NOT DOCUMENTED — no religious-text or Quranic commentary genre appears in the
+
+    benchmark''s essay type taxonomy [Q12, Q13, Q14, Q15]. This genre is entirely
+
+    absent.
+
+    '
+  gap_type: full
+  web_search_target: Arabic Quranic text essay scoring NLP Islamic religious commentary automated assessment Arab high school
+    curriculum
+- user_priority: Validated feedback generation for Arab student populations
+  benchmark_coverage: 'NOT DOCUMENTED — the benchmark is designed to predict numeric attribute scores
+
+    [Q50], not to generate or evaluate free-text feedback. No human-in-the-loop
+
+    evaluation with Arab students or teachers is described.
+
+    '
+  gap_type: full
+  web_search_target: Arabic writing automated feedback generation human evaluation Arab students formative assessment NLP
+- user_priority: Sub-national and cross-country curricular variation within Arab world
+  benchmark_coverage: 'The benchmark addresses only a single educational context (US Grades 7–10) and
+
+    has no mechanism for representing sub-national or cross-country variation even
+
+    within its own scope, let alone across Arab nations [Q3, Q10].
+
+    '
+  gap_type: full
+  web_search_target: Arab countries curriculum comparison Arabic language education Jordan Egypt Saudi Arabia Lebanon Qatar
+    writing standards variation

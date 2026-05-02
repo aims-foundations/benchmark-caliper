@@ -1,0 +1,434 @@
+{
+  "benchmark": "milu",
+  "region": "Bangladeshi Bengali University Student — Story Generation Thesis Deployment",
+  "dimensions": {
+    "input_ontology": {
+      "score": 1,
+      "justification": "MILU's 8-domain, 41-subject taxonomy is explicitly structured around Indian academic and competitive examination content [Q1, Q17, Q19], with 'local knowledge' operationalized as Indian state-level [Q12]. The deployment requires Bangladesh-specific categories (1971 Liberation War, SSC/HSC exams, Bangladeshi universities, Ekushe Boi Mela, rural/riverine contexts) which have no designated position in the ontology. Empirical sampling confirms zero Bangladeshi cultural touchstones across 21 Bengali validation items [DATASET-D2, D3, D4, D5, D6, D7] and that Bangladesh appears only as a distractor option in non-Bengali splits [DATASET-D22, D23]. The authors themselves note models perform poorly in culturally relevant areas [Q6, Q68], precisely the domains where Bangladeshi knowledge should appear.",
+      "strengths": [
+        "Broad multi-domain coverage spans 8 domains including Arts & Humanities, Law & Governance, and STEM [Q1, Q17, DATASET-D2, D4], which means the structural slots exist even if filled with Indian content — a Bangladesh-targeted re-population of those slots is conceivable.",
+        "Subject-level granularity (41 subjects) and language-stratified evaluation tables [Q99, Q128] provide a fine-grained reporting infrastructure that could in principle host Bangladesh-specific subjects."
+      ],
+      "checklist_responses": {
+        "IO-1": "Required Bangladesh-specific categories include the 1971 Liberation War, 1952 Language Movement, SSC/HSC exam content, Bangladeshi universities (Dhaka University, BUET, IUT, BRAC), Ekushe Boi Mela and Pohela Boishakh, post-1971 political history including the 2024 July Uprising, rural/riverine contexts, and Bangladeshi literary figures (Humayun Ahmed, Selim Al Deen) [WEB-3, WEB-5, WEB-7]. Story generation also requires categories for narrative settings (rural village life, river delta, Chittagong Hill Tracts, Dhaka neighborhoods) absent from competitive-exam ontology.",
+        "IO-2": "Yes — the taxonomy is structurally India-first [Q9, Q12, Q19] and excludes Bangladeshi national categories. Empirically confirmed: zero Bangladeshi cultural items in the 21-example Bengali validation sample [DATASET-D2 through D7].",
+        "IO-3": "Yes — the taxonomy includes Indian-specific categories (Indian state elections, Indian constitutional law, Filmfare Awards, Indian freedom fighters, Indian state welfare schemes) [DATASET-D2, D3, D5, D9, D10, D11, D12] that are construct-irrelevant or actively misleading for a Bangladeshi cultural-grounding evaluation.",
+        "IO-4": "Major content-validity gap: the taxonomy under-represents Bangladeshi national knowledge and over-represents Indian state/national knowledge. Authors acknowledge poor model performance in culturally relevant areas [Q6, Q68] but attribute it to training data, not to the benchmark's own India-first ontology [Q9]."
+      },
+      "evidence_quotes": [
+        "[Q1] 'MILU spans 8 domains and 41 subjects across 11 Indic languages, reflecting both general and culturally specific knowledge.' (p.1)",
+        "[Q9] 'We designed MILU with an India-first perspective by collecting questions from various national, state, and regional exams.' (p.2)",
+        "[Q12] 'We focus on region-specific exams to authentically capture local knowledge in the respective language.' (p.2)",
+        "[Q17] 'MILU is a large, multi-domain test set containing multiple-choice based questions (MCQs) taken from over 41 subjects with an emphasis on India-specific knowledge.' (p.3)",
+        "[Q19] 'MILU is designed as a culturally relevant benchmark to assess general problem-solving abilities and India-specific knowledge.' (p.3)",
+        "[Q68] 'open models perform poorly in domains specific to Indian culture—such as Arts & Humanities, Social Sciences, and Law & Governance' (p.7)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-3] SSC and HSC are the primary Bangladeshi national curriculum exams, entirely absent from MILU",
+        "[WEB-5] July 2024 Uprising is a foundational live cultural reference for Bangladeshi students, post-benchmark",
+        "[WEB-15] BLUCK (2025) demonstrates that a Bangladesh-sourced cultural-knowledge ontology is feasible and distinct from MILU"
+      ],
+      "evidence_dataset": [
+        "DATASET-D2: AAP Punjab election (2022) — India-specific governance in Bengali split",
+        "DATASET-D5: 65th Filmfare Awards — Indian film industry, no Bangladeshi (Dhallywood) equivalent",
+        "DATASET-D6: Qutub Minar, Delhi — Indian historical monument, no Bangladeshi sites (Lalbagh Fort, Paharpur) appear",
+        "DATASET-D7: Bahamani Kingdom — medieval Indian history fills the History slot in Bengali",
+        "DATASET-D22, D23: Bangladesh appears only as a distractor option in Odia/Telugu splits, never as a subject"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "WEB-3",
+          "WEB-5",
+          "WEB-7",
+          "WEB-15"
+        ],
+        "IO-2": [
+          "Q9",
+          "Q12",
+          "Q19",
+          "DATASET-D2",
+          "DATASET-D6",
+          "DATASET-D22"
+        ],
+        "IO-3": [
+          "DATASET-D2",
+          "DATASET-D3",
+          "DATASET-D5",
+          "DATASET-D9",
+          "DATASET-D11"
+        ],
+        "IO-4": [
+          "Q6",
+          "Q68",
+          "Q9"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether the larger Bengali test split (6,637 items) contains any organically-sourced Bengali-medium items with Bangladeshi-relevant content (validation sample shows 0%)"
+      ],
+      "requires_expert_verification": [
+        "Native Bangladeshi review of any candidate Bengali items that survive translation-filter to confirm absence of Bangladeshi cultural anchoring"
+      ]
+    },
+    "input_content": {
+      "score": 1,
+      "justification": "All MILU content was scraped from Indian competitive exam portals [Q11, Q21, Q88], spanning national civil service, government/private organization, and Indian state-level exams [Q93, Q96, Q97, Q98]. No Bangladeshi exam sources are mentioned. Empirical inspection confirms 100% of sampled Bengali validation items are GPT-4O translations from English [DATASET-D8] (vs. documented 25% [Q43]), and every culturally-specific Bengali item references Indian institutions, persons, or geography [DATASET-D1 through D7]. Identical questions appear verbatim across all 11 language splits [DATASET-D7 cross-config], confirming Bengali content is parallel translation of pan-Indian English exam content rather than Bengali-medium regional sourcing. The deployment's required Bangladeshi register (Cholti with Arabic/Persian loanword density) is not represented; the sampled vocabulary uses Tatsama Sanskritic forms characteristic of pan-Indian written Bengali [DATASET-D1, D25].",
+      "strengths": [
+        "STEM and universal academic content (chemistry, anatomy, computer science, mathematics) is culturally neutral and transfers validly to a Bangladeshi context [DATASET-D17, D18, D19, D20, D21], providing baseline signal on general academic Bengali competence.",
+        "Bengali-language grammar and vocabulary items (antonyms, active/passive transformations) probe written Bengali competence directly [DATASET-D24, D25], offering some linguistic signal even if register-neutral."
+      ],
+      "checklist_responses": {
+        "IC-1": "Yes — the deployment requires Bangladeshi-specific cultural, geographic, and dialectal knowledge (Q1, Q2, Q3 elicitation responses; [WEB-3, WEB-5, WEB-8]). Bangladeshi Cholti register with Arabic/Persian loanwords is required and is distinct from West Bengali norms.",
+        "IC-2": "No — content reflects Indian national/state cultural framing exclusively [Q9, DATASET-D1 through D7]. The 1991 Indian financial crisis, Indian state elections, Indian constitutional law, Indian film awards, and Indian medieval/colonial monuments all populate the Bengali split.",
+        "IC-3": "Yes — items requiring Indian-specific knowledge (Indian Election Commissioner removal procedure, AAP state politics, Indian Pharmacopoeia, India's National Food Security Mission) [DATASET-D3, D2, D14] do not transfer and may produce false negatives for users with Bangladeshi civic knowledge.",
+        "IC-4": "No Bangladeshi annotators participated [Q8, Q86, Q87]; the documentation discloses only Indian institutional affiliation. The flagged_verification_priorities list confirms no Bangladeshi annotators are documented.",
+        "IC-5": "Severe content-validity violation: Bengali content is (a) translated from English in 100% of sampled items [DATASET-D8], (b) culturally India-centric [DATASET-D2-D7], (c) lacks any Bangladeshi register markers [DATASET-D1, D25]. Strong scores on this content do not predict performance on Bangladesh-grounded story generation."
+      },
+      "evidence_quotes": [
+        "[Q9] 'We designed MILU with an India-first perspective by collecting questions from various national, state, and regional exams.' (p.2)",
+        "[Q11] 'We create this benchmark by collecting questions from over 1500 competitive exams from India.' (p.2)",
+        "[Q21] 'We gathered exam-specific questions by scraping various online exam portals that offer previously released question papers from various exams in multiple different languages.' (p.3)",
+        "[Q40] 'For subjects with insufficient questions, we sampled questions from the English set from that subject and translated them into the required language using GPT-4O.' (p.4)",
+        "[Q43] 'Of the total 79K questions, only 25% of questions are translated from English' (p.4)",
+        "[Q84] 'the scarcity of questions necessitated translating a portion of the dataset.' (p.9)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-3] SSC/HSC Bangladeshi national curriculum exams are the appropriate Bangladeshi exam-source equivalents, entirely absent from MILU",
+        "[WEB-15] BLUCK demonstrates feasibility of Bangladesh-sourced exam content (BCS, university entrance, bar council)",
+        "[WEB-18] BnMMLU sources directly from Bangladeshi NCTB textbooks — viable alternative content provenance"
+      ],
+      "evidence_dataset": [
+        "DATASET-D8: 100% of 21 sampled Bengali validation items are is_translated=True, vs. 25% documented benchmark average",
+        "DATASET-D1: 1991 India balance-of-payments crisis question translated into Bengali — Indian-specific economic history",
+        "DATASET-D2, D3, D5, D6, D7: Indian governance, film, monument, and medieval-history references populate culturally-specific Bengali items",
+        "DATASET-D25: Bengali vocabulary uses Sanskrit-derived Tatsama forms ('নৃত্য পরিবেশনা') with no Bangladeshi Cholti register markers",
+        "DATASET-D7 cross-config: Bahamani Kingdom question appears verbatim in Gujarati, Malayalam, Punjabi splits — confirming parallel translation rather than Bengali-medium sourcing"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "WEB-3",
+          "WEB-5",
+          "WEB-8"
+        ],
+        "IC-2": [
+          "Q9",
+          "DATASET-D1",
+          "DATASET-D2",
+          "DATASET-D3",
+          "DATASET-D5",
+          "DATASET-D6",
+          "DATASET-D7"
+        ],
+        "IC-3": [
+          "DATASET-D2",
+          "DATASET-D3",
+          "DATASET-D14"
+        ],
+        "IC-4": [
+          "Q8",
+          "Q86",
+          "Q87"
+        ],
+        "IC-5": [
+          "Q40",
+          "Q43",
+          "DATASET-D8",
+          "DATASET-D25"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether the test split (6,637 Bengali items) has a different translation rate or contains organically-sourced Bengali-medium items with West-Bengali-specific (but not Bangladeshi) cultural content",
+        "Systematic register classification of Bengali items by a Bangladeshi linguist"
+      ],
+      "requires_expert_verification": [
+        "Native Bangladeshi linguistic audit of register markers across a larger Bengali sample",
+        "Comparison of MILU Bengali content to BLUCK/BnMMLU Bangladeshi-sourced content for cultural-distance measurement"
+      ]
+    },
+    "input_form": {
+      "score": 4,
+      "justification": "MILU is purely text-based MCQ in Indic scripts [Q29] with INDICLID + Unicode filtering for script correctness [Q30] and manual verification per language [Q32]. The deployment is also text-only in Bengali script [WEB-2]. Empirical inspection confirms Bengali items are correctly rendered in Bangla script with no encoding errors [DATASET-D24, D25]. No script-level mismatch exists. The remaining concerns (register/dialect stratification, translation-induced surface form) are content/lexical rather than form properties; the writing-system-level form alignment is strong. One residual concern is that 100% translation rate in the Bengali validation sample [DATASET-D8] may produce translation-flavored surface text that differs subtly from organically Bengali-written prose, but this is at the boundary of form vs. content.",
+      "strengths": [
+        "Bengali script (Bangla lipi) rendering is correct and well-formed throughout the sampled split [DATASET-D24, D25]; no script contamination from other Indic scripts observed.",
+        "Documentation explicitly applies INDICLID and Unicode-based filtering to ensure script and language correctness [Q30], plus a final manual sample verification per language [Q32].",
+        "Modality (text) matches the deployment's text-only requirement; no image/audio dependency [Q29]."
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal modality (written Bengali script) matches deployment [Q29, WEB-2, DATASET-D24]. No resolution/encoding mismatch — both are Unicode Bengali text.",
+        "IF-2": "Bangladeshi infrastructure supports Bengali text input/output; urban Dhaka university students have adequate connectivity and devices [WEB-9, WEB-10]. No infrastructure barrier to MILU's input form.",
+        "IF-3": "MILU excludes reading-comprehension and image-based questions for uniformity [Q29], which slightly narrows form coverage relative to general LLM use, but is acceptable for an MCQ knowledge benchmark.",
+        "IF-4": "Minor concern: cross-language parallel-translation patterns [DATASET-D7] may produce translationese surface forms in Bengali items, distinct from organically-written Bengali prose; this is a subtle form-quality issue rather than a structural mismatch."
+      },
+      "evidence_quotes": [
+        "[Q29] 'During the collection process, we exclude any reading-comprehension-style questions, images-based questions, and those with more than four answer options to ensure uniformity and consistency.' (p.4)",
+        "[Q30] 'we utilize a combination of INDICLID (Madhani et al., 2023) and Unicode-based filtering (Khan et al., 2024), ensuring that the questions are in the correct language.' (p.4)",
+        "[Q32] 'we manually verify a sample of questions from each language to ensure accuracy and correct any remaining errors.' (p.4)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-2] Bengali alphasyllabary tokenization challenges are documented; Sangraha corpus has ~30B Bengali tokens",
+        "[WEB-9] Urban Dhaka connectivity supports text-based deployment"
+      ],
+      "evidence_dataset": [
+        "DATASET-D24: Bengali script correctly rendered in antonym question — no encoding errors",
+        "DATASET-D25: Active/passive Bengali grammar transformation — well-formed Bengali prose",
+        "DATASET-D8: 100% translated items in Bengali validation may produce translationese surface form"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q29",
+          "WEB-2",
+          "DATASET-D24"
+        ],
+        "IF-2": [
+          "WEB-9",
+          "WEB-10"
+        ],
+        "IF-3": [
+          "Q29"
+        ],
+        "IF-4": [
+          "DATASET-D8",
+          "DATASET-D7"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether translation-induced surface patterns systematically differ from organically-written Bangladeshi Bengali prose at a level that affects model evaluation"
+      ],
+      "requires_expert_verification": [
+        "Native Bangladeshi reader assessment of whether translated Bengali surface form reads naturally"
+      ]
+    },
+    "output_ontology": {
+      "score": 1,
+      "justification": "MILU's output space is a discrete label among up to four MCQ options [Q29, Q51], with the 41-subject taxonomy serving as metadata for analysis [Q38]. The deployment targets open-ended Bengali story generation, where the output space is free-form narrative text — fundamentally incompatible with a closed MCQ label space [DATASET-D5 OF concern]. Furthermore, the correct-answer category encodings reflect Indian national/state factual standards — Indian Election Commissioner removal procedure, Indian state political wins, Indian Pharmacopoeia [DATASET-D2, D3, D14] — which encode non-Bangladeshi values and assumptions in the answer-key structure itself. The MCQ output ontology cannot be re-mapped to evaluate culturally grounded narrative generation, and within-Bengali items the answer correctness is calibrated to Indian rather than Bangladeshi knowledge frameworks. No mechanism distinguishes India-specific from Bangladesh-specific answer correctness.",
+      "strengths": [
+        "Structured 4-option categorical output is reproducible and unambiguously scorable [Q51], which provides a clean baseline for measuring factual recall on whatever knowledge frame is encoded — useful as a first-pass screen even if not for the deployment's primary task."
+      ],
+      "checklist_responses": {
+        "OO-1": "Output labels are India-calibrated correct answers [DATASET-D3 — Indian CEC removal procedure; DATASET-D2 — Indian state election winner]. For a Bangladeshi user, the 'correct' answer for governance items presupposes Indian constitutional structures, not Bangladeshi ones.",
+        "OO-2": "Missing: any output category encoding Bangladeshi-specific correct answers (e.g., Bangladesh's Election Commission structure, SSC/HSC curriculum standards, Bangladeshi historical events). No story-generation-relevant output categories exist at all.",
+        "OO-3": "Yes — categories encode Indian national values/assumptions: Indian-state-level governance correctness [DATASET-D2, D3], Indian historical canon [DATASET-D6, D7], Indian cultural figures [DATASET-D4, D5]. These violate convergent validity for a Bangladeshi-targeted evaluation.",
+        "OO-4": "Stakeholder-driven taxonomy redesign would be required: a story-generation rubric grounded in Bangladeshi cultural touchstones, register, and named entities is needed — MCQ accuracy cannot be re-purposed. BanglaSocialBench's native-speaker-written context-dependent methodology [WEB-16] is the closest existing model.",
+        "OO-5": "Severe structural and content validity violations: the output taxonomy is doubly misaligned (closed-form MCQ vs. open generation; Indian answer-keys vs. Bangladeshi correctness)."
+      },
+      "evidence_quotes": [
+        "[Q29] 'During the collection process, we exclude any reading-comprehension-style questions, images-based questions, and those with more than four answer options to ensure uniformity and consistency.' (p.4)",
+        "[Q38] 'we determine 41 distinct subject names, which fall into eight main domains' (p.4)",
+        "[Q51] 'For multiple choice questions, given k possible answer strings, we select the answer string (ai) with the highest conditional log probability' (p.5)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-16] BanglaSocialBench native-speaker-written, context-dependent evaluation methodology is the closest precedent for a culturally-grounded output ontology",
+        "[WEB-15] BLUCK uses Bangladesh-sourced MCQ ontology as a category-redesign reference"
+      ],
+      "evidence_dataset": [
+        "DATASET-D3: Indian Election Commissioner removal procedure as the 'correct' answer encodes Indian constitutional law as ground truth",
+        "DATASET-D2: AAP Punjab election win as correct answer encodes Indian party-political knowledge",
+        "DATASET-D14: India's National Food Security Mission as correct answer encodes Indian government program knowledge"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q51",
+          "DATASET-D3",
+          "DATASET-D2"
+        ],
+        "OO-2": [
+          "DATASET-D3",
+          "DATASET-D14"
+        ],
+        "OO-3": [
+          "DATASET-D2",
+          "DATASET-D4",
+          "DATASET-D6",
+          "DATASET-D7"
+        ],
+        "OO-4": [
+          "WEB-16",
+          "WEB-15"
+        ],
+        "OO-5": [
+          "Q29",
+          "Q38"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether any items in the test split have answer keys that would also be correct under Bangladeshi knowledge frameworks (universal STEM items presumably yes; cultural/governance items presumably no)"
+      ],
+      "requires_expert_verification": [
+        "Bangladeshi expert review of cultural/governance answer keys to identify items where Indian and Bangladeshi correct answers diverge"
+      ]
+    },
+    "output_content": {
+      "score": 1,
+      "justification": "Ground truth labels were validated by Indian exam portal subject experts [Q22] and audited by AI4Bharat volunteers [Q87]. The benchmark team is exclusively affiliated with Indian institutions — Nilekani Centre at AI4Bharat, IIT Madras, IBM Research India [Q8] — and funded by Indian philanthropies [Q86]. No Bangladeshi reviewers or subject-matter experts are mentioned anywhere. The elicitation explicitly designates Indian-only annotator pools (including West Bengali speakers) as 'explicitly insufficient' for this deployment. Empirically, the cultural/governance items in the Bengali split [DATASET-D2, D3, D4, D5, D6] have answer labels reflecting Indian standards, and no Bangladeshi institutional or individual validator is documented. For governance items like Election Commissioner removal [DATASET-D3], a Bangladeshi annotator would correctly identify the framing as Indian-specific. No formal IAA, annotator demographic profiles, or aggregation methodology disclosures are provided.",
+      "strengths": [
+        "Source exam portals provided subject-expert answer validation [Q22], establishing baseline label correctness within the Indian-exam knowledge frame.",
+        "Manual cluster review and AI4Bharat volunteer audits [Q37, Q87] add a second pass of human verification, even if not Bangladeshi-grounded.",
+        "Approximately 45% of items arrived with topic tags from source portals [Q33], reducing reliance on automated clustering for those items."
+      ],
+      "checklist_responses": {
+        "OC-1": "No — labels reflect Indian stakeholder perspectives only [Q8, Q22]. The elicitation requires native Bangladeshi Bengali speakers as primary ground truth and explicitly designates Indian-only pools as insufficient.",
+        "OC-2": "Significant disagreement is likely on cultural/governance items where Indian and Bangladeshi correct answers diverge structurally [DATASET-D3 — Indian-specific CEC removal procedure]. Universal STEM items would show low disagreement.",
+        "OC-3": "Documentation discloses Indian institutional affiliation (AI4Bharat, IIT Madras, IBM Research India [Q8]) and Indian funding [Q86], but provides no formal Datasheet, demographic breakdown, or inter-annotator agreement statistics.",
+        "OC-4": "Re-annotation by a representative Bangladeshi annotator pool would be required for any deployment-relevant use; existing labels cannot be assumed valid for Bangladesh-targeted evaluation.",
+        "OC-5": "No aggregation methodology disclosed; minority-perspective erasure cannot be assessed from documentation. INSUFFICIENT DOCUMENTATION on aggregation procedure.",
+        "OC-6": "Severe convergent and external validity violations: labels do not correlate with regional Bangladeshi perspectives on cultural and governance items, and Indian judgments will not generalize."
+      },
+      "evidence_quotes": [
+        "[Q8] 'Sshubam Verma1 Mohammed Safi Ur Rahman Khan1,2 Vishwajeet Kumar3 Rudra Murthy3 Jaydeep Sen3 1Nilekani Centre at AI4Bharat 2Indian Institute of Technology, Madras 3IBM Research, India' (p.1)",
+        "[Q22] 'These portals typically tag questions manually with topic names and language details, and subject experts ensure the accuracy of the answers.' (p.3)",
+        "[Q86] 'We would like to thank EkStep Foundation and Nilekani Philanthropies for their generous grant towards building datasets, models, tools and other resources for Indian languages.' (p.9)",
+        "[Q87] 'volunteers from the AI4Bharat team for their motivation and meticulous efforts in conducting manual audits.' (p.9)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-8] BengaliMoralBench's native Bangladeshi speaker consensus methodology is a model for the annotation approach this deployment requires",
+        "[WEB-16] BanglaSocialBench's native-speaker-written evaluation methodology demonstrates that Bangladeshi annotator pools are feasible"
+      ],
+      "evidence_dataset": [
+        "DATASET-D3: Indian Election Commissioner removal procedure label requires Indian constitutional knowledge — Bangladeshi evaluator would identify framing mismatch",
+        "DATASET-D2: AAP Punjab election label requires Indian party-political knowledge — irrelevant to Bangladeshi civic knowledge",
+        "DATASET-D14: India's National Food Security Mission label — Bangladeshi user has no reason to know this Indian program"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q8",
+          "Q22",
+          "Q86"
+        ],
+        "OC-2": [
+          "DATASET-D3",
+          "DATASET-D2"
+        ],
+        "OC-3": [
+          "Q8",
+          "Q86",
+          "Q87"
+        ],
+        "OC-4": [
+          "WEB-8",
+          "WEB-16"
+        ],
+        "OC-5": [],
+        "OC-6": [
+          "Q8",
+          "DATASET-D3",
+          "DATASET-D14"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Inter-annotator agreement statistics (not disclosed)",
+        "Annotator demographic breakdown beyond institutional affiliation (not disclosed)",
+        "Aggregation methodology for resolving disagreements (not disclosed)"
+      ],
+      "requires_expert_verification": [
+        "Bangladeshi annotator re-review of culturally/politically specific Bengali items to quantify the Indian-vs-Bangladeshi label divergence rate"
+      ]
+    },
+    "output_form": {
+      "score": 1,
+      "justification": "MILU evaluates models using accuracy on closed MCQ items via log-likelihood (non-API) or structured JSON parsing (API) [Q48, Q49, Q51, Q52, Q53]. The deployment requires evaluating open-ended Bengali story generation, which demands free-form text output assessed for narrative coherence, register appropriateness, cultural authenticity, and grounding in Bangladeshi named entities. No MILU mechanism produces a score that transfers to story generation evaluation [DATASET-D5 concern]. The authors themselves note log-likelihood may diverge from generation-based and CoT methods [Q85]. The output-form gap is structural: MCQ accuracy measures forced-choice factual recall, not generative cultural grounding. Even if MILU scores were perfectly calibrated to Bangladeshi knowledge (which they are not), they would still not validate story generation quality.",
+      "strengths": [
+        "MILU's evaluation infrastructure is well-documented and reproducible across 0/1/5-shot conditions, log-likelihood, and generative-JSON modes [Q46, Q48, Q53], spanning 42–45 models [Q44, Q75]. This breadth means baseline factual-recall comparisons across models are feasible as a screening step.",
+        "Both base and instruct variants are evaluated [Q45], and per-subject/per-language tables are provided [Q99, Q128], enabling fine-grained baseline comparisons within MILU's intended construct."
+      ],
+      "checklist_responses": {
+        "OF-1": "No — MILU produces single discrete labels (option1–4) or structured JSON [Q51, Q53]; the deployment requires open-ended free-form Bengali narrative text. Output modalities do not match.",
+        "OF-2": "Not applicable — deployment is text-only; no TTS requirement. INSUFFICIENT DOCUMENTATION on whether MILU's evaluation infrastructure could be extended to speech, but this is not a deployment requirement.",
+        "OF-3": "Target population is highly literate (university students [WEB-3]); literacy is not a barrier for either MILU's or the deployment's text format.",
+        "OF-4": "Severe external-validity violation: MCQ accuracy on India-centric content does not predict Bangladeshi story-generation quality. The deployment must construct a separate generative evaluation rubric (per BanglaSocialBench precedent [WEB-16])."
+      },
+      "evidence_quotes": [
+        "[Q48] 'For non-API-based models, we use the LM-EVALUATION-HARNESS (Gao et al., 2024; Biderman et al., 2024) to ensure clean and reproducible evaluations.' (p.5)",
+        "[Q51] 'For multiple choice questions, given k possible answer strings, we select the answer string (ai) with the highest conditional log probability' (p.5)",
+        "[Q52] 'The API-based models are evaluated using the generative approach due to the lack of support for prompt log probabilities.' (p.5)",
+        "[Q53] 'We explicitly prompt these models to generate the correct response in a structured JSON format to simplify response parsing.' (p.5)",
+        "[Q85] 'our evaluation primarily relies on the log-likelihood approach, which may yield different results compared to other established methods, such as generation-based evaluation and chain-of-thought (CoT) prompting.' (p.9)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-16] BanglaSocialBench's native-speaker-written, context-dependent evaluation methodology is the closest precedent for a story-generation rubric",
+        "[WEB-3] University student literacy supports text-based deployment"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: MCQ correct-answer scoring produces binary pass/fail and yields no information about whether a model can narratively describe economic history in Bangladeshi Bengali",
+        "DATASET-D19: Universal medical MCQ — correct answer does not predict ability to weave medical detail into a culturally authentic Bangladeshi story"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q51",
+          "Q53",
+          "DATASET-D1"
+        ],
+        "OF-2": [],
+        "OF-3": [
+          "WEB-3"
+        ],
+        "OF-4": [
+          "Q85",
+          "WEB-16",
+          "DATASET-D1",
+          "DATASET-D19"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "No story-generation evaluation methodology exists in MILU; supplementation is structural, not incremental"
+      ],
+      "requires_expert_verification": [
+        "Design and validation of a Bangladeshi story-generation rubric by native-speaker linguists and literary scholars"
+      ]
+    }
+  },
+  "overall_summary": "MILU is structurally misaligned with the Bangladeshi Bengali story generation deployment along five of six dimensions. Its ontology is India-first by explicit design [Q9, Q19] and excludes Bangladeshi national categories (1971 Liberation War, SSC/HSC, Bangladeshi universities, Ekushe Boi Mela, rural/riverine contexts). Empirical sampling confirms zero Bangladeshi cultural touchstones in 21 Bengali validation items [DATASET-D2-D7], 100% translation rate from English in the sampled Bengali validation split [DATASET-D8] (vs. 25% documented), and Bangladesh appearing only as a distractor option in non-Bengali splits [DATASET-D22, D23]. Ground-truth labels are validated entirely within Indian institutional frameworks [Q8, Q22, Q86] with no Bangladeshi annotators documented. Output form is closed MCQ accuracy [Q51], structurally incompatible with the deployment's open-ended story generation target. The only well-aligned dimension is input form (text in Bangla script [Q29, Q30, DATASET-D24]). High MILU Bengali scores would not predict — and could mislead — the deployment's intended evaluation construct.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "MILU measures multiple-choice factual recall on Indian competitive-exam content rendered in Indic scripts, including Bengali. For this deployment, MILU's strongest residual signal is on universal STEM and Bengali grammar/vocabulary items [DATASET-D17-D21, D24-D25] — i.e., baseline academic Bengali competence. It can serve as a screening filter to distinguish models with zero Bengali competence from those with some, but cannot measure Bangladeshi cultural grounding, register fidelity, or story-generation quality.",
+    "construct_depth": "Shallow for the deployment's target construct. MILU probes one cell of a much larger evaluation space (closed-form factual recall on Indian content). The 'culturally relevant' framing in the documentation [Q1, Q19] refers to Indian culture; for Bangladeshi cultural grounding, MILU provides effectively no signal (input_ontology, input_content, output_ontology, output_content all scored 1). The output_form gap (MCQ vs. story generation) further means even strong MILU performance does not validate generative ability.",
+    "supplementation_needed": "Substantial supplementation is required across input_ontology, input_content, output_ontology, output_content, and output_form. Recommended supplements: (1) BLUCK [WEB-15] and BnMMLU [WEB-18] for Bangladesh-sourced cultural and academic MCQ baselines; (2) BengaliMoralBench [WEB-8] and BanglaSocialBench [WEB-16] for Bangladeshi cultural and sociopragmatic context; (3) the Bengali Dialectal Bias Benchmark [WEB-1] for register/dialect coverage; (4) a purpose-built story-generation rubric authored and validated by native Bangladeshi annotators, modeled on BanglaSocialBench's native-speaker-written methodology, covering 1971 Liberation War, post-1971 political history through the 2024 July Uprising, Bangladeshi universities and exam systems, Bangladeshi geography (Dhaka neighborhoods, Padma/Meghna/Jamuna river systems, Cox's Bazar, Chittagong Hill Tracts), Islamic cultural register, and rural/riverine narrative contexts."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "Taxonomy lacks Bangladeshi-specific categories (1971 Liberation War, SSC/HSC, Bangladeshi universities, cultural events, rural/riverine contexts, 2024 July Uprising)",
+      "recommendation": "Supplement with BLUCK (Bangladesh-sourced cultural/historical MCQ across 23 categories [WEB-15]) and BnMMLU (Bangladeshi NCTB-textbook-sourced MMLU [WEB-18]) to populate the missing ontology slots; do not rely on MILU's Bengali split for cultural-knowledge claims."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "100% of sampled Bengali validation items are GPT-4O translations from English Indian-exam content [DATASET-D8]; no Bangladeshi register markers; no Bangladeshi named entities",
+      "recommendation": "Source supplementary content from Bangladesh-origin exams (BCS, SSC, HSC, university entrance) per BLUCK/BnMMLU methodology; for the thesis, document explicitly that MILU Bengali scores reflect translated pan-Indian content and report MILU only as a baseline-screening signal alongside Bangladesh-sourced benchmarks."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "Closed MCQ output space cannot evaluate open-ended story generation; correct-answer categories encode Indian rather than Bangladeshi knowledge",
+      "recommendation": "Construct a story-generation rubric with native Bangladeshi linguists and literary scholars, modeled on BanglaSocialBench's native-speaker-written context-dependent methodology [WEB-16], covering cultural authenticity, register fidelity, named-entity grounding, and narrative coherence."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Ground-truth labels validated only by Indian institutional reviewers [Q8, Q22, Q86]; no Bangladeshi annotators; elicitation declares Indian-only pools 'explicitly insufficient'",
+      "recommendation": "Recruit a panel of native Bangladeshi Bengali annotators (university-educated, cross-regional including Dhaka, Sylhet, Chittagong, Barisal) to (a) re-validate any MILU Bengali items used in the thesis, and (b) author ground truth for the new story-generation rubric. Disclose annotator demographics and inter-annotator agreement in the thesis."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "MCQ accuracy via log-likelihood [Q51] does not transfer to evaluating open-ended Bengali narrative generation",
+      "recommendation": "Adopt a generation-based evaluation protocol (per the limitation noted in [Q85]) with multi-criteria human scoring (cultural authenticity, register, named-entity accuracy, narrative coherence) plus optional LLM-as-judge calibration validated against Bangladeshi annotator scores. Treat MILU accuracy purely as an upstream screening signal."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "Bangladeshi Cholti register (Arabic/Persian loanword density) is absent from the sampled translated Bengali content [DATASET-D1, D25]; West-Bengali/pan-Indian Sanskritic register dominates",
+      "recommendation": "Supplement with the Bengali Dialectal Bias Benchmark [WEB-1] for explicit dialect coverage (including Barishal, Chittagong, Sylhet, Rangpur, Noakhali); commission a register-stratified sample of story-generation prompts that probes Bangladeshi Cholti vs. West-Bengali outputs."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_ontology",
+    "input_content",
+    "output_ontology",
+    "output_content",
+    "output_form"
+  ],
+  "strongest_dimensions": [
+    "input_form"
+  ]
+}

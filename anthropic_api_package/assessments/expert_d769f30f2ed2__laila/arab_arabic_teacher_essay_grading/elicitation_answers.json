@@ -1,0 +1,6 @@
+{
+  "Q1": "I wouldn't expect grading systems to differ significantly since the goal at the end is get students to write nicely in Modern Standard Arabic, and when reading any MSA text, you can't really tell the nationality of the person who wrote it, so the end goal is the same for all Arab countries.",
+  "Q2": "It is possible that different countries have different grading criteria. In Egypt, there is no set rubric for grading essays and the score is left more open to the grader based on their own assessment of the quality of the essay.",
+  "Q3": "It would be better if the model did that as essay grading is somewhat subjective even among humans so it should express confidence or provide explanatory justification alongside each score so teachers can step in in cases where an essay falls between levels rather than rely only on the system's judgement.",
+  "Q4": "If the expected content knowledge is something that model isn't familiar with or trained on, it is possible that the model might misjudge relevance or development scores"
+}

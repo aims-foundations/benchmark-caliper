@@ -1,0 +1,432 @@
+name: Non-Arab Tourists and Expats in Eight Arab Countries
+abbreviation: arab-tourist-expat
+deployment_context:
+  description: An AI assistant helping non-Arab tourists and expats visiting Morocco,
+    Egypt, Jordan, Palestine, Lebanon, UAE, Kuwait, and Saudi Arabia answer school-level
+    general-knowledge questions about Arabic language, Arab history, and regional
+    geography. The system is evaluated using MMLU, a US-centric English-language benchmark.
+  use_case_scope: School-level educational knowledge (history, geography, language
+    basics). Practical on-the-ground guidance (local etiquette, transport, markets,
+    dialect phrases) is out of scope for the benchmark evaluation but frequently expected
+    by users.
+  benchmark: MMLU (Measuring Massive Multitask Language Understanding)
+  benchmark_language: English only
+  primary_assessment_concern: MMLU's 57 subjects are anchored in US academic curricula
+    and contain no dedicated Arab-region subject categories; cultural grounding, label
+    validity, and multi-perspective output are structural gaps.
+covered_countries:
+- Morocco
+- Egypt
+- Jordan
+- Palestine
+- Lebanon
+- United Arab Emirates
+- Kuwait
+- Saudi Arabia
+sub_regional_clusters:
+  north_africa_maghreb:
+    countries:
+    - Morocco
+    distinctive_features: Amazigh (Berber) heritage alongside Arab-Islamic identity;
+      Darija (Moroccan Arabic) as dominant spoken vernacular; French administrative
+      and educational overlay; Saharan and Atlantic geographic identity; contested
+      Western Sahara issue.
+    mmlu_blind_spots: Moroccan Amazigh cultural identity, Darija linguistic features,
+      and Maghreb-specific history are entirely absent from MMLU's documented subject
+      taxonomy.
+  nile_valley:
+    countries:
+    - Egypt
+    distinctive_features: Pharaonic heritage as a parallel identity pillar alongside
+      Arab-Islamic identity; Coptic Christian minority context; Egyptian Arabic as
+      the most widely understood Arabic dialect; center of Arab intellectual and media
+      production.
+    mmlu_blind_spots: Egyptian Coptic minority history, pharaonic periodization from
+      an Arab perspective, and Egyptian dialect features are not documented in MMLU
+      content.
+  levant:
+    countries:
+    - Jordan
+    - Palestine
+    - Lebanon
+    distinctive_features: Highly contested political histories (1948 war, Palestinian
+      displacement, Lebanese civil war, Jordanian-Palestinian demographic complexity);
+      sectarian diversity (Maronites, Druze, Sunni, Shia, Greek Orthodox); Levantine
+      Arabic dialects; Palestinian narrative as a politically salient cross-cutting
+      theme.
+    mmlu_blind_spots: Palestinian historical narrative, 1948 war framing, Lebanese
+      Civil War perspectives, and Jordanian-Palestinian demographic history are absent
+      or likely framed from Western/Israeli perspectives in MMLU.
+  gulf:
+    countries:
+    - United Arab Emirates
+    - Kuwait
+    - Saudi Arabia
+    distinctive_features: Tribal and monarchical civic identity; large expatriate-to-citizen
+      population ratios; kafala system governing labor relations; Vision 2030 and
+      national transformation agendas; Gulf Arabic dialects; Islamic governance frameworks;
+      oil-based economic identity.
+    mmlu_blind_spots: Kafala system, Vision 2030, Gulf tribal governance, and Gulf-specific
+      social norms are absent from MMLU's subject taxonomy. Western framing of Gulf
+      politics (US Foreign Policy task) does not substitute.
+target_user_population:
+  description: Non-Arab tourists and expats visiting the eight covered countries,
+    seeking general educational knowledge about Arabic language, Arab history, and
+    regional geography. Users have limited to no Arabic literacy and arrive from a
+    wide diversity of source countries.
+  primary_language: English
+  secondary_language_cohort: Arabic-learning foreigners who may prompt in Arabic;
+    cannot be evaluated by English-only MMLU.
+  source_country_diversity: Potentially global; no single dominant source nationality
+    specified.
+  arabic_literacy_expectation: Low to none for the primary cohort; beginner to intermediate
+    for the Arabic-learning sub-cohort.
+  prior_regional_knowledge: School-level or tourist-level; not specialist or academic.
+  occupation_role: Tourists and expats; general curiosity users, not researchers or
+    policymakers.
+languages:
+  primary_interaction_language: English
+  secondary_interaction_language: Arabic (Arabic-learning sub-cohort); specific dialects
+    unspecified but Modern Standard Arabic most likely for learners
+  arabic_dialect_landscape:
+    moroccan_darija: Distinct Maghreb Arabic variety with Berber and French influence;
+      [NEEDS VERIFICATION — degree of mutual intelligibility with other Arabic varieties]
+    egyptian_arabic: Most widely understood spoken Arabic variety due to media influence;
+      [NEEDS VERIFICATION — current prevalence in tourist contexts]
+    levantine_arabic: Spoken in Jordan, Palestine, Lebanon; Palestinian, Jordanian,
+      and Lebanese sub-varieties; [NEEDS VERIFICATION — degree of intra-Levantine
+      variation]
+    gulf_arabic: Spoken in UAE, Kuwait, KSA; notable sub-variation between Kuwaiti,
+      Najdi, Hejazi, and Gulf coastal varieties; [NEEDS VERIFICATION]
+    modern_standard_arabic: Formal/written register used across all eight countries;
+      primary target for Arabic-language learners
+  benchmark_language_coverage: MMLU is English-only; Arabic-language user queries
+    cannot be evaluated. No Arabic-language MMLU variant is used in this assessment;
+    existence and quality of Arabic MMLU variants (e.g., ArabicMMLU, ACVA) requires
+    verification.
+  diglossia_relevance: Moderate — users are learning or asking about Arabic language
+    basics, so awareness of MSA vs. dialect distinction is deployment-relevant, but
+    practical dialect support is out of benchmark scope.
+writing_systems:
+  arabic_script: Right-to-left; used for Arabic-language prompts from the secondary
+    user cohort. RTL rendering and mixed Arabic-Latin text are relevant for interface
+    evaluation but not for MMLU scoring.
+  latin_script: Used for English primary interaction and for French overlay in Morocco/Lebanon
+    contexts.
+  tifinagh_script: '[NEEDS VERIFICATION — whether Amazigh/Tifinagh-script content
+    is within system scope; likely out of scope given school-level Arabic/geography/history
+    focus]'
+  benchmark_script_coverage: MMLU is Latin-script English only; no RTL or Arabic-script
+    evaluation.
+domain_coverage:
+  in_scope_for_deployment:
+  - 'Arab history (school-level: Islamic Golden Age, Ottoman period, Arab nationalism,
+    modern state formation)'
+  - Regional geography (physical and political geography of the eight countries and
+    the broader Arab world)
+  - Arabic language basics (alphabet, grammar fundamentals, MSA vocabulary, script
+    introduction)
+  - General pan-Arab cultural knowledge (Islamic calendar, major religious practices
+    as background knowledge)
+  out_of_scope_for_deployment_but_user_expected:
+  - Local dialect phrases and conversational Arabic
+  - Tourist etiquette and religious customs guidance
+  - Transport and market navigation
+  - Practical visa, legal, or administrative advice
+  mmlu_subject_overlap:
+    nominal_overlap:
+    - High School World History (nominally covers multiple geographies but Arab-region
+      content unverified)
+    - High School Geography (social sciences cluster; Arab-region content unverified)
+    - World Religions (Islamic content may be present; extent and framing unverified)
+    - Global Facts (some Arab-region statistics may appear; extent unverified)
+    no_overlap:
+    - Arab history (no dedicated subject)
+    - Middle Eastern geography (no dedicated subject)
+    - Arabic language (no dedicated subject)
+    - Islamic jurisprudence or law (no dedicated subject; Professional Law is US bar
+      exam)
+    arab_region_content_in_mmlu: '[NEEDS VERIFICATION — systematic audit of MMLU world
+      history, geography, and global facts questions for Arab-region content proportion
+      and framing perspective]'
+contested_topics_and_political_sensitivities:
+  description: Multiple topics covered by the deployment are politically contested
+    across and within the eight countries, requiring multi-perspective acknowledgment
+    rather than single-answer responses. MMLU's binary MCQ scoring is structurally
+    incapable of capturing this requirement.
+  key_contested_topics:
+  - topic: 1948 Arab-Israeli War / Nakba
+    countries_most_affected:
+    - Palestine
+    - Jordan
+    - Lebanon
+    framing_variation: Palestinian and Arab sources frame as catastrophe (Nakba) and
+      dispossession; Israeli and Western academic sources frame as Israeli War of
+      Independence; MMLU likely encodes Western framing if present at all.
+    mmlu_label_validity_concern: HIGH
+  - topic: Western Sahara territorial status
+    countries_most_affected:
+    - Morocco
+    framing_variation: Morocco claims sovereignty; Sahrawi independence movement and
+      Algeria contest this; UN position is unresolved.
+    mmlu_label_validity_concern: HIGH
+  - topic: Lebanese Civil War causes and responsibility
+    countries_most_affected:
+    - Lebanon
+    framing_variation: Sectarian, Palestinian, Syrian, Israeli, and Western Cold War
+      framings differ substantially.
+    mmlu_label_validity_concern: MODERATE
+  - topic: Ottoman and colonial legacy periodization
+    countries_most_affected:
+    - All eight countries
+    framing_variation: Arab nationalist, Ottoman nostalgic, and Western colonial historiographies
+      diverge on periodization and causality.
+    mmlu_label_validity_concern: MODERATE
+  - topic: Palestinian statehood and borders
+    countries_most_affected:
+    - Palestine
+    - Jordan
+    - Lebanon
+    framing_variation: UN resolutions, Arab League positions, Israeli government positions,
+      and US policy positions differ; MMLU sourced from US academic materials likely
+      reflects US policy framing.
+    mmlu_label_validity_concern: HIGH
+  - topic: Status of Jerusalem
+    countries_most_affected:
+    - Palestine
+    - Jordan
+    - Lebanon
+    framing_variation: Palestinian, Jordanian (Hashemite custodianship), Israeli,
+      and international law framings diverge.
+    mmlu_label_validity_concern: HIGH
+  deployment_required_behavior: System should acknowledge multiple perspectives and
+    explicitly flag when a topic is contested or politically sensitive across countries,
+    rather than presenting a single authoritative answer.
+  benchmark_alignment: MMLU single-label MCQ scoring is structurally misaligned with
+    this required behavior; no mechanism exists in MMLU to credit multi-perspective
+    or uncertainty-flagging responses.
+country_specific_knowledge_gaps_in_mmlu:
+  morocco:
+    amazigh_heritage: Tamazight language, Tifinagh script, Berber pre-Islamic history
+      — absent from MMLU
+    darija: Moroccan Arabic dialect features — absent from MMLU
+    french_overlay: Administrative and educational use of French — not covered in
+      MMLU Arab-region context
+    western_sahara: Contested territorial status — MMLU label validity suspect
+    mmlu_coverage_estimate: '[NEEDS VERIFICATION]'
+  egypt:
+    pharaonic_history: Likely present in MMLU world history but framing perspective
+      (Western Egyptology vs. Egyptian national narrative) unverified
+    coptic_christianity: Coptic minority history and identity — [NEEDS VERIFICATION
+      — presence in MMLU world religions or history]
+    modern_egypt: Nasser, Arab nationalism, 1952 revolution, Camp David — [NEEDS VERIFICATION
+      — presence and framing in MMLU]
+    mmlu_coverage_estimate: '[NEEDS VERIFICATION]'
+  jordan:
+    hashemite_kingdom: Hashemite dynasty history, Jordanian-Palestinian demographic
+      context — [NEEDS VERIFICATION]
+    trans_jordan_mandate: British Mandate period, Transjordan formation — [NEEDS VERIFICATION
+      — framing in MMLU world history]
+    mmlu_coverage_estimate: '[NEEDS VERIFICATION]'
+  palestine:
+    nakba_and_1948: Nakba framing almost certainly absent from MMLU; 1948 war likely
+      framed from Western/Israeli perspective if present
+    oslo_accords: '[NEEDS VERIFICATION — presence and framing in MMLU]'
+    mmlu_coverage_estimate: '[NEEDS VERIFICATION — likely near-zero from Palestinian
+      perspective]'
+  lebanon:
+    civil_war: Lebanese Civil War multi-perspective coverage — [NEEDS VERIFICATION]
+    phoenician_heritage: Pre-Arab Phoenician historical identity — [NEEDS VERIFICATION
+      — framing in MMLU]
+    sectarian_system: Confessional political system — [NEEDS VERIFICATION]
+    mmlu_coverage_estimate: '[NEEDS VERIFICATION]'
+  uae:
+    federal_formation: UAE federal formation in 1971, Trucial States history — [NEEDS
+      VERIFICATION]
+    kafala_system: Labor governance — absent from MMLU documented subjects
+    rapid_modernization_narrative: Dubai/Abu Dhabi development as national narrative
+      — [NEEDS VERIFICATION]
+    mmlu_coverage_estimate: '[NEEDS VERIFICATION — likely minimal]'
+  kuwait:
+    gulf_war: 1990 Iraqi invasion and Gulf War — [NEEDS VERIFICATION — framing in
+      MMLU US Foreign Policy or world history]
+    tribal_governance: Kuwaiti tribal and dynastic governance — [NEEDS VERIFICATION]
+    mmlu_coverage_estimate: '[NEEDS VERIFICATION]'
+  saudi_arabia:
+    wahhabi_salafi_religious_tradition: Religious-political history of Saudi state
+      formation — [NEEDS VERIFICATION — framing in MMLU world religions]
+    vision_2030: Vision 2030 reform agenda — absent from MMLU (post-2021 and not in
+      academic curricula represented)
+    two_holy_mosques: Mecca and Medina religious significance — likely present in
+      MMLU world religions but extent unverified
+    mmlu_coverage_estimate: '[NEEDS VERIFICATION]'
+annotation_and_label_validity:
+  mmlu_annotator_population: Graduate and undergraduate students at US universities;
+    Amazon Mechanical Turk workers for human baseline; no Arab regional stakeholders
+    documented.
+  label_source_institutions: US standardized tests (GRE, USMLE), US undergraduate
+    curricula, Oxford University Press publications; no Arab educational institutions
+    represented.
+  arab_regional_label_validity: For any Arab history, regional geography, or Islamic
+    content questions that appear in MMLU, ground-truth labels encode Western academic
+    framing. Divergence from Arab regional stakeholder judgments is expected but unquantified.
+  inter_annotator_agreement: NOT DOCUMENTED in MMLU paper.
+  arab_expert_review: NOT DOCUMENTED — no subject-matter experts from Arab academic
+    institutions are identified in MMLU documentation.
+  contested_label_risk: HIGH for Palestinian and Levantine political history; MODERATE
+    for Islamic history and general Arab geography; LOW for STEM subjects.
+  recommended_supplementary_validation: '[NEEDS VERIFICATION — identify whether ArabicMMLU,
+    ACVA, or other Arab-developed benchmarks include annotator diversity documentation
+    and regional expert review]'
+arabic_language_benchmark_gap:
+  mmlu_arabic_coverage: None — MMLU is English-only with no Arabic-language questions
+    or Arabic-language input evaluation.
+  arabic_learning_user_cohort: Cannot be evaluated by MMLU; a separate Arabic-language
+    benchmark is required for this sub-cohort.
+  existing_arabic_mmlu_variants: '[NEEDS VERIFICATION — ArabicMMLU, ACVA, and similar
+    benchmarks should be identified and assessed for: (a) regional cultural grounding,
+    (b) dialect coverage, (c) contested-history handling, (d) country-level Arab sub-regional
+    coverage]'
+  msa_vs_dialect_benchmark_coverage: '[NEEDS VERIFICATION — whether available Arabic
+    benchmarks test MSA only or also include dialectal Arabic relevant to the eight-country
+    deployment context]'
+infrastructure_and_access_notes:
+  primary_users_are_visitors: Non-Arab tourists and expats; device and connectivity
+    profile likely reflects traveler demographics rather than local infrastructure.
+    Primary concern is not local connectivity gaps but rather benchmark-to-deployment
+    gap.
+  interface_modality: Text-based; matches MMLU modality. No multimodal requirements
+    documented.
+  rtl_rendering: Relevant for Arabic-language sub-cohort interactions; not evaluated
+    by MMLU.
+  mobile_vs_desktop: '[NEEDS VERIFICATION — tourist/expat interface preference data
+    for the eight-country context]'
+cultural_norms_relevant_to_evaluation:
+  pan_arab_generalization_acceptability: Pan-Arab generalization is acceptable per
+    elicitation for shared Islamic and linguistic content, but system must flag country-specific
+    distinctions rather than silently universalizing.
+  islam_as_shared_framework: Islamic calendar, religious practices, and jurisprudential
+    vocabulary are shared reference points across all eight countries, though practice
+    and legal application vary significantly (e.g., Saudi Arabia vs. Lebanon).
+  gender_norms: Significant variation across the eight countries — from Saudi Arabia's
+    historically strict public-space gender norms to Lebanon's more pluralistic urban
+    norms. [NEEDS VERIFICATION — current state post-Vision 2030 reforms in KSA]
+  oral_and_literary_tradition: Rich Arabic literary tradition (classical poetry, Quranic
+    linguistic heritage) is part of the educational knowledge domain the system covers;
+    likely underrepresented in MMLU.
+  ramadan_and_islamic_calendar: Relevant background knowledge for the deployment's
+    history and culture domain; [NEEDS VERIFICATION — presence in MMLU world religions
+    subject]
+  hospitality_norms: Diyafa (hospitality) tradition is pan-Arab cultural background
+    knowledge relevant to tourist users; out of MMLU evaluation scope.
+  country_specific_identity_markers:
+    moroccan_amazigh_identity: Parallel Berber and Arab identity; officially recognized
+      in Moroccan constitution [NEEDS VERIFICATION — current constitutional status]
+    egyptian_national_identity: Pharaonic + Arab + Islamic layered identity; strong
+      national distinctiveness within Arab world
+    levantine_sectarian_pluralism: Christian, Druze, Alawi, Sunni, Shia communities
+      with distinct historical narratives in Jordan, Lebanon, Palestine
+    gulf_tribal_monarchical_identity: Tribal lineage and dynastic legitimacy as civic
+      identity framework in UAE, Kuwait, KSA
+dimension_priority_summary:
+  input_ontology:
+    priority: HIGH
+    key_finding: MMLU has no dedicated Arab history, Middle Eastern geography, or
+      Arabic language subjects. The 57 subjects are anchored in US academic curricula.
+    verification_needed: '[NEEDS VERIFICATION — audit of world history, geography,
+      global facts, and world religions subjects for Arab-region content proportion
+      and framing]'
+  input_content:
+    priority: HIGH
+    key_finding: All MMLU data sources are Anglophone Western institutions. No Arab
+      educational systems, regional universities, or Arabic curricula are represented.
+      Country-specific Arab narratives are absent.
+    verification_needed: '[NEEDS VERIFICATION — whether any Arab-developed benchmark
+      (ArabicMMLU, ACVA) provides culturally grounded content instances for the eight-country
+      deployment]'
+  input_form:
+    priority: MODERATE
+    key_finding: Primary English text-based interaction matches MMLU modality. Arabic-language
+      sub-cohort cannot be evaluated by MMLU.
+    verification_needed: '[NEEDS VERIFICATION — Arabic MMLU variant quality and availability
+      for secondary cohort evaluation]'
+  output_ontology:
+    priority: HIGH
+    key_finding: MMLU's single-answer MCQ label schema is structurally incapable of
+      capturing the multi-perspective, uncertainty-flagging output behavior required
+      for contested Arab historical and political topics.
+    verification_needed: '[NEEDS VERIFICATION — whether any Arab-focused benchmark
+      uses multi-label or free-response scoring for contested historical content]'
+  output_content:
+    priority: HIGH
+    key_finding: MMLU ground-truth labels encode Western academic perspectives. For
+      Arab regional history and geography, label correctness as judged by Arab stakeholders
+      may diverge substantially. Annotator demographics are entirely undocumented.
+    verification_needed: '[NEEDS VERIFICATION — Palestinian and Levantine historical
+      narrative framing in any MMLU world history questions; Arab expert annotation
+      in alternative benchmarks]'
+  output_form:
+    priority: MODERATE
+    key_finding: Both MMLU and the deployment use text. MMLU's MCQ accuracy metric
+      cannot evaluate open-ended explanatory or perspective-acknowledging responses.
+      Calibration gap (up to 24% confidence-accuracy divergence) is especially concerning
+      for contested topic domains.
+    verification_needed: '[NEEDS VERIFICATION — alternative evaluation metrics for
+      open-ended Arab-region knowledge responses]'
+flagged_verification_targets:
+- id: FV1
+  topic: Arab-region subject coverage audit in MMLU
+  description: Systematic review of MMLU world history, high school geography, global
+    facts, and world religions subjects for Arab-region question proportion and framing
+    perspective.
+  status: '[NEEDS VERIFICATION]'
+- id: FV2
+  topic: Arabic-language MMLU variants
+  description: Identification and quality assessment of ArabicMMLU, ACVA, or similar
+    benchmarks; evaluation of their regional cultural grounding, country-level coverage,
+    dialect handling, and contested-history treatment.
+  status: '[NEEDS VERIFICATION]'
+- id: FV3
+  topic: Palestinian and Levantine historical narrative framing
+  description: Evidence on whether any MMLU history questions involve the 1948 war,
+    Palestinian history, or Levantine political history, and how ground-truth labels
+    are framed.
+  status: '[NEEDS VERIFICATION]'
+- id: FV4
+  topic: Sub-regional Arab diversity benchmarks
+  description: Whether any supplementary benchmarks cover Moroccan Amazigh heritage,
+    Gulf-specific social norms (kafala, Vision 2030), or Egyptian Coptic minority
+    context.
+  status: '[NEEDS VERIFICATION]'
+- id: FV5
+  topic: Multi-perspective scoring benchmarks for contested Arab history
+  description: Whether any Arab-focused benchmarks use multi-label, open-ended, or
+    perspective-attribution scoring for contested historical and political content.
+  status: '[NEEDS VERIFICATION]'
+- id: FV6
+  topic: Arab regional expert annotation
+  description: Whether any available Arabic or Arab-history benchmarks document annotation
+    by Arab regional subject-matter experts, and how label validity is established
+    for contested topics.
+  status: '[NEEDS VERIFICATION]'
+- id: FV7
+  topic: Gulf-specific knowledge benchmark coverage
+  description: Whether UAE, Kuwait, or Saudi-specific knowledge (kafala, Vision 2030,
+    tribal governance, Wahhabi-Salafi religious tradition) appears in any evaluated
+    benchmark.
+  status: '[NEEDS VERIFICATION]'
+- id: FV8
+  topic: Moroccan and Maghreb-specific benchmark coverage
+  description: Whether Amazigh/Berber heritage, Darija, or Western Sahara contested
+    status appears in any available benchmark with appropriate framing.
+  status: '[NEEDS VERIFICATION]'
+- id: FV9
+  topic: Current constitutional and legal status of Amazigh identity in Morocco
+  description: Current status of Tamazight as an official language and Amazigh cultural
+    recognition in Moroccan law.
+  status: '[NEEDS VERIFICATION]'
+- id: FV10
+  topic: Tourist and expat interface preferences across the eight countries
+  description: Whether tourists and expats in these countries predominantly use mobile
+    or desktop interfaces, and implications for text rendering (RTL, mixed script).
+  status: '[NEEDS VERIFICATION]'

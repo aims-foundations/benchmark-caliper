@@ -1,0 +1,376 @@
+name: Mymensingh Environmental Scientist — Cross-Regional South Asian Agricultural
+  Knowledge
+abbreviation: BGD-MYMENSINGH-AGRI-SCI
+assessment_context:
+  benchmark: MILU — A Multi-task Indic Language Understanding Benchmark
+  benchmark_year: 2024
+  deployment_use_case: An environmental scientist based in Mymensingh, Bangladesh
+    uses LLMs (both frontier and region-specific small models) to retrieve and reason
+    over agricultural and environmental science knowledge spanning South Asian regions
+    — including the Bangladeshi delta system, Bangladeshi Bengali-specific farming
+    contexts, and contrasting agro-ecological zones in India (Telangana dry-land cropping,
+    Andhra Pradesh coastal aquaculture).
+  assessment_purpose: Evaluate MILU's validity as an agricultural and environmental
+    science knowledge benchmark for this cross-regional, multilingual deployment context.
+target_population:
+  description: Environmental scientists and agronomists based primarily in Mymensingh
+    district, Bangladesh, querying LLMs for professional-grade agricultural and environmental
+    science knowledge. The deployment spans sub-national agro-ecological contexts
+    in Bangladesh and cross-references Indian agricultural zones (Telangana/Andhra
+    Pradesh, West Bengal). Users are likely to query in a mix of Bangladeshi Bengali
+    and English, and may also encounter or generate queries in standard Indian Bengali
+    or Telugu.
+  geography:
+    primary_country: Bangladesh
+    primary_district: Mymensingh
+    sub_national_zones:
+    - zone: Brahmaputra-Jamuna floodplain farming belt (Mymensingh district)
+      notes: Char-land agriculture, flood-recession cropping, boro and aman rice cultivation;
+        floodplain ecology defines dominant agronomic calendar
+    - zone: Haor wetland ecology zones (greater Mymensingh / Sylhet border region)
+      notes: Beel and haor farming systems; deep-water rice and fisheries; seasonal
+        inundation patterns drive distinct crop calendars
+    cross_reference_zones:
+    - zone: Telangana (India) — dry-land cropping belt
+      notes: '[NEEDS VERIFICATION — confirm dominant dry-land crops and agro-ecological
+        classification relevant to benchmark evaluation]'
+    - zone: Andhra Pradesh (India) — coastal aquaculture zone
+      notes: '[NEEDS VERIFICATION — confirm dominant aquaculture species, regulatory
+        context, and agro-ecological sub-zoning relevant to benchmark evaluation]'
+    - zone: West Bengal (India) — deltaic rice-farming zone
+      notes: Shares agro-ecological and linguistic context with Mymensingh; the Indian
+        Bengali benchmark corpus primarily reflects West Bengal exam conventions
+    transboundary_hydrology: The Ganges–Brahmaputra–Meghna (GBM) river system defines
+      the agro-hydrological context. Shared rivers (Ganges/Farakka, Teesta, Brahmaputra)
+      and bilateral water-sharing agreements between India and Bangladesh create cross-border
+      policy dimensions material to the deployment.
+languages:
+  primary_query_languages:
+  - Bangladeshi Bengali (Mymensingh regional dialect)
+  - Standard Bangladeshi Bengali (written/formal register)
+  - English (secondary; used for scientific literature queries)
+  cross_reference_languages:
+  - Standard Indian Bengali (West Bengal variant — the register reflected in MILU's
+    Bengali corpus)
+  - Telugu (for Telangana/Andhra agro-ecological content)
+  dialect_and_register_notes: Mymensingh district Bengali is a distinct regional dialect
+    of Bangladeshi Bengali, with phonological, lexical, and grammatical features differing
+    from both Standard Bangladeshi Bengali and West Bengal Bengali. Agricultural terminology
+    in Mymensingh dialect (local crop names, beel/haor/char land-tenure vocabulary,
+    irrigation terms) is not represented in MILU's Bengali corpus, which derives from
+    West Bengal and Indian national exam registers. Domain experts in this deployment
+    would query in a naturalistic professional register, not the exam-style standardized
+    phrasing MILU uses.
+  script: Bengali script (Eastern Nagari variant); Telugu script for Telugu-language
+    content; Latin script for English queries
+  script_notes: Bengali script is shared between Bangladeshi and Indian Bengali, but
+    orthographic conventions and exam-register norms differ. MILU's Bengali content
+    was sourced and partially machine-translated within Indian Bengali conventions;
+    Bangladeshi-register nuances are unrepresented.
+  machine_translation_risk: Approximately 25% of MILU questions are machine-translated
+    from English into target languages using GPT-4O. For Bengali, translated questions
+    likely carry Indian Bengali register conventions rather than Bangladeshi Bengali
+    norms, introducing a systematic stylistic and terminological bias for this deployment
+    population.
+occupational_cohort:
+  role: Environmental scientist / agronomist (professional domain expert)
+  institutional_context: '[NEEDS VERIFICATION — identify key institutions employing
+    environmental scientists in Mymensingh: e.g., Bangladesh Agricultural University
+    (BAU), Bangladesh Agricultural Research Institute (BARI), Bangladesh Water Development
+    Board (BWDB), NGO research units]'
+  professional_knowledge_domains:
+  - Agro-ecological systems of the Brahmaputra-Jamuna floodplain
+  - Haor and beel wetland ecology and farming systems
+  - Boro, aman, and aus rice cultivation calendars specific to Bangladesh
+  - Char-land (river-island) agriculture and flood-recession cropping
+  - Trans-border river hydrology (GBM system, Farakka Barrage, Teesta)
+  - 'Soil science: floodplain alluvial soils, hydromorphic soils of haor zones'
+  - Integrated crop-fish farming systems
+  - Climate change impacts on deltaic agriculture (sea-level rise, salinity intrusion,
+    cyclone frequency)
+  - Dry-land cropping systems of Telangana (cross-reference)
+  - Coastal aquaculture (Andhra Pradesh) (cross-reference)
+  query_behavior: Professional experts query in naturalistic, domain-specific language
+    — not in the standardized MCQ exam-register used by MILU. Queries likely blend
+    Bengali and English (code-switching), invoke local agricultural terminology, and
+    require open-ended or multi-step reasoning rather than single-label MCQ responses.
+  llm_usage_pattern: Uses both generic frontier LLMs (e.g., GPT-4o, Gemini) and region-specific
+    small Indic LLMs for knowledge retrieval and reasoning over agricultural science
+    content.
+agro_ecological_systems:
+  primary_systems_mymensingh:
+  - system: Haor wetland farming
+    description: Seasonally flooded bowl-shaped depressions; boro rice is the dominant
+      single crop during dry season; deep-water and flash-flooding pose structural
+      agronomic constraints
+    key_terminology_gap: Haor, beel, boro cycle, flash flood, hoar basin — none represented
+      in MILU subject taxonomy
+  - system: Brahmaputra-Jamuna char-land agriculture
+    description: Shifting river-island agriculture on newly accreted floodplain chars;
+      short-cycle crops (mustard, maize, pulses) and flood-recession cropping; highly
+      dynamic land tenure
+    key_terminology_gap: Char, archar, diluvion/alluvion land rights, flood-recession
+      cropping calendar — absent from MILU
+  - system: Irrigated floodplain rice farming
+    description: Triple-crop rotations (boro-aus-aman) in irrigated lowland areas;
+      groundwater irrigation from shallow tubewells; arsenic contamination of irrigation
+      water is a regional concern
+    key_terminology_gap: '[NEEDS VERIFICATION — verify arsenic-irrigation issue coverage
+      in any MILU environmental science questions]'
+  cross_reference_systems_india:
+  - system: Telangana dry-land cropping
+    region: Telangana, India
+    description: Rain-fed agriculture on Deccan plateau red soils; dominant crops
+      include cotton, sorghum, pulses, groundnut; dryland watershed management is
+      a policy priority
+    milu_coverage_status: '[NEEDS VERIFICATION — determine whether MILU Telugu questions
+      include Telangana-specific agro-ecological content or default to generic Indian
+      exam material]'
+  - system: Andhra Pradesh coastal aquaculture
+    region: Andhra Pradesh, India
+    description: Intensive shrimp (Litopenaeus vannamei) and fish aquaculture in coastal
+      brackish-water systems; significant export industry; regulatory environment
+      involves [NEEDS VERIFICATION]
+    milu_coverage_status: '[NEEDS VERIFICATION — determine whether MILU Telugu or
+      English questions cover coastal aquaculture in AP specifically]'
+  - system: West Bengal deltaic rice farming
+    region: West Bengal, India
+    description: Shares Ganges delta ecology with Bangladesh; aman-boro rice systems;
+      the Indian Bengali exam corpus in MILU primarily reflects this zone's agricultural
+      context
+    milu_coverage_status: Partially covered via West Bengal state-level exam content
+      in MILU Bengali corpus; depth of agro-ecological coverage unconfirmed
+transboundary_policy_context:
+  description: India–Bangladesh shared river systems create a domain where Indian
+    exam answer keys may encode nationally partial scientific and policy perspectives.
+    This is a high-priority validity concern for the deployment.
+  key_shared_rivers:
+  - river: Ganges (Padma in Bangladesh)
+    treaty: '[NEEDS VERIFICATION — verify current status of Ganges Water Sharing Treaty
+      (1996) and any renegotiation as of 2024]'
+    dispute_notes: Farakka Barrage flow regulation is a longstanding point of contention;
+      downstream impacts on Bangladesh agriculture and delta ecology are well-documented
+      in Bangladeshi scientific literature
+  - river: Teesta
+    treaty: '[NEEDS VERIFICATION — verify whether Teesta water-sharing agreement has
+      been finalized; status was unresolved as of training cutoff]'
+    dispute_notes: Teesta water sharing affects boro rice irrigation in northern Bangladesh;
+      Indian and Bangladeshi official positions on flow allocation differ
+  - river: Brahmaputra (Jamuna in Bangladesh)
+    treaty: '[NEEDS VERIFICATION — verify status of any India–China–Bangladesh tripartite
+      or bilateral agreements on Brahmaputra flow data sharing]'
+    dispute_notes: Chinese dam construction on upper Brahmaputra adds complexity;
+      flood early-warning data sharing between India and Bangladesh is a bilateral
+      issue
+  benchmark_validity_implication: MILU's Law and Governance domain and Environmental
+    Sciences domain draw exclusively from Indian exam corpora. For trans-border water
+    questions, Indian exam answer keys reflect Indian policy perspectives and may
+    not be authoritative for a Bangladeshi environmental scientist's professional
+    context. This is a confirmed HIGH-priority validity gap (OC dimension).
+benchmark_coverage_profile:
+  languages_in_benchmark:
+  - bn
+  - te
+  - en
+  - hi
+  - gu
+  - kn
+  - ml
+  - mr
+  - or
+  - pn
+  - ta
+  deployment_languages_covered:
+  - bn (Bengali — West Bengal variant, not Bangladeshi)
+  - te (Telugu)
+  - en (English)
+  deployment_languages_not_covered:
+  - Bangladeshi Bengali (Mymensingh dialect)
+  - Bangladeshi Standard Bengali as distinct from Indian Bengali
+  subject_domains_in_benchmark:
+  - Arts and Humanities
+  - Social Sciences
+  - Environmental Sciences
+  - Law and Governance
+  - Health and Medicine
+  - Science
+  - Engineering and Technology
+  - Business Studies
+  relevant_subject_domains:
+  - Environmental Sciences
+  - Science
+  subject_depth_for_deployment: Surface-level only (confirmed by user). MILU's Environmental
+    Sciences domain derives from Indian general competitive exam content; no agro-ecological
+    depth, no wetland ecology, no Bangladesh-specific agricultural content.
+  question_count_in_relevant_domains: '[NEEDS VERIFICATION — retrieve actual question
+    counts per subject within Environmental Sciences and Science domains across Bengali
+    and Telugu languages from MILU documentation Table 9]'
+  bangladesh_specific_content: STRUCTURALLY ABSENT — MILU is India-only by design.
+    No Bangladeshi exam institutions, no haor/beel/char-land content, no Bangladeshi
+    annotators.
+  bengali_corpus_origin: West Bengal state-level and Indian national exams only. Bangladeshi
+    Bengali register absent. Machine-translated Bengali questions derived from Indian
+    English sources.
+dimension_priorities:
+  input_ontology:
+    priority: HIGH
+    rationale: MILU's 41-subject taxonomy has no Bangladesh-specific agro-ecological
+      subdomains. The Environmental Sciences domain exists but is surface-level and
+      India-scoped. Haor wetland ecology, char-land agriculture, boro/aman rice systems,
+      and trans-border river management are structurally absent from the taxonomy.
+  input_content:
+    priority: HIGH
+    rationale: Every datapoint in MILU originates from Indian competitive exams. No
+      Bangladeshi farming context, Mymensingh dialect terminology, or cross-border
+      hydrological knowledge is represented. Individual Bengali questions carry West
+      Bengal exam register conventions.
+  input_form:
+    priority: MODERATE
+    rationale: Text-based, Bengali-script content is technically supported, but exam-register
+      MCQ phrasing is misaligned with naturalistic domain-expert queries. Machine-translated
+      Bengali content may carry Indian register artifacts.
+  output_ontology:
+    priority: MODERATE
+    rationale: Single-correct-answer MCQ labels cannot capture cross-border pluralism
+      in agro-ecological knowledge or multi-perspective reasoning on India–Bangladesh
+      water management questions.
+  output_content:
+    priority: HIGH
+    rationale: Ground-truth labels originate entirely from Indian exam corpora and
+      reflect Indian educational and policy contexts. No Bangladeshi subject-matter
+      experts or agronomists contributed to annotation. For Bangladesh-specific or
+      trans-border agricultural/policy questions, Indian exam answer keys are not
+      fully authoritative.
+  output_form:
+    priority: LOWER
+    rationale: Both benchmark and deployment are text-based. MCQ format suppresses
+      nuanced agricultural reasoning but the modality mismatch per se is minimal.
+flagged_gaps_for_web_search:
+- gap_id: GAP-1
+  title: Bangladesh-specific agricultural knowledge absence in MILU
+  description: MILU was constructed entirely from Indian competitive exams. Haor and
+    beel wetland farming, boro and aman rice cultivation calendars, char-land agriculture,
+    and flood-recession cropping in Mymensingh district are structurally absent.
+  web_search_target: MILU benchmark Bangladesh agricultural content haor wetland Bengali
+    questions Bangladeshi exam corpus
+  verification_question: Does any MILU subject or question set include Bangladeshi
+    agricultural content, or is the benchmark structurally India-only?
+- gap_id: GAP-2
+  title: Mymensingh/Bangladeshi Bengali dialect gap
+  description: MILU's Bengali content derives from West Bengal state and Indian national
+    exam corpora. Bangladeshi Standard Bengali and Mymensingh regional dialect agricultural
+    vocabulary are unrepresented.
+  web_search_target: Bangladeshi Bengali NLP benchmark Mymensingh dialect agricultural
+    terminology LLM evaluation MILU Bengali subset
+  verification_question: Does any MILU Bengali subset include questions authored or
+    validated by Bangladeshi institutions or exam bodies?
+- gap_id: GAP-3
+  title: Trans-border water and agricultural policy knowledge
+  description: India–Bangladesh water-sharing agreements (Ganges/Farakka, Teesta)
+    and jointly managed river systems create a domain where Indian exam answer keys
+    may encode nationally partial perspectives.
+  web_search_target: India Bangladesh water sharing agreement Teesta Ganges AI benchmark
+    cross-border agricultural policy evaluation LLM
+  verification_question: Does any MILU documentation address cross-border or politically
+    contested agricultural/environmental topics?
+- gap_id: GAP-4
+  title: Depth of agricultural science coverage in MILU
+  description: The user confirmed MILU's agricultural content is surface-level. The
+    actual distribution of questions across the Environmental Sciences domain needs
+    quantitative verification.
+  web_search_target: MILU benchmark environmental sciences agriculture subject question
+    distribution domain statistics Table 9 subject-level
+  verification_question: How many MILU questions fall under agriculture, environmental
+    science, or related applied science categories in Bengali and Telugu? What is
+    the sub-subject breakdown?
+- gap_id: GAP-5
+  title: Telugu-speaking zone agricultural coverage (Telangana/Andhra Pradesh)
+  description: The deployment targets Telangana dry-land cropping and Andhra coastal
+    aquaculture contexts. It is unconfirmed whether MILU's Telugu-language questions
+    include regionally specific sub-national agro-ecological content.
+  web_search_target: MILU Telugu benchmark Telangana Andhra Pradesh agricultural content
+    dry-land cropping aquaculture evaluation subject statistics
+  verification_question: Do MILU's Telugu-language questions include Telangana/Andhra-specific
+    agricultural content, or do they default to generic Indian exam material?
+- gap_id: GAP-6
+  title: Absence of Bangladeshi annotators or validators
+  description: MILU's annotation pipeline is structurally Indian. No Bangladeshi subject-matter
+    experts, agronomists, or environmental scientists contributed to benchmark construction.
+  web_search_target: MILU benchmark annotation Bangladeshi validators cross-border
+    ground truth agricultural science answer keys AI4Bharat
+  verification_question: Does MILU's design documentation mention any cross-border
+    or Bangladeshi input into benchmark construction or validation?
+- gap_id: GAP-7
+  title: Current status of key Bangladesh-India water treaties
+  description: The Teesta water-sharing agreement and current Ganges treaty status
+    are material to ground-truth validity for trans-border agricultural policy questions.
+  web_search_target: Teesta water sharing agreement India Bangladesh 2024 status Ganges
+    treaty Farakka agricultural downstream impact
+  verification_question: What is the current (2024) status of the Teesta agreement
+    and Ganges Water Sharing Treaty, and do any LLM benchmarks address these as contested
+    knowledge domains?
+- gap_id: GAP-8
+  title: Bangladesh Agricultural University and BARI representation in Indic NLP
+  description: Key Bangladeshi agricultural research institutions (BAU Mymensingh,
+    BARI, BRRI) may have produced Bengali-language scientific content relevant to
+    benchmark augmentation.
+  web_search_target: Bangladesh Agricultural University Mymensingh Bengali NLP dataset
+    BARI BRRI agricultural knowledge LLM benchmark
+  verification_question: Is there any Bengali-language agricultural science dataset
+    or benchmark drawing from Bangladeshi institutional sources (BAU, BARI, BRRI)
+    that could supplement or contrast with MILU?
+infrastructure_and_access_notes:
+  internet_access_mymensingh: '[NEEDS VERIFICATION — verify current mobile internet
+    penetration and broadband infrastructure in Mymensingh district, Bangladesh]'
+  device_usage: '[NEEDS VERIFICATION — verify dominant device type (mobile vs. desktop)
+    for professional users in Bangladeshi research/NGO contexts]'
+  llm_access_modality: Text-based API or web interface access to both frontier models
+    (GPT-4o, Gemini) and regional Indic LLMs; no image or speech modality involved
+    in this deployment
+  bangladeshi_llm_ecosystem: '[NEEDS VERIFICATION — identify any Bangladeshi Bengali-specific
+    LLMs or agricultural domain-adapted models evaluated or available as of 2024]'
+  indic_llm_bangla_support: Most evaluated Indic LLMs in MILU are adapted from English
+    base models (LLAMA-2-7B) with Indic language pretraining. Performance near random
+    baseline for many models in non-Hindi languages. Bengali-specific models evaluated
+    include [NEEDS VERIFICATION — check which MILU-evaluated models include Bangladeshi
+    Bengali data or distinct from West Bengal Bengali].
+cultural_and_institutional_norms_notes: 'The deployment population operates within
+  a Bangladeshi scientific and bureaucratic context that differs structurally from
+  the Indian institutional context MILU was designed for:
+
+  - Agricultural research and extension in Bangladesh is organized through distinct
+  national institutions (BAU, BARI, BRRI, DAE) with Bangladesh-specific crop variety
+  releases, policy frameworks, and agronomic recommendations.
+
+  - Bengali agricultural vocabulary in Bangladesh reflects local dialect, land-tenure
+  law (khas land, char land allotment), and floodplain ecology that diverges from
+  West Bengal conventions.
+
+  - Environmental policy context includes Bangladesh-specific climate adaptation frameworks
+  (Bangladesh Delta Plan 2100, BCCTF) not represented in Indian exam content.
+
+  - Professional norms blend South Asian academic formality with international scientific
+  English; queries to LLMs likely mix registers.
+
+  - Trans-boundary river issues carry political salience in Bangladesh that differs
+  from how they are framed in Indian exam contexts; environmental scientists may hold
+  positions informed by Bangladeshi national and scientific perspectives that Indian
+  answer keys would not validate.'
+known_data_sources_for_gap_filling:
+  bangladeshi_agricultural_institutions:
+  - 'Bangladesh Agricultural University (BAU), Mymensingh — [NEEDS VERIFICATION: published
+    Bengali-language academic or extension content]'
+  - 'Bangladesh Agricultural Research Institute (BARI) — [NEEDS VERIFICATION: technical
+    bulletin or exam-question availability]'
+  - 'Bangladesh Rice Research Institute (BRRI) — [NEEDS VERIFICATION: boro/aman variety
+    and cultivation guidance in Bengali]'
+  - 'Bangladesh Water Development Board (BWDB) — [NEEDS VERIFICATION: haor and floodplain
+    hydrology documentation]'
+  relevant_policy_documents:
+  - 'Bangladesh Delta Plan 2100 — [NEEDS VERIFICATION: Bengali-language availability
+    and LLM training data inclusion status]'
+  - Bangladesh Climate Change Strategy and Action Plan (BCCSAP) — [NEEDS VERIFICATION]
+  - 'Ganges Water Sharing Treaty (1996) — [NEEDS VERIFICATION: current implementation
+    status]'
+  - 'Teesta Water Sharing Agreement — [NEEDS VERIFICATION: finalization status as
+    of 2024]'

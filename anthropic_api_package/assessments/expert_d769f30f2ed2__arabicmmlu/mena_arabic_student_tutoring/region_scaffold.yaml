@@ -1,0 +1,418 @@
+name: MENA Multi-Country Arabic Tutoring System — Eight-Country Curriculum Deployment
+abbreviation: mena-tutoring-8country
+assessment_slug: arabicmmlu
+deployment_context: 'AI tutoring system providing curriculum-aligned MCQ support and
+  explanations for students at primary, middle, high school, and university levels
+  across eight MENA countries: Morocco, Egypt, Jordan, Palestine, Lebanon, UAE, Kuwait,
+  and Saudi Arabia.'
+target_population:
+  description: Students enrolled in national educational systems across eight MENA
+    countries, ranging from primary school through university level. Includes students
+    preparing for high-stakes national examinations (Thanawiyya Amma, Tawjihi, Gulf
+    equivalents) and university students studying management, economics, law, CS,
+    political science, and accounting. The population is predominantly Sunni Muslim
+    across all eight countries.
+  geographies:
+  - Morocco (North Africa)
+  - Egypt (North Africa)
+  - Jordan (Levant)
+  - Palestine (Levant)
+  - Lebanon (Levant)
+  - UAE (Gulf)
+  - Kuwait (Gulf)
+  - Saudi Arabia (Gulf)
+  education_levels:
+  - Primary school
+  - Middle school
+  - High school (pre-university / baccalaureate / Tawjihi / Thanawiyya Amma)
+  - University (undergraduate)
+  occupational_role: Students — exam-preparation and coursework support
+  religious_demographic: Predominantly Sunni Muslim across all eight countries; Shia-specific
+    fiqh rulings are out of scope for this deployment
+languages:
+  primary: Modern Standard Arabic (MSA) — formal medium of instruction for school-level
+    content across all eight countries
+  secondary: French — medium of instruction for science and certain professional/university
+    programs in Morocco
+  excluded: Moroccan Darija (spoken colloquial Arabic) — explicitly out of scope for
+    this deployment
+  diglossia_note: 'Diglossia is structurally present across all eight countries: MSA
+    governs formal written instruction and assessment; regional colloquials (Gulf
+    Arabic, Levantine Arabic, Darija) govern everyday speech. This deployment targets
+    MSA exclusively for school contexts, with French as a partial secondary medium
+    for Moroccan higher education.'
+  french_scope_note: French-medium content applies only to Moroccan university-level
+    subjects (sciences, certain professional programs). School-level Moroccan content
+    is MSA-compatible. French medium falls entirely outside ArabicMMLU scope.
+writing_systems:
+  scripts:
+  - Arabic script (right-to-left) — primary for all MSA content
+  - Latin script (French-medium Moroccan university content)
+  rtl_note: Arabic script RTL rendering and Arabic morphological complexity (root-pattern
+    system) are relevant NLP considerations for the tutoring system's input processing
+    and response generation.
+national_curriculum_systems:
+- country: Morocco
+  curriculum_authority: '[NEEDS VERIFICATION — Ministry of National Education, Preschool
+    and Sports (Ministère de l''Éducation Nationale)]'
+  exam_system: Baccalauréat (French-influenced system); primary/middle cycle exams
+  language_of_instruction: MSA for humanities/Islamic studies/Arabic language; French
+    for science and professional university tracks
+  distinctive_features: French-influenced baccalaureate structure; bilingual MSA/French
+    higher education; Maliki madhab for Islamic studies
+  benchmark_coverage_note: No Moroccan workers documented in ArabicMMLU data collection
+    workforce; Moroccan curriculum coverage may be thin [NEEDS VERIFICATION — actual
+    question count from Morocco in ArabicMMLU]
+- country: Egypt
+  curriculum_authority: '[NEEDS VERIFICATION — Ministry of Education and Technical
+    Education]'
+  exam_system: Thanawiyya Amma (general secondary certificate)
+  language_of_instruction: MSA
+  distinctive_features: High-stakes rote-learning culture; centralized national exam
+    with standardized answer banks; Egyptian civil law tradition relevant for university
+    law content
+  benchmark_coverage_note: Egyptian workers documented in benchmark workforce; likely
+    strong coverage — [NEEDS VERIFICATION — actual question count from Egypt in ArabicMMLU]
+- country: Jordan
+  curriculum_authority: '[NEEDS VERIFICATION — Ministry of Education]'
+  exam_system: Tawjihi (General Secondary Certificate Examination)
+  language_of_instruction: MSA
+  distinctive_features: Tawjihi is high-stakes; Jordan is the dominant contributor
+    to ArabicMMLU (over 6,000 questions); Jordanian legal framework relevant for university
+    law
+  benchmark_coverage_note: Over 6,000 questions from Jordan in ArabicMMLU — benchmark
+    heavily biased toward Jordanian curriculum content [NEEDS VERIFICATION — exact
+    distribution]
+- country: Palestine
+  curriculum_authority: '[NEEDS VERIFICATION — Palestinian Ministry of Education and
+    Higher Education]'
+  exam_system: '[NEEDS VERIFICATION — Palestinian General Secondary Certificate (Tawjihi
+    equivalent)]'
+  language_of_instruction: MSA
+  distinctive_features: Distinct national curriculum with Palestinian history and
+    civics content not shared with other Levant countries; no Palestinian workers
+    documented in ArabicMMLU collection
+  benchmark_coverage_note: Palestine listed as source country in ArabicMMLU but no
+    Palestinian workers documented; actual question count may be zero or negligible
+    [NEEDS VERIFICATION — ArabicMMLU Palestine question count]
+- country: Lebanon
+  curriculum_authority: '[NEEDS VERIFICATION — Centre for Educational Research and
+    Development (CERD)]'
+  exam_system: '[NEEDS VERIFICATION — Lebanese Baccalaureate / official secondary
+    certificate exams]'
+  language_of_instruction: MSA (Arabic language subjects); French or English for science
+    tracks depending on school type
+  distinctive_features: Multi-confessional society; some curricular sensitivity around
+    national history and civic identity; Lebanese workers documented in ArabicMMLU
+    workforce
+  benchmark_coverage_note: Lebanese workers present in benchmark collection; coverage
+    level [NEEDS VERIFICATION — actual question count from Lebanon in ArabicMMLU]
+- country: UAE
+  curriculum_authority: '[NEEDS VERIFICATION — Ministry of Education UAE]'
+  exam_system: '[NEEDS VERIFICATION — UAE national secondary certificate; EmSAT assessments]'
+  language_of_instruction: MSA for Arabic-medium subjects; English for science/technology
+    tracks in many schools
+  distinctive_features: UAE legal system (federal civil law with Sharia overlay) distinct
+    from Egyptian civil code; large expatriate school population alongside national
+    curriculum; UAE workers documented in ArabicMMLU
+  benchmark_coverage_note: UAE workers present in benchmark; coverage level [NEEDS
+    VERIFICATION — actual question count from UAE in ArabicMMLU]
+- country: Kuwait
+  curriculum_authority: '[NEEDS VERIFICATION — Kuwait Ministry of Education]'
+  exam_system: '[NEEDS VERIFICATION — Kuwaiti General Secondary Certificate]'
+  language_of_instruction: MSA
+  distinctive_features: Kuwaiti national history and civic education reflects specific
+    Gulf/Kuwaiti national narrative; no Kuwaiti workers documented in ArabicMMLU collection;
+    Kuwaiti legal system distinct from other Gulf states
+  benchmark_coverage_note: No Kuwaiti workers in ArabicMMLU collection; Kuwait not
+    mentioned in acknowledgments; question count may be among the lowest or zero [NEEDS
+    VERIFICATION — ArabicMMLU Kuwait question count]
+- country: Saudi Arabia
+  curriculum_authority: '[NEEDS VERIFICATION — Ministry of Education Saudi Arabia]'
+  exam_system: '[NEEDS VERIFICATION — Saudi General Secondary Certificate (Tawjihi
+    equivalent); Qiyas standardized tests]'
+  language_of_instruction: MSA
+  distinctive_features: Islamic studies heavily prioritized; Hanbali madhab normative
+    tradition; Vision 2030 curriculum reforms ongoing; two KSA workers documented
+    in ArabicMMLU
+  benchmark_coverage_note: KSA workers present in benchmark; Islamic studies questions
+    prioritized in KSA data [NEEDS VERIFICATION — actual question count from KSA in
+    ArabicMMLU]
+high_stakes_exams:
+  egypt:
+    name: Thanawiyya Amma (الثانوية العامة)
+    notes: Centralized national exam; rote-learning and standardized answer-bank culture;
+      divergence from official marking scheme could disadvantage students in open-ended
+      formats (mitigated by MCQ focus of deployment)
+  jordan:
+    name: Tawjihi (التوجيهي)
+    notes: High-stakes secondary exam; well-digitized national exam base; primary
+      driver of ArabicMMLU question volume
+  morocco:
+    name: Baccalauréat
+    notes: '[NEEDS VERIFICATION — official Moroccan baccalaureate exam structure and
+      subject coverage]'
+  palestine:
+    name: '[NEEDS VERIFICATION — Palestinian General Secondary Certificate name and
+      structure]'
+    notes: '[NEEDS VERIFICATION]'
+  lebanon:
+    name: '[NEEDS VERIFICATION — Lebanese official secondary examination name]'
+    notes: '[NEEDS VERIFICATION]'
+  uae:
+    name: '[NEEDS VERIFICATION — UAE secondary certificate and EmSAT structure]'
+    notes: '[NEEDS VERIFICATION]'
+  kuwait:
+    name: '[NEEDS VERIFICATION — Kuwaiti General Secondary Certificate name and structure]'
+    notes: '[NEEDS VERIFICATION]'
+  saudi_arabia:
+    name: '[NEEDS VERIFICATION — Saudi General Secondary Certificate and Qiyas structure]'
+    notes: '[NEEDS VERIFICATION]'
+subject_domain_notes:
+  islamic_studies:
+    scope: Covered across all eight countries at school level; prioritized in KSA
+      data within ArabicMMLU
+    madhab_variation: Morocco follows Maliki tradition; Saudi Arabia follows Hanbali
+      tradition; Jordan, Palestine, Lebanon predominantly Shafi'i or non-specified
+      Sunni; UAE and Kuwait [NEEDS VERIFICATION — dominant madhab in school Islamic
+      studies curricula]. Deployment user assessed madhab-specific divergence as unlikely
+      at school level, but benchmark madhab-calibration is undocumented.
+    madhab_benchmark_status: '[NEEDS VERIFICATION — whether ArabicMMLU Islamic studies
+      questions are madhab-neutral or calibrated to a specific school of jurisprudence]'
+  law:
+    scope: University-level; country-specific tailoring required per deployment specification
+    legal_traditions:
+      egypt: Egyptian Civil Code (French-influenced civil law tradition; dominant
+        MENA model)
+      morocco: Moroccan law (French-influenced civil law with Maliki personal status
+        law) [NEEDS VERIFICATION — Moroccan legal education system structure]
+      jordan: Jordanian civil law [NEEDS VERIFICATION — Jordanian legal code tradition
+        and university law curriculum]
+      uae: UAE federal law with Sharia overlay [NEEDS VERIFICATION — UAE legal education
+        framework]
+      kuwait: '[NEEDS VERIFICATION — Kuwaiti legal tradition and university law curriculum]'
+      saudi_arabia: Saudi law (Sharia-based with regulatory codes) [NEEDS VERIFICATION
+        — Saudi university law curriculum structure]
+      lebanon: '[NEEDS VERIFICATION — Lebanese legal tradition and university law
+        curriculum]'
+      palestine: '[NEEDS VERIFICATION — Palestinian legal framework and university
+        law curriculum]'
+    benchmark_gap: ArabicMMLU flat single-correct-answer schema encodes no country-specific
+      legal branching; law questions likely calibrated to one jurisdiction (probably
+      Egyptian); [NEEDS VERIFICATION — which legal traditions are represented in ArabicMMLU
+      law tasks]
+  national_history_and_civics:
+    scope: School level; country-specific correct answers expected; high inter-country
+      variation
+    variation_note: Palestinian history and national narrative content is entirely
+      country-specific and absent from benchmark workforce. Kuwaiti national history
+      similarly country-specific. Gulf civic education frameworks differ from Levantine
+      frameworks.
+    benchmark_gap: Jordan-dominant question distribution means civics and history
+      ground truth skews toward Jordanian curriculum framing
+  stem:
+    scope: All levels; largely curriculum-neutral for factual content
+    notes: Mathematics, natural science, physics, chemistry, biology — factual answers
+      are consistent across jurisdictions; benchmark coverage expected to be more
+      reliable here
+  university_level_subjects:
+    subjects:
+    - Management
+    - Economics
+    - Law
+    - Computer Science
+    - Political Science
+    - Accounting
+    benchmark_coverage: Approximately 6% of ArabicMMLU questions are university-level
+      [NEEDS VERIFICATION — exact university-level question count and subject distribution];
+      professional-setting questions are listed as future benchmark work
+    economics_political_science: Deployment user indicated general Arabic-world framing
+      may be acceptable for economics and political science (not requiring country-specific
+      tailoring)
+    cs_accounting_management: '[NEEDS VERIFICATION — whether ArabicMMLU includes CS,
+      accounting, or management university-level questions and at what depth]'
+  arabic_language:
+    scope: Dedicated subject group in ArabicMMLU; grammar, rhetoric, comprehension
+    notes: Arabic language questions are curriculum-neutral in terms of linguistic
+      correctness; regional variation in literary tradition is minor at school level
+  french_medium_moroccan_content:
+    scope: Moroccan university science and professional programs taught in French
+    benchmark_coverage: Full gap — ArabicMMLU is MSA-only; no French-medium content
+      exists in benchmark
+    companion_benchmark_status: '[NEEDS VERIFICATION — whether any companion benchmark
+      or evaluation suite exists for French-Arabic bilingual Moroccan higher education]'
+literacy_and_educational_attainment:
+  note: The target population (enrolled students) has high literacy by definition;
+    population-level literacy rates are less salient than enrollment and digital access
+    rates for this deployment.
+  primary_secondary_enrollment_rates:
+    morocco: '[NEEDS VERIFICATION]'
+    egypt: '[NEEDS VERIFICATION]'
+    jordan: '[NEEDS VERIFICATION]'
+    palestine: '[NEEDS VERIFICATION]'
+    lebanon: '[NEEDS VERIFICATION]'
+    uae: '[NEEDS VERIFICATION]'
+    kuwait: '[NEEDS VERIFICATION]'
+    saudi_arabia: '[NEEDS VERIFICATION]'
+  university_enrollment_rates:
+    note: '[NEEDS VERIFICATION — gross tertiary enrollment ratios for each of the
+      eight countries]'
+infrastructure_and_access:
+  internet_penetration_by_country:
+    morocco: '[NEEDS VERIFICATION]'
+    egypt: '[NEEDS VERIFICATION]'
+    jordan: '[NEEDS VERIFICATION]'
+    palestine: '[NEEDS VERIFICATION]'
+    lebanon: '[NEEDS VERIFICATION — note: infrastructure disruption context relevant]'
+    uae: '[NEEDS VERIFICATION]'
+    kuwait: '[NEEDS VERIFICATION]'
+    saudi_arabia: '[NEEDS VERIFICATION]'
+  mobile_vs_desktop_access:
+    general_pattern: Mobile-dominant access across all eight countries, particularly
+      in North Africa and Levant; Gulf states have high smartphone penetration
+    gulf_states: '[NEEDS VERIFICATION — smartphone penetration rates UAE, Kuwait,
+      KSA]'
+    levant_north_africa: '[NEEDS VERIFICATION — mobile internet penetration Morocco,
+      Egypt, Jordan, Palestine, Lebanon]'
+  platform_context: Tutoring system delivered via text-based interface; no multimodal
+    content required (aligns with ArabicMMLU text-only scope)
+cultural_and_pedagogical_norms:
+  rote_learning_culture: Rote learning and memorization-oriented exam preparation
+    is prevalent, particularly in Egypt (Thanawiyya Amma) and Jordan (Tawjihi). Students
+    may expect answers that match official marking-scheme phrasing rather than paraphrased
+    explanations.
+  mcq_format_alignment: MCQ format is standard across national exams in all eight
+    countries; deployment's MCQ focus reduces explanation-format mismatch risk
+  authority_and_curriculum_trust: Students and families place high trust in official
+    curriculum content; tutoring system responses that diverge from national textbook
+    content may be perceived as incorrect regardless of objective accuracy
+  islamic_values_integration: Islamic studies is a mandatory subject across all eight
+    national curricula; Islamic ethical framing may be embedded in social science
+    and humanities questions beyond the dedicated Islamic studies subject
+  gender_access_notes: Gulf states (UAE, Kuwait, KSA) have specific gender-segregated
+    educational environments; no direct impact on text-based tutoring content but
+    may affect deployment context [NEEDS VERIFICATION — any gender-specific curriculum
+    variation at school level]
+  exam_season_intensity: High-stakes exam periods (Tawjihi, Thanawiyya Amma) create
+    concentrated demand spikes; system should be expected to handle peak load during
+    May–June examination period [NEEDS VERIFICATION — exact exam calendar dates per
+    country]
+benchmark_country_coverage_summary:
+  jordan:
+    workforce_documented: true
+    estimated_question_share: Dominant — over 6,000 questions [benchmark-documented]
+    coverage_risk: LOW for Jordanian curriculum alignment; HIGH risk of benchmark
+      over-representing Jordanian framing for other countries
+  egypt:
+    workforce_documented: true
+    estimated_question_count: '[NEEDS VERIFICATION]'
+    coverage_risk: MODERATE — Egyptian workers present but question count unverified;
+      Egyptian legal tradition may dominate law questions
+  lebanon:
+    workforce_documented: true
+    estimated_question_count: '[NEEDS VERIFICATION]'
+    coverage_risk: MODERATE — Lebanese workers present; actual coverage unverified
+  uae:
+    workforce_documented: true
+    estimated_question_count: '[NEEDS VERIFICATION]'
+    coverage_risk: MODERATE — UAE workers present; actual coverage unverified
+  saudi_arabia:
+    workforce_documented: true
+    estimated_question_count: '[NEEDS VERIFICATION]'
+    coverage_risk: MODERATE — KSA workers present; Islamic studies content prioritized;
+      legal framework gap at university level
+  morocco:
+    workforce_documented: false
+    estimated_question_count: '[NEEDS VERIFICATION — may be among the ''as few as
+      100 or none'' countries]'
+    coverage_risk: HIGH — no Moroccan workers documented; French-medium university
+      content fully absent; Maliki madhab calibration unverified
+  kuwait:
+    workforce_documented: false
+    estimated_question_count: '[NEEDS VERIFICATION — may be zero or near-zero]'
+    coverage_risk: HIGH — no Kuwaiti workers documented; not mentioned in acknowledgments;
+      civic education and national history coverage highly suspect
+  palestine:
+    workforce_documented: false
+    estimated_question_count: '[NEEDS VERIFICATION — may be zero or near-zero]'
+    coverage_risk: HIGH — no Palestinian workers documented; Palestinian curriculum
+      and national narrative content likely absent or negligible
+flagged_gaps_for_web_search:
+- gap_id: 1
+  priority: HIGH
+  topic: Palestine curriculum coverage in ArabicMMLU
+  search_target: ArabicMMLU Palestine Ministry of Education exam questions Palestinian
+    curriculum coverage question count
+- gap_id: 2
+  priority: HIGH
+  topic: Kuwait curriculum coverage in ArabicMMLU
+  search_target: ArabicMMLU Kuwait curriculum questions Kuwaiti school exams civic
+    education national history Arabic NLP benchmark
+- gap_id: 3
+  priority: HIGH
+  topic: University-level subject distribution in ArabicMMLU (law, CS, management,
+    economics, accounting)
+  search_target: ArabicMMLU university level subject distribution law economics political
+    science CS management accounting Arabic higher education benchmark
+- gap_id: 4
+  priority: HIGH
+  topic: Which national legal traditions are represented in ArabicMMLU law questions
+  search_target: ArabicMMLU law questions legal tradition Egyptian civil code UAE
+    Moroccan Jordanian jurisdiction MENA curriculum
+- gap_id: 5
+  priority: HIGH
+  topic: Actual per-country question counts in ArabicMMLU (Morocco, Egypt, Lebanon,
+    UAE, Kuwait, KSA, Palestine)
+  search_target: ArabicMMLU per country question distribution Morocco Egypt Lebanon
+    UAE Kuwait Saudi Arabia Palestine dataset statistics
+- gap_id: 6
+  priority: MODERATE
+  topic: French-Arabic bilingual benchmark for Moroccan higher education
+  search_target: French Arabic bilingual benchmark Morocco university higher education
+    science NLP evaluation baccalauréat
+- gap_id: 7
+  priority: MODERATE
+  topic: ArabicMMLU Islamic studies madhab calibration (Maliki, Hanbali, Shafi'i neutrality)
+  search_target: ArabicMMLU Islamic studies madhab Maliki Hanbali Shafi'i school jurisprudence
+    Arabic benchmark question calibration neutrality
+- gap_id: 8
+  priority: MODERATE
+  topic: Rubric alignment between ArabicMMLU ground truth and national marking schemes
+    (Thanawiyya Amma, Tawjihi)
+  search_target: Arabic educational benchmark marking scheme rubric alignment Egyptian
+    Jordanian Thanawiyya Tawjihi national exam answer key validation
+- gap_id: 9
+  priority: LOWER
+  topic: Exact national exam calendars for all eight countries (exam season timing)
+  search_target: Thanawiyya Amma Tawjihi Baccalauréat UAE Kuwait KSA secondary exam
+    dates schedule 2024 2025
+dimension_priority_weights:
+  IO:
+    priority: HIGH
+    rationale: Palestine absent from documented workforce; Kuwait likely underrepresented;
+      university-level subjects (law, CS, management, accounting) constitute only
+      ~6% of benchmark; uneven per-country coverage across all eight deployment targets
+  IC:
+    priority: HIGH
+    rationale: Country-specific legal systems, national history, and civics vary substantially;
+      Jordanian-dominant question distribution may impose Jordanian framing as universal
+      ground truth for other seven curricula
+  IF:
+    priority: MODERATE
+    rationale: MSA aligns well for school-level deployment; French-medium Moroccan
+      university content falls entirely outside benchmark scope; Darija excluded by
+      deployment design
+  OO:
+    priority: MODERATE
+    rationale: MCQ format shared between benchmark and deployment reduces scoring
+      mismatch; flat label schema provides no mechanism for jurisdiction-specific
+      correct answers in law/civics
+  OC:
+    priority: HIGH
+    rationale: Ground-truth labels for Kuwait and Palestine questions (if any) verified
+      by workers from other national educational contexts; 96% agreement ceiling established
+      on general sample, not country-stratified
+  OF:
+    priority: LOWER
+    rationale: Both benchmark and deployment use MCQ output; explanation format confirmed
+      non-exam-critical for MCQ by deployment user; output form mismatch is minimal
