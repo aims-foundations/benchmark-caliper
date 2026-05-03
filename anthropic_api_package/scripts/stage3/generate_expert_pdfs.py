@@ -115,6 +115,51 @@ FONT_PATHS = [
     "/usr/local/share/fonts/freefont",
 ]
 
+NOTO_FONT_DIR = "/usr/share/fonts/truetype/noto"
+
+# === Unicode block → Noto font name for non-Latin script rendering ===
+_SCRIPT_RANGES = [
+    (0x0900, 0x097F, "NotoSansDevanagari"),
+    (0x0980, 0x09FF, "NotoSansBengali"),
+    (0x0A00, 0x0A7F, "NotoSansGurmukhi"),
+    (0x0A80, 0x0AFF, "NotoSansGujarati"),
+    (0x0B00, 0x0B7F, "NotoSansOriya"),
+    (0x0B80, 0x0BFF, "NotoSansTamil"),
+    (0x0C00, 0x0C7F, "NotoSansTelugu"),
+    (0x0C80, 0x0CFF, "NotoSansKannada"),
+    (0x0D00, 0x0D7F, "NotoSansMalayalam"),
+    (0x0D80, 0x0DFF, "NotoSansSinhala"),
+    (0x0600, 0x06FF, "NotoSansArabic"),
+    (0x0590, 0x05FF, "NotoSansHebrew"),
+    (0x0E00, 0x0E7F, "NotoSansThai"),
+    (0x1000, 0x109F, "NotoSansMyanmar"),
+    (0x0E80, 0x0EFF, "NotoSansLao"),
+    (0x1780, 0x17FF, "NotoSansKhmer"),
+]
+
+_noto_registered = set()
+
+
+def _register_noto_fonts():
+    noto_dir = Path(NOTO_FONT_DIR)
+    if not noto_dir.exists():
+        return
+    needed = {stem for _, _, stem in _SCRIPT_RANGES}
+    for stem in sorted(needed):
+        regular = noto_dir / f"{stem}-Regular.ttf"
+        if not regular.exists():
+            continue
+        try:
+            pdfmetrics.registerFont(TTFont(stem, str(regular)))
+            # Map all style variants to Regular so <b>/<i> inside Noto
+            # spans don't crash — most script fonts only ship Regular
+            pdfmetrics.registerFontFamily(
+                stem, normal=stem, bold=stem, italic=stem, boldItalic=stem,
+            )
+            _noto_registered.add(stem)
+        except Exception:
+            pass
+
 
 def _register_fonts():
     for base in FONT_PATHS:
@@ -136,6 +181,7 @@ def _register_fonts():
                 italic="FreeSansOblique",
                 boldItalic="FreeSansBoldOblique",
             )
+            _register_noto_fonts()
             return
     print(
         "WARNING: FreeSans fonts not found. PDF generation will use Helvetica "
@@ -517,9 +563,82 @@ def colorize_citations(escaped_text):
     return escaped_text
 
 
+def _char_to_noto_font(ch):
+    cp = ord(ch)
+    for start, end, font in _SCRIPT_RANGES:
+        if start <= cp <= end and font in _noto_registered:
+            return font
+    return None
+
+
+def wrap_scripts(text):
+    """Wrap non-Latin characters in <font face="NotoSansXXX"> tags.
+
+    Scans character-by-character, skipping XML tags and entities, grouping
+    consecutive same-script characters into single font spans.
+    """
+    if not _noto_registered:
+        return text
+
+    result = []
+    i = 0
+    n = len(text)
+    cur_font = None
+    cur_run = []
+
+    def _flush():
+        nonlocal cur_font, cur_run
+        if cur_font and cur_run:
+            result.append(
+                f'<font face="{cur_font}">{"".join(cur_run)}</font>')
+            cur_run = []
+            cur_font = None
+
+    while i < n:
+        ch = text[i]
+
+        if ch == '<':
+            _flush()
+            end = text.find('>', i)
+            if end == -1:
+                result.append(text[i:])
+                break
+            result.append(text[i:end + 1])
+            i = end + 1
+            continue
+
+        if ch == '&':
+            _flush()
+            end = text.find(';', i)
+            if end != -1 and end - i < 10:
+                result.append(text[i:end + 1])
+                i = end + 1
+            else:
+                result.append(ch)
+                i += 1
+            continue
+
+        font = _char_to_noto_font(ch)
+
+        if font is None:
+            _flush()
+            result.append(ch)
+        elif font == cur_font:
+            cur_run.append(ch)
+        else:
+            _flush()
+            cur_font = font
+            cur_run = [ch]
+
+        i += 1
+
+    _flush()
+    return "".join(result)
+
+
 def render_text(text):
-    """Normalize citations, escape XML, then colorize for PDF rendering."""
-    return colorize_citations(escape(normalize_citations(text)))
+    """Normalize citations, escape XML, colorize, wrap non-Latin scripts."""
+    return wrap_scripts(colorize_citations(escape(normalize_citations(text))))
 
 
 def extract_citation_ids(text):
@@ -623,6 +742,15 @@ def lookup_evidence(citation_ids, registries):
         else:
             pass
 
+    # === Sort by type group then numeric ID ===
+    type_order = {"quote": 0, "dataset": 1, "web": 2, "limitation": 3, "critical": 4}
+    def _sort_key(entry):
+        etype, eid = entry[0], entry[1]
+        m = re.search(r"(\d+)$", eid)
+        num = int(m.group(1)) if m else 0
+        return (type_order.get(etype, 99), num)
+    entries.sort(key=_sort_key)
+
     return entries
 
 
@@ -643,19 +771,18 @@ def make_evidence_table(entries, available_width, styles):
 
     for etype, eid, text1, text2 in entries:
         eid_p = Paragraph(f"<b>{escape(eid)}</b>", styles["EvidenceID"])
+        e1 = wrap_scripts(escape(text1))
+        e2 = wrap_scripts(escape(text2)) if text2 else ""
         if etype == "quote":
-            content = f"“{escape(text1)}” ({escape(text2)})"
+            content = f"“{e1}” ({e2})"
         elif etype == "web":
-            if text2:
-                content = f"{escape(text1)} ({escape(text2)})"
-            else:
-                content = escape(text1)
+            content = f"{e1} ({e2})" if text2 else e1
         elif etype == "dataset":
-            content = f"{escape(text1)} — {escape(text2)}"
+            content = f"{e1} — {e2}"
         elif etype in ("limitation", "critical"):
-            content = escape(text1)
+            content = e1
         else:
-            content = escape(text1)
+            content = e1
         rows.append([eid_p, Paragraph(content, styles["EvidenceCell"])])
 
     t = Table(rows, colWidths=[id_col_width, evidence_col_width])
@@ -887,22 +1014,32 @@ def build_dimension_pdf(dim_key, scoring, registries, output_path, styles):
             spaceAfter=6, spaceBefore=8,
         ))
         story.append(Paragraph("Remediation", styles["SectionHead"]))
+        all_remed_ids = []
         for i, rem in enumerate(remediation_items, 1):
+            gap = rem.get("gap", "")
+            rec = rem.get("recommendation", "")
             story.append(Paragraph(
-                f"<b>Gap {i}:</b> {render_text(rem.get('gap', ''))}",
+                f"<b>Gap {i}:</b> {render_text(gap)}",
                 styles["RemedGap"],
             ))
             story.append(Paragraph(
-                f"<b>Recommendation:</b> {render_text(rem.get('recommendation', ''))}",
+                f"<b>Recommendation:</b> {render_text(rec)}",
                 styles["RemedRec"],
             ))
+            all_remed_ids.extend(extract_citation_ids(gap))
+            all_remed_ids.extend(extract_citation_ids(rec))
+        all_remed_ids = list(dict.fromkeys(all_remed_ids))
+        _add_inline_evidence_from_ids(
+            story, all_remed_ids, registries, content_width, styles,
+        )
 
     doc.build(story)
 
 
 # === Summary PDF Builder ===
 
-def build_summary_pdf(scoring, deployment_text, output_path, styles):
+def build_summary_pdf(scoring, deployment_text, output_path, styles,
+                      registries=None):
     """Build the summary PDF: deployment context, scores, guidance."""
     benchmark = scoring.get("benchmark", "unknown")
     region = scoring.get("region", "unknown")
@@ -1059,37 +1196,51 @@ def build_summary_pdf(scoring, deployment_text, output_path, styles):
     summary = scoring.get("overall_summary", "")
     if summary:
         story.append(Paragraph("Overall Summary", styles["SectionHead"]))
-        story.append(Paragraph(escape(summary), styles["Body"]))
-        story.append(Spacer(1, 8))
+        story.append(Paragraph(render_text(summary), styles["Body"]))
+        story.append(Spacer(1, 4))
+        if registries:
+            _add_inline_evidence(story, summary, registries, content_width,
+                                 styles)
+        story.append(Spacer(1, 4))
 
     # === Practical Guidance ===
     guidance = scoring.get("practical_guidance", {})
     if guidance:
         story.append(Paragraph("Practical Guidance", styles["SectionHead"]))
+        all_guidance_ids = []
 
         measure = guidance.get("what_this_benchmark_measures", "")
         if measure:
             story.append(
                 Paragraph("What This Benchmark Measures", styles["SubHead"])
             )
-            story.append(Paragraph(escape(measure), styles["Body"]))
+            story.append(Paragraph(render_text(measure), styles["Body"]))
             story.append(Spacer(1, 4))
+            all_guidance_ids.extend(extract_citation_ids(measure))
 
         depth = guidance.get("construct_depth", "")
         if depth:
             story.append(
                 Paragraph("Construct Depth", styles["SubHead"])
             )
-            story.append(Paragraph(escape(depth), styles["Body"]))
+            story.append(Paragraph(render_text(depth), styles["Body"]))
             story.append(Spacer(1, 4))
+            all_guidance_ids.extend(extract_citation_ids(depth))
 
         supp = guidance.get("supplementation_needed", "")
         if supp:
             story.append(
                 Paragraph("What Else You Need", styles["SubHead"])
             )
-            story.append(Paragraph(escape(supp), styles["Body"]))
+            story.append(Paragraph(render_text(supp), styles["Body"]))
             story.append(Spacer(1, 4))
+            all_guidance_ids.extend(extract_citation_ids(supp))
+
+        if registries:
+            all_guidance_ids = list(dict.fromkeys(all_guidance_ids))
+            _add_inline_evidence_from_ids(
+                story, all_guidance_ids, registries, content_width, styles,
+            )
 
     doc.build(story)
 
@@ -1126,7 +1277,8 @@ def process_tuple(tuple_dir, styles):
     pdf_dir.mkdir(exist_ok=True)
 
     # Summary PDF
-    build_summary_pdf(scoring, deploy_text, pdf_dir / "summary.pdf", styles)
+    build_summary_pdf(scoring, deploy_text, pdf_dir / "summary.pdf", styles,
+                      registries=registries)
 
     # Dimension PDFs
     for dim_key, file_key in DIM_FILE_KEYS.items():
@@ -1155,6 +1307,95 @@ def discover_tuples(assessments_dir):
     return tuples
 
 
+# === Per-expert concatenation in form ordering ===
+
+COMPARATOR_MAP = {
+    "milu_the_indicmmlu_benchmark": "mmlu",
+    "milu": "mmlu",
+    "drbenchmark": "blurb",
+    "ltzglue": "glue",
+    "mrbench": "mathdial",
+    "crisisltlsum": "cnn_dailymail",
+    "wximpactbench": "crisisbench",
+    "arabicmmlu": "mmlu",
+    "laila": "asap_pp",
+    "toxigen": "civil_comments",
+}
+COMPARATOR_BENCHMARKS = set(COMPARATOR_MAP.values())
+
+DIM_PDF_ORDER = ["io", "ic", "if", "oo", "oc", "of"]
+
+
+def discover_experts(assessments_dir):
+    """Returns {expert_id: {benchmark_slug: [tuple_dir, ...]}}."""
+    assessments_dir = Path(assessments_dir)
+    experts = {}
+    for d in sorted(assessments_dir.glob("expert_*__*")):
+        if not d.is_dir():
+            continue
+        parts = d.name.split("__", 1)
+        if len(parts) != 2:
+            continue
+        eid, bench = parts
+        if eid not in experts:
+            experts[eid] = {}
+        tuples = sorted(
+            [t for t in d.iterdir() if t.is_dir() and (t / "scoring.json").exists()]
+        )
+        if tuples:
+            experts[eid][bench] = tuples
+    return experts
+
+
+def concat_expert_pdfs(expert_id, benchmarks, assessments_dir, concat_dir):
+    """Merge all PDFs for one expert into a single file in form order.
+
+    Order: for each regional benchmark (sorted), for each tuple (sorted):
+      summary → io → ic → if → oo → oc → of
+    Then comparative PDFs for that benchmark's pairs (if any).
+    """
+    from pypdf import PdfWriter
+
+    writer = PdfWriter()
+    pdf_paths = []
+
+    for bench in sorted(benchmarks):
+        if bench in COMPARATOR_BENCHMARKS:
+            continue
+
+        # === Regional tuples: summary + 6 dimensions ===
+        for td in benchmarks[bench]:
+            pdf_dir = td / "pdfs"
+            for name in ["summary"] + DIM_PDF_ORDER:
+                p = pdf_dir / f"{name}.pdf"
+                if p.exists():
+                    pdf_paths.append(p)
+
+        # === Comparative PDFs for this benchmark's pairs ===
+        comp_slug = COMPARATOR_MAP.get(bench)
+        if comp_slug and comp_slug in benchmarks:
+            comp_dirs = {d.name: d for d in benchmarks[comp_slug]}
+            for td in benchmarks[bench]:
+                if td.name in comp_dirs:
+                    p = comp_dirs[td.name] / "pdfs" / "comparative.pdf"
+                    if p.exists():
+                        pdf_paths.append(p)
+
+    if not pdf_paths:
+        print(f"  SKIP {expert_id}: no PDFs found")
+        return
+
+    for p in pdf_paths:
+        writer.append(str(p))
+
+    concat_dir = Path(concat_dir)
+    concat_dir.mkdir(parents=True, exist_ok=True)
+    out_path = concat_dir / f"{expert_id}_all.pdf"
+    with open(out_path, "wb") as f:
+        writer.write(f)
+    print(f"  {expert_id}: {len(pdf_paths)} PDFs → {out_path}")
+
+
 def main():
     p = argparse.ArgumentParser(
         description="Generate expert review PDFs for assessment tuples",
@@ -1166,6 +1407,10 @@ def main():
     p.add_argument(
         "--tuple", default=None,
         help="Process a single tuple directory instead of all",
+    )
+    p.add_argument(
+        "--concat-dir", default=None,
+        help="Directory for per-expert concatenated PDFs (outside assessments/)",
     )
     args = p.parse_args()
 
@@ -1191,6 +1436,12 @@ def main():
             n = process_tuple(td, styles)
             total += n
         print(f"Done: {total} PDFs generated across {len(tuples)} tuples")
+
+    if args.concat_dir:
+        experts = discover_experts(args.assessments_dir)
+        print(f"\nConcatenating PDFs for {len(experts)} experts:")
+        for eid, benchmarks in sorted(experts.items()):
+            concat_expert_pdfs(eid, benchmarks, args.assessments_dir, args.concat_dir)
 
 
 if __name__ == "__main__":

@@ -38,7 +38,7 @@ SCOPES = [
 
 ROOT_FOLDER_NAME = "validity-expert-review"
 
-PDF_KEYS = ["summary", "io", "ic", "if", "oo", "oc", "of"]
+PDF_KEYS = ["summary", "io", "ic", "if", "oo", "oc", "of", "comparative"]
 
 
 # === Auth ===
@@ -131,11 +131,12 @@ def get_web_view_link(service, file_id):
 
 # === Tuple discovery (matches generate_expert_pdfs.py) ===
 
-def discover_tuples(assessments_dir):
+def discover_tuples(assessments_dir, expert_id=None):
     """Find all assessment tuple directories that have a pdfs/ subdirectory."""
     assessments_dir = Path(assessments_dir)
     tuples = []
-    for expert_dir in sorted(assessments_dir.glob("expert_*")):
+    glob = f"{expert_id}__*" if expert_id else "expert_*"
+    for expert_dir in sorted(assessments_dir.glob(glob)):
         if not expert_dir.is_dir():
             continue
         for slug_dir in sorted(expert_dir.iterdir()):
@@ -220,6 +221,10 @@ def main():
         help="Process a single tuple directory instead of all",
     )
     p.add_argument(
+        "--expert", default=None,
+        help="Upload only for a single expert ID (e.g. expert_a59b4f572c38)",
+    )
+    p.add_argument(
         "--force", action="store_true",
         help="Re-upload files even if already in link map",
     )
@@ -248,7 +253,7 @@ def main():
             sys.exit(1)
         tuples = [td]
     else:
-        tuples = discover_tuples(assessments_dir)
+        tuples = discover_tuples(assessments_dir, args.expert)
         if not tuples:
             print(f"No tuples with pdfs/ found in {assessments_dir}")
             sys.exit(1)

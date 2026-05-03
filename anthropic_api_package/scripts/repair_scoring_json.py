@@ -127,6 +127,21 @@ def repair_scoring(data: dict) -> tuple[dict, list[str]]:
     hoisted_dims: dict = {}
     hoisted_root: dict = {}
 
+    # === Pass 0: extract root keys swallowed by any root-level dict ===
+    # When the model forgets a closing brace (e.g., practical_guidance is
+    # missing its "}"), the JSON parser folds subsequent root keys into
+    # that dict. Scan all root-level dicts — both `dimensions` and others
+    # like `practical_guidance` — for misplaced ROOT_KEYS.
+    for parent_key in list(data):
+        parent_val = data[parent_key]
+        if not isinstance(parent_val, dict):
+            continue
+        for key in list(parent_val):
+            if key in ROOT_KEYS:
+                hoisted_root[key] = parent_val[key]
+                del parent_val[key]
+                log.append(f"hoisted root key '{key}' out of '{parent_key}'")
+
     # === Pass 1: extract misplaced keys from existing dimensions ===
     for dim_name in list(dims):
         dim_dict = dims[dim_name]

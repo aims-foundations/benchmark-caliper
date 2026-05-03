@@ -1404,19 +1404,42 @@ def _resolve_org_datasets(hf_org: str) -> list[str]:
     return [d["id"] for d in resp.json()]
 
 
+def _run_da_script_inprocess(script: Path, extra_args: tuple[str, ...]) -> str:
+    """Run a DA script in the current process (fallback for subprocess hangs)."""
+    import io
+    import runpy
+    saved_argv = sys.argv
+    saved_stdout = sys.stdout
+    try:
+        sys.argv = [str(script)] + list(extra_args)
+        sys.stdout = buf = io.StringIO()
+        runpy.run_path(str(script), run_name="__main__")
+        return buf.getvalue()
+    except SystemExit:
+        return buf.getvalue()
+    except Exception as e:
+        return json.dumps({"script": script.name, "error": str(e)[:500]})
+    finally:
+        sys.argv = saved_argv
+        sys.stdout = saved_stdout
+
+
 def _run_da_script(script_name: str, *extra_args: str) -> str:
     """Run a dataset analysis script and return its JSON stdout.
 
     Returns a JSON error object on timeout or non-zero exit so callers can
     surface warnings without crashing the whole analysis step.
+
+    On subprocess timeout, retries in-process to avoid pipe/lock/env issues
+    that can cause hangs in child processes (e.g. HF datasets cache locks).
     """
     script = DA_SCRIPTS / script_name
     cmd = [sys.executable, str(script), *extra_args]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
     except subprocess.TimeoutExpired:
-        print(f"  WARN: {script_name} timed out after 300s")
-        return json.dumps({"script": script_name, "error": "timed out after 300s"})
+        print(f"  WARN: {script_name} timed out as subprocess, retrying in-process...")
+        return _run_da_script_inprocess(script, extra_args)
     if result.returncode != 0:
         print(f"  WARN: {script_name} failed:\n{result.stderr.rstrip()}")
         return json.dumps({"script": script_name, "error": result.stderr[:500]})

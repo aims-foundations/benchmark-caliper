@@ -54,6 +54,29 @@ def _find_label_column(features):
     return None
 
 
+_LABEL_CANDIDATES = ("label", "labels", "class_label", "category", "class")
+
+
+def _infer_label_from_buffer(buffer):
+    """Heuristic label detection when feature metadata is unavailable."""
+    if not buffer:
+        return None, None
+    for col_name in _LABEL_CANDIDATES:
+        if col_name not in buffer[0]:
+            continue
+        values = [row.get(col_name) for row in buffer if row.get(col_name) is not None]
+        if not values:
+            continue
+        unique = set(values)
+        if len(unique) > 100:
+            continue
+        if isinstance(values[0], int):
+            label_names = [f"class_{i}" for i in range(max(unique) + 1)]
+            return col_name, label_names
+        return col_name, None
+    return None, None
+
+
 # Returns a markdown-safe string representation of a single field value.
 # Hard-truncates long values so one large field can't blow the character budget.
 def _format_value(val):
@@ -171,22 +194,31 @@ def main():
                   sys.stdout, indent=2)
         return
 
-    # === Column filtering ===
-    # Build the set of columns to display, dropping media blobs that
-    # can't be rendered as text (images, audio, sequences of either)
-    features = ds.features
-    skip_cols = {name for name, feat in features.items() if _skip_column(feat)}
-    show_cols = [name for name in features if name not in skip_cols]
-
-    # Detect label column for stratification; label_names maps int → class string
-    label_col = _find_label_column(features)
-    label_names = features[label_col].names if label_col else None
-
     # === Buffer streaming ===
     # Pull a fixed-size prefix from the stream so selection is fast and
     # reproducible — full dataset iteration would be slow and unnecessary
     buffer = list(tqdm(ds.take(args.buffer_size), total=args.buffer_size,
                        desc="Streaming"))
+
+    # === Column filtering ===
+    # Build the set of columns to display, dropping media blobs that
+    # can't be rendered as text (images, audio, sequences of either)
+    features = ds.features
+    if features is not None:
+        skip_cols = {name for name, feat in features.items() if _skip_column(feat)}
+        show_cols = [name for name in features if name not in skip_cols]
+        label_col = _find_label_column(features)
+        label_names = features[label_col].names if label_col else None
+    else:
+        # Some datasets (custom loading scripts) don't expose feature
+        # metadata in streaming mode — infer columns from buffered rows
+        if not buffer:
+            json.dump({"script": "content_sample", "error": "Empty dataset (no feature schema, no rows)"},
+                      sys.stdout, indent=2)
+            return
+        show_cols = list(buffer[0].keys())
+        skip_cols = set()
+        label_col, label_names = _infer_label_from_buffer(buffer)
 
     # Shuffle before selection so the sample isn't biased toward the
     # dataset's natural ordering (e.g., all examples of one domain first)
@@ -206,14 +238,17 @@ def main():
 
     # Show class distribution over the buffer (not just selected examples)
     # so the downstream analyst can see whether the sample is representative
-    if label_col and label_names:
+    if label_col:
         dist = Counter(row[label_col] for row in buffer)
-        md.append(f"**Stratified on** `{label_col}` ({len(label_names)} classes)")
+        n_classes = len(dist)
+        md.append(f"**Stratified on** `{label_col}` ({n_classes} classes)")
         md.append(f"**Buffer** (n={len(buffer)}):")
-        for idx in sorted(dist):
-            # Guard against label indices that exceed the names list
-            name = label_names[idx] if idx < len(label_names) else f"class_{idx}"
-            md.append(f"  {name}: {dist[idx]}")
+        for val in sorted(dist, key=str):
+            if label_names and isinstance(val, int) and val < len(label_names):
+                name = label_names[val]
+            else:
+                name = str(val)
+            md.append(f"  {name}: {dist[val]}")
         md.append("")
 
     md.append(f"**Examples:** {len(examples)} from `{args.split}` split "
@@ -226,11 +261,13 @@ def main():
     # Render each example as a named section with optional class label in the header
     for i, row in enumerate(examples, 1):
         header = f"### Example {i}"
-        if label_col and label_names:
-            idx = row.get(label_col)
-            # Only annotate header if the label resolves to a known class name
-            if idx is not None and idx < len(label_names):
-                header += f" [{label_names[idx]}]"
+        if label_col:
+            val = row.get(label_col)
+            if val is not None:
+                if label_names and isinstance(val, int) and val < len(label_names):
+                    header += f" [{label_names[val]}]"
+                else:
+                    header += f" [{val}]"
         md.append(header)
         md.append("")
         for col in show_cols:

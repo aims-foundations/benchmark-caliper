@@ -1,0 +1,587 @@
+name: Gazipur Peri-Urban Low-Literacy Health Chatbot Users (Bangladesh)
+abbreviation: GAZ-BD-HEALTH
+deployment_context:
+  country: Bangladesh
+  sub_national_unit: Gazipur District, Dhaka Division
+  settlement_type: Peri-urban / industrial (garment and manufacturing belt north of
+    Dhaka metropolitan area)
+  deployment_system: Patient-centric clinical chatbot with content moderation layer
+    for toxicity detection and blocking
+  interaction_modality: Text-based chat; no documented voice/speech interface
+  user_role: Patients and health-information seekers interacting with a clinical chatbot
+    in a low-resource, mobile-first environment
+population_description: Low-literacy peri-urban residents of Gazipur, Bangladesh —
+  predominantly garment-industry and manufacturing workers — who use a clinical chat
+  assistant for health guidance. Interaction patterns are characterized by irregular
+  orthography, absent punctuation, phonetic spelling approximations, and frequent
+  code-switching between Bangla and English (Banglish). The population includes both
+  ordinary users and potential adversarial actors who operate in the same degraded-text
+  register, making clean separation of benign and adversarial input impossible at
+  the form level.
+languages:
+  primary: Bangla (Bengali)
+  varieties_and_registers:
+  - Standard Bangla (Shuddo Bangla) — unlikely to be dominant for this population
+  - Colloquial Dhaka-region Bangla
+  - Banglish — Bangla lexicon written in Roman/Latin script
+  - Phonetic ASCII approximation of Bangla (e.g., 'apni ki thik achen' rendered without
+    diacritics or consistent romanization convention)
+  - Code-switched Bangla-English with variable English borrowing (medical terms, product
+    names)
+  - Gazipur/Dhaka-region dialect features
+  minority_languages_present:
+  - 'Sylheti (speakers migrated for garment work) — [NEEDS VERIFICATION — deferred:
+    proportion of Sylheti speakers in Gazipur garment workforce is not published in
+    aggregated national statistics; requires local labour survey or stakeholder elicitation]'
+  - 'Chittagonian (speakers migrated for garment work) — [NEEDS VERIFICATION — deferred:
+    proportion of Chittagonian speakers in Gazipur garment workforce requires local
+    survey; note however that Chittagong/Noakhali dialects are covered in the BIDWESH
+    dataset (Fayaz et al. 2025 — [|https://arxiv.org/abs/2507.16183|]), confirming
+    distinct NLP treatment is warranted]'
+  note: No single standard orthography governs Banglish or phonetic ASCII Bangla;
+    individual users apply idiosyncratic romanization. Code-switching density and
+    English-borrowing rates vary by user education level and workplace exposure.
+writing_systems:
+  scripts_in_use:
+  - Bengali script (Unicode block U+0980–U+09FF) — formal/educated register
+  - Latin/Roman script — Banglish and phonetic approximations
+  - Mixed Bengali-Latin within single messages
+  orthographic_degradation_patterns:
+  - Absent punctuation (no sentence-terminal marks, no commas)
+  - Absent or inconsistent spacing between words
+  - No capitalization conventions in Roman-script Bangla
+  - Phoneme-to-grapheme mapping varies per user (e.g., 'sh', 's', 'c' all used for
+    the same Bangla sibilant)
+  - Vowel omission in rapid typing
+  - Numerals substituted for phonetically similar syllables (e.g., '4' for 'for')
+  nlp_processing_challenge: Toxicity classifiers trained on clean Bengali script or
+    clean English will encounter near-complete input distribution mismatch. Tokenization,
+    normalization, and script identification must all precede toxicity inference,
+    and toxic signals may be deliberately or accidentally embedded within orthographically
+    irregular forms.
+literacy_profile:
+  population_literacy_rate_gazipur: '[NOT FOUND — searched BBS district-level literacy
+    reports and Dhaka Tribune district-wise literacy data; no Gazipur-specific adult
+    literacy figure found in publicly available sources. National and Dhaka-division
+    figures below are the closest available proxies. Caveat: peri-urban industrial
+    populations may diverge substantially from divisional averages.]'
+  national_adult_literacy_rate_bangladesh: '74.23% general literacy rate (7+ years);
+    functional literacy rate 62.92% (7+ years) per Bangladesh Bureau of Statistics
+    Literacy Assessment Survey 2020–2023 — [|https://www.dhakatribune.com/bangladesh/education/319301/bbs-functional-literacy-rate-7-above-years-in|].
+    World Bank / UNESCO figure: 79% adult literacy (ages 15+) as of 2022 — [|https://tradingeconomics.com/bangladesh/literacy-rate-adult-total-percent-of-people-ages-15-and-above-wb-data.html|].
+    Note: two surveys use different age bases and definitions; BBS functional literacy
+    (62.92%) is more operationally relevant for this deployment.'
+  functional_literacy_rate_peri_urban_industrial_workers: 'Urban functional literacy
+    (ages 11–45): 80.35% per BBS LAS 2023 — [|https://pressxpress.org/2023/07/18/bangladesh-bureau-of-statistics-reveals-long-strides-forward-in-literacy-rate/|].
+    Caveat: this is a national urban aggregate; peri-urban Gazipur industrial workers
+    are likely below this figure, closer to the rural rate of 70.54%, given migration
+    origin from rural districts. No factory-worker-specific figure found.'
+  female_literacy_rate_gazipur: '[NOT FOUND — no Gazipur-specific female literacy
+    figure published. National proxy: functional literacy among females aged 11–45
+    is 73.25% (BBS LAS 2023 — [|https://pressxpress.org/2023/07/18/bangladesh-bureau-of-statistics-reveals-long-strides-forward-in-literacy-rate/|]);
+    national female adult literacy is approximately 77% (UNESCO/World Bank 2022 —
+    [|https://countryeconomy.com/demography/literacy-rate/bangladesh|]). These are
+    national aggregates and likely overestimate literacy in the Gazipur garment-worker
+    cohort.]'
+  note: Literacy figures for Gazipur specifically, and for garment-worker cohorts
+    in particular, are likely to diverge from national averages. Functional literacy
+    (ability to compose and read short messages) is more operationally relevant than
+    formal literacy statistics. Users may have mobile phone literacy without Bengali
+    script reading fluency.
+demographic_profile:
+  religious_composition:
+    muslim_majority_estimated_pct: ~91% (national figure, 2022 Bangladesh Census —
+      [|https://www.dhakatribune.com/bangladesh/291196/census-2022-number-of-muslims-increased-in-the|];
+      Gazipur-specific figure not published separately but expected to closely track
+      national given Dhaka Division demographics)
+    hindu_minority_estimated_pct: ~7.95% nationally (2022 Bangladesh Census — [|https://www.dhakatribune.com/bangladesh/291196/census-2022-number-of-muslims-increased-in-the|]);
+      Dhaka Division Hindu share is lower than Sylhet (13.5%) and Rangpur (12.98%)
+      divisions. Gazipur-specific figure not published.
+    christian_minority_estimated_pct: ~0.30% nationally (2022 Bangladesh Census —
+      [|https://www.dhakatribune.com/bangladesh/291196/census-2022-number-of-muslims-increased-in-the|]);
+      Gazipur-specific figure not available.
+    other: ~0.61% Buddhist, ~0.12% other religions nationally (2022 Bangladesh Census
+      — [|https://www.dhakatribune.com/bangladesh/291196/census-2022-number-of-muslims-increased-in-the|])
+    note: Inter-communal religious dynamics are a primary toxicity fault line in this
+      deployment. Anti-Hindu slurs (e.g., 'malaun') and other religiously coded derogatory
+      language must be explicitly represented in any evaluation taxonomy. The 2022
+      census confirms Hindus are the second-largest religious group nationally at
+      7.95%, down from 8.54% in 2011, indicating ongoing out-migration pressure that
+      heightens minority vulnerability. US State Department 2023 Religious Freedom
+      Report documents continued communal violence against Hindus — [|https://www.state.gov/reports/2023-report-on-international-religious-freedom/bangladesh/|].
+  caste_dynamics: 'Caste-coded language and discrimination exist in the Bangladeshi
+    Muslim and Hindu communities despite official abolition; caste-based slurs may
+    appear in health-query-embedded toxic content. [NEEDS VERIFICATION — deferred:
+    extent of caste salience in Gazipur specifically is not documentable through web
+    search; requires stakeholder/expert elicitation. Likely unsearchable at sub-district
+    level.]'
+  gender_composition:
+    female_worker_proportion_garment_sector: 53% female as of 2023, down from 56%
+      in 2014 and over 80% in the 1980s, per BIDS study presented at Annual Development
+      Conference — [|https://www.thedailystar.net/business/economy/news/female-workforce-garment-industry-slips-53-3771696|].
+      GIZ data shows 53.65% in 2021 — [|https://lightcastlepartners.com/insights/2023/07/women-garment-workers-in-bangladesh/|].
+      Female workers are concentrated in sewing and helper roles; management positions
+      are predominantly male.
+    note: Gazipur's garment industry is female-majority by workforce composition at
+      approximately 53%. Gender norms, son-preference beliefs, and reproductive health
+      queries are high-frequency interaction types. Son-preference framing (queries
+      oriented toward conceiving male children) is identified as a primary health-context
+      toxicity category.
+  age_bands_most_prevalent: Working-age 18–45 dominant given industrial employment
+    context. National median age is 27.0 years (DataReportal 2023 — [|https://datareportal.com/reports/digital-2023-bangladesh|]);
+    garment sector workforce skews toward this young-adult band consistent with the
+    deployment population.
+  migration_background: 'Significant proportion of residents are internal migrants
+    from rural districts; sub-regional dialect diversity is higher than Dhaka urban
+    average. [NEEDS VERIFICATION — deferred: district-of-origin data for Gazipur garment
+    workers is not available in aggregated public sources; requires factory-level
+    labour survey or NGO report. Likely unsearchable at this specificity.]'
+cultural_norms_notes: 'Key cultural dimensions relevant to toxicity evaluation in
+  this deployment:
+
+
+  **Religious identity and inter-communal dynamics:**
+
+  - Muslim majority norms (halal/haram framing in health contexts, Islamic calendar,
+  Ramadan health queries)
+
+  - Hindu minority vulnerability to targeted slurs; ''malaun'' is an operationally
+  documented anti-Hindu derogatory term
+
+  - Christian minority present but smaller (~0.30% nationally); specific slurs [NEEDS
+  VERIFICATION — deferred: likely unsearchable; requires community expert elicitation]
+
+  - Religious identity references in health queries should not be flagged as toxic
+  per se; over-flagging of religious identity mentions is a primary bias risk
+
+
+  **Gender norms and son preference:**
+
+  - Son-preference belief systems are culturally embedded and produce health queries
+  that encode gender discrimination (e.g., queries seeking to influence fetal sex)
+
+  - These queries are not overtly rude but encode harm; standard toxicity definitions
+  anchored in ''making someone want to leave a conversation'' would not capture them
+
+  - Female users may use chatbot as a private channel to ask questions they cannot
+  raise with male family members or male health workers
+
+
+  **Superstitious and traditional health belief systems:**
+
+  - Locally held beliefs about illness causation (jinn possession, evil eye / ''nazar'',
+  mal-intentioned supernatural agents) shape health queries
+
+  - Queries embedding these beliefs may recommend harmful non-medical interventions
+
+  - Kabiraj (traditional healer) and homeopathy referral patterns are common [NEEDS
+  VERIFICATION — deferred: prevalence in Gazipur specifically is a lived-practice
+  question not documentable through web search]
+
+
+  **Colorism:**
+
+  - Skin-whitening as a health/beauty goal is a documented pattern in South Asian
+  health-adjacent discourse
+
+  - Queries about skin-whitening products or procedures encode colorist harm distinct
+  from Western racial identity categories
+
+
+  **Social hierarchy and face:**
+
+  - Direct criticism of authority figures (doctors, employers) may be heavily mitigated
+  in user messages; indirect or coded complaint framing is likely
+
+  - Adversarial inputs from deliberate bad actors may exploit social-deference phrasing
+  to embed toxic content'
+locally_grounded_toxicity_taxonomy:
+  description: Toxicity categories operationally relevant to this deployment that
+    are absent from the benchmark's Western online-comment identity taxonomy
+  categories:
+  - category_id: HEALTH_INDUCED_IMPLICIT
+    label: Health-query-induced implicit toxicity
+    examples:
+    - Son-preference reproductive queries (how to conceive a boy)
+    - Queries framing female reproductive health as less important than male
+    - Harmful traditional medicine requests embedded in symptom description
+    benchmark_coverage: None — no health-query subtask exists in benchmark
+  - category_id: RELIGIOUS_SLUR_BD
+    label: Bangladeshi inter-communal religious slurs
+    examples:
+    - '''Malaun'' (anti-Hindu derogatory term)'
+    - 'Other community-specific derogatory terms [NEEDS VERIFICATION — deferred: comprehensive
+      list requires community expert elicitation; partially covered by Karim et al.
+      (2020) Bengali Hate Speech Dataset which includes ''religious'' as a hate category
+      — [|https://github.com/rezacsedu/Bengali-Hate-Speech-Dataset|], but specific
+      slur inventories are not published openly for safety reasons]'
+    benchmark_coverage: None — identity term list is Western online-comment curated
+  - category_id: COLORIST_HARM
+    label: Colorism and skin-tone-based harmful content
+    examples:
+    - Queries promoting skin-whitening via unsafe products
+    - Derogatory references to dark skin tone in health or social context
+    benchmark_coverage: None — racial identity categories are Western; colorism as
+      distinct sub-category absent
+  - category_id: SUPERSTITION_HEALTH_HARM
+    label: Superstition-encoded harmful health content
+    examples:
+    - Queries recommending jinn-related rituals as medical treatment
+    - Evil-eye belief-driven harmful advice
+    - Kabiraj intervention as substitute for emergency medical care
+    benchmark_coverage: None — no health-misinformation or superstition category in
+      benchmark taxonomy
+  - category_id: CASTE_CODED
+    label: Caste-coded derogatory language
+    examples:
+    - 'Occupational-caste slurs in Bengali/Bangla [NEEDS VERIFICATION — deferred:
+      specific terms require community expert elicitation; likely unsearchable without
+      reproducing harmful content]'
+    benchmark_coverage: None — caste is not represented in benchmark identity list
+  - category_id: GENDER_NORM_DISCRIMINATORY
+    label: Gender-norm-discriminatory framing (non-overt)
+    examples:
+    - Queries presupposing female health concerns are less urgent than male
+    - Reproductive coercion framing embedded in health questions
+    benchmark_coverage: Partial — gender is a benchmark identity category, but discriminatory
+      framing within health queries is not captured
+input_form_profile:
+  dominant_input_register: Degraded, code-switched, low-punctuation text indistinguishable
+    in form between ordinary and adversarial messages
+  adversarial_input_distinguishability: Low — toxic signals are embedded within the
+    same degraded register as benign queries; no clean separation exists
+  preprocessing_requirements:
+  - Script identification (Bengali Unicode vs. Latin/Roman)
+  - Banglish normalization or parallel processing pipeline
+  - Phonetic-to-standard-Bangla mapping (approximate; user-idiosyncratic)
+  - Punctuation and spacing reconstruction (heuristic)
+  - Code-switch boundary detection
+  benchmark_input_form_match: Severe mismatch — benchmark assumes clean standard English
+    throughout; no preprocessing for degraded or non-Latin-script input is documented
+infrastructure_notes: '- Mobile-first or mobile-only internet access is the expected
+  dominant mode for Gazipur''s industrial workforce. National household mobile phone
+  penetration: 97.9%; smartphone penetration: 63.3% of households (BBS ICT Use Survey
+  2023 — [|https://www.dhakatribune.com/bangladesh/320526/bbs-proportion-of-households-in-bangladesh-with|]).
+  Gazipur-specific figures not published; national household rate is best available
+  proxy.
+
+  - Mobile internet penetration in Bangladesh: 38.9% of total population as of January
+  2023 (DataReportal — [|https://datareportal.com/reports/digital-2023-bangladesh|]);
+  BBS SVRS 2023 puts internet users (15+) at 50.1% — [|https://www.bssnews.net/news/180472|].
+  Gazipur-specific figure not available.
+
+  - Gender gap in mobile internet: GSMA 2023 Consumer Survey reports a 40% gender
+  gap in mobile internet adoption in Bangladesh — the highest among Asian countries
+  surveyed — [|https://www.tbsnews.net/features/panorama/why-bangladeshi-women-lag-behind-men-internet-and-mobile-usage-909321|].
+  This is highly deployment-relevant: female garment workers (~53% of workforce) face
+  substantially lower individual mobile internet access than male counterparts.
+
+  - Dominant device type: low-to-mid-range Android smartphones [NEEDS VERIFICATION
+  — deferred: Gazipur-specific device brand/tier data not in public sources; national
+  household smartphone rate of 63.3% (BBS 2023) is best available proxy]
+
+  - Dominant input method: software keyboard with Bangla phonetic or Roman input;
+  Bangla Unicode keyboard adoption rate: [NEEDS VERIFICATION — deferred: below search
+  budget; likely unsearchable at this specificity]
+
+  - Data connectivity: 3G/4G coverage in peri-urban Gazipur [NEEDS VERIFICATION —
+  deferred: BTRC coverage maps not consulted within search budget]
+
+  - Platform delivery mechanism for chatbot (app, SMS, WhatsApp, web): [NEEDS VERIFICATION
+  — deferred: deployment-specific; not inferable from public sources]
+
+  - SMS-based fallback: relevant given literacy and connectivity constraints [NEEDS
+  VERIFICATION — deferred: deployment-specific]
+
+  - Bandwidth constraints may affect whether the system can run heavy NLP preprocessing
+  client-side or must rely on server-side inference'
+regulatory_and_policy_context:
+  applicable_data_protection_law_bangladesh: 'Primary instrument: Cyber Security Act,
+    2023 (Act No. 18 of 2023), which replaced the Digital Security Act, 2018 and includes
+    data breach notification provisions — [|https://en.wikipedia.org/wiki/Cyber_Security_Act,_2023|].
+    Draft Personal Data Protection Act 2023 (also called Draft PDPA 2023) received
+    in-principle cabinet approval November 2023; as of late 2024 it had not yet been
+    enacted into law — [|https://regulations.ai/regulations/bangladesh-2023-11-data-protection-act|].
+    The draft proposes a Bangladesh Data Protection Board and cross-sectoral obligations
+    for entities processing citizen data. No health-data-specific carve-out has been
+    publicly documented.'
+  health_information_regulation: '[NEEDS VERIFICATION — deferred: DGHS-specific digital
+    health guidelines were not found within search budget. The National AI Policy
+    2024 (Draft) introduces a risk-based classification system and references ''high-risk
+    AI systems''; clinical chatbots may fall under this category — [|https://regulations.ai/regulations/bangladesh-summary|].
+    Downstream verification should check MOHFW and DGHS portals directly.]'
+  content_moderation_legal_obligations: The Cyber Security Act, 2023 creates obligations
+    around content that 'creates enmity, hatred or hostility among different classes
+    or communities' (a provision used in documented minority-targeting cases — [|https://www.state.gov/reports/2023-report-on-international-religious-freedom/bangladesh/|]).
+    A draft Cyber Protection Ordinance (CPO) was under public consultation in late
+    2024–early 2025 but had not been enacted as of February 2025 — [|https://rfkhumanrights.org/our-voices/joint-statement-on-emerging-digital-laws-in-bangladesh/|].
+    Platform-level content liability framework remains evolving.
+  clinical_chatbot_regulatory_status: Bangladesh National AI Policy 2024 (Draft) proposes
+    risk-based classification; high-risk AI systems (which clinical chatbots are likely
+    to be classified as) are subject to mandatory audits and human-in-the-loop requirements
+    — [|https://regulations.ai/regulations/bangladesh-summary|]. No specific DGDA
+    clearance pathway for AI-based clinical chatbots has been publicly documented;
+    downstream verification should check DGDA portal. The regulatory environment is
+    actively transitioning.
+  note: 'Regulatory environment for AI-based health tools in Bangladesh is evolving
+    rapidly. The Cyber Security Act 2023 is the current binding statute; the Draft
+    PDPA 2023 and Draft National AI Policy 2024 are the key pending instruments. The
+    post-August-2024 political transition has added uncertainty: calls to repeal or
+    reform the CSA 2023 were made by the software industry association following the
+    change of government — [|https://en.wikipedia.org/wiki/Cyber_Security_Act,_2023|].
+    Downstream verification should check most recent MOHFW and DGDA guidance.'
+annotator_representativeness_requirements:
+  minimum_viable_standard: At least one or two native Bangladeshi annotators with
+    clinical and cultural context, as specified in elicitation — explicitly preferred
+    over no regional representation even if not fully sufficient
+  ideal_standard: Multiple annotators from the target region (Bangladesh) with clinical
+    domain knowledge, familiarity with Gazipur peri-urban sociolinguistics, and coverage
+    of Muslim, Hindu, and minority community perspectives
+  known_gap: The benchmark's ~450,000 annotated comments were labeled by crowdworkers
+    with no documented Bangladeshi or South Asian representation; this is a critical
+    OC-dimension mismatch
+  existing_bangladeshi_annotation_resources: 'Several Bangladeshi NLP annotation efforts
+    now exist and are partially relevant:
+
+    1. BD-SHS (Romim et al., LREC 2022): 50,200+ Bangla hate speech comments from
+    social media, hierarchically annotated, covering multiple social contexts — [|https://aclanthology.org/2022.lrec-1.552/|]
+
+    2. Bengali Hate Speech Dataset (Karim et al., 2020): ~5,000+ comments from Facebook/YouTube/newspapers
+    with political, religious, personal, gender-abusive, geopolitical categories;
+    annotated by native Bengali speakers and a linguist — [|https://github.com/rezacsedu/Bengali-Hate-Speech-Dataset|]
+
+    3. BanTH (Haider et al., NAACL 2025 Findings): 37,300 samples of transliterated
+    (Roman-script) Bangla from YouTube, multi-label with gender, religion, origin,
+    body-shaming categories — the first transliterated Bangla hate speech dataset
+    directly relevant to the Banglish input form challenge — [|https://aclanthology.org/2025.findings-naacl.403/|]
+
+    4. BIDWESH (Fayaz et al., 2025): 9,183 instances in Noakhali, Chittagong, and
+    Barishal regional dialects, the first multi-dialectal Bangla hate speech dataset
+    — [|https://arxiv.org/abs/2507.16183|]
+
+    Caveat: none of these datasets cover health-context queries, son-preference framing,
+    or the specific peri-urban Gazipur population; all are social-media-sourced. They
+    provide annotator pool leads and taxonomy starting points but are not drop-in
+    replacements for deployment-specific annotation.'
+  caste_and_religion_annotator_diversity: Annotators should represent both Muslim
+    and Hindu community perspectives to avoid systematic blind spots in inter-communal
+    slur detection
+sub_national_variation:
+  gazipur_vs_dhaka_urban:
+    linguistic_difference: 'Gazipur peri-urban register may include more rural-origin
+      dialect features than Dhaka urban; garment-worker migrant population introduces
+      inter-district dialect mixing [NEEDS VERIFICATION — deferred: sub-district linguistic
+      characterization requires ethnographic or sociolinguistic fieldwork; not documentable
+      from web sources]'
+    health_system_access: '[NEEDS VERIFICATION — deferred: Gazipur-specific primary
+      healthcare facility density vs. Dhaka urban requires DGHS district health profile;
+      not found within search budget]'
+  gazipur_vs_sylheti_speakers:
+    notes: 'Sylheti is mutually unintelligible with standard Bangla to a significant
+      degree; Sylheti-speaking workers in Gazipur may produce inputs that confound
+      Bangla NLP models [NEEDS VERIFICATION — deferred: proportion of Sylheti speakers
+      in Gazipur garment workforce requires local survey]. Sylheti dialect is not
+      covered by BIDWESH (which covers Noakhali, Chittagong, Barishal — [|https://arxiv.org/abs/2507.16183|]),
+      underscoring a specific NLP coverage gap for this migrant group.'
+  gazipur_vs_chittagonian_speakers:
+    notes: 'Chittagonian dialect is covered in the BIDWESH dataset (Fayaz et al. 2025
+      — [|https://arxiv.org/abs/2507.16183|]), which confirms its linguistic distinctiveness
+      and the need for dialect-aware hate speech detection. Proportion of Chittagonian
+      speakers in Gazipur garment sector specifically remains [NEEDS VERIFICATION
+      — deferred: requires local labour survey].'
+  intra_gazipur_variation: '[NEEDS VERIFICATION — deferred: variation between Gazipur
+    City Corporation area, Tongi, Kaliakair, and more rural upazila units within the
+    district is a sub-district question not documentable through web search; requires
+    local administrative data or fieldwork]'
+benchmark_alignment_summary:
+  identity_ontology_match: Very low — benchmark identity taxonomy is drawn from Western
+    English-language online communities; Bangladeshi inter-communal, caste, and colorism
+    categories are absent
+  input_content_match: Very low — benchmark data is English-language online comments;
+    no Banglish, phonetic Bangla ASCII, or health-context conversational content is
+    present
+  input_form_match: Very low — benchmark assumes clean standard English; deployment
+    input is systematically degraded with absent punctuation, irregular spacing, and
+    code-switching
+  output_ontology_match: Very low — benchmark toxicity axis ('rude, disrespectful,
+    or unreasonable') does not capture health-context implicit harm, son-preference
+    framing, superstition-encoded harm, or colorism
+  output_content_match: Very low — no Bangladeshi or South Asian annotator representation
+    documented; identity category list excludes South Asian-specific slurs and caste
+    categories
+  output_form_match: Moderate — both systems use text-in, continuous-score-out pipelines;
+    threshold-agnostic AUC metrics are structurally reusable, but score calibration
+    was derived from an entirely different input and population distribution
+  transferable_elements:
+  - Threshold-agnostic metric framework (Subgroup AUC, BPSN AUC, BNSP AUC, Positive
+    AEG, Negative AEG) is structurally applicable if recalibrated on Bangladeshi-annotated
+    data
+  - Methodology of comparing subgroup performance against background performance is
+    valid for auditing Muslim/Hindu identity-mention bias in the deployed classifier
+  - Finding that real data reveals more bias than synthetic data is a methodological
+    caution directly applicable to planning evaluation data collection in Gazipur
+flagged_gaps_for_downstream_search:
+- gap_id: G1
+  description: Banglish / Roman-script Bangla toxicity detection benchmarks
+  search_target: Banglish Roman script Bengali toxicity hate speech detection benchmark
+    NLP dataset
+  resolution_status: 'RESOLVED — BanTH (Haider et al., NAACL 2025 Findings) is the
+    first multi-label transliterated (Roman-script) Bangla hate speech dataset with
+    37,300 YouTube-sourced samples, covering gender, religion, origin, and body-shaming
+    categories — [|https://aclanthology.org/2025.findings-naacl.403/|]. Also relevant:
+    BengaliHateCB (Saha et al. 2024), a hybrid model trained on both Bengali and Banglish
+    datasets. Gap is partially filled for social-media content; no health-context
+    Banglish dataset exists.'
+- gap_id: G2
+  description: Health-context-induced toxicity patterns in South Asian clinical NLP
+  search_target: health chatbot toxicity safety benchmark South Asia Bangladesh clinical
+    NLP patient interaction
+  resolution_status: NOT FOUND — no health-chatbot-specific toxicity or safety benchmark
+    for Bangladesh or South Asia was found in the search results. All Bangladeshi
+    NLP hate-speech resources are social-media-sourced. This gap remains fully open
+    and represents the most critical missing resource for this deployment.
+- gap_id: G3
+  description: Religiously coded implicit toxicity in Bengali — anti-Hindu slurs and
+    inter-communal language
+  search_target: Bengali hate speech dataset anti-Hindu slur malaun toxicity annotation
+    Bangladesh BUET HatEval
+  resolution_status: PARTIALLY RESOLVED — Karim et al. (2020) Bengali Hate Speech
+    Dataset includes 'religious' as a hate category with data from Facebook, YouTube,
+    and newspapers — [|https://github.com/rezacsedu/Bengali-Hate-Speech-Dataset|].
+    BD-SHS (Romim et al. 2022) similarly includes religious hate in its taxonomy —
+    [|https://aclanthology.org/2022.lrec-1.552/|]. BanTH (2025) includes religion
+    as a multi-label target — [|https://aclanthology.org/2025.findings-naacl.403/|].
+    However, none of these publicly documents a specific inventory of inter-communal
+    slurs (including 'malaun'); slur lexicons are typically withheld for safety reasons.
+    Comprehensive coverage of the specific derogatory term inventory remains unconfirmed.
+- gap_id: G4
+  description: Colorism and skin-tone-based harmful content in South Asian NLP evaluation
+  search_target: colorism skin tone harmful content South Asia Bengali NLP evaluation
+    dataset fairness
+  resolution_status: NOT FOUND — no South Asian NLP dataset or benchmark specifically
+    addressing colorism or skin-tone-based harmful content was found. This category
+    remains an open gap with no available resource.
+- gap_id: G5
+  description: Superstition-encoded harmful health content datasets in Bangladesh
+    or South Asia
+  search_target: health misinformation superstition harmful content detection South
+    Asia Bengali NLP dataset jinn kabiraj
+  resolution_status: NOT FOUND — no dataset or benchmark covering superstition-encoded
+    harmful health content (jinn beliefs, kabiraj referral, evil-eye health advice)
+    in Bangla or South Asian languages was found. This gap remains fully open.
+- gap_id: G6
+  description: Bangladeshi community annotation efforts and regional content moderation
+    guidelines
+  search_target: Bangladeshi annotators content moderation cultural annotation South
+    Asian NLP community BUET
+  resolution_status: 'PARTIALLY RESOLVED — Multiple Bangladeshi academic NLP annotation
+    efforts identified: (1) BD-SHS uses native Bengali-speaker annotators with linguist
+    oversight — [|https://aclanthology.org/2022.lrec-1.552/|]; (2) Karim et al. (2020)
+    used two linguists and three native Bengali speakers — [|https://github.com/rezacsedu/Bengali-Hate-Speech-Dataset|];
+    (3) BanTH (2025) used compensated annotators for transliterated Bangla — [|https://aclanthology.org/2025.findings-naacl.403/|];
+    (4) BanglaHateBERT (Jahan et al. 2022) and BanglaBERT (BUET CSE NLP group) are
+    institutional Bangladeshi NLP resources. No government-level Bangladesh content
+    moderation guidelines found. BUET CSE NLP group ([|https://github.com/csebuetnlp/banglabert|])
+    is the primary institutional lead for Bangla NLP annotation infrastructure.'
+- gap_id: G7
+  description: Sub-national dialect variation in Bangladesh relevant to NLP — Sylheti,
+    Chittagonian, peri-urban Dhaka
+  search_target: sub-national dialect variation Bangladesh Sylheti Chittagong peri-urban
+    Gazipur NLP benchmark
+  resolution_status: PARTIALLY RESOLVED — BIDWESH (Fayaz et al. 2025) covers Noakhali,
+    Chittagong, and Barishal dialects in a 9,183-sample hate speech dataset — [|https://arxiv.org/abs/2507.16183|].
+    Earlier Vashantor corpus (Faria et al. 2023) established regional dialect availability.
+    Sylheti is notably absent from all existing dialect NLP resources found. No Gazipur-peri-urban-specific
+    or Dhaka-region-peri-urban dialect NLP dataset exists.
+- gap_id: G8
+  description: Noisy-text and degraded-input toxicity detection methodology
+  search_target: noisy text toxicity detection code-switching degraded input NLP low-literacy
+    mobile keyboard
+  resolution_status: PARTIALLY RESOLVED — BanTH (2025) addresses transliterated (Roman-script)
+    Bangla and proposes a translation-based prompting strategy for LLMs handling under-resourced
+    text — [|https://aclanthology.org/2025.findings-naacl.403/|]. Research by Al Maruf
+    et al. (2024) surveys challenges of dialect, script, and informal speech in Bangla
+    hate speech detection. No methodology paper specifically addressing absent-punctuation
+    or low-literacy mobile keyboard degradation patterns in toxicity detection was
+    found.
+- gap_id: G9
+  description: Son-preference and reproductive gender discrimination in South Asian
+    health NLP
+  search_target: son preference gender discrimination health chatbot NLP Bangladesh
+    South Asia harmful query detection
+  resolution_status: NOT FOUND — no NLP dataset or methodology paper specifically
+    addressing son-preference queries or reproductive gender discrimination in clinical
+    chatbot contexts was found for South Asia or Bangladesh. This gap remains fully
+    open.
+- gap_id: G10
+  description: Caste-coded derogatory language in Bengali NLP datasets
+  search_target: caste slur Bengali Bangla NLP hate speech dataset Bangladesh discrimination
+    annotation
+  resolution_status: NOT FOUND — caste as a distinct annotation category was not found
+    in any reviewed Bangladeshi NLP hate speech dataset. The Karim et al. (2020) dataset
+    includes 'personal' hate but does not document caste-specific annotation — [|https://github.com/rezacsedu/Bengali-Hate-Speech-Dataset|].
+    This gap remains open.
+- gap_id: G11
+  description: Mobile internet and smartphone penetration in Gazipur district
+  search_target: mobile internet penetration Gazipur Bangladesh smartphone adoption
+    garment worker survey
+  resolution_status: 'PARTIALLY RESOLVED — National household smartphone penetration:
+    63.3% (BBS ICT Use Survey 2023 — [|https://www.dhakatribune.com/bangladesh/320526/bbs-proportion-of-households-in-bangladesh-with|]);
+    national internet users: 38.9% of population (DataReportal Jan 2023 — [|https://datareportal.com/reports/digital-2023-bangladesh|]);
+    BBS SVRS 2023 puts internet use (15+) at 50.1% — [|https://www.bssnews.net/news/180472|].
+    Gender gap in mobile internet: GSMA 2023 reports 40% gap, highest in Asia — [|https://www.tbsnews.net/features/panorama/why-bangladeshi-women-lag-behind-men-internet-and-mobile-usage-909321|].
+    No Gazipur-specific or garment-worker-cohort-specific penetration figure found
+    in public sources.'
+- gap_id: G12
+  description: Bangladesh digital health and clinical AI regulatory framework
+  search_target: Bangladesh DGDA MOHFW digital health AI regulation clinical chatbot
+    guideline 2023 2024
+  resolution_status: 'PARTIALLY RESOLVED — Key regulatory instruments identified:
+    (1) Cyber Security Act 2023 (binding, replaced DSA 2018) — [|https://en.wikipedia.org/wiki/Cyber_Security_Act,_2023|];
+    (2) Draft Personal Data Protection Act 2023 (cabinet in-principle approval Nov
+    2023, not yet enacted) — [|https://regulations.ai/regulations/bangladesh-2023-11-data-protection-act|];
+    (3) National AI Policy 2024 (Draft) introducing risk-based classification for
+    AI systems — [|https://regulations.ai/regulations/bangladesh-summary|]; (4) a2i
+    Act 2023 establishing statutory body for AI-driven digital public goods. No DGDA-specific
+    clinical AI or chatbot clearance pathway was found. Health-data-specific provisions
+    in the draft PDPA are not publicly detailed. MOHFW-specific digital health guidelines
+    were not located within search budget.'
+net_new_fields:
+  bangla_nlp_hate_speech_ecosystem_summary:
+    description: 'A growing but still limited ecosystem of Bangla hate speech NLP
+      datasets now exists, relevant to the annotator representativeness and tooling
+      gaps identified in this assessment. Key datasets as of 2025: (1) BD-SHS (50,200+
+      samples, standard Bangla, social contexts, ACL 2022 — [|https://aclanthology.org/2022.lrec-1.552/|]);
+      (2) Bengali Hate Speech Dataset / Karim et al. 2020 (5,126 samples, religious/political/gender/geopolitical
+      categories — [|https://github.com/rezacsedu/Bengali-Hate-Speech-Dataset|]);
+      (3) BanTH (37,300 samples, transliterated/Roman-script Bangla, multi-label,
+      NAACL 2025 — [|https://aclanthology.org/2025.findings-naacl.403/|]); (4) BIDWESH
+      (9,183 samples, Noakhali/Chittagong/Barishal dialects, 2025 — [|https://arxiv.org/abs/2507.16183|]).
+      Critical shared limitation: all datasets are sourced from social media (YouTube,
+      Facebook, newspapers); none cover health-context conversational input, clinical
+      chatbot queries, or the specific degraded-input register of the Gazipur deployment.
+      A survey by Al Maruf et al. (2024) in Journal of Big Data documents the linguistic
+      challenges of dialect, script, and informal speech in Bangla hate speech detection.'
+    validity_dimension_relevance: OC (annotator representativeness), IF (input form
+      coverage), IO (identity taxonomy)
+  mobile_gender_gap_deployment_implication:
+    description: 'Bangladesh has the highest gender gap in mobile internet adoption
+      among Asian countries surveyed by GSMA (40% gap as of 2023 — [|https://www.tbsnews.net/features/panorama/why-bangladeshi-women-lag-behind-men-internet-and-mobile-usage-909321|]).
+      Female garment workers — approximately 53% of the Gazipur deployment''s user
+      base — face additional structural barriers: shared household devices, social
+      norms, and safety concerns around online use. This means the effective female
+      user cohort for a health chatbot may be substantially smaller and less digitally
+      experienced than the workforce proportion suggests.'
+    validity_dimension_relevance: IC (input content representativeness), OF (output
+      form/accessibility)
+  bangladesh_ai_regulatory_transition_risk:
+    description: Bangladesh's regulatory environment for AI and data is in active
+      transition. The Cyber Security Act 2023 is the current binding instrument (replacing
+      DSA 2018 — [|https://en.wikipedia.org/wiki/Cyber_Security_Act,_2023|]); the
+      Draft PDPA 2023 and Draft National AI Policy 2024 introduce risk-based AI classification
+      and data protection obligations but are not yet enacted as of early 2025 — [|https://regulations.ai/regulations/bangladesh-summary|].
+      Post-August 2024 political transition has introduced additional uncertainty.
+      Deployments built under the current legal framework may need re-compliance assessment
+      once the PDPA and AI Policy are enacted.
+    validity_dimension_relevance: Regulatory/governance risk flag for downstream deployment
+      decision

@@ -1,5 +1,5 @@
 {
-  "benchmark": "cnn_dailymail_rc",
+  "benchmark": "CNN/DailyMail",
   "region": "Ecuador Humanitarian Crisis Tweet Analysis — NGO/IO Analyst Deployment",
   "dimensions": {
     "input_ontology": {

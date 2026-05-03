@@ -1,6 +1,7 @@
 name: asap_plus_plus
 full_name: 'ASAP++: Enriching the ASAP Automated Essay Grading Dataset with Essay Attribute Scores'
 source_url: https://cfilt.iitb.ac.in/~egdata/
+paper_url: https://aclanthology.org/L18-1187/
 year: 2018
 domain: Automated Essay Grading / Writing Quality Assessment
 porting_strategy: none

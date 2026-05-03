@@ -14,6 +14,7 @@ Usage:
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -69,9 +70,15 @@ SCORE_LABELS = {
 # === Regional → comparator benchmark slug mapping ===
 COMPARATOR_MAP = {
     "milu_the_indicmmlu_benchmark": "mmlu",
+    "milu": "mmlu",
     "drbenchmark": "blurb",
     "ltzglue": "glue",
     "mrbench": "mathdial",
+    "crisisltlsum": "cnn_dailymail",
+    "wximpactbench": "crisisbench",
+    "arabicmmlu": "mmlu",
+    "laila": "asap_pp",
+    "toxigen": "civil_comments",
 }
 
 
@@ -91,9 +98,22 @@ def _register_fonts():
     for base in FONT_PATHS:
         regular = Path(base) / "FreeSans.ttf"
         bold = Path(base) / "FreeSansBold.ttf"
+        oblique = Path(base) / "FreeSansOblique.ttf"
+        bold_oblique = Path(base) / "FreeSansBoldOblique.ttf"
         if regular.exists() and bold.exists():
             pdfmetrics.registerFont(TTFont("FreeSans", str(regular)))
             pdfmetrics.registerFont(TTFont("FreeSansBold", str(bold)))
+            if oblique.exists():
+                pdfmetrics.registerFont(TTFont("FreeSansOblique", str(oblique)))
+            if bold_oblique.exists():
+                pdfmetrics.registerFont(TTFont("FreeSansBoldOblique", str(bold_oblique)))
+            pdfmetrics.registerFontFamily(
+                "FreeSans",
+                normal="FreeSans",
+                bold="FreeSansBold",
+                italic="FreeSansOblique",
+                boldItalic="FreeSansBoldOblique",
+            )
             return
     print(
         "WARNING: FreeSans fonts not found. Using Helvetica (no Devanagari).",
@@ -202,6 +222,72 @@ def truncate_excerpt(text, max_chars=350):
         if last > max_chars * 0.5:
             return cut[:last + 1]
     return cut.rstrip() + " ..."
+
+
+def _entry_id(entry):
+    """Extract citation ID from an evidence entry string.
+
+    Handles '[Q1] ...', '[WEB-3] ...', and 'DATASET-D5: ...' formats.
+    """
+    m = re.match(r"\[([^\]]+)\]", entry)
+    if m:
+        return m.group(1)
+    m = re.match(r"(DATASET-D\d+)", entry)
+    if m:
+        return m.group(1)
+    return None
+
+
+def _cited_evidence(justification, evidence_entries):
+    """Filter evidence entries to only those whose ID is cited in the text."""
+    if not justification:
+        return []
+    cited = []
+    for entry in evidence_entries:
+        eid = _entry_id(entry)
+        if not eid:
+            continue
+        # For DATASET-D5 entries, also match bare D5 in the justification
+        patterns = [re.escape(eid) + r"(?!\d)"]
+        if eid.startswith("DATASET-"):
+            bare = eid.replace("DATASET-", "")
+            patterns.append(re.escape(bare) + r"(?!\d)")
+        if any(re.search(p, justification) for p in patterns):
+            cited.append(entry)
+    return cited
+
+
+def colorize_citations(escaped_text):
+    """Wrap citation references in blue font tags."""
+    color = "#2d6a9f"
+
+    def _blue_if_citation(m):
+        inner = m.group(0)
+        if re.search(r"Q\d+|WEB-\d+|D\d+|DATASET", inner):
+            return f'<font color="{color}">{inner}</font>'
+        return inner
+
+    escaped_text = re.sub(r"\[[^\]]+\]", _blue_if_citation, escaped_text)
+
+    def _blue_if_not_wrapped(m):
+        pre = escaped_text[:m.start()]
+        if pre.count("<font") > pre.count("</font>"):
+            return m.group(0)
+        return f'<font color="{color}">{m.group(0)}</font>'
+
+    escaped_text = re.sub(r"DATASET-D\d+", _blue_if_not_wrapped, escaped_text)
+
+    # Bare citation tokens outside brackets (e.g. "partition: D8, D9")
+    def _blue_bare(m):
+        pre = escaped_text[:m.start()]
+        if pre.count("<font") > pre.count("</font>"):
+            return m.group(0)
+        return f'<font color="{color}">{m.group(0)}</font>'
+
+    escaped_text = re.sub(r"(?<![A-Za-z])D\d+(?!\d)", _blue_bare, escaped_text)
+    escaped_text = re.sub(r"(?<![A-Za-z])Q\d+(?!\d)", _blue_bare, escaped_text)
+    escaped_text = re.sub(r"WEB-\d+(?!\d)", _blue_bare, escaped_text)
+    return escaped_text
 
 
 def _compute_avg(scoring):
@@ -460,91 +546,10 @@ def build_comparative_pdf(regional_dir, comparator_dir, output_path, styles):
     ))
 
     # =========================================================
-    # PAGES 2-3: Per-Dimension Justification Excerpts
+    # Overall Summaries (before per-dimension detail)
     # =========================================================
 
     story.append(Spacer(1, 6))
-    story.append(HRFlowable(
-        width="100%", thickness=1, color=ACCENT,
-        spaceAfter=6, spaceBefore=6,
-    ))
-    story.append(Paragraph(
-        "Per-Dimension Justification Comparison", styles["SectionHead"],
-    ))
-    story.append(Paragraph(
-        "Brief excerpts from each benchmark's assessment justification. "
-        "Full justifications are available in the individual dimension PDFs.",
-        styles["DimDef"],
-    ))
-
-    for dim_key, dim_label in DIM_LABELS.items():
-        r_dim = regional_dims.get(dim_key, {})
-        c_dim = comparator_dims.get(dim_key, {})
-
-        r_score = r_dim.get("score", "N/A")
-        c_score = c_dim.get("score", "N/A")
-        r_conf = r_dim.get("confidence", "N/A")
-        c_conf = c_dim.get("confidence", "N/A")
-        r_just = truncate_excerpt(r_dim.get("justification", ""))
-        c_just = truncate_excerpt(c_dim.get("justification", ""))
-
-        abbrev = DIM_ABBREVS[dim_key]
-        definition = DIM_DEFINITIONS[dim_key]
-
-        block = []
-
-        # === Dimension header ===
-        block.append(Paragraph(
-            f"{escape(dim_label)} ({abbrev})",
-            styles["DimHead"],
-        ))
-        block.append(Paragraph(escape(definition), styles["DimDef"]))
-
-        # === Side-by-side excerpt table ===
-        excerpt_rows = [
-            # Header row
-            [Paragraph(
-                f"<b>{escape(regional_name)}</b> — {r_score}/5 "
-                f"({SCORE_LABELS.get(int(r_score), '')}) "
-                f"[{r_conf} confidence]" if isinstance(r_score, (int, float)) else
-                f"<b>{escape(regional_name)}</b> — {r_score}",
-                styles["CellBold"]),
-             Paragraph(
-                f"<b>{escape(comparator_name)}</b> — {c_score}/5 "
-                f"({SCORE_LABELS.get(int(c_score), '')}) "
-                f"[{c_conf} confidence]" if isinstance(c_score, (int, float)) else
-                f"<b>{escape(comparator_name)}</b> — {c_score}",
-                styles["CellBold"])],
-            # Excerpt row
-            [Paragraph(escape(r_just) if r_just else "<i>No justification available</i>",
-                        styles["Excerpt"]),
-             Paragraph(escape(c_just) if c_just else "<i>No justification available</i>",
-                        styles["Excerpt"])],
-        ]
-
-        half_width = content_width * 0.50
-        excerpt_tbl = Table(excerpt_rows, colWidths=[half_width, half_width])
-        excerpt_tbl.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (0, 0), REGIONAL_BG),
-            ("BACKGROUND", (1, 0), (1, 0), COMPARATOR_BG),
-            ("BACKGROUND", (0, 1), (0, 1), HexColor("#f1f8e9")),
-            ("BACKGROUND", (1, 1), (1, 1), HexColor("#e8f4fd")),
-            ("GRID", (0, 0), (-1, -1), 0.5, GRAY_BORDER),
-            ("VALIGN", (0, 0), (-1, -1), "TOP"),
-            ("TOPPADDING", (0, 0), (-1, -1), 5),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-            ("LEFTPADDING", (0, 0), (-1, -1), 6),
-            ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-        ]))
-        block.append(excerpt_tbl)
-        block.append(Spacer(1, 8))
-
-        story.append(KeepTogether(block))
-
-    # =========================================================
-    # FINAL SECTION: Overall Summaries
-    # =========================================================
-
     story.append(HRFlowable(
         width="100%", thickness=1, color=ACCENT,
         spaceAfter=6, spaceBefore=6,
@@ -560,7 +565,7 @@ def build_comparative_pdf(regional_dir, comparator_dir, output_path, styles):
             styles["ExcerptLabel"],
         ))
         story.append(Paragraph(
-            escape(truncate_excerpt(r_summary, 600)),
+            colorize_citations(escape(r_summary)),
             styles["Excerpt"],
         ))
         story.append(Spacer(1, 6))
@@ -571,9 +576,143 @@ def build_comparative_pdf(regional_dir, comparator_dir, output_path, styles):
             styles["ExcerptLabel"],
         ))
         story.append(Paragraph(
-            escape(truncate_excerpt(c_summary, 600)),
+            colorize_citations(escape(c_summary)),
             styles["Excerpt"],
         ))
+
+    # =========================================================
+    # Per-Dimension Justification + Evidence Comparison
+    # =========================================================
+
+    half_width = content_width * 0.50
+    section_header = [
+        Spacer(1, 6),
+        HRFlowable(
+            width="100%", thickness=1, color=ACCENT,
+            spaceAfter=6, spaceBefore=6,
+        ),
+        Paragraph(
+            "Per-Dimension Justification Comparison", styles["SectionHead"],
+        ),
+        Paragraph(
+            "Each benchmark's full assessment justification and cited evidence, "
+            "shown side by side.",
+            styles["DimDef"],
+        ),
+    ]
+    first_dim = True
+
+    for dim_key, dim_label in DIM_LABELS.items():
+        r_dim = regional_dims.get(dim_key, {})
+        c_dim = comparator_dims.get(dim_key, {})
+
+        r_score = r_dim.get("score", "N/A")
+        c_score = c_dim.get("score", "N/A")
+        r_conf = r_dim.get("confidence", "N/A")
+        c_conf = c_dim.get("confidence", "N/A")
+        r_just = r_dim.get("justification", "")
+        c_just = c_dim.get("justification", "")
+
+        abbrev = DIM_ABBREVS[dim_key]
+        definition = DIM_DEFINITIONS[dim_key]
+
+        block = []
+
+        # === Dimension header ===
+        block.append(Paragraph(
+            f"{escape(dim_label)} ({abbrev})",
+            styles["DimHead"],
+        ))
+        block.append(Paragraph(escape(definition), styles["DimDef"]))
+
+        # === Side-by-side justification table ===
+        excerpt_rows = [
+            [Paragraph(
+                f"<b>{escape(regional_name)}</b> — {r_score}/5 "
+                f"({SCORE_LABELS.get(int(r_score), '')}) "
+                f"[{r_conf} confidence]" if isinstance(r_score, (int, float)) else
+                f"<b>{escape(regional_name)}</b> �� {r_score}",
+                styles["CellBold"]),
+             Paragraph(
+                f"<b>{escape(comparator_name)}</b> — {c_score}/5 "
+                f"({SCORE_LABELS.get(int(c_score), '')}) "
+                f"[{c_conf} confidence]" if isinstance(c_score, (int, float)) else
+                f"<b>{escape(comparator_name)}</b> — {c_score}",
+                styles["CellBold"])],
+            [Paragraph(colorize_citations(escape(r_just)) if r_just else "<i>No justification available</i>",
+                        styles["Excerpt"]),
+             Paragraph(colorize_citations(escape(c_just)) if c_just else "<i>No justification available</i>",
+                        styles["Excerpt"])],
+        ]
+
+        excerpt_tbl = Table(excerpt_rows, colWidths=[half_width, half_width])
+        excerpt_tbl.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (0, 0), REGIONAL_BG),
+            ("BACKGROUND", (1, 0), (1, 0), COMPARATOR_BG),
+            ("BACKGROUND", (0, 1), (0, 1), HexColor("#f1f8e9")),
+            ("BACKGROUND", (1, 1), (1, 1), HexColor("#e8f4fd")),
+            ("GRID", (0, 0), (-1, -1), 0.5, GRAY_BORDER),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("TOPPADDING", (0, 0), (-1, -1), 5),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+            ("LEFTPADDING", (0, 0), (-1, -1), 6),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ]))
+        block.append(excerpt_tbl)
+
+        # === Side-by-side evidence table (only justification-cited entries) ===
+        r_all_ev = (r_dim.get("evidence_quotes", [])
+                    + r_dim.get("evidence_web_sources", [])
+                    + r_dim.get("evidence_dataset", []))
+        c_all_ev = (c_dim.get("evidence_quotes", [])
+                    + c_dim.get("evidence_web_sources", [])
+                    + c_dim.get("evidence_dataset", []))
+        r_ev = _cited_evidence(r_just, r_all_ev)
+        c_ev = _cited_evidence(c_just, c_all_ev)
+
+        if r_ev or c_ev:
+            n_rows = max(len(r_ev), len(c_ev))
+            ev_rows = [
+                [Paragraph(f"<b>{escape(regional_name)} evidence</b>",
+                           styles["CellBold"]),
+                 Paragraph(f"<b>{escape(comparator_name)} evidence</b>",
+                           styles["CellBold"])],
+            ]
+            for i in range(n_rows):
+                r_cell = colorize_citations(escape(r_ev[i])) if i < len(r_ev) else ""
+                c_cell = colorize_citations(escape(c_ev[i])) if i < len(c_ev) else ""
+                ev_rows.append([
+                    Paragraph(r_cell, styles["Excerpt"]),
+                    Paragraph(c_cell, styles["Excerpt"]),
+                ])
+
+            ev_tbl = Table(ev_rows, colWidths=[half_width, half_width])
+            ev_style = [
+                ("BACKGROUND", (0, 0), (0, 0), REGIONAL_BG),
+                ("BACKGROUND", (1, 0), (1, 0), COMPARATOR_BG),
+                ("GRID", (0, 0), (-1, -1), 0.5, GRAY_BORDER),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("TOPPADDING", (0, 0), (-1, -1), 3),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                ("LEFTPADDING", (0, 0), (-1, -1), 5),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+            ]
+            for i in range(1, n_rows + 1):
+                ev_style.append(("BACKGROUND", (0, i), (0, i), HexColor("#f1f8e9")))
+                ev_style.append(("BACKGROUND", (1, i), (1, i), HexColor("#e8f4fd")))
+            ev_tbl.setStyle(TableStyle(ev_style))
+            block.append(Spacer(1, 4))
+            block.append(ev_tbl)
+
+        block.append(Spacer(1, 10))
+        # Keep section header with first dim header to prevent orphaning
+        if first_dim:
+            story.append(KeepTogether(section_header + block[:3]))
+            first_dim = False
+        else:
+            story.append(KeepTogether(block[:3]))
+        for flowable in block[3:]:
+            story.append(flowable)
 
     doc.build(story)
 

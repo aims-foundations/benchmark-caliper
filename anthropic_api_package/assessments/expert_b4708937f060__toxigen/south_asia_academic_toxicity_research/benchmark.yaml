@@ -1,0 +1,1096 @@
+name: toxigen
+full_name: 'TOXIGEN: A Large-Scale Machine-Generated Dataset for Adversarial and Implicit Hate Speech Detection'
+source_url: https://github.com/microsoft/TOXIGEN
+paper_url: https://arxiv.org/abs/2203.09509
+year: 2022
+domain: Implicit and adversarial hate speech detection
+porting_strategy: none
+languages:
+- en
+primary_region: United States / Global North
+description: 'TOXIGEN is a large-scale machine-generated dataset of 274,186 toxic and benign statements
+
+  covering 13 U.S.-defined minority identity groups. It was designed to address the scarcity
+
+  of implicit toxicity data — statements devoid of profanity or slurs that are nonetheless
+
+  harmful — by prompting GPT-3 with demonstration-based prompting frameworks. A key
+
+  contribution is ALICE, an adversarial classifier-in-the-loop decoding algorithm that
+
+  steers language model generation toward false negatives (toxic content evading classifiers)
+
+  and false positives (benign content triggering classifiers). A human-validated test set
+
+  (TOXIGEN-HUMANVAL, 792 statements rated by 3 MTurk annotators each) provides multi-dimensional
+
+  label annotations including harmfulness, intended harm, positive stereotyping, lewdness,
+
+  and group framing. The benchmark is evaluated by its ability to improve downstream toxicity
+
+  classifiers on human-written implicit hate datasets, with reported gains of +7–19% on three
+
+  external corpora.
+
+  '
+documentation_excerpts: '## Key characteristics relevant to validity analysis:
+
+
+  ### Input Ontology
+
+  TOXIGEN''s task taxonomy is organized around 13 U.S.-defined minority identity groups — including
+
+  African Americans, women, and LGBTQ+ individuals — with the stated design goal of generating
+
+  equal numbers of toxic and benign statements per group [Q12]. The benchmark targets a specific
+
+  phenomenon (implicit toxicity) defined as statements without profanity or slurs that are
+
+  nonetheless harmful [Q13], and introduces two generation regimes: standard demonstration-based
+
+  top-k decoding and ALICE-adversarial generation [Q14, Q15]. ALICE operates in two modes —
+
+  maximizing classifier probability of the benign class given toxic prompts (false negatives)
+
+  and maximizing probability of the toxic class given benign prompts (false positives) [Q46, Q47].
+
+  A downstream fine-tuning validation task is also defined, assessing whether TOXIGEN-trained
+
+  classifiers generalize to human-written implicit hate [Q94].
+
+
+  From a South Asian deployment perspective, the taxonomy is critically deficient. The 13
+
+  groups are entirely U.S.-framed, with no representation of caste-based groups (Dalits, OBCs),
+
+  Hindu–Muslim communal conflict, India–Pakistan border rhetoric, or party-specific slur targets
+
+  (BJP, Congress, Awami League, PTI) [Q32]. These categories have no meaningful analogues in
+
+  TOXIGEN''s ontology. The benchmark explicitly excludes identity dimensions associated with
+
+  historically dominant groups as a normative design choice [Q106], a framing that maps poorly
+
+  onto South Asian power dynamics, where the same community may occupy oppressor or oppressed
+
+  positions depending on national context.
+
+
+  ### Input Content
+
+  TOXIGEN''s 274,186 statements are entirely machine-generated using GPT-3 [Q1, Q2], selected
+
+  for its capacity to produce human-like text while also generating socially biased content [Q2].
+
+  Seed demonstrations for toxic prompts were sourced from U.S.-centric hate forums and Reddit
+
+  [Q42], while benign demonstrations came from English-language blog posts and news articles
+
+  mentioning each group [Q37] — 20–50 sentences per group, collected through an iterative
+
+  human-in-the-loop process [Q39, Q41]. The machine-generation approach was motivated precisely
+
+  by the scarcity of implicit toxicity data [Q38], and GPT-3 is noted to sometimes conflate
+
+  identities or mention multiple groups within a single generation [Q80].
+
+
+  For the South Asian deployment, data source provenance is a fundamental validity concern.
+
+  All seed content originates from U.S. hate forums and English-language news; no South Asian
+
+  linguistic or cultural registers — Hinglish, Romanized Urdu, Tanglish, casteist microaggressions,
+
+  or communal dog-whistles — are represented anywhere in the generation pipeline. The machine-
+
+  generation process amplifies rather than corrects this gap, since GPT-3''s training distribution
+
+  skews heavily toward Western English content [Q101]. The authors acknowledge that implicit
+
+  toxicity is inherently hard to find at scale [Q38] and that prompt engineering quality
+
+  significantly affects generation outcomes [Q120], suggesting that adaptation to South Asian
+
+  registers would require entirely new seed curation rather than translation or reweighting.
+
+
+  ### Input Form
+
+  TOXIGEN is exclusively text-based [Q4, Q27], with generation parameters fixed at a maximum
+
+  length of 30 tokens, beam size of 10, and temperature of 0.9 [Q44]. Generation length varies
+
+  across the final dataset [Q49], and the data are released as a structured dataframe with fields
+
+  for prompt text, generated text, generation method, binary prompt label, target group, and a
+
+  RoBERTa model toxicity probability score [Q122]. The demonstration-based prompting framework
+
+  uses example sentences to encourage group-mentioning, implicit-style outputs [Q120, Q121].
+
+
+  The text-only modality aligns with the South Asian deployment''s needs, and the short-sentence
+
+  format (≤30 tokens) is compatible with stimuli-presentation workflows [Q51]. However, TOXIGEN
+
+  generates clean standard English prose. Code-mixed Romanized scripts (Hinglish, Romanized Urdu,
+
+  Tanglish) differ substantially in vocabulary, spelling conventions, syntactic structure, and
+
+  script encoding from the content TOXIGEN produces, creating a meaningful input-distribution
+
+  mismatch. The deployment''s most important content category — surface-benign text recognizable
+
+  as toxic only by in-group South Asian readers — relies on cultural-linguistic registers entirely
+
+  outside TOXIGEN''s generative scope.
+
+
+  ### Output Ontology
+
+  TOXIGEN''s primary output label is a binary prompt label (toxic = 1, benign = 0) [Q122].
+
+  The human-validated test set employs a richer schema: harmfulness is rated on a 1–5 Likert
+
+  scale under two authorship conditions (HARMFULIFAI, HARMFULIFHUMAN), with the maximum mapped
+
+  into three classes — non-toxic (<3), ambiguous (=3), and toxic (>3) [Q58, Q67]. Additional
+
+  label dimensions cover intended harm (HARMFULINTENT) [Q59], positive stereotyping (POSSTEREO)
+
+  [Q60], lewdness (LEWD), group framing (WHICHGROUP, GROUPFRAMING), and factual vs. opinion
+
+  framing (FACTOROPINION) [Q62]. The dominant toxic form is hate speech (94.56%) [Q73], with
+
+  moral judgment as the most common framing tactic [Q83].
+
+
+  The multi-dimensional Likert structure partially aligns with the deployment''s requirement for
+
+  graded, multi-axis ratings [Q58], and the POSSTEREO label offers a structural analogue for
+
+  capturing positive-stereotype harm. However, the label taxonomy was designed to capture
+
+  U.S.-calibrated harm constructs. Dimensions critical to South Asian deployment — caste-based
+
+  target specificity, communal religious framing, implicit political dog-whistles recognizable
+
+  only to in-group South Asian readers, and cross-regional comparative scoring — are entirely
+
+  absent from the output ontology. The authorship-conditioned harm schema (HARMFULIFAI vs.
+
+  HARMFULIFHUMAN) has no equivalent in the deployment''s design, and the three-class mapping
+
+  [Q67] provides insufficient granularity for the severity-plus-implicitness-plus-target-
+
+  specificity decomposition the research requires.
+
+
+  ### Output Content
+
+  Human validation was conducted on 792 statements (TOXIGEN-HUMANVAL), with each statement
+
+  rated by 3 annotators from a pool of 156 pre-qualified Amazon Mechanical Turk workers [Q52, Q64].
+
+  Annotators answered a multi-dimensional battery covering perceived authorship, harmfulness
+
+  under both conditions, intended harm, positive stereotyping, lewdness, group framing, and
+
+  factual vs. opinion status [Q55, Q56, Q57, Q59, Q61]. Inter-annotator agreement was moderate
+
+  (Fleiss'' κ = 0.46, Krippendorff''s α = 0.64), with majority agreement in 93.4% of cases
+
+  [Q68, Q69] — figures the authors compare favorably to prior hate speech annotation work [Q66].
+
+  A larger annotated training sample of 8,960 examples was subsequently collected using the same
+
+  MTurk pool and annotation framework [Q110], and a fine-tuned RoBERTa classifier was released
+
+  based on this sample [Q123].
+
+
+  Critically, annotator demographics are not documented beyond platform (MTurk) and qualification
+
+  status. The authors themselves flag that annotators'' sociodemographic backgrounds systematically
+
+  affect toxicity perception [Q118], and provide a concrete example of annotators mislabeling a
+
+  misogynistic reference (MGTOW) due to lack of cultural familiarity [Q119] — a pattern that
+
+  would be systematically amplified across South Asian content. TOXIGEN''s annotation pool almost
+
+  certainly lacks South Asian regional diversity. The 90.5% human-likeness validation [Q104] was
+
+  assessed by annotators with no disclosed expertise in South Asian languages or cultural contexts,
+
+  meaning the quality assurance framework does not transfer to the target deployment. The user
+
+  explicitly anticipates systematic disagreement across Indian, Pakistani, and Sri Lankan annotators
+
+  on identical stimuli — a cross-national dimension entirely absent from TOXIGEN''s annotation
+
+  design.
+
+
+  ### Output Form
+
+  TOXIGEN''s output modality is graded scalar toxicity scores plus group-mention classification,
+
+  with downstream outputs being binary or three-class toxicity decisions [Q67, Q95]. Classifier
+
+  performance is measured on three external human-written datasets (ImplicitHateCorpus,
+
+  SocialBiasFrames, DynaHate) and on TOXIGEN-HUMANVAL [Q96], with F1/accuracy improvements of
+
+  +7–19% reported [Q23]. ALICE''s effectiveness is evaluated by adversarial fooling rate against
+
+  five publicly available toxicity classifiers [Q18], with fooling rates of 58.97% (ALICE) vs.
+
+  26.88% (top-k) at large scale [Q114]. Average toxicity scores on a 1–5 scale are used to
+
+  compare generation methods [Q78, Q127], and group-mention accuracy is tracked at both small
+
+  and large scale [Q79, Q116, Q128].
+
+
+  The Likert-scale scoring framework [Q58, Q78] is partially compatible with the deployment''s
+
+  need for graded output rather than purely binary classification. However, TOXIGEN''s metric
+
+  framework does not decompose scores by implicitness level, target-group specificity, or
+
+  cross-regional comparability. All evaluation benchmarks [Q96] are U.S.-framed English datasets
+
+  with no South Asian validation data. The deployment''s core analytical goal — comparing LLM
+
+  toxicity ratings of South Asian vs. Western-equivalent stimuli — has no corresponding metric
+
+  structure in TOXIGEN. The toxicity subjectivity acknowledged by the authors [Q108] and the
+
+  absence of cross-cultural calibration make direct metric transfer inadvisable.
+
+  '
+verbatim_quotes:
+- id: Q1
+  page: 1
+  dimension: input_content
+  text: We introduce TOXIGEN, a large-scale machine-generated dataset of 274,186 toxic and benign statements.
+- id: Q2
+  page: 1
+  dimension: input_content
+  text: To create this dataset, we leverage the massive pretrained language model GPT-3 (Brown et al., 2020), which is known
+    to produce close-to-human-like text (Clark et al., 2021; Dou et al., 2021) but also easily generates socially biased and
+    toxic content (Sheng et al., 2019; Gehman et al., 2020).
+- id: Q3
+  page: 1
+  dimension: input_ontology
+  text: TOXIGEN covers over 135k toxic and 135k benign statements about 13 minority identity groups (e.g., African Americans,
+    women, LGBTQ+ folks, etc.).
+- id: Q4
+  page: 1
+  dimension: input_form
+  text: We develop a demonstration-based prompting framework and an adversarial classifier-in-the-loop decoding method to
+    generate subtly toxic and benign text with a massive pretrained language model (Brown et al., 2020).
+- id: Q5
+  page: 1
+  dimension: input_ontology
+  text: Indeed, 98.2% of TOXIGEN statements are implicit, i.e., devoid of explicit profanity,
+- id: Q6
+  page: 1
+  dimension: output_content
+  text: We also find that 94.5% of toxic examples are labeled as hate speech by human annotators.
+- id: Q7
+  page: 1
+  dimension: output_content
+  text: We conduct a human evaluation on a challenging subset of TOXIGEN and find that annotators struggle to distinguish
+    machine-generated text from human-written language.
+- id: Q8
+  page: 1
+  dimension: output_form
+  text: Using three publicly-available datasets, we show that finetuning a toxicity classifier on our data improves its performance
+    on human-written data substantially.
+- id: Q9
+  page: 1
+  dimension: output_form
+  text: We also demonstrate that TOXIGEN can be used to fight machine-generated toxicity as finetuning improves the classifier
+    significantly on our evaluation subset.
+- id: Q10
+  page: 1
+  dimension: output_content
+  text: Thomas Hartvigsen, Saadia Gabriel, Hamid Palangi, Maarten Sap, Dipankar Ray, Ece Kamar
+- id: Q11
+  page: 1
+  dimension: output_content
+  text: Massachusetts Institute of Technology, University of Washington, Microsoft Research, Allen Institute for AI, Carnegie
+    Mellon University, Microsoft
+- id: Q12
+  page: 1
+  dimension: input_ontology
+  text: First, it allows us to limit spurious identity-toxicity correlations (Dixon et al., 2018; Zhou et al., 2021) by generating
+    equal numbers of toxic/benign statements for each demographic group, including those that are often overlooked in toxic
+    language corpora (e.g., Native Americans).
+- id: Q13
+  page: 1
+  dimension: input_ontology
+  text: Second, machine generation and careful prompting enables us to generate implicit toxicity (i.e., without swearwords
+    or slurs), which is by definition hard to detect or find and thus often missing in toxic language corpora (Wiegand et
+    al., 2021).
+- id: Q14
+  page: 2
+  dimension: input_ontology
+  text: To generate a challenging subset of TOXIGEN, we introduce ALICE, an adversarial classifier-in-the-loop decoding algorithm.
+- id: Q15
+  page: 2
+  dimension: input_ontology
+  text: We use ALICE to control the toxicity of output text by pitting a toxicity classifier against a text generator during
+    beam search decoding.
+- id: Q16
+  page: 2
+  dimension: input_ontology
+  text: Given a toxic prompt, we can encourage generations to be less toxic based on the classifier scores.
+- id: Q17
+  page: 2
+  dimension: input_ontology
+  text: Similarly, we can steer a language model with neutral prompting towards higher toxicity generations.
+- id: Q18
+  page: 2
+  dimension: output_form
+  text: Our experiments with five publicly-available toxicity classifiers show that the generated sentences in both cases
+    above fool toxicity classifiers (see Figure 1).
+- id: Q19
+  page: 2
+  dimension: output_content
+  text: We validate the quality of our machine-generated dataset through a comprehensive human evaluation.
+- id: Q20
+  page: 2
+  dimension: output_content
+  text: Our results show that on a sample of 792 machine-generated sentences, 90% could be mistaken for human-written text.
+- id: Q21
+  page: 2
+  dimension: input_content
+  text: We also find that the generated data indeed contains a wide variety of specific references to the minority groups
+    mentioned in the prompts (§4.2).
+- id: Q22
+  page: 2
+  dimension: input_ontology
+  text: This indicates that our data generation approaches (with or without ALICE) successfully control the generation towards
+    the desired toxicity and minority group mention.
+- id: Q23
+  page: 2
+  dimension: output_form
+  text: 'Further experimental results demonstrate that fine-tuning existing classifiers on TOXIGEN consistently improves performance
+    (+7–19%) on 3 existing human-written implicit toxic datasets: ImplicitHateCorpus (ElSherief et al., 2021), SocialBiasFrames
+    (Sap et al., 2020), and DynaHate (Vidgen et al., 2021).'
+- id: Q24
+  page: 2
+  dimension: input_ontology
+  text: Detecting implicit toxicity about minority groups (e.g., stereotyping, microaggressions), remains an elusive goal
+    for NLP systems (Han and Tsvetkov, 2020; Wiegand et al., 2021).
+- id: Q25
+  page: 2
+  dimension: input_ontology
+  text: One key challenge is that, in contrast to explicit toxicity, implicit toxicity is not marked by the use of profanity
+    or swearwords, is sometimes positive in sentiment, and is generally harder to detect or collect at scale (MacAvaney et
+    al., 2019; Breitfeller et al., 2019).
+- id: Q26
+  page: 2
+  dimension: input_ontology
+  text: Nonetheless, implicitly toxic language about minority or marginalized groups is often psychologically damaging to
+    members of those groups (Sue et al., 2007;
+- id: Q27
+  page: 3
+  dimension: input_form
+  text: TOXIGEN is generated by prompting a language model to produce both benign and toxic sentences that (1) include mentions
+    of minority groups by name and (2) contain mainly implicit language, which does not include profanity or slurs.
+- id: Q28
+  page: 3
+  dimension: input_form
+  text: 'To achieve this, we perform demonstration-based prompt engineering: Acquiring example sentences,'
+- id: Q29
+  page: 3
+  dimension: input_ontology
+  text: To create TOXIGEN, we use demonstration-based prompting for LLMs, encouraging a text generator to produce both toxic
+    and benign sentences that mention minority groups without using explicit language.
+- id: Q30
+  page: 3
+  dimension: input_form
+  text: We introduce a classifier-in-the-loop decoding method based on constrained beam search, ALICE, which, along with samples
+    generated without ALICE, contributes to generating a challenging subset of TOXIGEN.
+- id: Q31
+  page: 3
+  dimension: input_content
+  text: Using these methods, we generate a massive set of statements (over 274,000) containing equal numbers of toxic and
+    benign sentences for 13 identity groups—see Table 2.
+- id: Q32
+  page: 3
+  dimension: input_ontology
+  text: With TOXIGEN, we aim for generating a large scale dataset that represent implicit toxicity while balancing between
+    toxic and benign statements, to address the gaps of previous work.
+- id: Q33
+  page: 4
+  dimension: input_form
+  text: Prompts are text fragments passed into language models that can encourage certain behaviors (Brown et al., 2020).
+- id: Q34
+  page: 4
+  dimension: input_content
+  text: However, designing prompts is notoriously challenging (Liu et al., 2021c).
+- id: Q35
+  page: 4
+  dimension: input_form
+  text: While there are several approaches for prompting pretrained LLMs (Liu et al., 2021b), a recent and promising direction
+    is demonstration-based prompting (Gao et al., 2021; Mishra et al., 2021).
+- id: Q36
+  page: 4
+  dimension: input_form
+  text: Here, example statements are passed to an LLMs, encouraging it to produce a similar, but distinct, statement.
+- id: Q37
+  page: 4
+  dimension: input_content
+  text: For benign prompts, we encourage realistic text generation and include diverse voices by collecting benign sentences
+    from blog posts and news articles that mention a group.
+- id: Q38
+  page: 4
+  dimension: input_content
+  text: However, finding large amounts of such data at scale is challenging—this is why implicit datasets are hard to acquire.
+- id: Q39
+  page: 4
+  dimension: input_content
+  text: 'To build a large enough set of demonstrations, we begin with a small number of examples from the wild, then engage
+    a human-in-the-loop process: collect some demonstrations, pass them to our LLM, comb through many responses, and add the
+    best examples to a growing set.'
+- id: Q40
+  page: 4
+  dimension: input_content
+  text: Ensuring that a set of examples consistently produces benign responses that still mention the targeted minority group
+    is challenging and so we iterate this loop many times, sampling random subsets of our examples to serve as prompts and
+    observing the responses.
+- id: Q41
+  page: 4
+  dimension: input_content
+  text: This way, we collect 20-50 demonstration sentences per group, all of which we release.
+- id: Q42
+  page: 4
+  dimension: input_content
+  text: To encourage implicit toxicity from a LLM, we find examples of human-written sentences with implicit toxicity towards
+    each group from hate forums (de Gibert et al., 2018) and Reddit (Breitfeller et al., 2019).
+- id: Q43
+  page: 4
+  dimension: output_content
+  text: We repeat the human-in-the-loop process to expand our sets of examples.
+- id: Q44
+  page: 4
+  dimension: input_form
+  text: Overall, by repeating this process for both toxic and benign examples for all 13 target groups, we create 26 sets
+    of prompts. We generate TOXIGEN data with and without ALICE. Without ALICE, we use top-k decoding (Fan et al., 2018) alone
+    with our toxic and benign prompts. With ALICE, we use the HateBERT fine-tuned OffensEval model from Caselli et al. (2021)
+    as the toxicity classifier (CLF). This model covers a range of direct and veiled offense types. We use GPT-3 for the language
+    model. For decoding, we use λL = λC = 0.5, a maximum generation length of 30 tokens, a beam size of 10, and a temperature
+    of 0.9.
+- id: Q45
+  page: 5
+  dimension: input_form
+  text: Due to limitations imposed by the OpenAI GPT-3 API on accessing log probabilities for the full model vocabulary, we
+    restricted the vocabulary with two (benign and toxic) per target group.
+- id: Q46
+  page: 5
+  dimension: input_ontology
+  text: 'False negatives: We use toxic prompts to encourage the language model to generate toxic outputs, then maximize the
+    classifier''s probability of the benign class during beam search.'
+- id: Q47
+  page: 5
+  dimension: input_ontology
+  text: 'False positives: We use benign prompts to encourage the language model to generate non-toxic outputs, then maximize
+    the probability of the toxic class during beam search.'
+- id: Q48
+  page: 5
+  dimension: output_form
+  text: In the first approach, we are also able to detoxify model outputs when the classifier successfully steers the generations
+    towards non-toxic language.
+- id: Q49
+  page: 6
+  dimension: input_form
+  text: In our final dataset, generation length varies significantly and, as expected, almost all the statements are implicit.
+- id: Q50
+  page: 6
+  dimension: input_ontology
+  text: As we show in §4, the ALICE-generated data is successful at attacking the given toxicity classifier, contributing
+    a challenging, adversarial subset of TOXIGEN.
+- id: Q51
+  page: 6
+  dimension: input_form
+  text: In the released data, we split off a test set that is validated by human annotators (see §4.2).
+- id: Q52
+  page: 6
+  dimension: output_content
+  text: To ensure the quality of TOXIGEN, we conduct human validation experiments and create TOXIGEN-HUMANVAL, a human-validated
+    test set.
+- id: Q53
+  page: 6
+  dimension: output_form
+  text: Specifically, we investigate the reliability of our prompt-based and ALICE-based methods at generating human-like
+    statements and controlling statements' toxicity and the minority groups mentioned (§4.2).
+- id: Q54
+  page: 6
+  dimension: output_form
+  text: Additionally, we measure the effectiveness of ALICE-generated statements (vs. top-k-generated) at fooling classifiers
+    (§4.3).
+- id: Q55
+  page: 6
+  dimension: output_content
+  text: For each generated statement, we ask the annotators various questions, described below, that take into account multiple
+    dimensions of how toxic machine-generated language presents a potential harm to readers.
+- id: Q56
+  page: 6
+  dimension: output_content
+  text: We first ask annotators to guess whether the statement's author was a human or an AI system (HUMANORAI).
+- id: Q57
+  page: 6
+  dimension: output_content
+  text: Then, we ask whether the statement would be harmful to anyone if an AI system wrote it (HARMFULIFAI), as well as if
+    a human wrote it (HARMFULIFHUMAN); we hypothesize that readers may have different standards for machine-generated text
+    than human-written text.
+- id: Q58
+  page: 6
+  dimension: output_ontology
+  text: For all questions measuring harmfulness of text, we consider potential harm on a 1-5 scale with 1 being clearly benign
+    and 5 indicating very offensive or abusive text.
+- id: Q59
+  page: 6
+  dimension: output_ontology
+  text: We ask readers whether statements were likely intended to be harmful (HARMFULINTENT), since some biased statements
+    can be positively intended (e.g., benevolent sexism; Glick and Fiske, 1996).
+- id: Q60
+  page: 6
+  dimension: output_ontology
+  text: Additionally, we ask if the statement exhibits a positive stereotype (POSSTEREO), which is also harmful (e.g., model
+    minority myths; Cheryan and Bodenhausen, 2000).
+- id: Q61
+  page: 6
+  dimension: output_content
+  text: To better understand how harm may be perpetrated against the minority group, we ask readers in-depth questions about
+    text's content, following Sap et al. (2020) and Olteanu et al. (2018).
+- id: Q62
+  page: 6
+  dimension: output_ontology
+  text: We ask whether or not the statement is lewd or sexual (LEWD), whether and how it references the targeted group or
+    other groups (WHICHGROUP, GROUPFRAMING), whether it claims to be factual or opinion (FACTOROPINION).
+- id: Q63
+  page: 6
+  dimension: input_form
+  text: We selected 792 statements from TOXIGEN to include in our test set, such that no training statement had cosine similarity
+    above 0.7 with any test statement.
+- id: Q64
+  page: 6
+  dimension: output_content
+  text: Each test statement was then rated by 3 annotators from a pool of 156 prequalified annotators from Amazon MTurk (See
+    Appendix B for details).
+- id: Q65
+  page: 6
+  dimension: output_form
+  text: To investigate the quality of our annotations, we compute agreement on toxicity ratings.
+- id: Q66
+  page: 6
+  dimension: output_form
+  text: We find that annotators agreed moderately and are higher than or equal rates to prior work on hate speech annotation
+    (Ross et al.,
+- id: Q67
+  page: 6
+  dimension: output_ontology
+  text: 'Specifically, we take the max of the HARMFULIFAI and HARMFULIFHUMAN scores and map it into three classes (scores
+    <3: "non-toxic", =3: "ambiguous", >3: "toxic").'
+- id: Q68
+  page: 7
+  dimension: output_content
+  text: with a Fleiss' κ=0.46 (Fleiss, 1971) and Krippendorff's α=0.64 (Krippendorff, 1980).
+- id: Q69
+  page: 7
+  dimension: output_content
+  text: In 55.17% of cases, all 3 annotators agree, while a majority (≥2/3) agree for 93.4%.
+- id: Q70
+  page: 7
+  dimension: output_form
+  text: First, we find that our machine-generated statements are largely indistinguishable from human-written statements.
+- id: Q71
+  page: 7
+  dimension: output_form
+  text: on average 90.5% of machine-generated examples are thought to be human-written by a majority of annotators, as shown
+    in Figure 4.
+- id: Q72
+  page: 7
+  dimension: output_form
+  text: 'We also note that harmful text confuses readers slightly more than non-harmful text: 92.9% of toxic examples are
+    mislabeled as human-written compared to 90.2% for non-toxic.'
+- id: Q73
+  page: 7
+  dimension: output_ontology
+  text: Most toxic examples are also hate speech (94.56%).
+- id: Q74
+  page: 7
+  dimension: output_ontology
+  text: While opinions are common in both toxic and non-toxic examples, most fact-claiming text is non-toxic.
+- id: Q75
+  page: 7
+  dimension: output_form
+  text: Second, we find that demonstration-based prompting reliably generates toxic and benign statements about minority groups
+    (§4.3).
+- id: Q76
+  page: 7
+  dimension: output_form
+  text: for the machine-generated examples, we find that 30.2% are harmful (given a score of >3), while only 4% are ambiguous.
+- id: Q77
+  page: 7
+  dimension: input_form
+  text: This indicates that these data are sufficiently toxic or benign.
+- id: Q78
+  page: 7
+  dimension: output_form
+  text: Average toxicity scores are on a 1-5 scale (1 being benign and 5 being clearly offensive), and are averaged across
+    annotator responses.
+- id: Q79
+  page: 8
+  dimension: output_content
+  text: that all identity groups covered by the dataset were represented in the human study (see Figure 3), and observe that
+    the identity group referenced by the prompt is generally the same as the group referenced by the corresponding TOXIGEN
+    text, though there is some deviation.
+- id: Q80
+  page: 8
+  dimension: input_content
+  text: This is likely due to GPT-3 conflating identities or mentioning multiple groups.
+- id: Q81
+  page: 8
+  dimension: output_form
+  text: Interestingly, there is no significant difference in toxicity when we account for whether annotators perceive scores
+    as written by humans or AI (Figure 5).
+- id: Q82
+  page: 8
+  dimension: output_form
+  text: This finding indicates that our machine-generated text is perceived as similarly harmful to human text.
+- id: Q83
+  page: 8
+  dimension: output_ontology
+  text: We also find that the most common framing tactic is "moral judgement", or questioning the morality of an identity
+    group, which has been linked to toxicity by prior work (Hoover et al., 2019).
+- id: Q84
+  page: 8
+  dimension: input_ontology
+  text: As further validation, we investigate whether ALICE-generated statements are more adversarial compared to top-k-generated
+    ones.
+- id: Q85
+  page: 8
+  dimension: input_content
+  text: 'For 125 randomly-selected prompts (62 toxic and 63 non-toxic), we generate two statements: one with ALICE and one
+    without (top-k).'
+- id: Q86
+  page: 8
+  dimension: output_content
+  text: We then collect annotations for the 250 statements using the setup described in §4.1, and get toxicity scores from
+    HateBERT.
+- id: Q87
+  page: 8
+  dimension: output_form
+  text: We find that for top-k sampled sentences, the prompt label indeed matches the desired label (95.2% of non-toxic examples
+    and 67.7% of toxic examples).
+- id: Q88
+  page: 8
+  dimension: output_form
+  text: For ALICE, 40.3% of toxic examples match the prompt label and 92.1% of non-toxic examples match.
+- id: Q89
+  page: 8
+  dimension: output_form
+  text: We also find that ALICE succeeds in fooling HateBERT (26.4% of ALICE-decoded sentences fool HateBERT vs. 16.8% of
+    top-k sampled sentences).
+- id: Q90
+  page: 8
+  dimension: output_form
+  text: 'Finally, ALICE is effective for detoxifying generated text: the avg. human-annotated toxicity score for ALICE-decoded
+    sentences with a toxic prompt is 2.97, compared to 3.75 for top-k.'
+- id: Q91
+  page: 8
+  dimension: output_form
+  text: This difference is statistically significant with p < 0.001.
+- id: Q92
+  page: 8
+  dimension: output_form
+  text: ALICE therefore leads to harder, more ambiguous examples.
+- id: Q93
+  page: 8
+  dimension: output_content
+  text: We greatly expand on these findings in Appendix E with a larger scale human evaluation (∼10,000 samples) comparing
+    sentences generated with and without ALICE.
+- id: Q94
+  page: 8
+  dimension: input_ontology
+  text: To further showcase the usefulness of TOXIGEN, we investigate how it can enhance classifiers' abilities to detect
+    human-written and machine-generated implicit toxic language.
+- id: Q95
+  page: 8
+  dimension: output_form
+  text: We fine-tune the widely-used HateBERT (Caselli et al., 2021) and ToxDectRoBERTa (Zhou et al., 2021) models on the
+    training portion of TOXIGEN, using the prompt labels as proxies for a true toxicity label.
+- id: Q96
+  page: 8
+  dimension: output_form
+  text: Then, we compare the performance of the out-of-the-box models to those fine-tuned on TOXIGEN on three publicly available
+    human-written datasets (IMPLICITHATECORPUS (ElSherief et al., 2021), the SOCIALBIASFRAMES test set (Sap et al., 2020),
+    and DYNAHATE (Vidgen et al., 2021)) as well as the evaluation portion of our machine-generated dataset (TOXIGEN-HUMANVAL).
+- id: Q97
+  page: 8
+  dimension: input_form
+  text: To ablate the contribution of each decoding method, we also split TOXIGEN into equal numbers of ALICE-generated and
+    top-k-generated examples.
+- id: Q98
+  page: 8
+  dimension: output_form
+  text: Our results—see Table 4—show that fine-tuning HateBERT and ToxDectRoBERTa on TOXIGEN improves performance across all
+    datasets.
+- id: Q99
+  page: 8
+  dimension: output_form
+  text: The improvement on human-written datasets shows that TOXIGEN can be used to improve existing classifiers, helping
+    them better tackle the challenging human-generated implicit toxicity detection task.
+- id: Q100
+  page: 8
+  dimension: output_form
+  text: Fine-tuned HateBERT performs strongly on TOXIGEN-HUMANVAL, demonstrating that our data can successfully help guard
+    against machine-generated toxicity.
+- id: Q101
+  page: 8
+  dimension: input_content
+  text: In this work, we used a large language model to create and release TOXIGEN, a large-scale, balanced, and implicit
+    toxic language dataset far larger than previous datasets, containing over 274k sentences, and is more diverse, including
+    mentions of 13 minority groups at scale.
+- id: Q102
+  page: 9
+  dimension: input_form
+  text: The generated samples are balanced in terms of number of benign and toxic samples for each group.
+- id: Q103
+  page: 9
+  dimension: output_form
+  text: We proposed ALICE, an adversarial decoding scheme to evaluate robustness of toxicity classifiers and generate sentences
+    to attack them, and showed the effectiveness of ALICE on a number of publicly-available toxicity detection systems.
+- id: Q104
+  page: 9
+  dimension: output_content
+  text: 'We also conducted a human study on a subset of TOXIGEN, verifying that our generation methods successfully create
+    challenging statements that annotators struggle to distinguish from human-written text: 90.5% of machine-generated examples
+    were thought to be human-written.'
+- id: Q105
+  page: 9
+  dimension: input_content
+  text: While the purpose of our work is to curate diverse and effective hate speech detection resources, our methods encourage
+    a large language model to make its generation more toxic.
+- id: Q106
+  page: 9
+  dimension: input_ontology
+  text: Our ultimate aim is to shift power dynamics to targets of oppression. Therefore, we do not consider identity dimensions
+    that are historically the agents of oppression (e.g., whiteness, heterosexuality, able-bodied-ness).
+- id: Q107
+  page: 9
+  dimension: output_content
+  text: Please also note that there is still a lot that this dataset is not capturing about toxic language. Our annotations
+    might not capture the full complexity of these issues related to human experiences.
+- id: Q108
+  page: 9
+  dimension: output_content
+  text: Still, toxicity is inherently subjective (Sap et al., 2021).
+- id: Q109
+  page: 9
+  dimension: output_content
+  text: We thank Azure AI Platform and Misha Bilenko for sponsoring this work and providing compute resources, Microsoft Research
+    for supporting our large scale human study, and Alexandra Olteanu for her feedback on human evaluation.
+- id: Q110
+  page: 15
+  dimension: output_content
+  text: In addition to the human-validated evaluation set described in Section 4, we obtain labels for 8,960 randomly sampled
+    training examples using the same annotation framework and pool of MTurk workers.
+- id: Q111
+  page: 15
+  dimension: input_content
+  text: This sample is evenly split between top-k and ALICE generated texts (50.9% for top-k, 49.1% for ALICE).
+- id: Q112
+  page: 15
+  dimension: input_content
+  text: Please note that the samples are drawn randomly from TOXIGEN training data and we did not enforce having the same
+    prompt for top-k and ALICE.
+- id: Q113
+  page: 15
+  dimension: output_form
+  text: We observe that 66.86% of ALICE-generated texts with a toxic prompt label are actually toxic (compared to 57.91% of
+    top-k examples) and 93.21% of ALICE-generated texts with a non-toxic prompt label are actually non-toxic (compared to
+    90.01% of top-k examples).
+- id: Q114
+  page: 15
+  dimension: output_form
+  text: We also find that ALICE is more effective at generating adversarial language - 58.97% of toxic ALICE-generated examples
+    fool HateBERT, compared to 26.88% of toxic top-k generated examples.
+- id: Q115
+  page: 15
+  dimension: output_form
+  text: ALICE-generated non-toxic examples also fool HateBERT more often than top-k, though the difference is smaller (15.51%
+    of ALICE-generated non-toxic examples vs. 11.35% of top-k generations).
+- id: Q116
+  page: 15
+  dimension: output_form
+  text: At least one annotator identified a direct or indirect reference to the exact target group for 70.4% of top-k generated
+    examples compared to 78.3% of ALICE-generated examples.
+- id: Q117
+  page: 15
+  dimension: output_content
+  text: As we address broadly in Section 7, subjectivity is an area of concern for annotation of toxicity.
+- id: Q118
+  page: 15
+  dimension: output_content
+  text: Prior work has pointed out the role that annotators' belief systems and sociodemographic backgrounds play in their
+    perception of toxicity (Sap et al., 2019, 2021; Davani et al., 2022).
+- id: Q119
+  page: 15
+  dimension: output_content
+  text: Annotators predicted this example to be non-toxic, likely due to not recognizing MGTOW as a misogynistic group.
+- id: Q120
+  page: 15
+  dimension: input_form
+  text: Prompt engineering can have significant effects on the quality of text generated by language models.
+- id: Q121
+  page: 15
+  dimension: input_form
+  text: Following the lead of other recent works, we use demonstration-based prompting, and introduce demonstrations to encourage
+    language models to generate group-mentioning text.
+- id: Q122
+  page: 16
+  dimension: output_ontology
+  text: 'We release TOXIGEN as a dataframe with the following fields: prompt contains the prompts we use for each generation.
+    generation is the TOXIGEN generated text. generation method denotes whether or not ALICE was used to generate the corresponding
+    generation. If this value is ALICE, then ALICE was used, if it is top-k, then ALICE was not used. prompt_label is the
+    binary value indicating whether or not the prompt is toxic (1 is toxic, 0 is benign), and therefore the generation should
+    be toxic as well. This label is slightly noisy, though largely accurate—as deemed by human annotators. group indicates
+    for which group the prompt was generated. Finally, roberta_prediction is the probability predicted by our corresponding
+    RoBERTa model for each instance. This field can be used as propagated labels according to this model.'
+- id: Q123
+  page: 16
+  dimension: output_content
+  text: We further finetune and release a RoBERTa classifier on the 8,960 human-annotated sampled in TOXIGEN, beginning with
+    the weights from (Zhou et al., 2021).
+- id: Q124
+  page: 16
+  dimension: output_form
+  text: We run this pretrained model on the full TOXIGEN dataset, collecting its predictions and release them along with TOXIGEN.
+    These new labels may serve to correct some mislabeling.
+- id: Q125
+  page: 16
+  dimension: output_form
+  text: As expected, when finetuning on each subset individually, performance is strong on their respective evaluation sets.
+    Further, without any finetuning, each model performs worse on the ALICE-generated data, indicating ALICE successfully
+    generates data that are more confusing to each model.
+- id: Q126
+  page: 16
+  dimension: input_content
+  text: All of our generated prompts (26,000) are released with the dataset.
+- id: Q127
+  page: 18
+  dimension: output_form
+  text: Average human-validated toxicity scores for training set examples based on prompt label (toxic vs. non-toxic) and
+    decoding method (top-k vs. ALICE).
+- id: Q128
+  page: 18
+  dimension: output_form
+  text: Comparing the proportion of identity group mentions that were desired based on the prompts vs. that were generated,
+    in our large-scale validated training set.
+coverage_strengths:
+- user_priority: Implicit and adversarial toxicity detection (surface-benign but harmful content)
+  benchmark_coverage: 'TOXIGEN was specifically designed to generate implicit toxicity — statements devoid of
+
+    profanity or slurs — because such content is by definition underrepresented in existing
+
+    corpora [Q13]. 98.2% of TOXIGEN statements are implicit [Q5], and ALICE directly targets
+
+    adversarial cases that fool classifiers [Q14, Q50]. This structural emphasis on implicit
+
+    rather than explicit toxicity is directly relevant to the deployment''s prioritization of
+
+    surface-benign, in-group-toxic content.
+
+    '
+  dimension: input_ontology
+- user_priority: Multi-dimensional, graded toxicity ratings beyond binary classification
+  benchmark_coverage: 'TOXIGEN-HUMANVAL employs a 1–5 Likert harmfulness scale [Q58] across multiple annotation
+
+    dimensions including HARMFULINTENT [Q59], POSSTEREO [Q60], LEWD, WHICHGROUP, GROUPFRAMING,
+
+    and FACTOROPINION [Q62], with a three-class mapping (non-toxic / ambiguous / toxic) [Q67].
+
+    This multi-dimensional label schema partially aligns with the deployment''s requirement for
+
+    severity, target-group specificity, and implicitness decomposition.
+
+    '
+  dimension: output_ontology
+- user_priority: Detecting positive stereotyping as a form of harm
+  benchmark_coverage: 'TOXIGEN explicitly encodes POSSTEREO (positive stereotype) as a label dimension in its
+
+    annotation schema [Q60], acknowledging that positive stereotypes cause harm (e.g., model
+
+    minority myths). This offers a structural analogue to the deployment''s need to capture
+
+    harmful content that superficially appears favorable toward a group.
+
+    '
+  dimension: output_ontology
+- user_priority: Adversarial evaluation of toxicity classifier robustness
+  benchmark_coverage: 'ALICE is specifically designed to evaluate classifier robustness by generating adversarial
+
+    examples that fool five publicly available toxicity classifiers [Q18], with large-scale
+
+    adversarial fooling rates of 58.97% for ALICE vs. 26.88% for top-k [Q114]. The framework
+
+    for assessing LLM toxicity-rating behavior under adversarial conditions is methodologically
+
+    transferable, even if the content is U.S.-framed.
+
+    '
+  dimension: output_form
+- user_priority: Annotator subjectivity and inter-annotator disagreement as validity concern
+  benchmark_coverage: 'The authors explicitly flag annotator subjectivity as a core concern [Q108], document that
+
+    annotators'' sociodemographic backgrounds affect toxicity perception [Q118], and report a
+
+    concrete case of cultural-knowledge-gap mislabeling [Q119]. Reported inter-annotator
+
+    agreement of Fleiss'' κ = 0.46 and Krippendorff''s α = 0.64 [Q68] provides a baseline for
+
+    what disagreement levels are observed in comparable implicit toxicity annotation work.
+
+    '
+  dimension: output_content
+coverage_gap_analysis:
+- user_priority: Caste-based groups (Dalits, OBCs) as toxicity targets
+  benchmark_coverage: 'NOT DOCUMENTED — TOXIGEN''s 13 target groups are entirely U.S.-defined [Q3, Q12]. Caste-based
+
+    identity categories have no representation or structural equivalent in the benchmark''s ontology.
+
+    The normative exclusion of dominant-group dimensions [Q106] maps poorly to South Asian power
+
+    structures where caste positioning is context-dependent.
+
+    '
+  gap_type: full
+  web_search_target: casteist hate speech NLP dataset Dalit OBC annotation benchmark India
+- user_priority: Hindu–Muslim communal conflict and India–Pakistan border rhetoric
+  benchmark_coverage: 'NOT DOCUMENTED — No communal conflict categories, religious targeting taxonomies, or
+
+    partition-era language registers exist in TOXIGEN''s group ontology [Q3, Q32]. The benchmark
+
+    covers religious groups only insofar as they overlap with U.S. minority identity categories.
+
+    '
+  gap_type: full
+  web_search_target: Hindu Muslim communal hate speech dataset NLP India Bangladesh Pakistan communal violence text
+- user_priority: Party-specific political slurs (BJP, Congress, Awami League, PTI)
+  benchmark_coverage: 'NOT DOCUMENTED — TOXIGEN contains no political party–specific target categories and does
+
+    not frame any of its 13 groups in terms of partisan political affiliation. Political slur
+
+    categories with South Asian specificity are entirely absent from the taxonomy [Q3, Q12].
+
+    '
+  gap_type: full
+  web_search_target: political hate speech South Asia BJP Congress Awami League PTI NLP dataset slur detection
+- user_priority: Code-mixed language inputs (Hinglish, Romanized Urdu, Tanglish)
+  benchmark_coverage: 'NOT DOCUMENTED — TOXIGEN generates exclusively standard English prose via GPT-3 [Q1, Q27].
+
+    Seed demonstrations come from English-language hate forums and news articles [Q37, Q42].
+
+    Code-mixed Romanized scripts with non-standard orthography fall entirely outside the
+
+    benchmark''s input distribution. Prompt engineering quality is noted as consequential [Q120],
+
+    and adaptation to South Asian registers would require wholly new seed curation.
+
+    '
+  gap_type: full
+  web_search_target: Hinglish Romanized Urdu Tanglish hate speech toxicity dataset code-mixed South Asian NLP
+- user_priority: Surface-benign, in-group-recognizable toxicity (dog-whistles, casteist microaggressions)
+  benchmark_coverage: 'Partial structural alignment: TOXIGEN''s core design targets implicit toxicity [Q13] and
+
+    ALICE generates adversarial examples that fool classifiers [Q50], including cases where
+
+    annotators failed to recognize in-group-specific toxicity due to cultural unfamiliarity [Q119].
+
+    However, all examples are U.S.-calibrated — South Asian dog-whistles (e.g., coded references
+
+    to Partition, caste slurs rendered as neutral-sounding terms) are not present in any seed
+
+    data, and the generative framework cannot produce them without South Asian–specific seed curation.
+
+    '
+  gap_type: partial
+  web_search_target: implicit casteist hate speech microaggression dog-whistle South Asia in-group annotation NLP
+- user_priority: Cross-national annotator disagreement (Indian, Pakistani, Sri Lankan raters on identical stimuli)
+  benchmark_coverage: 'NOT DOCUMENTED — Annotator pool demographics are undisclosed beyond MTurk platform and
+
+    qualification status [Q64]. While the authors acknowledge sociodemographic backgrounds affect
+
+    toxicity perception [Q118] and flag annotation subjectivity [Q108], no cross-national or
+
+    cross-regional annotator comparison is conducted. The TOXIGEN annotation framework was not
+
+    designed to surface or measure disagreement across national identity boundaries.
+
+    '
+  gap_type: full
+  web_search_target: inter-annotator disagreement cross-national South Asia toxicity hate speech annotation study India Pakistan
+    Sri Lanka
+- user_priority: Comparative ranking of LLM toxicity ratings for South Asian vs. Western stimuli
+  benchmark_coverage: 'NOT DOCUMENTED — TOXIGEN''s evaluation framework compares generation methods (ALICE vs.
+
+    top-k) and measures classifier improvement on U.S.-framed human-written datasets [Q96].
+
+    No cross-regional comparative scoring structure exists. The Likert-scale metric [Q78]
+
+    could in principle be repurposed for comparative ranking, but no methodology for
+
+    cross-regional LLM toxicity-rating comparison is documented or implied.
+
+    '
+  gap_type: full
+  web_search_target: LLM toxicity rating disparity cross-regional evaluation South Asian Western stimuli comparison benchmark
+- user_priority: Multi-dimensional output scoring (severity × implicitness × target-group specificity)
+  benchmark_coverage: 'Partial alignment: TOXIGEN-HUMANVAL provides multiple annotation dimensions including
+
+    harmfulness, intended harm, positive stereotyping, group framing, and factual vs. opinion
+
+    framing [Q58, Q59, Q60, Q62]. The three-class mapping [Q67] and Likert scale [Q58] offer
+
+    graded scoring. However, an implicitness severity axis and target-group specificity dimension
+
+    calibrated for South Asian contexts (e.g., distinguishing degrees of caste-targeting
+
+    implicitness) are absent from the label schema.
+
+    '
+  gap_type: partial
+  web_search_target: multi-dimensional hate speech annotation severity implicitness target specificity South Asia NLP evaluation
+    schema
+- user_priority: Sub-national variation within South Asia (West Bengal vs. UP vs. Tamil Nadu; Dhaka vs. Sylhet)
+  benchmark_coverage: 'NOT DOCUMENTED — TOXIGEN operates at the level of broad U.S. demographic categories [Q3]
+
+    with no sub-national or regional granularity. No framework for distinguishing sub-national
+
+    linguistic or cultural variation in toxicity perception is present anywhere in the benchmark.
+
+    '
+  gap_type: full
+  web_search_target: sub-national South Asian hate speech variation NLP dataset regional India Bangladesh dialect-specific
+    toxicity
+- user_priority: Partition-era and sectarian language varieties with specific semantic loading
+  benchmark_coverage: 'NOT DOCUMENTED — Seed content comes from contemporary U.S. hate forums and English-language
+
+    blog posts [Q37, Q42]. Historical-linguistic registers rooted in the 1947 Partition and
+
+    subsequent communal violence — which carry semantic loading absent from U.S. minority
+
+    discourse — are not represented in any component of TOXIGEN''s data pipeline.
+
+    '
+  gap_type: full
+  web_search_target: Partition 1947 communal violence language NLP corpus hate speech India Pakistan sectarian historical
+    register

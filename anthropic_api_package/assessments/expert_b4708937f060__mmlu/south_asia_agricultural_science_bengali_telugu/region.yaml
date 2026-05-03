@@ -1,0 +1,496 @@
+name: South Asian Agricultural and Environmental Science — Mymensingh–Telangana–Andhra
+  Pradesh Deployment
+abbreviation: SA-AGRI-MYM
+assessment_slug: mmlu/sa-agri-mym
+scope_note: 'This region document is scoped to the specific deployment population
+  described in the elicitation summary: an environmental scientist based in Mymensingh,
+  Bangladesh, evaluating LLM agricultural and environmental science knowledge across
+  three sub-regional agrarian contexts — the Brahmaputra-Jamuna delta near Mymensingh,
+  dry-land cropping zones in Telangana, and coastal aquaculture in Andhra Pradesh.
+  It is not a general South Asia or Bangladesh region document.'
+primary_anchor:
+  country: Bangladesh
+  district: Mymensingh
+  agro_ecological_zone: Brahmaputra-Jamuna floodplain / Old Brahmaputra floodplain
+    (AEZ 9/10, Bangladesh classification)
+  user_role: Environmental scientist and researcher; downstream population includes
+    farmers and agronomists in Mymensingh district and Telugu-speaking agrarian communities
+    in Telangana and Andhra Pradesh
+secondary_contexts:
+- state: Telangana
+  country: India
+  agro_ecological_focus: Deccan Plateau dry-land cropping; Rabi and Kharif systems
+    on red and black cotton soils
+  language_community: Telugu-speaking agrarian communities
+- state: Andhra Pradesh
+  country: India
+  agro_ecological_focus: Coastal aquaculture; Krishna and Godavari delta coastal zones;
+    saline-tolerant agriculture
+  language_community: Telugu-speaking coastal farming and fishing communities
+geopolitical_sensitivity:
+  cross_border_issues:
+  - Bangladesh–India water-sharing agreements (Ganges/Farakka Barrage, Teesta River)
+  - Joint Rivers Commission (Bangladesh–India) — treaty status and current negotiations
+  - Shared river basin management for the Brahmaputra-Jamuna system
+  - Comparative farming policy divergence between Bangladesh and West Bengal
+  note: Questions touching on shared river systems, water allocation, or comparative
+    agricultural policy may have legitimately divergent correct answers depending
+    on national or institutional perspective. Ground-truth labels derived from a single
+    national context will not be authoritative for both sides of this deployment.
+  active_treaties_and_agreements: 'Ganges Water Treaty (1996) remains in force; the
+    current treaty expires December 2026, and both countries have agreed in principle
+    to renew it, with formal negotiations pending the next elected Bangladeshi government
+    (Source: TBS News, January 2026 — [|https://www.tbsnews.net/foreign-policy/bangladeshi-indian-engineers-monitor-water-flows-under-ganges-water-sharing-treaty|]).
+    The Teesta water-sharing agreement has NO formal treaty as of May 2026: a 2011
+    draft proposing 37.5% to Bangladesh and 42.5% to India was blocked by West Bengal''s
+    Chief Minister and remains unsigned. Bangladesh''s interim government (led by
+    Muhammad Yunus, since August 2024) has prioritised resuming Teesta talks, and
+    Bangladesh is simultaneously pursuing a ~$1 billion Teesta river management project
+    with China (POWERCHINA), with the Teesta Master Plan deadline extended to December
+    2026 (Sources: Wikipedia — [|https://en.wikipedia.org/wiki/Teesta_Water_Dispute|];
+    South Asian Futures Fellowship — [|https://www.southasianfuturesfellowship.org/analysis-2/the-future-of-the-teesta-river-project-amidst-new-developments-in-bangladesh:-a-geopolitical-quagmire|];
+    TBS News — [|https://www.tbsnews.net/features/panorama/teesta-master-plan-and-longstanding-bangladesh-india-water-politics-1072696|]).
+    The Joint Rivers Commission remains active (met four times in 2024–2025 in Dhaka,
+    Delhi, and Kolkata). This high geopolitical fluidity makes benchmark questions
+    touching on Bangladesh–India water rights especially liable to produce nationally
+    divergent correct answers.'
+languages:
+  primary_evaluation_languages:
+  - Bangladeshi Bengali (Mymensingh dialect)
+  - Standard Bangladeshi Bengali (written/formal)
+  - Standard Indian Bengali (West Bengal variant)
+  - Telugu
+  - English (query/evaluation medium)
+  dialect_notes:
+    mymensingh_bengali: Mymensingh dialect (উত্তরবঙ্গীয়/ময়মনসিংহ আঞ্চলিক) has distinct
+      phonological patterns and agricultural vocabulary absent from standard Bengali
+      benchmarks. Local crop names, wetland terms, and land-tenure vocabulary differ
+      from Dhaka-standard or Kolkata-standard Bengali.
+    bengali_variant_divergence: Indian Bengali (West Bengal) and Bangladeshi Bengali
+      share a script but diverge in register, vocabulary, and implicit cultural framing;
+      benchmarks sourced from Indian materials may carry West Bengal stylistic defaults.
+    telugu: Telugu is a Dravidian language with a distinct script (Telugu script);
+      agricultural terminology for Deccan dry-land farming and coastal aquaculture
+      is largely absent from English-language benchmarks.
+  scripts:
+  - Bengali script (বাংলা) — used for both Bangladeshi and Indian Bengali
+  - Telugu script (తెలుగు)
+  - Latin script (English evaluation medium)
+  script_notes: Bengali and Telugu scripts require right-proper Unicode handling;
+    neither has uppercase/lowercase distinctions in the Latin sense. MMLU's English-only
+    ASCII/Unicode Latin input is a zero-compatibility baseline for both scripts.
+  benchmark_language_mismatch: MMLU accepts English-only input. All regional-language
+    evaluation (Bengali, Telugu) is entirely unsupported by the benchmark as designed.
+  llm_bengali_evaluation_evidence: 'A 2025 arXiv paper (arXiv:2507.23248) evaluating
+    LLMs'' multilingual capabilities for Bengali found that LLM accuracy in Bengali
+    is generally lower than in English, with smaller models underperforming especially
+    in Bengali. This confirms that even for standard Bengali (not Mymensingh dialect),
+    current LLMs are meaningfully degraded relative to English baselines. No study
+    specifically targeting Mymensingh-dialect Bengali or agricultural-domain Bengali
+    was found. Source: arXiv 2507.23248 — [|https://arxiv.org/pdf/2507.23248|]'
+agro_ecological_zones:
+  mymensingh_bangladesh:
+    zone_classification: '[NEEDS VERIFICATION — deferred: below search budget; the
+      BARC AEZ classification for Mymensingh district requires direct consultation
+      of Bangladesh Agricultural Research Council AEZ maps or SRDI (Soil Resources
+      Development Institute) documents, which were not returned by searches. The scaffold
+      note of AEZ 9 Old Brahmaputra Floodplain or AEZ 21 Haor and Flood Basin remains
+      the best available non-verified estimate.]'
+    key_systems:
+    - Boro rice cultivation (irrigated dry-season paddy, December–May)
+    - Aman rice cultivation (monsoon-fed transplanted paddy, June–November)
+    - Aus rice cultivation (pre-monsoon broadcast or transplanted)
+    - Haor wetland seasonal flooding cycles
+    - Char-land (riverine island) agriculture — highly dynamic, flood-prone
+    - Beel (permanent wetland) fisheries and aquaculture
+    soils: '[NEEDS VERIFICATION — deferred: below search budget; likely silty clay
+      loam fluvial deposits based on general AEZ 9 descriptions, but specific Mymensingh
+      district soil series require SRDI or FAO soil map consultation.]'
+    flood_regime: '[NEEDS VERIFICATION — deferred: likely unsearchable at required
+      sub-district precision; requires BWDB hydrological station data for the Old
+      Brahmaputra floodplain near Mymensingh.]'
+    key_institutions:
+    - Bangladesh Rice Research Institute (BRRI) — Gazipur (near Mymensingh corridor)
+    - Bangladesh Agricultural University (BAU) — Mymensingh
+    - Bangladesh Agricultural Research Institute (BARI)
+    - Department of Agricultural Extension (DAE), Mymensingh region
+  telangana_india:
+    zone_classification: '[NEEDS VERIFICATION — deferred: below search budget; ICAR
+      agro-climatic zone classification for Telangana (likely Zone VI Semi-Arid Tropics/Deccan
+      Plateau) requires direct ICAR document consultation.]'
+    key_systems:
+    - Rabi dry-land cropping (sorghum, chickpea, sunflower on black cotton soils)
+    - Kharif cropping (cotton, soybean, maize, red gram)
+    - Tank-fed irrigation systems (traditional cheruvu tanks)
+    - Dryland horticulture (mango, banana in irrigated pockets)
+    soils: '[NEEDS VERIFICATION — deferred: below search budget; Vertisols (black
+      cotton soils) and Alfisols (red soils) are well-documented in the literature
+      for the Deccan Plateau but district-specific Telangana data was not retrieved.]'
+    rainfall_regime: '[NEEDS VERIFICATION — deferred: below search budget; average
+      annual rainfall for Telangana dry-land zones typically cited as 700–1000 mm
+      with unimodal distribution; sub-district variation requires ICAR-CRIDA or IMD
+      data.]'
+    key_institutions:
+    - Professor Jayashankar Telangana State Agricultural University (PJTSAU)
+    - ICRISAT — Patancheru, Hyderabad (semi-arid tropics research)
+    - ICAR-Central Research Institute for Dryland Agriculture (CRIDA)
+  andhra_pradesh_coastal_india:
+    zone_classification: '[NEEDS VERIFICATION — deferred: below search budget; ICAR
+      agro-climatic zone for coastal AP (Krishna-Godavari deltaic zone) requires direct
+      ICAR document consultation.]'
+    key_systems:
+    - Brackishwater shrimp aquaculture (Penaeus vannamei, Penaeus monodon)
+    - Freshwater fish culture (catla, rohu, mrigal — major carps)
+    - Coastal saline agriculture and salt-tolerant rice varieties
+    - Delta paddy cultivation (Krishna, Godavari deltas)
+    soils: '[NEEDS VERIFICATION — deferred: below search budget; coastal alluvial
+      and saline soil characterisation for AP aquaculture zones requires NBSS&LUP
+      or ICAR-CIBA publications.]'
+    key_institutions:
+    - Central Institute of Brackishwater Aquaculture (CIBA) — Chennai (regional mandate)
+    - ICAR-Central Marine Fisheries Research Institute (CMFRI)
+    - Acharya NG Ranga Agricultural University (ANGRAU)
+key_agricultural_terminology:
+  bangladeshi_bengali_mymensingh_specific:
+    wetland_terms:
+    - হাওর (haor) — large bowl-shaped floodplain basin, seasonally inundated
+    - বিল (beel) — permanent or semi-permanent freshwater wetland
+    - চর (char) — riverine silt island, highly transient landform
+    - বাঁওড় (baor) — oxbow lake
+    rice_cultivation_terms:
+    - বোরো (boro) — dry-season irrigated rice, winter-spring crop
+    - আমন (aman) — wet-season transplanted or broadcast rice
+    - আউশ (aus) — pre-monsoon rain-fed rice
+    land_tenure_and_management:
+    - জলমহাল (jalmohol) — government-leased water body for fisheries
+    - খাস জমি (khas jomi) — government-owned fallow or vested land
+    - বর্গাচাষ (borga chash) — sharecropping arrangement
+    note: 'These terms are largely absent from standard Bengali NLP corpora and entirely
+      absent from MMLU. Mymensingh dialect variants of these terms may differ from
+      Dhaka-standard usage. [NEEDS VERIFICATION — deferred: likely unsearchable (lived
+      practice); dialect-specific phonological or lexical variants for the Mymensingh
+      region vs. standard Bangladeshi Bengali agricultural registers require in-region
+      linguist or BAU faculty elicitation, not web search.]'
+  telugu_agricultural_terms:
+    note: 'A 2024/2025 study (Rajesh, Gupta, Immadisetty — ICICC 2024, published in
+      Springer LNNS vol. 1039) explicitly documents that the agricultural domain ''has
+      a lack of readily available resources, especially in regional languages'' and
+      evaluates perplexity of language models on Telugu agricultural corpora, confirming
+      sparse coverage. No publicly available Telugu-medium agricultural knowledge
+      benchmark was found for Telangana or Andhra Pradesh-specific dry-land or aquaculture
+      domains. Standard Telugu agricultural terminology for Kharif/Rabi dry-land crops
+      and tank irrigation (cheruvu) in NLP corpora remains verified-scarce. Source:
+      Springer — [|https://doi.org/10.1007/978-981-97-4152-6_38|]'
+literacy_and_education:
+  bangladesh_national_literacy_rate: '77.9% (citizens aged 7 and above, 2024 BBS Bangladesh
+    Economic Survey figure; up from 76.8% in 2023). The functional literacy rate (7+)
+    as measured by BBS Literacy Assessment Survey 2023 is lower at 62.92%, with adult
+    functional literacy (15+) at 60.77%. Caution: Bangladesh''s national literacy
+    definition (ability to read, write, and do simple arithmetic) diverges from the
+    international standard; researchers note the true rate may be lower under international
+    criteria. Source: BBS Bangladesh Economic Survey 2024 (Observer BD — [|https://www.observerbd.com/news/542998|]);
+    BBS Literacy Assessment Survey 2023 (Prothom Alo — [|https://en.prothomalo.com/bangladesh/c7axno0vhh|])'
+  mymensingh_district_literacy_rate: '[NOT FOUND — searched BBS publications and district-level
+    reports; BBS publishes district-level data in Population and Housing Census volumes
+    but the 2022 census data was not publicly indexed in retrievable form during this
+    search. The national rural functional literacy rate (11–45 years) of 70.54% (BBS
+    LAS 2023) is the closest available proxy for rural Mymensingh; actual district
+    figure requires BBS district census tables. Source for proxy: Prothom Alo — [|https://en.prothomalo.com/bangladesh/c7axno0vhh|]]'
+  telangana_literacy_rate: '66.54% (2011 Census, the most recent full census available;
+    male 74.95%, female 57.92%); NSO 2017–18 survey estimate is approximately 72.8%.
+    Caveat: India has not conducted a national census since 2011; the 2021 census
+    was delayed and remains unpublished as of May 2026, so no post-2018 official figure
+    exists for Telangana. Sources: Government of Telangana Socio-Economic Outlook
+    2018 cited in Testbook — [|https://testbook.com/question-answer/what-is-the-literacy-rate-of-telangana--5efeb788fbc9b00d102b5fda|];
+    NSO 2017–18 data cited in SAARJ/Academicia 2022 — [|https://saarj.com/wp-content/uploads/paper/ACADEMICIA/2022/FULL-PDF/ACADEMICIA-AUGUST-2022/8.15,%20Khritish%20Swargiary.pdf|]'
+  andhra_pradesh_literacy_rate: '67.02% (Census 2011); NSO 2017–18 estimate 66.4%
+    (lowest among all Indian states; male 73.4%, female 59.5%). Same census caveat
+    applies — no post-2021 official figure available. Sources: Census 2011 cited at
+    census2011.co.in — [|https://www.census2011.co.in/census/state/andhra+pradesh.html|];
+    NSO 2017–18 in findeasy.in — [|https://www.findeasy.in/indian-states-by-literacy-rate/|]'
+  agricultural_university_presence:
+    bangladesh: Bangladesh Agricultural University (BAU), Mymensingh — primary higher
+      education anchor for the deployment population
+    telangana: 'PJTSAU — [NEEDS VERIFICATION — deferred: below search budget; campus
+      locations and extension reach require PJTSAU official website consultation.]'
+    andhra_pradesh: 'ANGRAU — [NEEDS VERIFICATION — deferred: below search budget;
+      campus locations and extension reach require ANGRAU official website consultation.]'
+  note: The primary user (environmental scientist) is university-educated; downstream
+    farmer/agronomist population has variable formal education. Agricultural extension
+    literacy in local languages is the operative threshold for that sub-population.
+    Both Andhra Pradesh and Telangana have among India's lowest state literacy rates,
+    sharpening concerns about the downstream farmer population's digital and print
+    literacy for any LLM-assisted extension application.
+infrastructure_notes:
+  bangladesh_internet_penetration: '44.5% of total population (77.36 million users)
+    at start of 2024 per DataReportal/Kepios analysis; the Bangladesh Telecommunication
+    Regulatory Commission (BTRC) reported a higher mobile-subscription-based figure
+    peaking at 80.6% in August 2024 (using a different denominator — mobile internet
+    subscriptions relative to population, not unique users), declining to ~78.6% by
+    October 2024. Wikipedia/Internet Live Stats puts 2025 internet users at ~82.8
+    million (47%). These figures diverge due to methodological differences; the DataReportal/Kepios
+    figure (unique users, 44.5%) is generally considered more conservative and reliable.
+    Sources: DataReportal Digital 2024 Bangladesh — [|https://datareportal.com/reports/digital-2024-bangladesh|];
+    New Age BD (BTRC data) — [|https://www.newagebd.net/post/telecom/252740/internet-penetration-rate-declines|]'
+  bangladesh_mobile_internet_penetration: 'Mobile internet dominates: approximately
+    119.29 million mobile internet subscriptions as of 2025 (exceeds total population
+    due to multi-SIM usage). Rural internet access increased from 28% in 2020 to an
+    estimated 49% in 2025 per Wikipedia, though significant rural–urban gaps persist
+    (urban ~78%). BBS Sample Vital Statistics 2023 reported 50.1% of persons aged
+    15+ used the internet in 2023 (up from 45.5% in 2022). Mobile-first access is
+    the dominant mode. Sources: Wikipedia Internet in Bangladesh — [|https://en.wikipedia.org/wiki/Internet_in_Bangladesh|];
+    BBS Sample Vital Statistics 2023 (BSS News) — [|https://www.bssnews.net/news/180472|]'
+  india_telangana_andhra_internet_penetration: '[NEEDS VERIFICATION — deferred: below
+    search budget; state-level figures for Telangana and Andhra Pradesh internet penetration
+    were not returned by Bangladesh-focused searches. TRAI and NSSO data would be
+    the authoritative sources. India''s national internet penetration is approximately
+    50–55% as of 2023–2024 (ITU/World Bank), with rural–urban divides similar to Bangladesh
+    patterns.]'
+  device_profile: 'Mobile-first usage expected for farmer/agronomist population; researcher
+    population likely has laptop/desktop access. Smartphone penetration in rural Bangladesh
+    and rural Telangana differs substantially. Rural Bangladesh internet access approximately
+    49% (2025 estimate) vs. urban 78%. [NEEDS VERIFICATION — deferred: below search
+    budget; rural smartphone penetration rates specifically for Mymensingh district
+    and Telangana agrarian districts require BTRC/TRAI sub-national data.]'
+  connectivity_constraints: 'Low-bandwidth environments relevant for farmer-facing
+    applications; not a primary constraint for the environmental scientist user but
+    relevant to downstream deployment validity. Median mobile internet speed in Bangladesh:
+    23.00 Mbps (January 2024, Ookla data). Source: DataReportal Digital 2024 Bangladesh
+    — [|https://datareportal.com/reports/digital-2024-bangladesh|]'
+  nlp_infrastructure_notes: 'AI4Bharat IndicBERT v1 (ALBERT-based) covers 12 Indian
+    languages including Bengali and Telugu, pretrained on 9B tokens (120GB corpus);
+    Telugu has good monolingual corpus representation. IndicBERT v2 (ACL 2023) covers
+    20+ languages via the IndicXTREME benchmark (9 tasks across sentence classification,
+    QA, NER, and retrieval). IndicTrans2 (2023, TMLR) provides machine translation
+    for all 22 scheduled Indian languages including Telugu; its ILCI training data
+    includes agriculture domain sentences across 16 languages. Bengali NLP: IndicBERT
+    covers Indian Bengali; Bangladeshi Bengali and Mymensingh dialect are not explicitly
+    covered by any of these frameworks. None of the above benchmarks include agricultural
+    domain knowledge evaluation (agronomy, crop science, aquaculture) for Telugu or
+    Bengali — they cover general NLU tasks. Sources: AI4Bharat IndicBERT GitHub —
+    [|https://github.com/AI4Bharat/IndicBERT|]; IndicTrans2 OpenReview — [|https://openreview.net/forum?id=vfT4YuzAYA|];
+    AI4Bharat IndicNLP Resources — [|https://indicnlp.ai4bharat.org/pages/indicnlp-resources/|]'
+cultural_and_institutional_norms:
+  bangladesh: Agricultural knowledge in Bangladesh is institutionally anchored in
+    BRRI, BARI, and BAU extension networks. Farmer practice is shaped by seasonal
+    flood calendars, not Western-academic agronomy defaults. Community-level water
+    management (khals, sluice gates) involves collective decision-making. Government
+    agricultural extension (DAE) is a primary knowledge channel. Islamic calendar
+    influences cropping scheduling in some communities.
+  telangana_andhra: Deccan dry-land farming communities have centuries-old tank irrigation
+    traditions (cheruvu system) that differ from canal-irrigation assumptions in national-level
+    Indian agricultural policy. Telugu-medium extension communication is standard;
+    Hindi or English-medium content faces uptake barriers in rural contexts. Farmer
+    Producer Organizations (FPOs) and ICRISAT-linked programs are key knowledge intermediaries.
+  cross_border_sensitivity: Hydrological and agricultural policy questions that span
+    the Bangladesh–India border (Teesta, Ganges, Brahmaputra basin management) carry
+    geopolitical charge. Responses calibrated to Indian government policy positions
+    may be received as politically biased by Bangladeshi scientists and vice versa.
+    Benchmark ground-truth labels that embed one national perspective without flagging
+    this are validity risks. The political context has intensified since August 2024
+    (fall of Sheikh Hasina government) and Bangladesh's pivot toward China on Teesta
+    management adds further geopolitical complexity to any cross-border agricultural
+    water-sharing questions.
+regulatory_and_policy_context:
+  bangladesh:
+    primary_agricultural_policy: '[NEEDS VERIFICATION — deferred: below search budget;
+      current Bangladesh National Agriculture Policy and active 5-year plan provisions
+      for flood-plain farming require Ministry of Agriculture official portal consultation.]'
+    water_management_framework: '[NEEDS VERIFICATION — deferred: below search budget;
+      Bangladesh Water Act and BWDB regulatory mandate for haor and floodplain zones
+      require official legal text consultation.]'
+    seeds_and_varieties_regulation: '[NEEDS VERIFICATION — deferred: below search
+      budget; BADC and BRRI variety release process and protected variety status require
+      institutional publication review.]'
+  india_telangana_andhra:
+    agricultural_policy: '[NEEDS VERIFICATION — deferred: below search budget; Telangana
+      and Andhra Pradesh state agricultural policy frameworks and PM-KISAN provisions
+      require state government portal consultation.]'
+    aquaculture_regulation: '[NEEDS VERIFICATION — deferred: below search budget;
+      Coastal Aquaculture Authority (CAA) Act provisions for AP shrimp farming and
+      EIA requirements require Ministry of Fisheries/CAA official text.]'
+    water_rights: '[NEEDS VERIFICATION — deferred: below search budget; Andhra Pradesh
+      and Telangana water allocation post-bifurcation and Krishna/Godavari River Management
+      Board mandates require tribunal order and ministry report consultation.]'
+  cross_border:
+    ganges_water_treaty: '1996 Ganges Water Sharing Treaty remains active; current
+      treaty expires December 2026. Joint River Commission sources confirm both countries
+      have agreed in principle to renew; formal negotiations pending elected Bangladeshi
+      government. Engineers from both countries are currently monitoring flows at
+      Farakka (Bangladesh engineers) and Hardinge Bridge (Indian engineers) per the
+      treaty''s joint monitoring provisions. Source: TBS News, January 2026 — [|https://www.tbsnews.net/foreign-policy/bangladeshi-indian-engineers-monitor-water-flows-under-ganges-water-sharing-treaty|]'
+    teesta_agreement: 'No formal treaty exists. The 2011 draft (37.5% Bangladesh /
+      42.5% India) was blocked by West Bengal CM Mamata Banerjee and remains unsigned.
+      Bangladesh''s Yunus-led interim government (since August 2024) has expressed
+      commitment to restarting talks. Bangladesh is simultaneously pursuing a Chinese-financed
+      Teesta River Comprehensive Management and Restoration Project (~$1B, POWERCHINA);
+      the Teesta Master Plan deadline is extended to December 2026. West Bengal CM
+      (as of June 2025) has reiterated opposition to any Teesta sharing deal without
+      state government involvement. This remains one of the most active and unresolved
+      cross-border water disputes in South Asia. Sources: Wikipedia — [|https://en.wikipedia.org/wiki/Teesta_Water_Dispute|];
+      TBS News (Teesta Master Plan) — [|https://www.tbsnews.net/features/panorama/teesta-master-plan-and-longstanding-bangladesh-india-water-politics-1072696|];
+      PMF IAS — [|https://www.pmfias.com/teesta-water-sharing-with-bangladesh/|]'
+    joint_rivers_commission: 'Bangladesh–India Joint Rivers Commission (JRC) constituted
+      in 1972. Remained active through 2024–2025 political turbulence; held meetings
+      in Dhaka (×2), Delhi, and Kolkata in 2024–2025. The 2022 Kushiyara River Agreement
+      (signed at the 38th JRC meeting) is the most recent bilateral water agreement,
+      allowing Bangladesh to withdraw 153 cusecs via Rahimpur Canal for Sylhet irrigation.
+      Source: TBS News — [|https://www.tbsnews.net/foreign-policy/bangladeshi-indian-engineers-monitor-water-flows-under-ganges-water-sharing-treaty|];
+      Water Diplomat — [|https://www.waterdiplomat.org/story/2025/08/teesta-river-politics-and-benefit-sharing-getting-yes-without-grand-bargain|]'
+benchmark_validity_summary:
+  benchmark: mmlu
+  overall_fitness: Very low for this deployment. MMLU is English-only, US/Western-institution-anchored,
+    and contains no agro-ecological, delta-ecology, or South Asian regional agricultural
+    content. Multilingual input (Bengali, Telugu) is entirely unsupported. Ground-truth
+    labels have no South Asian agronomic validation. The benchmark may serve only
+    as a weak general-science baseline for cross-model comparison.
+  dimension_fitness:
+    input_ontology: Very low — 57-subject taxonomy contains no haor ecology, delta
+      farming, dry-land Deccan cropping, or South Asian agro-ecology subjects.
+    input_content: Very low — all content sourced from US standardized exams and Anglophone
+      university materials; no BRRI, BARI, ICAR, or Telugu-medium agricultural content.
+    input_form: Zero — English-only text input; Bengali and Telugu scripts unsupported.
+    output_ontology: Low — four-option MCQ schema cannot encode regionally contingent
+      correct answers or cross-border policy divergence.
+    output_content: Very low — no South Asian annotators documented; US MTurk worker
+      baseline irrelevant to agronomic knowledge standards.
+    output_form: Partial — MCQ accuracy metric is usable for baseline cross-model
+      comparison but cannot capture open-ended agronomic reasoning.
+flagged_gaps_for_web_search:
+- gap_id: 1
+  topic: Mymensingh dialect Bengali agricultural NLP corpora
+  search_target: Mymensingh Bengali dialect NLP corpus agricultural terminology haor
+    boro aman Bangladeshi Bengali language model benchmark evaluation BNLP BanglaLM
+  search_result_summary: '[NOT FOUND — no NLP corpus or benchmark specifically targeting
+    Mymensingh-dialect Bengali agricultural terminology was identified. The IndicBERT/IndicGLUE
+    ecosystem covers Indian Bengali but not Bangladeshi Bengali dialect variants.
+    The BNLP toolkit (referenced in AI4Bharat NLP catalog — [|https://ai4bharat.github.io/indicnlp_catalog/|])
+    provides general Bangladeshi Bengali NLP tools but no agricultural domain or dialect-specific
+    corpus. This null result confirms a genuine documentation gap.]'
+- gap_id: 2
+  topic: Telugu-medium agricultural and environmental science benchmarks
+  search_target: Telugu language agricultural benchmark LLM evaluation AI4Bharat IndicGLUE
+    IndicBERT Telangana Andhra Pradesh dry-land farming aquaculture Dravidian NLP
+    agri domain
+  search_result_summary: No Telugu-specific agricultural or environmental science
+    LLM benchmark was found. A 2024 conference paper (ICICC 2024, Springer LNNS vol.
+    1039 — [|https://doi.org/10.1007/978-981-97-4152-6_38|]) explicitly identifies
+    the lack of agricultural domain resources for Telugu and compares language model
+    perplexity on Telugu agricultural corpora, but does not produce a reusable benchmark.
+    AI4Bharat's IndicGLUE and IndicXTREME benchmarks cover Telugu for general NLU
+    tasks (QA, sentiment, NER) but contain no agricultural domain evaluation. This
+    is a confirmed gap.
+- gap_id: 3
+  topic: Haor and floodplain ecology subject coverage in existing benchmarks
+  search_target: haor wetland Bangladesh LLM benchmark floodplain ecology South Asian
+    agricultural NLP evaluation boro rice char-land farming BRRI BAU dataset
+  search_result_summary: '[NOT FOUND — no LLM benchmark or NLP evaluation dataset
+    covering haor wetlands, boro rice systems, char-land farming, or Brahmaputra-Jamuna
+    floodplain ecology was identified. The AgriPriceBD dataset (arXiv 2604.06227 —
+    [|https://arxiv.org/abs/2604.06227|]) is the only Bangladesh-specific agricultural
+    ML dataset found; it covers commodity price forecasting (garlic, chickpea, green
+    chilli, cucumber, sweet pumpkin) and does not address agro-ecological or production-system
+    knowledge. This confirms the assessment that haor/floodplain ecology is entirely
+    absent from the LLM benchmark landscape.]'
+- gap_id: 4
+  topic: Cross-border Bangladesh–India agri-policy answer divergence in benchmarks
+  search_target: Bangladesh India water sharing Ganges Teesta Farakka benchmark annotation
+    LLM evaluation cross-border agricultural policy regional answer divergence geopolitical
+    NLP
+  search_result_summary: '[NOT FOUND — no LLM benchmark or NLP annotation methodology
+    was found that explicitly handles cross-border Bangladesh–India water-sharing
+    or agricultural policy questions with nationally divergent correct answers. The
+    geopolitical validity risk documented in this region document (competing correct
+    answers depending on national perspective) is unaddressed in any known benchmark.
+    Searches confirmed the Teesta dispute is actively unresolved as of 2025, heightening
+    this risk.]'
+- gap_id: 5
+  topic: Sub-national India agro-climatic zone granularity in LLM benchmarks
+  search_target: India sub-national state-level agricultural benchmark LLM Telangana
+    Andhra Pradesh agro-climatic zone ICAR IndicNLU regional knowledge evaluation
+  search_result_summary: '[NOT FOUND — IndicGLUE, IndicXTREME, and BharatBench (Krutrim,
+    2024) evaluate general NLU capabilities for Indian languages but contain no sub-national
+    state-level or agro-climatic zone-specific agricultural knowledge tasks. BharatBench
+    references the Indic QA Benchmark (multilingual QA for Indic languages) but no
+    agricultural domain or state-specific content was documented. Source consulted:
+    BharatBench report — [|https://ai-labs.olakrutrim.com/static/Bharatbench-report-4thfeb.pdf|]]'
+- gap_id: 6
+  topic: Region-specific LLM evaluation infrastructure for Bangladeshi Bengali and
+    South Indian languages
+  search_target: BanglaLM Mukherjee Bengali LLM agricultural domain evaluation IndicBERT
+    South Indian language model benchmark comparison frontier vs regional models Bangladesh
+  search_result_summary: AI4Bharat IndicBERT v2 (ACL 2023 — [|https://aclanthology.org/2023.acl-long.693|])
+    is the leading multilingual Indic NLU model, covering 20+ languages including
+    Bengali and Telugu via IndicXTREME. A 2025 arXiv paper (arXiv:2507.23248 — [|https://arxiv.org/pdf/2507.23248|])
+    benchmarks multiple LLMs on Bengali NLU tasks and finds consistent Bengali performance
+    degradation relative to English. No agricultural-domain-specific Bengali or Telugu
+    LLM evaluation infrastructure was found. The IndicTrans2 system (TMLR 2023 — [|https://openreview.net/forum?id=vfT4YuzAYA|])
+    includes agriculture-domain sentences from ILCI data in its MT training, but this
+    is a translation system, not a knowledge evaluation benchmark.
+- gap_id: 7
+  topic: Existing South Asian agricultural knowledge evaluation datasets
+  search_target: South Asian agricultural NLP dataset knowledge assessment Bangladesh
+    India crop soil climate LLM evaluation agronomy environmental science benchmark
+    2022 2023 2024
+  search_result_summary: 'Two relevant resources found: (1) AgriPriceBD (arXiv 2604.06227,
+    March 2026 — [|https://arxiv.org/abs/2604.06227|]): first publicly available daily
+    multi-commodity retail price dataset for Bangladesh (5 commodities, 2020–2025);
+    addresses price forecasting, not agricultural knowledge evaluation. (2) A 2025
+    arXiv paper (arXiv:2507.16974 — [|https://arxiv.org/html/2507.16974v2|]) creates
+    synthetic agricultural QA pairs (60,130 pairs) in English, Hindi, and Punjabi
+    using IndicTrans2, with human evaluation; explicitly notes that ''agriculture-specific
+    QA datasets are only for high-resource languages such as English, German and Chinese,''
+    confirming no Telugu or Bangladeshi Bengali agricultural QA dataset exists. Both
+    papers reinforce the absence of domain-specific South Asian agricultural NLP evaluation
+    resources.'
+- gap_id: 8
+  topic: Bangladesh Rice Research Institute (BRRI) and BARI publication corpora availability
+    for LLM evaluation
+  search_target: BRRI BARI Bangladesh Rice Research Institute publication corpus Bengali
+    NLP pretraining LLM agricultural domain knowledge dataset availability
+  search_result_summary: '[NOT FOUND — no publicly accessible BRRI or BARI publication
+    corpus suitable for NLP pretraining or LLM evaluation was identified through web
+    search. BRRI and BARI publish technical bulletins and variety release documents
+    in Bengali and English, but these do not appear to be available as structured
+    NLP-ready datasets. This is a confirmed documentation gap that would require direct
+    institutional collaboration with BRRI/BARI to address.]'
+net_new_fields:
+  teesta_river_agricultural_significance: 'The Teesta River irrigates approximately
+    14% of Bangladesh''s total cropped area and is vital for cultivating Boro rice
+    (Bangladesh''s largest crop), with the Teesta Barrage Project irrigating 540,000
+    hectares across seven districts. Water shortages from India''s upstream withdrawals
+    at Gazoldoba cost Bangladesh approximately 1.5 million tons of rice annually (IFPRI
+    estimate). This makes Teesta water allocation directly load-bearing for boro rice
+    yield estimation questions — a core agro-ecological topic for the deployment.
+    Source: Social Science Journal 2025 — [|https://www.socialsciencejournal.in/assets/archives/2025/vol11issue2/11026.pdf|];
+    Wikipedia Teesta Water Dispute — [|https://en.wikipedia.org/wiki/Teesta_Water_Dispute|]'
+  agriprice_bd_dataset: 'AgriPriceBD (arXiv 2604.06227, March 2026) is the first publicly
+    available daily multi-commodity retail price dataset for Bangladesh, covering
+    five commodities over 2020–2025, constructed via LLM-assisted parsing of government
+    market monitoring PDFs. While not an agricultural knowledge benchmark, it confirms
+    that LLM-assisted pipelines can successfully process Bengali-language government
+    agricultural reports — a methodological precedent for future BRRI/BARI corpus
+    digitisation. It also documents that existing forecasting architectures (Informer,
+    Prophet) fail on Bangladeshi agricultural price data, underscoring data-scarcity
+    and domain-mismatch challenges. Source: arXiv — [|https://arxiv.org/abs/2604.06227|]'
+  synthetic_agri_qa_hindi_punjabi: 'A 2025 paper (arXiv:2507.16974) demonstrates that
+    synthetic agricultural QA datasets can be generated at scale (60,130 pairs) for
+    Indian languages using IndicTrans2, with human evaluation finding that LLM-as-judge
+    metrics are inadequate for domain- and country-specific agricultural QA evaluation.
+    The method covers Hindi and Punjabi but not Telugu or Bengali, and explicitly
+    notes the absence of agricultural QA datasets for regional Indian languages —
+    directly relevant to the deployment''s gap analysis. Source: arXiv — [|https://arxiv.org/html/2507.16974v2|]'
+  indic_nlp_general_benchmark_note: 'AI4Bharat''s IndicXTREME (ACL 2023) is the most
+    comprehensive multilingual Indic NLU benchmark, covering 9 tasks across 20 languages
+    including Bengali and Telugu (IndicQA, IndicSentiment, IndicCOPA, etc.). It does
+    not include agricultural domain evaluation. IndicBERT v2 achieves state-of-the-art
+    results on these tasks but its Bengali coverage is weighted toward Indian Bengali
+    (West Bengal) rather than Bangladeshi Bengali; the Mymensingh dialect is unrepresented.
+    Source: ACL Anthology — [|https://aclanthology.org/2023.acl-long.693|]'
+  kushiyara_river_agreement_2022: 'The 2022 Kushiyara River Agreement (signed at the
+    38th JRC meeting) is the most recent Bangladesh–India bilateral water agreement;
+    it allows Bangladesh to withdraw 153 cusecs via Rahimpur Canal for Sylhet agriculture
+    during the lean season. This incremental agreement is cited as a possible model
+    for Teesta governance. Its existence confirms that Bangladesh–India river agreements
+    are alive and evolving, meaning benchmark questions about bilateral water agreements
+    will require up-to-date factual grounding. Source: Water Diplomat — [|https://www.waterdiplomat.org/story/2025/08/teesta-river-politics-and-benefit-sharing-getting-yes-without-grand-bargain|]'
