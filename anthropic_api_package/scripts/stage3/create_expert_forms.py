@@ -75,6 +75,8 @@ COMPARATOR_MAP = {
     "arabicmmlu": "mmlu",
     "laila": "asap_pp",
     "toxigen": "civil_comments",
+    "afridoc_mt_document_level_mt_corpus_for_african_languages": "flores200",
+    "injongo_a_multicultural_intent_detection_and_slot_filling_dataset_for_16_african_languages": "massive",
 }
 COMPARATOR_BENCHMARKS = set(COMPARATOR_MAP.values())
 

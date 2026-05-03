@@ -1,0 +1,473 @@
+{
+  "benchmark": "afridoc_mt",
+  "region": "Amhara Region Agricultural & Microfinance Document Translation — Cooperative and Rural MFI End-Users",
+  "dimensions": {
+    "input_ontology": {
+      "score": 2,
+      "justification": "The benchmark's task taxonomy (document-level and sentence-level MT between English and five African languages, including Amharic) is structurally relevant — the deployment also needs document-level Amharic MT, and the user agreed that document-level structural demands are broadly similar across genres. However, the test-case category distribution covers only health (WHO) and IT news (Techpoint Africa) genres [Q1, Q2, Q80], with zero coverage of agricultural input subsidy notices, land-use policy updates, credit-scheme terms, or cooperative governance documents — the four genres specified for the deployment. The only legally-binding-text instance in the entire dataset is a translation of the WHO International Health Regulations [DATASET-D17], which does not approach the register of Ethiopian federal proclamations. Web research confirms this is a sector-wide gap: no Amharic MT benchmark covers Ethiopian government proclamation, agricultural subsidy, cooperative governance, or legal-administrative domains [WEB-14, WEB-22, WEB-15]. Given the user's HIGH priority weight on IO and the total absence of deployment-relevant test categories, the score is low — but not 1, because the abstract task type (document-level Amharic MT) is correctly represented and supports both sentence-level and pseudo-document subtasks at multiple chunk sizes [Q3, Q35, Q49] that broadly match deployment document length variation.",
+      "strengths": [
+        "Document-level MT task is correctly framed and explicitly motivated by context-dependent phenomena (coreference, lexical disambiguation, lexical cohesion) [Q16] that also matter for cross-clause legal documents",
+        "Multiple chunk-size configurations (k=5, 10, 25, full document, sentence-level) [DATASET-D5, Q49] enable evaluation at granularities relevant to bureau document lengths",
+        "Twelve diverse model configurations evaluated [Q41], including African-centric (Toucan), broad-coverage (NLLB-200, MADLAD-400), and decoder-only LLMs, providing a useful map of MT system options for Amharic"
+      ],
+      "checklist_responses": {
+        "IO-1": "Required deployment categories are: (1) agricultural input subsidy notices, (2) land-use policy updates, (3) credit-scheme terms / loan agreements, (4) cooperative membership and governance notices — all proclamation-derived formal administrative register documents in Amharic. Hybrid genres (e.g., MFI documents combining credit-scheme and subsidy terminology, since ACSI distributes both [WEB-7]) are also relevant.",
+        "IO-2": "Yes, the benchmark omits all four required categories. Source corpus is exclusively Techpoint Africa (tech news) and WHO (health news) [Q18, Q22], confirmed empirically across all 61 sampled examples [DATASET-D7, DATASET-D8, DATASET-D9, DATASET-D13]. Web research confirms no other Amharic MT benchmark covers these categories either [WEB-14, WEB-22].",
+        "IO-3": "The IT/tech news subset (sports betting commentary [DATASET-D28], crypto/Web3 news [DATASET-D9], African tech entrepreneurship interviews [DATASET-D27]) is largely irrelevant to the deployment context and represents construct-irrelevant variance for an agricultural/microfinance use case. Health news has marginal relevance only via its policy-register subset (IHR, TRIPS) [DATASET-D17, DATASET-D18].",
+        "IO-4": "Documented gaps: (a) total absence of agricultural proclamation register; (b) total absence of cooperative governance documents per Proclamation 985/2016 [WEB-8, WEB-10]; (c) total absence of land-tenure documents per Proclamation 456/2005 and Amhara Revised Proclamation [WEB-12, WEB-13]; (d) total absence of MFI loan-agreement instances. These constitute construct underrepresentation for the deployment's task category."
+      },
+      "evidence_quotes": [
+        "[Q1] 'This paper introduces AFRIDOC-MT, a document-level multi-parallel translation dataset covering English and five African languages: Amharic, Hausa, Swahili, Yorùbá, and Zulu.' (p.1)",
+        "[Q2] 'The dataset comprises 334 health and 271 information technology news documents, all human-translated from English to these languages.' (p.1)",
+        "[Q14] 'To the best of our knowledge, only TICO-19, a health domain translation benchmark, has the potential to be used for document-level MT, while it is restricted to topics related to COVID-19.' (p.2)",
+        "[Q80] 'We introduce AFRIDOC-MT, a document-level translation dataset in the health and tech domains for five African languages.' (p.9)",
+        "[Q3] 'We conduct document-level translation benchmark experiments by evaluating the ability of neural machine translation (NMT) models and large language models (LLMs) to translate between English and these languages, at both the sentence and pseudo-document levels' (p.1)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-14] EthioNLP survey confirms no Amharic MT benchmark covers legal-administrative domains",
+        "[WEB-22] EthioMT parallel corpus is general-domain only",
+        "[WEB-15] EthioLLM/EthioBenchmark covers classification, NER, sentiment, hate speech — not legal-domain MT",
+        "[WEB-8] Cooperative Societies Proclamation 985/2016 establishes the operative cooperative tier structure for the deployment",
+        "[WEB-10] Ministry of Justice official text confirms current cooperative proclamation"
+      ],
+      "evidence_dataset": [
+        "DATASET-D7: Tech document is fintech/policy news (PayDay, CBN governor) — no agricultural content",
+        "DATASET-D13: The only 'agriculture' mention in the sample is the name of a fund (SEFAA) inside a fintech news story — not agricultural document content",
+        "DATASET-D17: International Health Regulations is the closest legal-register item but is WHO international law, not Ethiopian proclamation",
+        "DATASET-D5: Pseudo-document chunk (k=10) demonstrates working chunk-size configuration relevant to medium-length bureau documents"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "WEB-8",
+          "WEB-10",
+          "WEB-7"
+        ],
+        "IO-2": [
+          "Q1",
+          "Q2",
+          "Q80",
+          "WEB-14",
+          "WEB-22",
+          "DATASET-D7",
+          "DATASET-D13"
+        ],
+        "IO-3": [
+          "DATASET-D28",
+          "DATASET-D9",
+          "DATASET-D27",
+          "DATASET-D17"
+        ],
+        "IO-4": [
+          "Q2",
+          "WEB-8",
+          "WEB-12",
+          "WEB-13",
+          "WEB-14"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether deployment intermediaries can compose a custom evaluation set drawing from public Ethiopian proclamation Amharic texts to supplement AFRIDOC-MT",
+        "Whether the deployment also includes oral-mediation use cases (extension worker reading aloud) that would alter the input ontology"
+      ],
+      "requires_expert_verification": [
+        "Confirmation from Amhara Regional Bureau staff that the four listed deployment genres exhaust the operative document categories"
+      ]
+    },
+    "input_content": {
+      "score": 1,
+      "justification": "The input content gap is total. All English source documents are scraped from Techpoint Africa and WHO [Q18, Q22], and the Amharic translations were produced from this English source material with explicit acknowledgment of translationese risk [Q103, Q104, Q105]. The deployment requires Amharic content drawn from Ethiopian federal and regional proclamations, agricultural subsidy notices, land-tenure documents, MFI loan agreements, and cooperative governance materials — none of which appear anywhere in the corpus. Critical proclamation-derived term categories (cooperative tier names, land-tenure category labels, subsidy scheme names, MFI credit-scheme terms) are entirely absent, confirmed empirically across all sampled examples [DATASET-D9, DATASET-D4]. The source-language direction is also mismatched: the benchmark translates FROM English [Q103], whereas the deployment operates on documents natively authored in Amharic administrative register [WEB-10]. No public Amharic legal-administrative glossary exists [WEB-14, WEB-15] to serve as an external terminology anchor. Given the user's HIGH priority weight on IC and the empirical confirmation of total content absence, this dimension is at the floor.",
+      "strengths": [
+        "WHO health-policy subset includes some legally-binding international-law references (IHR, TRIPS) [DATASET-D17, DATASET-D18] — the only register-adjacent content, useful as a weak analog for numbered-clause discourse structure",
+        "Amharic content is rendered fluently in Ethiopic script by native-speaker translators [Q23, Q24, DATASET-D2]"
+      ],
+      "checklist_responses": {
+        "IC-1": "Yes — deployment inputs require region-specific knowledge of Ethiopian federal/regional proclamations (985/2016 cooperative; 456/2005 land; Amhara Revised 2006 + 252/2017 amendment) [WEB-8, WEB-10, WEB-12, WEB-13], Amhara-specific institutional vocabulary (ACSI, EABC, primary cooperative unions) [WEB-3, WEB-5], and Amharic administrative register conventions distinct from Addis Ababa standard. The benchmark contains none of this [DATASET concerns 1, 3].",
+        "IC-2": "The benchmark's WHO and Techpoint sources do not align with deployment culture. The user noted contemporary documents draw primarily from federal/regional proclamation-derived terminology, which is absent. Cultural framing of the benchmark is described as English-biased [Q105]; the deployment operates within Ethiopian Orthodox Christian Amhara cultural context [WEB-11, WEB-20] with cooperative-mediated document interaction [WEB-3].",
+        "IC-3": "Tech subset includes Western/global startup vocabulary (venture capital, crypto, Web3) [DATASET-D9, DATASET-D19] and sports betting [DATASET-D28] that do not transfer. Health subset is WHO-globalized rather than Ethiopia-grounded.",
+        "IC-4": "Not done in the benchmark; required for deployment evaluation. Federal bureau translators are the preferred annotation authority [elicitation Q3] but were not represented in benchmark creation [gap_3 web search].",
+        "IC-5": "Critical content issues: (a) source-direction mismatch (English→Amharic vs. Amharic-source) [Q103, CRITICAL Concern 2]; (b) total absence of proclamation-derived terminology [CRITICAL Concern 3]; (c) translationese in reference Amharic [Q103, Q104, MAJOR Concern 3]; (d) no ACSI/EABC/cooperative scheme content [WEB-3, WEB-5]; (e) no Amhara region zone-specific administrative vocabulary."
+      },
+      "evidence_quotes": [
+        "[Q18] 'We scraped English articles from the websites of Techpoint Africa and the World Health Organization (WHO).' (p.3)",
+        "[Q22] 'we selected 334 and 271 English articles/documents from the health and tech domains respectively, which represents 10k sentences each per domain.' (p.3)",
+        "[Q103] 'A potential limitation of our dataset is the influence of translationese... Since all source material translated originates in English, translated sentences in African languages may exhibit patterns such as unnatural syntax or overly literal phrasing.' (p.10)",
+        "[Q105] 'AFRIDOC-MT may reflect a bias toward English in terms of structure, semantics, and cultural framing.' (p.10)",
+        "[Q34] 'The health data is licensed under CC BY-NCSA 3.0, while the tech data is licensed under CC BY-NC-SA 4.0.' (p.4)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-3] EABC is sole importer of fertilizer; distributes through primary cooperative unions — deployment-critical institutional vocabulary absent from benchmark",
+        "[WEB-5] ACSI serves ~2 million clients across all woredas; key MFI in deployment",
+        "[WEB-8] Cooperative Societies Proclamation 985/2016 defines the operative tier vocabulary",
+        "[WEB-10] Ministry of Justice provides authoritative Amharic terminology for cooperative tiers",
+        "[WEB-12] Land Administration Proclamation 456/2005 defines land-tenure terminology absent from benchmark",
+        "[WEB-13] Amhara Revised Proclamation provides regional land-tenure framework",
+        "[WEB-14] No public Amharic legal-administrative glossary exists",
+        "[WEB-15] EthioLLM resources do not include legal-administrative MT data"
+      ],
+      "evidence_dataset": [
+        "DATASET-D9: Crypto/fintech vocabulary (Nestcoin, FTX, pre-seed) — zero overlap with cooperative or subsidy terminology",
+        "DATASET-D4: Antimicrobial medical terminology — zero overlap with land-tenure or cooperative tier vocabulary",
+        "DATASET-D17: IHR Amharic — closest regulatory-register item, still translated from English, not native administrative authoring",
+        "DATASET-D1: Tropical cyclone Amharic exhibits English-influenced subordination — empirical confirmation of translationese risk",
+        "DATASET-D13: Only 'agriculture' mention in entire sample is the SEFAA fund name in a fintech story"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "WEB-8",
+          "WEB-10",
+          "WEB-12",
+          "WEB-13",
+          "WEB-3",
+          "WEB-5",
+          "DATASET-D9",
+          "DATASET-D4"
+        ],
+        "IC-2": [
+          "Q105",
+          "WEB-11",
+          "WEB-20",
+          "WEB-3"
+        ],
+        "IC-3": [
+          "DATASET-D9",
+          "DATASET-D19",
+          "DATASET-D28"
+        ],
+        "IC-4": [
+          "Q23",
+          "Q24"
+        ],
+        "IC-5": [
+          "Q103",
+          "Q104",
+          "WEB-3",
+          "WEB-5",
+          "DATASET-D17",
+          "DATASET-D1"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether ACSI loan-agreement Amharic templates and EABC subsidy notice templates are publicly available for use in a supplementary evaluation set",
+        "Whether Amhara Regional Bureau translation unit maintains an internal glossary that could anchor terminology evaluation"
+      ],
+      "requires_expert_verification": [
+        "Native-speaker assessment of register-distance between AFRIDOC-MT Amharic and federal proclamation Amharic",
+        "Identification of specific Amharic terms most likely to be mistranslated by AFRIDOC-MT-finetuned systems"
+      ]
+    },
+    "input_form": {
+      "score": 4,
+      "justification": "Input form is the most aligned dimension and the user assigned it LOWER priority. Both benchmark and deployment are text-only, and Amharic is explicitly handled in Ethiopic (Ge'ez) script with documented accommodations: token limits were specifically increased for Amharic [Q162] because its non-Latin script produced larger token counts than English [Q127]. The benchmark adopts pseudo-document chunking with k=10 to fit Amharic within model context limits [Q47, Q48, Q128], a practical choice that the deployment will likely also need. Empirically, all sampled Amharic content is rendered consistently in Ethiopic script across all configurations [DATASET-D1, DATASET-D5, Strength 1]. The remaining concern is that the deployment may evolve toward format-preserving or multimodal translation (scanned PDFs, structured documents with tables and signature blocks) — a possibility flagged but unconfirmed in the regional context. Some annotation-workflow infrastructure (CSV/Google Sheets with paragraph-marking empty rows) [Q119, Q122] partially preserves document structure at the corpus level. Score of 4 reflects strong technical alignment on script and tokenization, with a minor gap on structural fidelity that becomes relevant only if deployment expands to format-preserving use cases.",
+      "strengths": [
+        "Amharic Ethiopic script is correctly handled across all configurations with explicit token-limit accommodation [Q162, DATASET-D1]",
+        "Multiple chunk-size configurations (k=5, 10, 25, full document, sentence-level) [Q49, DATASET-D5] enable matching deployment document lengths",
+        "Annotation workflow preserves paragraph-separating empty rows at corpus level [Q119]",
+        "Token-length statistics across languages [Q33] demonstrate empirical engagement with Amharic morphological characteristics"
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal distribution match is good. Both benchmark and deployment are text-only Amharic in Ethiopic script. Deployment delivery channel is print/SMS/WhatsApp [regional context: technology_access], all of which are text representations the benchmark covers.",
+        "IF-2": "Amharic Ethiopic-script text infrastructure is supported in the benchmark; rural Amhara connectivity issues affect distribution but not the input form the MT system processes [WEB-18 on internet blockages affects delivery, not signal format].",
+        "IF-3": "Domain-specific form differences: (a) deployment may include scanned PDFs requiring OCR [regional context: multimodal_future NEEDS VERIFICATION] — not assessed by AFRIDOC-MT; (b) deployment documents may include numbered clause structures, tables, signature blocks — partially preserved at corpus level [Q119] but no metric assesses preservation [Q57]; (c) Amharic register-specific token patterns of formal proclamation Amharic may differ from health/IT news Amharic — not directly addressed.",
+        "IF-4": "Form mismatches harming external validity: minor — text-only modality matches; structural fidelity gap is the only documented mismatch and is contingent on multimodal evolution. INSUFFICIENT DOCUMENTATION on whether deployment receives plain text vs. structured documents; would need consultation with Amhara Regional Bureau."
+      },
+      "evidence_quotes": [
+        "[Q47] 'An initial analysis showed that some models were unable to process entire documents due to input length limits, which were exceeded by token counts in some languages (Amharic and Yorùbá).' (p.5)",
+        "[Q127] 'Amharic and Yorùbá—languages with unique characteristics such as non-Latin scripts and diacritics, respectively—had the largest average token counts across the tokenizers.' (p.19)",
+        "[Q128] 'To accommodate both languages in our experiments, we chose pseudo-documents with k=10.' (p.19)",
+        "[Q162] 'Therefore, we increased the token limit specifically for Amharic.' (p.21)",
+        "[Q119] 'Please do not delete double empty rows, as they serve to separate paragraphs.' (p.18)",
+        "[Q33] 'Amharic and Zulu are relatively shorter, reflecting interesting linguistic properties.' (p.4)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-18] Internet blockages in Amhara region affect document delivery channels but not text-input signal format"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: Amharic Ethiopic-script document rendered consistently across multi-paragraph health content",
+        "DATASET-D5: k=10 pseudo-document chunk in Amharic confirms working configuration",
+        "Strength 1: All sampled Amharic content rendered consistently in Ethiopic script across all 10 configurations"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q127",
+          "DATASET-D1"
+        ],
+        "IF-2": [
+          "Q162",
+          "WEB-18"
+        ],
+        "IF-3": [
+          "Q47",
+          "Q119",
+          "Q33"
+        ],
+        "IF-4": [
+          "Q119"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether deployment receives documents as plain text, structured digital files, or scanned PDFs requiring OCR",
+        "Per-token-count statistics for Amharic proclamation register vs. AFRIDOC-MT health Amharic"
+      ],
+      "requires_expert_verification": [
+        "Empirical token-length comparison between AFRIDOC-MT Amharic and bureau proclamation Amharic to assess whether the chosen chunk size generalizes"
+      ]
+    },
+    "output_ontology": {
+      "score": 2,
+      "justification": "The output ontology is calibrated for news discourse: GPT-4o-judged fluency (1–5), content errors, lexical cohesion errors, and grammatical cohesion errors [Q54, Q55, Q180, Q191], plus d-chrF and d-BLEU [Q51, Q52] and human direct assessment on a 0–100 scale [Q195]. The benchmark explicitly defines lexical cohesion as 'vocabulary usage, incorrect or missing synonyms' [Q189] — narrative discourse flow, not legal terminological consistency. No rubric component evaluates whether named entities such as cooperative tier designations, land-tenure category labels, or subsidy scheme names are rendered identically across all clauses of a document — the critical coherence requirement for the deployment. Web research confirms terminology-consistency metrics exist (Semenov & Bojar WMT 2022; HHI) but have not been validated for Amharic [WEB-25, WEB-26]. Compounding this, the benchmark itself reports that GPT-4o-as-judge is unreliable for African language translation directions [Q67, Q85, Q99, Q219], leaving human DA as the residual signal — which had Krippendorff's alpha of only 0.46 for Amharic [Q71, Q211]. Given the user's MODERATE priority on OO and the partial match (d-chrF captures morphological richness [Q53], cohesion definitions touch on relevant phenomena), score is 2 rather than 1.",
+      "strengths": [
+        "d-chrF is explicitly chosen as primary because it captures morphological richness of African languages [Q53]",
+        "Output ontology engages with discourse-level phenomena (cohesion, fluency) [Q187, Q188] that have some overlap with cross-clause requirements of legal documents",
+        "Benchmark transparently flags GPT-4o judging unreliability for African languages [Q67, Q85, Q99, Q219], enabling informed substitution"
+      ],
+      "checklist_responses": {
+        "OO-1": "Output label categories (fluency 1-5, CE, LE, GE, d-chrF, d-BLEU, DA 0-100) are partially relevant — fluency and content-error scoring map to deployment quality concerns, but the categories are calibrated to news adequacy rather than legal-administrative precision [Q189, Q190].",
+        "OO-2": "Missing categories specific to the deployment: (a) terminological consistency across clauses for proclamation-derived terms — no metric exists [WEB-25, WEB-26 confirm metric gap for Amharic]; (b) structural fidelity preservation for numbered clauses; (c) register-appropriateness scoring against Ethiopian proclamation register; (d) cross-reference accuracy for proclamation article citations.",
+        "OO-3": "Categories assume news-discourse decision rules — 'lexical cohesion mistakes involve... overuse of certain words that disrupt the flow' [Q189] explicitly penalizes repetition, which is the opposite of what is needed for legal terminological consistency where identical repeat-rendering is required.",
+        "OO-4": "Stakeholder-driven taxonomy redesign is needed: deployment scoring should add (1) terminology-consistency (e.g., HHI-based [WEB-26]) for proclamation terms; (2) register-appropriateness assessed by federal bureau translators [elicitation Q3]; (3) structural-fidelity scoring if format preservation is required.",
+        "OO-5": "Issues harming structural validity: scoring rubric structurally misrepresents the construct of legal-administrative translation quality (treats consistent term repetition as a defect rather than a virtue [Q189]). Issues harming content validity: missing terminology-consistency, register, and structural categories. External validity at risk: GPT-4o judging shown unreliable for African languages [Q99, Q219]."
+      },
+      "evidence_quotes": [
+        "[Q53] 'we report d-chrF scores... as chrF better captures the morphological richness of African languages' (p.5)",
+        "[Q55] 'we assess each translated document's fluency, content errors (CE), and cohesion errors—specifically lexical (LE) and grammatical (GE) errors—using GPT-4o' (p.5)",
+        "[Q189] 'Lexical Cohesion Mistakes: Issues with vocabulary usage, incorrect or missing synonyms, or overuse of certain words that disrupt the flow.' (p.23)",
+        "[Q67] 'These inconsistencies raise concerns about GPT-4o's reliability.' (p.7)",
+        "[Q99] 'GPT-4o was employed to assess and rate the translation outputs... While its ratings were consistent for translations into English, the same was not observed for translations into African languages, likely due to the model's limited understanding of these languages.' (p.10)",
+        "[Q219] 'These results suggest that using GPT-4o as a translation judge is not yet well-suited for low-resource languages.' (p.26)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-25] Semenov & Bojar (WMT 2022) terminology-consistency metric exists but not validated for African languages",
+        "[WEB-26] HHI applied to legal corpora terminology consistency — not validated for Amharic",
+        "[WEB-27] JUST-NLP 2025 legal MT shared task uses BLEU/METEOR/COMET only, not for African languages"
+      ],
+      "evidence_dataset": [
+        "DATASET-MAJOR Concern 1: Lexical cohesion definition addresses narrative flow, not legal terminological stability",
+        "DATASET-D17: IHR document — no rubric evaluates whether 'PHEIC' is rendered identically across all clauses"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q53",
+          "Q55",
+          "Q189",
+          "Q190"
+        ],
+        "OO-2": [
+          "WEB-25",
+          "WEB-26",
+          "WEB-27"
+        ],
+        "OO-3": [
+          "Q189"
+        ],
+        "OO-4": [
+          "WEB-25",
+          "WEB-26"
+        ],
+        "OO-5": [
+          "Q67",
+          "Q99",
+          "Q219",
+          "DATASET-D17"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether HHI or Semenov-Bojar terminology-consistency metrics can be implemented for Amharic with available resources",
+        "Whether federal bureau translation units have internal scoring rubrics that could be adopted"
+      ],
+      "requires_expert_verification": [
+        "Federal bureau translator validation of which output categories matter most for binding legal documents"
+      ]
+    },
+    "output_content": {
+      "score": 2,
+      "justification": "Reference Amharic translations were produced by four named native-speaker translators [Q23, Q109] under a controlled workflow with QE filtering at threshold 0.65 [Q28, Q29] and language-coordinator manual inspection [Q27]. However, the user's preferred ground-truth authority is domain-trained federal bureau translators [elicitation Q3], with regional bureau staff or extension workers as acceptable surrogates — and no documentation of institutional affiliation or agricultural/legal domain expertise exists for the four Amharic translators [Q109; gap_3 web search NOT FOUND]. The translators were prepared for health/IT domains via a terminology workshop [Q26], not for proclamation-derived agricultural or financial vocabulary. Inter-annotator agreement for Amharic was Krippendorff's alpha = 0.46 [Q71, Q211], described by the authors as 'relatively low' [Q71], even within the health domain in which translators were specifically prepared. Reference translations also exhibit translationese due to English source provenance [Q103, Q104]. Human evaluation used three native-speaker annotators per language [Q194], primarily drawn from the translation team [Q194], 80 documents each with 30 shared [Q197]. No demographics on annotator regional origin (Amhara region vs. other Amharic-speaking areas) are documented. Given the user's HIGH priority weight on OC and the multiple convergent gaps (annotator domain mismatch, low IAA, translationese, no federal-bureau-translator anchor), score is 2.",
+      "strengths": [
+        "Reference translations were produced by named native speakers under controlled workflow with QE [Q23, Q28]",
+        "Pre-translation workshop shared terminology resources [Q26], demonstrating awareness of domain-terminology importance",
+        "Translators worked with full document context [Q25], appropriate for document-level coherence requirements",
+        "Translators were instructed not to use MT engines [Q120], reducing risk of MT-contaminated reference data",
+        "Compensation was disclosed ($1,250 / 2,500 sentences for translators [Q31]; $55.15 for human evaluators [Q198]), enabling labor-conditions transparency"
+      ],
+      "checklist_responses": {
+        "OC-1": "No — ground-truth labels reflect health/IT translation judgments. The user-specified preferred authority (federal bureau translators with agricultural/legal Amharic training) is unrepresented [elicitation Q3; Q109 lists translator names without institutional affiliation; gap_3 web search confirmed no public information].",
+        "OC-2": "Likely substantial disagreement on domain-specific term choices. Amhara regional bureau staff and federal Ministry of Agriculture translators would apply proclamation-derived standardized terminology [WEB-10, WEB-8]; AFRIDOC-MT translators applied health/IT register translations. Disagreement is structurally expected; the magnitude is not directly measured.",
+        "OC-3": "Datasheet-level demographics absent. The paper names translators [Q109] and notes they were native speakers recruited via a coordinator [Q23, Q24] but provides no institutional affiliation, regional origin (Amhara-region vs. other), education, or domain training.",
+        "OC-4": "Required for deployment validity. Re-annotation by Amhara Regional Bureau translation staff or federal Ministry of Agriculture translators on a deployment-domain test set is needed.",
+        "OC-5": "Aggregation: human DA averages three annotators per language [Q69]. Krippendorff's alpha 0.46 for Amharic [Q71, Q211] indicates substantial inter-annotator divergence; averaging may erase legitimate domain-driven disagreements. Zulu evaluation could not be conducted at all due to recruitment difficulties [Q100], a precedent that flags fragility of the annotator-recruitment pipeline.",
+        "OC-6": "Issues harming convergent validity: translators' health/IT focus likely fails to correlate with federal bureau translator judgment on agricultural/legal terminology [WEB-14 confirms no Amharic legal-administrative resources exist for cross-validation]. External validity: judgments do not generalize to deployment ground-truth authority. Empirical: low IAA [Q71], translationese [Q103], and no documented domain expertise [DATASET-MAJOR Concern 2]."
+      },
+      "evidence_quotes": [
+        "[Q23] 'We translated the extracted 10k English sentences to the 5 African languages through 4 expert translators per language.' (p.3)",
+        "[Q26] 'we conducted a translation workshop, during which three translation experts shared their experiences in creating terminologies' (p.3)",
+        "[Q71] 'We obtained Krippendorff's alpha values of ≥ 0.40, which are relatively low due to the fine granularity of the evaluation scale.' (p.8)",
+        "[Q100] 'we were unable to recruit annotators for Zulu.' (p.10)",
+        "[Q103] 'translated sentences in African languages may exhibit patterns such as unnatural syntax or overly literal phrasing.' (p.10)",
+        "[Q109] 'Amharic: Bereket Tilahun, Hana M. Tamiru, Biniam Asmlash, Lidetewold Kebede' (p.11)",
+        "[Q194] 'three native speakers of the African languages—primarily translators involved in the dataset creation—were recruited.' (p.24)",
+        "[Q211] 'We obtained α scores of 0.46, 0.57, 0.40, and 0.81, and 0.54 for Amharic, Hausa, Swahili, Yorùbá, and Zulu respectively.' (p.26)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-10] Ministry of Justice provides authoritative Amharic terminology — federal bureau translators are the preferred authority unrepresented in the benchmark",
+        "[WEB-14] No public Amharic legal-administrative glossary resource exists",
+        "[WEB-3] EABC and primary cooperative unions are the institutional terminology anchors for deployment, distinct from health/IT translator preparation"
+      ],
+      "evidence_dataset": [
+        "DATASET-MAJOR Concern 2: No documentation of agricultural/legal domain expertise among the four Amharic translators; preferred ground-truth authority entirely absent",
+        "DATASET-Strength 5: Translators produced fluent Amharic with consistent technical terminology within the health domain — quality signal exists for that domain only",
+        "DATASET-D3: Translation displays appropriate WHO pediatric-nutrition register but not transferable to agricultural register"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q109",
+          "WEB-10"
+        ],
+        "OC-2": [
+          "WEB-8",
+          "WEB-10",
+          "WEB-14"
+        ],
+        "OC-3": [
+          "Q23",
+          "Q24",
+          "Q109"
+        ],
+        "OC-4": [
+          "WEB-3"
+        ],
+        "OC-5": [
+          "Q71",
+          "Q100",
+          "Q211"
+        ],
+        "OC-6": [
+          "Q103",
+          "Q71",
+          "WEB-14"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Institutional affiliation and domain expertise of the four named Amharic translators",
+        "Regional origin of Amharic translators (Amhara region vs. Addis Ababa vs. diaspora)",
+        "Whether any of the human evaluators had agricultural or legal Amharic exposure"
+      ],
+      "requires_expert_verification": [
+        "Federal bureau translator judgment on AFRIDOC-MT reference Amharic register-appropriateness for agricultural/legal documents",
+        "Magnitude of expected disagreement between AFRIDOC-MT translators and federal bureau translators on a deployment-domain test set"
+      ]
+    },
+    "output_form": {
+      "score": 3,
+      "justification": "Output form is text-only translation [Q8, Q44, Q201], matching the deployment's text-only requirement. Document-level outputs are produced by realigning sentence-level or pseudo-document translations into full documents [Q51, Q57], partially preserving paragraph structure via maintained empty rows [Q119]. However, no metric assesses structural fidelity (preservation of numbered clauses, tables, signature blocks) [regional context: structure_preservation_gap]. The benchmark also reports specific output-form pathologies for African-language translations: under-generation, over-generation, repetition of words and phrases, off-target translations [Q6], and inconsistent diacritics [Q77] — these failure modes would be especially harmful in a legal-administrative deployment where exact term repetition matters. Embedding-based document-level evaluation for African languages remains unavailable [Q50, Q96, Q175, Q176]. Greedy decoding is used [Q155]. Given the user's MODERATE priority on OF and the partial match (text-only ✓; structural fidelity gap; no plain-language accessibility scoring for variable-literacy end-users), score is 3.",
+      "strengths": [
+        "Output modality (text in Ethiopic script) directly matches deployment text-only requirement [Q8]",
+        "Paragraph structure preserved at corpus level via empty-row convention [Q119]",
+        "Sentence-to-document realignment supports document-level evaluation [Q51, Q57]",
+        "Output failure modes (under/over-generation, repetition, off-target, diacritic inconsistency) [Q6, Q77] are documented, enabling targeted detection in deployment"
+      ],
+      "checklist_responses": {
+        "OF-1": "Yes — text output modality matches deployment [Q8, Q44]. Both benchmark and deployment produce Amharic text translations.",
+        "OF-2": "TTS not assessed by the benchmark. The deployment context indicates extension workers read documents aloud to less-literate cooperative members [regional context: oral_tradition_and_document_mediation], creating an implicit TTS-relevant accessibility requirement that AFRIDOC-MT does not address. INSUFFICIENT DOCUMENTATION on whether deployment system itself includes TTS.",
+        "OF-3": "Literacy considerations: Ethiopia adult literacy is 51.8% (2017) [WEB-16, WEB-17]; Amhara-region-specific and rural-Amhara-specific rates are not publicly available [regional context: NOT FOUND]. The benchmark does not assess accessibility or comprehension of translated output for variable-literacy readers; reading-level / plain-language scoring is absent. End-users are mediated by cooperative leaders and extension workers, partially mitigating the literacy gap.",
+        "OF-4": "Form mismatches harming external validity: (a) no structural-fidelity scoring for numbered clauses/tables/signature blocks [Q119 partial preservation only]; (b) no plain-language or readability scoring for variable-literacy readers; (c) documented LLM output pathologies (repetition, off-target) [Q6] would be especially harmful for legal terminology stability in deployment."
+      },
+      "evidence_quotes": [
+        "[Q6] 'some LLMs exhibit issues such as under-generation, over-generation, repetition of words and phrases, and off-target translations, specifically for translation into African languages.' (p.1)",
+        "[Q8] 'We evaluate performance using automatic metrics and compare the results of encoder-decoder models with decoder-only LLMs' (p.1)",
+        "[Q44] 'Given that our created dataset can be used for sentence-level translation and as a baseline for document-level translation, we evaluate all models on the test splits for each domain.' (p.5)",
+        "[Q51] 'we realigned sentence-level or pseudo-translation outputs into full documents, then computed BLEU... and chrF... to create document BLEU (d-BLEU) and document chrF (d-chrF).' (p.5)",
+        "[Q77] 'for Yorùbá, it often uses inconsistent or partial diacritics, resulting in inaccuracies.' (p.8)",
+        "[Q119] 'Please do not delete double empty rows, as they serve to separate paragraphs.' (p.18)",
+        "[Q175] 'we used BLEU and chrF scores but excluded AfriCOMET due to its backbone model... having a context length of 512 tokens.' (p.22)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-16] Ethiopia adult literacy 51.8% (2017) — variable-literacy end-users not addressed by benchmark scoring",
+        "[WEB-17] World Bank confirms Ethiopia literacy figure"
+      ],
+      "evidence_dataset": [
+        "DATASET-Strength 1: Amharic Ethiopic-script output rendering is consistent across configurations — text-form match confirmed empirically",
+        "DATASET-D27: Tech-domain interview register confirms output-form fluency varies by source register, suggesting deployment register-shift would also affect output fluency"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q8",
+          "Q44"
+        ],
+        "OF-2": [
+          "WEB-16"
+        ],
+        "OF-3": [
+          "WEB-16",
+          "WEB-17"
+        ],
+        "OF-4": [
+          "Q6",
+          "Q77",
+          "Q119"
+        ]
+      },
+      "confidence": "medium",
+      "information_gaps": [
+        "Amhara-region and rural-Amhara literacy rates",
+        "Whether deployment system includes TTS or remains text-only",
+        "Whether deployment delivery format requires preservation of numbered-clause / table / signature-block structure"
+      ],
+      "requires_expert_verification": [
+        "Cooperative leader and extension worker assessment of translation comprehensibility for end-user mediation"
+      ]
+    }
+  },
+  "overall_summary": "AFRIDOC-MT is a high-quality document-level MT benchmark for five African languages including Amharic in Ethiopic script, but its fitness for evaluating Amharic agricultural and microfinance document translation in Amhara region is severely limited by three convergent gaps: (1) total domain absence — no agricultural, land-tenure, cooperative governance, or credit-scheme content exists in the benchmark, confirmed empirically across all sampled examples and corroborated by web research showing no other Amharic MT benchmark covers these domains either; (2) source-language direction mismatch — the benchmark translates from English to Amharic and exhibits acknowledged translationese, whereas the deployment operates on documents natively authored in Amharic proclamation register; and (3) annotator-authority mismatch — the four named Amharic translators were prepared for health/IT domains with no documented agricultural or legal Amharic expertise, while the user-specified preferred ground-truth authority is federal bureau translators. Output scoring is calibrated for narrative discourse coherence with no metric for terminological consistency — the critical coherence requirement for legal-administrative documents. The benchmark's strongest alignment is on Input Form (text-only Amharic in Ethiopic script with documented tokenization accommodations) and Output Form (text output modality match). Of the three HIGH-priority dimensions (IO, IC, OC), all score 1-2.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "AFRIDOC-MT can credibly measure: (a) general document-level MT capability for English-to-Amharic in Ethiopic script using NLLB-200, GPT-4o, and other current systems [Q4, Q41]; (b) basic discourse coherence in narrative health and IT news [Q16, Q55]; (c) fluency-vs-accuracy tradeoffs for Amharic at sentence-level vs. pseudo-document granularities [Q61, Q72]; (d) which model architectures struggle with non-Latin script and morphological richness [Q53, Q127]. The strongest dimensions for the deployment are Input Form (4) and Output Form (3), reflecting that the benchmark technically handles Amharic text in Ethiopic script and produces text outputs at relevant granularities.",
+    "construct_depth": "Construct depth is shallow for the deployment's specific construct (legal-administrative Amharic translation quality). The benchmark probes general document-level MT depth in news domains via a multi-evaluation stack (d-chrF + d-BLEU + GPT-4o-judge + human DA), but the GPT-4o judge is explicitly unreliable for African languages [Q67, Q85, Q219], leaving human DA with Amharic Krippendorff's alpha of only 0.46 [Q71] as the residual signal. No measurement instrument exists for terminological consistency across clauses [WEB-25, WEB-26 confirm metric gap], structural fidelity for numbered clauses, register-appropriateness against Ethiopian proclamation conventions, or accessibility for variable-literacy end-users. Performance on AFRIDOC-MT does not predict performance on deployment-domain documents.",
+    "supplementation_needed": "Critical supplementation: (1) construct a deployment-domain test set drawing from publicly available Ethiopian proclamation Amharic (e.g., Proclamation 985/2016 [WEB-10], Proclamation 456/2005 [WEB-12]) and ACSI/EABC notices [WEB-3, WEB-5] — closing the IO and IC gaps; (2) recruit federal Ministry of Agriculture or Amhara Regional Bureau translators as annotators for that test set — closing the OC gap; (3) implement a terminology-consistency metric adapted from Semenov-Bojar or HHI [WEB-25, WEB-26] for proclamation-derived term categories — closing the OO gap; (4) add structural-fidelity and plain-language accessibility scoring if format-preserving or oral-mediation use cases are confirmed — closing the OF gap; (5) collect Amharic-source-language examples to address the source-direction mismatch."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "All four required deployment genres (agricultural input subsidy notices, land-use policy updates, credit-scheme terms, cooperative governance notices) are absent from the benchmark, and no Amharic MT benchmark covers them.",
+      "recommendation": "Construct a supplementary evaluation set of 50–200 Amharic deployment-domain documents drawn from publicly available federal/regional proclamations (985/2016, 456/2005, Amhara Revised 2006), EABC subsidy notices, and ACSI loan-agreement templates. Treat AFRIDOC-MT scores as a general-MT baseline only and require deployment-domain test scores for go/no-go decisions."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "Critical proclamation-derived terminology (cooperative tier names per 985/2016, land-tenure category labels, subsidy scheme names, MFI credit-scheme terms) is entirely absent; source-language direction is mismatched (English→Amharic vs. native Amharic-source documents).",
+      "recommendation": "Compile a proclamation-terminology glossary using Ministry of Justice Amharic texts [WEB-10] and IGAD land-administration profile [WEB-12] as anchors. Build deployment test items in the deployment's actual source-language direction (Amharic source) rather than relying on AFRIDOC-MT's English source provenance. Document and probe specifically for translationese artifacts when evaluating models that have been exposed to AFRIDOC-MT-like training data."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "No metric evaluates terminological consistency across clauses for proclamation-derived terms; lexical cohesion definition treats term repetition as a defect, opposite to legal-document requirements; GPT-4o judge unreliable for African languages.",
+      "recommendation": "Implement a term-consistency metric (Semenov-Bojar WMT 2022 [WEB-25] or HHI-based [WEB-26]) over a curated list of 30–80 deployment-critical Amharic terms. Replace GPT-4o-as-judge with native-speaker review by federal bureau translators for any high-stakes evaluation. Add structural-fidelity scoring (numbered-clause preservation) if deployment evolves toward format-preserving translation."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Reference Amharic translations were produced by translators with no documented agricultural or legal Amharic expertise; user-specified preferred authority (federal bureau translators) is absent; Amharic IAA is 0.46 even within the prepared health domain.",
+      "recommendation": "For deployment validation, recruit at least two federal Ministry of Agriculture or Amhara Regional Bureau translators to re-annotate a deployment-domain test set. Document annotator institutional affiliation, agricultural/legal Amharic experience, and regional origin. Report Krippendorff's alpha disaggregated by term-category to surface terminology-specific disagreement rather than averaging it away."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "No structural-fidelity scoring for numbered clauses, tables, or signature blocks; no readability/accessibility scoring for variable-literacy end-users mediated by cooperative leaders and extension workers.",
+      "recommendation": "If deployment delivers structured documents, add a structural-fidelity check (template-preservation rate). Pilot a comprehension test with cooperative leaders and extension workers from one or two woredas (where conflict access permits [WEB-4, WEB-21]) to assess plain-language accessibility of translated output, especially for read-aloud mediation."
+    },
+    {
+      "dimension": "input_ontology",
+      "gap": "Hybrid genres (e.g., MFI loan agreements bundled with input-subsidy distribution terms via ACSI's dual government-distribution role [WEB-7]) are not anticipated by either the benchmark or by single-genre supplementary sets.",
+      "recommendation": "Include hybrid ACSI-issued documents (MFI + subsidy) in the supplementary deployment-domain test set, sourced via direct consultation with ACSI or Amhara Regional Bureau partners; do not assume single-genre coverage suffices."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_content",
+    "input_ontology",
+    "output_content",
+    "output_ontology"
+  ],
+  "strongest_dimensions": [
+    "input_form",
+    "output_form"
+  ]
+}

@@ -1,0 +1,516 @@
+name: Ethiopian Intercity Travelers — Amharic-Language Booking Bot
+abbreviation: ETH-IC-AM
+assessment_context:
+  benchmark: MASSIVE (Multilingual NLU, 51 languages, intent classification and slot
+    filling)
+  deployment: Conversational booking bot for Sky Bus, Selam Bus, and Ride intercity
+    services, accessed via Android/iOS smartphone apps
+  primary_task: Intent classification and slot filling for intercity route queries,
+    fare lookups, and seat-change transactions in Amharic
+target_population:
+  description: Ethiopian intercity commuters and travelers who use Android or iOS
+    apps to book long-distance bus or ride-hail trips with operators Sky Bus, Selam
+    Bus, and Ride. The population spans urban Addis Ababa residents, rural and regional
+    travelers across Amhara Region, Oromia, Tigray, SNNPR, and other regions served
+    by intercity routes. A significant share are Amharic-as-L2 speakers from non-Amhara
+    ethnic backgrounds who use Amharic as a functional lingua franca for travel.
+  primary_language: Amharic
+  expected_code_switching_languages:
+  - Oromo (especially on Addis–Adama–Hawassa corridor)
+  - Tigrinya (especially on Addis–Mekelle corridor)
+  - Other Ethiopian languages (Sidama, Somali, Afar — lower frequency)
+  l2_speaker_share: '[NEEDS VERIFICATION — deferred: below search budget; likely unsearchable
+    from published sources — no national survey isolates intercity-bus-user language
+    background. Note: Oromo speakers constitute >40% of Ethiopia''s population (EthioMT
+    survey data — [|https://arxiv.org/html/2403.19365v1|]), suggesting L2 Amharic
+    share among intercity travelers is substantial but no operator-level figure is
+    publicly available.]'
+  age_range: '[NEEDS VERIFICATION — deferred: below search budget; operator-level
+    app analytics are not published. Note: Ethiopia''s median age is 19.1 years (UN
+    World Population Prospects 2024 — [|https://srv1.worldometers.info/world-population/ethiopia-population/|]),
+    indicating a very young overall population; working-age intercity traveler profile
+    likely skews 18–45.]'
+  app_platform: Android and iOS smartphone apps (Sky Bus, Selam Bus, Ride)
+geography:
+  country: Ethiopia
+  primary_city: Addis Ababa (largest origin/destination hub)
+  key_regions:
+  - Addis Ababa City Administration
+  - Amhara Region
+  - Oromia Region
+  - Tigray Region
+  - SNNPR (Southern Nations, Nationalities, and Peoples' Region)
+  - Afar Region
+  - Somali Region
+  key_intercity_corridors:
+  - Addis Ababa – Adama (Nazret)
+  - Addis Ababa – Hawassa
+  - Addis Ababa – Bahir Dar
+  - Addis Ababa – Gondar
+  - Addis Ababa – Mekelle
+  - Addis Ababa – Dire Dawa
+  - Addis Ababa – Jimma
+  - Addis Ababa – Dessie
+  urbanization_rate_pct: '~23% urban (CIA World Factbook 2023 figure: 23.2%; UN 2025
+    estimate: 22.5%) — Sources: CIA World Factbook 2023 — [|https://www.cia.gov/the-world-factbook/about/archives/2023/countries/ethiopia/|];
+    Worldometer UN 2024 Revision — [|https://srv1.worldometers.info/world-population/ethiopia-population/|].
+    Caveat: urbanization growing at ~4.4% per year; Addis Ababa is a disproportionate
+    share of this urban population. The predominantly rural population profile means
+    most intercity travelers originate from rural or peri-urban areas.'
+  rural_traveler_share: '[NEEDS VERIFICATION — deferred: below search budget; no published
+    breakdown of intercity bus passengers by urban/rural origin exists. Given ~77%
+    rural population nationally, a majority of intercity travelers likely originate
+    from non-Addis locations, but no operator-level figure confirms this.]'
+languages:
+  primary_interface_language: Amharic
+  script: Ethiopic (Ge'ez script) — fidel syllabary
+  script_category_in_massive: Unique script (one of 18 languages with a script used
+    by only one MASSIVE locale)
+  code_switching_languages:
+    oromo:
+      script: Latin (since 1991, Qubee orthography)
+      relevance: High — Oromia is the largest region by area and population; Addis–Adama–Hawassa
+        is a major corridor. User confirmed Oromo code-switching will occur in real
+        utterances.
+      massive_coverage: Separate MASSIVE locale (no mixed Amharic–Oromo utterances)
+    tigrinya:
+      script: Ethiopic (same script family as Amharic)
+      relevance: Moderate — northern route (Addis–Mekelle) travelers; Tigrinya speakers
+        may code-switch especially for place names and route terminology.
+      massive_coverage: Separate MASSIVE locale (no mixed Amharic–Tigrinya utterances)
+  linguistic_features_relevant_to_nlu:
+    morphology: Amharic is a highly morphologically rich, fusional Semitic language
+      with root-and-pattern morphology, extensive verb inflection, and cliticization
+      of prepositions and conjunctions
+    word_order: SOV with significant flexibility; verb-final structure affects slot
+      span detection
+    script_directionality: Left-to-right (Ethiopic script, unlike Arabic RTL)
+    tokenization_notes: Amharic uses spaces as word delimiters, but morphological
+      richness means a single token can encode information that requires multiple
+      tokens in English. Slot boundary detection may be affected.
+    numeral_system: Ethiopic numerals exist (፩፪፫…) alongside Arabic numerals; spoken
+      Amharic uses a base-10 system with distinct Amharic number words. Birr amounts
+      may appear in either numeral form or as spelled-out Amharic words.
+    politeness: '[NEEDS VERIFICATION — deferred: likely unsearchable (lived practice);
+      Amharic politeness/register distinctions in booking-bot utterances require in-community
+      elicitation rather than web-retrievable documentation. MASSIVE documents 21
+      languages with two-way formal/informal distinctions, but whether Amharic''s
+      politeness system was fully captured in MASSIVE''s annotation is not confirmed.]'
+  amharic_dialect_variation:
+    description: Amharic dialects vary across Amhara sub-regions (Gondar, Gojjam,
+      Wollo, Shewa) and differ further from L2-speaker usage. Addis Ababa Amharic
+      is considered a prestige/standard variety.
+    l2_speaker_phrasing: Non-Amhara speakers using Amharic as L2 may exhibit pronunciation-influenced
+      spelling, simplified syntax, and Oromo/Tigrinya loanword insertion. These patterns
+      are unlikely to appear in translated NLU datasets.
+    massive_annotator_dialect_representation: '[NOT FOUND — searched MASSIVE paper
+      (arXiv 2204.08582) and Ethiopian NLP literature; MASSIVE does not disclose the
+      regional or dialect background of its Amharic translators. No third-party audit
+      of MASSIVE''s Amharic annotator demographics was found in the NLP literature
+      reviewed.]'
+calendar_and_temporal_conventions:
+  primary_calendar: 'Ethiopian (Ge''ez) calendar — 13 months: Meskerem, Tikimt, Hidar,
+    Tahsas, Tir, Yekatit, Megabit, Miazia, Ginbot, Sene, Hamle, Nehase, Pagume'
+  calendar_offset_from_gregorian: 'Approximately 7–8 years behind the Gregorian calendar;
+    Ethiopian New Year falls in September (Gregorian). The offset is 8 years from
+    January 1 to ~September 10/11, then 7 years for the remainder of the Gregorian
+    year. Source: Ethiopian Calendar reference — [|https://ethiocal.com/|]'
+  date_expression_conventions: Users are expected to express travel dates using Ethiopian
+    month names (e.g., 'Meskerem 5' for a date in late September Gregorian). These
+    will not appear in MASSIVE's translated date slot values.
+  holiday_demand_surges:
+  - 'Timkat (Ethiopian Epiphany) — Tir 11 E.C., corresponding to January 19 Gregorian
+    (January 20 in Gregorian leap years). Major travel surge. Source: [|https://www.ethiopiancalendar.net/ethiopian-holidays|]'
+  - 'Meskel (Finding of the True Cross) — Meskerem 17 E.C., corresponding to September
+    27 Gregorian (September 28 the year before a Gregorian leap year). Source: [|https://holidays.ertale.com/|]'
+  - 'Ethiopian Christmas (Genna/Lidat) — Tahsas 29 E.C., corresponding to January
+    7 Gregorian every year. Source: [|https://holidays.ertale.com/|]'
+  - 'Ethiopian Easter (Fasika) — movable feast; date varies yearly, calculated using
+    ancient Ethiopian Orthodox ecclesiastical rules, distinct from and usually later
+    than Western Easter. Source: [|https://ethiopiancalendars.com/|]'
+  - 'Eid al-Fitr and Eid al-Adha — Islamic lunar calendar; dates shift ~10–11 days
+    earlier each Gregorian year. Muslim traveler share and surge patterns: [NEEDS
+    VERIFICATION — deferred: below search budget; no published operator-level surge
+    data found]'
+  - 'Ethiopian New Year (Enkutatash) — Meskerem 1 E.C., corresponding to September
+    11 Gregorian (September 12 in the Gregorian year before a leap year). Major peak
+    travel period. Source: [|https://holidays.ertale.com/|]; [|https://ethiocal.com/|]'
+  massive_coverage: None — MASSIVE contains no Ethiopian calendar month names, Ge'ez-calendar
+    temporal expressions, or holiday-based surcharge slot values
+domain_specific_notes:
+  intercity_transport_context: Sky Bus, Selam Bus, and Ride are the three named operators.
+    Ethiopian intercity bus travel is a primary mode of long-distance transport, especially
+    for non-elite travelers. Routes connect Addis Ababa to regional capitals and towns
+    across all major corridors.
+  fare_and_currency:
+    currency: 'Ethiopian Birr (ETB, symbol: ብር or Br)'
+    fare_expression_conventions: Fares may be quoted as Arabic numerals (e.g., '450
+      birr'), Ethiopic numerals, or verbalized Amharic number words. Informal spoken
+      conventions (e.g., rounding, use of 'hundred' as a unit) may differ from formal
+      written forms.
+    massive_coverage: None — MASSIVE price/fare slots derive from English-origin SLURP
+      data and do not address ETB formatting, Amharic numeral verbalization, or spoken-number
+      conventions
+  operator_specific_slot_types:
+    description: The booking domain requires slot types not present in MASSIVE's 55-slot
+      taxonomy
+    missing_slots:
+    - operator_name (Sky Bus, Selam Bus, Ride)
+    - 'seat_class (VIP, economy, sleeper — exact classes per operator: [NEEDS VERIFICATION
+      — deferred: below search budget; no publicly available operator seat-class taxonomy
+      was found in web searches])'
+    - route_closure_reason (road closure, weather, security)
+    - surcharge_event (holiday, peak-season pricing)
+    - trip_change_type (rebook, cancel, upgrade)
+    - departure_terminal (bus station name, e.g., Meskel Square, Kality, Autobus Terra)
+  city_name_variants:
+    description: 'Ethiopian cities are referred to by multiple names in common usage:
+      Amharic names, Oromo names, colonial/transliterated English names, abbreviations,
+      and demonyms. The booking system must handle all variants as equivalent slot
+      values.'
+    examples:
+    - amharic_name: አዳማ
+      common_name: Adama
+      alternate_name: Nazret
+      massive_coverage: Not present
+    - amharic_name: ሐዋሳ
+      common_name: Hawassa
+      alternate_name: Awassa
+      massive_coverage: Not present
+    - amharic_name: መቀሌ
+      common_name: Mekelle
+      alternate_name: Mek'ele
+      massive_coverage: Not present
+    - amharic_name: ባህር ዳር
+      common_name: Bahir Dar
+      alternate_name: '[NEEDS VERIFICATION — deferred: low impact; no widely used
+        alternate name for Bahir Dar found in reviewed sources]'
+      massive_coverage: Not present
+    - amharic_name: ጎንደር
+      common_name: Gondar
+      alternate_name: Gonder (variant transliteration)
+      massive_coverage: Not present
+    - amharic_name: ድሬ ዳዋ
+      common_name: Dire Dawa
+      alternate_name: Diredawa (one-word variant used in some official contexts)
+      massive_coverage: Not present
+    - note: '[NEEDS VERIFICATION — deferred: below search budget; no comprehensive
+        operator route + city-name-variant list is publicly available. A full list
+        requires direct elicitation from Sky Bus, Selam Bus, and Ride operators.]'
+  booking_flow_intents:
+    description: The user considers the booking flow broadly generic and compatible
+      with MASSIVE's intent set. However, the following intent types relevant to Ethiopian
+      intercity bus booking are absent from MASSIVE's 60-intent taxonomy.
+    absent_intents:
+    - route_query (which buses serve origin–destination pair?)
+    - seat_class_query (what classes are available?)
+    - operator_query (does Sky Bus / Selam serve this route?)
+    - cancel_and_rebook (due to road closure or schedule change)
+    - holiday_surcharge_query (is pricing higher for Timkat?)
+    - departure_terminal_query (which station does the bus leave from?)
+    coverage_note: Generic booking intents (book, reschedule, check availability)
+      are partially covered by MASSIVE. Transportation-domain-specific and Ethiopia-specific
+      intents are not.
+infrastructure_notes:
+  device_platform: Android and iOS smartphones (app-based text input)
+  android_market_share_pct: '[NEEDS VERIFICATION — deferred: below search budget;
+    no Ethiopia-specific Android vs. iOS split was found in reviewed sources. Nationally,
+    Android dominates in African markets generally, but no Ethiopia-specific figure
+    was retrieved.]'
+  smartphone_penetration_pct: '~15% of the population own a smartphone as of 2024
+    (gender breakdown: 18% of men, 6% of women). Source: Birr Metrics citing GSMA
+    data — [|https://birrmetrics.com/ethiopia-narrows-mobile-gender-gap-to-24-but-smartphone-access-for-women-remains-just-6/|].
+    Caveat: this is a national aggregate; urban/app-user cohort penetration is significantly
+    higher. The low national figure underscores that the deployment population is
+    a self-selected subset of higher-digital-literacy users.'
+  mobile_internet_penetration_pct: 'Mobile penetration (subscriptions per person)
+    reached 61.4% in Q1 2024, up from 36.7% in Q1 2019. 3G+4G subscriptions represent
+    61.3% of total mobile subscriptions as of early 2024. Source: Omdia Ethiopia Service
+    Provider Market Report 2024 via Connecting Africa — [|https://www.connectingafrica.com/connectivity/ethiopia-s-telecoms-liberalization-makes-progress-omdia|]'
+  primary_mobile_operator: 'Ethio Telecom is the dominant operator with ~94.2% market
+    share as of 2024, declining toward a projected 78.5% as Safaricom Ethiopia expands.
+    Ethio Telecom had 78.3 million active subscribers by end-June 2024; Safaricom
+    Ethiopia had 6.1 million active monthly users by mid-2024. Sources: Omdia/Connecting
+    Africa 2024 — [|https://www.connectingafrica.com/connectivity/ethiopia-s-telecoms-liberalization-makes-progress-omdia|];
+    Astute Analytica/GlobeNewswire 2025 — [|https://www.globenewswire.com/news-release/2025/01/27/3015813/0/en/Ethiopia-Mobile-Value-Added-Services-Market-to-Worth-Over-US-10-23-Billion-By-2033-Astute-Analytica.html|]'
+  average_mobile_data_speed: '[NEEDS VERIFICATION — deferred: below search budget;
+    no Ethiopia national average mobile data speed figure was found in reviewed sources.
+    Ethio Telecom launched its first commercial 5G network in September 2023 (145
+    sites in Addis Ababa), expanding 4G to 45+ cities in 2023. Source: Connecting
+    Africa 2024 — [|https://www.connectingafrica.com/connectivity/ethiopia-s-telecoms-liberalization-makes-progress-omdia|]]'
+  connectivity_variation_by_region:
+    addis_ababa: '5G commercially launched September 2023 (Ethio Telecom, 145 initial
+      sites, now expanding). 4G/LTE broadly available. Source: Connecting Africa 2024
+      — [|https://www.connectingafrica.com/connectivity/ethiopia-s-telecoms-liberalization-makes-progress-omdia|]'
+    amhara_region: '[NEEDS VERIFICATION — deferred: below search budget; no Amhara-specific
+      corridor coverage figure found. National 4G expansion reached 45+ cities in
+      2023.]'
+    oromia_region: '[NEEDS VERIFICATION — deferred: below search budget; Oromia corridor
+      coverage not separately documented in reviewed sources.]'
+    tigray_region: 'Connectivity was severely disrupted during the 2020–2022 Tigray
+      conflict. Recovery is ongoing. The conflict period saw primary school enrollment
+      drop from ~85.5% in 2020 to 20.8% in 2021, indicating broad infrastructure disruption.
+      Current network status not separately quantified in reviewed sources. Source
+      on conflict impact: ZoeTalent/education data — [|https://zoetalentsolutions.com/education-statistics-for-ethiopia/|]'
+    snnpr: '[NEEDS VERIFICATION — deferred: below search budget; no SNNPR-specific
+      connectivity figure found in reviewed sources.]'
+  input_modality: Text (on-screen keyboard using Ethiopic/Ge'ez fidel input or phonetic
+    Amharic input method)
+  keyboard_input_method_notes: Users may input Amharic using a dedicated Ethiopic
+    keyboard, a phonetic romanization-to-fidel IME, or may occasionally type Amharic
+    words in Latin characters (Amharic romanization). The system should handle fidel
+    input as primary but Latin-script Amharic representation is a plausible edge case.
+  offline_capability_requirement: '[NEEDS VERIFICATION — deferred: below search budget;
+    no public documentation of Sky Bus, Selam Bus, or Ride app offline capabilities
+    was found.]'
+literacy_and_education:
+  national_literacy_rate_pct: '~51.8% adult literacy rate (ages 15+) as of 2017 (latest
+    World Bank / UNESCO figure available); male 57.2%, female 44.4%. No more recent
+    national survey value has been published. Sources: CIA World Factbook 2023 — [|https://www.cia.gov/the-world-factbook/about/archives/2023/countries/ethiopia/|];
+    UNESCO via TheGlobalEconomy — [|https://www.theglobaleconomy.com/Ethiopia/Literacy_rate/|].
+    Caveat: the 2017 figure is the most recent published; actual 2024 literacy is
+    likely higher given expanding primary enrollment, but no updated survey has been
+    released.'
+  amharic_literacy_rate_pct: '[NOT FOUND — searched World Bank, UNESCO, and Ethiopian
+    education sources; no Amharic-specific literacy rate (distinct from general literacy)
+    is published as a standalone national statistic. General literacy in Ethiopia
+    is measured against Amharic or regional-language reading ability, but the Amharic-only
+    share is not separately reported.]'
+  urban_rural_literacy_gap: 'Significant regional and urban–rural gap documented.
+    Urban areas (e.g., Addis Ababa) have substantially higher literacy; pastoralist
+    regions (Afar, Somali) have much lower rates. Primary net enrollment in Afar ~46%
+    vs. national ~95% in 2018. Source: ZoeTalent/education statistics — [|https://zoetalentsolutions.com/education-statistics-for-ethiopia/|].
+    Caveat: national figure is a 2017 aggregate; sub-national literacy rates vary
+    widely and are not published annually.'
+  smartphone_app_literacy: Users are app-literate by virtue of using the booking application,
+    but digital literacy levels vary; complex UI or long-form text entry may pose
+    friction for some users.
+  primary_language_of_education_by_region:
+    addis_ababa: Amharic
+    amhara_region: Amharic
+    oromia_region: Oromo (Afaan Oromoo) — Amharic as second language of instruction
+    tigray_region: Tigrinya — Amharic as second language
+    snnpr: '[NEEDS VERIFICATION — deferred: likely unsearchable at granular level;
+      varies by ethnic group and zone within SNNPR; requires regional education authority
+      data or stakeholder elicitation]'
+cultural_norms_notes: '- Ethiopian Orthodox Christianity is the majority religion,
+  shaping holiday travel demand around Genna, Timkat, Fasika, and Meskel.
+
+  - Islam is the second-largest religion; Eid travel surges are significant.
+
+  - Ethiopian New Year (Enkutatash, Meskerem 1) is a peak travel period.
+
+  - Multi-ethnic national identity: Oromo, Amhara, Tigrinya, Somali, Sidama, and other
+  ethnic groups all use intercity transport but may prefer their own language for
+  natural utterances.
+
+  - Amharic functions as the working language of the federal government and as a national
+  lingua franca, but is an L2 for the majority of Ethiopians by ethnicity.
+
+  - Respect for elders and formal address forms may influence user utterance register,
+  especially for older travelers.
+
+  - Informal travel planning often involves social referrals and word-of-mouth; some
+  users may be first-time app users.
+
+  - Bus station culture in Ethiopia involves negotiation, informal brokers (dallalas),
+  and route knowledge embedded in local practice — not always reflected in formalized
+  booking intents.
+
+  '
+regulatory_and_operator_context:
+  transport_regulatory_body: '[NEEDS VERIFICATION — deferred: below search budget;
+    the Ethiopian Ministry of Transport and Logistics is the federal body, but specific
+    intercity bus licensing authority (federal vs. regional) was not confirmed in
+    reviewed sources]'
+  operator_licensing: '[NEEDS VERIFICATION — deferred: below search budget; no publicly
+    available Sky Bus, Selam Bus, or Ride route concession framework documentation
+    was found]'
+  data_protection_regulation: 'Personal Data Protection Proclamation No. 1321/2024
+    (PDPP), enacted April 4, 2024, published in the Federal Negarit Gazette July 24,
+    2024 (in force). Ethiopia''s first comprehensive data protection law; designates
+    the Ethiopian Communications Authority (ECA) as supervisory authority; establishes
+    consent-based processing, data subject rights (access, rectification, erasure,
+    portability, objection to automated decisions), and data localisation requirements
+    (locally collected personal data must be stored on servers in Ethiopia). Penalties
+    for violations range from 1–10 years imprisonment and fines of 60,000–600,000
+    Birr depending on severity. Sources: CIPIT analysis — [|https://cipit.org/ethiopias-personal-data-protection-proclamation-of-2024-and-its-budding-digital-identity-regime/|];
+    full text (English) — [|https://www.metaappz.com/References/ethiopian_laws/federal/pr_1321_2024/en/txt|];
+    Digital Policy Alert — [|https://digitalpolicyalert.org/event/24922-implemented-personal-data-protection-proclamation-proclamation-no-13212024-including-data-localisation-requirements|]'
+  consumer_protection_framework: '[NEEDS VERIFICATION — deferred: below search budget;
+    Ethiopia applies the 2013 Trade Competition and Consumer Protection Proclamation
+    to digital services generally. No digital-booking-specific consumer protection
+    framework was found. Source (partial): Digital Policy Alert 2025 — [|https://digitalpolicyalert.org/digest/dpa-digital-digest-ethiopia|]]'
+  fare_regulation: '[NEEDS VERIFICATION — deferred: below search budget; whether Ethiopian
+    intercity bus fares are government-regulated or market-set was not confirmed in
+    reviewed sources. Note: Ethiopia has historically regulated transport tariffs,
+    but recent liberalization trends (telecom, trade) suggest market-set fares are
+    possible for private operators]'
+benchmark_fit_summary:
+  dimension_priority_weights:
+    IO: MODERATE — MASSIVE's 60 intents cover generic booking flows but omit Ethiopian-specific
+      and operator-specific intents
+    IC: HIGH — Slot values (Ethiopian calendar dates, local city name variants, Birr
+      fares) are absent from translated MASSIVE data
+    IF: LOWER — Text-only, Ethiopic-script, modality-aligned; tokenization quality
+      for Amharic slot boundaries is a minor open question
+    OO: MODERATE — 55-slot taxonomy lacks operator_name, seat_class, route_closure_reason,
+      surcharge_event slot types
+    OC: HIGH — MASSIVE Amharic data translated from English by fluency-certified workers;
+      no code-switching, no L2-speaker phrasing, no Oromo-corridor representation
+    OF: LOWER — Intent + slot-filling output format directly matches deployment requirements
+  flagged_gaps_requiring_web_search:
+  - gap_id: 1
+    description: Ethiopian calendar slot coverage in any NLU/slot-filling benchmark
+    search_target: Amharic NLU slot filling Ethiopian calendar Ge'ez calendar date
+      entity recognition benchmark
+    search_result: NOT FOUND — No NLU or slot-filling benchmark including Ethiopian
+      calendar temporal expressions (Meskerem, Tikimt, etc.) was identified in searches
+      of EthioNLP, EthioLLM/EthioBenchmark (LREC-COLING 2024), or broader Ethiopian
+      NLP literature. EthioBenchmark covers news classification, machine translation,
+      NER, POS tagging, hate speech detection, and sentiment analysis — not intent
+      classification or slot filling with Ethiopian date slots. This confirms a full
+      gap with no existing resource to bridge it.
+  - gap_id: 2
+    description: Ethiopian city name variants and abbreviations in Amharic NER or
+      NLU data
+    search_target: Ethiopian city name NLP Amharic named entity recognition location
+      variants benchmark
+    search_result: PARTIAL — Amharic NER datasets exist (ANEC corpus, Yimam et al.
+      2021 — 210,000 tokens, CRF-based, publicly available per EthioNLP survey — [|https://github.com/EthioNLP/Ethiopian-Language-Survey|]).
+      However, no NER benchmark specifically targeting intercity transport city name
+      variants (Adama/Nazret, Mek'ele/Mekelle) in booking-domain contexts was found.
+      General Amharic NER may provide partial transfer, but domain adaptation for
+      transport-specific location entities is unsupported.
+  - gap_id: 3
+    description: Oromo–Amharic code-switching corpora or evaluation sets
+    search_target: Amharic Oromo code-switching corpus NLP evaluation dataset Ethiopia
+    search_result: 'PARTIAL — A bilingual Amharic–Afaan Oromo code-switching corpus
+      exists for hate speech detection, with annotated social-media posts (GitHub:
+      michaelmelese/Bilingual-Amharic-Afaan-Oromo-Hate-Speech — [|https://link.springer.com/article/10.1186/s40537-024-01044-y|]).
+      The EthioNLP group also produced a pipeline for code-switched Ethiopian social
+      media posts using OSCAR/CommonCrawl corpora augmented with EthioMT back-translation
+      ([|https://ethionlp.github.io/|]). However, no code-switching corpus for the
+      booking/transport domain exists. The social media code-switching corpus is the
+      closest available resource but differs substantially in domain, register, and
+      slot structure from booking-bot utterances.'
+  - gap_id: 4
+    description: Tigrinya–Amharic code-switching corpora or evaluation sets
+    search_target: Tigrinya Amharic code-switching NLP Ethiopian language benchmark
+    search_result: NOT FOUND — No Tigrinya–Amharic mixed-language NLP corpus or evaluation
+      set was identified. EthioLLM/EthioBenchmark covers monolingual Tigrinya tasks
+      (MT, POS, hate speech, sentiment), and a hate speech annotation scheme covers
+      Amharic + Tigrigna as separate languages on social media ([|https://aclanthology.org/2024.rail-1.13.pdf|]),
+      but no Tigrinya–Amharic code-switching evaluation resource for any domain was
+      found. This is a confirmed full gap.
+  - gap_id: 5
+    description: Amharic-as-L2 speaker phrasing in NLP datasets
+    search_target: Amharic L2 speaker NLP evaluation intercity transport Ethiopia
+      dialect variation
+    search_result: NOT FOUND — No NLP dataset specifically capturing L2-speaker Amharic
+      phrasing patterns, pronunciation-influenced spelling, or syntactically simplified
+      Amharic from non-Amhara speakers was found. Ethiopian NLP literature (EthioNLP
+      survey 2023, EthioLLM 2024) focuses on monolingual standard Amharic. This gap
+      requires stakeholder/community elicitation rather than web-searchable resources.
+  - gap_id: 6
+    description: African or low-resource transport-domain NLU slot types
+    search_target: African intercity transport NLU slot filling benchmark bus booking
+      sub-Saharan low-resource NLP
+    search_result: NOT FOUND — No African or sub-Saharan intercity transport NLU benchmark
+      was identified. EthioBenchmark (LREC-COLING 2024) covers only news classification,
+      MT, NER, POS tagging, hate speech, and sentiment analysis — no transport or
+      booking domain. This is a confirmed full gap across the African NLP ecosystem.
+  - gap_id: 7
+    description: Amharic numeral verbalization and Birr currency slot normalization
+    search_target: Amharic number verbalization Birr currency NLP slot filling numeric
+      normalization Ethiopian
+    search_result: NOT FOUND — No NLP resource specifically addressing Amharic numeral
+      verbalization for currency (Birr) or slot normalization of spoken Amharic number
+      words was found. Ethiopian NLP literature does not surface a dedicated numeric
+      normalization resource for Amharic. This gap requires domain-specific corpus
+      construction.
+  - gap_id: 8
+    description: Amharic Ethiopic-script tokenization quality for slot boundary detection
+    search_target: Amharic Ethiopic script tokenization slot filling NLP Ge'ez word
+      boundary
+    search_result: PARTIAL — Amharic tokenization tools exist (amseg segmenter/tokenizer,
+      Yimam et al. 2021 per EthioNLP survey — [|https://github.com/EthioNLP/Ethiopian-Language-Survey|]),
+      and HornMorpho (rule-based morphological analyzer) is actively used in Ethiopian
+      NLP pipelines ([|https://ethionlp.github.io/|]). However, no slot-filling-specific
+      evaluation of tokenization quality for Amharic in MASSIVE or any comparable
+      benchmark was found. The general tokenizer availability reduces but does not
+      eliminate concerns about slot boundary detection for booking-domain Amharic.
+  - gap_id: 9
+    description: Ethio Telecom and mobile internet penetration current figures
+    search_target: Ethiopia mobile internet penetration smartphone usage 2024 Ethio
+      Telecom Safaricom market share
+    search_result: 'RESOLVED — See infrastructure_notes fields above. Mobile penetration:
+      61.4% Q1 2024 (Omdia). Ethio Telecom market share: ~94.2% in 2024. Smartphone
+      penetration: ~15% nationally. Sources cited in infrastructure_notes.'
+  - gap_id: 10
+    description: Ethiopian data protection and digital consumer protection regulatory
+      framework
+    search_target: Ethiopia Personal Data Protection Proclamation digital services
+      regulation 2024
+    search_result: RESOLVED — Personal Data Protection Proclamation No. 1321/2024
+      enacted April 4, 2024, in force July 24, 2024. See regulatory_and_operator_context.data_protection_regulation
+      above.
+  - gap_id: 11
+    description: Sky Bus, Selam Bus, Ride operator seat class taxonomy and route network
+    search_target: Sky Bus Ethiopia Selam Bus seat classes routes VIP economy intercity
+      bus
+    search_result: NOT FOUND — No publicly available documentation of Sky Bus, Selam
+      Bus, or Ride seat class taxonomies or official route networks was found in web
+      searches. Operator-level detail requires direct elicitation from the operators.
+net_new_fields:
+  ethiopian_nlp_ecosystem_note:
+    field_type: net-new
+    content: 'EthioLLM (2024) introduced the first multilingual LLMs for five Ethiopian
+      languages (Amharic, Ge''ez, Afaan Oromo, Somali, Tigrinya) alongside EthioBenchmark,
+      a consolidated benchmark for NER, POS tagging, news classification, hate speech
+      detection, sentiment analysis, and MT. No intent classification or slot-filling
+      tasks are included. EthioBenchmark is the most comprehensive publicly available
+      Ethiopian NLP evaluation suite but does not address booking-domain NLU. Source:
+      EthioLLM, LREC-COLING 2024 — [|https://aclanthology.org/2024.lrec-main.561/|];
+      arXiv — [|https://arxiv.org/abs/2403.13737|]. Relevance: confirms no existing
+      benchmark for the deployment''s primary evaluation need (Amharic intent classification
+      + slot filling in transport domain).'
+  amharic_oromo_code_switching_corpus_note:
+    field_type: net-new
+    content: 'A bilingual Amharic–Afaan Oromo hate speech corpus exists (Woldeyohannis
+      et al., Journal of Big Data 2024; GitHub: michaelmelese/Bilingual-Amharic-Afaan-Oromo-Hate-Speech).
+      It is the only known publicly available Amharic–Oromo code-switched NLP dataset.
+      Source: Springer Journal of Big Data — [|https://link.springer.com/article/10.1186/s40537-024-01044-y|].
+      Relevance to benchmark gap 3 (Oromo code-switching): the corpus exists but is
+      restricted to hate speech detection on social media; domain mismatch with booking-bot
+      utterances is severe. It could serve as a starting point for mixed-language
+      tokenization and word-list construction, but not as a direct training or evaluation
+      resource for the deployment.'
+  ethiopian_social_media_multilingual_hate_speech_corpus:
+    field_type: net-new
+    content: 'A 2024 fine-grained hate speech annotation scheme and multilingual lexicon
+      covering Amharic, Afaan Oromo, English, and Tigrigna was developed for Ethiopian
+      social media (X, Telegram, Facebook), including code-switched posts (RAIL 2024
+      workshop paper — [|https://aclanthology.org/2024.rail-1.13.pdf|]). This is the
+      most linguistically diverse Ethiopian NLP corpus for code-mixed content. Relevance:
+      confirms that Amharic–Oromo–Tigrigna code-switching is empirically documented
+      in Ethiopian digital communication, strengthening the validity concern about
+      MASSIVE''s monolingual Amharic annotation failing to capture real user utterances
+      on Oromia and Tigray corridors.'
+  ethiopia_national_ai_policy:
+    field_type: net-new
+    content: 'Ethiopia has approved a National AI Policy and established the Ethiopian
+      AI Institute to guide AI development. The policy operates alongside the PDPP
+      2024 data governance framework. Source: Digital Policy Alert 2025 — [|https://digitalpolicyalert.org/digest/dpa-digital-digest-ethiopia|].
+      Relevance: AI deployments in Ethiopia are subject to both the PDPP and the emerging
+      AI policy; the booking bot operator should monitor ECA and Ethiopian AI Institute
+      guidance as implementing regulations are developed.'
+  gsma_digital_gender_gap:
+    field_type: net-new
+    content: 'GSMA 2024 reports a 40% gender disparity in mobile internet use in Ethiopia;
+      only 6% of women own a smartphone vs. 18% of men. Source: GSMA Digital Economy
+      Ethiopia Report 2024 (press release) — [|https://www.gsma.com/newsroom/press-release/ethiopias-digital-economy-to-contribute-etb-1-3-trillion-to-gdp-by-2028-unlocking-jobs-and-growth-through-telecom-and-policy-reforms/|];
+      Birr Metrics 2024 — [|https://birrmetrics.com/ethiopia-narrows-mobile-gender-gap-to-24-but-smartphone-access-for-women-remains-just-6/|].
+      Relevance: the deployment population (smartphone app users) is likely disproportionately
+      male; benchmarking and annotation efforts should account for this cohort skew,
+      as female travelers who do access the app may exhibit different utterance patterns.'

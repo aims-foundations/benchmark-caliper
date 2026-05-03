@@ -1,0 +1,1604 @@
+name: afridoc_mt
+full_name: 'AFRIDOC-MT: A Document-Level Multi-Parallel Translation Dataset for African Languages'
+year: 2024
+domain: Document-level machine translation evaluation for African languages
+porting_strategy: ground_up
+languages:
+- en
+- am
+- ha
+- sw
+- yo
+- zu
+primary_region: Sub-Saharan Africa (East and West Africa)
+description: 'AFRIDOC-MT is a document-level multi-parallel translation benchmark covering
+
+  English and five African languages: Amharic, Hausa, Swahili, Yorùbá, and Zulu.
+
+  The dataset comprises 334 health and 271 information technology news documents,
+
+  all human-translated from English. It supports both sentence-level and
+
+  pseudo-document-level translation experiments evaluated using standard MT
+
+  metrics (d-BLEU, d-chrF), GPT-4o-as-judge, and human direct assessment.
+
+  The benchmark evaluates encoder-decoder NMT systems and decoder-only LLMs
+
+  across 12 model configurations in health and technology news genres.
+
+  '
+documentation_excerpts: '## Key characteristics relevant to validity analysis:
+
+
+  ### Input Ontology
+
+  AFRIDOC-MT covers a single task type: document-level machine translation
+
+  between English and five African languages (plus multi-way translation among
+
+  the six languages). The benchmark supports both sentence-level and
+
+  pseudo-document-level (fixed-size chunk) translation as subtasks [Q3, Q35].
+
+  Document-level translation is motivated by the need to handle context-dependent
+
+  phenomena including coreference resolution, lexical disambiguation, and lexical
+
+  cohesion [Q16], and the authors situate the benchmark as addressing the gap left
+
+  by existing sentence-level MT datasets [Q13, Q15]. The genres evaluated are
+
+  exclusively health and information technology news [Q1, Q2, Q80]; no
+
+  agricultural, legal, regulatory, administrative, or financial document types are
+
+  included. The only competing document-level dataset acknowledged, TICO-19, is
+
+  restricted to COVID-19 health topics [Q14], confirming that regulatory and
+
+  policy genres remain entirely absent from the benchmarking landscape covered by
+
+  this work. Twelve model configurations are evaluated [Q41] spanning five
+
+  encoder-decoder systems [Q37] and multiple decoder-only LLMs [Q39], with prompt
+
+  sensitivity assessed using three prompts per LLM [Q91].
+
+
+  ### Input Content
+
+  English source documents were scraped from Techpoint Africa (technology news)
+
+  and the World Health Organization (health news), yielding approximately 10,000
+
+  English sentences per domain from 334 health and 271 technology articles [Q18,
+
+  Q22]. Data is dual-licensed under CC BY-NC-SA 3.0/4.0 and characterized as
+
+  ethically sourced from publicly available materials selected to represent
+
+  different cultural perspectives and minimize bias [Q34, Q106]. MADLAD-400, one
+
+  of the evaluated models, was trained on Common Crawl [Q137]; Toucan was
+
+  pre-trained on large multilingual texts covering over 500 African languages [Q140].
+
+  The dataset authors acknowledge that since all source material originates in
+
+  English, translated African-language sentences may exhibit translationese —
+
+  unnatural syntax, overly literal phrasing, and a structural and semantic bias
+
+  toward English [Q103, Q104, Q105]. No agricultural proclamation texts,
+
+  cooperative membership regulations, land-tenure documents, subsidy scheme
+
+  notices, or microfinance credit-scheme terms appear anywhere in the source
+
+  corpus.
+
+
+  ### Input Form
+
+  The benchmark is entirely text-based. Amharic is explicitly present in Ethiopic
+
+  (non-Latin) script [Q1, Q127]; Yorùbá uses a Latin-based script with diacritics
+
+  [Q77]; the remaining languages (Hausa, Swahili, Zulu) use Latin script. Token
+
+  length statistics show meaningful cross-lingual variation: Hausa and Yorùbá
+
+  produce longer tokenizations than English, while Amharic and Zulu produce shorter
+
+  ones [Q33]. Non-Latin script and diacritics caused Amharic and Yorùbá to exceed
+
+  model token limits, requiring chunking into pseudo-documents of k=10 sentences
+
+  [Q47, Q48, Q128]; the token limit for Amharic was specifically increased to
+
+  accommodate its script properties [Q162]. The annotation workflow used .csv files
+
+  in Google Sheets or Excel [Q122], with explicit instructions to preserve
+
+  paragraph-separating empty rows [Q119]. No audio, image, or OCR components are
+
+  involved.
+
+
+  ### Output Ontology
+
+  The benchmark''s output scoring framework evaluates translation adequacy,
+
+  fluency, and discourse coherence. Automated metrics are document-level chrF
+
+  (d-chrF) and document-level BLEU (d-BLEU), computed via SacreBLEU with
+
+  bootstrap resampling [Q51, Q52]; d-chrF is reported as primary because it
+
+  better captures the morphological richness of African languages [Q53]. GPT-4o
+
+  evaluates fluency on a 1–5 scale and counts content errors (CE), lexical
+
+  cohesion errors (LE), and grammatical cohesion errors (GE) [Q54, Q55, Q180,
+
+  Q191]. The benchmark explicitly defines cohesion as how text is connected using
+
+  grammar and vocabulary to ensure smooth sentence flow [Q187, Q188], with lexical
+
+  cohesion mistakes involving vocabulary usage and synonym issues [Q189] and
+
+  grammatical cohesion mistakes involving pronoun, conjunction, and clause-linking
+
+  problems [Q190]. Human direct assessment uses a 0–100 continuous quality scale
+
+  [Q195] via the ESA protocol in the Appraise framework [Q196]. No rubric
+
+  component addresses terminological consistency — the stable cross-clause
+
+  rendering of named entities such as subsidy scheme names, land-tenure category
+
+  labels, or proclamation-derived legal terms. The label ontology is calibrated
+
+  for news discourse adequacy and fluency, not for the regulatory precision
+
+  required in legal-administrative translation. GPT-4o''s reliability as a judge
+
+  for African language translation directions is explicitly questioned [Q67, Q85,
+
+  Q219]; human evaluation is ultimately preferred for translations into African
+
+  languages [Q68].
+
+
+  ### Output Content
+
+  Translation was performed by four expert translators per language, recruited
+
+  through a native-speaker language coordinator [Q23, Q24]. The 10,000 sentences
+
+  per language were distributed equally among translators who worked sentence-by-
+
+  sentence with access to full document context [Q25]. A pre-translation workshop
+
+  was conducted to share terminology creation experience and existing resources
+
+  [Q26]; translators were instructed not to use machine translation engines [Q120],
+
+  and a terminology harmonization list was promised during the process [Q121].
+
+  Quality control used AfriCOMET quality estimation (threshold 0.65 for manual
+
+  review) [Q28, Q29] and manual inspection by language coordinators [Q27]. Human
+
+  evaluation for model outputs used three native-speaker annotators per language,
+
+  primarily drawn from the translation team [Q194], each evaluating 80 documents
+
+  with 30 shared for inter-annotator agreement [Q197]. Inter-annotator agreement
+
+  (Krippendorff''s alpha) was 0.46, 0.57, 0.40, and 0.54 for Amharic, Hausa,
+
+  Swahili, and Zulu respectively — relatively low [Q71, Q211, Q212]. Named
+
+  Amharic translators are listed [Q109] but no documentation of their
+
+  institutional affiliation, domain expertise, or familiarity with
+
+  agricultural/legal Amharic is provided. Human evaluation for Zulu could not
+
+  be conducted due to annotator recruitment difficulties [Q100].
+
+
+  ### Output Form
+
+  The benchmark produces and evaluates text-only translation outputs. All
+
+  automated metrics (d-chrF, d-BLEU, s-COMET/chrF/BLEU) and human assessments
+
+  operate on plain text [Q51, Q52, Q170, Q172]. Document structure is partially
+
+  preserved at the corpus level — paragraph-separating rows are maintained in the
+
+  annotation workflow [Q119] and sentence-to-document realignment is performed
+
+  for metric computation [Q51, Q57] — but no metric assesses structural fidelity
+
+  (preservation of numbered clauses, tables, or signature blocks). Due to context
+
+  length limits, full documents are not translated atomically; they are processed
+
+  as pseudo-document chunks of k=10 sentences [Q48, Q49] or sentence-by-sentence
+
+  [Q201], with outputs merged for evaluation. Embedding-based document-level
+
+  metrics for African languages remain unavailable [Q50, Q96, Q176]: AfriCOMET
+
+  cannot be applied at document level due to its 512-token backbone limit [Q175],
+
+  and ModernBERT-based QE produced undifferentiated scores across all models
+
+  [Q97, Q98]. Greedy decoding is used throughout [Q155].
+
+  '
+verbatim_quotes:
+- id: Q1
+  page: 1
+  dimension: input_ontology
+  text: 'This paper introduces AFRIDOC-MT, a document-level multi-parallel translation dataset covering English and five African
+    languages: Amharic, Hausa, Swahili, Yorùbá, and Zulu.'
+- id: Q2
+  page: 1
+  dimension: input_content
+  text: The dataset comprises 334 health and 271 information technology news documents, all human-translated from English
+    to these languages.
+- id: Q3
+  page: 1
+  dimension: input_ontology
+  text: We conduct document-level translation benchmark experiments by evaluating the ability of neural machine translation
+    (NMT) models and large language models (LLMs) to translate between English and these languages, at both the sentence and
+    pseudo-document levels, the outputs being realigned to form complete documents for evaluation.
+- id: Q4
+  page: 1
+  dimension: output_form
+  text: Our results indicate that NLLB-200 achieves the best average performance among the standard NMT models, while GPT-4o
+    outperforms general-purpose LLMs.
+- id: Q5
+  page: 1
+  dimension: input_ontology
+  text: Fine-tuning selected models leads to substantial performance gains, but models trained on sentences struggle to generalize
+    effectively to longer documents.
+- id: Q6
+  page: 1
+  dimension: output_form
+  text: Furthermore, our analysis reveals that some LLMs exhibit issues such as under-generation, over-generation, repetition
+    of words and phrases, and off-target translations, specifically for translation into African languages.
+- id: Q7
+  page: 1
+  dimension: input_ontology
+  text: In addition, AFRIDOC-MT supports multi-way translation, allowing translations not only between English and the African
+    languages but also between any two of the languages covered.
+- id: Q8
+  page: 1
+  dimension: output_form
+  text: We evaluate performance using automatic metrics and compare the results of encoder-decoder models with decoder-only
+    LLMs
+- id: Q9
+  page: 1
+  dimension: output_content
+  text: Jesujoba O. Alabi, Israel Abebe Azime, Miaoran Zhang, Cristina España-Bonet, Rachel Bawden, Dawei Zhu, David Ifeoluwa
+    Adelani, Clement Oyeleke Odoje, Idris Akinade, Iffat Maab, Davis David, Shamsuddeen Hassan Muhammad, Neo Putini, David
+    O. Ademuyiwa, Andrew Caines, Dietrich Klakow
+- id: Q10
+  page: 1
+  dimension: output_content
+  text: Masakhane NLP, Saarland University, Saarland Informatic Campus, DFKI GmbH, Barcelona Supercomputing Center, Inria
+    Paris France, Mila McGill University & Canada CIFAR AI Chair, University of Ibadan Nigeria, National Institute of Informatics
+    Japan, Selcom Tanzania, Imperial College London, University of KwaZulu-Natal, Loughborough University U.K, University
+    of Cambridge U.K.
+- id: Q11
+  page: 2
+  dimension: input_ontology
+  text: There exist several MT evaluation benchmark datasets for African languages.
+- id: Q12
+  page: 2
+  dimension: input_ontology
+  text: They can be categorized into two kinds. First, evaluation datasets specifically designed for translating into or from
+    African languages (Ezeani et al., 2020; Azunre et al., 2021; Adelani et al., 2021, 2022, inter alia). Second, benchmark
+    datasets covering many languages, including African languages.
+- id: Q13
+  page: 2
+  dimension: input_form
+  text: However, most of these datasets are designed for sentence-level MT, primarily drawn from religious or news domains,
+    although some consist of translated sentences originating from the same document.
+- id: Q14
+  page: 2
+  dimension: input_ontology
+  text: To the best of our knowledge, only TICO-19, a health domain translation benchmark, has the potential to be used for
+    document-level MT, while it is restricted to topics related to COVID-19.
+- id: Q15
+  page: 2
+  dimension: input_ontology
+  text: Document-level NMT aims to overcome the limitations of sentence-level systems by translating an entire document as
+    a whole.
+- id: Q16
+  page: 2
+  dimension: input_ontology
+  text: Both document-level and context-aware MT allow for the possibility of improving translation quality for context-dependent
+    phenomena such as coreference resolution (Müller et al., 2018; Bawden et al., 2018; Voita et al., 2018; Herold and Ney,
+    2023), lexical disambiguation (Rios Gonzales et al., 2017; Martínez Garcia et al., 2019), and lexical cohesion (Wong and
+    Kit, 2012; Garcia et al., 2014, 2017; Bawden et al., 2018; Voita et al., 2019).
+- id: Q17
+  page: 2
+  dimension: input_ontology
+  text: Various methods have been proposed to extend sentence-level models to capture document-level context (Tiedemann and
+    Scherrer, 2017; Libovický and Helcl, 2017; Bawden et al., 2018; Miculicich et al., 2018; Sun et al., 2022).
+- id: Q18
+  page: 3
+  dimension: input_content
+  text: We scraped English articles from the websites of Techpoint Africa and the World Health Organization (WHO). The articles
+    cover different topics of different lengths with an average length of 30 and 37 sentences for health and tech respectively.
+- id: Q19
+  page: 3
+  dimension: input_form
+  text: While our corpus is initially structured at the article level, we aim to make it suitable for sentence-level translation
+    tasks as well.
+- id: Q20
+  page: 3
+  dimension: input_form
+  text: To achieve this, we segmented the raw articles into sentences using NLTK (Bird et al., 2009).
+- id: Q21
+  page: 3
+  dimension: input_form
+  text: To ensure high segmentation quality, we recruited a linguist and a professional translator to verify the correctness
+    of the segmentation and make corrections as needed.
+- id: Q22
+  page: 3
+  dimension: input_content
+  text: Finally, we selected 334 and 271 English articles/documents from the health and tech domains respectively, which represents
+    10k sentences each per domain.
+- id: Q23
+  page: 3
+  dimension: output_content
+  text: We translated the extracted 10k English sentences to the 5 African languages through 4 expert translators per language.
+- id: Q24
+  page: 3
+  dimension: output_content
+  text: The translators were recruited through a language coordinator who is also a native speaker of the language.
+- id: Q25
+  page: 3
+  dimension: output_content
+  text: The 10k sentences were distributed equally among the translators and the translations were done in-context (i.e. the
+    translators translated on the sentence level but had access to the whole document).
+- id: Q26
+  page: 3
+  dimension: output_content
+  text: Due to the domain-specific nature of the task, before starting the translation process, we conducted a translation
+    workshop, during which three translation experts shared their experiences in creating terminologies and they also shared
+    existing resources with the translators including short translation guidelines (Appendix A.1).
+- id: Q27
+  page: 3
+  dimension: output_content
+  text: Quality control was conducted using automated quality estimation, followed by manual inspections by our language coordinators.
+- id: Q28
+  page: 3
+  dimension: output_content
+  text: We also used Quality Estimation (QE), specifically AfriCOMET (Wang et al., 2024a), Given a translated sentence in
+    any African language and its corresponding source English sentence, AfriCOMET generates a score between 0 and 1, where
+    0 indicates poor quality and higher values signify better quality.
+- id: Q29
+  page: 3
+  dimension: output_content
+  text: The translators, in collaboration with the language coordinators, were tasked with reviewing instances that had quality
+    estimation scores below 0.65.
+- id: Q30
+  page: 3
+  dimension: output_content
+  text: Manual inspection indicates that QE scores below 0.65 do not necessarily reflect poor translations, consistent with
+    Adelani et al. (2024b), likely due to
+- id: Q31
+  page: 3
+  dimension: output_content
+  text: Each translator was paid $1, 250 for 2, 500 sentences.
+- id: Q32
+  page: 4
+  dimension: input_form
+  text: We created train, development (dev), and test splits for each domain. To prevent data leakage, documents sharing sentences
+    with the same English translation were assigned to the training set. The dev set contains 25–33 documents, and the test
+    set 59–61 documents, drawn from the remaining data.
+- id: Q33
+  page: 4
+  dimension: input_form
+  text: Table 4 shows the average number of whitespace-separated tokens per sentence across domains and languages, including
+    English. The health domain has more tokens than tech. Hausa and Yorùbá are longer than English, likely due to their descriptive
+    nature, while Swahili is similar in length. Amharic and Zulu are relatively shorter, reflecting interesting linguistic
+    properties.
+- id: Q34
+  page: 4
+  dimension: input_content
+  text: The health data is licensed under CC BY-NCSA 3.0, while the tech data is licensed under CC BY-NC-SA 4.0.
+- id: Q35
+  page: 4
+  dimension: input_ontology
+  text: 'Given the AFRIDOC-MT data, we conducted both sentence- and document-level translation, evaluating two types of models:
+    encoder-decoder and decoder-only models. While the majority of these models are open-source, we also evaluated two proprietary
+    models of the same type.'
+- id: Q36
+  page: 4
+  dimension: output_form
+  text: Our evaluation primarily focuses on document-level translation, reflecting the availability of our document-level
+    translation corpus. For completeness, we also conduct a series of sentence-level experiments, with the results presented
+    in Appendix C.
+- id: Q37
+  page: 4
+  dimension: input_ontology
+  text: We evaluate five kinds of open encoder-decoder model including Toucan (Elmadany et al., 2024; Adebara et al., 2024),
+    M2M-100 (Fan et al., 2020), NLLB200 (NLLB Team et al., 2024), MADLAD400 (Kudugunta et al., 2023), and Aya-101 (Üstün et
+    al., 2024).
+- id: Q38
+  page: 4
+  dimension: input_ontology
+  text: Toucan is an Afro-centric multilingual MT model supporting 150 African language pairs. In comparison, M2M-100, NLLB-200,
+    and MADLAD-400 cover between 100 and 450 language pairs. Aya-101, an instruction-tuned mT5 model (Xue et al., 2021), supports
+    100 languages and can translate between various languages, including those considered in AFRIDOC-MT.
+- id: Q39
+  page: 4
+  dimension: input_ontology
+  text: We also evaluate open and closed decoder-only models. Open models include LLama3.1 (Dubey et al., 2024), Gemma2 (Gemma
+    Team et al., 2024), their instruction-tuned variants, and LLaMAX3 (Lu et al., 2024)—a LLama3-based model further pre-trained
+    on 100+ languages, including several African ones. The closed models include OpenAI GPT models (GPT-3.5 Turbo and GPT-4o)
+    (OpenAI, 2024), which have been shown to have document-level translation ability (Wang et al., 2023).
+- id: Q40
+  page: 4
+  dimension: input_content
+  text: While their language coverage is not well documented, they show some ability to handle African languages (Adelani
+    et al., 2024b; Bayes et al., 2024), though far below their performance in English, their primary training language.
+- id: Q41
+  page: 4
+  dimension: input_ontology
+  text: We present the result of 12 models in total, including the 1.2B version of Toucan, 1.3B and 3.3B versions of NLLB-200,
+    3B and 13B versions of MADLAD-400 and Aya-101 respectively. We also have the 8B instruction tuned version of LLama3.1
+    (LLama3.1-IT), 9B version of Gemma-2 (Gemma2-IT), and LLaMAX3-Alpaca.
+- id: Q42
+  page: 4
+  dimension: input_ontology
+  text: For sentence-level evaluation, we jointly fine-tune NLLB-200 with 1.3B parameters on the 30 language directions and
+    on the two domains to make the models more specialized. Similarly, we did supervised fine-tuning (SFT) on LLaMAX3
+- id: Q43
+  page: 5
+  dimension: input_form
+  text: We perform SFT on LLaMAX3 and LLama3.1 for document-level translation, using pseudo-documents with k=10.
+- id: Q44
+  page: 5
+  dimension: output_form
+  text: Given that our created dataset can be used for sentence-level translation and as a baseline for document-level translation,
+    we evaluate all models on the test splits for each domain.
+- id: Q45
+  page: 5
+  dimension: output_form
+  text: We evaluate the translation models (M2M-100, NLLB-200, and MADLAD-400) using the Fairseq (Ott et al., 2019) codebase
+    for (M2M-100 and NLLB-200), and the Transformers (Wolf et al., 2020) codebase for MADLAD-400.
+- id: Q46
+  page: 5
+  dimension: output_form
+  text: However, for other models including Aya-101, we use the EleutherAI LM Evaluation Harness (lm-eval) tool (Biderman
+    et al., 2024) using the three templates listed in Table 23 of Appendix B.4.
+- id: Q47
+  page: 5
+  dimension: input_form
+  text: An initial analysis showed that some models were unable to process entire documents due to input length limits, which
+    were exceeded by token counts in some languages (Amharic and Yorùbá).
+- id: Q48
+  page: 5
+  dimension: input_form
+  text: To address this, we adopted a similar approach to Lee et al. (2022), splitting documents into fixed-size chunks of
+    k sentences to fit within token limits; the final chunk may contain fewer than k sentences.
+- id: Q49
+  page: 5
+  dimension: output_form
+  text: To select an appropriate chunk size, we conducted initial tests with k = 1 (sentence-level), 5, 10, and 25, choosing
+    k = 10 for our experiments.
+- id: Q50
+  page: 5
+  dimension: output_form
+  text: Evaluating document-level translation remains challenging, as existing automatic metrics struggle to capture improvements
+    and account for discourse phenomena (Jiang et al., 2022; Dahan et al., 2024), and embedding-based metrics have not been
+    explored in this context for African languages due to the lack of data.
+- id: Q51
+  page: 5
+  dimension: output_form
+  text: Hence, we realigned sentence-level or pseudo-translation outputs into full documents, then computed BLEU (Papineni
+    et al., 2002) and chrF (Popović, 2015) to create document BLEU (d-BLEU) and document chrF (d-chrF).
+- id: Q52
+  page: 5
+  dimension: output_form
+  text: Metrics were computed using SacreBLEU (Post, 2018) with bootstrap resampling (n = 1000) to report 95% confidence intervals.
+- id: Q53
+  page: 5
+  dimension: output_form
+  text: We report d-chrF scores for the best prompt per model and language direction in the main text, as chrF better captures
+    the morphological richness of African languages (Adelani et al., 2022), with full results provided in Appendix C.
+- id: Q54
+  page: 5
+  dimension: output_ontology
+  text: We use GPT-4o as a judge to evaluate translation outputs, following recent work showing LLMs' effectiveness in assessing
+    translation quality and analyzing errors (Wu et al., 2024; Sun et al., 2025).
+- id: Q55
+  page: 5
+  dimension: output_ontology
+  text: Following Sun et al. (2025), we assess each translated document's fluency, content errors (CE), and cohesion errors—specifically
+    lexical (LE) and grammatical (GE) errors—using GPT-4o, with evaluation limited to a few model outputs due to cost constraints
+    (Appendix B.6).
+- id: Q56
+  page: 5
+  dimension: output_content
+  text: We also complement this with human evaluation for direct assessment scores (Appendix B.7) and qualitative analysis
+    through manual inspection (Appendix B.8).
+- id: Q57
+  page: 5
+  dimension: output_form
+  text: In Tables 5 and 6 we present d-chrF scores based on the realigned documents, created by merging the translated sentences
+    into their corresponding documents.
+- id: Q58
+  page: 5
+  dimension: output_form
+  text: On average the NLLB models obtain scores of 65.4/66.6 and 64.3/65.0 on health and tech domains respectively, with
+    3.3B outperforming 1.3B except when translating into Yorùbá.
+- id: Q59
+  page: 5
+  dimension: output_form
+  text: Furthermore, translating to African languages is significantly worse compared to translating to English for all the
+    models.
+- id: Q60
+  page: 6
+  dimension: output_form
+  text: In Tables 7 and 8 we present d-chrF scores based on the best prompt per language for the translation output of the
+    models when evaluated on the realigned documents from pseudo-documents with k =10 sentences per pseudo-document.
+- id: Q61
+  page: 6
+  dimension: output_form
+  text: Pseudo-document translation is worse than sentence-level translation when translating into African languages Our results
+    from pseudo-document translation show a performance drop across different models compared to sentence-level translation,
+    especially when translating into African languages.
+- id: Q62
+  page: 6
+  dimension: output_form
+  text: However, GPT-4o demonstrates similar and consistent performance in both setups and domains.
+- id: Q63
+  page: 6
+  dimension: output_form
+  text: Additionally, we observe that GPT-3.5 is the next best performing decoder-only LLM, which contrasts with its performance
+    in sentence-level translation.
+- id: Q64
+  page: 7
+  dimension: output_form
+  text: Table 9 presents average GPT-4o evaluations for fluency and content errors (CE) of realigned outputs from sentence-level
+    and pseudo-document-level tasks (k=10) across four models in the health domain.
+- id: Q65
+  page: 7
+  dimension: output_form
+  text: When translating into English, pseudo-document outputs are generally rated as more fluent and show fewer content errors,
+    except for LLaMAX3-SFT1, which, when evaluated on pseudo-documents, shows lower fluency but still fewer content errors—an
+    outcome that is counterintuitive.
+- id: Q66
+  page: 7
+  dimension: output_form
+  text: However, when translating into African languages, the results are less consistent.
+- id: Q67
+  page: 7
+  dimension: output_ontology
+  text: These inconsistencies raise concerns about GPT-4o's reliability.
+- id: Q68
+  page: 7
+  dimension: output_form
+  text: Consequently, we focus on human evaluation going forward.
+- id: Q69
+  page: 7
+  dimension: output_content
+  text: In Table 10 we report average direct assessment (DA) scores (on a scale from 0 to 100) from three annotators per language
+    for the health domain, when translating into four African languages.
+- id: Q70
+  page: 7
+  dimension: output_content
+  text: For each language, we used 30 documents across models and both domains to compute inter-annotator
+- id: Q71
+  page: 8
+  dimension: output_content
+  text: We obtained Krippendorff's alpha values of ≥ 0.40, which are relatively low due to the fine granularity of the evaluation
+    scale.
+- id: Q72
+  page: 8
+  dimension: output_form
+  text: Human evaluation results align closely with d-chrF, which favors sentence-level translations over pseudo-document
+    translations when translating into African languages.
+- id: Q73
+  page: 8
+  dimension: output_form
+  text: Among the models, LLaMAX3-SFT1 receives higher ratings at the sentence-level but is rated lower when translating pseudo-documents.
+- id: Q74
+  page: 8
+  dimension: output_form
+  text: In contrast, LLaMAX3-SFT10 receives slightly lower ratings than LLaMAX3-SFT1 at the sentence-level but is rated higher
+    in the pseudo-document setting.
+- id: Q75
+  page: 8
+  dimension: output_form
+  text: GPT-3.5 is generally rated as the weakest model across languages, except for Swahili, where its performance is comparatively
+    better.
+- id: Q76
+  page: 8
+  dimension: output_content
+  text: Our qualitative analysis, based on feedback from native speakers who are also authors, indicates that GPT-3.5 frequently
+    over-generates in the pseudo-document setup by repeating words and phrases—except in Swahili, where it performs best.
+- id: Q77
+  page: 8
+  dimension: input_form
+  text: However, for Yorùbá, it often uses inconsistent or partial diacritics, resulting in inaccuracies.
+- id: Q78
+  page: 8
+  dimension: output_form
+  text: LLaMAX3-SFT1 also exhibits repetition in pseudo-document translations, likely due to a length generalization problem
+    (Anil et al., 2022), and does so more than LLaMAX3-SFT10.
+- id: Q79
+  page: 8
+  dimension: output_form
+  text: For the other four languages, LLaMAX3-SFT1 with the sentence-level setup was rated higher than other models and configurations,
+    owing to better context preservation and fewer repetitions.
+- id: Q80
+  page: 9
+  dimension: input_content
+  text: We introduce AFRIDOC-MT, a document-level translation dataset in the health and tech domains for five African languages.
+- id: Q81
+  page: 9
+  dimension: input_ontology
+  text: We benchmarked various models, fine-tuning selected ones.
+- id: Q82
+  page: 9
+  dimension: input_form
+  text: Due to context length limits, documents were translated either sentence by sentence or as pseudo-documents.
+- id: Q83
+  page: 9
+  dimension: output_form
+  text: Outputs were evaluated using standard MT metrics, GPT-4o as a judge, and human direct assessment.
+- id: Q84
+  page: 9
+  dimension: output_form
+  text: NLLB-200 was the strongest built-in MT model, while GPT-4o outperformed general-purpose LLMs.
+- id: Q85
+  page: 9
+  dimension: output_ontology
+  text: However, our DA and qualitative analysis found GPT-4o's judgments inconsistent for African languages, and sentence-by-sentence
+    translation proved more effective for some languages.
+- id: Q86
+  page: 9
+  dimension: input_ontology
+  text: We evaluated only a small subset of the numerous multilingual LLMs available.
+- id: Q87
+  page: 9
+  dimension: input_form
+  text: Our experiments were also limited by the context length of the LLMs, particularly for open LLMs.
+- id: Q88
+  page: 9
+  dimension: input_form
+  text: Except for LLama3.1, all other open LLMs have a context length of 8192 tokens, while encoder-decoder models were primarily
+    based on T5.
+- id: Q89
+  page: 9
+  dimension: input_form
+  text: This makes it difficult to use the context length beyond a certain limit, making full document translation infeasible.
+- id: Q90
+  page: 9
+  dimension: output_form
+  text: LLMs are prone to variance in performance based on the prompt.
+- id: Q91
+  page: 9
+  dimension: input_ontology
+  text: We therefore evaluated them for translation using three different prompts.
+- id: Q92
+  page: 9
+  dimension: output_form
+  text: However, it is possible that our prompts were not optimal.
+- id: Q93
+  page: 10
+  dimension: input_ontology
+  text: Africa is home to thousands of indigenous languages, many of which exhibit unique linguistic properties. However,
+    due to the high cost of translation using human translators and limited available funding, it is currently impossible
+    to cover all languages. As a result, we focused on just five languages.
+- id: Q94
+  page: 10
+  dimension: input_ontology
+  text: AFRIDOC-MT is a multi-way parallel dataset. However, due to the cost of running inference over three prompts and across
+    all 30 translation directions for all the models evaluated, most of our analysis is limited to translation tasks between
+    English and the five African languages.
+- id: Q95
+  page: 10
+  dimension: output_form
+  text: While we fine-tuned NLLB-200, LLama3.1 and LLaMAX3 on all 30 directions, we only provide results from NLLB-200 for
+    all directions both before and after fine-tuning for sentence-level and pseudo-document tasks in the Appendix D.
+- id: Q96
+  page: 10
+  dimension: output_form
+  text: Quality evaluation in MT is an open and ongoing area of research, especially for document-level translation. Recent
+    works have proposed embedding-based metrics for evaluation at both the sentence and document levels. While this has been
+    well explored for high-resource language pairs, it remains underexplored for African languages, although there is a tool,
+    AfriCOMET, that works for sentence-level evaluation in African languages.
+- id: Q97
+  page: 10
+  dimension: output_form
+  text: However, we evaluated the document-level translation outputs using ModernBERT-base-long-context-qe-v1, trained on
+    the WMT human evaluation dataset across 41 language pairs, including over 20 languages and three African languages (Hausa,
+    Xhosa, and Zulu), two of which are included to our work.
+- id: Q98
+  page: 10
+  dimension: output_form
+  text: 'However, the scores were nearly identical across all models, offering no meaningful differentiation. Hence, for our
+    document-level evaluation, in addition to lexical-based metrics, we incorporated three other evaluation approaches: using
+    GPT-4o as a judge, human evaluation, and qualitative analysis.'
+- id: Q99
+  page: 10
+  dimension: output_ontology
+  text: GPT-4o was employed to assess and rate the translation outputs of four models. While its ratings were consistent for
+    translations into English, the same was not observed for translations into African languages, likely due to the model's
+    limited understanding of these languages.
+- id: Q100
+  page: 10
+  dimension: output_content
+  text: Therefore, we conducted a human evaluation for translations from English to African languages, comparing only three
+    models due to cost constraints. However, we were unable to recruit annotators for Zulu.
+- id: Q101
+  page: 10
+  dimension: input_ontology
+  text: While we fine-tuned both NLLB-1.3B and LLaMAX3 models across all 30 language directions, due to computational constraints
+    and the high cost of qualitative evaluation, our detailed analysis focuses only on translation between English and the
+    5 African languages.
+- id: Q102
+  page: 10
+  dimension: output_form
+  text: Nevertheless, we report quantitative results across all 30 directions for NLLB-1.3B. We will make all fine-tuned models
+    publicly available to support future work, and we hope that further research will explore the remaining translation directions
+    in greater depth.
+- id: Q103
+  page: 10
+  dimension: input_content
+  text: A potential limitation of our dataset is the influence of translationese (Koppel and Ordan, 2011). Since all source
+    material translated originates in English, translated sentences in African languages may exhibit patterns such as unnatural
+    syntax or overly literal phrasing.
+- id: Q104
+  page: 10
+  dimension: input_content
+  text: Although we have not conducted an analysis to quantify these effects, prior work suggests that they can affect MT
+    model performance, generalization and evaluation including direct assessment (Freitag et al., 2019; Edunov et al., 2020).
+- id: Q105
+  page: 10
+  dimension: input_content
+  text: Furthermore, AFRIDOC-MT may reflect a bias toward English in terms of structure, semantics, and cultural framing.
+    We leave a deeper investigation of these issues to future work.
+- id: Q106
+  page: 10
+  dimension: input_content
+  text: AFRIDOC-MT was created with the utmost consideration for ethical standards. The English texts translated were sourced
+    from publicly available and ethically sourced materials. The data sources were selected to represent different cultural
+    perspectives, with a focus on minimizing any potential bias.
+- id: Q107
+  page: 10
+  dimension: input_content
+  text: Efforts were made to ensure the dataset does not include harmful, biased, or offensive content via manual inspection.
+- id: Q108
+  page: 10
+  dimension: output_content
+  text: This work was carried out with support from Lacuna Fund, an initiative co-founded by The Rockefeller Foundation, Google.org,
+    and Canada's International Development Research Centre. This research project has benefited from the Microsoft Accelerate
+    Foundation Models Research (AFMR)
+- id: Q109
+  page: 11
+  dimension: output_content
+  text: 'Also, we also appreciate the translators whose names we have listed below: 1. Amharic: Bereket Tilahun, Hana M. Tamiru,
+    Biniam Asmlash, Lidetewold Kebede 2. Hausa: Junaid Garba, Umma Abubakar, Jibrin Adamu, Ruqayya Nasir Iro 3. Swahili: Mohamed
+    Mwinyimkuu, Laanyu koone, Baraka Karuli Mgasa, Said Athumani Said 4. Yorùbá: Ifeoluwa Akinsola, Simeon Onaolapo, Ganiyat
+    Dasola Afolabi, Oluwatosin Koya 5. Zulu: Busisiwe Pakade, Rooweither Mabuya, Tholakele Zungu, Zanele Thembani'
+- id: Q110
+  page: 11
+  dimension: output_content
+  text: Lastly, we thank the human annotators who were not part of the translation team.
+- id: Q111
+  page: 11
+  dimension: output_content
+  text: We acknowledge the support of OpenAI for providing API credits through their Researcher Access API programme.
+- id: Q112
+  page: 11
+  dimension: output_content
+  text: Jesujoba Alabi acknowledges the support of the BMBF's (German Federal Ministry of Education and Research) SLIK project
+    under the grant 01IS22015C.
+- id: Q113
+  page: 11
+  dimension: output_content
+  text: The work has also been partially funded by BMBF through the TRAILS project (grant number 01IW24005).
+- id: Q114
+  page: 11
+  dimension: output_content
+  text: Miaoran Zhang received funding from the DFG (German Research Foundation) under project 232722074, SFB 1102.
+- id: Q115
+  page: 11
+  dimension: output_content
+  text: CEB acknowledges her AI4S fellowship within the "Generación D" initiative by Red.es, Ministerio para la Transformación
+    Digital y de la Función Pública, for talent attraction (C005/24-ED CV1), funded by NextGenerationEU through PRTR.
+- id: Q116
+  page: 11
+  dimension: output_content
+  text: R. Bawden's participation was partly funded by her chair in the PRAIRIE institute, funded by the French national agency
+    ANR, as part of the "Investissements d'avenir" programme under the reference ANR-19-P3IA-0001 and by the French Agence
+    Nationale de la Recherche (ANR) under the projects TraLaLaM ("ANR-23-IAS1-0006") and MaTOS ("ANR-22-CE23-0033").
+- id: Q117
+  page: 11
+  dimension: output_content
+  text: David Adelani acknowledges the funding of IVADO and the Canada First Research Excellence Fund.
+- id: Q118
+  page: 18
+  dimension: input_form
+  text: Each file contains 2500 sentences, and they are named in the format of a serial number followed by your first name.
+- id: Q119
+  page: 18
+  dimension: output_form
+  text: Please do not delete double empty rows, as they serve to separate paragraphs. Also, avoid deleting any rows, columns,
+    or provided text.
+- id: Q120
+  page: 18
+  dimension: output_content
+  text: Use the language field to input the translations. It is essential not to rely on translation engines, as our quality
+    assurance process can detect this. Depending on such tools may result in potential issues that you would need to address,
+    leading to additional work on your part.
+- id: Q121
+  page: 18
+  dimension: output_content
+  text: We will provide a list of extracted terminologies soon so that you can harmonize how terminologies are translated.
+- id: Q122
+  page: 18
+  dimension: input_form
+  text: The files are in .csv format, and you can open them using Google Sheets or Microsoft Excel (for offline work).
+- id: Q123
+  page: 19
+  dimension: input_form
+  text: Given that the translated documents vary in length in terms of sentences and tokens, and considering the maximum token
+    length limitations of the different LLMs used, we adopted a chunking approach for document-level evaluation.
+- id: Q124
+  page: 19
+  dimension: input_form
+  text: In this approach, documents were divided into smaller pseudo-documents that fit within the maximum length constraints
+    of the models.
+- id: Q125
+  page: 19
+  dimension: input_form
+  text: To establish an appropriate chunk size, each document was divided into fixed-size chunks of k sentences, with the
+    possibility that the final chunk may contain fewer than k sentences.
+- id: Q126
+  page: 19
+  dimension: input_form
+  text: We conducted an initial analysis, testing different values for k (5, 10, and 25), with k=1 serving as our sentence-level
+    setup.
+- id: Q127
+  page: 19
+  dimension: input_form
+  text: Our analysis revealed that Amharic and Yorùbá—languages with unique characteristics such as non-Latin scripts and
+    diacritics, respectively—had the largest average token counts across the tokenizers.
+- id: Q128
+  page: 19
+  dimension: input_form
+  text: To accommodate both languages in our experiments, we chose pseudo-documents with k=10.
+- id: Q129
+  page: 19
+  dimension: input_form
+  text: However, for the SFT models described in Appendix B.2, we used both k=5 and k=10.
+- id: Q130
+  page: 19
+  dimension: input_ontology
+  text: M2M-100 (Fan et al., 2020) is a transformer-based multilingual neural translation model from Meta, trained to translate
+    between 100 languages, including several African languages.
+- id: Q131
+  page: 19
+  dimension: input_ontology
+  text: 'It has three variants of different sizes: 400M parameters, 1.2B parameters, and 12B parameters.'
+- id: Q132
+  page: 19
+  dimension: input_ontology
+  text: For our experiments, we evaluated the 400M and 1.2B variants.
+- id: Q133
+  page: 19
+  dimension: input_ontology
+  text: NLLB (NLLB Team et al., 2024) is a model similar to M2M-100, with broader coverage, trained to translate between just
+    over 200 languages, including more than 50 African languages.
+- id: Q134
+  page: 19
+  dimension: input_ontology
+  text: 'It also has different sizes: 600M, 1.3B, 3.3B, and 54B parameters.'
+- id: Q135
+  page: 19
+  dimension: input_ontology
+  text: For this work, we evaluated the first three variants.
+- id: Q136
+  page: 19
+  dimension: input_ontology
+  text: MADLAD-400 (Kudugunta et al., 2023) is a multilingual translation model based on the T5 architecture (Raffel et al.,
+    2020), covering 450 languages, including many African languages.
+- id: Q137
+  page: 19
+  dimension: input_content
+  text: It was trained on data collected from the Common Crawl dataset.
+- id: Q138
+  page: 19
+  dimension: input_content
+  text: The dataset underwent a thorough self-audit to filter out noisy content and ensure its quality for training MT models.
+- id: Q139
+  page: 19
+  dimension: input_ontology
+  text: Toucan (Elmadany et al., 2024; Adebara et al., 2024) is another multilingual but Afro-centric translation model based
+    on the T5 architecture, covering 150 language pairs of African languages.
+- id: Q140
+  page: 19
+  dimension: input_content
+  text: It was first pre-trained on large multilingual texts covering over 500 African languages and then finetuned on translation
+    task covering over 100 language pairs.
+- id: Q141
+  page: 20
+  dimension: input_ontology
+  text: Aya-101 (Üstün et al., 2024) is an instruction-tuned mT5 model (Xue et al., 2021) designed to handle both discriminative
+    and generative multilingual tasks. With 13B parameters, it covers 100 languages and is capable of translating between
+    a wide range of languages, including African languages.
+- id: Q142
+  page: 20
+  dimension: input_content
+  text: Gemma2 (Gemma Team et al., 2024) is a decoder-only LLM trained on billions of tokens sourced from the web. The training
+    data primarily consists of English-language text, but it also includes code and mathematical content. While Gemma2 has
+    an English-centric focus, it also possesses multilingual capabilities. We evaluate the base Gemma2 model with 9B parameters,
+    as well as its instruction-tuned version.
+- id: Q143
+  page: 20
+  dimension: input_form
+  text: LLama3.1 (Dubey et al., 2024) is another decoder-only LLM trained on trillions of tokens across multiple languages.
+    It was fine-tuned using existing instruction datasets as well as synthetically generated instruction data to create its
+    instruction-tuned version. One advantage LLama3.1 has over other models is its context window of 128K tokens, the largest
+    among all models considered in this work, making it particularly suitable for document-based tasks such as document-level
+    translation. We evaluate the base LLama3.1 model with 8B parameters, as well as its instruction-tuned version.
+- id: Q144
+  page: 20
+  dimension: input_ontology
+  text: LLaMAX3 (Lu et al., 2024) is a multilingual LLM built on the LLama3 with 8B parameters as its base. It was trained
+    on 102 languages, including several African languages, through continued pretraining. Using an English instruction dataset
+    (Alpaca), it was further fine-tuned to create LLaMAX3-Alpaca. We evaluated both models and compared their performance
+    across various tasks.
+- id: Q145
+  page: 20
+  dimension: input_form
+  text: We perform supervised fine-tuning to tailor LLMs for translation tasks. To train sentence-level MT systems, we use
+    all parallel sentences from AFRIDOC-MT to construct the training set, enabling the LLMs to translate across multiple directions
+    and domains. Following Zhu et al. (2024b), we augment the parallel data with translation instructions, which are randomly
+    sampled from a predefined set of 31 MT instructions for each training example.
+- id: Q146
+  page: 21
+  dimension: input_form
+  text: To train document-level MT systems, we follow the same process, but train on longer segments formed by concatenating
+    multiple sentences.
+- id: Q147
+  page: 21
+  dimension: input_form
+  text: When fine-tuning, we use a learning rate of 5e−6 and an effective batch size of 64.
+- id: Q148
+  page: 21
+  dimension: output_form
+  text: Models are trained for only one epoch, as further training does not result in improvements and may even lead to performance
+    degradation.
+- id: Q149
+  page: 21
+  dimension: input_form
+  text: we fine-tuned the 1.3B version of NLLB-200 for sentence and pseudo-document (with 10 sentences) translation using
+    the Fairseq (Ott et al., 2019) codebase.
+- id: Q150
+  page: 21
+  dimension: input_content
+  text: We used all the training examples from 30 language directions across both domains.
+- id: Q151
+  page: 21
+  dimension: input_form
+  text: The model was fine-tuned for 50k steps using a learning rate of 5e−5, token batch size of 2048 and a gradient accumulation
+    of 2.
+- id: Q152
+  page: 21
+  dimension: output_form
+  text: The checkpoint with the lowest validation loss was selected as the best model for evaluation.
+- id: Q153
+  page: 21
+  dimension: output_form
+  text: The models were evaluated using different tools. For example, both the NLLB-200 and M2M-100 models were evaluated
+    with the Fairseq codebase, while Toucan and MADLAD-400 were evaluated using the Hugging Face (HF) codebase.
+- id: Q154
+  page: 21
+  dimension: output_form
+  text: All other LLMs, including LLama3.1 (both instruction-tuned and SFT models), Gemma, and Aya-101, were evaluated using
+    EleutherAI LM Evaluation Harness (lm-eval) tool (Biderman et al., 2024).
+- id: Q155
+  page: 21
+  dimension: output_form
+  text: In all cases, greedy decoding was used.
+- id: Q156
+  page: 21
+  dimension: input_form
+  text: The models evaluated have different context lengths. For encoder-decoder models, M2M-100 and NLLB have a maximum sequence
+    length of 1024 and 512 respectively.
+- id: Q157
+  page: 21
+  dimension: input_form
+  text: Aya-101 and MADALAD, based on the T5 architecture, do not have a pre-specified maximum sequence length, so we fixed
+    their maximum sequence length to 1024 for all experiments involving encoder-decoder models.
+- id: Q158
+  page: 21
+  dimension: input_form
+  text: However, for decoder-only models, Gemma and LLaMAX3 (based on LLama3) have a maximum sequence length of 8192, while
+    LLama3.1 has a maximum sequence length of 128K.
+- id: Q159
+  page: 21
+  dimension: output_form
+  text: Since all the decoder-only models were evaluated using LM Evaluation Harness, we used a similar setup for them, selecting
+    the maximum length based on the specific needs of each model.
+- id: Q160
+  page: 21
+  dimension: input_form
+  text: These numbers were chosen based on the statistics from Table 11.
+- id: Q161
+  page: 21
+  dimension: input_form
+  text: However, for Amharic, when translating pseudo-documents with 25 sentences and full documents, there were instances
+    exceeding the 95th percentile derived from the training statistics.
+- id: Q162
+  page: 21
+  dimension: input_form
+  text: Therefore, we increased the token limit specifically for Amharic.
+- id: Q163
+  page: 21
+  dimension: output_form
+  text: While the translation models we evaluated do not require prompts, MADLAD-400, requires a prefix of the form <2xx>
+    token, which is prepended to the source sentence.
+- id: Q164
+  page: 21
+  dimension: output_form
+  text: Similarly, Toucan uses just the target language ISO-693 code as prefix, which is prepended to the source sentence
+    (e.g., "swa" for Swahili).
+- id: Q165
+  page: 21
+  dimension: output_form
+  text: For other models, including Aya-101, we used three different prompts for sentence-level translation and document translation
+    experiments.
+- id: Q166
+  page: 21
+  dimension: output_form
+  text: The main difference between the prompts for these tasks is the explicit mention of "text" or "document" within the
+    prompt, as shown in Table 23.
+- id: Q167
+  page: 21
+  dimension: output_form
+  text: For the base models Gemma2, Llama3.1, LLaMAX3, and Aya-101, we prompted them directly using the respective prompts.
+- id: Q168
+  page: 21
+  dimension: output_form
+  text: However, for the instruction-tuned versions of Gemma2 and Llama3.1, we used their respective chat templates.
+- id: Q169
+  page: 21
+  dimension: output_form
+  text: For all Alpaca-based models, including our SFT models, we used the Alpaca template.
+- id: Q170
+  page: 21
+  dimension: output_form
+  text: We evaluate translation quality with BLEU (Papineni et al., 2002) and ChrF (Popović, 2015) using SacreBLEU (Post,
+    2018).
+- id: Q171
+  page: 21
+  dimension: output_form
+  text: We run significance tests using bootstrap resampling and report the 95%
+- id: Q172
+  page: 22
+  dimension: output_form
+  text: We also use AfriCOMET (Wang et al., 2024a) to evaluate the quality of the translation outputs.
+- id: Q173
+  page: 22
+  dimension: output_form
+  text: We report the chrF scores of the best prompt for each model and language direction in the main paper, with all additional
+    results provided in the Appendix C.
+- id: Q174
+  page: 22
+  dimension: input_ontology
+  text: For document-level experiments, we evaluated the LLMs using the same three prompts as in the sentence-level experiment.
+- id: Q175
+  page: 22
+  dimension: output_form
+  text: For evaluation, we used BLEU and chrF scores but excluded AfriCOMET due to its backbone model, AfroXLM-R-L (Alabi
+    et al., 2022; Adelani et al., 2024a), having a context length of 512 tokens.
+- id: Q176
+  page: 22
+  dimension: output_form
+  text: This made it impractical to compute COMET scores for document-level outputs.
+- id: Q177
+  page: 22
+  dimension: output_ontology
+  text: We use GPT-4o to assess the quality of translation output, as demonstrated by Sun et al. (2025), which shows a correlation
+    with human judgment.
+- id: Q178
+  page: 22
+  dimension: output_form
+  text: Due to the cost of this task, we limited our evaluation to a few selected models, including Aya-101, GPT-3.5, GPT-4o,
+    and LLaMAX3 fine-tuned on AFRIDOC-MT sentences and pseudo-documents of 10 sentences.
+- id: Q179
+  page: 22
+  dimension: output_ontology
+  text: We compared translations performed at the sentence-level and pseudo-document level in terms of fluency, content errors,
+    and cohesion errors—specifically lexical (LE) and grammatical (GE) errors—using the same definitions as Sun et al. (2025).
+- id: Q180
+  page: 22
+  dimension: output_ontology
+  text: GPT-4o is prompted to rate the fluency of a document on a scale from 1 to 5, where 5 indicates high fluency and 1
+    represents low fluency.
+- id: Q181
+  page: 22
+  dimension: output_form
+  text: This evaluation is conducted without providing any reference document.
+- id: Q182
+  page: 22
+  dimension: output_form
+  text: For the final fluency score, we report the average rating across all documents.
+- id: Q183
+  page: 22
+  dimension: output_ontology
+  text: GPT-4 is prompted to identify and list the mistakes, such as incorrect translations, omissions, additions, and any
+    other errors, by comparing the model's output to the reference translation.
+- id: Q184
+  page: 22
+  dimension: output_ontology
+  text: After identifying these errors, we count all of them and compute the average across all documents, reporting that
+    as the content error (CE).
+- id: Q185
+  page: 23
+  dimension: output_ontology
+  text: 'Cohesion: GPT-4 is prompted to rate cohesion-related mistakes, including lexical and grammatical errors, in the model''s
+    output, comparing it to the reference translation.'
+- id: Q186
+  page: 23
+  dimension: output_ontology
+  text: We count each error individually, compute the average across the documents, and report them as lexical errors (LE)
+    and grammatical errors (GE).
+- id: Q187
+  page: 23
+  dimension: output_ontology
+  text: Cohesion refers to how different parts of a text are connected using language structures like grammar and vocabulary.
+- id: Q188
+  page: 23
+  dimension: output_ontology
+  text: It ensures that sentences flow smoothly and the text makes sense as a whole.
+- id: Q189
+  page: 23
+  dimension: output_ontology
+  text: 'Lexical Cohesion Mistakes: Issues with vocabulary usage, incorrect or missing synonyms, or overuse of certain words
+    that disrupt the flow.'
+- id: Q190
+  page: 23
+  dimension: output_ontology
+  text: 'Grammatical Cohesion Mistakes: Problems with pronouns, conjunctions, or grammatical structures that link sentences
+    and clauses.'
+- id: Q191
+  page: 24
+  dimension: output_ontology
+  text: Fluency can only have values between 1 and 5. However, the other metrics, including CE, GE, and LE, do not have a
+    specific range and can take on any value because they are counts.
+- id: Q192
+  page: 24
+  dimension: output_content
+  text: Beyond using GPT-4o as a judge, we also conduct human evaluation on a subset of outputs from GPT-3.5, LLaMAX3-SFT1,
+    and LLaMAX3-SFT10 for two domains, focusing specifically on translation into five African languages due to cost constraints.
+- id: Q193
+  page: 24
+  dimension: output_content
+  text: Translation into English was excluded, as existing automatic metrics, including GPT-based evaluations, are already
+    reliable for this direction.
+- id: Q194
+  page: 24
+  dimension: output_content
+  text: For the human evaluation, three native speakers of the African languages—primarily translators involved in the dataset
+    creation—were recruited.
+- id: Q195
+  page: 24
+  dimension: output_content
+  text: Each annotator was assigned 80 documents to evaluate, tasked with marking as many error spans as possible and rating
+    the overall quality on a scale from 0 to 100.
+- id: Q196
+  page: 24
+  dimension: output_form
+  text: This annotation followed the error span annotation (ESA) (Kocmi et al., 2024) protocol as implemented within the Appraise
+    Evaluation Framework (Federmann, 2018).
+- id: Q197
+  page: 24
+  dimension: output_content
+  text: To assess consistency and inter-annotator agreement, 30 of the 80 documents were shared among all three annotators.
+- id: Q198
+  page: 24
+  dimension: output_content
+  text: Each annotator was remunerated with $55.15
+- id: Q199
+  page: 24
+  dimension: output_content
+  text: Alongside the human direct assessment of the translation outputs, we shared a subset of the outputs with one author
+    per language, each a native speaker.
+- id: Q200
+  page: 24
+  dimension: output_content
+  text: 'They were tasked with analyzing the outputs to answer two key questions: (1) What common errors or flaws do the models
+    exhibit across different setups? and (2) How fluent are the translation outputs produced by the models across the various
+    settings?'
+- id: Q201
+  page: 24
+  dimension: output_form
+  text: Given that AFRIDOC-MT is a document-level translation dataset, and due to the limited context length of most translation
+    models and LLMs, which makes it impossible to translate a full document at once, we opted to translate the sentences within
+    the documents and then merge them back to form the complete document. For document-level evaluation, we split the documents
+    into chunks of 10 sentences and translate these chunks using the different models.
+- id: Q202
+  page: 25
+  dimension: output_form
+  text: In Tables 19 and 20 we provide the full results on the merged pseudo-documents using d-chrF and d-BLEU.
+- id: Q203
+  page: 25
+  dimension: output_form
+  text: It is important to note that we also trained and evaluated NLLB-200 for pseudo-document translation. However, due
+    to its 512-token maximum sequence length, it is not competitive.
+- id: Q204
+  page: 25
+  dimension: output_form
+  text: Our results show that both LLama3.1 and LLaMAX3 models, when fine-tuned on sentences, performed significantly worse
+    on pseudo-document evaluations compared to the same models fine-tuned on pseudo-documents for both domains.
+- id: Q205
+  page: 25
+  dimension: input_form
+  text: All these models were trained using a similar setup, with the primary difference being the data used for fine-tuning.
+- id: Q206
+  page: 25
+  dimension: output_form
+  text: Overall, no clear trend is observed in MT performance across language family classes. However, Amharic (a non-Latin
+    script language) and Yorùbá (a heavily diacriticitized language) result in the lowest chrF scores, while Swahili—the most
+    widely spoken indigenous African language—performs best.
+- id: Q207
+  page: 25
+  dimension: output_form
+  text: In Tables 21 and 22 we present the average GPT-4o evaluation results for four models.
+- id: Q208
+  page: 25
+  dimension: output_ontology
+  text: 'When translating into African languages, there is no clear pattern: for example, GPT-3.5, despite having the lowest
+    fluency score, also had the fewest content, lexical, and grammatical errors, which is counterintuitive.'
+- id: Q209
+  page: 26
+  dimension: output_content
+  text: We were able to obtain DA scores from three annotators for all the languages.
+- id: Q210
+  page: 26
+  dimension: output_content
+  text: For each language, we calculated inter-annotator agreement using Krippendorff's alpha α over 30 document instances.
+- id: Q211
+  page: 26
+  dimension: output_content
+  text: We obtained α scores of 0.46, 0.57, 0.40, and 0.81, and 0.54 for Amharic, Hausa, Swahili, Yorùbá, and Zulu respectively.
+- id: Q212
+  page: 26
+  dimension: output_content
+  text: These are relatively low scores, except for Yorùbá.
+- id: Q213
+  page: 26
+  dimension: output_form
+  text: We present the average DA scores in Tables 10 and 14 for the health and tech domains, respectively.
+- id: Q214
+  page: 26
+  dimension: output_form
+  text: The results show that annotators rate documents translated at the sentence-level as higher quality than those translated
+    at the pseudo-document level.
+- id: Q215
+  page: 26
+  dimension: output_form
+  text: Additionally, GPT-3.5 received the lowest ratings among the three models.
+- id: Q216
+  page: 26
+  dimension: output_form
+  text: LLaMAX3-SFT1, a model trained on sentence-level data, was rated the best across all languages when evaluated on sentences.
+- id: Q217
+  page: 26
+  dimension: output_form
+  text: However, when evaluated on pseudo-documents, its performance was rated lower than that of LLaMAX3-SFT10.
+- id: Q218
+  page: 26
+  dimension: output_ontology
+  text: These findings are consistent with the d-chrF scores for the models, but they do not align with the evaluations from
+    GPT-4o as a judge.
+- id: Q219
+  page: 26
+  dimension: output_ontology
+  text: These results suggest that using GPT-4o as a translation judge is not yet well-suited for low-resource languages.
+- id: Q220
+  page: 26
+  dimension: output_form
+  text: We focus on the sentence-level task and translated across all 30 directions for which the model was trained, evaluating
+    both NLLB-200 (1.3B) and its fine-tuned version using d-chrF.
+- id: Q221
+  page: 26
+  dimension: output_form
+  text: The results shows that translating into Yorùbá, which is the direction with the lowest d-chrF score from English among
+    all the languages, benefited the most.
+- id: Q222
+  page: 26
+  dimension: input_form
+  text: One major factor contributing to this is the presence of diacritics.
+- id: Q223
+  page: 26
+  dimension: output_form
+  text: Furthermore, looking at their actual performances and not just the differences, our results show that translations
+    into Swahili and English—both relatively high-resource languages—yield higher BLEU and chrF scores (see Figures 11 and
+    12), even after supervised finetuning.
+- id: Q224
+  page: 26
+  dimension: output_form
+  text: Hence, there is much to be done to improve translation performance between low-resource language pairs.
+- id: Q225
+  page: 28
+  dimension: output_form
+  text: Change (∆) in d-BLEU and d-chrF for sentence evaluation comparing NLLB1.3B before and after supervised finetuning
+    on AFRIDOC-MT
+- id: Q226
+  page: 29
+  dimension: output_form
+  text: 'Table 15: Performance results of various models on the sentence-level task for the Health domain, measured using
+    document level metric d-BLEU and d-chrF.'
+- id: Q227
+  page: 29
+  dimension: output_form
+  text: 'Table 16: Performance results of various models on the sentence-level task for the Tech domain, measured using document
+    level metric d-BLEU and d-chrF.'
+- id: Q228
+  page: 30
+  dimension: output_form
+  text: 'Table 17: Performance results of various models on the sentence-level task for the Health domain, measured using
+    sentence level metric s-BLEU, s-CHRF, and s-COMET.'
+- id: Q229
+  page: 31
+  dimension: output_form
+  text: Performance results of various models on the sentence-level task for the Tech domain, measured using sentence level
+    metric s-BLEU, s-CHRF, and s-COMET.
+- id: Q230
+  page: 32
+  dimension: output_form
+  text: 'Table 19: Performance results of various models on the pseudo-document-level task for the Health domain, measured
+    using document level metric d-BLEU and d-CHRF.'
+- id: Q231
+  page: 32
+  dimension: output_form
+  text: 'Table 20: Performance results of various models on the pseudo-document-level task for the Tech domain, measured using
+    document level metric d-BLEU and d-CHRF.'
+- id: Q232
+  page: 33
+  dimension: output_form
+  text: 'Table 21: Document-level evaluation in the health domain, judged by GPT-4o. Compares sentence- vs. document-level
+    outputs on Fluency (1–5 scale), Content Errors (CE), Lexical (LE), and Grammatical Cohesion Errors (GE).'
+- id: Q233
+  page: 33
+  dimension: output_content
+  text: 'Table 21: Document-level evaluation in the health domain, judged by GPT-4o.'
+- id: Q234
+  page: 34
+  dimension: output_form
+  text: Document-level evaluation in the tech domain, judged by GPT-4o. Compares sentence- vs. document-level outputs on Fluency
+    (1–5 scale), Content Errors (CE), Lexical (LE), and Grammatical Cohesion Errors (GE).
+- id: Q235
+  page: 35
+  dimension: input_ontology
+  text: The task prompts used for evaluating LLMs are applied to both sentence-level and document-level translation tasks.
+- id: Q236
+  page: 37
+  dimension: output_form
+  text: 'Figure 19: d-chrF scores for some LLMs for sentence-level translation using different prompts when translating into
+    African languages'
+- id: Q237
+  page: 37
+  dimension: output_form
+  text: 'Figure 20: d-chrF scores for some LLMs for sentence-level translation using different prompts when translating into
+    African languages'
+- id: Q238
+  page: 37
+  dimension: output_form
+  text: 'Figure 21: d-chrF scores for some LLMs for sentence-level translation using different prompts when translating into
+    English'
+- id: Q239
+  page: 37
+  dimension: output_form
+  text: 'Figure 22: d-chrF scores for some LLMs for sentence-level translation using different prompts when translating into
+    English'
+coverage_strengths:
+- user_priority: Document-level translation structural demands
+  benchmark_coverage: 'The benchmark explicitly targets document-level translation of multi-sentence
+
+    texts, evaluating context-dependent phenomena (coreference, lexical cohesion,
+
+    lexical disambiguation) that the user acknowledges are broadly shared across
+
+    genres [Q15, Q16]. Pseudo-document chunking at k=10 sentences mirrors the
+
+    multi-sentence structure of bureau notices [Q48, Q49].
+
+    '
+  dimension: input_ontology
+- user_priority: Amharic language coverage in Ethiopic script
+  benchmark_coverage: 'Amharic is one of the five target languages and is explicitly handled in
+
+    Ethiopic script. The benchmark documents tokenization challenges specific to
+
+    Amharic''s non-Latin script and accommodates them with increased token limits
+
+    [Q127, Q162], providing operational evidence that Amharic script processing
+
+    has been addressed. d-chrF is selected as the primary metric partly because
+
+    it captures morphological richness relevant to Amharic [Q53].
+
+    '
+  dimension: input_form
+- user_priority: Human annotation with native Amharic speakers
+  benchmark_coverage: 'Four expert Amharic translators (named: Bereket Tilahun, Hana M. Tamiru,
+
+    Biniam Asmlash, Lidetewold Kebede) were recruited through a native-speaker
+
+    language coordinator [Q109, Q24]. Human evaluation annotators were also
+
+    native speakers, primarily drawn from the translation team [Q194]. This
+
+    provides a documented native-speaker annotation chain for Amharic, even if
+
+    domain expertise is unverified.
+
+    '
+  dimension: output_content
+- user_priority: Multi-model evaluation breadth
+  benchmark_coverage: 'The benchmark evaluates 12 model configurations including NLLB-200, GPT-4o,
+
+    LLaMAX3, and fine-tuned variants [Q37, Q39, Q41], providing comparative
+
+    baselines across encoder-decoder and decoder-only architectures relevant to
+
+    translation system selection for the deployment context.
+
+    '
+  dimension: input_ontology
+- user_priority: Translation quality metrics for morphologically rich Amharic
+  benchmark_coverage: 'chrF is explicitly selected as the primary metric because it better captures
+
+    the morphological richness of African languages including Amharic [Q53].
+
+    Multi-layered evaluation combines d-chrF, d-BLEU, GPT-4o-as-judge, and human
+
+    direct assessment [Q83], providing redundant quality signals.
+
+    '
+  dimension: output_form
+coverage_gap_analysis:
+- user_priority: Agricultural input subsidy, land-use policy, and credit-scheme document genres
+  benchmark_coverage: 'NOT DOCUMENTED — the benchmark covers only health and IT news genres [Q1, Q2,
+
+    Q80]. No agricultural proclamation, land-use regulation, or financial
+
+    credit-scheme document type appears in any split. The paper acknowledges that
+
+    TICO-19 is the only other document-level African-language MT dataset and it
+
+    is restricted to COVID-19 health topics [Q14], confirming the complete absence
+
+    of regulatory/agricultural genres from the benchmarking landscape. The
+
+    translationese risk compounds this: all source material originates in English
+
+    [Q103], whereas the target deployment translates from Amharic bureau documents.
+
+    '
+  gap_type: full
+  web_search_target: Amharic machine translation benchmark agricultural legal regulatory Ethiopian government proclamation
+    evaluation dataset
+- user_priority: Proclamation-register Amharic terminology (subsidy schemes, land-tenure, cooperative law)
+  benchmark_coverage: 'NOT DOCUMENTED — the benchmark''s vocabulary is drawn entirely from health and
+
+    technology news sources [Q18, Q22]. A pre-translation terminology workshop was
+
+    conducted and a harmonization list promised [Q26, Q121], but these resources
+
+    are specific to health and IT terminology, not to Ethiopian federal proclamation
+
+    register vocabulary. The paper explicitly acknowledges that AFRIDOC-MT may
+
+    reflect a bias toward English structure and cultural framing [Q105], further
+
+    distancing it from the legal-administrative Amharic register operative in the
+
+    deployment.
+
+    '
+  gap_type: full
+  web_search_target: Ethiopian agricultural proclamation Amharic terminology glossary ministry agriculture ATA subsidy cooperative
+    land tenure translation
+- user_priority: Annotators with federal bureau or agricultural/legal translation domain expertise
+  benchmark_coverage: 'PARTIAL — expert translators were recruited through a native-speaker coordinator
+
+    [Q24] and a terminology workshop was held [Q26], but no documentation of
+
+    institutional affiliation, domain specialization, or familiarity with
+
+    agricultural/legal Amharic is provided for the four named Amharic translators
+
+    [Q109]. The preferred ground-truth authority identified by the user (domain-
+
+    trained federal bureau translators) is entirely absent from the annotator pool.
+
+    Inter-annotator agreement for Amharic was only 0.46 (Krippendorff''s alpha)
+
+    [Q211], suggesting labeling consistency challenges that would compound in a
+
+    specialized domain.
+
+    '
+  gap_type: partial
+  web_search_target: AFRIDOC-MT Amharic translator background domain expertise institutional affiliation Ethiopia government
+    translation
+- user_priority: Terminological consistency scoring across multi-clause documents
+  benchmark_coverage: 'NOT DOCUMENTED — the output scoring framework evaluates fluency, content
+
+    errors, and lexical/grammatical cohesion [Q54, Q55, Q187–Q190] but contains
+
+    no rubric component for terminological consistency — the stable cross-clause
+
+    rendering of specific proclamation-derived term names. The scoring definitions
+
+    address vocabulary usage and synonym issues [Q189] but in the context of news
+
+    discourse flow rather than legal term stability. GPT-4o''s unreliability for
+
+    African language translation [Q67, Q99, Q219] further limits confidence in
+
+    the cohesion error counts as proxies for terminological precision.
+
+    '
+  gap_type: full
+  web_search_target: terminological consistency evaluation metric machine translation legal administrative documents African
+    languages
+- user_priority: Amhara sub-regional Amharic register and dialect features
+  benchmark_coverage: 'NOT DOCUMENTED — the benchmark targets Amharic broadly without specifying
+
+    which regional variety or administrative register is represented. No
+
+    documentation discusses whether the four Amharic translators reflect a
+
+    national standard Amharic, Addis Ababa register, or Amhara-region bureau
+
+    register. The translationese risk [Q103, Q104, Q105] means translated
+
+    Amharic may not reflect the vocabulary patterns of Amhara regional bureau
+
+    documents at all.
+
+    '
+  gap_type: full
+  web_search_target: Amhara region Amharic dialect administrative register variation Ethiopian NLP benchmark sub-national
+- user_priority: Document structure fidelity (numbered clauses, tables, signature blocks)
+  benchmark_coverage: 'PARTIAL — the benchmark preserves paragraph structure in its annotation
+
+    workflow [Q119] and realigns translated sentences into complete documents for
+
+    metric computation [Q51, Q57], but no metric evaluates structural fidelity
+
+    of numbered clauses, tables, or signature blocks. The user indicates format
+
+    preservation is contingent on model modality and is not an absolute
+
+    requirement for text-only models, making this a partial gap relevant primarily
+
+    if the deployment evolves toward multimodal or format-preserving translation.
+
+    '
+  gap_type: partial
+  web_search_target: document structure preservation evaluation machine translation tables numbered clauses administrative
+    legal African languages benchmark

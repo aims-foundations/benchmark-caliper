@@ -442,7 +442,8 @@ def _which(cmd: str) -> bool:
 #           registry (3a-assemble) + Sonnet narrative (3a-consolidate)
 # ===================================================================
 
-def step_1a_extract(pdf_path: Path, name: str, max_workers: int = 1) -> Path:
+def step_1a_extract(pdf_path: Path, name: str, max_workers: int = 1,
+                    max_pages: int = 80) -> Path:
     """Per-page Haiku extraction with on-disk caching (implements step 3a-extract).
 
     NOTE: Named step_1a_extract for legacy reasons; this is step 3a-extract in the
@@ -459,6 +460,12 @@ def step_1a_extract(pdf_path: Path, name: str, max_workers: int = 1) -> Path:
     under the lowest common personal-tier cap (50k TPM for Haiku). Bump it
     if you have a higher tier — total wall-clock for 30 pages at 1 worker
     is ~2-3 minutes.
+
+    `max_pages` caps extraction to the first N pages (default 80). Papers
+    with extensive appendices (e.g. per-language result tables) can exceed
+    API token limits; the core content is almost always in the first 50-80
+    pages. Cached pages beyond the cap are removed so downstream steps
+    (assemble, consolidate) don't consume them.
     """
     _paper_dir(name).mkdir(parents=True, exist_ok=True)
     cache_dir = PAGE_CACHES / name
@@ -472,6 +479,19 @@ def step_1a_extract(pdf_path: Path, name: str, max_workers: int = 1) -> Path:
         if not page_files:
             print("ERROR: split_pdf.sh produced no page files", file=sys.stderr)
             sys.exit(1)
+
+        # === Cap page count and prune stale cache ===
+        total_in_pdf = len(page_files)
+        if max_pages and total_in_pdf > max_pages:
+            print(f"[3a-extract] Capping at {max_pages}/{total_in_pdf} pages "
+                  f"(skipping appendix pages {max_pages + 1}-{total_in_pdf})")
+            page_files = page_files[:max_pages]
+            # Remove cached extractions beyond the cap so downstream steps
+            # (assemble, consolidate) don't consume oversized context.
+            for stale in sorted(cache_dir.glob("page_*.txt")):
+                page_num = int(stale.stem.split("_")[1])
+                if page_num > max_pages:
+                    stale.unlink()
 
         # === Determine which pages still need extraction ===
         # Page files that already have a cached .txt are skipped — this makes
@@ -2211,6 +2231,13 @@ def parse_args() -> argparse.Namespace:
         "in CI / dev to enforce the gate.",
     )
     p.add_argument(
+        "--max-pages",
+        type=int,
+        default=80,
+        help="Cap PDF extraction at the first N pages (default: 80). "
+        "Prevents token-limit errors on papers with extensive appendices.",
+    )
+    p.add_argument(
         "--hf-dataset",
         help="HuggingFace dataset ID (e.g. masakhane/afrisenti). "
         "Enables Step 5b dataset analysis. Also checks benchmarks/hf_links.json.",
@@ -2392,7 +2419,7 @@ def main() -> None:
 
         # === Step 3a: paper -> per-page extractions -> assemble registry -> narrative ===
         _ledger_begin(name, "3a-extract")
-        step_1a_extract(pdf_path, name)
+        step_1a_extract(pdf_path, name, max_pages=args.max_pages)
         _ledger_end(name)
 
         _ledger_begin(name, "3a-assemble")
@@ -2536,7 +2563,7 @@ def _run_single_step(args: argparse.Namespace, pdf_path: Path, name: str) -> Non
             )
         elif args.step == "3a-extract":
             _ledger_begin(name, "3a-extract")
-            step_1a_extract(pdf_path, name)  # legacy name; see docstring
+            step_1a_extract(pdf_path, name, max_pages=args.max_pages)
         elif args.step == "3a-assemble":
             cache_dir = PAGE_CACHES / name
             if not any(cache_dir.glob("page_*.txt")) and not client.DRY_RUN:

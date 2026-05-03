@@ -1,0 +1,6 @@
+{
+  "Q1": "Yes the dataset covers general domains, however booking buses or ride sharing in Ethiopia has not that much different booking work flows than the others. We expect the system to handle all expected scenarios.",
+  "Q2": "Yes I believe the above listed conventions reflects users' natural utterances  and we expect the system to extract them correctly",
+  "Q3": "Yes the data is curated by native speakers, however we expect some code-switching in case of Amharic",
+  "Q4": ""
+}

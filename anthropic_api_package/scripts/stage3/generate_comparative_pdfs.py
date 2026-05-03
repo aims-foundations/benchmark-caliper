@@ -79,6 +79,8 @@ COMPARATOR_MAP = {
     "arabicmmlu": "mmlu",
     "laila": "asap_pp",
     "toxigen": "civil_comments",
+    "afridoc_mt_document_level_mt_corpus_for_african_languages": "flores200",
+    "injongo_a_multicultural_intent_detection_and_slot_filling_dataset_for_16_african_languages": "massive",
 }
 
 
@@ -88,6 +90,53 @@ FONT_PATHS = [
     "/usr/share/fonts/truetype/freefont",
     "/usr/local/share/fonts/freefont",
 ]
+
+NOTO_FONT_DIR = "/usr/share/fonts/truetype/noto"
+
+_SCRIPT_RANGES = [
+    (0x0900, 0x097F, "NotoSansDevanagari"),
+    (0x0980, 0x09FF, "NotoSansBengali"),
+    (0x0A00, 0x0A7F, "NotoSansGurmukhi"),
+    (0x0A80, 0x0AFF, "NotoSansGujarati"),
+    (0x0B00, 0x0B7F, "NotoSansOriya"),
+    (0x0B80, 0x0BFF, "NotoSansTamil"),
+    (0x0C00, 0x0C7F, "NotoSansTelugu"),
+    (0x0C80, 0x0CFF, "NotoSansKannada"),
+    (0x0D00, 0x0D7F, "NotoSansMalayalam"),
+    (0x0D80, 0x0DFF, "NotoSansSinhala"),
+    (0x0600, 0x06FF, "NotoSansArabic"),
+    (0x0590, 0x05FF, "NotoSansHebrew"),
+    (0x0E00, 0x0E7F, "NotoSansThai"),
+    (0x1000, 0x109F, "NotoSansMyanmar"),
+    (0x0E80, 0x0EFF, "NotoSansLao"),
+    (0x1780, 0x17FF, "NotoSansKhmer"),
+    (0x1200, 0x137F, "NotoSansEthiopic"),
+    (0x1380, 0x139F, "NotoSansEthiopic"),
+    (0x2D80, 0x2DDF, "NotoSansEthiopic"),
+    (0xAB00, 0xAB2F, "NotoSansEthiopic"),
+]
+
+_noto_registered = set()
+
+
+def _register_noto_fonts():
+    noto_dir = Path(NOTO_FONT_DIR)
+    if not noto_dir.exists():
+        return
+    needed = {stem for _, _, stem in _SCRIPT_RANGES}
+    for stem in sorted(needed):
+        regular = noto_dir / f"{stem}-Regular.ttf"
+        if not regular.exists():
+            continue
+        try:
+            pdfmetrics.registerFont(TTFont(stem, str(regular)))
+            pdfmetrics.registerFontFamily(
+                stem, normal=stem, bold=stem, italic=stem, boldItalic=stem,
+            )
+            _noto_registered.add(stem)
+        except Exception:
+            pass
+
 
 FONT_REGULAR = "FreeSans"
 FONT_BOLD = "FreeSansBold"
@@ -114,9 +163,10 @@ def _register_fonts():
                 italic="FreeSansOblique",
                 boldItalic="FreeSansBoldOblique",
             )
+            _register_noto_fonts()
             return
     print(
-        "WARNING: FreeSans fonts not found. Using Helvetica (no Devanagari).",
+        "WARNING: FreeSans fonts not found. Using Helvetica (no non-Latin support).",
         file=sys.stderr,
     )
     FONT_REGULAR = "Helvetica"
@@ -201,6 +251,76 @@ def _build_styles():
     return styles
 
 
+# === Script wrapping ===
+
+def _char_to_noto_font(ch):
+    cp = ord(ch)
+    for start, end, font in _SCRIPT_RANGES:
+        if start <= cp <= end and font in _noto_registered:
+            return font
+    return None
+
+
+def wrap_scripts(text):
+    """Wrap non-Latin characters in <font face="NotoSansXXX"> tags."""
+    if not _noto_registered:
+        return text
+
+    result = []
+    i = 0
+    n = len(text)
+    cur_font = None
+    cur_run = []
+
+    def _flush():
+        nonlocal cur_font, cur_run
+        if cur_font and cur_run:
+            result.append(
+                f'<font face="{cur_font}">{"".join(cur_run)}</font>')
+            cur_run = []
+            cur_font = None
+
+    while i < n:
+        ch = text[i]
+
+        if ch == '<':
+            _flush()
+            end = text.find('>', i)
+            if end == -1:
+                result.append(text[i:])
+                break
+            result.append(text[i:end + 1])
+            i = end + 1
+            continue
+
+        if ch == '&':
+            _flush()
+            end = text.find(';', i)
+            if end == -1:
+                result.append(text[i:])
+                break
+            result.append(text[i:end + 1])
+            i = end + 1
+            continue
+
+        font = _char_to_noto_font(ch)
+        if font:
+            if font == cur_font:
+                cur_run.append(ch)
+            else:
+                _flush()
+                cur_font = font
+                cur_run = [ch]
+        else:
+            _flush()
+            result.append(ch)
+
+        i += 1
+
+    _flush()
+    return "".join(result)
+
+
 # === Helpers ===
 
 def escape(text):
@@ -209,6 +329,11 @@ def escape(text):
     text = text.replace("<", "&lt;")
     text = text.replace(">", "&gt;")
     return text
+
+
+def render_text(text):
+    """Escape XML, colorize citations, wrap non-Latin scripts."""
+    return wrap_scripts(colorize_citations(escape(text)))
 
 
 def truncate_excerpt(text, max_chars=350):
@@ -418,16 +543,16 @@ def build_comparative_pdf(regional_dir, comparator_dir, output_path, styles):
             low = line.lower()
             if low.startswith("use case and domain:"):
                 story.append(Paragraph(
-                    f"<b>Use case:</b> {escape(line.split(':', 1)[1].strip())}",
+                    f"<b>Use case:</b> {wrap_scripts(escape(line.split(':', 1)[1].strip()))}",
                     styles["Body"],
                 ))
             elif low.startswith("target population:"):
                 story.append(Paragraph(
-                    f"<b>Target population:</b> {escape(line.split(':', 1)[1].strip())}",
+                    f"<b>Target population:</b> {wrap_scripts(escape(line.split(':', 1)[1].strip()))}",
                     styles["Body"],
                 ))
             else:
-                story.append(Paragraph(escape(line), styles["Body"]))
+                story.append(Paragraph(wrap_scripts(escape(line)), styles["Body"]))
         story.append(Spacer(1, 8))
 
     # === Risk Ratings ===
@@ -565,7 +690,7 @@ def build_comparative_pdf(regional_dir, comparator_dir, output_path, styles):
             styles["ExcerptLabel"],
         ))
         story.append(Paragraph(
-            colorize_citations(escape(r_summary)),
+            render_text(r_summary),
             styles["Excerpt"],
         ))
         story.append(Spacer(1, 6))
@@ -576,7 +701,7 @@ def build_comparative_pdf(regional_dir, comparator_dir, output_path, styles):
             styles["ExcerptLabel"],
         ))
         story.append(Paragraph(
-            colorize_citations(escape(c_summary)),
+            render_text(c_summary),
             styles["Excerpt"],
         ))
 
@@ -639,9 +764,9 @@ def build_comparative_pdf(regional_dir, comparator_dir, output_path, styles):
                 f"[{c_conf} confidence]" if isinstance(c_score, (int, float)) else
                 f"<b>{escape(comparator_name)}</b> — {c_score}",
                 styles["CellBold"])],
-            [Paragraph(colorize_citations(escape(r_just)) if r_just else "<i>No justification available</i>",
+            [Paragraph(render_text(r_just) if r_just else "<i>No justification available</i>",
                         styles["Excerpt"]),
-             Paragraph(colorize_citations(escape(c_just)) if c_just else "<i>No justification available</i>",
+             Paragraph(render_text(c_just) if c_just else "<i>No justification available</i>",
                         styles["Excerpt"])],
         ]
 
@@ -679,8 +804,8 @@ def build_comparative_pdf(regional_dir, comparator_dir, output_path, styles):
                            styles["CellBold"])],
             ]
             for i in range(n_rows):
-                r_cell = colorize_citations(escape(r_ev[i])) if i < len(r_ev) else ""
-                c_cell = colorize_citations(escape(c_ev[i])) if i < len(c_ev) else ""
+                r_cell = render_text(r_ev[i]) if i < len(r_ev) else ""
+                c_cell = render_text(c_ev[i]) if i < len(c_ev) else ""
                 ev_rows.append([
                     Paragraph(r_cell, styles["Excerpt"]),
                     Paragraph(c_cell, styles["Excerpt"]),

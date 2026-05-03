@@ -1,0 +1,422 @@
+name: Amhara Region Agricultural and Microfinance Translation Cohort
+abbreviation: AMHARA-AGFIN
+deployment_context:
+  country: Ethiopia
+  region: Amhara
+  sub_regional_scope: Rural and peri-urban areas served by agricultural cooperatives
+    and microfinance institutions (ACSI, ADCSI service areas)
+  deployment_description: AI translation system (NLLB, text-only) converting official
+    government documents — agricultural input subsidy notices, land-use policy updates,
+    and credit-scheme terms from federal and regional bureaus — into Amharic for use
+    by farmer cooperative leaders and rural microfinance clients in the Amhara region
+    of Ethiopia.
+  benchmark_assessed: nllb
+  assessment_year: 2025 (current assessment cycle; NLLB paper published 2022; Nature
+    publication 2024)
+target_population:
+  primary_roles:
+  - Farmer cooperative leaders and extension workers interpreting binding subsidy
+    and land-policy documents
+  - Rural microfinance clients (ACSI borrowers, ADCSI borrowers) acting on credit-scheme
+    terms and repayment conditions
+  - Cooperative administrative staff receiving translated policy notices from federal
+    and regional bureaus
+  geographic_concentration:
+    region: Amhara Region, Ethiopia
+    agro_ecological_zones:
+    - Highland zones (e.g., North and South Gondar, North and South Wollo zones)
+    - Lowland and semi-arid zones (e.g., Awi, Wag Himra, Oromia Special Zone of Amhara)
+    zone_level_variation_note: '[NEEDS VERIFICATION — deferred: likely unsearchable
+      (sub-national administrative vocabulary differences require domain expert /
+      stakeholder elicitation; no searchable public documentation of zone-by-zone
+      ACSI vs. ADCSI vocabulary divergence found)]'
+  settlement_type: Predominantly rural; some peri-urban cooperative and MFI branch
+    office contexts
+  estimated_population_size: 'ACSI: approximately 1 million active borrowers per 2018
+    World Bank Group microfinance performance assessment (cited in peer-reviewed literature
+    as 1,056,390); operates across all 10 Amhara administrative zones with 461 branch
+    offices; some sources cite up to ~2 million clients in rural Ethiopia in more
+    recent estimates. ADCSI borrower count not separately documented in publicly accessible
+    sources. Source: Springer Discover Sustainability (2023) — [|https://link.springer.com/article/10.1007/s43621-023-00161-7|];
+    Academia.edu livelihood study — [|https://www.academia.edu/99257540/The_role_of_Amhara_credit_and_saving_institution_in_improving_rural_households_livelihood|]'
+languages:
+  target_language: Amharic (amh)
+  script: 'Ethiopic (Ge''ez), ISO 15924: Ethi'
+  source_document_languages:
+  - Amharic (federal and regional bureau documents in Amharic register)
+  - Possibly other Ethiopian official registers (e.g., documents originating from
+    federal ministries may be in Amharic; regional variations may exist)
+  register_note: Source documents are written in formal bureaucratic register — numbered
+    clause structures, legal-administrative phrasing, and domain-specific agricultural
+    and financial terminology derived from federal proclamations and regional bureau
+    standards. The target population uses an established administrative vocabulary
+    shaped by prior government communications; translation must align with this familiar
+    register rather than producing generic or colloquial Amharic.
+  diglossia_or_register_variation: Ethiopian Amharic exhibits significant register
+    stratification between formal written (fidel-based bureaucratic prose) and everyday
+    spoken varieties. Cooperative leaders and rural borrowers are accustomed to a
+    specific administrative lexicon established through prior government contact;
+    departure from this lexicon reduces practical uptake.
+  sub_national_register_variation: '[NEEDS VERIFICATION — deferred: likely unsearchable
+    (lived administrative practice); no public documentation of ACSI vs. ADCSI vocabulary
+    divergence or zone-by-zone register differences found in searches; requires domain
+    expert elicitation]'
+writing_system:
+  script: Ethiopic (Ge'ez script)
+  script_note: Amharic uses the Ge'ez abugida script, written left-to-right. NLLB
+    includes a dedicated 8,000-token SentencePiece vocabulary trained specifically
+    for Amharic and Tigrinya to support this script. No RTL rendering challenges apply.
+    Ge'ez script is unambiguous for Amharic in this deployment context.
+  nlp_tooling_maturity: 'Amharic is the best-resourced Ethiopian language for NLP.
+    The 2024 EthioLLM project introduced multilingual LLMs and EthioBenchmark covering
+    five Ethiopian languages including Amharic across NLP tasks (NER, sentiment, MT,
+    summarization, QA). EthioMT (2024) introduced parallel corpora for 15 Ethiopian
+    languages. However, no domain-specific NLP tooling for agricultural/financial/bureaucratic
+    Amharic terminology exists; all available benchmarks cover general-domain or news/social
+    media content. Source: EthioLLM paper (arXiv:2403.13737) — [|https://arxiv.org/abs/2403.13737|];
+    EthioMT paper — [|https://arxiv.org/html/2403.19365v1|]'
+literacy_and_education:
+  regional_literacy_rate_amhara: '[NOT FOUND — searched UNESCO, World Bank, and Ethiopian
+    statistics sources; no Amhara-region-specific adult literacy rate found in publicly
+    accessible disaggregated data. National figure is ~51.8% (see national rate below);
+    Amhara is expected to be broadly similar to or below national average given rural
+    composition, but no sub-national figure confirmed]'
+  rural_literacy_rate_amhara: '[NOT FOUND — searched UNESCO and World Bank; no rural-specific
+    Amhara literacy rate in publicly accessible sources; national rural rate is substantially
+    below national average given strong urban-rural literacy gap documented in Ethiopian
+    education statistics]'
+  national_literacy_rate_ethiopia: '~51.8% adult literacy rate (ages 15+) as of 2017
+    (latest UNESCO/World Bank published figure); youth literacy (ages 15–24) approximately
+    69%. No more recent national survey figure confirmed in available sources. Source:
+    UNESCO Institute for Statistics via World Bank WDI — [|https://data.worldbank.org/indicator/SE.ADT.LITR.ZS?locations=ET|];
+    corroborated by multiple secondary sources citing 2017 UNESCO data — [|https://zoetalentsolutions.com/education-statistics-for-ethiopia/|]'
+  education_language_note: Amhara regional schooling is conducted primarily in Amharic.
+    Federal government communications and cooperative training materials also use
+    Amharic. Cooperative leaders typically have primary or secondary education; rural
+    borrowers may have lower formal literacy but high familiarity with spoken administrative
+    vocabulary.
+  functional_literacy_for_document_use: Target users are expected to engage with translated
+    documents through a combination of personal reading and oral relay through cooperative
+    leadership structures. Cooperative extension workers serve as key intermediaries
+    for disseminating translated content to lower-literacy borrowers.
+  relevant_note: Varying literacy levels within the cohort mean that even accurate
+    Amharic translations must use vocabulary already familiar to end-users; novel
+    or generic Amharic renderings of standardized administrative terms risk practical
+    non-uptake even if linguistically correct.
+cultural_and_institutional_norms:
+  cooperative_structure: Ethiopian agricultural cooperatives operate under a tiered
+    membership and leadership structure. Cooperative leaders (e.g., chair, secretary,
+    extension liaison) are the primary translators-of-record for policy documents
+    disseminated to member farmers. Federal and regional bureau translators are the
+    recognized authority on translation correctness; cooperative leaders and borrowers
+    are end-consumers rather than validators.
+  land_tenure_context: Ethiopian land tenure is governed by federal and regional proclamations
+    that have substantially standardized terminology, replacing many traditional local
+    terms with official administrative vocabulary. However, residual locally-specific
+    terminology and agro-ecological variation (highland vs. lowland) may produce sub-regional
+    vocabulary differences not captured in general-purpose translation systems.
+  microfinance_institutional_context: 'ACSI (Amhara Credit and Savings Institution)
+    is the largest MFI in Ethiopia, constituting approximately 28.1% of all microfinance
+    borrowing clients nationally and operating in all 10 Amhara administrative zones
+    with 461 branch offices. ADCSI (Addis Credit and Savings Institution) serves the
+    Addis Ababa and peri-urban context. Loan agreements, repayment schedules, and
+    eligibility conditions are binding documents; mistranslation of penalty clauses
+    or eligibility thresholds has direct financial consequences for borrowers. Source:
+    Springer Discover Sustainability (2023) — [|https://link.springer.com/article/10.1007/s43621-023-00161-7|]'
+  trust_and_authority_norms: End-users treat government-issued translated documents
+    as authoritative. Translation errors that alter the apparent terms of subsidy
+    eligibility or loan conditions may not be identifiable by users without access
+    to the original document, increasing the stakes of silent mistranslation.
+  oral_relay_patterns: Translated documents are frequently read aloud and interpreted
+    verbally within cooperative meetings. Terminology consistency and familiar administrative
+    vocabulary are critical for accurate oral relay; inconsistent or unfamiliar Amharic
+    renderings of standard terms create compounding interpretation errors.
+  religious_and_cultural_calendar: '[NEEDS VERIFICATION — deferred: likely unsearchable
+    (lived practice); Ethiopian Orthodox calendar observances and agricultural seasonal
+    cycles are well-known to affect cooperative scheduling, but specific documentation
+    of how these affect document-processing timelines in Amhara cooperative structures
+    requires field-level elicitation rather than web search]'
+infrastructure_notes:
+  connectivity:
+    rural_internet_penetration_amhara: 'Ethiopia national internet penetration is
+      approximately 19.4% (ITU and DataReportal, February 2024); rural penetration
+      is substantially lower given that ~80% of Ethiopia''s population is rural and
+      telecommunications infrastructure is described as often absent from rural areas.
+      The Amhara region specifically experienced mobile data shutdowns in multiple
+      cities from August 2023 to July 2024 due to conflict between federal forces
+      and Fano militias, and again in April–May 2023 over regional special forces
+      disputes — severely disrupting connectivity during those periods. Note: this
+      is a national aggregate with documented Amhara-specific disruptions; actual
+      Amhara rural penetration is likely well below the 19.4% national figure. Source:
+      Freedom House Freedom on the Net 2024 — [|https://freedomhouse.org/country/ethiopia/freedom-net/2024|];
+      Freedom House 2023 — [|https://freedomhouse.org/country/ethiopia/freedom-net/2023|]'
+    mobile_penetration_amhara: '[NOT FOUND — no Amhara-specific mobile penetration
+      figure found in ITU, World Bank, or Ethio Telecom public data; national mobile
+      coverage at 4G extends to 33% of population as of 2022 (Freedom House 2024),
+      with 3G expansion ongoing; Amhara connectivity was additionally disrupted by
+      conflict-related shutdowns 2023–2024. Source: Freedom House 2024 — [|https://freedomhouse.org/country/ethiopia/freedom-net/2024|]]'
+    electricity_access_rural_amhara: 'National electricity access was 55.4% of the
+      total population in 2022 (World Bank/ESMAP data), up from 51.1% in 2020. Rural
+      access is substantially lower than the national average; the Freedom House 2024
+      report notes infrastructure is unreliable and power outages inhibit internet
+      access. No Amhara-region-specific rural electricity figure found in publicly
+      accessible sources. Source: World Bank WDI / Macrotrends (World Bank data) —
+      [|https://www.macrotrends.net/global-metrics/countries/eth/ethiopia/electricity-access-statistics|];
+      Freedom House 2024 — [|https://freedomhouse.org/country/ethiopia/freedom-net/2024|]'
+    general_pattern: Amhara region is predominantly rural with lower connectivity
+      than Addis Ababa or major urban centers. Mobile network coverage and electricity
+      access are variable across agro-ecological zones. The translation system is
+      deployed text-only (NLLB), reducing infrastructure demands compared to multimodal
+      deployments. However, repeated conflict-related internet and mobile data shutdowns
+      in Amhara (2021–2024) represent a deployment-relevant disruption risk for any
+      connected document-translation pipeline.
+  device_and_interface: Translation system is text-only (NLLB). Output format is flowing
+    prose Amharic; layout preservation is not required. End-users receive translated
+    documents through cooperative office infrastructure (printed paper, SMS, or verbally
+    relayed), not directly via AI interface.
+  document_processing_pipeline: Source documents originate from federal and regional
+    bureaus; translation occurs at the institutional (cooperative or MFI branch) level,
+    not at the individual borrower level. Document-level coherence and terminology
+    consistency across clauses are critical properties not captured by NLLB's sentence-level
+    evaluation architecture.
+domain_specific_notes:
+  agricultural_policy_documents:
+    document_types:
+    - Agricultural input subsidy notices (fertilizer, improved seed, pesticide programs)
+    - Land-use policy updates (rental terms, lease conditions, parcel reallocation
+      notices)
+    - Cooperative membership and benefit eligibility notices
+    terminology_challenges: Ethiopian federal and regional proclamations have standardized
+      most land-tenure terminology (replacing traditional local terms with official
+      administrative vocabulary), but domain-specific terms related to subsidy eligibility
+      criteria, input distribution schedules, and cooperative-tier benefits may not
+      appear in general-purpose Amharic translation benchmarks. Mistranslation of
+      eligibility thresholds or seasonal deadlines has direct material consequences
+      for farming households.
+    relevant_proclamations_and_standards: '[NEEDS VERIFICATION — deferred: below remaining
+      search budget and partially unsearchable; Ethiopian federal land proclamations
+      (e.g., Federal Rural Land Administration and Use Proclamation No. 456/2005 and
+      amendments) are publicly documented but their vocabulary coverage in NLLB training
+      data cannot be confirmed without corpus analysis; requires technical investigation
+      beyond web search]'
+  microfinance_and_credit_documents:
+    document_types:
+    - Loan agreement terms and conditions (ACSI, ADCSI)
+    - Credit-scheme eligibility criteria and documentation requirements
+    - Repayment schedules, interest rates, and penalty clause structures
+    - Savings product terms
+    terminology_challenges: Amharic rendering of financial terms (interest, penalty,
+      collateral, guarantor, grace period) must align with vocabulary already in use
+      by ACSI/ADCSI in their borrower-facing communications. NLLB training corpora
+      are unlikely to contain ACSI-specific or Ethiopian MFI-specific parallel text.
+      False precision in numerical loan conditions (interest rates, penalty amounts,
+      eligibility cutoffs) represents a high-consequence error type not captured by
+      chrF++ or XSTS scoring.
+    acsi_adcsi_coverage: '[NOT FOUND — searched ACSI official website, FinDev Gateway,
+      J-PAL, and academic literature; no publicly accessible ACSI/ADCSI Amharic-language
+      financial terminology guide or parallel text corpus found; ACSI website (acsi.org.et)
+      provides institutional background but no downloadable terminology resources.
+      This confirms a real gap: no ACSI/ADCSI domain reference data is publicly available
+      for use as translation evaluation ground truth.]'
+  bureaucratic_and_legal_register:
+    document_structure: Source documents typically use numbered clause structures,
+      defined terms, and conditional eligibility language ('if … then … unless …').
+      The NLLB/Flores-200 benchmark evaluates sentence-level translation with no provision
+      for clause-sequence coherence, conditional-logic fidelity, or cross-reference
+      consistency. Deployer confirmed prose output is acceptable for this text-only
+      deployment, but document-level semantic consistency across clauses remains an
+      unscored gap.
+    validation_authority: Federal bureau translators are the primary validation authority;
+      regional bureau staff and cooperative extension workers are acceptable fallbacks.
+      Benchmark annotation workforce (professional generalist translators without
+      documented Ethiopian government-domain expertise) does not match the deployer's
+      stated validation authority.
+benchmark_fit_assessment:
+  language_and_script_fit:
+    assessment: ADEQUATE — Amharic is explicitly included in Flores-200 with dedicated
+      Ge'ez-script SentencePiece vocabulary. No script or modality mismatch exists
+      for this text-only, prose-output deployment.
+    residual_concern: Sentence-level evaluation architecture does not assess document-level
+      Amharic coherence or cross-clause terminology consistency.
+  domain_coverage_fit:
+    assessment: POOR — Flores-200 evaluation data covers Wikinews, Wikijunior, and
+      Wikivoyage content. No agricultural, land-tenure, microfinance, or Ethiopian
+      bureaucratic content is present in evaluation or training data by design. Domain-transfer
+      gap is the primary fitness risk.
+    flagged_for_search: true
+  output_scoring_fit:
+    assessment: POOR — chrF++ and XSTS scores cannot distinguish correct rendering
+      of subsidy eligibility conditions from silent alteration of numerical thresholds.
+      No terminology-consistency or conditional-logic-fidelity rubric exists.
+    flagged_for_search: true
+  annotator_population_fit:
+    assessment: POOR — Flores-200 annotators are professional generalist translators
+      without documented Ethiopian government-domain expertise. The deployer's validation
+      authority (federal bureau translators) is not represented in the annotation
+      workforce.
+    flagged_for_search: true
+  format_fit:
+    assessment: ADEQUATE — Deployer confirmed prose output is acceptable for this
+      text-only NLLB deployment. Benchmark's text-only sentence-level output format
+      aligns with the relaxed output requirement.
+    residual_concern: No document-level scoring; aggregated sentence-level chrF++
+      improvements may not indicate fitness for binding administrative documents.
+flagged_gaps_requiring_web_search:
+- gap_id: 1
+  description: Agricultural and financial domain coverage in Flores-200 and NLLB evaluation
+    extensions
+  search_target: Whether any Flores-200 or NLLB evaluation extensions have added Ethiopian
+    agricultural, land-tenure, or microfinance content, or whether alternative MT
+    benchmarks cover these domains in Amharic
+  search_result: 'NO DOMAIN-SPECIFIC BENCHMARK FOUND. EthioLLM (arXiv:2403.13737,
+    2024) introduced EthioBenchmark covering NER, sentiment, MT, summarization, and
+    QA for Amharic and four other Ethiopian languages, but all tasks use general-domain
+    or news/social media data — no agricultural, land-tenure, or microfinance domain
+    content. EthioMT (arXiv:2403.19365, 2024) introduced parallel corpora for 15 Ethiopian
+    languages drawn from religious and general domains, not administrative/financial
+    domains. No Flores-200 extension for Ethiopian agricultural or bureaucratic content
+    was found. The Flores+ expansion program has added languages (Erzya, Tuvan, Emakhuwa,
+    Iberian languages) but no Ethiopian domain-specific extension. This null result
+    confirms the gap is real and unaddressed by the research community. Sources: EthioLLM
+    — [|https://arxiv.org/abs/2403.13737|]; EthioMT — [|https://arxiv.org/html/2403.19365v1|];
+    Flores+ extensions survey — [|https://arxiv.org/html/2508.20511v1|]'
+- gap_id: 2
+  description: NLLB document-level coherence and terminology consistency for Amharic
+  search_target: Evidence on NLLB document-level translation quality for Amharic,
+    including cross-clause terminology consistency — critical for subsidy eligibility
+    conditions and loan agreements
+  search_result: 'NO DOCUMENT-LEVEL AMHARIC EVALUATION FOUND. A 2025 paper (''Languages
+    Still Left Behind: Toward a Better Multilingual Machine Translation Benchmark'',
+    arXiv:2508.20511) found that NLLB models evaluated on Flores+ score well on that
+    benchmark but perform poorly on naturalistic evaluation datasets: in experiments
+    on Jinghpaw, fine-tuning on naturalistic corpora improved performance on domain-appropriate
+    test sets but caused a drop in Flores+ scores, demonstrating domain-benchmark
+    mismatch. The paper also found that mock translations merely reproducing named
+    entities achieved non-trivial BLEU and ChrF++ scores, suggesting metrics reward
+    superficial copying over translational adequacy. This provides strong independent
+    evidence that NLLB/Flores-200 scores are unreliable indicators of fitness for
+    domain-specific or naturalistic document translation. No Amharic-specific document-level
+    evaluation study was found. Source: arXiv:2508.20511 — [|https://arxiv.org/html/2508.20511v1|]'
+- gap_id: 3
+  description: Ethiopian federal and regional administrative vocabulary coverage in
+    NLLB training corpora
+  search_target: Whether federally standardized land and credit terminology (per Ethiopian
+    proclamations) is present in NLLB's CCAligned or mC4-derived training sets; documented
+    mistranslations of official Ethiopian administrative terms
+  search_result: 'NOT DIRECTLY CONFIRMABLE. NLLB''s Hugging Face model card explicitly
+    states: ''Our model has been tested on the Wikimedia domain with limited investigation
+    on other domains.'' No documentation of Ethiopian government administrative vocabulary
+    in NLLB training data was found. The Walia-LLM paper (EMNLP 2024 Findings) noted
+    that GPT-4 ''encounters some challenges in evaluating machine translation, often
+    missing grammatical details in Amharic sentences,'' suggesting quality evaluation
+    of Amharic MT is itself unreliable. Source: NLLB Hugging Face model card — [|https://huggingface.co/facebook/nllb-200-3.3B|];
+    WaliaLLM paper — [|https://aclanthology.org/2024.findings-emnlp.25.pdf|]'
+- gap_id: 4
+  description: Annotator provenance for Amharic in Flores-200
+  search_target: Who translated the Amharic portion of Flores-200 (professional generalist
+    vs. domain specialists), what quality controls were applied, and whether post-publication
+    audits of Amharic translation quality exist
+  search_result: 'PARTIAL — CORRECTIONS EXIST FOR SOME AFRICAN LANGUAGES BUT NOT AMHARIC
+    SPECIFICALLY. A 2024 study (Abdulmumin et al., 2024) corrected errors in several
+    African language splits of FLORES-200 including Hausa, Sepedi, Xitsonga, and isiZulu,
+    using token-level divergence statistics. No Amharic-specific correction or audit
+    paper was found. The NLLB paper (Nature 2024) confirms the general workflow: 4-phase
+    process, 90% quality threshold, professional translators with 2–5 years experience,
+    relaxed thresholds for low-resource languages where qualified reviewers were scarce.
+    No documentation of domain expertise requirements specifically for Amharic translators.
+    Source: Nature NLLB paper — [|https://www.nature.com/articles/s41586-024-07335-x|];
+    Flores-200 African language corrections noted in — [|https://www.emergentmind.com/topics/flores-200-benchmark-dataset|]'
+- gap_id: 5
+  description: Sub-national Amhara regional register variation and ACSI/ADCSI vocabulary
+  search_target: Whether NLLB evaluation data or training corpora reflect regional
+    administrative register differences within Amhara; whether ACSI/ADCSI parallel
+    text is publicly available as domain reference data
+  search_result: 'NOT FOUND — No ACSI or ADCSI Amharic terminology guides or parallel
+    text corpora found in any public repository. ACSI official website (acsi.org.et)
+    provides institutional background only. No academic study of sub-national Amhara
+    administrative register variation was found. This confirms the absence of any
+    domain reference data against which NLLB translations of ACSI/ADCSI documents
+    could be validated. Source: ACSI official website — [|http://www.acsi.org.et/|];
+    FinDev Gateway ACSI profile — [|https://www.findevgateway.org/case-study/2004/01/amhara-credit-and-saving-institution-acsi-institutional-profile-current-status|]'
+- gap_id: 6
+  description: Mistranslation risk in legal-financial numerical and conditional content
+    for Amharic
+  search_target: Documented cases of NLLB or similar MT systems mistranslating numerical
+    or conditional legal content in Amharic or other low-resource African languages;
+    whether any evaluation framework assesses false precision in financial clause
+    translation
+  search_result: 'NO AMHARIC-SPECIFIC CASES FOUND. The 2025 ''Languages Still Left
+    Behind'' paper (arXiv:2508.20511) found that in Flores+ human evaluation, only
+    1 out of 50 Jinghpaw sentences was judged correctly translated by a native speaker,
+    and annotators reported many source sentences were ''highly domain-specific or
+    culturally loaded, making them difficult to translate naturally.'' For Tigrinya
+    (closely related Semitic language), a memory-efficient NLLB study found over-generation
+    artifacts when translating to English. No framework for assessing false precision
+    in numerical financial clauses in any low-resource language was found. Source:
+    arXiv:2508.20511 — [|https://arxiv.org/html/2508.20511v1|]'
+- gap_id: 7
+  description: Amhara region infrastructure and connectivity data
+  search_target: Current rural internet penetration, mobile network coverage, electricity
+    access, and literacy rates for the Amhara region of Ethiopia, disaggregated by
+    rural/peri-urban where possible
+  search_result: 'PARTIALLY RESOLVED — See infrastructure_notes.connectivity fields
+    above. National figures confirmed; Amhara-specific disaggregated figures not publicly
+    available. Key finding: Amhara region experienced documented mobile internet shutdowns
+    (August 2023–July 2024 and April–May 2023) due to conflict, representing a concrete
+    deployment risk for connected translation pipelines. Sources: Freedom House 2024
+    — [|https://freedomhouse.org/country/ethiopia/freedom-net/2024|]; Freedom House
+    2023 — [|https://freedomhouse.org/country/ethiopia/freedom-net/2023|]; World Bank
+    electricity data — [|https://www.macrotrends.net/global-metrics/countries/eth/ethiopia/electricity-access-statistics|]'
+- gap_id: 8
+  description: ACSI and ADCSI service area scope and borrower population
+  search_target: Current ACSI and ADCSI active borrower counts in Amhara region; geographic
+    scope of ACSI vs. ADCSI service areas within Amhara zones; whether ACSI/ADCSI
+    publish standardized Amharic-language financial terminology guides
+  search_result: 'PARTIALLY RESOLVED — ACSI: approximately 1,056,390 active borrowers
+    per 2018 World Bank microfinance performance assessment; operates in all 10 Amhara
+    administrative zones with 461 branches; constitutes ~28.1% of Ethiopia''s microfinance
+    borrowing clients. More recent estimates cite ~2 million clients in rural Ethiopia.
+    No post-2020 official ACSI annual report with updated borrower counts found in
+    public sources. ADCSI serves Addis Ababa and surrounding areas; no Amhara-specific
+    ADCSI figure found. No Amharic financial terminology guides published by either
+    institution in public domain. Sources: Springer article 2023 — [|https://link.springer.com/article/10.1007/s43621-023-00161-7|];
+    Academia.edu — [|https://www.academia.edu/99257540/The_role_of_Amhara_credit_and_saving_institution_in_improving_rural_households_livelihood|]'
+net_new_fields:
+  amharic_nlp_ecosystem_2024:
+    summary: As of 2024, Amharic is the best-resourced Ethiopian language for NLP,
+      with EthioLLM (multilingual LLM for 5 Ethiopian languages + EthioBenchmark across
+      NER, sentiment, MT, QA) and EthioMT (parallel corpora for 15 Ethiopian languages)
+      released. However, all available Amharic NLP benchmarks cover general-domain,
+      news, or social media content; no benchmark covers agricultural, administrative,
+      or financial domains. This confirms the absence of any community-validated reference
+      data for the deployment's core document types.
+    source: EthioLLM arXiv:2403.13737 — [|https://arxiv.org/abs/2403.13737|]; EthioMT
+      arXiv:2403.19365 — [|https://arxiv.org/html/2403.19365v1|]
+  flores_benchmark_domain_mismatch_evidence_2025:
+    summary: A 2025 study ('Languages Still Left Behind', arXiv:2508.20511) found
+      that NLLB models fine-tuned on naturalistic domain data outperformed Flores+
+      baselines on domain-appropriate test sets but performed worse on Flores+ itself,
+      demonstrating that Flores+ scores do not reliably predict out-of-domain translation
+      quality. The study also found mock translations reproducing named entities scored
+      non-trivially on BLEU and ChrF++, confirming that these metrics can reward superficial
+      rather than accurate translation. This provides direct empirical support for
+      the benchmark fitness concerns flagged in this assessment.
+    source: arXiv:2508.20511 — [|https://arxiv.org/html/2508.20511v1|]
+  amhara_connectivity_disruption_risk:
+    summary: Amhara region experienced documented mobile internet and phone line shutdowns
+      affecting 19 cities from August 2023, with restrictions not fully lifted until
+      July 2024, and a prior blackout in April–May 2023. Fixed-line internet remained
+      nominally accessible but is uncommon in rural areas. Any deployment pipeline
+      requiring connected document translation must account for this as a recurring
+      operational risk specific to the Amhara deployment context.
+    source: Freedom House Freedom on the Net 2024 — [|https://freedomhouse.org/country/ethiopia/freedom-net/2024|]
+  flores_african_language_correction_efforts:
+    summary: Post-publication correction work (Abdulmumin et al., 2024) has identified
+      and corrected translation errors in several African FLORES-200 language splits
+      (Hausa, Sepedi, Xitsonga, isiZulu). No corresponding Amharic correction study
+      was found, but the pattern of errors in related African languages — attributed
+      to lower standardization and professional translator scarcity — is consistent
+      with known NLLB quality challenges for low-resource languages and warrants targeted
+      human audit of the Amharic Flores-200 data.
+    source: Emergent Mind FLORES-200 topic page summarizing Abdulmumin et al. 2024
+      — [|https://www.emergentmind.com/topics/flores-200-benchmark-dataset|]

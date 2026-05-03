@@ -1,0 +1,314 @@
+name: Ethiopian Intercity Travelers — Amharic-Language Booking Bot
+abbreviation: ETH-IC-AM
+assessment_context:
+  benchmark: MASSIVE (Multilingual NLU, 51 languages, intent classification and slot
+    filling)
+  deployment: Conversational booking bot for Sky Bus, Selam Bus, and Ride intercity
+    services, accessed via Android/iOS smartphone apps
+  primary_task: Intent classification and slot filling for intercity route queries,
+    fare lookups, and seat-change transactions in Amharic
+target_population:
+  description: Ethiopian intercity commuters and travelers who use Android or iOS
+    apps to book long-distance bus or ride-hail trips with operators Sky Bus, Selam
+    Bus, and Ride. The population spans urban Addis Ababa residents, rural and regional
+    travelers across Amhara Region, Oromia, Tigray, SNNPR, and other regions served
+    by intercity routes. A significant share are Amharic-as-L2 speakers from non-Amhara
+    ethnic backgrounds who use Amharic as a functional lingua franca for travel.
+  primary_language: Amharic
+  expected_code_switching_languages:
+  - Oromo (especially on Addis–Adama–Hawassa corridor)
+  - Tigrinya (especially on Addis–Mekelle corridor)
+  - Other Ethiopian languages (Sidama, Somali, Afar — lower frequency)
+  l2_speaker_share: '[NEEDS VERIFICATION — estimated proportion of intercity bus users
+    who are Amharic-as-L2 speakers from Oromia, SNNPR, Tigray, or other regions]'
+  age_range: Predominantly working-age adults; no formal age restriction on app use.
+    [NEEDS VERIFICATION — operator age-profile data or app analytics]
+  app_platform: Android and iOS smartphone apps (Sky Bus, Selam Bus, Ride)
+geography:
+  country: Ethiopia
+  primary_city: Addis Ababa (largest origin/destination hub)
+  key_regions:
+  - Addis Ababa City Administration
+  - Amhara Region
+  - Oromia Region
+  - Tigray Region
+  - SNNPR (Southern Nations, Nationalities, and Peoples' Region)
+  - Afar Region
+  - Somali Region
+  key_intercity_corridors:
+  - Addis Ababa – Adama (Nazret)
+  - Addis Ababa – Hawassa
+  - Addis Ababa – Bahir Dar
+  - Addis Ababa – Gondar
+  - Addis Ababa – Mekelle
+  - Addis Ababa – Dire Dawa
+  - Addis Ababa – Jimma
+  - Addis Ababa – Dessie
+  urbanization_rate_pct: '[NEEDS VERIFICATION]'
+  rural_traveler_share: '[NEEDS VERIFICATION — share of intercity bus passengers originating
+    from non-Addis locations]'
+languages:
+  primary_interface_language: Amharic
+  script: Ethiopic (Ge'ez script) — fidel syllabary
+  script_category_in_massive: Unique script (one of 18 languages with a script used
+    by only one MASSIVE locale)
+  code_switching_languages:
+    oromo:
+      script: Latin (since 1991, Qubee orthography)
+      relevance: High — Oromia is the largest region by area and population; Addis–Adama–Hawassa
+        is a major corridor. User confirmed Oromo code-switching will occur in real
+        utterances.
+      massive_coverage: Separate MASSIVE locale (no mixed Amharic–Oromo utterances)
+    tigrinya:
+      script: Ethiopic (same script family as Amharic)
+      relevance: Moderate — northern route (Addis–Mekelle) travelers; Tigrinya speakers
+        may code-switch especially for place names and route terminology.
+      massive_coverage: Separate MASSIVE locale (no mixed Amharic–Tigrinya utterances)
+  linguistic_features_relevant_to_nlu:
+    morphology: Amharic is a highly morphologically rich, fusional Semitic language
+      with root-and-pattern morphology, extensive verb inflection, and cliticization
+      of prepositions and conjunctions
+    word_order: SOV with significant flexibility; verb-final structure affects slot
+      span detection
+    script_directionality: Left-to-right (Ethiopic script, unlike Arabic RTL)
+    tokenization_notes: Amharic uses spaces as word delimiters, but morphological
+      richness means a single token can encode information that requires multiple
+      tokens in English. Slot boundary detection may be affected.
+    numeral_system: Ethiopic numerals exist (፩፪፫…) alongside Arabic numerals; spoken
+      Amharic uses a base-10 system with distinct Amharic number words. Birr amounts
+      may appear in either numeral form or as spelled-out Amharic words.
+    politeness: '[NEEDS VERIFICATION — extent and form of Amharic politeness/register
+      distinctions as reflected in booking-bot utterances]'
+  amharic_dialect_variation:
+    description: Amharic dialects vary across Amhara sub-regions (Gondar, Gojjam,
+      Wollo, Shewa) and differ further from L2-speaker usage. Addis Ababa Amharic
+      is considered a prestige/standard variety.
+    l2_speaker_phrasing: Non-Amhara speakers using Amharic as L2 may exhibit pronunciation-influenced
+      spelling, simplified syntax, and Oromo/Tigrinya loanword insertion. These patterns
+      are unlikely to appear in translated NLU datasets.
+    massive_annotator_dialect_representation: '[NEEDS VERIFICATION — whether MASSIVE
+      Amharic translators represent Addis-variety, Amhara-region variety, or L2-speaker
+      variety]'
+calendar_and_temporal_conventions:
+  primary_calendar: 'Ethiopian (Ge''ez) calendar — 13 months: Meskerem, Tikimt, Hidar,
+    Tahsas, Tir, Yekatit, Megabit, Miazia, Ginbot, Sene, Hamle, Nehase, Pagume'
+  calendar_offset_from_gregorian: Approximately 7–8 years behind the Gregorian calendar;
+    Ethiopian New Year falls in September (Gregorian)
+  date_expression_conventions: Users are expected to express travel dates using Ethiopian
+    month names (e.g., 'Meskerem 5' for a date in late September Gregorian). These
+    will not appear in MASSIVE's translated date slot values.
+  holiday_demand_surges:
+  - 'Timkat (Ethiopian Epiphany) — [NEEDS VERIFICATION: Gregorian-equivalent date,
+    surcharge practice]'
+  - 'Meskel (Finding of the True Cross) — [NEEDS VERIFICATION: Gregorian-equivalent
+    date]'
+  - 'Ethiopian Christmas (Genna/Lidat) — [NEEDS VERIFICATION: Gregorian-equivalent
+    date]'
+  - 'Ethiopian Easter (Fasika) — [NEEDS VERIFICATION: date varies]'
+  - 'Eid al-Fitr and Eid al-Adha — [NEEDS VERIFICATION: Muslim traveler share and
+    surge patterns]'
+  - 'Ethiopian New Year (Enkutatash) — [NEEDS VERIFICATION: Gregorian-equivalent date,
+    travel surge scale]'
+  massive_coverage: None — MASSIVE contains no Ethiopian calendar month names, Ge'ez-calendar
+    temporal expressions, or holiday-based surcharge slot values
+domain_specific_notes:
+  intercity_transport_context: Sky Bus, Selam Bus, and Ride are the three named operators.
+    Ethiopian intercity bus travel is a primary mode of long-distance transport, especially
+    for non-elite travelers. Routes connect Addis Ababa to regional capitals and towns
+    across all major corridors.
+  fare_and_currency:
+    currency: 'Ethiopian Birr (ETB, symbol: ብር or Br)'
+    fare_expression_conventions: Fares may be quoted as Arabic numerals (e.g., '450
+      birr'), Ethiopic numerals, or verbalized Amharic number words. Informal spoken
+      conventions (e.g., rounding, use of 'hundred' as a unit) may differ from formal
+      written forms.
+    massive_coverage: None — MASSIVE price/fare slots derive from English-origin SLURP
+      data and do not address ETB formatting, Amharic numeral verbalization, or spoken-number
+      conventions
+  operator_specific_slot_types:
+    description: The booking domain requires slot types not present in MASSIVE's 55-slot
+      taxonomy
+    missing_slots:
+    - operator_name (Sky Bus, Selam Bus, Ride)
+    - 'seat_class (VIP, economy, sleeper — exact classes per operator: [NEEDS VERIFICATION])'
+    - route_closure_reason (road closure, weather, security)
+    - surcharge_event (holiday, peak-season pricing)
+    - trip_change_type (rebook, cancel, upgrade)
+    - departure_terminal (bus station name, e.g., Meskel Square, Kality, Autobus Terra)
+  city_name_variants:
+    description: 'Ethiopian cities are referred to by multiple names in common usage:
+      Amharic names, Oromo names, colonial/transliterated English names, abbreviations,
+      and demonyms. The booking system must handle all variants as equivalent slot
+      values.'
+    examples:
+    - amharic_name: አዳማ
+      common_name: Adama
+      alternate_name: Nazret
+      massive_coverage: Not present
+    - amharic_name: ሐዋሳ
+      common_name: Hawassa
+      alternate_name: Awassa
+      massive_coverage: Not present
+    - amharic_name: መቀሌ
+      common_name: Mekelle
+      alternate_name: Mek'ele
+      massive_coverage: Not present
+    - amharic_name: ባህር ዳር
+      common_name: Bahir Dar
+      alternate_name: '[NEEDS VERIFICATION]'
+      massive_coverage: Not present
+    - amharic_name: ጎንደር
+      common_name: Gondar
+      alternate_name: '[NEEDS VERIFICATION]'
+      massive_coverage: Not present
+    - amharic_name: ድሬ ዳዋ
+      common_name: Dire Dawa
+      alternate_name: '[NEEDS VERIFICATION]'
+      massive_coverage: Not present
+    - note: '[NEEDS VERIFICATION — full list of cities served per operator and common
+        name variants in user utterances]'
+  booking_flow_intents:
+    description: The user considers the booking flow broadly generic and compatible
+      with MASSIVE's intent set. However, the following intent types relevant to Ethiopian
+      intercity bus booking are absent from MASSIVE's 60-intent taxonomy.
+    absent_intents:
+    - route_query (which buses serve origin–destination pair?)
+    - seat_class_query (what classes are available?)
+    - operator_query (does Sky Bus / Selam serve this route?)
+    - cancel_and_rebook (due to road closure or schedule change)
+    - holiday_surcharge_query (is pricing higher for Timkat?)
+    - departure_terminal_query (which station does the bus leave from?)
+    coverage_note: Generic booking intents (book, reschedule, check availability)
+      are partially covered by MASSIVE. Transportation-domain-specific and Ethiopia-specific
+      intents are not.
+infrastructure_notes:
+  device_platform: Android and iOS smartphones (app-based text input)
+  android_market_share_pct: '[NEEDS VERIFICATION — Ethiopia Android vs. iOS split]'
+  smartphone_penetration_pct: '[NEEDS VERIFICATION — Ethiopia national figure]'
+  mobile_internet_penetration_pct: '[NEEDS VERIFICATION]'
+  primary_mobile_operator: '[NEEDS VERIFICATION — Ethio Telecom dominant; Safaricom/other
+    entrants: verify current market share]'
+  average_mobile_data_speed: '[NEEDS VERIFICATION]'
+  connectivity_variation_by_region:
+    addis_ababa: '[NEEDS VERIFICATION — urban 4G/LTE coverage]'
+    amhara_region: '[NEEDS VERIFICATION — inter-city route coverage]'
+    oromia_region: '[NEEDS VERIFICATION]'
+    tigray_region: '[NEEDS VERIFICATION — connectivity disruption from recent conflict
+      period]'
+    snnpr: '[NEEDS VERIFICATION]'
+  input_modality: Text (on-screen keyboard using Ethiopic/Ge'ez fidel input or phonetic
+    Amharic input method)
+  keyboard_input_method_notes: Users may input Amharic using a dedicated Ethiopic
+    keyboard, a phonetic romanization-to-fidel IME, or may occasionally type Amharic
+    words in Latin characters (Amharic romanization). The system should handle fidel
+    input as primary but Latin-script Amharic representation is a plausible edge case.
+  offline_capability_requirement: '[NEEDS VERIFICATION — whether the app supports
+    offline slot prefill or requires live connectivity for all transactions]'
+literacy_and_education:
+  national_literacy_rate_pct: '[NEEDS VERIFICATION]'
+  amharic_literacy_rate_pct: '[NEEDS VERIFICATION — Amharic-specific literacy distinct
+    from general literacy]'
+  urban_rural_literacy_gap: '[NEEDS VERIFICATION]'
+  smartphone_app_literacy: Users are app-literate by virtue of using the booking application,
+    but digital literacy levels vary; complex UI or long-form text entry may pose
+    friction for some users.
+  primary_language_of_education_by_region:
+    addis_ababa: Amharic
+    amhara_region: Amharic
+    oromia_region: Oromo (Afaan Oromoo) — Amharic as second language of instruction
+    tigray_region: Tigrinya — Amharic as second language
+    snnpr: '[NEEDS VERIFICATION — varies by ethnic group within SNNPR]'
+cultural_norms_notes: '- Ethiopian Orthodox Christianity is the majority religion,
+  shaping holiday travel demand around Genna, Timkat, Fasika, and Meskel.
+
+  - Islam is the second-largest religion; Eid travel surges are significant.
+
+  - Ethiopian New Year (Enkutatash, Meskerem 1) is a peak travel period.
+
+  - Multi-ethnic national identity: Oromo, Amhara, Tigrinya, Somali, Sidama, and other
+  ethnic groups all use intercity transport but may prefer their own language for
+  natural utterances.
+
+  - Amharic functions as the working language of the federal government and as a national
+  lingua franca, but is an L2 for the majority of Ethiopians by ethnicity.
+
+  - Respect for elders and formal address forms may influence user utterance register,
+  especially for older travelers.
+
+  - Informal travel planning often involves social referrals and word-of-mouth; some
+  users may be first-time app users.
+
+  - Bus station culture in Ethiopia involves negotiation, informal brokers (dallalas),
+  and route knowledge embedded in local practice — not always reflected in formalized
+  booking intents.
+
+  '
+regulatory_and_operator_context:
+  transport_regulatory_body: '[NEEDS VERIFICATION — Ethiopian Ministry of Transport
+    and Logistics or regional transport authorities]'
+  operator_licensing: '[NEEDS VERIFICATION — Sky Bus, Selam Bus, Ride licensing and
+    route concession framework]'
+  data_protection_regulation: '[NEEDS VERIFICATION — Ethiopia Personal Data Protection
+    Proclamation or equivalent in force]'
+  consumer_protection_framework: '[NEEDS VERIFICATION — applicable Ethiopian consumer
+    protection law for digital booking services]'
+  fare_regulation: '[NEEDS VERIFICATION — whether intercity bus fares are government-regulated
+    or market-set; holiday surcharge rules]'
+benchmark_fit_summary:
+  dimension_priority_weights:
+    IO: MODERATE — MASSIVE's 60 intents cover generic booking flows but omit Ethiopian-specific
+      and operator-specific intents
+    IC: HIGH — Slot values (Ethiopian calendar dates, local city name variants, Birr
+      fares) are absent from translated MASSIVE data
+    IF: LOWER — Text-only, Ethiopic-script, modality-aligned; tokenization quality
+      for Amharic slot boundaries is a minor open question
+    OO: MODERATE — 55-slot taxonomy lacks operator_name, seat_class, route_closure_reason,
+      surcharge_event slot types
+    OC: HIGH — MASSIVE Amharic data translated from English by fluency-certified workers;
+      no code-switching, no L2-speaker phrasing, no Oromo-corridor representation
+    OF: LOWER — Intent + slot-filling output format directly matches deployment requirements
+  flagged_gaps_requiring_web_search:
+  - gap_id: 1
+    description: Ethiopian calendar slot coverage in any NLU/slot-filling benchmark
+    search_target: Amharic NLU slot filling Ethiopian calendar Ge'ez calendar date
+      entity recognition benchmark
+  - gap_id: 2
+    description: Ethiopian city name variants and abbreviations in Amharic NER or
+      NLU data
+    search_target: Ethiopian city name NLP Amharic named entity recognition location
+      variants benchmark
+  - gap_id: 3
+    description: Oromo–Amharic code-switching corpora or evaluation sets
+    search_target: Amharic Oromo code-switching corpus NLP evaluation dataset Ethiopia
+  - gap_id: 4
+    description: Tigrinya–Amharic code-switching corpora or evaluation sets
+    search_target: Tigrinya Amharic code-switching NLP Ethiopian language benchmark
+  - gap_id: 5
+    description: Amharic-as-L2 speaker phrasing in NLP datasets
+    search_target: Amharic L2 speaker NLP evaluation intercity transport Ethiopia
+      dialect variation
+  - gap_id: 6
+    description: African or low-resource transport-domain NLU slot types
+    search_target: African intercity transport NLU slot filling benchmark bus booking
+      sub-Saharan low-resource NLP
+  - gap_id: 7
+    description: Amharic numeral verbalization and Birr currency slot normalization
+    search_target: Amharic number verbalization Birr currency NLP slot filling numeric
+      normalization Ethiopian
+  - gap_id: 8
+    description: Amharic Ethiopic-script tokenization quality for slot boundary detection
+    search_target: Amharic Ethiopic script tokenization slot filling NLP Ge'ez word
+      boundary
+  - gap_id: 9
+    description: Ethio Telecom and mobile internet penetration current figures
+    search_target: Ethiopia mobile internet penetration smartphone usage 2024 Ethio
+      Telecom Safaricom market share
+  - gap_id: 10
+    description: Ethiopian data protection and digital consumer protection regulatory
+      framework
+    search_target: Ethiopia Personal Data Protection Proclamation digital services
+      regulation 2024
+  - gap_id: 11
+    description: Sky Bus, Selam Bus, Ride operator seat class taxonomy and route network
+    search_target: Sky Bus Ethiopia Selam Bus seat classes routes VIP economy intercity
+      bus

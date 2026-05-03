@@ -1,0 +1,267 @@
+name: Amhara Region Agricultural & Microfinance Document Translation — Cooperative
+  and Rural MFI End-Users
+abbreviation: ETH-AMH-AGRI-MFI
+country: Ethiopia
+sub_national_scope:
+  region: Amhara Region
+  administrative_context: One of Ethiopia's major federal regional states; home to
+    a large rural farming population organized through agricultural cooperatives and
+    served by regional microfinance institutions. Federal and regional bureau documents
+    originate from Addis Ababa (federal) and Bahir Dar (Amhara regional capital).
+  key_zones_or_woredas: '[NEEDS VERIFICATION — identify agriculturally significant
+    zones within Amhara region most relevant to input-subsidy and cooperative-credit
+    deployment, e.g. North Gondar, South Wollo, East Gojjam]'
+deployment_population:
+  description: Farmer cooperative leaders and rural microfinance clients in Amhara
+    region who must correctly interpret binding government and lender documents translated
+    into Amharic. Includes cooperative extension workers who mediate document interpretation
+    between bureaus and end-users.
+  roles:
+  - Farmer cooperative leaders (primary decision-makers and signatories for cooperative-level
+    subsidy and credit agreements)
+  - Rural microfinance clients (individual borrowers under ACSI, ADCSI, or equivalent
+    regional MFI schemes)
+  - Cooperative extension workers (intermediary interpreters of translated documents
+    for less-literate members)
+  institutional_context:
+    microfinance_institutions:
+    - ACSI (Amhara Credit and Savings Institution)
+    - 'ADCSI (Addis Credit and Savings Institution — note: verify whether ADCSI operates
+      in Amhara region or is primarily Addis Ababa-based)'
+    - '[NEEDS VERIFICATION — other MFIs active in Amhara region cooperative lending]'
+    government_bureaus:
+    - Amhara Regional Bureau of Agriculture
+    - Amhara Regional Cooperative Promotion Agency
+    - Ethiopian Ministry of Agriculture (federal — issues proclamations operative
+      in region)
+    - '[NEEDS VERIFICATION — federal bureau names for input-subsidy and land administration
+      relevant to Amhara]'
+    cooperative_framework: '[NEEDS VERIFICATION — applicable Ethiopian cooperative
+      proclamation number and year; verify current federal cooperative proclamation
+      operative in Amhara region]'
+languages:
+  target_output_language: Amharic
+  script: Ethiopic (Ge'ez script, non-Latin, left-to-right)
+  source_document_language: Amharic or formal Ethiopian government-register Amharic
+    (federal and regional proclamation register)
+  register_notes: 'Federal and regional proclamations use a distinct formal administrative
+    register in Amharic that differs substantially from everyday spoken Amharic and
+    from the health/IT-domain Amharic found in AFRIDOC-MT. Key register features include:
+    numbered clause structures, cross-reference phrasing between articles, legally
+    standardized terminology derived from Ethiopian proclamation drafting conventions,
+    and fixed multi-word terms for subsidy scheme names, land-tenure categories, and
+    cooperative membership tiers.'
+  dialect_and_regional_variation: '[NEEDS VERIFICATION — extent to which Amhara-region
+    bureau Amharic diverges lexically or syntactically from Addis Ababa standard Amharic;
+    whether Amhara Regional Bureau documents use region-specific administrative vocabulary]'
+  end_user_spoken_variety: Amharic (Amhara region variety); some cooperative members
+    may be more fluent in local Amharic dialects than in the formal proclamation register
+  translationese_risk: AFRIDOC-MT Amharic reference translations are produced from
+    English source documents, creating potential structural and semantic bias toward
+    English. The deployment translates FROM Amharic government documents (not from
+    English), reversing the source-language relationship and making the benchmark's
+    translationese profile inapplicable.
+document_genres:
+  deployment_genres:
+  - genre: Agricultural input subsidy notice
+    description: Federal or regional bureau announcements specifying eligible inputs
+      (fertilizer, seeds, pesticides), per-unit subsidy amounts, application periods,
+      eligibility conditions, and distribution points. Contain numbered eligibility
+      clauses, seasonal deadlines, and scheme-specific proper names.
+    linguistic_features: Numbered clause structures, proclamation-derived scheme names,
+      itemized eligibility conditions, penalty clauses for misuse, cross-references
+      to parent proclamations
+  - genre: Land-use policy update
+    description: Regional or federal communications on land-tenure rights, usage restrictions,
+      and cadastral registration obligations derived from Ethiopian land administration
+      proclamations. Reference legally standardized tenure categories.
+    linguistic_features: Land-tenure category labels (e.g., rist-derived terms, usufruct
+      rights, holding certificates), numbered articles, cross-reference to proclamation
+      numbers, administrative zone identifiers
+  - genre: Credit-scheme terms and loan agreement
+    description: MFI (ACSI/ADCSI) loan-agreement documents specifying interest rate
+      schedules, repayment conditions, collateral requirements, penalty clauses, and
+      cooperative-guarantee structures. Formally issued documents with signature blocks
+      and numbered conditions.
+    linguistic_features: Financial and legal terminology, numbered conditions, penalty
+      and default clauses, cooperative membership tier references, MFI-specific scheme
+      names
+  - genre: Cooperative membership and governance notice
+    description: Cooperative promotion agency communications on membership tiers,
+      rights, obligations, annual meeting requirements, and audit schedules under
+      Ethiopian cooperative law.
+    linguistic_features: Cooperative proclamation-derived vocabulary, governance and
+      quorum terms, membership tier designations, fixed formulaic phrases from proclamation
+      templates
+  benchmark_genres:
+  - Health news (WHO-sourced)
+  - Information technology news (Techpoint Africa-sourced)
+  genre_alignment: NONE — benchmark contains zero agricultural, land-use, credit-scheme,
+    or cooperative governance documents. Domain gap is total for all four deployment
+    genres.
+terminology:
+  critical_term_categories:
+  - category: Input subsidy scheme names
+    examples: '[NEEDS VERIFICATION — current named subsidy schemes operative in Amhara
+      region, e.g. fertilizer subsidy program names, seed distribution scheme names
+      from Ministry of Agriculture or ATA]'
+    translation_risk: Mistranslation or inconsistent rendering of scheme names across
+      clauses can cause cooperative leaders to apply under wrong scheme or miss eligibility
+      windows — binding legal and financial consequence
+  - category: Land-tenure category labels
+    examples: '[NEEDS VERIFICATION — Amharic terms for holding certificate (ሊዝ/),
+      rist, usufruct rights as used in current Amhara land administration practice]'
+    translation_risk: Confusion between tenure categories has legal consequence for
+      land-use rights and access to credit (land certificate often used as collateral)
+  - category: Cooperative membership tiers
+    examples: '[NEEDS VERIFICATION — Amharic terminology for primary cooperative,
+      cooperative union, multi-purpose cooperative as defined in current Ethiopian
+      cooperative proclamation]'
+    translation_risk: Tier misidentification affects eligibility for collective subsidy
+      applications and loan guarantee structures
+  - category: MFI credit-scheme terms
+    examples: '[NEEDS VERIFICATION — ACSI/ADCSI product names, Amharic terms for group
+      lending guarantee, solidarity group, loan repayment schedule terms]'
+    translation_risk: Misunderstanding of penalty, default, or repayment terms has
+      direct financial consequence for borrowers
+  - category: Proclamation cross-reference vocabulary
+    examples: '[NEEDS VERIFICATION — standard Amharic formulaic phrases used in Ethiopian
+      proclamation drafting for cross-referencing articles, defining scope, and specifying
+      enforcement]'
+    translation_risk: Failure to maintain consistent rendering of cross-reference
+      phrases undermines document coherence across numbered clauses
+  terminology_authority:
+    preferred: Federal bureau translators with domain training in agricultural or
+      legal Amharic (e.g., Ministry of Agriculture translation unit, ATA — Agricultural
+      Transformation Agency)
+    acceptable_surrogate: Amhara Regional Bureau of Agriculture staff; cooperative
+      extension workers with document mediation experience
+    benchmark_annotator_alignment: NONE documented — AFRIDOC-MT Amharic translators
+      have no documented agricultural or legal domain expertise; preferred ground-truth
+      authority is entirely absent from the benchmark annotator pool
+    amharic_legal_glossary_resources: '[NEEDS VERIFICATION — whether Ministry of Agriculture,
+      ATA, or regional bureau publishes Amharic terminology glossaries for agricultural
+      or cooperative proclamation vocabulary]'
+target_user_characteristics:
+  literacy:
+    general_literacy_rate_ethiopia: '[NEEDS VERIFICATION]'
+    amhara_region_literacy_rate: '[NEEDS VERIFICATION]'
+    rural_amhara_literacy_rate: '[NEEDS VERIFICATION]'
+    functional_literacy_notes: End-user population includes cooperative leaders (typically
+      higher literacy within cooperative context) and rural microfinance clients (variable
+      literacy, potentially low for formal proclamation-register text). Extension
+      workers serve as literacy mediators for less-literate members. Benchmark does
+      not assess accessibility or comprehension of translated output for variable-literacy
+      readers.
+  prior_document_exposure: Familiar with prior government communications and their
+    characteristic administrative vocabulary; subject to proclamation-derived land
+    and credit terminology in formal documents rather than traditional local terminology
+  technology_access:
+    mobile_penetration_amhara_rural: '[NEEDS VERIFICATION]'
+    smartphone_vs_feature_phone_split: '[NEEDS VERIFICATION — Amhara rural context;
+      likely higher feature-phone share than urban Ethiopia]'
+    internet_connectivity_rural_amhara: '[NEEDS VERIFICATION]'
+    electricity_access_rural_amhara: '[NEEDS VERIFICATION]'
+    primary_access_mode: Translated documents likely received as printed paper copies
+      distributed through cooperative offices or MFI branches, or as SMS/WhatsApp
+      messages forwarded by extension workers — not direct AI system interaction by
+      end-users
+  document_interaction_mode: Cooperative leaders and extension workers receive and
+    interpret translated documents on behalf of cooperative members; end-users typically
+    do not interact with the translation system directly
+cultural_and_institutional_norms:
+  cooperative_culture: Agricultural cooperatives in Amhara region are a primary channel
+    for government input delivery and credit access; cooperative leader decisions
+    based on misunderstood translated documents affect the entire membership collectively
+  government_document_authority: Ethiopian government proclamation documents carry
+    binding legal authority; translation errors in official notices have enforceable
+    legal and financial consequences, not merely informational ones
+  trust_and_legitimacy: Rural users extend institutional trust to documents appearing
+    to come from government bureaus; translation errors that alter meaning may go
+    undetected if the output superficially resembles expected administrative language
+  oral_tradition_and_document_mediation: Strong oral tradition in rural Amhara; cooperative
+    leaders and extension workers typically read documents aloud and explain them
+    to less-literate members — translation fluency and naturalness in spoken Amharic
+    matters for this mediation function
+  language_formality_expectations: End-users expect translated government documents
+    to match the formal register of Amharic they associate with official communications;
+    overly colloquial or health-news-register Amharic may undermine perceived document
+    legitimacy
+  religious_and_social_calendar: '[NEEDS VERIFICATION — whether Ethiopian Orthodox
+    Christian calendar or other religious observances create seasonal patterns relevant
+    to subsidy application deadlines or document distribution timing in Amhara region]'
+infrastructure_notes:
+  distribution_channel: Translated documents distributed through cooperative offices,
+    MFI branch offices, woreda-level bureau offices, and extension worker networks
+    — print-centric, not digital-first delivery
+  translation_system_operator: System operated by federal/regional bureau translation
+    staff or a deployment intermediary, not by end-users directly
+  format_requirements:
+    text_only_deployment: Current deployment is text-only; flowing prose is acceptable
+      but structure preservation preferred where feasible
+    structure_preservation_gap: AFRIDOC-MT does not evaluate preservation of numbered
+      clauses, tables, or signature blocks — a partial gap if deployment evolves toward
+      format-preserving or multimodal translation
+    multimodal_future: '[NEEDS VERIFICATION — whether bureau documents are supplied
+      as scanned PDFs requiring OCR, structured digital files, or plain text — affects
+      whether multimodal structure-preservation becomes a near-term requirement]'
+benchmark_alignment_summary:
+  benchmark: AFRIDOC-MT
+  language_coverage: PRESENT — Amharic is one of five target languages, handled in
+    Ethiopic script with documented accommodations for token-length constraints
+  domain_coverage: ABSENT — health and IT news only; zero agricultural, land-use,
+    cooperative, or credit-scheme documents
+  register_coverage: ABSENT — health/IT news register vs. Ethiopian proclamation-derived
+    formal administrative register; no overlap
+  terminology_coverage: ABSENT — benchmark vocabulary drawn entirely from health/IT
+    sources; proclamation-derived agricultural and financial terminology entirely
+    unrepresented
+  annotator_domain_alignment: ABSENT — no documented agricultural or legal translation
+    expertise among AFRIDOC-MT Amharic translators; inter-annotator agreement for
+    Amharic was 0.46 (Krippendorff's alpha)
+  output_scoring_alignment: PARTIAL — d-chrF captures morphological quality broadly;
+    no rubric component for terminological consistency across multi-clause documents;
+    GPT-4o-as-judge explicitly unreliable for African language translation directions
+  source_language_direction: MISMATCHED — benchmark translates FROM English; deployment
+    translates FROM Amharic government-register documents; translationese profile
+    is inapplicable
+  document_structure_scoring: ABSENT — no metric evaluates preservation of numbered
+    clauses, tables, or signature blocks
+flagged_gaps_for_web_search:
+- gap_id: 1
+  description: Agricultural and regulatory domain absence from all Amharic MT benchmarks
+  search_target: Amharic machine translation benchmark agricultural legal regulatory
+    Ethiopian government proclamation evaluation dataset
+- gap_id: 2
+  description: Proclamation-register Amharic terminology resources
+  search_target: Ethiopian agricultural proclamation Amharic terminology glossary
+    Ministry of Agriculture ATA subsidy cooperative land tenure translation resource
+- gap_id: 3
+  description: AFRIDOC-MT Amharic translator backgrounds and domain expertise
+  search_target: AFRIDOC-MT Amharic translators Bereket Tilahun Hana Tamiru Biniam
+    Asmlash Lidetewold Kebede institutional affiliation agricultural legal domain
+    Ethiopia
+- gap_id: 4
+  description: Amhara sub-regional Amharic register and dialect features relative
+    to national standard
+  search_target: Amhara region Amharic dialect administrative register variation Ethiopian
+    NLP sub-national bureau language
+- gap_id: 5
+  description: ACSI and ADCSI operational scope and Amhara region microfinance landscape
+  search_target: ACSI Amhara Credit Savings Institution loan products cooperative
+    clients ADCSI Amhara region microfinance Ethiopia rural
+- gap_id: 6
+  description: Terminological consistency evaluation metrics for legal-administrative
+    MT
+  search_target: terminological consistency evaluation metric machine translation
+    legal administrative documents African languages benchmark
+- gap_id: 7
+  description: Low-literacy end-user accessibility of translated government Amharic
+    documents
+  search_target: Amharic plain language government document comprehension rural Ethiopia
+    cooperative members literacy accessibility
+- gap_id: 8
+  description: Current Ethiopian federal cooperative and land proclamation operative
+    terminology
+  search_target: Ethiopian cooperative proclamation Amharic current federal land administration
+    proclamation Amhara region holding certificate terminology

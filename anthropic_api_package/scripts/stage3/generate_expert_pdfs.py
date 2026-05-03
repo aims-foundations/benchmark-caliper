@@ -135,6 +135,10 @@ _SCRIPT_RANGES = [
     (0x1000, 0x109F, "NotoSansMyanmar"),
     (0x0E80, 0x0EFF, "NotoSansLao"),
     (0x1780, 0x17FF, "NotoSansKhmer"),
+    (0x1200, 0x137F, "NotoSansEthiopic"),
+    (0x1380, 0x139F, "NotoSansEthiopic"),
+    (0x2D80, 0x2DDF, "NotoSansEthiopic"),
+    (0xAB00, 0xAB2F, "NotoSansEthiopic"),
 ]
 
 _noto_registered = set()
@@ -1320,6 +1324,8 @@ COMPARATOR_MAP = {
     "arabicmmlu": "mmlu",
     "laila": "asap_pp",
     "toxigen": "civil_comments",
+    "afridoc_mt_document_level_mt_corpus_for_african_languages": "flores200",
+    "injongo_a_multicultural_intent_detection_and_slot_filling_dataset_for_16_african_languages": "massive",
 }
 COMPARATOR_BENCHMARKS = set(COMPARATOR_MAP.values())
 

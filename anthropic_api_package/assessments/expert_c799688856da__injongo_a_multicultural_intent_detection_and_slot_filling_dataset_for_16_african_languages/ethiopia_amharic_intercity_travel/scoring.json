@@ -1,0 +1,428 @@
+{
+  "benchmark": "INJONGO",
+  "region": "Ethiopian Intercity/Ride-Hail Commuter Cohort (Amharic-Primary)",
+  "dimensions": {
+    "input_ontology": {
+      "score": 2,
+      "justification": "INJONGO's travel domain is derived from CLINC's generic intent set ('exchange rate', 'book flight') [Q39] and explicitly omits intercity bus operator flows. Empirical inspection of the Amharic split confirms that all sampled travel-domain Amharic utterances use air-travel framing (book_flight to Turkey, Sudan) or generic car rental — there are no intercity bus, seat-class, or operator-specific intents [DATASET-D7, D8, D25, D26]. The deployment requires intent detection for Sky Bus / Selam Bus / Ride bus and ride-hail booking, including seat-class upgrade, road-closure rebooking, holiday-surge booking, and operator-specific cancellation, none of which appear in the 40-intent taxonomy. The paper itself acknowledges scope limits [Q107, Q111]. Although elicitation marked IO as MODERATE priority (user accepts general travel intents as broadly comparable), the empirical ontology mismatch in the travel subdomain is concrete and substantial.",
+      "strengths": [
+        "Joint intent + slot taxonomy is well-defined and matches the deployment's NLU module structure [Q2, Q31]",
+        "Travel is one of five included domains, providing partial overlap with bus booking flows [Q5, Q117]",
+        "Ground-up African-context elicitation rather than translation reduces some Western framing [Q8, Q30]"
+      ],
+      "checklist_responses": {
+        "IO-1": "Required categories for the deployment include intercity bus route queries, fare lookup, seat selection (VIP/economy), booking, cancellation/rebooking — only generic 'book_flight', 'car_rental', and 'travel_suggestion' overlap, established by elicitation and observed in the Amharic data [DATASET-D7, D8].",
+        "IO-2": "Yes. INJONGO covers 5 domains and 40 intents derived from CLINC [Q39, Q117] and omits intercity bus, seat-class selection, holiday-surge booking, and road-closure rebooking. The paper explicitly notes the taxonomy 'missing some other domains such as healthcare and education' [Q107] and a non-natural intent frequency distribution [Q111].",
+        "IO-3": "The travel domain is dominated by air travel framing in the Amharic split (international flights to Turkey, Sudan) [DATASET-D7, D8, D25, D26]; these are not necessarily irrelevant but concentrate evaluation weight on air rather than surface intercity transport relevant to the deployment.",
+        "IO-4": "Documented gaps: (a) no intercity bus operator intents, (b) no seat-class/fare-tier intents, (c) no rebooking-on-disruption intent, (d) no Ethiopian-holiday surge booking intents — all of which harm content validity for this specific deployment."
+      },
+      "evidence_quotes": [
+        "[Q39] 'we extracted 40 intents from five most suitable domains to the African contexts: Banking ... Travel (e.g. \"exchange rate\", \"book flight\")' (p.3)",
+        "[Q107] 'The scope of INJONGO is constrained by its coverage of only 5 domains and 40 intents, missing some other domains such as healthcare and education that are essential for real-world applications.' (p.9)",
+        "[Q111] 'the fixed distribution of examples across intents may not accurately reflect the natural frequency of these interactions in real-world conversations.' (p.9)",
+        "[Q117] 'These are a total of 40 categories across 5 domains (Banking, Kitchen and Dining, Travel, Utility, and Home).' (p.13)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-9] INJONGO GitHub confirms domain/intent inventory matches CLINC-derived taxonomy"
+      ],
+      "evidence_dataset": [
+        "DATASET-D7: Amharic book_flight is international air travel (to Turkey), no surface transport",
+        "DATASET-D8: Amharic book_flight to Sudan — international air, no bus operator",
+        "DATASET-D25, D26: Both Amharic book_flight examples are international air; no intercity bus intents",
+        "DATASET-D30: No intercity corridors, seat class, bus operator, or fare tier present in Amharic travel utterances"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "DATASET-D7",
+          "DATASET-D8"
+        ],
+        "IO-2": [
+          "Q39",
+          "Q107",
+          "Q117"
+        ],
+        "IO-3": [
+          "DATASET-D7",
+          "DATASET-D8",
+          "DATASET-D25",
+          "DATASET-D26"
+        ],
+        "IO-4": [
+          "Q107",
+          "Q111",
+          "DATASET-D30"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether any Amharic travel-domain utterances in the unsampled 99.4% of the dataset use surface-transport framing"
+      ],
+      "requires_expert_verification": [
+        "Definitive intent inventory of Sky Bus / Selam Bus / Ride booking APIs to quantify gap"
+      ]
+    },
+    "input_content": {
+      "score": 3,
+      "justification": "Empirical dataset inspection partially resolves what the paper does not document. Ethiopian calendar months (Meskerem, Hamle) appear as DATE slot values [DATASET-D1, D2, D6], Ethiopian intercity cities (Dire Dawa, Bahir Dar, Hawassa, Arba Minch) appear as CITY_OR_PROVINCE slots [DATASET-D2, D9], and Ethiopia-specific financial entities (Amhara Bank, Commercial Bank of Ethiopia, TeleBirr, Dashen Bank) appear in banking-domain instances [DATASET-D3, D4, D5, D34]. This is materially better than the registry feared. However, several deployment-critical content gaps remain: (a) Ethiopian Birr (ETB) was absent as a CURRENCY/MONEY slot value in any sampled Amharic example despite Naira/Rand appearing in other tracks [DATASET-D5, D19, D22 vs Amharic absence]; (b) most Amharic DATE slots used relative expressions rather than named Ge'ez months (only 2/9) [DATASET-D15, D16, D28]; (c) Ethiopian time convention (6-hour offset) is unaddressed in TIME annotations [DATASET-D11, D23]; (d) no code-switched Amharic–Oromo / Amharic–Tigrinya utterances appear, despite ~70% L2 Amharic users in the deployment population [DATASET-D1–D18 monolingual]. IC was marked HIGH priority in elicitation, so these residual gaps weigh heavily.",
+      "strengths": [
+        "Ethiopian calendar months (Meskerem, Hamle) confirmed as valid DATE slot annotations in travel-domain Amharic instances [DATASET-D1, D2, D6]",
+        "Major Ethiopian intercity cities (Dire Dawa, Bahir Dar, Hawassa, Arba Minch) appear as CITY_OR_PROVINCE slots [DATASET-D2, D9]",
+        "Ground-up cultural elicitation methodology rather than translation [Q6, Q13, Q30]",
+        "Ethiopia-specific banks and TeleBirr appear as natively grounded entities [DATASET-D3, D4, D5]"
+      ],
+      "checklist_responses": {
+        "IC-1": "Yes — deployment demands Amharic city names/abbreviations, Ethiopian calendar dates, Birr fares, and operator-specific terminology, confirmed by elicitation Q2 (HIGH priority) and YAML calendar/toponym sections.",
+        "IC-2": "Partially. Cultural grounding is confirmed for banking-domain Amharic [DATASET-D3, D4, D5] and partially for travel (Ethiopian cities + Meskerem present) [DATASET-D1, D2, D9]. The grounding methodology is documented [Q30, Q40, Q41].",
+        "IC-3": "Western-content leakage was not observed in the Amharic sample (though present in some other tracks, e.g., Hausa Taco Bell [DATASET-D31]). Air-travel-to-international-destinations framing dominates the Amharic travel domain [DATASET-D7, D8].",
+        "IC-4": "Native Amharic speakers annotated [Q7], but regional/L2 demographics undisclosed and code-switched utterances absent from sample [DATASET-D1–D18]; full re-annotation by Ethiopian regional pool would be advisable.",
+        "IC-5": "Documented residual content gaps: (a) Birr/ETB absent from sampled Amharic CURRENCY/MONEY slots; (b) Ethiopian calendar months sparse vs. relative dates [DATASET-D15, D16, D28]; (c) Ethiopian clock convention undocumented; (d) no code-switched utterances [DATASET-D1–D18]."
+      },
+      "evidence_quotes": [
+        "[Q6] 'providing an annotator with sentences from the CLINC dataset ... they are to come up with culturally-relevant similar sentences and relevant slot entities' (p.1)",
+        "[Q30] 'we ensured that the slot entities are more culturally relevant in the respective countries the languages are from' (p.2)",
+        "[Q40] 'A Xhosa annotator was asked to generate another utterance ... capturing the South African context' (p.3)",
+        "[Q88] 'The performance of some African languages is often higher than others, this is probably connected to the amount of monolingual data available on the web.' (p.7)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-9] INJONGO GitHub provides direct dataset access; banking-domain Amharic utterances reference Ethiopian banks (Abay Bank)",
+        "[WEB-3] Amharic functions as L2 lingua franca; ~29.3% L1 speakers — code-switching expected in deployment population"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1, D2: 'ከድሬዳዋ ወደ ባህርዳር ለመስከረም አምስት' — Ethiopian cities + Ge'ez month Meskerem in travel-domain DATE slot",
+        "DATASET-D6: Hamle (Ethiopian month) used in DATE slot",
+        "DATASET-D9: Hawassa and Arba Minch as CITY_OR_PROVINCE slots in travel_suggestion",
+        "DATASET-D3, D4, D5: Amhara Bank, Commercial Bank of Ethiopia, TeleBirr — Ethiopia-specific banking entities",
+        "DATASET-D15, D16, D28: Most Amharic DATE annotations use relative expressions ('this month', 'next month') rather than named Ethiopian calendar months",
+        "DATASET-D5 vs D19, D22: TeleBirr present as PAYMENT_COMPANY but no Birr-denominated CURRENCY/MONEY slot in Amharic sample, while Naira (Hausa) and Rand (Xhosa) are well-represented",
+        "DATASET-D1–D18: All Amharic utterances monolingual; no Oromo/Tigrinya/English code-switching observed",
+        "DATASET-D11, D23: Ethiopian clock convention (12 ሰአት) ambiguity; one example unannotated"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "Q6",
+          "Q30"
+        ],
+        "IC-2": [
+          "Q40",
+          "DATASET-D1",
+          "DATASET-D2",
+          "DATASET-D3",
+          "DATASET-D4",
+          "DATASET-D5",
+          "DATASET-D9"
+        ],
+        "IC-3": [
+          "DATASET-D7",
+          "DATASET-D8",
+          "DATASET-D31"
+        ],
+        "IC-4": [
+          "Q7"
+        ],
+        "IC-5": [
+          "DATASET-D11",
+          "DATASET-D15",
+          "DATASET-D16",
+          "DATASET-D28",
+          "DATASET-D5",
+          "DATASET-D19",
+          "DATASET-D22"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Birr coverage in the 99.4% of Amharic data not sampled",
+        "Frequency of named Ethiopian calendar months vs. relative dates in full travel split",
+        "Whether any code-switched Amharic utterances exist in unsampled portions"
+      ],
+      "requires_expert_verification": [
+        "Native Amharic-speaking expert review of Ethiopian time convention handling in TIME slots across the full dataset"
+      ]
+    },
+    "input_form": {
+      "score": 5,
+      "justification": "INJONGO is a text-only benchmark [Q38, Q43] released under CC BY 4.0 [Q23], with Amharic encoded in Ge'ez/Ethiopic script. The deployment is also a text-based smartphone app, with primary input in Ge'ez script. Dataset inspection confirms all sampled Amharic examples use proper Ge'ez script with no romanization or mixed-script anomalies [DATASET-D1, D5]. There is full modality and script alignment. Elicitation marked IF as LOWER priority, consistent with no concrete violations.",
+      "strengths": [
+        "Text modality fully matches deployment [Q38]",
+        "Ge'ez script used consistently in all sampled Amharic examples with no anomalies [DATASET-D1, D5]",
+        "CC BY 4.0 license permits adaptation [Q23]"
+      ],
+      "checklist_responses": {
+        "IF-1": "Both source and target are plain text in Ge'ez script for Amharic [Q38, DATASET-D1].",
+        "IF-2": "Smartphone IMEs support Ge'ez input on major Android distributions (qualitative web evidence). National 4G coverage of ~33% [WEB-6] affects connectivity but not signal form.",
+        "IF-3": "No domain-specific form differences relevant — both contexts are typed conversational text.",
+        "IF-4": "No form mismatches identified for the Amharic deployment."
+      },
+      "evidence_quotes": [
+        "[Q23] 'Dataset is released under CC BY 4.0 license.' (p.2)",
+        "[Q38] 'the dataset construction follows two stages: (1) Utterance elicitation in an African language and (2) Slot-filling annotation of the generated utterance.' (p.3)",
+        "[Q43] 'The annotation followed the named entity recognition setup on LabelStudio platform.' (p.4)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-6] GSMA Ethiopia: 3G covers ~98% of population, 4G ~33% — connectivity context for smartphone app deployment"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: Amharic utterance in proper Ge'ez script throughout",
+        "DATASET-D5: Ge'ez script consistent throughout Amharic banking example"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q38",
+          "DATASET-D1"
+        ],
+        "IF-2": [
+          "WEB-6"
+        ],
+        "IF-3": [
+          "Q38"
+        ],
+        "IF-4": [
+          "DATASET-D1",
+          "DATASET-D5"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Behavior on code-switched tokens written in Latin script (e.g., Oromo lexical insertions) is undocumented"
+      ],
+      "requires_expert_verification": []
+    },
+    "output_ontology": {
+      "score": 2,
+      "justification": "The 23-slot final ontology [Q118, Q119, Q144] includes structural fits for deployment needs (CITY_OR_PROVINCE, MONEY, CURRENCY, DATE, TIME, BANK_NAME), and merging of low-frequency types is principled [Q51, Q52, Q55]. However, several decision-rule mismatches arise for the Ethiopian deployment: (a) DATE/TIME boundary rules are documented [Q153, Q154] using Gregorian conventions only — no accommodation for Ethiopian calendar (13 months, Pagume intercalary) or 6-hour offset clock; (b) the 40-intent inventory excludes intercity bus, seat-class, fare-tier, and rebooking categories required for Sky Bus/Selam Bus/Ride [Q39, DATASET-D7, D8]; (c) dataset inspection shows Amharic DATE annotations dominated by relative expressions, suggesting the operative decision rule for Ethiopian month names is undertested [DATASET-D15, D16, D28]. These are structural-validity gaps. A redeeming factor: Ethiopian month names did appear as DATE slots [DATASET-D2, D6], so the ontology can host them in principle.",
+      "strengths": [
+        "23 slot types including travel-relevant CITY_OR_PROVINCE, MONEY, CURRENCY, DATE, TIME [Q144]",
+        "Detailed boundary rules for ambiguous cases (TIME vs DATE, BANK_NAME word inclusion) [Q152, Q153, Q154]",
+        "Ontology can in principle host Ge'ez month names — confirmed empirically [DATASET-D2, D6]",
+        "Merging process reduced ambiguity from 34 to 23 types [Q55, Q119]"
+      ],
+      "checklist_responses": {
+        "OO-1": "Most slot types are regionally relevant (cities, money, banks). However, the intent ontology lacks bus-operator-specific categories required for the deployment [Q39, DATASET-D30].",
+        "OO-2": "Missing: intercity bus intents, seat-class/fare-tier intents, rebooking-on-disruption intent. DATE rule does not encode Ethiopian calendar month set; TIME rule does not encode Ethiopian clock convention [Q153, Q154].",
+        "OO-3": "DATE/TIME annotation conventions are implicitly Gregorian/international as documented [Q153, Q154]; this encodes a non-Ethiopian temporal convention as default, with no documented annotator instruction for Ge'ez calendar or 6-hour-offset clock.",
+        "OO-4": "Stakeholder-driven taxonomy redesign is recommended for the intent layer (add bus-specific intents) and for the DATE/TIME decision rules (specify Ge'ez calendar handling and Ethiopian clock disambiguation).",
+        "OO-5": "Documented issues: missing bus intents harm content validity; Gregorian-only DATE/TIME decision rules harm structural validity for Ethiopian temporal expressions."
+      },
+      "evidence_quotes": [
+        "[Q119] 'After merging similar or low-frequency types during data preprocessing in Section 3.3, it was reduced to 23 distinct slot types' (p.13)",
+        "[Q144] 'ACCOUNT_TYPE, ARTIST_NAME, BANK_NAME, BILL_TYPE, CALENDAR_EVENT, CITY_OR_PROVINCE, COUNTRY, CURRENCY, DATE, ... TIME' (p.19)",
+        "[Q153] 'Anything that is less than one day should be annotated as TIME and not DATE' (p.21)",
+        "[Q154] 'Anything that is more than one day must be annotated as DATE and not time' (p.21)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-9] INJONGO GitHub — 23-slot ontology in annotation prompts confirmed"
+      ],
+      "evidence_dataset": [
+        "DATASET-D2, D6: Ge'ez month names accepted as DATE slot values empirically",
+        "DATASET-D15, D16, D28: Most DATE slot values are relative expressions rather than named Ethiopian months",
+        "DATASET-D11, D23: Ethiopian clock TIME values either unannotated or ambiguous",
+        "DATASET-D30: Travel intent set excludes bus operator and seat-class flows"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q144",
+          "DATASET-D30"
+        ],
+        "OO-2": [
+          "Q39",
+          "Q153",
+          "Q154",
+          "DATASET-D30"
+        ],
+        "OO-3": [
+          "Q153",
+          "Q154",
+          "DATASET-D11",
+          "DATASET-D23"
+        ],
+        "OO-4": [
+          "DATASET-D30",
+          "DATASET-D11"
+        ],
+        "OO-5": [
+          "Q39",
+          "Q153",
+          "Q154"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether the annotation guide (full Appendix) includes any Ge'ez calendar examples beyond the verbatim quotes available"
+      ],
+      "requires_expert_verification": [
+        "Whether 'CALENDAR_EVENT' would accommodate Timkat/Meskel as labels — taxonomy intent unclear from documentation"
+      ]
+    },
+    "output_content": {
+      "score": 2,
+      "justification": "Annotation methodology is sound on its face: ≥3 native annotators per utterance with majority voting [Q42, Q45], Fleiss' Kappa improving to 0.912–1.00 after a two-round review [Q47, Q48], with Amharic specifically reaching κ=0.933 post-review (initial 0.836). However, several documented and empirical gaps reduce convergent validity for this deployment: (a) annotator regional/L2 demographics within Ethiopia are undisclosed [Q44, gap-4 NOT FOUND]; (b) the actual user population includes L2 Amharic speakers from Oromia, Tigray, and SNNP regions who code-switch — a population mismatch flagged HIGH in elicitation; (c) dataset inspection reveals concrete annotation gaps (empty spans on utterances containing clear DATE/TIME content [DATASET-D11, D33], inconsistent treatment of '12 ሰአት' across alarm utterances [DATASET-D11 vs D23], misannotated PERSONAL_NAME in Oromo [DATASET-D29]); (d) no code-switched utterances at all in 19 Amharic samples [DATASET-D1–D18]. OC was marked HIGH priority in elicitation, so these residuals weigh heavily.",
+      "strengths": [
+        "Native-speaker annotation with three annotators and majority voting [Q42, Q45]",
+        "Two-round review process raised inter-annotator agreement substantially [Q47, Q48, Q109]",
+        "Amharic post-review κ=0.933, second-highest among all initial scores [WEB-17]",
+        "Detailed annotation guide with edge-case rules [Q149, Q156, Q157]"
+      ],
+      "checklist_responses": {
+        "OC-1": "Partially. Native Amharic annotators were used [Q7], but their regional/L2 representativeness for the actual deployment user base (multi-regional, L2-heavy) is undisclosed [Q44].",
+        "OC-2": "Likely disagreement on (a) code-switched utterances (absent from training entirely), (b) Ethiopian time convention, (c) regional toponyms beyond major cities. Demographic profile of annotators is not published.",
+        "OC-3": "Documentation specifies 'native speakers' [Q7] and recruitment via a Kenyan logistics company [Q44]. No demographic breakdown by region, urban/rural, age, or L1/L2 status is provided.",
+        "OC-4": "Re-annotation by a representative pool (including non-Addis L2 speakers and code-switching annotators) is recommended given the deployment's user heterogeneity.",
+        "OC-5": "Majority voting [Q45] is used. With three annotators and absence of demographic diversity controls, minority regional perspectives may be erased; the review process explicitly resolved disagreement toward consistency [Q53, Q109].",
+        "OC-6": "Documented issues: undisclosed demographics, observed annotation gaps in Amharic [DATASET-D11, D33], absence of code-switched data — all harming convergent and external validity."
+      },
+      "evidence_quotes": [
+        "[Q7] 'utterances generated by native speakers across diverse domains' (p.1)",
+        "[Q42] 'Each utterance was annotated by three annotators so that we could check for agreement in the slot annotations.' (p.4)",
+        "[Q44] 'all recruited participants received an appropriate remuneration based on the per-country rate decided by our logistics company in Kenya.' (p.4)",
+        "[Q45] 'a majority voting system with a minimum of three annotators per sentence to resolve disagreements.' (p.4)",
+        "[Q48] 'agreement scores improved markedly across all languages, reaching 0.912-1.00.' (p.4)",
+        "[Q53] 'ambiguous slot types significantly impacted annotation quality and introduced unnecessary complexity.' (p.4)",
+        "[Q109] 'requiring two rounds of review to achieve consistent quality.' (p.9)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-17] INJONGO Table 8 — Amharic initial κ=0.836, post-review κ=0.933",
+        "[WEB-3] Amharic L2 lingua-franca status — most learned second language across Ethiopia"
+      ],
+      "evidence_dataset": [
+        "DATASET-D11: Amharic alarm utterance with empty spans despite containing 'ነገ' (tomorrow) and '12 ሰአት' (12 o'clock) — annotation gap",
+        "DATASET-D33: Amharic calendar_update with empty spans despite birthday calendar event content",
+        "DATASET-D23: Same utterance type annotated inconsistently across two examples — '12 ሰአት' once unannotated, once with TIME slot",
+        "DATASET-D29: Oromo PERSONAL_NAME 'caalaa' likely misannotated from 'galgala caalaan' phrase",
+        "DATASET-D1–D18: No code-switched Amharic utterances in any sample — annotator pool/methodology did not produce them"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q7",
+          "Q44"
+        ],
+        "OC-2": [
+          "DATASET-D1",
+          "DATASET-D11",
+          "WEB-3"
+        ],
+        "OC-3": [
+          "Q7",
+          "Q44"
+        ],
+        "OC-4": [
+          "WEB-3"
+        ],
+        "OC-5": [
+          "Q45",
+          "Q53",
+          "Q109"
+        ],
+        "OC-6": [
+          "DATASET-D11",
+          "DATASET-D33",
+          "DATASET-D29"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Annotator demographics within Ethiopia (region of origin, urban/rural, L1/L2 Amharic, age, education)",
+        "Number of annotators recruited for the Amharic split specifically",
+        "Whether any annotation review was performed by Ethiopian regional sub-population"
+      ],
+      "requires_expert_verification": [
+        "Native Amharic speaker review of suspected misannotations and empty-span examples to confirm rate of annotation gaps"
+      ]
+    },
+    "output_form": {
+      "score": 4,
+      "justification": "Output is intent class (closed 40-class label) plus structured slot-tag spans in $$-delimited text [Q145, Q146], scored with accuracy and F1 [Q84]. This matches the deployment's task-oriented dialogue NLU output requirements directly. Best fine-tuned models reach 93.7% intent accuracy / 85.6% F1 [Q19, Q78], setting an upper bound; Amharic-specific scores are reported in Table 5 (per-language) but not extracted in registry — gap noted. One minor concern: the eng config used for cross-lingual transfer contains lossy transliterations of Ethiopian entities (e.g., 'Dashen' → 'dasion') [DATASET-D34], which slightly degrades cross-lingual transfer evaluation quality. OF was marked LOWER priority and substantively the form fits.",
+      "strengths": [
+        "Structured intent + slot-tag output format directly matches deployment NLU module requirements [Q145, Q146]",
+        "Accuracy and F1 metrics appropriate for closed-class intent and span-based slot evaluation [Q84]",
+        "Amharic post-review annotation quality high (κ=0.933) [WEB-17]"
+      ],
+      "checklist_responses": {
+        "OF-1": "Yes — text-based intent class + slot-tag output exactly matches deployment NLU module needs [Q145, Q146].",
+        "OF-2": "TTS not relevant — deployment is text-based smartphone app.",
+        "OF-3": "Smartphone-app users are positively selected for literacy [WEB-4 ~15% smartphone ownership]; text output is appropriate. National literacy ~71% [WEB-1, WEB-2] is lower than the smartphone-using subset, but for the deployment's user segment text output is suitable.",
+        "OF-4": "Minor: lossy transliteration of Ethiopian entities in the eng config [DATASET-D34] could weaken cross-lingual transfer evaluation but does not affect direct Amharic deployment evaluation."
+      },
+      "evidence_quotes": [
+        "[Q19] 'fine-tuning baselines could reach an accuracy of 93.7% and F1-score of 85.6 for intent detection and slot-filling tasks respectively.' (p.2)",
+        "[Q84] 'Evaluation is based on accuracy and F1-score for ID and SF tasks.' (p.7)",
+        "[Q145] 'Please ensure that the entities match the listed types and that unstated entities should not be included in the response if no entities are found, return $$ only.' (p.19)",
+        "[Q146] 'Output: PERSONAL_NAME John $$ CITY_OR_PROVINCE Paris $$ MONEY 100 $$ RESTAURANT_NAME Awater' (p.19)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-4] Ethiopia smartphone ownership ~15% — text-based output appropriate for app user segment",
+        "[WEB-17] Amharic post-review κ=0.933 supports output reliability"
+      ],
+      "evidence_dataset": [
+        "DATASET-D34: 'Dashen Bank' transliterated as 'dasion bank' in eng config — cross-lingual transfer source quality concern"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q145",
+          "Q146"
+        ],
+        "OF-2": [
+          "Q84"
+        ],
+        "OF-3": [
+          "WEB-4"
+        ],
+        "OF-4": [
+          "DATASET-D34"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Amharic-specific intent accuracy and slot F1 from Table 5 of the paper not directly extracted"
+      ],
+      "requires_expert_verification": []
+    }
+  },
+  "overall_summary": "INJONGO is the most relevant existing benchmark for Amharic intent detection and slot-filling, and the only large-scale resource of its kind. For the Ethiopian intercity/ride-hail deployment, it provides genuine value in three respects: (1) Amharic is included as a first-class language with culturally grounded entities (Ethiopian banks, TeleBirr, Ethiopian cities including Dire Dawa, Bahir Dar, Hawassa, Arba Minch, and even Ge'ez calendar months Meskerem and Hamle as DATE slot values); (2) text/Ge'ez script and structured intent+slot output exactly match deployment requirements; (3) annotation quality after review is high (κ=0.933 for Amharic). However, three substantive gaps limit construct validity for this specific deployment: (a) the 40-intent travel taxonomy is air-travel-framed and entirely lacks intercity bus, seat-class, fare-tier, and operator-specific rebooking intents — confirmed empirically in the Amharic split (HIGH-priority IO concern); (b) Ethiopian Birr is absent as a CURRENCY/MONEY slot value in the sampled Amharic data while other tracks' currencies (Naira, Rand) are well-represented, and most Amharic DATE slots use relative expressions rather than named Ge'ez months (HIGH-priority IC residuals); (c) no code-switched Amharic–Oromo / Amharic–Tigrinya utterances exist despite the L2-heavy multi-regional user base, and annotator regional demographics are undisclosed (HIGH-priority OC concern). The benchmark is suitable as a foundation but requires deployment-specific supplementation before being treated as sufficient evaluation evidence.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "INJONGO measures Amharic NLU performance on a 40-intent / 23-slot taxonomy spanning banking, home, kitchen-and-dining, travel, and utility domains, using accuracy (intent) and F1 (slot). It provides a valid measure of (i) general Amharic text comprehension by encoder, encoder-decoder, and LLM-prompted models, (ii) culturally grounded slot extraction for Ethiopian banks, payment platforms (TeleBirr), and major intercity cities, and (iii) cross-lingual transfer behavior from English to Amharic. Strongest dimensions for this deployment are input form (full text/Ge'ez match) and output form (structured intent+slot output matches NLU module). It can support model selection across encoder, decoder, and LLM families for the Amharic NLU layer.",
+    "construct_depth": "Construct depth is shallow-to-moderate for the deployment's actual task. The benchmark probes generic conversational NLU on Amharic and partially covers Ethiopian cultural grounding in banking and selected travel slots, but it does not probe (a) intercity bus operator booking flows, (b) seat-class/fare-tier reasoning, (c) Ethiopian Birr fare extraction in travel context, (d) Ethiopian-clock-convention TIME extraction, (e) Ge'ez-calendar dense temporal reasoning beyond the few sampled instances, or (f) code-switched Amharic–Oromo / Amharic–Tigrinya robustness. High benchmark scores would not justify confidence that a deployed model handles fare extraction, holiday-surge bookings, or L2-speaker code-switched utterances correctly.",
+    "supplementation_needed": "(1) For input ontology: build an operator-specific intent inventory (Sky Bus, Selam Bus, Ride) covering seat-class upgrade, road-closure rebooking, holiday-surge booking, and operator-specific cancellation; benchmark on this. (2) For input content: collect or synthesize an Amharic test slice with Ethiopian Birr-denominated fares, dense Ge'ez calendar month references including Pagume, Ethiopian-clock-convention TIME values, and the full set of intercity corridor toponyms; supplement with code-switched Amharic–Oromo and Amharic–Tigrinya utterances. (3) For output content: re-annotate or expert-validate a slice using non-Addis-centric L2 Amharic annotators, including rural and Tigray/Oromia-region speakers, to assess label validity for code-switched utterances. (4) Supplement with EthioBenchmark NER/POS as auxiliary evidence, and operator-log-derived utterances for ecological validity."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "INJONGO's 40-intent travel taxonomy is air-travel framed and lacks intercity bus operator flows (seat-class, rebooking, holiday-surge)",
+      "recommendation": "Define a deployment-specific intent supplement (~10–15 intents) drawn from Sky Bus / Selam Bus / Ride API surfaces; collect 50–100 Amharic utterances per intent via native speaker elicitation following INJONGO's methodology; treat this as a required held-out evaluation alongside INJONGO's travel domain."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "Ethiopian Birr (ETB) absent as CURRENCY/MONEY slot in sampled Amharic; most DATE slots use relative expressions rather than named Ge'ez months; Ethiopian clock convention undocumented; no code-switched utterances",
+      "recommendation": "Construct a 'ETH-Travel-Slot Stress Set' of Amharic utterances densely populated with (a) Birr fare amounts (VIP/economy tiers), (b) Ge'ez calendar month names across all 13 months including Pagume, (c) Ethiopian-clock TIME values with explicit annotator convention, (d) code-switched Amharic–Oromo and Amharic–Tigrinya tokens for cities and booking terms; evaluate alongside INJONGO Amharic test."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "DATE/TIME annotation rules implicitly Gregorian/international; no documented decision rule for Ge'ez calendar or Ethiopian 6-hour-offset clock; no intent categories for bus-specific flows",
+      "recommendation": "Author a Ge'ez-calendar and Ethiopian-clock annotation addendum to the INJONGO guide, specifying acceptable surface forms for each Ge'ez month, intercalary Pagume handling, and disambiguation rules for ambiguous TIME expressions; add bus-specific intents to the operative ontology for downstream evaluation."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Annotator regional/L2 demographics within Ethiopia undisclosed; observed annotation gaps (empty spans on utterances with clear DATE/TIME content); no code-switched data ever annotated",
+      "recommendation": "Recruit a regionally diverse annotator pool — explicitly including non-Addis annotators from Amhara, Oromia, Tigray, SNNP, and Somali regions, with documented L1/L2 status — and re-annotate a stratified sample (~500 utterances) of the Amharic INJONGO test split plus a new code-switched mini-set; report κ stratified by annotator subgroup."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "Annotation gaps observed empirically (empty spans on temporally explicit utterances)",
+      "recommendation": "Run a targeted audit pass over Amharic train/dev/test for empty-span utterances containing temporal lexemes ('ሰአት', 'ጠዋት', 'ነገ', Ge'ez month names) and patch with corrected annotations before using F1 as a model-selection metric."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "Lossy transliteration of Ethiopian entities in the eng config used for cross-lingual transfer (e.g., Dashen Bank → 'dasion')",
+      "recommendation": "If using INJONGO's English split as a cross-lingual source, normalize transliterations of Ethiopian named entities to standard English spellings (Dashen Bank, Awash Bank, Abay Bank) before training; otherwise prefer in-language SFT."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_ontology",
+    "input_content",
+    "output_content"
+  ],
+  "strongest_dimensions": [
+    "input_form",
+    "output_form"
+  ]
+}
