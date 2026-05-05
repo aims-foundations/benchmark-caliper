@@ -1,0 +1,322 @@
+[
+  {
+    "expert_id": "expert_3c703eb48522",
+    "regional_benchmark": "crisisltlsum",
+    "comparator_benchmark": "CNN/DailyMail",
+    "tuple_slug": "ecuador_spanish_disaster_response",
+    "region": "Ecuador — Humanitarian Crisis Social Media Analysts",
+    "pair_num": 1,
+    "overall_ordering": "CRISISLTLSUM should score higher than CNN_DAILYMAIL_RC",
+    "overall_ordering_code": "regional_higher",
+    "dimension_ordering": {
+      "input_content": "CRISISLTLSUM should score higher than CNN_DAILYMAIL_RC",
+      "output_form": "CRISISLTLSUM should score higher than CNN_DAILYMAIL_RC",
+      "input_ontology": "CRISISLTLSUM should score higher than CNN_DAILYMAIL_RC",
+      "output_content": "CRISISLTLSUM should score higher than CNN_DAILYMAIL_RC",
+      "input_form": "Relative ordering is about right",
+      "output_ontology": "Relative ordering is about right"
+    },
+    "dimension_ordering_codes": {
+      "input_content": "regional_higher",
+      "output_form": "regional_higher",
+      "input_ontology": "regional_higher",
+      "output_content": "regional_higher",
+      "input_form": "about_right",
+      "output_ontology": "about_right"
+    },
+    "justification_quality": 4,
+    "room_to_grow": 4,
+    "missing_differences": null,
+    "expert_email": "ticona.belu@gmail.com",
+    "respondent_email": "ticona.belu@gmail.com",
+    "submitted_at": "2026-05-05T04:37:07.431303Z"
+  },
+  {
+    "expert_id": "expert_3c703eb48522",
+    "regional_benchmark": "wximpactbench",
+    "comparator_benchmark": "crisisbench",
+    "tuple_slug": "argentina_rioplatense_disaster_policy",
+    "region": "Argentine Government Disaster Reporting Reliability — Policy Staff",
+    "pair_num": 2,
+    "overall_ordering": "Relative ordering is about right",
+    "overall_ordering_code": "about_right",
+    "dimension_ordering": {
+      "output_content": "Relative ordering is about right",
+      "input_form": "Relative ordering is about right",
+      "output_form": "Relative ordering is about right",
+      "input_ontology": "Relative ordering is about right",
+      "input_content": "CRISISBENCH should score higher than WXIMPACTBENCH",
+      "output_ontology": "Relative ordering is about right"
+    },
+    "dimension_ordering_codes": {
+      "output_content": "about_right",
+      "input_form": "about_right",
+      "output_form": "about_right",
+      "input_ontology": "about_right",
+      "input_content": "regional_higher",
+      "output_ontology": "about_right"
+    },
+    "justification_quality": 4,
+    "room_to_grow": 5,
+    "missing_differences": "There was an ambiguity In the deployment context, the use case focuses on 'news' but in the target user sections other channels are mentioned: \"social media, press\". These benchmarks cover different channels and maybe this is not a fair comparison. \nWXIMPACTBENCH focuses and news and CRISISBENCH on social media, both having validity concerns for this use case that are well explained in the comparison. ",
+    "expert_email": "ticona.belu@gmail.com",
+    "respondent_email": "ticona.belu@gmail.com",
+    "submitted_at": "2026-05-05T04:37:07.431303Z"
+  },
+  {
+    "expert_id": "expert_a59b4f572c38",
+    "regional_benchmark": "milu",
+    "comparator_benchmark": "mmlu",
+    "tuple_slug": "india_hindi_competitive_exam_prep",
+    "region": "Hindi-Medium Competitive Exam Aspirants — North India (Central Exams)",
+    "pair_num": 1,
+    "overall_ordering": "Relative ordering is about right",
+    "overall_ordering_code": "about_right",
+    "dimension_ordering": {
+      "output_ontology": "Relative ordering is about right",
+      "input_content": "Relative ordering is about right",
+      "output_form": "MILU should score higher than MMLU",
+      "input_form": "Relative ordering is about right",
+      "output_content": "Relative ordering is about right",
+      "input_ontology": "Relative ordering is about right"
+    },
+    "dimension_ordering_codes": {
+      "output_ontology": "about_right",
+      "input_content": "about_right",
+      "output_form": "regional_higher",
+      "input_form": "about_right",
+      "output_content": "about_right",
+      "input_ontology": "about_right"
+    },
+    "justification_quality": 4,
+    "room_to_grow": 4,
+    "missing_differences": null,
+    "expert_email": "kaushalmaurya94@gmail.com",
+    "respondent_email": "kaushalmaurya94@gmail.com",
+    "submitted_at": "2026-05-05T14:10:21.529357Z"
+  },
+  {
+    "expert_id": "expert_a59b4f572c38",
+    "regional_benchmark": "mrbench",
+    "comparator_benchmark": "mathdial",
+    "tuple_slug": "india_urban_english_tutoring",
+    "region": "Indian Metropolitan Grade 1–8 Mathematics Teachers (Delhi & Mumbai)",
+    "pair_num": 2,
+    "overall_ordering": "Scores should be approximately equal",
+    "overall_ordering_code": "equal",
+    "dimension_ordering": {
+      "output_form": "Scores should be approximately equal",
+      "input_form": "Scores should be approximately equal",
+      "output_content": "Scores should be approximately equal",
+      "output_ontology": "Scores should be approximately equal",
+      "input_content": "Scores should be approximately equal",
+      "input_ontology": "Relative ordering is about right"
+    },
+    "dimension_ordering_codes": {
+      "output_form": "equal",
+      "input_form": "equal",
+      "output_content": "equal",
+      "output_ontology": "equal",
+      "input_content": "equal",
+      "input_ontology": "about_right"
+    },
+    "justification_quality": 2,
+    "room_to_grow": 2,
+    "missing_differences": null,
+    "expert_email": "kaushalmaurya94@gmail.com",
+    "respondent_email": "kaushalmaurya94@gmail.com",
+    "submitted_at": "2026-05-05T14:10:21.529357Z"
+  },
+  {
+    "expert_id": "expert_b082a2ed12a9",
+    "regional_benchmark": "drbenchmark",
+    "comparator_benchmark": "blurb",
+    "tuple_slug": "france_pharma_regulatory",
+    "region": "EU Pharmaceutical Regulatory NLP — French",
+    "pair_num": 1,
+    "overall_ordering": "Relative ordering is about right",
+    "overall_ordering_code": "about_right",
+    "dimension_ordering": {
+      "output_form": "Relative ordering is about right",
+      "output_ontology": "Relative ordering is about right",
+      "input_content": "Relative ordering is about right",
+      "output_content": "Relative ordering is about right",
+      "input_ontology": "Relative ordering is about right",
+      "input_form": "Relative ordering is about right"
+    },
+    "dimension_ordering_codes": {
+      "output_form": "about_right",
+      "output_ontology": "about_right",
+      "input_content": "about_right",
+      "output_content": "about_right",
+      "input_ontology": "about_right",
+      "input_form": "about_right"
+    },
+    "justification_quality": 4,
+    "room_to_grow": 5,
+    "missing_differences": null,
+    "expert_email": "philippy.fred@gmail.com",
+    "respondent_email": "philippy.fred@gmail.com",
+    "submitted_at": "2026-05-05T12:55:32.663479Z"
+  },
+  {
+    "expert_id": "expert_b082a2ed12a9",
+    "regional_benchmark": "ltzglue",
+    "comparator_benchmark": "glue",
+    "tuple_slug": "luxembourg_luxembourgish_public_admin",
+    "region": "Luxembourg Public Administration — Civil Servant NLU Deployment",
+    "pair_num": 2,
+    "overall_ordering": "Relative ordering is about right",
+    "overall_ordering_code": "about_right",
+    "dimension_ordering": {
+      "output_form": "Relative ordering is about right",
+      "input_content": "Relative ordering is about right",
+      "output_content": "Relative ordering is about right",
+      "input_form": "Relative ordering is about right",
+      "input_ontology": "Relative ordering is about right",
+      "output_ontology": "Relative ordering is about right"
+    },
+    "dimension_ordering_codes": {
+      "output_form": "about_right",
+      "input_content": "about_right",
+      "output_content": "about_right",
+      "input_form": "about_right",
+      "input_ontology": "about_right",
+      "output_ontology": "about_right"
+    },
+    "justification_quality": 5,
+    "room_to_grow": 5,
+    "missing_differences": null,
+    "expert_email": "philippy.fred@gmail.com",
+    "respondent_email": "philippy.fred@gmail.com",
+    "submitted_at": "2026-05-05T12:55:32.663479Z"
+  },
+  {
+    "expert_id": "expert_b4708937f060",
+    "regional_benchmark": "milu",
+    "comparator_benchmark": "mmlu",
+    "tuple_slug": "south_asia_agricultural_science_bengali_telugu",
+    "region": "Mymensingh Environmental Scientist — Cross-Regional South Asian Agricultural Knowledge",
+    "pair_num": 1,
+    "overall_ordering": "Relative ordering is about right",
+    "overall_ordering_code": "about_right",
+    "dimension_ordering": {
+      "input_form": "Relative ordering is about right",
+      "output_form": "Relative ordering is about right",
+      "input_ontology": "Relative ordering is about right",
+      "output_ontology": "Relative ordering is about right",
+      "output_content": "Relative ordering is about right",
+      "input_content": "Relative ordering is about right"
+    },
+    "dimension_ordering_codes": {
+      "input_form": "about_right",
+      "output_form": "about_right",
+      "input_ontology": "about_right",
+      "output_ontology": "about_right",
+      "output_content": "about_right",
+      "input_content": "about_right"
+    },
+    "justification_quality": 4,
+    "room_to_grow": 3,
+    "missing_differences": "As you can see the alternative MMLU is not useful. So I think the assessment is correct in terms of providing the differences by the pipeline but it's just, proposing MMLU does not add any extra value but what might be useful if you could not find a useful benchmark alternative--\n- how data from the wild (context specific) and the proposed benchmark together can construct similar style but context dependent contrastive questionaries ",
+    "expert_email": "ffaisal.gmu@gmail.com",
+    "respondent_email": "ffaisal.gmu@gmail.com",
+    "submitted_at": "2026-05-04T18:22:50.712467Z"
+  },
+  {
+    "expert_id": "expert_b4708937f060",
+    "regional_benchmark": "toxigen",
+    "comparator_benchmark": "Civil Comments",
+    "tuple_slug": "bangladesh_gausa_clinical_toxicity",
+    "region": "Gazipur District Clinical Chatbot Users — Bangladeshi Peri-Urban Patient Population",
+    "pair_num": 2,
+    "overall_ordering": "Relative ordering is about right",
+    "overall_ordering_code": "about_right",
+    "dimension_ordering": {
+      "output_content": "Relative ordering is about right",
+      "input_form": "Relative ordering is about right",
+      "output_ontology": "Relative ordering is about right",
+      "input_ontology": "Relative ordering is about right",
+      "output_form": "Relative ordering is about right",
+      "input_content": "Relative ordering is about right"
+    },
+    "dimension_ordering_codes": {
+      "output_content": "about_right",
+      "input_form": "about_right",
+      "output_ontology": "about_right",
+      "input_ontology": "about_right",
+      "output_form": "about_right",
+      "input_content": "about_right"
+    },
+    "justification_quality": 3,
+    "room_to_grow": 3,
+    "missing_differences": "yes, the alternative receives the same score and I do not think this proposal adds enough utility for the deployment. A more useful alternative suggestion would be a multilingual toxicity dataset.",
+    "expert_email": "ffaisal.gmu@gmail.com",
+    "respondent_email": "ffaisal.gmu@gmail.com",
+    "submitted_at": "2026-05-04T18:22:50.712467Z"
+  },
+  {
+    "expert_id": "expert_c799688856da",
+    "regional_benchmark": "afridoc_mt",
+    "comparator_benchmark": "nllb",
+    "tuple_slug": "ethiopia_amharic_rural_finance",
+    "region": "Amhara Region Agricultural & Microfinance Document Translation — Cooperative and Rural MFI End-Users",
+    "pair_num": 1,
+    "overall_ordering": "Relative ordering is about right",
+    "overall_ordering_code": "about_right",
+    "dimension_ordering": {
+      "output_ontology": "Relative ordering is about right",
+      "output_form": "Scores should be approximately equal",
+      "output_content": "Relative ordering is about right",
+      "input_content": "Scores should be approximately equal",
+      "input_ontology": "Relative ordering is about right",
+      "input_form": "Relative ordering is about right"
+    },
+    "dimension_ordering_codes": {
+      "output_ontology": "about_right",
+      "output_form": "equal",
+      "output_content": "about_right",
+      "input_content": "equal",
+      "input_ontology": "about_right",
+      "input_form": "about_right"
+    },
+    "justification_quality": 4,
+    "room_to_grow": 5,
+    "missing_differences": null,
+    "expert_email": "atnafuatx@gmail.com",
+    "respondent_email": "atnafuatx@gmail.com",
+    "submitted_at": "2026-05-05T13:17:33.768688Z"
+  },
+  {
+    "expert_id": "expert_c799688856da",
+    "regional_benchmark": "INJONGO",
+    "comparator_benchmark": "massive",
+    "tuple_slug": "ethiopia_amharic_intercity_travel",
+    "region": "Ethiopian Intercity/Ride-Hail Commuter Cohort (Amharic-Primary)",
+    "pair_num": 2,
+    "overall_ordering": "Relative ordering is about right",
+    "overall_ordering_code": "about_right",
+    "dimension_ordering": {
+      "input_form": "Relative ordering is about right",
+      "input_content": "Relative ordering is about right",
+      "output_content": "Relative ordering is about right",
+      "input_ontology": "Relative ordering is about right",
+      "output_form": "Relative ordering is about right",
+      "output_ontology": "Relative ordering is about right"
+    },
+    "dimension_ordering_codes": {
+      "input_form": "about_right",
+      "input_content": "about_right",
+      "output_content": "about_right",
+      "input_ontology": "about_right",
+      "output_form": "about_right",
+      "output_ontology": "about_right"
+    },
+    "justification_quality": 5,
+    "room_to_grow": 5,
+    "missing_differences": null,
+    "expert_email": "atnafuatx@gmail.com",
+    "respondent_email": "atnafuatx@gmail.com",
+    "submitted_at": "2026-05-05T13:17:33.768688Z"
+  }
+]

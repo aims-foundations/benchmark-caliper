@@ -1,0 +1,1934 @@
+[
+  {
+    "expert_id": "expert_3c703eb48522",
+    "benchmark": "crisisltlsum",
+    "region": "Ecuador — Humanitarian Crisis Social Media Analysts",
+    "tuple_slug": "ecuador_spanish_disaster_response",
+    "assessment_num": 1,
+    "pipeline_risk": "high",
+    "pipeline_scores": {
+      "input_ontology": 1,
+      "input_content": 1,
+      "input_form": 1,
+      "output_ontology": 2,
+      "output_content": 1,
+      "output_form": 2
+    },
+    "pipeline_avg": 1.33,
+    "context": {
+      "summary_accuracy": 4,
+      "recommendations": 5,
+      "summary_completeness": 4,
+      "risk_agreement": "About right",
+      "construct_depth": 4
+    },
+    "dimensions": {
+      "input_ontology": {
+        "justification_adequate": 4,
+        "score_appropriate": 5,
+        "evidence_support": 4,
+        "checklist_complete": 4,
+        "confidence_calibration": "About right"
+      },
+      "input_content": {
+        "checklist_complete": 4,
+        "justification_adequate": 4,
+        "confidence_calibration": "About right",
+        "score_appropriate": 4,
+        "evidence_support": 4
+      },
+      "input_form": {
+        "confidence_calibration": "About right",
+        "checklist_complete": 4,
+        "evidence_support": 4,
+        "score_appropriate": 4,
+        "justification_adequate": 4,
+        "missing_concerns": "I believe the document gives more weight to concerns related to Kichwa than I'd expect. These communities would use their language mainly to connect among them, and not that much to report a disaster-related problem. In such cases, I'd expect them to use Spanish since this is the official language responders and authorities would understand. This would be the case for platforms such as Twitter, that are used as broadcasters. But on Facebook I can imagine finding more Kichwa/Shear groups/communities where they actually write in this language. I'd emphasize the limit more due to the lack of the Ecuadorian lexicon, local name entities and locations."
+      },
+      "output_ontology": {
+        "evidence_support": 3,
+        "missing_concerns": "The checklist has some evidences not used in the items/justifications (WEB-21, Q106)\nIt would be useful to have some sort of interpretation of the scores to better understand what makes a benchmark and use cases more suitable",
+        "checklist_complete": 4,
+        "score_appropriate": 4,
+        "confidence_calibration": "About right",
+        "justification_adequate": 4
+      },
+      "output_content": {
+        "justification_adequate": 4,
+        "checklist_complete": 4,
+        "confidence_calibration": "About right",
+        "evidence_support": 4,
+        "score_appropriate": 4
+      },
+      "output_form": {
+        "confidence_calibration": "Overconfident",
+        "missing_concerns": "I think the assessment highlights a format mismatch between the benchmark data and the use case output format (e.g. reporting structure from UN OCHA documents), which is a problem other use cases would have. This issue is hard to address unless a specific benchmark for the use case is developed. I would focus more on the content and less on stylistic genre-convention: \"(numbered bullets, standardized headers, parroquia-level\ndamnificado figures)\". In other words, if the content is there in the output summary, a follow up stage could focus on reformatting the output. \nAs a minor comment, I believe the term \"parroquia-level damnificado\" is an hallucinations or super specific example that I would not expect in this type of document",
+        "checklist_complete": 3,
+        "score_appropriate": 4,
+        "justification_adequate": 2,
+        "evidence_support": 3
+      }
+    },
+    "usefulness": {
+      "actionability": 5,
+      "remediation_actionable": 5,
+      "novel_insights": "No — but it confirmed my existing concerns",
+      "trust": 4,
+      "refinements_text": "I believe this assessment and all the documents would be highly useful as a starting point of discussion/analysis for interdisciplinary roundtables. In my experience in applied domains, the instances where experts meets for in-depth analysis on how to evaluate/design tools for specific use cases are quite limited.",
+      "value_vs_expert": "Useful complement to expert review",
+      "remediation_reasonable": 4
+    },
+    "expert_email": "ticona.belu@gmail.com",
+    "respondent_email": "ticona.belu@gmail.com",
+    "submitted_at": "2026-05-05T04:37:07.431303Z",
+    "aggregates": {
+      "mean_dim_checklist_complete": 3.83,
+      "mean_dim_evidence_support": 3.67,
+      "mean_dim_justification_adequate": 3.67,
+      "mean_dim_score_appropriate": 4.17,
+      "mean_context_likert": 4.25,
+      "mean_usefulness_likert": 4.5,
+      "mean_all_likert": 3.97,
+      "n_likert_responses": 32,
+      "completeness": {
+        "expected": 50,
+        "answered": 45,
+        "pct": 90.0
+      }
+    }
+  },
+  {
+    "expert_id": "expert_3c703eb48522",
+    "benchmark": "crisisltlsum",
+    "region": "Mexico City and Central America Bilingual Crisis Journalism",
+    "tuple_slug": "mexico_journalists_crisis_news",
+    "assessment_num": 2,
+    "pipeline_risk": "high",
+    "pipeline_scores": {
+      "input_ontology": 1,
+      "input_content": 1,
+      "input_form": 3,
+      "output_ontology": 2,
+      "output_content": 1,
+      "output_form": 1
+    },
+    "pipeline_avg": 1.5,
+    "context": {
+      "recommendations": 5,
+      "risk_agreement": "About right",
+      "summary_completeness": 4,
+      "summary_accuracy": 4,
+      "construct_depth": 4
+    },
+    "dimensions": {
+      "input_ontology": {
+        "confidence_calibration": "About right",
+        "score_appropriate": 4,
+        "checklist_complete": 4,
+        "justification_adequate": 4,
+        "evidence_support": 5
+      },
+      "input_content": {
+        "missing_concerns": "WEB-3 not used in the checklist",
+        "confidence_calibration": "About right",
+        "score_appropriate": 4,
+        "evidence_support": 3,
+        "justification_adequate": 4,
+        "checklist_complete": 4
+      },
+      "input_form": {
+        "evidence_support": 4,
+        "missing_concerns": "None. Minor comment, this is probably a bug: \"elicitation IF-priority=LOWER].\"",
+        "confidence_calibration": "About right",
+        "checklist_complete": 4,
+        "justification_adequate": 4,
+        "score_appropriate": 4
+      },
+      "output_ontology": {
+        "checklist_complete": 4,
+        "score_appropriate": 4,
+        "missing_concerns": "The remediation section cites the a \"#Verificado19S model\" but this paper is a user study without any model development.",
+        "evidence_support": 2,
+        "justification_adequate": 3,
+        "confidence_calibration": "About right"
+      },
+      "output_content": {
+        "score_appropriate": 4,
+        "evidence_support": 4,
+        "confidence_calibration": "About right",
+        "justification_adequate": 4,
+        "checklist_complete": 4
+      },
+      "output_form": {
+        "score_appropriate": 4,
+        "checklist_complete": 3,
+        "justification_adequate": 4,
+        "missing_concerns": "The information gaps mentioned are at different levels of relevance. \"• No Spanish crisis-summarization reference dataset exists to enable bilingual evaluation construction\" is the main one, an at a minor level \"Operationalizable AP Español rubric criteria not openly accessible\"",
+        "confidence_calibration": "About right",
+        "evidence_support": 5
+      }
+    },
+    "usefulness": {
+      "remediation_reasonable": 4,
+      "trust": 4,
+      "actionability": 4,
+      "value_vs_expert": "Starting point that needs substantial revision",
+      "remediation_actionable": 5,
+      "refinements_text": "I think an interactive interface to review and verify the assessment would be very helpful, especially if experts from different backgrounds analyzed the documents together. For example, someone with a more technical background could check and validate the sources/recommendations (for example, see the comment left above about https://arxiv.org/pdf/2007.05848). Probably practitioners/users might need more contextualized explanations about some terminologies (e.g. sacreROUGE). I can imagine that in some contexts a technical profile/expert might not be available. I wonder how this tool could help in those cases. If available for limited time, I definitively believe this assessment would accelerate a manual expert review.",
+      "novel_insights": "No — but it confirmed my existing concerns"
+    },
+    "expert_email": "ticona.belu@gmail.com",
+    "respondent_email": "ticona.belu@gmail.com",
+    "submitted_at": "2026-05-05T04:37:07.431303Z",
+    "aggregates": {
+      "mean_dim_checklist_complete": 3.83,
+      "mean_dim_evidence_support": 3.83,
+      "mean_dim_justification_adequate": 3.83,
+      "mean_dim_score_appropriate": 4.0,
+      "mean_context_likert": 4.25,
+      "mean_usefulness_likert": 4.25,
+      "mean_all_likert": 3.97,
+      "n_likert_responses": 32,
+      "completeness": {
+        "expected": 50,
+        "answered": 46,
+        "pct": 92.0
+      }
+    }
+  },
+  {
+    "expert_id": "expert_3c703eb48522",
+    "benchmark": "wximpactbench",
+    "region": "Argentine Government Disaster Reporting Reliability — Policy Staff",
+    "tuple_slug": "argentina_rioplatense_disaster_policy",
+    "assessment_num": 3,
+    "pipeline_risk": "high",
+    "pipeline_scores": {
+      "input_ontology": 3,
+      "input_content": 1,
+      "input_form": 2,
+      "output_ontology": 2,
+      "output_content": 2,
+      "output_form": 3
+    },
+    "pipeline_avg": 2.17,
+    "context": {
+      "summary_completeness": 4,
+      "recommendations": 5,
+      "risk_agreement": "About right",
+      "construct_depth": 4,
+      "summary_accuracy": 4
+    },
+    "dimensions": {
+      "input_ontology": {
+        "checklist_complete": 4,
+        "confidence_calibration": "About right",
+        "score_appropriate": 3,
+        "evidence_support": 4,
+        "justification_adequate": 4
+      },
+      "input_content": {
+        "confidence_calibration": "About right",
+        "justification_adequate": 4,
+        "missing_concerns": "The assessment refers to \"villa miseria\" in the same way its refers to other major issues that are much more concerning \"Major content issues: zero Spanish-language content; zero Argentine geography; zero villa miseria framing; zero social\nmedia content;\". ",
+        "score_appropriate": 4,
+        "evidence_support": 4,
+        "checklist_complete": 4
+      },
+      "input_form": {
+        "justification_adequate": 4,
+        "score_appropriate": 4,
+        "checklist_complete": 4,
+        "evidence_support": 4,
+        "confidence_calibration": "About right"
+      },
+      "output_ontology": {
+        "checklist_complete": 2,
+        "justification_adequate": 3,
+        "score_appropriate": 4,
+        "missing_concerns": "The information gap focused on a very specific regular and well-known event (ENSO/El Niño). I was expecting this assessment to rely on external sources for disaster reporting/misinformation in Argentina to justify its justifications.",
+        "evidence_support": 3,
+        "confidence_calibration": "Overconfident"
+      },
+      "output_content": {
+        "justification_adequate": 5,
+        "score_appropriate": 4,
+        "confidence_calibration": "About right",
+        "checklist_complete": 5,
+        "evidence_support": 4
+      },
+      "output_form": {
+        "confidence_calibration": "About right",
+        "score_appropriate": 3,
+        "evidence_support": 5,
+        "justification_adequate": 4,
+        "checklist_complete": 4
+      }
+    },
+    "usefulness": {
+      "trust": 3,
+      "new_concerns_text": "- Annotation inconsistencies found with specific examples\n- Slightly related, consideration of benchmark accessibility in terms of computational resources    ",
+      "novel_insights": "Yes — one or two",
+      "value_vs_expert": "Starting point that needs substantial revision",
+      "remediation_reasonable": 4,
+      "remediation_actionable": 5,
+      "actionability": 4
+    },
+    "expert_email": "ticona.belu@gmail.com",
+    "respondent_email": "ticona.belu@gmail.com",
+    "submitted_at": "2026-05-05T04:37:07.431303Z",
+    "aggregates": {
+      "mean_dim_checklist_complete": 3.83,
+      "mean_dim_evidence_support": 4.0,
+      "mean_dim_justification_adequate": 4.0,
+      "mean_dim_score_appropriate": 3.67,
+      "mean_context_likert": 4.25,
+      "mean_usefulness_likert": 4.0,
+      "mean_all_likert": 3.94,
+      "n_likert_responses": 32,
+      "completeness": {
+        "expected": 50,
+        "answered": 44,
+        "pct": 88.0
+      }
+    }
+  },
+  {
+    "expert_id": "expert_3c703eb48522",
+    "benchmark": "wximpactbench",
+    "region": "Gran Chaco Tri-Border Emergency Response Zone",
+    "tuple_slug": "gran_chaco_spanish_disaster_response",
+    "assessment_num": 4,
+    "pipeline_risk": "high",
+    "pipeline_scores": {
+      "input_ontology": 1,
+      "input_content": 1,
+      "input_form": 1,
+      "output_ontology": 2,
+      "output_content": 1,
+      "output_form": 3
+    },
+    "pipeline_avg": 1.5,
+    "context": {
+      "summary_accuracy": 5,
+      "construct_depth": 4,
+      "recommendations": 5,
+      "summary_completeness": 4,
+      "risk_agreement": "About right"
+    },
+    "dimensions": {
+      "input_ontology": {
+        "justification_adequate": 4,
+        "checklist_complete": 5,
+        "evidence_support": 4,
+        "confidence_calibration": "About right",
+        "score_appropriate": 5
+      },
+      "input_content": {
+        "evidence_support": 5,
+        "confidence_calibration": "About right",
+        "score_appropriate": 5,
+        "justification_adequate": 5,
+        "checklist_complete": 5
+      },
+      "input_form": {
+        "checklist_complete": 5,
+        "justification_adequate": 5,
+        "confidence_calibration": "About right",
+        "score_appropriate": 5,
+        "evidence_support": 5
+      },
+      "output_ontology": {
+        "evidence_support": 5,
+        "score_appropriate": 4,
+        "justification_adequate": 4,
+        "checklist_complete": 4,
+        "confidence_calibration": "About right"
+      },
+      "output_content": {
+        "checklist_complete": 4,
+        "confidence_calibration": "About right",
+        "score_appropriate": 5,
+        "evidence_support": 4,
+        "justification_adequate": 4
+      },
+      "output_form": {
+        "checklist_complete": 4,
+        "score_appropriate": 3,
+        "justification_adequate": 4,
+        "confidence_calibration": "Underconfident",
+        "evidence_support": 4
+      }
+    },
+    "usefulness": {
+      "actionability": 4,
+      "novel_insights": "No — but it confirmed my existing concerns",
+      "remediation_actionable": 4,
+      "remediation_reasonable": 4,
+      "trust": 4,
+      "value_vs_expert": "Useful complement to expert review"
+    },
+    "expert_email": "ticona.belu@gmail.com",
+    "respondent_email": "ticona.belu@gmail.com",
+    "submitted_at": "2026-05-05T04:37:07.431303Z",
+    "aggregates": {
+      "mean_dim_checklist_complete": 4.5,
+      "mean_dim_evidence_support": 4.5,
+      "mean_dim_justification_adequate": 4.33,
+      "mean_dim_score_appropriate": 4.5,
+      "mean_context_likert": 4.5,
+      "mean_usefulness_likert": 4.0,
+      "mean_all_likert": 4.41,
+      "n_likert_responses": 32,
+      "completeness": {
+        "expected": 50,
+        "answered": 41,
+        "pct": 82.0
+      }
+    }
+  },
+  {
+    "expert_id": "expert_a59b4f572c38",
+    "benchmark": "milu",
+    "region": "Hindi-Medium Competitive Exam Aspirants — North India (Central Exams)",
+    "tuple_slug": "india_hindi_competitive_exam_prep",
+    "assessment_num": 1,
+    "pipeline_risk": "high",
+    "pipeline_scores": {
+      "input_ontology": 3,
+      "input_content": 2,
+      "input_form": 4,
+      "output_ontology": 1,
+      "output_content": 2,
+      "output_form": 1
+    },
+    "pipeline_avg": 2.17,
+    "context": {
+      "construct_depth": 4,
+      "summary_completeness": 4,
+      "recommendations": 4,
+      "risk_agreement": "Too conservative (risk is lower)",
+      "summary_accuracy": 4
+    },
+    "dimensions": {
+      "input_ontology": {
+        "missing_concerns": "I think the deplyment senario can be bit more specific",
+        "evidence_support": 3,
+        "justification_adequate": 4,
+        "checklist_complete": 4,
+        "score_appropriate": 4,
+        "confidence_calibration": "About right"
+      },
+      "input_content": {
+        "evidence_support": 3,
+        "confidence_calibration": "Overconfident",
+        "checklist_complete": 2,
+        "score_appropriate": 2,
+        "missing_concerns": "I would expect moderate gap ",
+        "justification_adequate": 2
+      },
+      "input_form": {
+        "score_appropriate": 5,
+        "evidence_support": 5,
+        "checklist_complete": 5,
+        "confidence_calibration": "About right",
+        "justification_adequate": 5
+      },
+      "output_ontology": {
+        "score_appropriate": 5,
+        "confidence_calibration": "About right",
+        "justification_adequate": 5,
+        "evidence_support": 4,
+        "checklist_complete": 4
+      },
+      "output_content": {
+        "justification_adequate": 4,
+        "evidence_support": 4,
+        "checklist_complete": 4,
+        "confidence_calibration": "About right",
+        "score_appropriate": 2
+      },
+      "output_form": {
+        "confidence_calibration": "Overconfident",
+        "checklist_complete": 3,
+        "justification_adequate": 2,
+        "evidence_support": 3,
+        "score_appropriate": 3
+      }
+    },
+    "usefulness": {
+      "remediation_actionable": 3,
+      "value_vs_expert": "Useful complement to expert review",
+      "trust": 4,
+      "actionability": 4,
+      "novel_insights": "No — but it confirmed my existing concerns",
+      "remediation_reasonable": 3
+    },
+    "expert_email": "kaushalmaurya94@gmail.com",
+    "respondent_email": "kaushalmaurya94@gmail.com",
+    "submitted_at": "2026-05-05T14:10:21.529357Z",
+    "aggregates": {
+      "mean_dim_checklist_complete": 3.67,
+      "mean_dim_evidence_support": 3.67,
+      "mean_dim_justification_adequate": 3.67,
+      "mean_dim_score_appropriate": 3.5,
+      "mean_context_likert": 4.0,
+      "mean_usefulness_likert": 3.5,
+      "mean_all_likert": 3.66,
+      "n_likert_responses": 32,
+      "completeness": {
+        "expected": 50,
+        "answered": 43,
+        "pct": 86.0
+      }
+    }
+  },
+  {
+    "expert_id": "expert_a59b4f572c38",
+    "benchmark": "milu",
+    "region": "North Indian Hindi-Medium Postgraduate Teacher — MCQ Evaluation Deployment",
+    "tuple_slug": "india_hindi_educational_assessment",
+    "assessment_num": 2,
+    "pipeline_risk": "medium",
+    "pipeline_scores": {
+      "input_ontology": 3,
+      "input_content": 2,
+      "input_form": 4,
+      "output_ontology": 4,
+      "output_content": 2,
+      "output_form": 5
+    },
+    "pipeline_avg": 3.33,
+    "context": {
+      "summary_accuracy": 4,
+      "construct_depth": 3,
+      "summary_completeness": 4,
+      "recommendations": 4,
+      "risk_agreement": "Too conservative (risk is lower)"
+    },
+    "dimensions": {
+      "input_ontology": {
+        "evidence_support": 3,
+        "justification_adequate": 2,
+        "score_appropriate": 2,
+        "confidence_calibration": "About right",
+        "checklist_complete": 2
+      },
+      "input_content": {
+        "checklist_complete": 4,
+        "justification_adequate": 4,
+        "evidence_support": 4,
+        "score_appropriate": 2,
+        "confidence_calibration": "Overconfident"
+      },
+      "input_form": {
+        "confidence_calibration": "About right",
+        "score_appropriate": 5,
+        "justification_adequate": 5,
+        "evidence_support": 5,
+        "checklist_complete": 5
+      },
+      "output_ontology": {
+        "score_appropriate": 5,
+        "checklist_complete": 5,
+        "confidence_calibration": "About right",
+        "evidence_support": 5,
+        "justification_adequate": 5
+      },
+      "output_content": {
+        "confidence_calibration": "About right",
+        "score_appropriate": 4,
+        "justification_adequate": 4,
+        "checklist_complete": 4,
+        "evidence_support": 4
+      },
+      "output_form": {
+        "evidence_support": 4,
+        "checklist_complete": 4,
+        "confidence_calibration": "Overconfident",
+        "score_appropriate": 4,
+        "justification_adequate": 4
+      }
+    },
+    "usefulness": {
+      "trust": 4,
+      "actionability": 5,
+      "remediation_reasonable": 4,
+      "value_vs_expert": "Useful complement to expert review",
+      "novel_insights": "No — but it confirmed my existing concerns",
+      "remediation_actionable": 4
+    },
+    "expert_email": "kaushalmaurya94@gmail.com",
+    "respondent_email": "kaushalmaurya94@gmail.com",
+    "submitted_at": "2026-05-05T14:10:21.529357Z",
+    "aggregates": {
+      "mean_dim_checklist_complete": 4.0,
+      "mean_dim_evidence_support": 4.17,
+      "mean_dim_justification_adequate": 4.0,
+      "mean_dim_score_appropriate": 3.67,
+      "mean_context_likert": 3.75,
+      "mean_usefulness_likert": 4.25,
+      "mean_all_likert": 3.97,
+      "n_likert_responses": 32,
+      "completeness": {
+        "expected": 50,
+        "answered": 41,
+        "pct": 82.0
+      }
+    }
+  },
+  {
+    "expert_id": "expert_a59b4f572c38",
+    "benchmark": "mrbench",
+    "region": "Metropolitan India — Grades 1–8 Mathematics Tutoring (Student Population)",
+    "tuple_slug": "india_english_elementary_tutoring",
+    "assessment_num": 3,
+    "pipeline_risk": "high",
+    "pipeline_scores": {
+      "input_ontology": 2,
+      "input_content": 1,
+      "input_form": 4,
+      "output_ontology": 1,
+      "output_content": 2,
+      "output_form": 3
+    },
+    "pipeline_avg": 2.17,
+    "context": {
+      "summary_completeness": 4,
+      "recommendations": 5,
+      "summary_accuracy": 5,
+      "construct_depth": 4,
+      "risk_agreement": "About right"
+    },
+    "dimensions": {
+      "input_ontology": {
+        "justification_adequate": 4,
+        "checklist_complete": 4,
+        "score_appropriate": 4,
+        "confidence_calibration": "About right",
+        "evidence_support": 4
+      },
+      "input_content": {
+        "justification_adequate": 5,
+        "evidence_support": 4,
+        "confidence_calibration": "About right",
+        "checklist_complete": 4,
+        "score_appropriate": 4
+      },
+      "input_form": {
+        "score_appropriate": 4,
+        "checklist_complete": 4,
+        "justification_adequate": 4,
+        "evidence_support": 5,
+        "confidence_calibration": "About right"
+      },
+      "output_ontology": {
+        "checklist_complete": 3,
+        "confidence_calibration": "About right",
+        "evidence_support": 4,
+        "justification_adequate": 5,
+        "score_appropriate": 4
+      },
+      "output_content": {
+        "score_appropriate": 4,
+        "evidence_support": 4,
+        "justification_adequate": 4,
+        "confidence_calibration": "About right",
+        "checklist_complete": 5
+      },
+      "output_form": {
+        "checklist_complete": 4,
+        "confidence_calibration": "Underconfident",
+        "score_appropriate": 4,
+        "evidence_support": 4,
+        "justification_adequate": 4
+      }
+    },
+    "usefulness": {
+      "actionability": 4,
+      "remediation_reasonable": 4,
+      "novel_insights": "No — but it confirmed my existing concerns",
+      "remediation_actionable": 3,
+      "trust": 4,
+      "value_vs_expert": "Useful complement to expert review"
+    },
+    "expert_email": "kaushalmaurya94@gmail.com",
+    "respondent_email": "kaushalmaurya94@gmail.com",
+    "submitted_at": "2026-05-05T14:10:21.529357Z",
+    "aggregates": {
+      "mean_dim_checklist_complete": 4.0,
+      "mean_dim_evidence_support": 4.17,
+      "mean_dim_justification_adequate": 4.33,
+      "mean_dim_score_appropriate": 4.0,
+      "mean_context_likert": 4.5,
+      "mean_usefulness_likert": 3.75,
+      "mean_all_likert": 4.12,
+      "n_likert_responses": 32,
+      "completeness": {
+        "expected": 50,
+        "answered": 41,
+        "pct": 82.0
+      }
+    }
+  },
+  {
+    "expert_id": "expert_a59b4f572c38",
+    "benchmark": "mrbench",
+    "region": "Indian Metropolitan Grade 1–8 Mathematics Teachers (Delhi & Mumbai)",
+    "tuple_slug": "india_urban_english_tutoring",
+    "assessment_num": 4,
+    "pipeline_risk": "high",
+    "pipeline_scores": {
+      "input_ontology": 4,
+      "input_content": 2,
+      "input_form": 4,
+      "output_ontology": 3,
+      "output_content": 2,
+      "output_form": 4
+    },
+    "pipeline_avg": 3.17,
+    "context": {
+      "summary_completeness": 5,
+      "risk_agreement": "Too conservative (risk is lower)",
+      "construct_depth": 3,
+      "recommendations": 4,
+      "summary_accuracy": 4
+    },
+    "dimensions": {
+      "input_ontology": {
+        "score_appropriate": 5,
+        "evidence_support": 5,
+        "checklist_complete": 5,
+        "justification_adequate": 5,
+        "confidence_calibration": "About right"
+      },
+      "input_content": {
+        "confidence_calibration": "About right",
+        "justification_adequate": 4,
+        "evidence_support": 4,
+        "checklist_complete": 4,
+        "score_appropriate": 5
+      },
+      "input_form": {
+        "evidence_support": 4,
+        "checklist_complete": 4,
+        "justification_adequate": 4,
+        "score_appropriate": 5,
+        "confidence_calibration": "About right"
+      },
+      "output_ontology": {
+        "evidence_support": 4,
+        "checklist_complete": 4,
+        "justification_adequate": 4,
+        "score_appropriate": 3,
+        "confidence_calibration": "Overconfident"
+      },
+      "output_content": {
+        "checklist_complete": 4,
+        "evidence_support": 4,
+        "score_appropriate": 4,
+        "confidence_calibration": "About right",
+        "justification_adequate": 5
+      },
+      "output_form": {
+        "justification_adequate": 4,
+        "score_appropriate": 4,
+        "evidence_support": 4,
+        "confidence_calibration": "About right",
+        "checklist_complete": 3
+      }
+    },
+    "usefulness": {
+      "remediation_actionable": 4,
+      "value_vs_expert": "Useful complement to expert review",
+      "actionability": 4,
+      "novel_insights": "No — but it confirmed my existing concerns",
+      "remediation_reasonable": 5,
+      "trust": 4
+    },
+    "expert_email": "kaushalmaurya94@gmail.com",
+    "respondent_email": "kaushalmaurya94@gmail.com",
+    "submitted_at": "2026-05-05T14:10:21.529357Z",
+    "aggregates": {
+      "mean_dim_checklist_complete": 4.0,
+      "mean_dim_evidence_support": 4.17,
+      "mean_dim_justification_adequate": 4.33,
+      "mean_dim_score_appropriate": 4.33,
+      "mean_context_likert": 4.0,
+      "mean_usefulness_likert": 4.25,
+      "mean_all_likert": 4.19,
+      "n_likert_responses": 32,
+      "completeness": {
+        "expected": 50,
+        "answered": 41,
+        "pct": 82.0
+      }
+    }
+  },
+  {
+    "expert_id": "expert_b082a2ed12a9",
+    "benchmark": "drbenchmark",
+    "region": "French Hospital Clinical NLP — Metropolitan France (DrBenchmark)",
+    "tuple_slug": "france_clinical_nlp_hospital",
+    "assessment_num": 1,
+    "pipeline_risk": "high",
+    "pipeline_scores": {
+      "input_ontology": 3,
+      "input_content": 2,
+      "input_form": 4,
+      "output_ontology": 2,
+      "output_content": 2,
+      "output_form": 2
+    },
+    "pipeline_avg": 2.5,
+    "context": {
+      "recommendations": 5,
+      "risk_agreement": "About right",
+      "construct_depth": 5,
+      "summary_completeness": 5,
+      "summary_accuracy": 5
+    },
+    "dimensions": {
+      "input_ontology": {
+        "checklist_complete": 5,
+        "score_appropriate": 5,
+        "confidence_calibration": "About right",
+        "justification_adequate": 5,
+        "evidence_support": 5
+      },
+      "input_content": {
+        "checklist_complete": 5,
+        "justification_adequate": 5,
+        "confidence_calibration": "About right",
+        "score_appropriate": 5,
+        "evidence_support": 5
+      },
+      "input_form": {
+        "score_appropriate": 5,
+        "justification_adequate": 5,
+        "checklist_complete": 5,
+        "confidence_calibration": "About right",
+        "evidence_support": 5
+      },
+      "output_ontology": {
+        "checklist_complete": 5,
+        "score_appropriate": 5,
+        "confidence_calibration": "About right",
+        "justification_adequate": 5,
+        "evidence_support": 5
+      },
+      "output_content": {
+        "checklist_complete": 5,
+        "evidence_support": 5,
+        "justification_adequate": 5,
+        "score_appropriate": 5,
+        "confidence_calibration": "About right"
+      },
+      "output_form": {
+        "justification_adequate": 5,
+        "evidence_support": 5,
+        "checklist_complete": 5,
+        "score_appropriate": 5,
+        "confidence_calibration": "About right"
+      }
+    },
+    "usefulness": {
+      "trust": 5,
+      "actionability": 5,
+      "remediation_reasonable": 5,
+      "remediation_actionable": 5,
+      "novel_insights": "Yes — several new concerns",
+      "value_vs_expert": "Useful complement to expert review",
+      "new_concerns_text": "The presence of computer-generated system prompts that contaminate the clinical text (IC), a heavy data imbalance where \"neutral\" cases overwhelm (OF), and the inclusion of entirely irrelevant topics like animal medicine and entertainment trivia (IO)."
+    },
+    "expert_email": "philippy.fred@gmail.com",
+    "respondent_email": "philippy.fred@gmail.com",
+    "submitted_at": "2026-05-05T12:55:32.663479Z",
+    "aggregates": {
+      "mean_dim_checklist_complete": 5.0,
+      "mean_dim_evidence_support": 5.0,
+      "mean_dim_justification_adequate": 5.0,
+      "mean_dim_score_appropriate": 5.0,
+      "mean_context_likert": 5.0,
+      "mean_usefulness_likert": 5.0,
+      "mean_all_likert": 5.0,
+      "n_likert_responses": 32,
+      "completeness": {
+        "expected": 50,
+        "answered": 42,
+        "pct": 84.0
+      }
+    }
+  },
+  {
+    "expert_id": "expert_b082a2ed12a9",
+    "benchmark": "drbenchmark",
+    "region": "EU Pharmaceutical Regulatory NLP — French",
+    "tuple_slug": "france_pharma_regulatory",
+    "assessment_num": 2,
+    "pipeline_risk": "high",
+    "pipeline_scores": {
+      "input_ontology": 2,
+      "input_content": 2,
+      "input_form": 4,
+      "output_ontology": 1,
+      "output_content": 2,
+      "output_form": 4
+    },
+    "pipeline_avg": 2.5,
+    "context": {
+      "construct_depth": 5,
+      "summary_accuracy": 5,
+      "recommendations": 5,
+      "risk_agreement": "About right",
+      "summary_completeness": 5
+    },
+    "dimensions": {
+      "input_ontology": {
+        "justification_adequate": 5,
+        "evidence_support": 5,
+        "score_appropriate": 5,
+        "confidence_calibration": "About right",
+        "checklist_complete": 5
+      },
+      "input_content": {
+        "justification_adequate": 5,
+        "confidence_calibration": "About right",
+        "evidence_support": 5,
+        "checklist_complete": 5,
+        "score_appropriate": 5
+      },
+      "input_form": {
+        "confidence_calibration": "About right",
+        "justification_adequate": 5,
+        "score_appropriate": 5,
+        "evidence_support": 5,
+        "checklist_complete": 5
+      },
+      "output_ontology": {
+        "confidence_calibration": "About right",
+        "checklist_complete": 5,
+        "score_appropriate": 5,
+        "evidence_support": 5,
+        "justification_adequate": 5
+      },
+      "output_content": {
+        "score_appropriate": 5,
+        "checklist_complete": 5,
+        "confidence_calibration": "About right",
+        "justification_adequate": 5,
+        "evidence_support": 5
+      },
+      "output_form": {
+        "checklist_complete": 5,
+        "justification_adequate": 5,
+        "confidence_calibration": "About right",
+        "score_appropriate": 5,
+        "evidence_support": 5
+      }
+    },
+    "usefulness": {
+      "actionability": 5,
+      "novel_insights": "Yes — several new concerns",
+      "new_concerns_text": "1) The benchmark's similarity scoring is too \"forgiving\" (OO); 2) the NER schema merges different distinct categories into a single category CHEM (IO); 3) long EMEA documents are split into sentences",
+      "value_vs_expert": "Useful complement to expert review",
+      "remediation_actionable": 5,
+      "remediation_reasonable": 5,
+      "trust": 5
+    },
+    "expert_email": "philippy.fred@gmail.com",
+    "respondent_email": "philippy.fred@gmail.com",
+    "submitted_at": "2026-05-05T12:55:32.663479Z",
+    "aggregates": {
+      "mean_dim_checklist_complete": 5.0,
+      "mean_dim_evidence_support": 5.0,
+      "mean_dim_justification_adequate": 5.0,
+      "mean_dim_score_appropriate": 5.0,
+      "mean_context_likert": 5.0,
+      "mean_usefulness_likert": 5.0,
+      "mean_all_likert": 5.0,
+      "n_likert_responses": 32,
+      "completeness": {
+        "expected": 50,
+        "answered": 42,
+        "pct": 84.0
+      }
+    }
+  },
+  {
+    "expert_id": "expert_b082a2ed12a9",
+    "benchmark": "ltzglue",
+    "region": "Luxembourgish Professional Newsroom",
+    "tuple_slug": "luxembourg_luxembourgish_newsroom",
+    "assessment_num": 3,
+    "pipeline_risk": "high",
+    "pipeline_scores": {
+      "input_ontology": 3,
+      "input_content": 2,
+      "input_form": 3,
+      "output_ontology": 2,
+      "output_content": 2,
+      "output_form": 4
+    },
+    "pipeline_avg": 2.67,
+    "context": {
+      "summary_accuracy": 5,
+      "recommendations": 5,
+      "construct_depth": 5,
+      "summary_completeness": 5,
+      "risk_agreement": "About right"
+    },
+    "dimensions": {
+      "input_ontology": {
+        "checklist_complete": 5,
+        "score_appropriate": 5,
+        "evidence_support": 5,
+        "justification_adequate": 5,
+        "confidence_calibration": "About right"
+      },
+      "input_content": {
+        "score_appropriate": 4,
+        "justification_adequate": 5,
+        "confidence_calibration": "About right",
+        "checklist_complete": 5,
+        "missing_concerns": "Personally, I agree with the justification and arguments but I would argue that the score should be slightly higher (3/5 maybe) since even though code-switching is indeed not well documented in the benchmark, it should still follow a media-like pattern since many tasks are sourced from news data.",
+        "evidence_support": 5
+      },
+      "input_form": {
+        "checklist_complete": 5,
+        "evidence_support": 5,
+        "score_appropriate": 5,
+        "confidence_calibration": "Underconfident",
+        "justification_adequate": 5
+      },
+      "output_ontology": {
+        "checklist_complete": 5,
+        "score_appropriate": 5,
+        "confidence_calibration": "About right",
+        "justification_adequate": 5,
+        "evidence_support": 5
+      },
+      "output_content": {
+        "score_appropriate": 5,
+        "justification_adequate": 5,
+        "confidence_calibration": "About right",
+        "evidence_support": 5,
+        "checklist_complete": 5
+      },
+      "output_form": {
+        "score_appropriate": 5,
+        "justification_adequate": 5,
+        "checklist_complete": 5,
+        "confidence_calibration": "About right",
+        "evidence_support": 5
+      }
+    },
+    "usefulness": {
+      "actionability": 5,
+      "novel_insights": "Yes — one or two",
+      "value_vs_expert": "Useful complement to expert review",
+      "trust": 5,
+      "new_concerns_text": "Low level of agreement among annotators for sentiment analysis task",
+      "remediation_actionable": 5,
+      "remediation_reasonable": 5
+    },
+    "expert_email": "philippy.fred@gmail.com",
+    "respondent_email": "philippy.fred@gmail.com",
+    "submitted_at": "2026-05-05T12:55:32.663479Z",
+    "aggregates": {
+      "mean_dim_checklist_complete": 5.0,
+      "mean_dim_evidence_support": 5.0,
+      "mean_dim_justification_adequate": 5.0,
+      "mean_dim_score_appropriate": 4.83,
+      "mean_context_likert": 5.0,
+      "mean_usefulness_likert": 5.0,
+      "mean_all_likert": 4.97,
+      "n_likert_responses": 32,
+      "completeness": {
+        "expected": 50,
+        "answered": 43,
+        "pct": 86.0
+      }
+    }
+  },
+  {
+    "expert_id": "expert_b082a2ed12a9",
+    "benchmark": "ltzglue",
+    "region": "Luxembourg Public Administration — Civil Servant NLU Deployment",
+    "tuple_slug": "luxembourg_luxembourgish_public_admin",
+    "assessment_num": 4,
+    "pipeline_risk": "high",
+    "pipeline_scores": {
+      "input_ontology": 2,
+      "input_content": 2,
+      "input_form": 3,
+      "output_ontology": 1,
+      "output_content": 2,
+      "output_form": 3
+    },
+    "pipeline_avg": 2.17,
+    "context": {
+      "risk_agreement": "About right",
+      "construct_depth": 5,
+      "recommendations": 5,
+      "summary_completeness": 5,
+      "summary_accuracy": 5
+    },
+    "dimensions": {
+      "input_ontology": {
+        "evidence_support": 5,
+        "checklist_complete": 5,
+        "confidence_calibration": "About right",
+        "score_appropriate": 5,
+        "justification_adequate": 5
+      },
+      "input_content": {
+        "checklist_complete": 5,
+        "confidence_calibration": "About right",
+        "justification_adequate": 5,
+        "evidence_support": 5,
+        "score_appropriate": 5
+      },
+      "input_form": {
+        "checklist_complete": 5,
+        "evidence_support": 5,
+        "score_appropriate": 5,
+        "justification_adequate": 5,
+        "confidence_calibration": "Underconfident"
+      },
+      "output_ontology": {
+        "justification_adequate": 5,
+        "score_appropriate": 5,
+        "checklist_complete": 5,
+        "confidence_calibration": "About right",
+        "evidence_support": 5
+      },
+      "output_content": {
+        "justification_adequate": 5,
+        "score_appropriate": 5,
+        "checklist_complete": 5,
+        "confidence_calibration": "About right",
+        "evidence_support": 5
+      },
+      "output_form": {
+        "confidence_calibration": "About right",
+        "checklist_complete": 5,
+        "evidence_support": 5,
+        "justification_adequate": 5,
+        "score_appropriate": 5
+      }
+    },
+    "usefulness": {
+      "novel_insights": "No — but it confirmed my existing concerns",
+      "actionability": 5,
+      "trust": 5,
+      "remediation_actionable": 5,
+      "remediation_reasonable": 5,
+      "value_vs_expert": "Useful complement to expert review"
+    },
+    "expert_email": "philippy.fred@gmail.com",
+    "respondent_email": "philippy.fred@gmail.com",
+    "submitted_at": "2026-05-05T12:55:32.663479Z",
+    "aggregates": {
+      "mean_dim_checklist_complete": 5.0,
+      "mean_dim_evidence_support": 5.0,
+      "mean_dim_justification_adequate": 5.0,
+      "mean_dim_score_appropriate": 5.0,
+      "mean_context_likert": 5.0,
+      "mean_usefulness_likert": 5.0,
+      "mean_all_likert": 5.0,
+      "n_likert_responses": 32,
+      "completeness": {
+        "expected": 50,
+        "answered": 41,
+        "pct": 82.0
+      }
+    }
+  },
+  {
+    "expert_id": "expert_b4708937f060",
+    "benchmark": "milu",
+    "region": "Bangladeshi Bengali University Student — Story Generation Thesis Deployment",
+    "tuple_slug": "bangladesh_bengali_story_generation",
+    "assessment_num": 1,
+    "pipeline_risk": "high",
+    "pipeline_scores": {
+      "input_ontology": 1,
+      "input_content": 1,
+      "input_form": 4,
+      "output_ontology": 1,
+      "output_content": 1,
+      "output_form": 1
+    },
+    "pipeline_avg": 1.5,
+    "context": {
+      "recommendations": 4,
+      "summary_accuracy": 4,
+      "risk_agreement": "About right",
+      "summary_completeness": 4,
+      "construct_depth": 4,
+      "overall_comments": "Overall I find the setting useful. A comparative example of what recommendation I could get by just simply asking a frontier llm about using MILU for conext driven story generation for bangla language VS using this specific pipeline would be helpful to understand the overall gap and utility of the proposed appraoch. "
+    },
+    "dimensions": {
+      "input_ontology": {
+        "checklist_complete": 4,
+        "evidence_support": 4,
+        "score_appropriate": 4,
+        "confidence_calibration": "About right",
+        "missing_concerns": "The input ontology concern is right in general, but if I consider the bangla language based context grounding evaluation, the benchmark covers  partial contexts (india specific). However, just by adapting the benchmark to add the contrastive Bangladesh specific grounding, the benchmark could be useful to perform contrastive evaluation. The ratings and classification kind of misses that aspect and overly focuses on what's missing instead of how to make the partial content useful.",
+        "justification_adequate": 3
+      },
+      "input_content": {
+        "score_appropriate": 3,
+        "checklist_complete": 4,
+        "missing_concerns": "As I said earlier, this is quite right however, it just does not provide focus on which part of the indian context grounding also serves the bangladesh part. There should be some common qas that serve both regions.",
+        "justification_adequate": 4,
+        "evidence_support": 1,
+        "confidence_calibration": "About right"
+      },
+      "input_form": {
+        "justification_adequate": 4,
+        "checklist_complete": 4,
+        "evidence_support": 4,
+        "confidence_calibration": "About right",
+        "score_appropriate": 1,
+        "missing_concerns": "this part is fine. Discussion on inclusion of new input form (if it's essential) might provide additional insights. "
+      },
+      "output_ontology": {
+        "missing_concerns": "overall correct but there are ways qa based evaluation could support the story generation validity. Some insight on that regard might be useful.",
+        "evidence_support": 4,
+        "checklist_complete": 4,
+        "score_appropriate": 4,
+        "confidence_calibration": "About right",
+        "justification_adequate": 4
+      },
+      "output_content": {
+        "score_appropriate": 4,
+        "justification_adequate": 3,
+        "evidence_support": 2,
+        "checklist_complete": 3,
+        "missing_concerns": "I do not find adequate details on this dimension in the overall summery",
+        "confidence_calibration": "Cannot assess"
+      },
+      "output_form": {
+        "score_appropriate": 4,
+        "checklist_complete": 4,
+        "confidence_calibration": "About right",
+        "evidence_support": 4,
+        "missing_concerns": "Overall valid but as I said earlier, it misses the prospect aspect",
+        "justification_adequate": 4
+      }
+    },
+    "usefulness": {
+      "trust": 4,
+      "remediation_actionable": 4,
+      "value_vs_expert": "Starting point that needs substantial revision",
+      "new_concerns_text": "- The avalilability of bangladesh specific benchmarks that could substitute some parts. I knew there were less bangladeshi context grounding but that's where the adaptation part kicks in-- I need to adapt this benchmark with other bengaladesh specific benchmark to adequately support contrastive evaluation.\n- The output form is a real issue but the assessment does not provide me adequate details on how to tackle that issue",
+      "novel_insights": "Yes — one or two",
+      "remediation_reasonable": 4,
+      "actionability": 4,
+      "refinements_text": "Again putting my previous comment:\n\nThe input ontology concern is right in general, but if I consider the bangla language based context grounding evaluation, the benchmark covers  partial contexts (india specific). However, just by adapting the benchmark to add the contrastive Bangladesh specific grounding, the benchmark could be useful to perform contrastive evaluation. The ratings and classification kind of misses that aspect and overly focuses on what's missing instead of how to make the partial content useful."
+    },
+    "expert_email": "ffaisal.gmu@gmail.com",
+    "respondent_email": "ffaisal.gmu@gmail.com",
+    "submitted_at": "2026-05-04T18:22:50.712467Z",
+    "aggregates": {
+      "mean_dim_checklist_complete": 3.83,
+      "mean_dim_evidence_support": 3.17,
+      "mean_dim_justification_adequate": 3.67,
+      "mean_dim_score_appropriate": 3.33,
+      "mean_context_likert": 4.0,
+      "mean_usefulness_likert": 4.0,
+      "mean_all_likert": 3.62,
+      "n_likert_responses": 32,
+      "completeness": {
+        "expected": 50,
+        "answered": 50,
+        "pct": 100.0
+      }
+    }
+  },
+  {
+    "expert_id": "expert_b4708937f060",
+    "benchmark": "milu",
+    "region": "Mymensingh Environmental Scientist — Cross-Regional South Asian Agricultural Knowledge",
+    "tuple_slug": "south_asia_agricultural_science_bengali_telugu",
+    "assessment_num": 2,
+    "pipeline_risk": "high",
+    "pipeline_scores": {
+      "input_ontology": 2,
+      "input_content": 1,
+      "input_form": 3,
+      "output_ontology": 2,
+      "output_content": 2,
+      "output_form": 3
+    },
+    "pipeline_avg": 2.17,
+    "context": {
+      "recommendations": 1,
+      "risk_agreement": "About right",
+      "summary_completeness": 4,
+      "summary_accuracy": 4,
+      "construct_depth": 4,
+      "overall_comments": "I think overall this is correct assessment"
+    },
+    "dimensions": {
+      "input_ontology": {
+        "score_appropriate": 4,
+        "confidence_calibration": "About right",
+        "justification_adequate": 4,
+        "missing_concerns": "Not enough citation is there. Also I believe providing some example from the related category/domain and subject from the benchmark and what actionable items need to be done to transform it to the deployment need would be useful",
+        "checklist_complete": 4,
+        "evidence_support": 3
+      },
+      "input_content": {
+        "score_appropriate": 4,
+        "confidence_calibration": "About right",
+        "missing_concerns": "As I said before, not enough qualitative assessment is there",
+        "justification_adequate": 4,
+        "checklist_complete": 4,
+        "evidence_support": 3
+      },
+      "input_form": {
+        "justification_adequate": 4,
+        "confidence_calibration": "About right",
+        "checklist_complete": 4,
+        "score_appropriate": 4,
+        "evidence_support": 4
+      },
+      "output_ontology": {
+        "score_appropriate": 1,
+        "missing_concerns": "Again, a discussion on some qualitative assessment on how different input form might or might not be helpful to deployment adaptability is useful",
+        "evidence_support": 3,
+        "confidence_calibration": "About right",
+        "checklist_complete": 4,
+        "justification_adequate": 4
+      },
+      "output_content": {
+        "missing_concerns": "n/a",
+        "checklist_complete": 4,
+        "evidence_support": 3,
+        "justification_adequate": 4,
+        "score_appropriate": 4,
+        "confidence_calibration": "About right"
+      },
+      "output_form": {
+        "checklist_complete": 4,
+        "score_appropriate": 4,
+        "missing_concerns": "n/a",
+        "evidence_support": 3,
+        "justification_adequate": 4,
+        "confidence_calibration": "About right"
+      }
+    },
+    "usefulness": {
+      "trust": 4,
+      "novel_insights": "No — but it confirmed my existing concerns",
+      "refinements_text": "- example off qualitative assessment of each dimension and what could be a good alternative way to transform it to score better\n- how to adapt utilizing this benchmark and a more useful one to construct a contrastive deployment version that is useful",
+      "actionability": 4,
+      "remediation_reasonable": 4,
+      "remediation_actionable": 3,
+      "value_vs_expert": "Starting point that needs substantial revision"
+    },
+    "expert_email": "ffaisal.gmu@gmail.com",
+    "respondent_email": "ffaisal.gmu@gmail.com",
+    "submitted_at": "2026-05-04T18:22:50.712467Z",
+    "aggregates": {
+      "mean_dim_checklist_complete": 4.0,
+      "mean_dim_evidence_support": 3.17,
+      "mean_dim_justification_adequate": 4.0,
+      "mean_dim_score_appropriate": 3.5,
+      "mean_context_likert": 3.25,
+      "mean_usefulness_likert": 3.75,
+      "mean_all_likert": 3.62,
+      "n_likert_responses": 32,
+      "completeness": {
+        "expected": 50,
+        "answered": 48,
+        "pct": 96.0
+      }
+    }
+  },
+  {
+    "expert_id": "expert_b4708937f060",
+    "benchmark": "toxigen",
+    "region": "Gazipur District Clinical Chatbot Users — Bangladeshi Peri-Urban Patient Population",
+    "tuple_slug": "bangladesh_gausa_clinical_toxicity",
+    "assessment_num": 3,
+    "pipeline_risk": "high",
+    "pipeline_scores": {
+      "input_ontology": 1,
+      "input_content": 1,
+      "input_form": 1,
+      "output_ontology": 1,
+      "output_content": 1,
+      "output_form": 3
+    },
+    "pipeline_avg": 1.33,
+    "context": {
+      "recommendations": 3,
+      "risk_agreement": "About right",
+      "construct_depth": 4,
+      "summary_accuracy": 4,
+      "summary_completeness": 4,
+      "overall_comments": "I overall agree with the assessment but my recommendation about the 'What Else You Need' section should be much more example driven to basically show how partially this dataset could be useful to make the deployment."
+    },
+    "dimensions": {
+      "input_ontology": {
+        "confidence_calibration": "About right",
+        "score_appropriate": 4,
+        "missing_concerns": "n/a",
+        "evidence_support": 4,
+        "checklist_complete": 4,
+        "justification_adequate": 4
+      },
+      "input_content": {
+        "justification_adequate": 4,
+        "checklist_complete": 4,
+        "evidence_support": 4,
+        "score_appropriate": 4,
+        "confidence_calibration": "About right"
+      },
+      "input_form": {
+        "score_appropriate": 4,
+        "evidence_support": 3,
+        "missing_concerns": "there are multilingual version datasets of toxigen that contain Bengali. If someone does machine translation of Toxigen, how close it becomes to serve the deployment purpose, a discussion is needed in that regard.",
+        "confidence_calibration": "About right",
+        "justification_adequate": 4,
+        "checklist_complete": 4
+      },
+      "output_ontology": {
+        "confidence_calibration": "About right",
+        "evidence_support": 4,
+        "justification_adequate": 4,
+        "score_appropriate": 5,
+        "missing_concerns": "this is true there might not be no clinical harm setup but my deployment concern including social prejudice  evaluation in clinical setup. So how much current implicit bias in toxigen could be useful in that regard-- a discussion on that (example driven) would be useful",
+        "checklist_complete": 4
+      },
+      "output_content": {
+        "justification_adequate": 4,
+        "missing_concerns": "same concern about previous (output ontology)",
+        "score_appropriate": 4,
+        "confidence_calibration": "About right",
+        "evidence_support": 4,
+        "checklist_complete": 4
+      },
+      "output_form": {
+        "confidence_calibration": "About right",
+        "evidence_support": 4,
+        "justification_adequate": 4,
+        "checklist_complete": 4,
+        "score_appropriate": 4
+      }
+    },
+    "usefulness": {
+      "value_vs_expert": "Starting point that needs substantial revision",
+      "new_concerns_text": "- bias dynamic happening in a muslim majority setup vs western setup",
+      "actionability": 4,
+      "remediation_actionable": 4,
+      "refinements_text": "- The recommendations are not 100% example driven. There should be more datapoints inspection supporting each dimension and in terms of 'What else you need'-- how augmenting these data points might serve the deployment purpose-- a discussion on that would be useful.",
+      "trust": 4,
+      "remediation_reasonable": 4,
+      "novel_insights": "Yes — one or two"
+    },
+    "expert_email": "ffaisal.gmu@gmail.com",
+    "respondent_email": "ffaisal.gmu@gmail.com",
+    "submitted_at": "2026-05-04T18:22:50.712467Z",
+    "aggregates": {
+      "mean_dim_checklist_complete": 4.0,
+      "mean_dim_evidence_support": 3.83,
+      "mean_dim_justification_adequate": 4.0,
+      "mean_dim_score_appropriate": 4.17,
+      "mean_context_likert": 3.75,
+      "mean_usefulness_likert": 4.0,
+      "mean_all_likert": 3.97,
+      "n_likert_responses": 32,
+      "completeness": {
+        "expected": 50,
+        "answered": 48,
+        "pct": 96.0
+      }
+    }
+  },
+  {
+    "expert_id": "expert_b4708937f060",
+    "benchmark": "toxigen",
+    "region": "South Asian Safety Researchers — TOXIGEN Cross-Regional Validity Assessment",
+    "tuple_slug": "south_asia_academic_toxicity_research",
+    "assessment_num": 4,
+    "pipeline_risk": "high",
+    "pipeline_scores": {
+      "input_ontology": 1,
+      "input_content": 1,
+      "input_form": 2,
+      "output_ontology": 2,
+      "output_content": 1,
+      "output_form": 2
+    },
+    "pipeline_avg": 1.5,
+    "context": {
+      "construct_depth": 4,
+      "risk_agreement": "About right",
+      "summary_accuracy": 4,
+      "recommendations": 4,
+      "summary_completeness": 4,
+      "overall_comments": "the what else you need and the construct depth misses a discussion on how to practially incorporate the implication of dialect variety specific example inclusion for that region."
+    },
+    "dimensions": {
+      "input_ontology": {
+        "checklist_complete": 4,
+        "justification_adequate": 4,
+        "missing_concerns": "direct deployment is not ideal. An actionable plan on how to adapt toxigen as a 2/3-step adaptation deployment and rating based on that would be useful as supplementary materials. ",
+        "score_appropriate": 4,
+        "evidence_support": 4,
+        "confidence_calibration": "About right"
+      },
+      "input_content": {
+        "confidence_calibration": "About right",
+        "missing_concerns": "same concern as input ontology",
+        "justification_adequate": 4,
+        "evidence_support": 4,
+        "checklist_complete": 4,
+        "score_appropriate": 4
+      },
+      "input_form": {
+        "confidence_calibration": "About right",
+        "missing_concerns": "n/a",
+        "checklist_complete": 4,
+        "justification_adequate": 4,
+        "evidence_support": 4,
+        "score_appropriate": 4
+      },
+      "output_ontology": {
+        "missing_concerns": "n/a",
+        "evidence_support": 4,
+        "justification_adequate": 4,
+        "confidence_calibration": "About right",
+        "checklist_complete": 4,
+        "score_appropriate": 4
+      },
+      "output_content": {
+        "confidence_calibration": "About right",
+        "missing_concerns": "n/a",
+        "checklist_complete": 4,
+        "evidence_support": 4,
+        "score_appropriate": 5,
+        "justification_adequate": 4
+      },
+      "output_form": {
+        "score_appropriate": 4,
+        "evidence_support": 4,
+        "confidence_calibration": "About right",
+        "missing_concerns": "Pointers about the utility of this dataset as a proposed deployment requires an indepth analysis of this dataset's multilingual and multi-variety adaptation",
+        "justification_adequate": 4,
+        "checklist_complete": 4
+      }
+    },
+    "usefulness": {
+      "value_vs_expert": "Starting point that needs substantial revision",
+      "novel_insights": "Yes — one or two",
+      "refinements_text": "As I said earlier, pointers about the utility of this dataset as a proposed deployment requires an indepth analysis of this dataset's multilingual and multi-variety adaptation",
+      "trust": 4,
+      "remediation_actionable": 3,
+      "remediation_reasonable": 4,
+      "new_concerns_text": "- white majority annotator bias",
+      "actionability": 4
+    },
+    "expert_email": "ffaisal.gmu@gmail.com",
+    "respondent_email": "ffaisal.gmu@gmail.com",
+    "submitted_at": "2026-05-04T18:22:50.712467Z",
+    "aggregates": {
+      "mean_dim_checklist_complete": 4.0,
+      "mean_dim_evidence_support": 4.0,
+      "mean_dim_justification_adequate": 4.0,
+      "mean_dim_score_appropriate": 4.17,
+      "mean_context_likert": 4.0,
+      "mean_usefulness_likert": 3.75,
+      "mean_all_likert": 4.0,
+      "n_likert_responses": 32,
+      "completeness": {
+        "expected": 50,
+        "answered": 50,
+        "pct": 100.0
+      }
+    }
+  },
+  {
+    "expert_id": "expert_c799688856da",
+    "benchmark": "afridoc_mt",
+    "region": "Ethiopia Ministry of Health — Amharic Clinical Translation Deployment",
+    "tuple_slug": "ethiopia_amharic_maternal_health",
+    "assessment_num": 1,
+    "pipeline_risk": "high",
+    "pipeline_scores": {
+      "input_ontology": 3,
+      "input_content": 2,
+      "input_form": 4,
+      "output_ontology": 2,
+      "output_content": 2,
+      "output_form": 4
+    },
+    "pipeline_avg": 2.83,
+    "context": {
+      "recommendations": 4,
+      "risk_agreement": "About right",
+      "construct_depth": 5,
+      "summary_accuracy": 5,
+      "summary_completeness": 5
+    },
+    "dimensions": {
+      "input_ontology": {
+        "confidence_calibration": "About right",
+        "checklist_complete": 5,
+        "score_appropriate": 4,
+        "justification_adequate": 4,
+        "evidence_support": 5
+      },
+      "input_content": {
+        "score_appropriate": 5,
+        "justification_adequate": 5,
+        "checklist_complete": 5,
+        "evidence_support": 5,
+        "confidence_calibration": "About right"
+      },
+      "input_form": {
+        "score_appropriate": 4,
+        "evidence_support": 4,
+        "justification_adequate": 4,
+        "checklist_complete": 5,
+        "confidence_calibration": "About right"
+      },
+      "output_ontology": {
+        "checklist_complete": 5,
+        "score_appropriate": 5,
+        "confidence_calibration": "About right",
+        "evidence_support": 5,
+        "justification_adequate": 5
+      },
+      "output_content": {
+        "confidence_calibration": "About right",
+        "checklist_complete": 5,
+        "score_appropriate": 5,
+        "evidence_support": 5,
+        "justification_adequate": 5
+      },
+      "output_form": {
+        "confidence_calibration": "About right",
+        "checklist_complete": 5,
+        "evidence_support": 5,
+        "score_appropriate": 4,
+        "justification_adequate": 4
+      }
+    },
+    "usefulness": {
+      "new_concerns_text": "The assessment focused on different real-world applicability scenarios for the benchmark. It highlighted the missing dimensions in academic benchmarks evaluation when considering training and/or evaluating models on those benchmarks and deploying them in real-world scenarios. ",
+      "remediation_reasonable": 4,
+      "actionability": 5,
+      "value_vs_expert": "Useful complement to expert review",
+      "remediation_actionable": 4,
+      "trust": 5,
+      "novel_insights": "Yes — several new concerns"
+    },
+    "expert_email": "atnafuatx@gmail.com",
+    "respondent_email": "atnafuatx@gmail.com",
+    "submitted_at": "2026-05-05T13:17:33.768688Z",
+    "aggregates": {
+      "mean_dim_checklist_complete": 5.0,
+      "mean_dim_evidence_support": 4.83,
+      "mean_dim_justification_adequate": 4.5,
+      "mean_dim_score_appropriate": 4.5,
+      "mean_context_likert": 4.75,
+      "mean_usefulness_likert": 4.5,
+      "mean_all_likert": 4.69,
+      "n_likert_responses": 32,
+      "completeness": {
+        "expected": 50,
+        "answered": 42,
+        "pct": 84.0
+      }
+    }
+  },
+  {
+    "expert_id": "expert_c799688856da",
+    "benchmark": "afridoc_mt",
+    "region": "Amhara Region Agricultural & Microfinance Document Translation — Cooperative and Rural MFI End-Users",
+    "tuple_slug": "ethiopia_amharic_rural_finance",
+    "assessment_num": 2,
+    "pipeline_risk": "high",
+    "pipeline_scores": {
+      "input_ontology": 2,
+      "input_content": 1,
+      "input_form": 4,
+      "output_ontology": 2,
+      "output_content": 2,
+      "output_form": 3
+    },
+    "pipeline_avg": 2.33,
+    "context": {
+      "construct_depth": 5,
+      "summary_completeness": 5,
+      "summary_accuracy": 5,
+      "recommendations": 5,
+      "risk_agreement": "About right"
+    },
+    "dimensions": {
+      "input_ontology": {
+        "evidence_support": 5,
+        "score_appropriate": 5,
+        "justification_adequate": 5,
+        "checklist_complete": 5,
+        "confidence_calibration": "About right"
+      },
+      "input_content": {
+        "score_appropriate": 4,
+        "evidence_support": 5,
+        "confidence_calibration": "About right",
+        "justification_adequate": 4,
+        "checklist_complete": 5
+      },
+      "input_form": {
+        "confidence_calibration": "About right",
+        "checklist_complete": 5,
+        "score_appropriate": 5,
+        "justification_adequate": 5,
+        "evidence_support": 5
+      },
+      "output_ontology": {
+        "evidence_support": 5,
+        "score_appropriate": 5,
+        "justification_adequate": 5,
+        "checklist_complete": 5,
+        "confidence_calibration": "About right"
+      },
+      "output_content": {
+        "score_appropriate": 4,
+        "confidence_calibration": "About right",
+        "checklist_complete": 4,
+        "evidence_support": 4,
+        "justification_adequate": 4
+      },
+      "output_form": {
+        "score_appropriate": 5,
+        "justification_adequate": 5,
+        "evidence_support": 5,
+        "checklist_complete": 5,
+        "confidence_calibration": "About right"
+      }
+    },
+    "usefulness": {
+      "value_vs_expert": "Comparable to expert review",
+      "trust": 5,
+      "remediation_reasonable": 5,
+      "actionability": 5,
+      "remediation_actionable": 5,
+      "new_concerns_text": "As i said in previous response, i found different evaluation dimensions when considering model deployment for real world applications. ",
+      "novel_insights": "Yes — several new concerns"
+    },
+    "expert_email": "atnafuatx@gmail.com",
+    "respondent_email": "atnafuatx@gmail.com",
+    "submitted_at": "2026-05-05T13:17:33.768688Z",
+    "aggregates": {
+      "mean_dim_checklist_complete": 4.83,
+      "mean_dim_evidence_support": 4.83,
+      "mean_dim_justification_adequate": 4.67,
+      "mean_dim_score_appropriate": 4.67,
+      "mean_context_likert": 5.0,
+      "mean_usefulness_likert": 5.0,
+      "mean_all_likert": 4.81,
+      "n_likert_responses": 32,
+      "completeness": {
+        "expected": 50,
+        "answered": 42,
+        "pct": 84.0
+      }
+    }
+  },
+  {
+    "expert_id": "expert_c799688856da",
+    "benchmark": "INJONGO",
+    "region": "Ethiopian Intercity/Ride-Hail Commuter Cohort (Amharic-Primary)",
+    "tuple_slug": "ethiopia_amharic_intercity_travel",
+    "assessment_num": 3,
+    "pipeline_risk": "high",
+    "pipeline_scores": {
+      "input_ontology": 2,
+      "input_content": 3,
+      "input_form": 5,
+      "output_ontology": 2,
+      "output_content": 2,
+      "output_form": 4
+    },
+    "pipeline_avg": 3.0,
+    "context": {
+      "recommendations": 5,
+      "risk_agreement": "About right",
+      "summary_completeness": 5,
+      "construct_depth": 5,
+      "summary_accuracy": 5
+    },
+    "dimensions": {
+      "input_ontology": {
+        "score_appropriate": 4,
+        "evidence_support": 5,
+        "checklist_complete": 5,
+        "confidence_calibration": "About right",
+        "justification_adequate": 4
+      },
+      "input_content": {
+        "score_appropriate": 5,
+        "confidence_calibration": "About right",
+        "checklist_complete": 5,
+        "justification_adequate": 5,
+        "evidence_support": 5
+      },
+      "input_form": {
+        "confidence_calibration": "About right",
+        "justification_adequate": 5,
+        "checklist_complete": 5,
+        "evidence_support": 5,
+        "score_appropriate": 5
+      },
+      "output_ontology": {
+        "justification_adequate": 4,
+        "checklist_complete": 5,
+        "confidence_calibration": "About right",
+        "evidence_support": 5,
+        "score_appropriate": 4
+      },
+      "output_content": {
+        "justification_adequate": 4,
+        "evidence_support": 4,
+        "confidence_calibration": "About right",
+        "checklist_complete": 4,
+        "score_appropriate": 4
+      },
+      "output_form": {
+        "confidence_calibration": "About right",
+        "checklist_complete": 5,
+        "justification_adequate": 5,
+        "score_appropriate": 5,
+        "evidence_support": 5
+      }
+    },
+    "usefulness": {
+      "remediation_reasonable": 5,
+      "actionability": 5,
+      "novel_insights": "Yes — several new concerns",
+      "remediation_actionable": 5,
+      "trust": 5,
+      "value_vs_expert": "Comparable to expert review"
+    },
+    "expert_email": "atnafuatx@gmail.com",
+    "respondent_email": "atnafuatx@gmail.com",
+    "submitted_at": "2026-05-05T13:17:33.768688Z",
+    "aggregates": {
+      "mean_dim_checklist_complete": 4.83,
+      "mean_dim_evidence_support": 4.83,
+      "mean_dim_justification_adequate": 4.5,
+      "mean_dim_score_appropriate": 4.5,
+      "mean_context_likert": 5.0,
+      "mean_usefulness_likert": 5.0,
+      "mean_all_likert": 4.75,
+      "n_likert_responses": 32,
+      "completeness": {
+        "expected": 50,
+        "answered": 41,
+        "pct": 82.0
+      }
+    }
+  },
+  {
+    "expert_id": "expert_c799688856da",
+    "benchmark": "INJONGO",
+    "region": "Urban Ethiopian Utility Chatbot Users — Amharic-Language Telegram/SMS",
+    "tuple_slug": "ethiopia_amharic_utility_urban",
+    "assessment_num": 4,
+    "pipeline_risk": "high",
+    "pipeline_scores": {
+      "input_ontology": 2,
+      "input_content": 2,
+      "input_form": 4,
+      "output_ontology": 2,
+      "output_content": 2,
+      "output_form": 4
+    },
+    "pipeline_avg": 2.67,
+    "context": {
+      "recommendations": 4,
+      "construct_depth": 4,
+      "summary_accuracy": 4,
+      "summary_completeness": 4,
+      "risk_agreement": "About right"
+    },
+    "dimensions": {
+      "input_ontology": {
+        "score_appropriate": 5,
+        "justification_adequate": 5,
+        "evidence_support": 5,
+        "confidence_calibration": "About right",
+        "checklist_complete": 5
+      },
+      "input_content": {
+        "confidence_calibration": "About right",
+        "justification_adequate": 4,
+        "score_appropriate": 4,
+        "evidence_support": 4,
+        "checklist_complete": 4
+      },
+      "input_form": {
+        "evidence_support": 5,
+        "score_appropriate": 5,
+        "justification_adequate": 5,
+        "confidence_calibration": "About right",
+        "checklist_complete": 5
+      },
+      "output_ontology": {
+        "confidence_calibration": "About right",
+        "evidence_support": 4,
+        "justification_adequate": 4,
+        "score_appropriate": 4,
+        "checklist_complete": 4
+      },
+      "output_content": {
+        "checklist_complete": 4,
+        "confidence_calibration": "About right",
+        "evidence_support": 4,
+        "score_appropriate": 4,
+        "justification_adequate": 4
+      },
+      "output_form": {
+        "evidence_support": 5,
+        "checklist_complete": 5,
+        "justification_adequate": 5,
+        "score_appropriate": 5,
+        "confidence_calibration": "About right"
+      }
+    },
+    "usefulness": {
+      "trust": 5,
+      "novel_insights": "Yes — several new concerns",
+      "remediation_reasonable": 5,
+      "value_vs_expert": "Comparable to expert review",
+      "actionability": 5,
+      "remediation_actionable": 5
+    },
+    "expert_email": "atnafuatx@gmail.com",
+    "respondent_email": "atnafuatx@gmail.com",
+    "submitted_at": "2026-05-05T13:17:33.768688Z",
+    "aggregates": {
+      "mean_dim_checklist_complete": 4.5,
+      "mean_dim_evidence_support": 4.5,
+      "mean_dim_justification_adequate": 4.5,
+      "mean_dim_score_appropriate": 4.5,
+      "mean_context_likert": 4.0,
+      "mean_usefulness_likert": 5.0,
+      "mean_all_likert": 4.5,
+      "n_likert_responses": 32,
+      "completeness": {
+        "expected": 50,
+        "answered": 41,
+        "pct": 82.0
+      }
+    }
+  }
+]
