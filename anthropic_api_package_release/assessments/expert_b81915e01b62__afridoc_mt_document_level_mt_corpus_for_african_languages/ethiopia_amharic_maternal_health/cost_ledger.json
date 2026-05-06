@@ -1,0 +1,156 @@
+{
+  "0_slug": {
+    "haiku": {
+      "model_id": "claude-haiku-4-5-20251001",
+      "calls": 1,
+      "input_tokens": 192,
+      "output_tokens": 12,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "1_metadata": {
+    "haiku": {
+      "model_id": "claude-haiku-4-5-20251001",
+      "calls": 1,
+      "input_tokens": 6267,
+      "output_tokens": 231,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "2_questions": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 1,
+      "input_tokens": 2437,
+      "output_tokens": 509,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "3a_extract": {
+    "haiku": {
+      "model_id": "claude-haiku-4-5-20251001",
+      "calls": 37,
+      "input_tokens": 160646,
+      "output_tokens": 21409,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "2_summary": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 1,
+      "input_tokens": 2412,
+      "output_tokens": 1534,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "3a_merge": {
+    "haiku": {
+      "model_id": "claude-haiku-4-5-20251001",
+      "calls": 16,
+      "input_tokens": 4253,
+      "output_tokens": 297,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "3a_consolidate": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 1,
+      "input_tokens": 18025,
+      "output_tokens": 4316,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "3b_select": {
+    "haiku": {
+      "model_id": "claude-haiku-4-5-20251001",
+      "calls": 1,
+      "input_tokens": 19576,
+      "output_tokens": 15,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "3b_synthesize": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 1,
+      "input_tokens": 24274,
+      "output_tokens": 9337,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "4a_template": {
+    "haiku": {
+      "model_id": "claude-haiku-4-5-20251001",
+      "calls": 1,
+      "input_tokens": 1817,
+      "output_tokens": 24,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "4b_synthesize": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 1,
+      "input_tokens": 29518,
+      "output_tokens": 4170,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "5_web_search": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 1,
+      "input_tokens": 392431,
+      "output_tokens": 8085,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 8
+    }
+  },
+  "5b_da_interpret": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 1,
+      "input_tokens": 281296,
+      "output_tokens": 12581,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "7_score": {
+    "opus": {
+      "model_id": "claude-opus-4-7",
+      "calls": 1,
+      "input_tokens": 58444,
+      "output_tokens": 18581,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  }
+}

@@ -1,0 +1,11 @@
+- name: arabicmmlu
+- full_name: ArabicMMLU: Assessing Massive Multitask Language Understanding in Arabic
+- year: 2024
+- domain: A multi-task language understanding benchmark for evaluating reasoning and knowledge-intensive capabilities of language models in Arabic across diverse subject areas and educational levels.
+- languages: Arabic (Modern Standard Arabic)
+- primary_region: Middle East and North Africa (North Africa, the Levant, Gulf regions)
+- porting_strategy: adapted
+- input_modalities: text
+- output_modalities: label
+- brief_description: ArabicMMLU is the first MMLU-style benchmark for Modern Standard Arabic, comprising 40 tasks and 14,575 multiple-choice questions sourced from school exams across eight Arabic-speaking countries (Jordan, Egypt, UAE, Lebanon, Saudi Arabia, and others). Over 50% of the questions are tailored to Arabic-specific contexts with rich local content in history, geography, law, civics education, and driving tests. The benchmark was constructed through collaboration with native Arabic speakers to ensure regional and cultural localization.
+- source_culture: transferred from different cultural context

@@ -1,0 +1,371 @@
+{
+  "benchmark": "crisisltlsum",
+  "region": "Ecuador — Humanitarian Crisis Social Media Analysts",
+  "dimensions": {
+    "input_ontology": {
+      "score": 1,
+      "justification": "The benchmark's taxonomy is restricted to four crisis domains — wildfire, local fire, traffic, and storm [Q1, Q122] — and its scope is explicitly limited to 'local' events bound to a specific building, street, or county of short duration [Q12]. The Ecuador deployment prioritizes large-scale humanitarian and geophysical events (volcanic eruptions, lahares, earthquake sequences, mass displacement, complex humanitarian emergencies) that are entirely absent from this taxonomy, as confirmed by elicitation A1 and the regional crisis typology where 'benchmark_coverage: absent' is recorded for nearly every priority crisis type. Independent Ecuadorian crisis NLP work has identified volcanic and telluric (seismic) categories as operationally distinct [WEB-18]. Only 'storm' has even partial overlap, and that overlap is shallow because the benchmark's storm cases come from US/Australian meteorological contexts. The construct underrepresentation is severe and structural.",
+      "strengths": [
+        "The benchmark does cover traffic incidents and local urban fires, which may have some narrow applicability to urban Ecuadorian cantonal emergencies (e.g., Quito, Guayaquil) that municipal Cuerpo de Bomberos handle [Q122]; and it formalizes a granular 'local event' notion (e.g., 'fire in building A') [Q40] that conceptually maps onto parroquia-level incident tracking."
+      ],
+      "checklist_responses": {
+        "IO-1": "Required categories for Ecuador humanitarian deployment include volcanic eruption sequences (Cotopaxi, Tungurahua, Sangay), lahares, earthquake/aftershock sequences, landslides (movimiento en masa), riverine and coastal flooding (desbordamiento, inundación), mass displacement, and complex humanitarian emergencies [WEB-18]; elicitation A1 confirms these are the priority categories.",
+        "IO-2": "The benchmark omits all of the above categories. Q122 confirms the search is limited to 'wildfire, local fire, traffic, and storm,' and Q12 restricts scope to short-duration local events, structurally excluding multi-phase volcanic and displacement crises.",
+        "IO-3": "Wildfire and US-style traffic incidents are not 'irrelevant' per se but are low-priority for Ecuadorian humanitarian coordinators; páramo fires are noted in the region YAML as a Sierra concern but the benchmark's wildfire framing is calibrated to California/NSW/Victoria contexts [Q124], introducing construct-irrelevant variance.",
+        "IO-4": "Content validity is severely harmed: the benchmark cannot evaluate timeline extraction or summarization for the disaster types that constitute the deployment's primary operational use case. Q22's claim of '1,000 timelines' applies only within the four-domain frame and provides no coverage for Andean or Amazonian disaster typologies."
+      },
+      "evidence_quotes": [
+        "[Q1] 'CrisisLTLSum contains 1,000 crisis event timelines across four domains: wildfires, local fires, traffic, and storms.' (p.1)",
+        "[Q12] 'The term \"local\" indicates that an event is bound to an exact location, such as a building, a street, or a county, and usually lasts for a short period.' (p.2)",
+        "[Q122] 'We build CrisisLTLSum by limiting the search to four crisis domains: wildfire, local fire, traffic, and storm.' (p.12)",
+        "[Q40] 'the clustering objective is to group tweets related to the same local event, such as a \"fire in building A\" or a \"wildfire in a specific area\".' (p.4)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-18] Ecuadorian researchers built a Twitter monitoring system around four locally-relevant categories: volcanic, telluric (seismic), fires, and climatological — confirming Ecuador's distinct crisis taxonomy.",
+        "[WEB-21] HumVI 2024 review confirms English-dominance and the absence of multilingual humanitarian timeline benchmarks."
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "IO-1": [
+          "WEB-18"
+        ],
+        "IO-2": [
+          "Q122",
+          "Q12"
+        ],
+        "IO-3": [
+          "Q124"
+        ],
+        "IO-4": [
+          "Q1",
+          "Q22"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether any narrow urban-fire or traffic sub-use-case in Quito/Guayaquil could meaningfully reuse the benchmark's taxonomy without retraining."
+      ],
+      "requires_expert_verification": [
+        "Whether IGEPN/SNGR alert escalation workflows could be modeled as 'timelines' compatible with the benchmark's seed-tweet formulation."
+      ]
+    },
+    "input_content": {
+      "score": 1,
+      "justification": "All source data was collected from seven US states and two Australian states during 2020–2021 [Q123], and geographic areas were selected for their fit to the four-domain taxonomy [Q124]. Tweet filtering depends on US/Australian city, town, and 'famous neighborhoods' lists [Q30] and on English-curated keyword lists [Q126]. The 1,000 clusters were hand-selected by the authors [Q52]. Ecuadorian crisis tweets reference parroquias, cantones, SNGR (formerly SGR) [WEB-11], IGEPN, INAMHI, Cruz Roja Ecuatoriana, volcano names (Cotopaxi, Tungurahua, Sangay), Kichwa toponyms, and operationally critical terms like 'damnificados' and 'albergues' — none of which are represented in the dataset. Elicitation A2 confirms analysts require precise anchoring to Ecuador-specific entities and that US-default references would be operationally meaningless. The Ecuador-specific UrbangEnCy dataset [WEB-17] exists but covers only binary classification, not timelines.",
+      "strengths": [
+        "The benchmark provides a methodological template (semi-automated cluster-then-refine, seed-tweet specification) [Q27, Q52] that could in principle be re-applied to Ecuadorian Spanish content; the authors transparently document content-collection limitations [Q117] and explicitly acknowledge that replication for other languages/locations is hard [Q119]."
+      ],
+      "checklist_responses": {
+        "IC-1": "Yes — Ecuador queries require Spanish-language dialectal knowledge, Ecuadorian administrative geography (24 provinces, ~221+ cantones, 1,500+ parroquias) [WEB-6, WEB-8], Kichwa/Shuar toponym recognition [WEB-1], institutional acronyms (SNGR/SGR, IGEPN, INAMHI, MSP), and crisis-specific Spanish vocabulary ('damnificado', 'albergue', 'lahares', 'desbordamiento'). None of this is present in the benchmark.",
+        "IC-2": "Cultural sensitivity is misaligned: the dataset reflects US/Australian crisis-response cultural norms (FEMA-style agencies, US journalistic conventions). Ecuadorian humanitarian context emphasizes inter-agency coordination, indigenous community signals, and the 'damnificado' legal-operational concept absent from the benchmark.",
+        "IC-3": "Western-specific knowledge is pervasive: location candidate lists [Q30], OSM-based place anchoring [Q36], and keyword curation from US/Australian news [Q126] all encode US/Australian assumptions that will not transfer.",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — the benchmark itself documents no regional annotators; for Ecuador deployment, expert annotators from Cruz Roja Ecuatoriana, UN OCHA Ecuador, and indigenous federations (CONAIE, ECUARUNARI) would be required.",
+        "IC-5": "Content validity is fundamentally violated: the entire instance pool reflects US/Australian crisis content [Q123, Q69], with no Spanish, Latin American, or humanitarian-organizational content represented."
+      },
+      "evidence_quotes": [
+        "[Q123] 'We collect CrisisLTLSum across seven states in the USA and two states of Australia during 2020 and 2021.' (p.12)",
+        "[Q124] 'These states are selected as they are some of the areas subject to the most events falling into our crisis domains of interest.' (p.13)",
+        "[Q30] 'The location filtering relies on a list of location candidates created by gathering cities, towns, and famous neighborhoods in a big area of interest.' (p.3)",
+        "[Q52] 'We, authors of this work, manually selected 1,000 clusters... while specifying the \"seed tweet\"... of each timeline.' (p.5)",
+        "[Q126] 'We carefully curate a keyword list for each of our categories of interest by employing expert knowledge gathered through over-viewing crisis stories in news, social media, and related big disaster events of the past.' (p.13)",
+        "[Q119] 'replicating the same process for other language or based on other locations may be hard because of such dependencies.' (p.10)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-6] Ecuador has 24 provinces with distinct administrative hierarchy.",
+        "[WEB-8] Ecuador has approximately 221 cantones and over 1,500 parroquias — administrative units absent from benchmark geography.",
+        "[WEB-11] SNGR was formally renamed from SGR in 2024; both acronyms appear in tweets.",
+        "[WEB-17] UrbangEnCy provides 25,500+ Ecuadorian Spanish emergency tweets but only binary labels.",
+        "[WEB-1] Kichwa and Shuar are official intercultural languages; toponyms appear in Sierra/Oriente content."
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "IC-1": [
+          "WEB-6",
+          "WEB-8",
+          "WEB-11",
+          "WEB-1"
+        ],
+        "IC-2": [
+          "Q123",
+          "Q124"
+        ],
+        "IC-3": [
+          "Q30",
+          "Q36",
+          "Q126"
+        ],
+        "IC-4": [],
+        "IC-5": [
+          "Q123",
+          "Q69"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "OpenStreetMap coverage quality for rural Ecuadorian parroquias and Kichwa community names is unverified."
+      ],
+      "requires_expert_verification": [
+        "Specific institutional Twitter/X handles for SNGR, IGEPN, INAMHI, and Cruz Roja Ecuatoriana for entity-linking."
+      ]
+    },
+    "input_form": {
+      "score": 1,
+      "justification": "The benchmark's preprocessing pipeline is English-specific throughout: AllenNLP NER trained on CoNLL03 [Q33], BERT-based NER fine-tuned on English Twitter [Q35], lemmatization and lowercasing of English keywords [Q129], OpenStreetMap matching of English place names [Q36], and BERT/BART models with 512-token English-tokenizer constraints [Q86, Q141, Q143]. The authors themselves flag that 'replicating the same process for other language or based on other locations may be hard' [Q119]. The Ecuador deployment processes Ecuadorian Spanish in informal/semi-formal registers with Kichwa-Spanish code-switching and crisis-specific vocabulary (elicitation A4); no Kichwa NLP resources are publicly available [WEB-1, WEB-13]. The signal-distribution mismatch is total at the language level and severe at the register/script level — the benchmark cannot process Spanish input at all without reconstruction, and Kichwa toponyms within Spanish tweets would not be recognized by any component of the pipeline.",
+      "strengths": [
+        "The benchmark is text-only and Twitter-native, matching the surface modality of the Ecuadorian deployment's primary data source; UrbangEnCy [WEB-17] confirms Twitter is also used for Ecuadorian emergency NLP, so the platform-level signal type is shared."
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal distribution mismatch is severe: the benchmark operates on English Twitter; the deployment requires Ecuadorian Spanish with code-switching, indigenous toponyms, and informal orthography [WEB-1]. Tokenizers, NER, lemmatization [Q129], and place-name matching [Q36] would all need replacement.",
+        "IF-2": "Regional infrastructure supports Twitter capture (95.8% mobile broadband [WEB-15]; UrbangEnCy demonstrates feasibility [WEB-17]), but Amazonian rural areas have severely limited connectivity, biasing the available signal away from indigenous communities most exposed to environmental crises.",
+        "IF-3": "Domain-specific form differences include Kichwa orthographic variation (the 2008 unified alphabet remains contested [WEB-1]), Spanish accent marks, and crisis vocabulary like 'damnificados', 'lahares' that no English-trained tokenizer or NER will handle correctly.",
+        "IF-4": "External validity is fundamentally violated: the entire preprocessing pipeline [Q28–Q37] is English/US/Australia-calibrated and the authors explicitly acknowledge the language dependency [Q119]."
+      },
+      "evidence_quotes": [
+        "[Q33] 'we use a pre-trained neural model from AllenNLP... trained on CoNLL03... to extract entities with types of people, location, and organization.' (p.3)",
+        "[Q35] 'we further developed a BERT-based NER model tuned on Twitter data to detect location mentions.' (p.4)",
+        "[Q36] 'We use OpenStreetMap API to map location mentions to physical addresses.' (p.4)",
+        "[Q119] 'replicating the same process for other language or based on other locations may be hard because of such dependencies.' (p.10)",
+        "[Q129] 'we maintain both a lower-cased and a lemittized version of the keywords and the tweet's text.' (p.13)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-1] Kichwa orthography is contested with continued spelling variation; written use of indigenous languages outside schools is minimal.",
+        "[WEB-13] First Ecuadorian Spanish NLP corpus exists but does not cover Kichwa.",
+        "[WEB-15] Ecuador has 95.8% mobile broadband connections, supporting Twitter use.",
+        "[WEB-17] UrbangEnCy demonstrates feasibility of Spanish Ecuadorian Twitter capture but is binary-classification only."
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "IF-1": [
+          "Q33",
+          "Q35",
+          "Q129",
+          "WEB-1"
+        ],
+        "IF-2": [
+          "WEB-15",
+          "WEB-17"
+        ],
+        "IF-3": [
+          "WEB-1"
+        ],
+        "IF-4": [
+          "Q119",
+          "Q36"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "OSM coverage quality for Ecuadorian rural geography; smartphone vs. feature-phone distribution in Oriente."
+      ],
+      "requires_expert_verification": [
+        "Frequency and patterns of Kichwa-Spanish code-switching in real-time crisis tweets from indigenous federation accounts."
+      ]
+    },
+    "output_ontology": {
+      "score": 2,
+      "justification": "The output ontology consists of (a) a binary relevance label conditioned on three conjunctive criteria — relevant, informative (facts vs. 'personal points of view'), and not repetitive [Q58] — and (b) a four-axis summary rubric (Coherence, Accuracy, Coverage, Overall) scored 1–5 [Q106, Q151–Q160]. The Coherence rubric explicitly references English grammar and English-language understandability [Q153]. For humanitarian coordinators, relevance criteria differ structurally: road/bridge access status to affected communities, informal community broadcasts, displacement movement indicators, alert level changes, and 'damnificados' counts at parroquia/cantón level are operationally salient (region YAML; elicitation A3), and arguably some 'personal points of view' from affected communities are highly informative for needs assessment — directly conflicting with the benchmark's exclusion of personal views [Q58]. The four-axis summary rubric is partially transferable in abstract structure but its operational definitions are anchored to English [Q153] and contain no notion of humanitarian reporting conventions (UN OCHA SITREP format, numbered findings, agency acronym usage).",
+      "strengths": [
+        "The four-axis rubric (Coherence, Accuracy, Coverage, Overall) is a generic and well-structured summarization evaluation framework [Q106, Q151] that could plausibly be adapted to Spanish reference summaries with rewritten anchors; the Accuracy axis [Q155] aligns with humanitarian concerns about avoiding hallucinated content."
+      ],
+      "checklist_responses": {
+        "OO-1": "The binary 'part of timeline / not' label is too coarse for humanitarian use; the rubric axes are reusable in form but their English-anchored definitions [Q153] need redesign.",
+        "OO-2": "Missing categories include: humanitarian-relevance sub-types (logistics access, needs signals, coordination signals, displacement), source-type tagging (official agency vs. community vs. media), and alert-escalation states (critical for IGEPN/SNGR volcanic monitoring) — none are represented [Q58, Q151].",
+        "OO-3": "The 'informative = facts not personal points of view' criterion [Q58] encodes a US-journalism stance that excludes precisely the affected-community first-person testimony often most operationally salient in humanitarian monitoring.",
+        "OO-4": "Stakeholder-driven taxonomy redesign is required, involving Cruz Roja Ecuatoriana and UN OCHA Ecuador analysts, to define a multi-label relevance schema and SITREP-aligned summary criteria.",
+        "OO-5": "Structural and content validity are violated: the output space does not represent the constructs ('humanitarian operational relevance', 'situation report quality') the deployment cares about."
+      },
+      "evidence_quotes": [
+        "[Q58] 'A tweet is labeled as part of the timeline only if it satisfies all the following three conditions: relevant... informative: provides facts about the event but not only contains personal points of view, not repetitive...' (p.5)",
+        "[Q106] 'Each summary was evaluated by five different workers on a scale from 1 to 5 across four axes: Coherence, Accuracy, Coverage, and Overall quality...' (p.8)",
+        "[Q153] 'A summary is coherent if when read by itself, it's easy to understand and free of English errors.' (p.21)",
+        "[Q155] 'Does the factual information in the summary accurately match the information in the timeline?' (p.21)",
+        "[Q157] '\"How well does the summary cover the important information in the timeline?\"' (p.21)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-21] HumVI confirms humanitarian NLP requires bespoke relevance taxonomies not covered by general crisis benchmarks."
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "OO-1": [
+          "Q58",
+          "Q153"
+        ],
+        "OO-2": [
+          "Q58",
+          "Q151",
+          "WEB-21"
+        ],
+        "OO-3": [
+          "Q58"
+        ],
+        "OO-4": [],
+        "OO-5": [
+          "Q153",
+          "Q157"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether Cruz Roja/UN OCHA have published formal relevance schemas adaptable as a target ontology."
+      ],
+      "requires_expert_verification": [
+        "Operational definition of 'important information' in Ecuadorian humanitarian SITREP conventions vs. benchmark's 'Coverage' axis."
+      ]
+    },
+    "output_content": {
+      "score": 1,
+      "justification": "Ground-truth labels were produced by MTurk workers explicitly restricted to 'countries where native English speakers are most likely to be found' [Q61], with majority vote across three workers per timeline [Q70] and reference summaries selected from the two highest-agreeing workers [Q88]. Summary quality ratings used five MTurk workers under the same location restriction [Q105, Q106]. The deployment requires labels produced by an inter-operational team of Ecuadorian field coordinators, social analysts, and domain experts (elicitation A3) — a fundamentally different and unavailable annotator population. There is no Spanish-speaking, Latin American, indigenous-language-fluent, or humanitarian-practitioner annotator in the entire benchmark pipeline. The high inter-annotator agreement (90.06% [Q77]) demonstrates only internal consistency among US-context workers, not validity for the Ecuadorian humanitarian construct.",
+      "strengths": [
+        "The benchmark documents annotation procedures transparently — multiple QC gates [Q60–Q66], qualification testing [Q62], expert review [Q64], and reported agreement statistics [Q77, Q79] — providing a methodological template that could be adapted (with different annotators) for Ecuadorian re-annotation."
+      ],
+      "checklist_responses": {
+        "OC-1": "No — labels reflect English-native MTurk worker judgments [Q61, Q70], not Ecuadorian humanitarian coordinator perspectives.",
+        "OC-2": "Disagreement is highly likely on the 'informative' criterion [Q58] (excluding personal views vs. needs-signal interpretation), on what constitutes 'important information' for Coverage [Q157], and on event boundaries (US local-fire model vs. multi-phase volcanic crisis).",
+        "OC-3": "Demographic documentation is partial: only the location restriction [Q61], MTurk recruitment, qualification process [Q62–Q66], and pay rate [Q67–Q68] are documented. No information on language background beyond English-native, professional background, or humanitarian experience.",
+        "OC-4": "Re-annotation by an Ecuadorian inter-operational team (per A3) is essential — but the existing labels themselves are not reusable as a starting point for humanitarian relevance.",
+        "OC-5": "Aggregation is majority vote of three workers [Q70], which can erase a single dissenting humanitarian-aware perspective — particularly risky for low-frequency but high-importance signals (community needs, indigenous voices).",
+        "OC-6": "Convergent validity and external validity are both violated: there is no evidence the labels correlate with Ecuadorian humanitarian judgments, and the annotator population is operationally unrepresentative."
+      },
+      "evidence_quotes": [
+        "[Q61] 'we use location restriction (QC1) to limit the pool of workers to countries where native English speakers are most likely to be found.' (p.5)",
+        "[Q70] 'we take the majority label among the three workers.' (p.6)",
+        "[Q77] 'The average timeline-level agreement between those two workers is 90.06%.' (p.6)",
+        "[Q88] 'we pick the two summaries written by the two workers who agree the most...' (p.7)",
+        "[Q105] 'we recruit a group of workers from MTurk with the same Location restriction (QC1)...' (p.8)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-22] HumAID 2016 Ecuador Earthquake subset shows severe class imbalance (e.g., 3 tweets in 'displaced people and evacuations'), illustrating that even Ecuador-event data annotated under generic schemas underweights humanitarian categories.",
+        "[WEB-27] MDPI study confirms HumAID Ecuador subset class imbalance limits training utility."
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "OC-1": [
+          "Q61",
+          "Q70"
+        ],
+        "OC-2": [
+          "Q58",
+          "Q157"
+        ],
+        "OC-3": [
+          "Q61",
+          "Q62",
+          "Q67"
+        ],
+        "OC-4": [],
+        "OC-5": [
+          "Q70",
+          "WEB-22"
+        ],
+        "OC-6": [
+          "Q61",
+          "Q105"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Specific country-level distribution of the MTurk worker pool (US-only? US/UK/AU?)."
+      ],
+      "requires_expert_verification": [
+        "Whether any Cruz Roja Ecuatoriana or UN OCHA Ecuador annotation guidelines could anchor a re-annotation effort."
+      ]
+    },
+    "output_form": {
+      "score": 3,
+      "justification": "At the surface modality level, the benchmark and deployment match: both produce text outputs (binary classification labels, abstractive text summaries) [Q91, Q98]. ROUGE [Q98–Q100] and the human rubric [Q106] are evaluation metrics that can in principle be adapted to Spanish reference summaries with appropriate tokenization. However, the benchmark provides no documentation of multilingual evaluation, and the human-written reference summaries [Q87] are English. UN OCHA situation reports follow specific genre conventions (numbered bullets, standardized headers, percentages) that differ from the abstractive narrative style elicited in the benchmark. The deployment also requires bilingual reporting (Spanish for national counterparts, English for global reporting), which the benchmark does not address. So the modality matches but the formatting/genre/language alignment does not.",
+      "strengths": [
+        "Text-based abstractive summarization is the right surface form for humanitarian SITREP production [Q98]; the multi-reference ROUGE setup [Q100] is a reasonable template that extends to Spanish references with multilingual tokenization; the human evaluation protocol design [Q103–Q108] is methodologically sound and could be re-instantiated with bilingual evaluators."
+      ],
+      "checklist_responses": {
+        "OF-1": "Text-output modality matches deployment needs (analyst-consumable text summaries and binary relevance flags) [Q91, Q98].",
+        "OF-2": "Text-to-speech is not a primary requirement — analysts are literate professionals (region YAML literacy_and_education.analyst_population). Not applicable.",
+        "OF-3": "Analyst literacy is high in Spanish and English [region YAML]; no accessibility barrier at the consumer side. Affected populations have ~94–96% national literacy [WEB-2, WEB-3] but with rural and indigenous gaps [WEB-5] — relevant if outputs were redirected to community use, but not for the primary analyst use case.",
+        "OF-4": "External validity is partially preserved at the modality level but compromised by language (English-only references [Q87], English-anchored Coherence [Q153]) and genre (no SITREP conventions). ROUGE applied to English references against Spanish outputs would be invalid."
+      },
+      "evidence_quotes": [
+        "[Q91] 'For evaluation, we use the average timeline-level accuracy.' (p.7)",
+        "[Q98] 'We evaluate all timeline summarization models with ROUGE...' (p.8)",
+        "[Q100] 'We use SacreROUGE... to compute multi-reference ROUGE scores.' (p.8)",
+        "[Q87] 'each timeline in our dataset is annotated by three workers... it includes three summaries.' (p.7)",
+        "[Q108] 'the human-written summaries are significantly better than the ones generated by models, in terms of overall quality with an average rating of 4.12.' (p.8)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-2] Ecuador adult literacy ~94% (2022).",
+        "[WEB-3] Ecuador adult literacy ~96.3% (2022).",
+        "[WEB-5] Indigenous communities have lower literacy rates than national average."
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "OF-1": [
+          "Q91",
+          "Q98"
+        ],
+        "OF-2": [],
+        "OF-3": [
+          "WEB-2",
+          "WEB-3",
+          "WEB-5"
+        ],
+        "OF-4": [
+          "Q87",
+          "Q153"
+        ]
+      },
+      "confidence": "medium",
+      "information_gaps": [
+        "Whether multilingual ROUGE/BERTScore implementations adopted by humanitarian NLP practitioners are validated for Spanish SITREP-style text."
+      ],
+      "requires_expert_verification": [
+        "Specific UN OCHA / Cruz Roja SITREP genre conventions to anchor evaluation rubric adaptation."
+      ]
+    }
+  },
+  "overall_summary": "CrisisLTLSum is a well-documented but tightly scoped English-language benchmark built on US/Australian Twitter data covering four crisis domains (wildfire, local fire, traffic, storm). For the Ecuador humanitarian crisis social media analyst deployment, it presents fundamental misalignments across nearly every validity dimension: the crisis taxonomy excludes the deployment's priority categories (volcanic, seismic, displacement, complex emergencies); the input content is geographically and institutionally US/Australian; the preprocessing pipeline is English-only with the authors themselves acknowledging language dependency; the output relevance criteria embed US-journalism assumptions that conflict with humanitarian needs-signal interpretation; and the labels were produced by English-native MTurk workers rather than by the inter-operational humanitarian teams the deployment requires. Only the surface output modality (text summaries and binary classifications) and the methodological scaffolding (cluster-then-refine procedure, multi-reference ROUGE, four-axis summarization rubric) offer any reusable value.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "CrisisLTLSum measures English-language, US/Australian-context timeline extraction and abstractive summarization quality for short-duration local crisis events in four narrow domains (wildfire, local fire, traffic, storm), evaluated against US English-native MTurk worker judgments. For the Ecuador deployment it can serve at most as a methodological exemplar — not as a measurement of the constructs (Spanish humanitarian operational relevance, multi-phase geophysical event tracking, SITREP-quality summarization) the deployment requires.",
+    "construct_depth": "The benchmark probes its in-scope constructs reasonably deeply — it provides 1,000 timelines, transparent QC procedures, multi-reference summaries, and both automatic (ROUGE) and human (four-axis) evaluation. However, that depth is entirely conditional on the English/US/Australian/four-domain frame; outside that frame, none of the depth transfers. Input Ontology, Input Content, Input Form, and Output Content all score 1; Output Ontology scores 2; only Output Form (modality match) reaches 3.",
+    "supplementation_needed": "Substantial supplementation is required: (1) a Spanish-language Ecuadorian crisis dataset with timeline structure (UrbangEnCy [WEB-17] is a binary-classification starting point but does not provide timelines); (2) re-annotation by Ecuadorian humanitarian inter-operational teams to define and label operational relevance; (3) replacement of the English NLP preprocessing stack (NER, OSM-anchoring, tokenization) with Spanish/Kichwa-aware components; (4) extension of the crisis taxonomy to volcanic, seismic, landslide, displacement, and complex humanitarian categories; (5) genre-aware evaluation against UN OCHA SITREP and Cruz Roja reporting conventions in both Spanish and English."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "Four-domain US taxonomy excludes Ecuador's priority crisis types (volcanic, seismic, landslide, displacement, complex humanitarian emergencies).",
+      "recommendation": "Co-design a deployment-specific crisis taxonomy with Cruz Roja Ecuatoriana, UN OCHA Ecuador, IGEPN, and SNGR; include multi-phase event states (alert escalation, lahar advisory, exclusion-zone declaration, return phase) explicitly modeled as timeline structure."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "All instances are US/Australian English Twitter; no Ecuadorian geographic, institutional, or linguistic content.",
+      "recommendation": "Build an Ecuador-specific timeline corpus using UrbangEnCy [WEB-17] as a Spanish-tweet seed pool, extended with parroquia-level location candidates, SNGR/IGEPN/INAMHI keyword lists, and Kichwa toponym dictionaries curated with CONAIE/ECUARUNARI input."
+    },
+    {
+      "dimension": "input_form",
+      "gap": "English-only preprocessing pipeline (NER, lemmatization, OSM, tokenizers) cannot process Spanish or Kichwa.",
+      "recommendation": "Replace AllenNLP/CoNLL03 NER with Spanish NER fine-tuned on Ecuadorian tweets (extending the Mexico earthquake template [WEB-20]); validate OpenStreetMap coverage for Ecuadorian rural geography and supplement with a Kichwa-toponym gazetteer; handle the SGR/SNGR acronym alias [WEB-11] explicitly."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "Binary 'part of timeline' criterion and four-axis rubric are anchored to English/US-journalism norms; humanitarian relevance categories (logistics access, community needs, displacement signals, alert escalation) are unrepresented.",
+      "recommendation": "Redesign the relevance schema as multi-label humanitarian-operational tagging (logistics, needs, displacement, coordination, casualties, infrastructure, alert-state) and rewrite the summary rubric to include SITREP genre conformance, bilingual coherence, and source-type provenance."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Labels and reference summaries produced by English-native MTurk workers, not by the Ecuadorian inter-operational team that will use the system.",
+      "recommendation": "Conduct re-annotation with field coordinators, social analysts, and domain experts from Cruz Roja Ecuatoriana and UN OCHA Ecuador; use deliberative consensus rather than majority-vote aggregation to preserve minority humanitarian signals; document annotator demographics in a Datasheet."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "ROUGE and the human rubric assume English references; no Spanish or bilingual evaluation; no SITREP genre conventions.",
+      "recommendation": "Use multilingual semantic-similarity metrics (e.g., multilingual BERTScore) against Spanish reference summaries; develop a parallel English/Spanish evaluation track aligned with UN OCHA SITREP and Cruz Roja appeal genre conventions."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_ontology",
+    "input_content",
+    "input_form",
+    "output_content"
+  ],
+  "strongest_dimensions": [
+    "output_form"
+  ]
+}

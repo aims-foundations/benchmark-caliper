@@ -1,0 +1,5 @@
+Use case and domain: Deployment scenario: A GPT-4 model is implemented in a one-on-one tutoring session, where its responses are augmented with a human tutor’s input. We need to assesd whather Are the student stisfied with this newly GPT4 responses? 
+
+Domain: Educational tutoring
+Setting: Mobile application / enterprise software
+Target population: A student from a metropolitan city in India, in grades 1–8, who is fluent in English.

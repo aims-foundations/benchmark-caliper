@@ -1,0 +1,208 @@
+name: Qatari and Arab High School Arabic Essay Writers (Grades 10–12)
+abbreviation: QA-HS-AES
+deployment_context:
+  use_case: AI-assisted formative feedback on Arabic essay drafts before formal grading.
+    The system provides natural-language revision suggestions with explanatory rationale
+    for each writing trait, targeting student writers in Grades 10–12 preparing academic
+    essays under Arab national curricula.
+  primary_geography: Qatar
+  secondary_geography: Arab countries broadly (Egypt, Saudi Arabia, Jordan, Lebanon,
+    and others), with reduced reliability outside Qatar due to curricular divergence
+  institutional_anchor: Qatar national curriculum (primary); other Arab national curricula
+    (secondary, partially divergent)
+target_population:
+  role: High school student writers (Grades 10–12) preparing formal academic essays
+    for graded assessment
+  age_band: approximately 15–18 years old
+  grade_levels:
+  - Grade 10
+  - Grade 11
+  - Grade 12
+  language_profile: Modern Standard Arabic (MSA) as the formal written register; Gulf
+    Arabic dialect influence possible in Qatari students' writing; other regional
+    dialects (Egyptian, Levantine, Hijazi) possible in secondary populations
+  curriculum_context: Qatar national curriculum is the primary anchor. Students write
+    to essay prompts set within Qatari pedagogical and cultural norms. Secondary populations
+    follow Egyptian, Saudi, Jordanian, or Lebanese national curricula with partially
+    divergent writing conventions and rubric standards.
+  population_size_qatar_g10_12: '[NEEDS VERIFICATION]'
+  gender_composition_notes: Qatar operates gender-segregated public schooling; both
+    male and female student cohorts are in scope for this deployment. Any system evaluation
+    should verify performance parity across gender cohorts. [NEEDS VERIFICATION —
+    confirm current MOE Qatar school structure for Grades 10–12]
+languages:
+  primary_written: Modern Standard Arabic (MSA / الفصحى)
+  dialect_influence:
+    primary: Gulf Arabic (Qatari variety) — may surface in vocabulary choice, idiomatic
+      expressions, or informal constructions within otherwise MSA student essays
+    secondary:
+    - Egyptian Arabic (for Egyptian-curriculum secondary population)
+    - Levantine Arabic (for Jordanian/Lebanese-curriculum secondary population)
+    - Hijazi/Najdi Arabic (for Saudi-curriculum secondary population)
+    note: Code-mixing between MSA and regional dialect in formal student writing is
+      an open empirical question for this population. [NEEDS VERIFICATION — see flagged
+      gap on MSA/Gulf Arabic code-mixing in student writing]
+  diglossia_note: MSA is the expected written norm in formal academic essays; however,
+    students may inadvertently introduce dialect features. The feedback system must
+    be calibrated to recognize and comment on dialect intrusion as a correctable feature
+    without over-penalizing register variation that falls within acceptable pedagogical
+    tolerance.
+  instruction_language: Arabic (primary medium of instruction for Arabic-language
+    essay courses in Qatar and other Arab countries). Some Qatari schools — particularly
+    international or semi-private schools — may use English as a parallel medium.
+    [NEEDS VERIFICATION — confirm Qatari MOE language-of-instruction policy for Arabic
+    essay courses, Grades 10–12]
+writing_systems:
+  primary_script: Arabic script (right-to-left, Unicode Arabic block)
+  morphological_considerations: MSA uses a root-and-pattern (trilateral root) morphological
+    system with rich inflectional morphology. Morphological correctness (verb conjugation,
+    noun-adjective agreement, dual/plural forms, case endings) is a salient quality
+    dimension in student writing that differs fundamentally from English writing quality
+    metrics.
+  diacritics: Tashkeel (short vowel diacritics / حركات) are generally omitted in student
+    prose but may be relevant in literary or Quranic text commentary essays where
+    diacritical accuracy signals comprehension. NLP tools must handle both diacritized
+    and undiacritized input.
+  punctuation_and_layout: Arabic punctuation conventions differ from English (e.g.,
+    Arabic comma ،, Arabic question mark ؟). RTL rendering and mixed-direction text
+    (e.g., embedded numerals or Latin-script citations) require specific handling
+    in any NLP pipeline.
+  nlp_tooling_status: Arabic NLP tooling (tokenization, morphological analysis, POS
+    tagging, parsing) is maturing but lags significantly behind English. Tools calibrated
+    to news-domain MSA may not transfer well to student writing register. [NEEDS VERIFICATION
+    — identify current best-practice Arabic NLP tools for student writing analysis
+    as of latest available survey]
+curriculum_and_genre_context:
+  primary_curriculum_authority: Qatar Ministry of Education and Higher Education (MOE
+    Qatar)
+  applicable_curriculum_framework: '[NEEDS VERIFICATION — locate Qatar national Arabic-language
+    curriculum framework and writing standards for Grades 10–12, e.g., MOE Qatar Arabic
+    Language Standards or equivalent published rubric documentation]'
+  essay_genres_in_scope:
+  - genre: Persuasive / argumentative essay (مقالة إقناعية / حجاجية)
+    notes: Standard genre across Arab high school curricula; broadly analogous to
+      benchmark essay type but anchored to Arabic rhetorical conventions (e.g., classical
+      Arabic argumentation structures).
+  - genre: Explanatory / expository essay (مقالة تفسيرية / إيضاحية)
+    notes: Present in benchmark in limited form; deployment requires coverage calibrated
+      to Arab curricular norms.
+  - genre: Literary analysis essay (مقالة تحليل أدبي)
+    notes: ABSENT from benchmark. Standard in Qatari and other Arab Grade 10–12 curricula.
+      Requires evaluative knowledge of classical and modern Arabic literature, poetic
+      forms, and literary criticism traditions. [NEEDS VERIFICATION — confirm genre
+      prevalence and rubric criteria in Qatar Grades 10–12 Arabic literature curriculum]
+  - genre: Religious text commentary / Quranic text engagement (تفسير / تأمل نص ديني)
+    notes: ABSENT from benchmark. Present in Arab high school curricula to varying
+      degrees. Requires sensitivity to Islamic scholarly conventions and Quranic citation
+      norms. [NEEDS VERIFICATION — confirm whether Qatar Grades 10–12 Arabic curriculum
+      includes graded Quranic commentary essay tasks and what rubric criteria apply]
+  - genre: Cultural commentary essay (مقالة ثقافية / اجتماعية)
+    notes: ABSENT from benchmark. Engages with Arab cultural heritage, social values,
+      or contemporary issues through an Arab cultural lens. [NEEDS VERIFICATION —
+      confirm genre presence and weighting in Qatar curriculum assessment]
+  genre_coverage_gap_summary: The benchmark (ASAP++) covers only argumentative/persuasive,
+    source-dependent, and narrative/descriptive genres in English. At minimum two
+    of the five genres listed above (literary analysis and religious text commentary)
+    are entirely unrepresented in the benchmark and require separate validation resources.
+  scoring_rubric_notes:
+    qatar_rubric_status: '[NEEDS VERIFICATION — locate Qatar MOE published Arabic
+      writing rubric for Grades 10–12; key dimensions expected to include: correctness/إتقان
+      اللغة, organization/التنظيم, content development/تطوير المحتوى, vocabulary/الثروة
+      اللغوية, style/الأسلوب]'
+    cross_country_divergence: '[NEEDS VERIFICATION — investigate how Saudi (MOE Saudi),
+      Egyptian (Thanaweya Amma), Jordanian (Tawjihi), and Lebanese writing rubrics
+      diverge from Qatar''s in emphasis on language correctness, content, and style
+      dimensions]'
+    pan_arab_shared_norms: MSA grammatical correctness and adherence to classical
+      Arabic rhetorical norms (فصاحة, بلاغة) are broadly shared across Arab curricula,
+      but practical rubric weighting differs. This shared layer provides a partial
+      anchor for cross-country generalization.
+cultural_norms_notes: '- Islamic values are deeply embedded in Qatari educational
+  content and essay prompts; Quranic citations, hadith references, and Islamic ethical
+  framing are culturally normative in student writing and should not be flagged as
+  off-topic.
+
+  - Arabic rhetorical and literary tradition (بلاغة / فصاحة): classical Arabic eloquence
+  norms — including rhythm, lexical richness, and structural parallelism — are aesthetic
+  values in Arabic writing that differ from English clarity/concision ideals.
+
+  - High regard for classical Arabic literature and the Quran as linguistic models;
+  student essays may draw on these sources as authorities.
+
+  - Honor, family, and community as recurring thematic anchors in cultural commentary
+  essays.
+
+  - Gender-appropriate content expectations may vary by school type (public/private,
+  single-sex/mixed) within Qatar and across Arab countries.
+
+  - Sensitivity to political topics varies by country (Qatari, Saudi, Egyptian, Jordanian
+  national narratives differ); the feedback system should avoid generating commentary
+  that implicates politically sensitive content.
+
+  - Ramadan and the Islamic calendar affect academic scheduling and student availability;
+  this may be relevant for deployment timing considerations.
+
+  '
+infrastructure_and_access_notes:
+  qatar_digital_infrastructure: '[NEEDS VERIFICATION — current internet penetration,
+    device ownership, and school-level device access for Qatari Grade 10–12 students]'
+  school_technology_context: '[NEEDS VERIFICATION — whether Qatar MOE schools have
+    mandated learning management systems (LMS) or digital platforms for essay submission
+    relevant to integration of an AI feedback tool]'
+  device_profile: Mobile-device access is likely high in Qatar given general smartphone
+    penetration; however, essay writing and feedback review may occur primarily on
+    desktop/laptop in school lab or home contexts. [NEEDS VERIFICATION]
+  arabic_interface_requirements: The system interface must support RTL text input
+    and display. Keyboard layout (Arabic keyboard vs. transliteration input) affects
+    user experience. Any feedback text output must be rendered in Arabic script with
+    proper diacritics where pedagogically relevant.
+  secondary_country_infrastructure_variation: '[NEEDS VERIFICATION — infrastructure
+    access for students in Egypt, Jordan, Lebanon, Saudi Arabia who represent the
+    secondary deployment population; significant variation expected]'
+domain_specific_notes:
+  automated_arabic_essay_scoring_landscape: '[NEEDS VERIFICATION — identify existing
+    Arabic AES datasets and systems, e.g., Arabic IELTS writing corpora, Gulf/Qatar
+    national exam corpora, or other MSA student essay datasets that could serve as
+    more valid proxies than ASAP++]'
+  feedback_generation_validation:
+    requirement: The deployment output is actionable natural-language revision suggestions
+      with explanatory rationale, not numeric scores. No validated Arabic feedback
+      generation framework is known to exist for this population.
+    gap_status: '[NEEDS VERIFICATION — search for Arabic writing feedback generation
+      systems or human-in-the-loop evaluation studies with Arab student populations]'
+  arabic_nlp_tools_for_student_writing: '[NEEDS VERIFICATION — identify Arabic morphological
+    analyzers, grammar checkers, and coherence/cohesion tools validated on student-register
+    MSA writing rather than news domain]'
+  msa_dialect_codemixing_tools: '[NEEDS VERIFICATION — identify NLP tools or datasets
+    that detect and handle Gulf Arabic / MSA code-mixing in formal student writing]'
+  religious_text_genre_resources: '[NEEDS VERIFICATION — identify any AES benchmarks
+    or Arabic NLP resources covering Quranic or religious-text commentary essays for
+    high school assessment]'
+  comparative_arab_curriculum_studies: '[NEEDS VERIFICATION — locate comparative studies
+    of Arabic writing instruction and assessment norms across Qatar, Saudi Arabia,
+    Egypt, Jordan, and Lebanon, including Tawjihi and Thanaweya Amma writing components]'
+benchmark_alignment_summary:
+  benchmark: asap_plus_plus
+  overall_alignment: Severely misaligned across all six validity dimensions. The benchmark
+    provides no Arabic-language data, no Qatari or Arab student writing, no genre
+    coverage for literary analysis or religious text commentary, no natural-language
+    feedback output schema, and no annotation grounded in Arab curriculum norms. The
+    benchmark may serve as a methodological reference (e.g., for QWK-based inter-rater
+    agreement design) but cannot function as a validity anchor for this deployment.
+  primary_validity_gaps:
+  - All benchmark data is English-only; deployment is Arabic-only (MSA)
+  - Benchmark essay genres (argumentative, source-dependent, narrative) do not include
+    literary analysis, religious text commentary, or cultural commentary
+  - Benchmark output is ordinal numeric scores; deployment requires natural-language
+    revision suggestions
+  - Benchmark ground truth is anchored to US curriculum raters; deployment requires
+    Qatar/Arab curriculum norms
+  - No Gulf Arabic, Qatari student, or Arab student writing appears anywhere in the
+    benchmark
+  partial_methodological_relevance:
+  - Multi-trait attribute scoring structure (content, organization, vocabulary, etc.)
+    is conceptually analogous to what a formative feedback system would target
+  - QWK-based inter-rater reliability methodology is a valid template for any future
+    Arabic annotation effort
+  - Genre-specific scoring logic (different attributes weighted differently per genre)
+    is a methodological precedent relevant to a multi-genre Arabic deployment

@@ -1,0 +1,6051 @@
+{
+  "formId": "REDACTED",
+  "info": {
+    "title": "Benchmark Validity Assessment Stage 3 (expert_80eb33f0e871@anonymous.invalid)",
+    "description": "Thank you for participating in this expert validation study.\n\nYou will review automated validity assessments for benchmark datasets in specific deployment contexts. For each assessment, you will:\n\n1. Read a companion PDF with the detailed analysis\n2. Answer questions about the assessment's accuracy and completeness\n\nEach section includes a link to the relevant PDF — please open it before answering the questions.\n\nEstimated time: 2.5 - 5 hours.\n\nIMPORTANT: The form has 34 sections. Please aim to take 5-10 minutes on each one.\n\nPlease be as transparent as possible with your answers. This will help us accurately frame any contributions or uses of the pipeline in the paper, as well as help us improve the pipeline for future iterations.\n\nIMPORTANT: The total PDF materials are quite long due to the inclusion of detailed evidence tables. You should aim to fully digest the main text of each document, but you do not need to exhaustively read the evidence tables — they are provided as a reference to help you assess your answers to the questions in this form.\n\nYour responses are saved automatically as you progress (requires being signed into your Google account; drafts are tied to your browser and device).",
+    "documentTitle": "Benchmark Validity Assessment Stage 3 (expert_80eb33f0e871@anonymous.invalid)"
+  },
+  "settings": {
+    "emailCollectionType": "VERIFIED"
+  },
+  "revisionId": "00000005",
+  "responderUri": "https://docs.google.com/forms/d/e/1FAIpQLSfllL2pnEbAaZkwB78iD0W-2kw7C1j5lZaDb9ZBvvj-WYP_RA/viewform",
+  "items": [
+    {
+      "itemId": "50977f41",
+      "pageBreakItem": {},
+      "title": "Assessment 1: MILU — Bangladeshi Bengali University Student — Story Generation Thesis Deployment",
+      "description": "Use case and domain: The focus is region-dependent generic llm adaptation. \n\nTask: domain-dependent language and dialect understanding\nLLMs evaluated: Generic frontier model vs small llms as well as region specific llms\nDomain: General llm capability on region-dependent and context driven task understanding\nSetting: Evaluating region-dependent llms to assess their capability on local-context tasks.\nTarget population: A native bengali speaker (a university student doing bsc thesis in story generation) from Dhaka, Bangladesh is using a regional llm to generate local context-driven stories. So it is important to have Bangladesh specific entity presence in the evaluation of the bengali part of the benchmark.\n\nYour elicitation responses:\n\nQ1 (IO): \"Your user is a Bengali-speaking university student in Dhaka, Bangladesh generating locally grounded stories. The benchmark draws from Indian state and competitive exams, so its Bengali content likely reflects West Bengal and broader Indian cultural references — Durga Puja in Kolkata, Indian independence narratives, West Bengali literary figures like Tagore in an Indian national context. Does your deployment require coverage of Bangladesh-specific cultural touchstones instead, such as the 1971 Liberation War, Pohela Boishakh as celebrated in Bangladesh, Eid traditions in a Bangladeshi context, or Bangladeshi literary figures like Humayun Ahmed? What other Bangladesh-specific topics would your user expect the system to know?\"\n  → \"yes, the benchmark should have Bangladesh specific contexts as well as you have mentioned.\nOther Bangladesh-specific topic:\n1. Education- Cover the common higer level exam mentions like SSC , HSC. Educational institute like Dhaka University, Buet, IUT, DMC, RU, Shahjalal university, Brac University.\n2. Village- Village life specific context, bangladesh specific river area life context, life of a farmer\n3. Political context- Recent political uprising, political knowledge driven from the period of 1971-2026; not only 1971\n4. Drama and film- Common drama and film history\n5. Culture- Specific cultural identifiers such as ekushe boimela.\n6. Tourism- Bnagladesh specific tourism places like cox's bazar, rangamati, bandarban, sajek etc.\"\n\nQ2 (IC): \"For story generation grounded in Dhaka and Bangladesh, the system needs to handle entities like specific Dhaka neighbourhoods (Dhanmondi, Wari, Old Dhaka), local institutions (University of Dhaka, BUET), Bangladeshi political figures, and Bangladeshi rivers and geography. Do you expect the benchmark's Bengali datapoints — sourced from Indian exams — to contain these Bangladeshi-specific named entities and local context, or are they predominantly India-centric in their concrete references?\"\n  → \"Yes I expect the benchmark shoud have Bangladeshi-specific named entities\"\n\nQ3 (IC): \"Written Bengali has two major registers: Standard Colloquial Bengali (Cholti) and the more formal Shadhubhasha, with Bangladeshi Standard Bengali differing from West Bengali Standard Bengali in vocabulary, idiom, and loanword patterns (e.g., more Arabic/Persian influence in Bangladesh). Does your deployment require the LLM to understand and generate in the Bangladeshi register specifically, and would exam-derived questions from India adequately reflect that register for your evaluation purposes?\"\n  → \"yes, Bangladeshi register specifically.\nno, exam-derived questions from India will not adequately reflect that register for your evaluation purposes\"\n\nQ4 (OC): \"For culturally grounded story-generation evaluation — judging whether a generated story correctly reflects Bangladeshi local context — whose judgment should serve as ground truth: native Bangladeshi Bengali speakers, West Bengali speakers, or a mixed annotator pool? If the benchmark's Bengali questions were validated by Indian annotators, would that mismatch affect the reliability of evaluation scores for your Bangladesh-targeted deployment?\"\n  → \"native Bangladeshi Bengali speakers primarily. However, a mixed annotator pool also works.\nYes, I think that mismatch affect the reliability of evaluation scores for the Bangladesh-targeted deployment.\"\n\n▶ Open the Summary PDF before answering: https://drive.google.com/file/d/18M1BOuuRNdNJkBV4KIgAUk2b3Ha1j_y0/view?usp=drivesdk"
+    },
+    {
+      "itemId": "73357fc5",
+      "title": "The pipeline assigned an overall risk rating of HIGH for using MILU in this deployment context. How does this compare to your expert judgment?",
+      "questionItem": {
+        "question": {
+          "questionId": "724048d7",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Too conservative (risk is lower)"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Too lenient (risk is higher)"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "2465d1cb",
+      "title": "The overall summary paragraph accurately synthesizes the findings across all six dimensions.",
+      "questionItem": {
+        "question": {
+          "questionId": "0b19b3e3",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "5c3aac2c",
+      "title": "The overall summary captures the most important validity concerns for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "538809da",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "40f08446",
+      "title": "The 'Construct Depth' description accurately characterizes what this benchmark measures and does not measure.",
+      "questionItem": {
+        "question": {
+          "questionId": "52c50100",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "23fac75d",
+      "title": "The 'What Else You Need' recommendations would help a practitioner plan supplementary evaluation.",
+      "questionItem": {
+        "question": {
+          "questionId": "04a8b30e",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "5d1d31c2",
+      "title": "Any overall comments on the assessment's quality, framing, or usefulness?",
+      "questionItem": {
+        "question": {
+          "questionId": "18a76afd",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "5f8e582b",
+      "pageBreakItem": {},
+      "title": "Assessment 1 — Input Ontology (IO)",
+      "description": "Score: 1/5 (Serious concern) | Confidence: high\n\n▶ Open the Input Ontology (IO) PDF before answering: https://drive.google.com/file/d/16M_QFNQ7gSk7tN-wzF1N0O8UdM3YqgKl/view?usp=drivesdk"
+    },
+    {
+      "itemId": "4c92ca78",
+      "title": "The score of 1/5 (Serious concern) for Input Ontology (IO) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "07c51a23",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "4816cbba",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "54eb364e",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "6b9015a0",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "4a4ca3b9",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "7aeb3ded",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "2e964f1c",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "7c2b78c6",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "5bfc4f91",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "22119cab",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "286abbe8",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "09025732",
+      "pageBreakItem": {},
+      "title": "Assessment 1 — Input Content (IC)",
+      "description": "Score: 1/5 (Serious concern) | Confidence: high\n\n▶ Open the Input Content (IC) PDF before answering: https://drive.google.com/file/d/1uzuoa_rrrZZUOgGwCsZpYZXCregyPi6L/view?usp=drivesdk"
+    },
+    {
+      "itemId": "70486857",
+      "title": "The score of 1/5 (Serious concern) for Input Content (IC) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "6cef3905",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "1795a3f4",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "5e8266a9",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "59b475e6",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "2d4007cf",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "78240413",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "3f9407fc",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "44861f6e",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "772aa97c",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "54f715e0",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "32e056ba",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "63cbc641",
+      "pageBreakItem": {},
+      "title": "Assessment 1 — Input Form (IF)",
+      "description": "Score: 4/5 (Minor gaps) | Confidence: high\n\n▶ Open the Input Form (IF) PDF before answering: https://drive.google.com/file/d/1vTj5ZAMe9sxLAP2HWUaUxzPAktzmIAxG/view?usp=drivesdk"
+    },
+    {
+      "itemId": "1a59ce25",
+      "title": "The score of 4/5 (Minor gaps) for Input Form (IF) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "1545b094",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "14e34205",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "62f5c33a",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "372097a8",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "209c9d88",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "646d2082",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "2305d0ca",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "5227bbed",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "1d357a48",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "58bc516a",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "42c6cba0",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "73fb4944",
+      "pageBreakItem": {},
+      "title": "Assessment 1 — Output Ontology (OO)",
+      "description": "Score: 1/5 (Serious concern) | Confidence: high\n\n▶ Open the Output Ontology (OO) PDF before answering: https://drive.google.com/file/d/1EEp-6xJHR3n7ZMxOeL3CWxKe5v1up-Kw/view?usp=drivesdk"
+    },
+    {
+      "itemId": "441b6250",
+      "title": "The score of 1/5 (Serious concern) for Output Ontology (OO) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "690e9cbe",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "7e3793f5",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "2c2d0eea",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "348e3a66",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "06932497",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "4cf67971",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "6fbdcbab",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "20091793",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "5620d99b",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "16a73bbd",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "383f64a1",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "7fdddbbf",
+      "pageBreakItem": {},
+      "title": "Assessment 1 — Output Content (OC)",
+      "description": "Score: 1/5 (Serious concern) | Confidence: high\n\n▶ Open the Output Content (OC) PDF before answering: https://drive.google.com/file/d/1JyPaB4O-KHu3GbZVb72xVOtlHZrLiVfm/view?usp=drivesdk"
+    },
+    {
+      "itemId": "3c22848b",
+      "title": "The score of 1/5 (Serious concern) for Output Content (OC) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "45a449a6",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "5ec4861a",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "641fc1e8",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "41e896fa",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "2c6c88ea",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "47563098",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "4b3833ff",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "49221519",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "3bc990a3",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "0d6dd3f1",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "459ce45f",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "23c10aad",
+      "pageBreakItem": {},
+      "title": "Assessment 1 — Output Form (OF)",
+      "description": "Score: 1/5 (Serious concern) | Confidence: high\n\n▶ Open the Output Form (OF) PDF before answering: https://drive.google.com/file/d/19zir6fIFjgMRg9nNP8vXzbvvR1LWjM5C/view?usp=drivesdk"
+    },
+    {
+      "itemId": "1b3ee04d",
+      "title": "The score of 1/5 (Serious concern) for Output Form (OF) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "3ffaba97",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "7f53c4eb",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "09241d21",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "29913d76",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "7de3a6f2",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "68e115c2",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "4425ecb7",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "60be0201",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "0ee1a4e9",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "448565a2",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "69cc16da",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "1a2cc516",
+      "pageBreakItem": {},
+      "title": "Assessment 1 — Usefulness & Actionability",
+      "description": "Based on your review of the full assessment, please evaluate its overall usefulness."
+    },
+    {
+      "itemId": "2e1f3180",
+      "title": "Did the assessment surface validity concerns you hadn't previously considered?",
+      "questionItem": {
+        "question": {
+          "questionId": "6ef4fdd6",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Yes — several new concerns"
+              },
+              {
+                "value": "Yes — one or two"
+              },
+              {
+                "value": "No — but it confirmed my existing concerns"
+              },
+              {
+                "value": "No — it missed concerns I already knew about"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "70dacb90",
+      "title": "Which concerns were new or surprising to you? (If you answered \"Yes\" above)",
+      "questionItem": {
+        "question": {
+          "questionId": "51e268aa",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "2c56fa9c",
+      "title": "I would trust this assessment to inform a real deployment decision about this benchmark.",
+      "questionItem": {
+        "question": {
+          "questionId": "098fd3dd",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "34af080b",
+      "title": "This assessment could help evaluation/benchmark design decisions for the deployment use case and target population of interest.",
+      "questionItem": {
+        "question": {
+          "questionId": "08a335a6",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "405f98e1",
+      "title": "The remediation recommendations are reasonable.",
+      "questionItem": {
+        "question": {
+          "questionId": "2738ba99",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "1090a85e",
+      "title": "The remediation recommendations are actionable.",
+      "questionItem": {
+        "question": {
+          "questionId": "4de250b7",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "3b45c5bc",
+      "title": "How would you characterize this assessment's value relative to a manual expert review?",
+      "questionItem": {
+        "question": {
+          "questionId": "0ddc2d30",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Comparable to expert review"
+              },
+              {
+                "value": "Useful complement to expert review"
+              },
+              {
+                "value": "Starting point that needs substantial revision"
+              },
+              {
+                "value": "Not useful"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "6d4ea24d",
+      "title": "Are there specific refinements or additions that would make this assessment more useful for practitioners in your domain?",
+      "questionItem": {
+        "question": {
+          "questionId": "3db771b1",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "6e6caf7c",
+      "pageBreakItem": {},
+      "title": "Assessment 2: MILU — Mymensingh Environmental Scientist — Cross-Regional South Asian Agricultural Knowledge",
+      "description": "Use case and domain: Task: Environment science and geograpy-specific agricultural knowledge understanding\nLLMs evaluated: Generic frontier model vs small llms as well as region specific llms\nDomain: Environmental science\nSetting: Environment science research utility assessment using llm and local-context\nTarget population: An environment scientist from Mymensingh, Bangladesh wants to get knowledge about different south asian region specific agricultural practice. So having different region and language specific agricultural and demographic context understanding (e.g. telegu spoken area, hydrabad India and agricultural practice/problems vs farmers practice/problems from Mymensingh, Bangladesh~bengali spoken in Mymensingh accented dialect.)\n\nYour elicitation responses:\n\nQ1 (IO): \"Your deployment targets agricultural and environmental science knowledge across South Asian regions — including, for example, flood-plain farming in the Brahmaputra-Jamuna delta near Mymensingh, dry-land cropping in Telangana, or coastal aquaculture in Andhra Pradesh. Does MILU's coverage of culturally specific subjects (local history, arts, festivals, law) adequately represent the agro-ecological, soil, crop, and climate-specific knowledge your scientist actually needs, or are those agricultural subdomains largely absent from the benchmark's subject taxonomy?\"\n  → \"Not really. The benchmark contain surface level knowledge about the agriculture of different parts of india. But the depth level subject knowledge is kind of missing.\"\n\nQ2 (IC): \"Your deployment involves Bengali as spoken in Mymensingh — a dialect with distinct vocabulary and phonological patterns compared to standard West Bengal Bengali or Dhaka Bengali. Do the Bengali-language questions in the benchmark reflect standard Indian Bengali (West Bengal exam corpus) rather than the Bangladeshi or Mymensingh regional variant? Would dialect-specific agricultural terminology (e.g., local crop names, land-tenure terms, irrigation vocabulary used by Bangladeshi farmers) be represented, or would the content implicitly default to Indian Bengali conventions?\"\n  → \"Yes there might be very implicit indian bengali styled wordding but mostly they are pretty standard wordings. Some dialect-specific agricultural terminology will definately make the bechmark more robust.\"\n\nQ3 (OC): \"The benchmark draws questions from Indian regional competitive exams, meaning ground-truth labels were validated against Indian exam answer keys and annotated within an Indian educational context. For agricultural and environmental science questions relevant to Bangladesh — such as haor wetland ecology, boro rice cultivation cycles, or flood management under Bangladesh's river systems — would Indian exam-derived answer keys be considered authoritative by environmental scientists or agronomists based in Mymensingh? Are there cases where the scientifically or practically correct answer for a Bangladeshi context would differ from what an Indian exam marks as correct?\"\n  → \"Yes I think as these country share borders there are a lot of agricultural and water agreement and the general sentiment around these agreement might create different array of opinions based on the country. But those different perspective should be reflected and handled gracefully in the benchmark. And yes, Indian exam-derived answer might be considered authorative (though few cases, the main problem I want it to capture is the agricultural differences and practice differences in these regions and knowledge regarding that) by environmental scientists or agronomists based in Mymensingh\"\n\nQ4 (IF): \"Your scientist is querying about region-specific agricultural practices across multiple South Asian linguistic zones (Telugu-speaking Telangana/Andhra vs Bengali-speaking Bangladesh). Will the LLMs being evaluated receive queries written in those regional languages, in English, or in a mix? And is the Mymensingh scientist expected to write queries in standard Bengali script, colloquial Bangladeshi Bengali, or English — since the benchmark's text inputs are standardized exam-style prompts that may not reflect how a domain expert in Bangladesh would naturally phrase an environmental science question?\"\n  → \"So this part should contain questions in indian languages as well as in bengali (spoken both in india and bangladesh)\"\n\n▶ Open the Summary PDF before answering: https://drive.google.com/file/d/10dMTJTTXzxGojUjBGunGlLXj6Xm4OdV6/view?usp=drivesdk"
+    },
+    {
+      "itemId": "4922ad83",
+      "title": "The pipeline assigned an overall risk rating of HIGH for using MILU in this deployment context. How does this compare to your expert judgment?",
+      "questionItem": {
+        "question": {
+          "questionId": "5c8adb3d",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Too conservative (risk is lower)"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Too lenient (risk is higher)"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "597867a0",
+      "title": "The overall summary paragraph accurately synthesizes the findings across all six dimensions.",
+      "questionItem": {
+        "question": {
+          "questionId": "36c42d9b",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "0c505049",
+      "title": "The overall summary captures the most important validity concerns for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "50c02b4a",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "39a2936d",
+      "title": "The 'Construct Depth' description accurately characterizes what this benchmark measures and does not measure.",
+      "questionItem": {
+        "question": {
+          "questionId": "021eb71b",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "5192b0c7",
+      "title": "The 'What Else You Need' recommendations would help a practitioner plan supplementary evaluation.",
+      "questionItem": {
+        "question": {
+          "questionId": "75e43f78",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "1e19232a",
+      "title": "Any overall comments on the assessment's quality, framing, or usefulness?",
+      "questionItem": {
+        "question": {
+          "questionId": "772d1d0c",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "3598262e",
+      "pageBreakItem": {},
+      "title": "Assessment 2 — Input Ontology (IO)",
+      "description": "Score: 2/5 (Significant gaps) | Confidence: high\n\n▶ Open the Input Ontology (IO) PDF before answering: https://drive.google.com/file/d/1udTCLUjrvcy7ZO8uEHpYjfJyu-S2jyrQ/view?usp=drivesdk"
+    },
+    {
+      "itemId": "45b02d01",
+      "title": "The score of 2/5 (Significant gaps) for Input Ontology (IO) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "30ff77fa",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "03c42b2a",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "2adeb491",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "3f35a7cc",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "4d43c0a0",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "0ff070a3",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "4e56d381",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "5093edff",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "52e472a2",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "691e92f5",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "265dc447",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "5a7e9aab",
+      "pageBreakItem": {},
+      "title": "Assessment 2 — Input Content (IC)",
+      "description": "Score: 1/5 (Serious concern) | Confidence: high\n\n▶ Open the Input Content (IC) PDF before answering: https://drive.google.com/file/d/16VmqTEFq3Cnvthy3KiWn_VsRI7ITtyMw/view?usp=drivesdk"
+    },
+    {
+      "itemId": "60bbec19",
+      "title": "The score of 1/5 (Serious concern) for Input Content (IC) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "2362acf6",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "7f54d1bd",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "68f9b1a6",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "70c82818",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "4dcf5bed",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "01d673c9",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "66515676",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "1d190fb7",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "49f53cde",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "335ff077",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "5a08c069",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "376e91bb",
+      "pageBreakItem": {},
+      "title": "Assessment 2 — Input Form (IF)",
+      "description": "Score: 3/5 (Moderate gaps) | Confidence: high\n\n▶ Open the Input Form (IF) PDF before answering: https://drive.google.com/file/d/1JXgCLI-SYTeSXseenvVEJDJ-9Yxgpzqy/view?usp=drivesdk"
+    },
+    {
+      "itemId": "202dbbe4",
+      "title": "The score of 3/5 (Moderate gaps) for Input Form (IF) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "3ad5b4b2",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "14631dc2",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "1cb84ae3",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "0e6037b6",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "40323e9f",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "2962380e",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "72bb28d2",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "339e9b4c",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "4d931396",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "76c1cb94",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "7dbe1194",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "4866af9a",
+      "pageBreakItem": {},
+      "title": "Assessment 2 — Output Ontology (OO)",
+      "description": "Score: 2/5 (Significant gaps) | Confidence: high\n\n▶ Open the Output Ontology (OO) PDF before answering: https://drive.google.com/file/d/1wPOvZR9ntdooxOTbnIpgYY4RyLzUCIWi/view?usp=drivesdk"
+    },
+    {
+      "itemId": "0d54dbbe",
+      "title": "The score of 2/5 (Significant gaps) for Output Ontology (OO) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "54b3a3ea",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "54e539ce",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "53a7877b",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "2ca75d44",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "680fafa4",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "16747387",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "4bfe87a9",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "7593b138",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "0f6c5d28",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "6c2b5f8d",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "4115ace9",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "427aac04",
+      "pageBreakItem": {},
+      "title": "Assessment 2 — Output Content (OC)",
+      "description": "Score: 2/5 (Significant gaps) | Confidence: high\n\n▶ Open the Output Content (OC) PDF before answering: https://drive.google.com/file/d/1qx3gXzur8KsOB6sAls9jE8wuULwphFHa/view?usp=drivesdk"
+    },
+    {
+      "itemId": "3e46b29d",
+      "title": "The score of 2/5 (Significant gaps) for Output Content (OC) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "4ff30b85",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "72c4d244",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "3d371389",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "0726b302",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "58c32693",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "74b1d96f",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "24eedcd8",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "06a3c25b",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "779d96a1",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "79c7b74c",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "28d84b89",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "1675db05",
+      "pageBreakItem": {},
+      "title": "Assessment 2 — Output Form (OF)",
+      "description": "Score: 3/5 (Moderate gaps) | Confidence: high\n\n▶ Open the Output Form (OF) PDF before answering: https://drive.google.com/file/d/1CosIriSgaM_zAPzZdM_mhahYkCKcdx3x/view?usp=drivesdk"
+    },
+    {
+      "itemId": "6f61d850",
+      "title": "The score of 3/5 (Moderate gaps) for Output Form (OF) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "191a8689",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "4f6b6cbc",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "5c7b862b",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "7ca63379",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "05cee266",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "064607aa",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "32e9a951",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "435b6e5f",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "677ceb95",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "370fbde6",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "03d95b0e",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "27604973",
+      "pageBreakItem": {},
+      "title": "Assessment 2 — Usefulness & Actionability",
+      "description": "Based on your review of the full assessment, please evaluate its overall usefulness."
+    },
+    {
+      "itemId": "5c6b793a",
+      "title": "Did the assessment surface validity concerns you hadn't previously considered?",
+      "questionItem": {
+        "question": {
+          "questionId": "528db536",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Yes — several new concerns"
+              },
+              {
+                "value": "Yes — one or two"
+              },
+              {
+                "value": "No — but it confirmed my existing concerns"
+              },
+              {
+                "value": "No — it missed concerns I already knew about"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "4c3910d6",
+      "title": "Which concerns were new or surprising to you? (If you answered \"Yes\" above)",
+      "questionItem": {
+        "question": {
+          "questionId": "15f4adc2",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "71061812",
+      "title": "I would trust this assessment to inform a real deployment decision about this benchmark.",
+      "questionItem": {
+        "question": {
+          "questionId": "6070c508",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "4be997f5",
+      "title": "This assessment could help evaluation/benchmark design decisions for the deployment use case and target population of interest.",
+      "questionItem": {
+        "question": {
+          "questionId": "64d117ff",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "003899af",
+      "title": "The remediation recommendations are reasonable.",
+      "questionItem": {
+        "question": {
+          "questionId": "15dec193",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "3fa46b98",
+      "title": "The remediation recommendations are actionable.",
+      "questionItem": {
+        "question": {
+          "questionId": "5f256a29",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "610515e1",
+      "title": "How would you characterize this assessment's value relative to a manual expert review?",
+      "questionItem": {
+        "question": {
+          "questionId": "45e71e8b",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Comparable to expert review"
+              },
+              {
+                "value": "Useful complement to expert review"
+              },
+              {
+                "value": "Starting point that needs substantial revision"
+              },
+              {
+                "value": "Not useful"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "5c501a06",
+      "title": "Are there specific refinements or additions that would make this assessment more useful for practitioners in your domain?",
+      "questionItem": {
+        "question": {
+          "questionId": "418aedd8",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "62d56031",
+      "pageBreakItem": {},
+      "title": "Comparative 1: MILU vs. MMLU",
+      "description": "The pipeline assessed two benchmarks for the same deployment context: MILU (a benchmark proposed by you) and MMLU (https://arxiv.org/abs/2009.03300) (a benchmark we selected for comparison). Both were evaluated across the same six validity dimensions. The comparative PDF below presents excerpts from each benchmark's individual assessment for this context — please review it before answering the questions.\n\nMILU: 2.2/5 avg | MMLU: 1.2/5 avg\nContext: Mymensingh Environmental Scientist — Cross-Regional South Asian Agricultural Knowledge\n\n▶ Open the Comparative PDF: https://drive.google.com/file/d/1x76V_v8TnDP57XdaAq4tyjFLYu_NWbmM/view?usp=drivesdk"
+    },
+    {
+      "itemId": "0f9cc380",
+      "title": "The pipeline scored MILU at an average of 2.2/5 and MMLU at 1.2/5 for this deployment context. Does this relative ordering match your expert judgment?",
+      "questionItem": {
+        "question": {
+          "questionId": "73c08aec",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "MILU should score higher than MMLU"
+              },
+              {
+                "value": "Relative ordering is about right"
+              },
+              {
+                "value": "MMLU should score higher than MILU"
+              },
+              {
+                "value": "Scores should be approximately equal"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "0ea7f12a",
+      "title": "For Input Ontology (IO), the pipeline scored MILU at 2/5 and MMLU at 1/5. Does this relative ordering match your judgment?",
+      "questionItem": {
+        "question": {
+          "questionId": "69d71387",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "MILU should score higher than MMLU"
+              },
+              {
+                "value": "Relative ordering is about right"
+              },
+              {
+                "value": "MMLU should score higher than MILU"
+              },
+              {
+                "value": "Scores should be approximately equal"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "59128bd4",
+      "title": "For Input Content (IC), the pipeline scored MILU at 1/5 and MMLU at 1/5. Does this relative ordering match your judgment?",
+      "questionItem": {
+        "question": {
+          "questionId": "73ac18d5",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "MILU should score higher than MMLU"
+              },
+              {
+                "value": "Relative ordering is about right"
+              },
+              {
+                "value": "MMLU should score higher than MILU"
+              },
+              {
+                "value": "Scores should be approximately equal"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "23800844",
+      "title": "For Input Form (IF), the pipeline scored MILU at 3/5 and MMLU at 1/5. Does this relative ordering match your judgment?",
+      "questionItem": {
+        "question": {
+          "questionId": "474175eb",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "MILU should score higher than MMLU"
+              },
+              {
+                "value": "Relative ordering is about right"
+              },
+              {
+                "value": "MMLU should score higher than MILU"
+              },
+              {
+                "value": "Scores should be approximately equal"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "62958c57",
+      "title": "For Output Ontology (OO), the pipeline scored MILU at 2/5 and MMLU at 1/5. Does this relative ordering match your judgment?",
+      "questionItem": {
+        "question": {
+          "questionId": "25fb8fb8",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "MILU should score higher than MMLU"
+              },
+              {
+                "value": "Relative ordering is about right"
+              },
+              {
+                "value": "MMLU should score higher than MILU"
+              },
+              {
+                "value": "Scores should be approximately equal"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "42d29d87",
+      "title": "For Output Content (OC), the pipeline scored MILU at 2/5 and MMLU at 1/5. Does this relative ordering match your judgment?",
+      "questionItem": {
+        "question": {
+          "questionId": "58d69668",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "MILU should score higher than MMLU"
+              },
+              {
+                "value": "Relative ordering is about right"
+              },
+              {
+                "value": "MMLU should score higher than MILU"
+              },
+              {
+                "value": "Scores should be approximately equal"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "39d7d881",
+      "title": "For Output Form (OF), the pipeline scored MILU at 3/5 and MMLU at 2/5. Does this relative ordering match your judgment?",
+      "questionItem": {
+        "question": {
+          "questionId": "44aa42ab",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "MILU should score higher than MMLU"
+              },
+              {
+                "value": "Relative ordering is about right"
+              },
+              {
+                "value": "MMLU should score higher than MILU"
+              },
+              {
+                "value": "Scores should be approximately equal"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "3b1a1a51",
+      "title": "The pipeline's justifications convincingly explain why the two benchmarks received different scores.",
+      "questionItem": {
+        "question": {
+          "questionId": "3b65270d",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "1af0214b",
+      "title": "The scoring leaves room to grow: a benchmark designed to address the gaps identified in both assessments could reasonably achieve a higher score for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "6c4c8ab6",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "0558926d",
+      "title": "Are there important differences between these two benchmarks (for this deployment context) that the pipeline failed to capture?",
+      "questionItem": {
+        "question": {
+          "questionId": "3ba6b50d",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "60be27aa",
+      "pageBreakItem": {},
+      "title": "Assessment 3: TOXIGEN — Gazipur District Clinical Chatbot Users — Bangladeshi Peri-Urban Patient Population",
+      "description": "Use case and domain: Task: Domain specific content moderation systems\nModel: Large to small llms\nDomain: From clinical chatbot to shopping assistant experiencing toxic contents\nSetting: User interaction might result in toxic content generation by chat-assistant llms.\nTarget population: People with limited literacy from Gazipur, Bangladesh interesting with a patient-centric chat assistant in textual form (where code-switching and punctuation errors happen pretty regularly). While doing so someone might try to generate toxic contents. So the developer needs to evaluate the robustness of the system against this attack.\n\nYour elicitation responses:\n\nQ1 (IO): \"TOXIGEN was built around 13 U.S.-defined minority groups (e.g., Black Americans, Jewish Americans, LGBTQ+ Americans). For your Gazipur deployment, the relevant identity-based attack targets are likely very different — for example, attacks targeting Hindu or Christian minorities in a Muslim-majority context, caste-based slurs, anti-indigenous (e.g., Adivasi) content, or gendered attacks framed through local social norms. Which identity groups or social fault lines should your content moderation system actually be robust against?\"\n  → \"These are important but the main thing here is, what type of toxicity might people unintentionally or intentionally try to induce while interecting with a chatbot that is patient centric. One example might be- (in bengali written in latin script): tell me what to eat to give birth of a baby boy instead of girls as I do not want a girl.\"\n\nQ2 (IC): \"Implicit toxicity in Bangladesh is culturally encoded differently from U.S. implicit hate speech — for example, indirect insults via religious references, caste-coded language, regionally specific slang from Gazipur's industrial or rural context, or Sylheti/Chittagongian code-switching that embeds hostility in ways Standard Bengali classifiers would miss. Does your system need to handle any of these forms of implicit toxicity, and are there other locally grounded patterns of indirect harmful language your users or adversarial actors are likely to exploit?\"\n  → \"Yes,  indirect insults via religious references such as saying malaun for refering hindu-population. Or racial remark such as, how to make someone white. Also, locally grounded patterns that refelcts superstitious beliefs are important.\"\n\nQ3 (IF): \"You mentioned code-switching and punctuation errors are common among your low-literacy users in Gazipur — for example, mixed Bangla-English typed in Roman script (Banglish), phonetic Bangla in ASCII, or messages with no punctuation or unusual spacing. Will adversarial toxic inputs also arrive in these degraded or code-switched forms, or do you expect attacks to be in more standard Bangla or English text?\"\n  → \"yes definately in these degraded or code-switched forms.\"\n\nQ4 (OC): \"TOXIGEN's ground-truth toxicity labels were validated by U.S.-based annotators judging U.S. cultural content. For your clinical chatbot in Bangladesh, the boundary between acceptable directness, medical bluntness, or culturally loaded phrasing and genuinely toxic output may be judged very differently. Whose judgment should count as authoritative for labeling content as toxic in your system — local Bangladeshi clinicians, community members from Gazipur, platform moderators, or another group?\"\n  → \"An ideal system should have more than one expert to annotate from that region. If that is not possible, having one/two person from native bangladeshi (who  knows the context) will do the work which is better than nothing.\"\n\n▶ Open the Summary PDF before answering: https://drive.google.com/file/d/1pOKF7w8bqufQ_5Lh4ta0b35nS-IxCyej/view?usp=drivesdk"
+    },
+    {
+      "itemId": "0a2620c2",
+      "title": "The pipeline assigned an overall risk rating of HIGH for using TOXIGEN in this deployment context. How does this compare to your expert judgment?",
+      "questionItem": {
+        "question": {
+          "questionId": "00837c18",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Too conservative (risk is lower)"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Too lenient (risk is higher)"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "3fae0106",
+      "title": "The overall summary paragraph accurately synthesizes the findings across all six dimensions.",
+      "questionItem": {
+        "question": {
+          "questionId": "25099ca9",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "6a9ee4b1",
+      "title": "The overall summary captures the most important validity concerns for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "24ae9eb1",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "1353595e",
+      "title": "The 'Construct Depth' description accurately characterizes what this benchmark measures and does not measure.",
+      "questionItem": {
+        "question": {
+          "questionId": "7230a922",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "19fbc387",
+      "title": "The 'What Else You Need' recommendations would help a practitioner plan supplementary evaluation.",
+      "questionItem": {
+        "question": {
+          "questionId": "62af01fc",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "47c8f8ca",
+      "title": "Any overall comments on the assessment's quality, framing, or usefulness?",
+      "questionItem": {
+        "question": {
+          "questionId": "1e14f718",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "3caa8ec5",
+      "pageBreakItem": {},
+      "title": "Assessment 3 — Input Ontology (IO)",
+      "description": "Score: 1/5 (Serious concern) | Confidence: high\n\n▶ Open the Input Ontology (IO) PDF before answering: https://drive.google.com/file/d/1tbiViXGHwH_1Rmq2lyvS3RD4OWX9zVni/view?usp=drivesdk"
+    },
+    {
+      "itemId": "7b714812",
+      "title": "The score of 1/5 (Serious concern) for Input Ontology (IO) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "47df8ae9",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "3bc9b6b4",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "314ab6d6",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "124b7be9",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "37a3190c",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "4cf2b8da",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "1a09faa3",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "65c8fe7c",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "68fac119",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "7c6c5968",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "6c0b3e41",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "0b6fdc97",
+      "pageBreakItem": {},
+      "title": "Assessment 3 — Input Content (IC)",
+      "description": "Score: 1/5 (Serious concern) | Confidence: high\n\n▶ Open the Input Content (IC) PDF before answering: https://drive.google.com/file/d/1L3aQt0CfdBVtLGV_Z1WiWc8gT5ragA09/view?usp=drivesdk"
+    },
+    {
+      "itemId": "5bf9b885",
+      "title": "The score of 1/5 (Serious concern) for Input Content (IC) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "0b55930b",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "437edaca",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "47697741",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "46b63d7e",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "0b9136bd",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "54f6d949",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "2d6d08c5",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "1de3382b",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "74e8e0df",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "5576aacf",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "5b69305f",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "0f336e0b",
+      "pageBreakItem": {},
+      "title": "Assessment 3 — Input Form (IF)",
+      "description": "Score: 1/5 (Serious concern) | Confidence: high\n\n▶ Open the Input Form (IF) PDF before answering: https://drive.google.com/file/d/1VEsL4Om3TS_MwX7Z3HFqa-pUqQLIVQkg/view?usp=drivesdk"
+    },
+    {
+      "itemId": "3bcbe5ee",
+      "title": "The score of 1/5 (Serious concern) for Input Form (IF) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "39e50fa2",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "50d24e80",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "54d9497a",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "53ce10e5",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "2cffff95",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "11ce1bbe",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "64645752",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "702dad30",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "73dd8573",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "6051845b",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "22edbcae",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "7765f648",
+      "pageBreakItem": {},
+      "title": "Assessment 3 — Output Ontology (OO)",
+      "description": "Score: 1/5 (Serious concern) | Confidence: high\n\n▶ Open the Output Ontology (OO) PDF before answering: https://drive.google.com/file/d/1pkXWFrNia7_xgCoAkyT28qNecwAz9Yb9/view?usp=drivesdk"
+    },
+    {
+      "itemId": "21819f95",
+      "title": "The score of 1/5 (Serious concern) for Output Ontology (OO) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "7d4c7271",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "471706ca",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "4bcaa6ef",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "19405793",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "01cfd0b7",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "32f2d706",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "6bfb020a",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "6ea46317",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "4654aff2",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "42a50d09",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "26464f16",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "1b85bfcd",
+      "pageBreakItem": {},
+      "title": "Assessment 3 — Output Content (OC)",
+      "description": "Score: 1/5 (Serious concern) | Confidence: high\n\n▶ Open the Output Content (OC) PDF before answering: https://drive.google.com/file/d/1k2tjekWKvkds2ylbsX3EtiTexBCUtNMr/view?usp=drivesdk"
+    },
+    {
+      "itemId": "599018fa",
+      "title": "The score of 1/5 (Serious concern) for Output Content (OC) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "00803102",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "67816448",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "4700dc76",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "3f2db567",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "76c0000a",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "07ec7845",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "2136011c",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "620418d9",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "05dd1ca6",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "3142157b",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "2941c860",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "0f7814e1",
+      "pageBreakItem": {},
+      "title": "Assessment 3 — Output Form (OF)",
+      "description": "Score: 3/5 (Moderate gaps) | Confidence: medium\n\n▶ Open the Output Form (OF) PDF before answering: https://drive.google.com/file/d/1M6EG_PlHy-0sjxfkUzt__1F7sixWZ-ZF/view?usp=drivesdk"
+    },
+    {
+      "itemId": "72f40568",
+      "title": "The score of 3/5 (Moderate gaps) for Output Form (OF) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "5b7ba91a",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "7fda9bef",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "37712190",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "43f993b4",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "4fe5c7b3",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "368c4613",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "7c178499",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "519964a0",
+      "title": "The pipeline assigned medium confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "4365e16b",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "10c9ca66",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "0f358125",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "14beadf5",
+      "pageBreakItem": {},
+      "title": "Assessment 3 — Usefulness & Actionability",
+      "description": "Based on your review of the full assessment, please evaluate its overall usefulness."
+    },
+    {
+      "itemId": "62f4bfdb",
+      "title": "Did the assessment surface validity concerns you hadn't previously considered?",
+      "questionItem": {
+        "question": {
+          "questionId": "721ed7a1",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Yes — several new concerns"
+              },
+              {
+                "value": "Yes — one or two"
+              },
+              {
+                "value": "No — but it confirmed my existing concerns"
+              },
+              {
+                "value": "No — it missed concerns I already knew about"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "131f7a34",
+      "title": "Which concerns were new or surprising to you? (If you answered \"Yes\" above)",
+      "questionItem": {
+        "question": {
+          "questionId": "1e0e2153",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "13ecc788",
+      "title": "I would trust this assessment to inform a real deployment decision about this benchmark.",
+      "questionItem": {
+        "question": {
+          "questionId": "36cd4492",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "5f1b91ab",
+      "title": "This assessment could help evaluation/benchmark design decisions for the deployment use case and target population of interest.",
+      "questionItem": {
+        "question": {
+          "questionId": "181f9f70",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "3a8096fa",
+      "title": "The remediation recommendations are reasonable.",
+      "questionItem": {
+        "question": {
+          "questionId": "7f382a2c",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "79ffedfe",
+      "title": "The remediation recommendations are actionable.",
+      "questionItem": {
+        "question": {
+          "questionId": "54309d81",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "5b1e3d7b",
+      "title": "How would you characterize this assessment's value relative to a manual expert review?",
+      "questionItem": {
+        "question": {
+          "questionId": "49c54cb8",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Comparable to expert review"
+              },
+              {
+                "value": "Useful complement to expert review"
+              },
+              {
+                "value": "Starting point that needs substantial revision"
+              },
+              {
+                "value": "Not useful"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "79c7707a",
+      "title": "Are there specific refinements or additions that would make this assessment more useful for practitioners in your domain?",
+      "questionItem": {
+        "question": {
+          "questionId": "50743eb1",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "014ce36e",
+      "pageBreakItem": {},
+      "title": "Assessment 4: TOXIGEN — South Asian Safety Researchers — TOXIGEN Cross-Regional Validity Assessment",
+      "description": "Use case and domain: Task: Toxicity evaluation in different language varieties (llm given toxicity rating)\nModel: Large to small llms\nDomain: The domain will be generic as well as specific such as texts having racist remarks, sexual and offensive jokes, subtle remarks\nSetting: Based on the language and region, different wording of offensive context tokens are essential. Once this is being incorporated in the benchmark, we can evaluate the comparative toxicity rating in different variety on similar text and their variations.\nTarget population: Target population is academic safety researcher from south asian region trying to understand how their region specific offensive comments are perceived by llms compared to western equivalent offensive contexts.\n\nYour elicitation responses:\n\nQ1 (IO): \"TOXIGEN was built around 13 U.S.-defined minority groups (e.g., Black Americans, Jewish Americans, LGBTQ+ Americans). For your South Asian researchers, which target group categories are essential — for example, caste-based groups (Dalits, OBCs), religious communities (Muslims, Hindus, Sikhs, Christians), ethnic/linguistic communities (Bengalis, Tamils, Pashtuns), or regional migrant communities? Are there offense categories common in South Asia — such as casteist slurs, partition-era sectarian language, or anti-migrant rhetoric — that have no close U.S. equivalent in the benchmark's current taxonomy?\"\n  → \"Yes it should contain country specific contexts. Such as for bangladesh and India-- Confict related to muslim and hindu living in this area. As well as political slurs for and from the spupporting parties (e.g. BJP, Congress, Awamileague). Country specific tension between india-pakistan that you might expect from the people's spoken words from those part. Also caste-based groups as well.\"\n\nQ2 (IC): \"Your deployment targets implicit and subtle toxicity, which is often highly context-dependent. In South Asian contexts, would the offensive content your researchers are studying include code-mixed language (e.g., Hinglish, Tanglish, Romanized Urdu), indirect casteist microaggressions that require caste-system knowledge to parse, or religious dog-whistles that are benign on the surface but toxic to in-group readers? Would purely English-language benchmark stimuli — generated from a U.S. cultural frame — be recognizable as offensive to South Asian annotators or LLMs, or would they require South-Asian-specific rewording to feel ecologically valid?\"\n  → \"yes code-mixed language is essential. yo are right it needs those are benign on the surface but toxic to in-group readers. They definately require South-Asian-specific rewording to feel ecologically valid, that's the main point.\"\n\nQ3 (OC): \"When your researchers label whether a statement is toxic in a South Asian context, whose judgment should serve as ground truth — South Asian academic safety researchers themselves, community members from the targeted group (e.g., Dalit activists, Muslim scholars), or a cross-regional consensus? Would you expect systematic disagreement in toxicity ratings between, say, Indian, Pakistani, and Sri Lankan annotators looking at the same text, given different political and social histories?\"\n  → \"cross-regional consensus is essential but might be crucial to collect. there will be systematic disagreement in toxicity ratings between, say, Indian, Pakistani, and Sri Lankan annotators looking at the same text and that's the point of this research. That's why this is costly and sensitive.\"\n\nQ4 (OO): \"Your use case involves comparing how LLMs rate toxicity across language varieties and regional variants of similar content. Should the output scoring be a single toxicity score, a multi-dimensional rating (e.g., severity, target group specificity, implicitness level), or a comparative ranking between a South Asian and Western equivalent stimulus? Would a binary toxic/benign label — as TOXIGEN produces — be sufficient for your researchers' comparative analysis, or do they need finer-grained output to detect cross-regional rating differences in LLM behavior?\"\n  → \"A multidimensional rating. Besides, a comparative ranking between a South Asian and Western equivalent stimulus or llm's view of an equivalent sentence might help. I think toxigen has a likert-scale type rating, not a binary level.\"\n\n▶ Open the Summary PDF before answering: https://drive.google.com/file/d/1S3M6uOvDL0hJwG8_NkeA8XM12rp4jNg8/view?usp=drivesdk"
+    },
+    {
+      "itemId": "2376a62a",
+      "title": "The pipeline assigned an overall risk rating of HIGH for using TOXIGEN in this deployment context. How does this compare to your expert judgment?",
+      "questionItem": {
+        "question": {
+          "questionId": "46cf462f",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Too conservative (risk is lower)"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Too lenient (risk is higher)"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "2d3443ce",
+      "title": "The overall summary paragraph accurately synthesizes the findings across all six dimensions.",
+      "questionItem": {
+        "question": {
+          "questionId": "1b565e49",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "4089038e",
+      "title": "The overall summary captures the most important validity concerns for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "19ec5d79",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "2ac61303",
+      "title": "The 'Construct Depth' description accurately characterizes what this benchmark measures and does not measure.",
+      "questionItem": {
+        "question": {
+          "questionId": "236bca30",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "0901c7a1",
+      "title": "The 'What Else You Need' recommendations would help a practitioner plan supplementary evaluation.",
+      "questionItem": {
+        "question": {
+          "questionId": "2c2e6a2b",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "780939c0",
+      "title": "Any overall comments on the assessment's quality, framing, or usefulness?",
+      "questionItem": {
+        "question": {
+          "questionId": "6c8be32f",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "5865047c",
+      "pageBreakItem": {},
+      "title": "Assessment 4 — Input Ontology (IO)",
+      "description": "Score: 1/5 (Serious concern) | Confidence: high\n\n▶ Open the Input Ontology (IO) PDF before answering: https://drive.google.com/file/d/1QIRNp7gn3jjzohz5kej4zY-Yfa25EUQh/view?usp=drivesdk"
+    },
+    {
+      "itemId": "7e96c257",
+      "title": "The score of 1/5 (Serious concern) for Input Ontology (IO) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "3bd8eab6",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "04e37814",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "74ee3e6b",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "51e3fdbb",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "69b019fe",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "1c4bf0e7",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "24b949dd",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "5777e1cb",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "6ad7f959",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "19918307",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "636dd673",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "7aebc456",
+      "pageBreakItem": {},
+      "title": "Assessment 4 — Input Content (IC)",
+      "description": "Score: 1/5 (Serious concern) | Confidence: high\n\n▶ Open the Input Content (IC) PDF before answering: https://drive.google.com/file/d/1DKmKYdqc7r12XJQQ9zZY-AU8S8fngMAO/view?usp=drivesdk"
+    },
+    {
+      "itemId": "23f2b692",
+      "title": "The score of 1/5 (Serious concern) for Input Content (IC) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "1bea4ce3",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "6057593b",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "50c02ed8",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "16b07e00",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "01213351",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "3c7c27f6",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "14572c5d",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "271ae328",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "180afa8e",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "0d61b795",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "12b54c0d",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "7b42f17f",
+      "pageBreakItem": {},
+      "title": "Assessment 4 — Input Form (IF)",
+      "description": "Score: 2/5 (Significant gaps) | Confidence: high\n\n▶ Open the Input Form (IF) PDF before answering: https://drive.google.com/file/d/1dX3gUHZMo9uisrToYg7NqW4Mhm2t42aQ/view?usp=drivesdk"
+    },
+    {
+      "itemId": "6f89b4d3",
+      "title": "The score of 2/5 (Significant gaps) for Input Form (IF) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "18d90fc3",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "76fc0258",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "7d60474c",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "744a4090",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "678da59c",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "01d0b2be",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "37b3bcac",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "64293048",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "5841ef7b",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "088e4c3b",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "2ce638af",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "19681608",
+      "pageBreakItem": {},
+      "title": "Assessment 4 — Output Ontology (OO)",
+      "description": "Score: 2/5 (Significant gaps) | Confidence: high\n\n▶ Open the Output Ontology (OO) PDF before answering: https://drive.google.com/file/d/1-MQIl8KcVsoyWLNTp1rX9b6-mMFiJm89/view?usp=drivesdk"
+    },
+    {
+      "itemId": "67c823f0",
+      "title": "The score of 2/5 (Significant gaps) for Output Ontology (OO) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "78d4024e",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "574476a0",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "7f31cc85",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "16fab5d1",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "7f624ca5",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "5f429d63",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "0bfbf7d1",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "175f3f67",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "16dff767",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "223eaaf6",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "26bd97ba",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "61d7aec9",
+      "pageBreakItem": {},
+      "title": "Assessment 4 — Output Content (OC)",
+      "description": "Score: 1/5 (Serious concern) | Confidence: high\n\n▶ Open the Output Content (OC) PDF before answering: https://drive.google.com/file/d/1jpldxfJtE4ACvFvSu1rQ4wJf8Sjyo2CW/view?usp=drivesdk"
+    },
+    {
+      "itemId": "56b3ae1d",
+      "title": "The score of 1/5 (Serious concern) for Output Content (OC) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "33a6d619",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "1d5625bf",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "33f0a547",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "103b0b3e",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "4499280a",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "227e58b0",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "5d191bfd",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "7feed655",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "5ae3b06a",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "37d347e1",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "2c7e7f87",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "3914bad1",
+      "pageBreakItem": {},
+      "title": "Assessment 4 — Output Form (OF)",
+      "description": "Score: 2/5 (Significant gaps) | Confidence: high\n\n▶ Open the Output Form (OF) PDF before answering: https://drive.google.com/file/d/1QctjfsowVyJD8VSjGYXZ65BF0x3ZXT6L/view?usp=drivesdk"
+    },
+    {
+      "itemId": "0420d53b",
+      "title": "The score of 2/5 (Significant gaps) for Output Form (OF) is appropriate for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "5e9e480a",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "6b8994d3",
+      "title": "The justification adequately explains why this score was assigned.",
+      "questionItem": {
+        "question": {
+          "questionId": "10196169",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "6aa1610b",
+      "title": "The arguments for this dimension are well-supported by the cited evidence.",
+      "questionItem": {
+        "question": {
+          "questionId": "4b877bbe",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "4b2b9911",
+      "title": "The checklist responses and information gaps capture the most important validity concerns for this dimension.",
+      "questionItem": {
+        "question": {
+          "questionId": "3e32762a",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "500e112a",
+      "title": "The pipeline assigned high confidence for this dimension. How does this compare to your judgment of the evidence strength?",
+      "questionItem": {
+        "question": {
+          "questionId": "2406b186",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Overconfident"
+              },
+              {
+                "value": "About right"
+              },
+              {
+                "value": "Underconfident"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "40702ec8",
+      "title": "What important validity considerations, if any, are missing or mischaracterized for this dimension? For example, were any strengths overstated or weaknesses omitted (or vice versa)?",
+      "questionItem": {
+        "question": {
+          "questionId": "0f16c51e",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "47448616",
+      "pageBreakItem": {},
+      "title": "Assessment 4 — Usefulness & Actionability",
+      "description": "Based on your review of the full assessment, please evaluate its overall usefulness."
+    },
+    {
+      "itemId": "37c5c99a",
+      "title": "Did the assessment surface validity concerns you hadn't previously considered?",
+      "questionItem": {
+        "question": {
+          "questionId": "6e3fca02",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Yes — several new concerns"
+              },
+              {
+                "value": "Yes — one or two"
+              },
+              {
+                "value": "No — but it confirmed my existing concerns"
+              },
+              {
+                "value": "No — it missed concerns I already knew about"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "3013379b",
+      "title": "Which concerns were new or surprising to you? (If you answered \"Yes\" above)",
+      "questionItem": {
+        "question": {
+          "questionId": "680f97f8",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "45e17d3b",
+      "title": "I would trust this assessment to inform a real deployment decision about this benchmark.",
+      "questionItem": {
+        "question": {
+          "questionId": "28076da8",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "29261c25",
+      "title": "This assessment could help evaluation/benchmark design decisions for the deployment use case and target population of interest.",
+      "questionItem": {
+        "question": {
+          "questionId": "1a193147",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "39a901b0",
+      "title": "The remediation recommendations are reasonable.",
+      "questionItem": {
+        "question": {
+          "questionId": "0635abe8",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "29b6c301",
+      "title": "The remediation recommendations are actionable.",
+      "questionItem": {
+        "question": {
+          "questionId": "30f3f18b",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "09caa0da",
+      "title": "How would you characterize this assessment's value relative to a manual expert review?",
+      "questionItem": {
+        "question": {
+          "questionId": "3749fbd2",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "Comparable to expert review"
+              },
+              {
+                "value": "Useful complement to expert review"
+              },
+              {
+                "value": "Starting point that needs substantial revision"
+              },
+              {
+                "value": "Not useful"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "51961957",
+      "title": "Are there specific refinements or additions that would make this assessment more useful for practitioners in your domain?",
+      "questionItem": {
+        "question": {
+          "questionId": "037cfa3c",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "67630176",
+      "pageBreakItem": {},
+      "title": "Comparative 2: TOXIGEN vs. CIVIL COMMENTS",
+      "description": "The pipeline assessed two benchmarks for the same deployment context: TOXIGEN (a benchmark proposed by you) and CIVIL COMMENTS (https://arxiv.org/abs/1903.04561) (a benchmark we selected for comparison). Both were evaluated across the same six validity dimensions. The comparative PDF below presents excerpts from each benchmark's individual assessment for this context — please review it before answering the questions.\n\nTOXIGEN: 1.3/5 avg | CIVIL COMMENTS: 1.3/5 avg\nContext: Gazipur District Clinical Chatbot Users — Bangladeshi Peri-Urban Patient Population\n\n▶ Open the Comparative PDF: https://drive.google.com/file/d/17We8t2vmGSyvKWc_Y35e6jLyPampN5PJ/view?usp=drivesdk"
+    },
+    {
+      "itemId": "25b29602",
+      "title": "The pipeline scored TOXIGEN at an average of 1.3/5 and CIVIL COMMENTS at 1.3/5 for this deployment context. Does this relative ordering match your expert judgment?",
+      "questionItem": {
+        "question": {
+          "questionId": "74d58d02",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "TOXIGEN should score higher than CIVIL COMMENTS"
+              },
+              {
+                "value": "Relative ordering is about right"
+              },
+              {
+                "value": "CIVIL COMMENTS should score higher than TOXIGEN"
+              },
+              {
+                "value": "Scores should be approximately equal"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "093a67c9",
+      "title": "For Input Ontology (IO), the pipeline scored TOXIGEN at 1/5 and CIVIL COMMENTS at 1/5. Does this relative ordering match your judgment?",
+      "questionItem": {
+        "question": {
+          "questionId": "69c678ef",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "TOXIGEN should score higher than CIVIL COMMENTS"
+              },
+              {
+                "value": "Relative ordering is about right"
+              },
+              {
+                "value": "CIVIL COMMENTS should score higher than TOXIGEN"
+              },
+              {
+                "value": "Scores should be approximately equal"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "7d062a78",
+      "title": "For Input Content (IC), the pipeline scored TOXIGEN at 1/5 and CIVIL COMMENTS at 1/5. Does this relative ordering match your judgment?",
+      "questionItem": {
+        "question": {
+          "questionId": "684c22f8",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "TOXIGEN should score higher than CIVIL COMMENTS"
+              },
+              {
+                "value": "Relative ordering is about right"
+              },
+              {
+                "value": "CIVIL COMMENTS should score higher than TOXIGEN"
+              },
+              {
+                "value": "Scores should be approximately equal"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "16e118b4",
+      "title": "For Input Form (IF), the pipeline scored TOXIGEN at 1/5 and CIVIL COMMENTS at 1/5. Does this relative ordering match your judgment?",
+      "questionItem": {
+        "question": {
+          "questionId": "13b760de",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "TOXIGEN should score higher than CIVIL COMMENTS"
+              },
+              {
+                "value": "Relative ordering is about right"
+              },
+              {
+                "value": "CIVIL COMMENTS should score higher than TOXIGEN"
+              },
+              {
+                "value": "Scores should be approximately equal"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "4b69e184",
+      "title": "For Output Ontology (OO), the pipeline scored TOXIGEN at 1/5 and CIVIL COMMENTS at 1/5. Does this relative ordering match your judgment?",
+      "questionItem": {
+        "question": {
+          "questionId": "19f64a51",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "TOXIGEN should score higher than CIVIL COMMENTS"
+              },
+              {
+                "value": "Relative ordering is about right"
+              },
+              {
+                "value": "CIVIL COMMENTS should score higher than TOXIGEN"
+              },
+              {
+                "value": "Scores should be approximately equal"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "0ff484da",
+      "title": "For Output Content (OC), the pipeline scored TOXIGEN at 1/5 and CIVIL COMMENTS at 1/5. Does this relative ordering match your judgment?",
+      "questionItem": {
+        "question": {
+          "questionId": "3cb20a1f",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "TOXIGEN should score higher than CIVIL COMMENTS"
+              },
+              {
+                "value": "Relative ordering is about right"
+              },
+              {
+                "value": "CIVIL COMMENTS should score higher than TOXIGEN"
+              },
+              {
+                "value": "Scores should be approximately equal"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "3b4939dc",
+      "title": "For Output Form (OF), the pipeline scored TOXIGEN at 3/5 and CIVIL COMMENTS at 3/5. Does this relative ordering match your judgment?",
+      "questionItem": {
+        "question": {
+          "questionId": "2a5b95f6",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "TOXIGEN should score higher than CIVIL COMMENTS"
+              },
+              {
+                "value": "Relative ordering is about right"
+              },
+              {
+                "value": "CIVIL COMMENTS should score higher than TOXIGEN"
+              },
+              {
+                "value": "Scores should be approximately equal"
+              },
+              {
+                "value": "Cannot assess"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "309d86d1",
+      "title": "The pipeline's justifications convincingly explain why the two benchmarks received different scores.",
+      "questionItem": {
+        "question": {
+          "questionId": "1ca68791",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "2d0c75d0",
+      "title": "The scoring leaves room to grow: a benchmark designed to address the gaps identified in both assessments could reasonably achieve a higher score for this deployment context.",
+      "questionItem": {
+        "question": {
+          "questionId": "4b6e26e7",
+          "required": true,
+          "choiceQuestion": {
+            "type": "RADIO",
+            "options": [
+              {
+                "value": "1 — Strongly disagree"
+              },
+              {
+                "value": "2 — Disagree"
+              },
+              {
+                "value": "3 — Neutral"
+              },
+              {
+                "value": "4 — Agree"
+              },
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "itemId": "5481196a",
+      "title": "Are there important differences between these two benchmarks (for this deployment context) that the pipeline failed to capture?",
+      "questionItem": {
+        "question": {
+          "questionId": "53822a69",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    },
+    {
+      "itemId": "21536994",
+      "pageBreakItem": {},
+      "title": "Thank You",
+      "description": "Thank you for completing this review. Your expert feedback is invaluable for validating and improving this automated assessment pipeline.\n\nIf you have any remaining comments or feedback about the overall experience, please share them below."
+    },
+    {
+      "itemId": "208a3128",
+      "title": "Any final comments or feedback?",
+      "questionItem": {
+        "question": {
+          "questionId": "5bae2b55",
+          "textQuestion": {
+            "paragraph": true
+          }
+        }
+      }
+    }
+  ],
+  "publishSettings": {
+    "publishState": {
+      "isPublished": true,
+      "isAcceptingResponses": true
+    }
+  }
+}

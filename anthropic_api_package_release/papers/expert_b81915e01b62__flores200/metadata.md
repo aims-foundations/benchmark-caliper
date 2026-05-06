@@ -1,0 +1,11 @@
+- name: nllb
+- full_name: No Language Left Behind: Scaling Human-Centered Machine Translation
+- year: 2022
+- domain: Machine translation across 200+ languages, with a focus on low-resource language translation quality and safety.
+- languages: 200 languages (specific list not enumerated in pages 1-2)
+- primary_region: Global
+- porting_strategy: ground_up
+- input_modalities: text
+- output_modalities: text, label
+- brief_description: NLLB is a massively multilingual machine translation project that aims to break the 200-language barrier for translation. It combines human-centered research (exploratory interviews with native speakers), novel data mining techniques tailored for low-resource languages, and a conditional compute model based on Sparsely Gated Mixture of Experts. The work includes Flores-200, a human-translated benchmark covering over 40,000 translation directions, and incorporates human evaluation alongside a toxicity benchmark to assess translation safety.
+- source_culture: mixed

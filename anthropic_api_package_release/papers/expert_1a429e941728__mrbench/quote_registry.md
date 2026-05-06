@@ -1,0 +1,171 @@
+---
+
+## Quote Registry
+
+**This section is authoritative.** Every entry is verbatim text from the paper.
+
+| ID | Page | Category | Text |
+|----|------|----------|------|
+| Q1 | 1 | task_taxonomy | "we propose a unified evaluation taxonomy with eight pedagogical dimensions based on key learning sciences principles, which is designed to assess the pedagogical value of LLM-powered AI tutor responses grounded in student mistakes or confusions in the mathematical domain." |
+| Q2 | 1 | data_sources | "We release MRBench – a new evaluation benchmark containing 192 conversations and 1,596 responses from seven state-of-the-art LLM-based and human tutors, providing gold annotations for eight pedagogical dimensions." |
+| Q3 | 1 | evaluation_metrics | "We assess reliability of the popular Prometheus2 and Llama-3.1-8B LLMs as evaluators and analyze each tutor's pedagogical abilities, highlighting which LLMs are good tutors and which ones are more suitable as question-answering systems." |
+| Q4 | 1 | stated_limitations | "General domain-agnostic natural language generation (NLG) metrics (Lin, 2004; Popovic´, 2017; Post, 2018; Gao et al., 2020; Liu et al., 2023) are not well-suited for this context, as most of them fail to account for pedagogical values and require gold references, which are often not available, especially in online interactions." |
+| Q5 | 1 | task_taxonomy | "Specifically, for the student mistake remediation task, we need to assess complex pedagogical aspects and abilities of such systems, ensuring that they provide students with sufficient, helpful, and factually correct guidance and do not simply reveal answers when a student makes a mistake." |
+| Q6 | 1 | authors_affiliations | "Kaushal Kumar Maurya, KV Aditya Srivatsa, Kseniia Petukhova and Ekaterina Kochmar. Mohamed bin Zayed University of Artificial Intelligence, Abu Dhabi, UAE." |
+| Q7 | 2 | evaluation_metrics | "General domain-agnostic natural language generation (NLG) metrics like BLEU (Papineni et al., 2002), BERTScore (Lin, 2004), DialogRPT (Gao et al., 2020), and so on have been used as proxies to measure the coherence and human-likeness of AI tutor responses." |
+| Q8 | 2 | stated_limitations | "However, these metrics do not account for pedagogical values (Jurenka et al., 2024; Liu et al., 2024) and often require a ground truth answer to evaluate matching responses." |
+| Q9 | 2 | stated_limitations | "For a given input dialogue, there can be multiple valid, pedagogically correct ground truth responses, making detection of the optimal answer non-deterministic (Tack and Piech, 2022; Al-Hossami et al., 2024)." |
+| Q10 | 2 | stated_limitations | "Additionally, these metrics can be easily manipulated; for instance, simple responses like "Hello" or "teacher:" (Baladón et al., 2023; Jurenka et al., 2024) can inflate scores." |
+| Q11 | 2 | task_taxonomy | "In this section, we first briefly overview and discuss the limitations of the existing general-purpose NLG metrics and then turn to pedagogically-oriented approaches to evaluation." |
+| Q12 | 3 | task_taxonomy | "In this work, we focus on educational dialogues between a student and a tutor in the mathematical domain. Specifically, the conversations are grounded in students' mistakes or confusions, and the AI tutor aims to respond in order to remediate such mistakes or confusions." |
+| Q13 | 3 | task_taxonomy | "Formally, let's define the conversation history between a tutor and a student as H = {(T1, S1),(T2, S2), . . . ,(Tt, St)}, where Ti represents the i-th response from the tutor, and Si represents the i-th response from the student. Let Sk denote the student's most recent k utterances, where k ∈ [1, ..., t], containing a mistake or confusion. Then the objective of the tutor is to provide the most appropriate response Tt+1 to address this mistake or confusion." |
+| Q14 | 3 | task_taxonomy | "The evaluation taxonomy detailed in Section 4 assesses the appropriateness of the Tt+1 response across eight key pedagogical dimensions." |
+| Q15 | 3 | task_taxonomy | "In this section, we first present our approach, narrowing the evaluation taxonomy down to eight measurable dimensions aligned with key pedagogical strategies (Jurenka et al., 2024; Hennessy et al., 2016). These dimensions are most suitable for the student mistake remediation task and are based on the learning sciences principles." |
+| Q16 | 3 | task_taxonomy | "We then dive into the details of each dimension and its relationship to previous research. An overview of the taxonomy is presented in Table 2." |
+| Q17 | 3 | task_taxonomy | "Encourage active learning (Chi and Wylie, 2014; Oakley and Sejnowski, 2021): The tutor should encourage students to actively participate in the discussion and practice rather than passively receive information. The tutor can achieve this by not revealing the answer immediately and scaffolding guidance." |
+| Q18 | 3 | task_taxonomy | "Adapt to students' goals and needs (King and South, 2017): The tutor should respond coherently by adapting to the current state and goals of the student's learning rather than following a pre-defined learning path. In the context of student mistake remediation, this happens when the tutor identifies the mistake, pinpoints its location, and responds coherently." |
+| Q19 | 3 | task_taxonomy | "Manage cognitive load and enhance metacognitive skills (Mayer, 2002; Dehaene, 2020; Cohen et al., 2021): The tutor should present the information in a structured manner, with elaboration and examples in manageably small chunks that enable the student to generalize their learning skills beyond the current problem. For the task at hand, this can be achieved by providing appropriate guidance." |
+| Q20 | 3 | task_taxonomy | "Foster motivation and stimulate curiosity (Keller, 1987; Patall et al., 2008): The tutor" |
+| Q21 | 4 | task_taxonomy | "Since all dialogues in the dataset contain a mistake made by the student, a good-quality response from the tutor should include the relevant mistake identification." |
+| Q22 | 4 | task_taxonomy | "A good tutor response should not only notify the student of the committed error but also point to its location in the answer and outline what the error is to help the student remediate it in their subsequent response." |
+| Q23 | 4 | task_taxonomy | "Since most dialogues are relatively short and present contexts for the mistakes made early in the student's solution, a good tutor strategy is not to reveal the answer to the student immediately but rather provide helpful guidance." |
+| Q24 | 4 | task_taxonomy | "In addition to not revealing the answer immediately, a good tutor response should provide the student with relevant and helpful guidance, such as a hint, an explanation, or a supporting question." |
+| Q25 | 4 | task_taxonomy | "Once the guidance is provided to a student, it should be clear from a good tutor response what the student should do next; in other words, the tutor response should not be vague, unclear, or a conversation stopper." |
+| Q26 | 4 | task_taxonomy | "We postulate that a high-quality tutor's response should be logically consistent with the student's previous responses." |
+| Q27 | 4 | task_taxonomy | "In addition to addressing student mistakes, a good tutor should encourage them and avoid using toxic language, which is aligned with the care dimension in the evaluation schema of Wang et al. (2024a)." |
+| Q28 | 4 | stated_limitations | "This dimension is particularly critical for LLM-based AI tutors, as they often exhibit unpredictable behavior." |
+| Q29 | 4 | task_taxonomy | "Effective tutoring requires that students feel a connection with the tutor, which is more likely when the tutor's responses appear human-like rather than robotic." |
+| Q30 | 4 | stated_limitations | "Although there are inherent interdependencies among the proposed dimensions of the taxonomy (e.g., a response that reveals the answer is less likely to be actionable, and vice versa), we explicitly instructed all annotators to treat each dimension as independent and orthogonal to minimize confounding factors and potential biases during the annotation process." |
+| Q31 | 5 | annotation_process | "The annotation team consisted of two male and two female annotators, with all four annotators holding at least a post-graduate degree in Computer Science and being proficient in English." |
+| Q32 | 5 | annotation_process | "We note that for this study, we do not require annotators to have direct teaching experience, as understanding of the mathematical tasks at the middle school level and being able to judge the responses from the perspective of a potential user of such AI tutors (or a student), rather than specifically a teacher, is sufficient." |
+| Q33 | 5 | annotation_process | "To control the annotation workflow and ensure quality, we opted not to use public annotation outsourcing platforms such as Prolific or MTurk, which allowed us to implement rigorous training protocols and a robust validation mechanism for the annotations." |
+| Q34 | 5 | annotation_process | "First, we provided all annotators with comprehensive training, including an interactive training document (see Section C for more details) and oral instructions." |
+| Q35 | 5 | annotation_process | "Following this, we conducted validation pilot study to evaluate the annotation quality and the annotators' understanding of the instructions before rolling out the large-scale human evaluation detailed in Section 5.2." |
+| Q36 | 5 | annotation_process | "In this validation pilot study, all four annotators iteratively reviewed the annotation scheme and guidelines." |
+| Q37 | 5 | annotation_process | "Each annotator also independently labeled the same eight randomly sampled dialogues – four from each of the two datasets (Bridge and MathDial) – across the eight dimensions of the evaluation taxonomy." |
+| Q38 | 5 | annotation_process | "Given that each dialogue contained multiple responses from both LLMs and humans, and each response was annotated across eight evaluation dimensions, this resulted in a total of 544 annotations per annotator." |
+| Q39 | 5 | evaluation_metrics | "To measure inter-annotator agreement, we computed Fleiss' kappa value, which for this annotation experiment equals 0.65, indicating substantial agreement." |
+| Q40 | 5 | stated_limitations | "None of the annotators identified any additional or redundant dimensions necessary for student mistake remediation." |
+| Q41 | 5 | data_sources | "We have compiled mistake remediation benchmark, MRBench, from the Bridge (Wang et al., 2024a) and MathDial (Macina et al., 2023) datasets." |
+| Q42 | 5 | data_sources | "Each instance in both datasets comprises educational dialogue interactions between students and tutors within the mathematical domain." |
+| Q43 | 5 | data_sources | "These interactions are specifically anchored in the students' errors or misconceptions, accompanied by the subsequent human tutor response, which aims to remediate the mistake or confusion." |
+| Q44 | 5 | data_sources | "The Bridge dataset (Wang et al., 2024a) comprises partial dialogue interactions between real human tutors and students at the elementary level, featuring two distinct human tutor responses (novice and expert)." |
+| Q45 | 5 | data_sources | "The dialogue context is typically short (few turns) and predominantly focused on fundamental mathematical concepts, including operations such as multiplication, addition, and so on." |
+| Q46 | 5 | data_sources | "The original dataset consists of a total of 700 dialogues; we filtered 60 high-quality instances for MRBench." |
+| Q47 | 5 | data_sources | "Among the various criteria for selecting high-quality dialogues, the key one was that the student's last utterance (or last few utterances) should exhibit an error or confusion." |
+| Q48 | 5 | data_sources | "The dialogues in the MathDial dataset (Macina et al., 2023) consist of complete multi-turn conversations between a real human tutor and an LLM acting as a student, where the tutor aims to remediate the student's mistakes." |
+| Q49 | 5 | data_sources | "Specifically, these conversations are grounded in middle school-level mathematical reasoning questions." |
+| Q50 | 5 | data_format | "To match the format of Bridge (partial conversations with the last few student's utterances exhibiting a mistake or confusion), we prepared the dataset by terminating a conversation where the student makes a mistake and considering the next tutor response as the expert tutor response (there are no associated novice" |
+| Q51 | 6 | data_format | "To further ensure the reliability of our benchmark, we manually inspected the data in order to retain only high-quality examples, which resulted in 132 instances for MRBench." |
+| Q52 | 6 | data_sources | "Next, for the 192 instances in MRBench (60 from Bridge and 132 from MathDial), we generated appropriate subsequent responses based on the conversation history and the last utterance, which contained confusions or mistakes, using seven state-of-the-art LLMs." |
+| Q53 | 6 | task_taxonomy | "We consider state-of-the-art LLMs of various sizes and capabilities, including: GPT-4 (Achiam et al., 2023), Gemini (Reid et al., 2024), Sonnet (Anthropic, 2024), Mistral (Jiang et al., 2023), Llama-3.1-8B and Llama-3.1-405B (Dubey et al., 2024), and Phi3 (Abdin et al., 2024)." |
+| Q54 | 6 | data_format | "Furthermore, each LLM has associated responses for 192 dialogues, resulting in a benchmark of 192 × 7 (7 LLM responses) + 192 × 1 (expert responses) + 60 × 1 (novice responses) = 1,596 responses, which makes the evaluation benchmark reasonably large while still manageable for human annotation described in Section 5.2." |
+| Q55 | 6 | annotation_process | "Four trained annotators (see Section 4.2) annotated MRBench using the validated taxonomy." |
+| Q56 | 6 | annotation_process | "Each annotator was asked to annotate human and LLM-based tutor responses across 8 dimensions of the taxonomy in the context of 48 dialogues." |
+| Q57 | 6 | annotation_process | "A total of 192 instances were annotated, with 40 of those annotated independently by two annotators (10 instances from Bridge and 30 from MathDial) allowing us to calculate pairwise inter-annotator agreement." |
+| Q58 | 6 | label_categories | "Each dimension was annotated using a three-tier labeling system (see Figure 1 and Table 4)." |
+| Q59 | 6 | label_categories | "For instance, the 'mistake identification' dimension employed the following labels: (i) yes, (ii) to some extent, and (iii) no." |
+| Q60 | 6 | annotation_process | "Annotators were instructed to assign 'yes' if the tutor accurately identified the mistake, 'no' if the mistake was missed, and 'to some extent' when there was ambiguity or uncertainty in the mistake identification." |
+| Q61 | 6 | annotation_process | "The annotators reached an average Cohen's kappa score of 0.71, which indicates substantial inter-annotator agreement (McHugh, 2012)." |
+| Q62 | 6 | evaluation_metrics | "We used Prometheus2 (Kim et al., 2024) because: (i) it was specifically trained as an evaluator using reinforcement learning with human feedback (RLHF), (ii) it has a high correlation with human annotations and GPT-4, and (iii) it does not belong to any of the LLM families considered as AI tutors in our framework." |
+| Q63 | 6 | evaluation_metrics | "In addition, we also used Llama-3.1-8B as a lightweight LLM to assess the reliability of smaller models that were not fine-tuned for evaluation objectives as a critic." |
+| Q64 | 6 | evaluation_metrics | "We utilize two key metrics to quantitatively assess the pedagogical effectiveness of LLMs and for comparative analysis: (1) Desired Annotation Match Rate (DAMR): This metric quantifies the percentage of responses from each human or LLM-based tutor that received the desired annotation labels." |
+| Q65 | 6 | evaluation_metrics | "The desired labels for each dimension are detailed in Table 2." |
+| Q66 | 6 | evaluation_metrics | "(2) Annotation Correlation (AC): This metric is based on Pearson's correlation (Sedgwick, 2012), and it estimates the correlation between LLM-generated and human annotations (Kim et al., 2024), allowing us to assess the reliability of LLMs as evaluators in the context of student mistake remediation." |
+| Q67 | 7 | evaluation_metrics | "Table 3 shows DAMR scores for each LLM across all eight dimensions." |
+| Q68 | 7 | evaluation_metrics | "We consider human-based evaluations as gold standard." |
+| Q69 | 7 | evaluation_metrics | "Both these LLMs perform well in identifying students' mistakes and their exact location, with Llama-3.1-405B having a slight edge as GPT-4 reveals the answer approximately 47% of the time, making its responses less actionable and impacting student's learning experience." |
+| Q70 | 7 | stated_limitations | "This shows that GPT-4 is a good question-answering system but a relatively poor tutor." |
+| Q71 | 7 | evaluation_metrics | "Among these three LLMs, Gemini performs the worst as its responses are often incoherent, while also achieving low scores for mistake identification and exact location." |
+| Q72 | 7 | evaluation_metrics | "Phi3 is the worst-performing LLM model in this context, with the lowest score for coherence, suggesting that the responses from Phi3 are often irrelevant to the conversation context, as well as overall low scores in other dimensions." |
+| Q73 | 7 | stated_limitations | "This underscores the model's inadequate capacity for contextual understanding and semantic alignment in educational dialogues considered in this study." |
+| Q74 | 7 | evaluation_metrics | "In the few cases where Phi3 demonstrates some competence, it frequently reveals the answer, reflecting more of a question-answer system than a pedagogical tutor behavior." |
+| Q75 | 7 | stated_limitations | "Moreover, its outputs tend to be robotic, template-based and lack the nuance expected in human responses." |
+| Q76 | 7 | evaluation_metrics | "In contrast, despite having fewer parameters, Llama-3.1-8B demonstrates reasonable performance, albeit still below that of larger LLMs." |
+| Q77 | 7 | evaluation_metrics | "Specifically, its responses are coherent, strategically avoid immediate answer revelation, robustly identify and rectify mistakes, and exhibit human-like behavior, as evidenced by the DAMR scores." |
+| Q78 | 7 | evaluation_metrics | "We also investigated the pedagogical value of human responses for both Novice and Expert." |
+| Q79 | 7 | evaluation_metrics | "It can be observed that Novice responses do not have a high score for guidance and are poor in terms of actionability (DAMR score of 1.67)." |
+| Q80 | 7 | evaluation_metrics | "Furthermore, the responses are generally short and ambiguous, such as "this is a good try," which leads to lower scores for mistake identification and location." |
+| Q81 | 7 | evaluation_metrics | "At the same time, they often do not reveal the answer." |
+| Q82 | 7 | data_sources | "*For the Novice, we have considered only 60 dialogues from the Bridge dataset." |
+| Q83 | 7 | evaluation_metrics | "The DAMR scores for Novice are reported on these 60 instances, while for Expert and all LLMs, all 192 instances were considered." |
+| Q84 | 8 | label_categories | "Can a tutor achieve a higher DAMR score for actionability while receiving a lower score for providing guidance? This is possible since we consider only factually correct guidance as useful (see Table 4)." |
+| Q85 | 8 | stated_limitations | "At the same time, even incorrect or incomplete guidance can lead to certain actions on the part of the student and can foster their curiosity, thus providing them with learning opportunities." |
+| Q86 | 8 | task_taxonomy | "This further demonstrates the need to treat the dimensions as independent." |
+| Q87 | 8 | stated_limitations | "In terms of the other qualities of the Expert responses, they do not normally reveal the answer and tend to include scaffolding; however, there are a small number of instances where they failed to identify the mistake or its location." |
+| Q88 | 8 | annotation_process | "Overall, we conclude that human responses from Expert are significantly better than Novice." |
+| Q89 | 8 | evaluation_metrics | "Our findings on the Tutor Tone align with those of Wang et al. (2024a) – in task-oriented conversations, AI tutors tend to be more Neutral than Encouraging." |
+| Q90 | 8 | label_categories | "When we combine these two labels into "Non-offensive", the DAMR score reaches 100% as we observe no offensive responses from any LLMs or humans." |
+| Q91 | 8 | evaluation_metrics | "We observe high scores for most of the LLMs on human-likeness, which demonstrates their capability to generate human-like output with minimal or no grammatical and fluency mistakes, showing the timely nature of our study, which focuses more on in-depth semantic and pedagogical aspects of tutor responses rather than only on superficial attributes like grammaticality and fluency." |
+| Q92 | 8 | data_sources | "As discussed in Section 5.1, the conversational contexts in the Bridge dataset are typically very short (see Table 7) and the dialogues are grounded in elementary math operations, so most models are able to identify the mistakes and their locations." |
+| Q93 | 8 | stated_limitations | "However, they struggle to provide appropriate guidance without revealing the answer because the mistakes are generally related to quite basic operations like addition or multiplication, often in a one-step type of mathematical problems." |
+| Q94 | 8 | evaluation_metrics | "Still, models like GPT-4 and Llama-3.1-405B are able to offer some reasonable guidance." |
+| Q95 | 8 | data_sources | "In contrast, for MathDial, the contexts are longer, the mistakes are grounded in reasoning, and the responses are more structured." |
+| Q96 | 8 | stated_limitations | "Yet, many LLMs do not meet the expectations for each dimension of the taxonomy, as discussed earlier." |
+| Q97 | 8 | data_sources | "Combining both types of data in MRBench makes it both challenging and comprehensive." |
+| Q98 | 8 | stated_limitations | "In summary, all LLMs and even human tutors lack some pedagogical abilities required for effective tutoring." |
+| Q99 | 8 | evaluation_metrics | "While Llama-3.1-405B is the most effective, followed by Mistral and other state-of-the-art models, GPT-4 reveals the answer too quickly." |
+| Q100 | 8 | evaluation_metrics | "Gemini is less coherent and accurate, and Sonnet focuses on human-likeness and encouraging tone but is less effective in other dimensions." |
+| Q101 | 8 | evaluation_metrics | "Phi3 is the worst-performing model according to our analysis, as it fails to understand the context, while Llama-3.1-8B, despite being smaller, performs reasonably well." |
+| Q102 | 8 | annotation_process | "Human responses are also not perfect – Novice responses are ambiguous and short, whereas Expert responses are more focused on actionability and less on other dimensions." |
+| Q103 | 8 | task_taxonomy | "Overall, the proposed taxonomy precisely categorizes performance across 8 dimensions, reflecting the current state-of-the-art in AI tutors." |
+| Q104 | 8 | stated_limitations | "Our study demonstrates that there is a considerable room for improvement in the pedagogical abilities of AI tutors." |
+| Q105 | 8 | annotation_process | "We also performed annotations using Prometheus2 and Llama-3.1-8B as critic LLMs." |
+| Q106 | 8 | evaluation_metrics | "The correlation scores with human annotations are presented in Appendix Tables 5 and 6, respectively." |
+| Q107 | 8 | stated_limitations | "Across both LLMs, it can be observed that most of the correlation scores are negative (except for the human-likeness dimension), indicating that the annotations from the LLMs are unreliable for the challenging pedagogical dimensions." |
+| Q108 | 8 | stated_limitations | "Prometheus2 is not trained on our taxonomy dimensions, except for the general human-likeness dimension, where the model shows slightly better correlations with positive scores." |
+| Q109 | 8 | stated_limitations | "We believe both LLMs have a limited understanding of rich pedagogical concepts, as they were not specifically trained on pedagogically rich datasets." |
+| Q110 | 8 | stated_limitations | "At the same time, we acknowledge that the experiments presented in this work are preliminary" |
+| Q111 | 9 | task_taxonomy | "This paper presents the first effort to unify AI tutor evaluation for the student mistake remediation task in the mathematics domain." |
+| Q112 | 9 | task_taxonomy | "Specifically, we propose an evaluation taxonomy with eight pedagogical dimensions based on the key learning sciences principles." |
+| Q113 | 9 | annotation_process | "We also release the MRBench benchmark with seven state-of-the-art LLM-as-tutors responses, along with gold human annotations." |
+| Q114 | 9 | evaluation_metrics | "We also assess the feasibility of LLMs as evaluators in this context by correlating their judgements with human annotations, indicating that they are often unreliable." |
+| Q115 | 9 | evaluation_metrics | "This study evaluates tutor response quality across the proposed eight dimensions independently." |
+| Q116 | 9 | stated_limitations | "However, in practice, these dimensions may be inherently interrelated and may influence one another." |
+| Q117 | 9 | stated_limitations | "The proposed taxonomy primarily focuses on the task of the student mistake remediation in the domain of mathematics." |
+| Q118 | 9 | stated_limitations | "We acknowledge that the proposed taxonomy will need to be verified on and likely adapted if applied to other tasks such as concept learning, and to subjects other than mathematics." |
+| Q119 | 9 | label_categories | "The current taxonomy and annotation scheme focus on the appropriateness of the tutor responses." |
+| Q120 | 9 | stated_limitations | "However, one of the limitations is that it does not consider the tutoring dialogues' impact on the overall student learning." |
+| Q121 | 9 | stated_limitations | "Specifically, the annotation pertains to the individual tutor turns within educational dialogues, which restricts our understanding of broader implications on student learning processes and learning gains, typically observed after a conversation concludes." |
+| Q122 | 9 | stated_limitations | "In this study, we limit the LLM-based evaluation to two LLMs as critics, using the evaluation prompt presented in Figure 6." |
+| Q123 | 9 | evaluation_metrics | "The results obtained with these LLMs are not encouraging, as detailed in Section 6." |
+| Q124 | 9 | stated_limitations | "Although we do not foresee any ethical risks, we acknowledge that this work relies on the outputs from LLMs, and there are certain risks associated with such outputs in general since these models may generate responses that, although plausible, can be factually incorrect, nonsensical, or even offensive." |
+| Q125 | 9 | stated_limitations | "Of particular importance for the educational domain is the fact that hallucinations can misguide students and propagate biases." |
+| Q126 | 10 | authors_affiliations | "This research is partially supported by Google through the Google Academic Research Award (GARA) 2024. We are grateful for their support. We also extend our gratitude to the campus supercomputing center at MBZUAI." |
+| Q127 | 10 | stated_limitations | "strongly believe that this study will help shed light on the current capabilities of LLMs in the context of educational dialogues, and the insights gained from this study may help mitigate issues related to the use of LLMs in the educational domain in the future." |
+| Q128 | 12 | label_categories | "The definitions, associated labels, and the desired labels for each dimension of the proposed taxonomy are provided in Table 4." |
+| Q129 | 12 | task_taxonomy | "Through an iterative analysis of the taxonomy, we identify eight dimensions that comprehensively assess tutor response quality in the context of mistake remediation." |
+| Q130 | 12 | stated_limitations | "However, other educational settings, particularly those involving tutorial dialogues beyond mistake remediation, may require modifications, as discussed in the limitations section." |
+| Q131 | 12 | task_taxonomy | "To establish a robust framework, we initially considered additional dimensions such as grammaticality and empathy, among others." |
+| Q132 | 12 | annotation_process | "However, our validation pilot study (see Section 4.2) confirmed that the selected eight dimensions are both necessary and sufficient for evaluating tutor response quality in dialogues aimed at mistake remediation." |
+| Q133 | 12 | data_format | "The prompt template used to generate responses from the seven considered LLMs for both the Bridge and MathDial datasets is shown in Figure 2." |
+| Q134 | 12 | data_format | "The template is adapted from Wang et al. (2024a)." |
+| Q135 | 13 | annotation_process | "As discussed in Section 5.2, prior to commencing large-scale human annotation, we implemented a two-phase interactive training and evaluation protocol and asked each annotator to undertake training." |
+| Q136 | 13 | annotation_process | "Subsequently, we assessed annotators' understanding through a structured quiz, as is shown in a screenshot presented in Figure 5." |
+| Q137 | 13 | annotation_process | "Additionally, we developed a comprehensive set of annotation guidelines, serving as a reference for annotators during the large-scale annotation process." |
+| Q138 | 13 | evaluation_metrics | "The correlation scores are calculated using Pearson's correlation (Sedgwick, 2012)." |
+| Q139 | 13 | data_sources | "*Only 60 dialogues were considered for Novice, whereas all 192 dialogues were considered for Expert and other tutors." |
+| Q140 | 14 | data_sources | "Table 7 shows the statistics for the Bridge, MathDial, and MRBench datasets." |
+| Q141 | 14 | data_format | "It can be observed that the conversation history and response lengths from different LLMs and humans are generally shorter in the Bridge dataset compared to the MathDial dataset." |
+| Q142 | 14 | data_format | "Additionally, the number of turns differs between them." |
+| Q143 | 14 | task_taxonomy | "These aspects highlight that including both datasets in MRBench ensures diversity and provides for a good mix of easy and difficult mathematical problems, making the benchmark both comprehensive and challenging." |
+| Q144 | 14 | task_taxonomy | "The problems covered in the Bridge dataset are at the elementary school level, whereas those in MathDial are at the middle school level." |
+| Q145 | 14 | data_format | "The conversation topic is not provided in MathDial." |
+| Q146 | 14 | annotation_process | "* indicates that the annotations are considered for 8 evaluation dimensions of the taxonomy." |
+| Q147 | 14 | data_format | "In all cases, length is estimated using the number of characters." |
+| Q148 | 15 | annotation_process | "The template is based on the insights drawn from the Prometheus2 model's official guidelines." |
+| Q149 | 16 | evaluation_metrics | "Pedagogical ability assessment of different LLMs using the DAMR scores (in %) across eight evaluation dimensions with human evaluation on the Bridge data." |
+| Q150 | 16 | evaluation_metrics | "Pedagogical ability assessment of different LLMs using the DAMR scores (in %) across eight evaluation dimensions with human evaluation on the MathDial data." |
+| Q151 | 16 | stated_limitations | "'-' indicates that DAMR scores for Novice are not available for MathDial data." |
+| Q152 | 17 | annotation_process | "Figure 4: An example from the annotator training phase for the Mistake Identification dimension." |
+| Q153 | 17 | annotation_process | "Figure 5: An example from the annotator testing phase for the Revealing of the Answer dimension." |
+
+### Category Index
+- **task_taxonomy**: Q1, Q5, Q11, Q12, Q13, Q14, Q15, Q16, Q17, Q18, Q19, Q20, Q21, Q22, Q23, Q24, Q25, Q26, Q27, Q29, Q53, Q86, Q103, Q111, Q112, Q129, Q131, Q143, Q144
+- **data_sources**: Q2, Q41, Q42, Q43, Q44, Q45, Q46, Q47, Q48, Q49, Q52, Q82, Q92, Q95, Q97, Q139, Q140
+- **data_format**: Q50, Q51, Q54, Q133, Q134, Q141, Q142, Q145, Q147
+- **label_categories**: Q58, Q59, Q84, Q90, Q119, Q128
+- **annotation_process**: Q31, Q32, Q33, Q34, Q35, Q36, Q37, Q38, Q55, Q56, Q57, Q60, Q61, Q88, Q102, Q105, Q113, Q132, Q135, Q136, Q137, Q146, Q148, Q152, Q153
+- **evaluation_metrics**: Q3, Q7, Q39, Q62, Q63, Q64, Q65, Q66, Q67, Q68, Q69, Q71, Q72, Q74, Q76, Q77, Q78, Q79, Q80, Q81, Q83, Q89, Q91, Q94, Q99, Q100, Q101, Q106, Q114, Q115, Q123, Q138, Q149, Q150
+- **stated_limitations**: Q4, Q8, Q9, Q10, Q28, Q30, Q40, Q70, Q73, Q75, Q85, Q87, Q93, Q96, Q98, Q104, Q107, Q108, Q109, Q110, Q116, Q117, Q118, Q120, Q121, Q122, Q124, Q125, Q127, Q130, Q151
+- **authors_affiliations**: Q6, Q126

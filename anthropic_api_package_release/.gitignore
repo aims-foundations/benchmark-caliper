@@ -1,0 +1,41 @@
+# Per-deployment assessment tree — uses hashed expert IDs, no raw PII.
+# Track everything (traces, cost ledgers, elicitation, scoring).
+# assessments/
+
+# Per-paper benchmark YAMLs — paper-level, no PII.
+# benchmarks/*.yaml
+
+# Paper-level outputs (metadata, summaries) are safe to track.
+# PDFs are large/copyrighted — keep ignored.
+papers/*.pdf
+
+# Page caches are large and derivative (re-extractable from PDFs).
+page_caches/
+
+# DA script output cache — deterministic, re-runnable from HF datasets.
+benchmarks/da_cache/
+
+# Expert-validation experiment artifacts — contain raw PII (emails,
+# names, regional context, expert-curated PDFs). Keep out of git.
+expert_responses/*
+!expert_responses/.gitkeep
+
+# Nested logs (e.g. stray claude-trace deposits) — the repo-root logs/ rule
+# isn't inherited, so ignore any logs/ at any depth beneath this package.
+**/logs/
+
+# Per-expert concatenated review PDFs — large, derivative, contain PII context.
+expert_review_pdfs/
+
+# API key and environment
+.env
+.secrets/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# macOS
+.DS_Store

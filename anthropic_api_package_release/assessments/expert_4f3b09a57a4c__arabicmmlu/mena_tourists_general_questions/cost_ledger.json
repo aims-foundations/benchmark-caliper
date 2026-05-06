@@ -1,0 +1,112 @@
+{
+  "0_slug": {
+    "haiku": {
+      "model_id": "claude-haiku-4-5-20251001",
+      "calls": 1,
+      "input_tokens": 212,
+      "output_tokens": 11,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "2_questions": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 1,
+      "input_tokens": 2490,
+      "output_tokens": 469,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "2_summary": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 1,
+      "input_tokens": 2424,
+      "output_tokens": 1507,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "3a_consolidate": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 1,
+      "input_tokens": 9720,
+      "output_tokens": 3341,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "3b_synthesize": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 1,
+      "input_tokens": 14994,
+      "output_tokens": 6020,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "4a_template": {
+    "haiku": {
+      "model_id": "claude-haiku-4-5-20251001",
+      "calls": 1,
+      "input_tokens": 1790,
+      "output_tokens": 24,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "4b_synthesize": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 1,
+      "input_tokens": 17878,
+      "output_tokens": 3643,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "5_web_search": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 1,
+      "input_tokens": 250848,
+      "output_tokens": 8050,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 6
+    }
+  },
+  "5b_da_interpret": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 1,
+      "input_tokens": 79177,
+      "output_tokens": 11450,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "7_score": {
+    "opus": {
+      "model_id": "claude-opus-4-7",
+      "calls": 1,
+      "input_tokens": 46295,
+      "output_tokens": 14300,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  }
+}

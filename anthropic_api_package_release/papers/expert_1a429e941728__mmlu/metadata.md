@@ -1,0 +1,11 @@
+- name: mmlu
+- full_name: Measuring Massive Multitask Language Understanding
+- year: 2021
+- domain: A comprehensive benchmark measuring text models' multitask accuracy across 57 diverse subjects including STEM, humanities, and social sciences, ranging from elementary to advanced professional level.
+- languages: English
+- primary_region: United States
+- porting_strategy: none
+- input_modalities: text
+- output_modalities: label
+- brief_description: MMLU is a large-scale benchmark consisting of 57 tasks that measure a language model's world knowledge and problem-solving ability across diverse academic and professional domains. The benchmark evaluates models exclusively in zero-shot and few-shot settings, covering subjects from mathematics and US history to computer science, law, and ethics. It was designed to assess knowledge acquired during pretraining and identify important shortcomings in state-of-the-art models.
+- source_culture: transferred from different cultural context

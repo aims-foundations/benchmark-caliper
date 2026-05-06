@@ -1,0 +1,5 @@
+Use case and domain: Task: Domain specific content moderation systems
+Model: Large to small llms
+Domain: From clinical chatbot to shopping assistant experiencing toxic contents
+Setting: User interaction might result in toxic content generation by chat-assistant llms.
+Target population: People with limited literacy from Gazipur, Bangladesh interesting with a patient-centric chat assistant in textual form (where code-switching and punctuation errors happen pretty regularly). While doing so someone might try to generate toxic contents. So the developer needs to evaluate the robustness of the system against this attack.

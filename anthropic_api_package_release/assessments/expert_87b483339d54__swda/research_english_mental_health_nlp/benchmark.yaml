@@ -1,0 +1,477 @@
+name: switchboard_conversational_speech
+full_name: 'SWITCHBOARD: A Multilayer Multiplayer Corpus of Conversational Speech'
+year: 1992
+domain: Conversational speech recognition and speaker authentication
+porting_strategy: none
+languages:
+- en
+primary_region: United States (general American English)
+documentation_excerpts:
+  input_ontology: 'SWITCHBOARD was designed for two research tasks — speaker authentication and large-vocabulary
+
+    speech recognition — both targeting telephone-based applications [Q1, Q11]. The corpus
+
+    architecture reflects a design philosophy emphasizing "depth and breadth of coverage,
+
+    especially for speaker verification research" [Q31], with structural distinctions between
+
+    target speakers and impostor pools [Q35, Q36]. Neither the task taxonomy nor any
+
+    conversational annotation layer has any relationship to clinical or therapeutic dialogue.
+
+    There is no mention of dialogue-act classification as a design goal, and no annotation
+
+    targeting communicative intent categories — let alone therapy-specific acts such as
+
+    empathic reflection, disclosure scaffolding, crisis signaling, or any category within a
+
+    CBT-style dialogue framework. The benchmark''s input ontology is therefore substantially
+
+    misaligned with any multi-category counseling dialogue-act taxonomy, and the corpus
+
+    provides no native coverage of substance use counseling, culturally adapted therapeutic
+
+    models, or any clinical modality.
+
+    '
+  input_content: 'Approximately 2,500 conversations were collected from around 500 paid volunteer speakers
+
+    drawn from "every major dialect of American English" via T1 telephone lines at Texas
+
+    Instruments [Q2, Q3], yielding over 250 hours of speech and nearly 3 million words [Q4].
+
+    The collection protocol was refined over months of piloting to optimize naturalness and
+
+    spontaneity [Q15], and the hardware platform was a commercial Robotooperator system
+
+    modified for the SWITCHBOARD protocol [Q16, Q17]. Demographic metadata including age,
+
+    sex, education level, and dialect region of origin was collected [Q37], and fifty target
+
+    speakers participated at least 25 times over several weeks [Q32, Q33, Q34], while the
+
+    remaining ~450 speakers constituted an impostor pool [Q36]. The conversational instances
+
+    are general American English telephone speech from 1992. The description of "every major
+
+    dialect of American English" [Q3] almost certainly reflects the dominant dialect taxonomy
+
+    of its era; African American Vernacular English, South Asian English, Latinx-inflected
+
+    English, and Indigenous English speech patterns are almost certainly absent. There is no
+
+    indication of counseling-relevant discourse, clinical populations, or any topical domain
+
+    associated with mental health. The distributional mismatch with contemporary counseling
+
+    language used by diverse clinical populations is severe and entirely undocumented by the
+
+    authors.
+
+    '
+  input_form: 'Recordings were captured in an all-digital 4-wire format [Q7] and stored as 8 kHz,
+
+    mu-law encoded signal files later interleaved into NIST SPHERE format [Q20] — a
+
+    telephone-era acoustic specification. Each conversation is accompanied by a detailed,
+
+    time-aligned word-level transcription capturing speakers'' turns, simultaneous speech,
+
+    interrupted sentences, partial words, and other spontaneous speech phenomena [Q6, Q8,
+
+    Q24]. Time alignment was produced through supervised phone-based recognition, reducing
+
+    phonetic markings to a word-by-word format [Q26, Q27, Q28], with original phonetic base
+
+    forms available in an accompanying dictionary [Q29]. Call metadata including date, time,
+
+    duration, and telephone numbers was automatically logged [Q38]. Some speakers contributed
+
+    over an hour of speech while hundreds of others contributed several minutes each [Q5],
+
+    creating asymmetric coverage. For LLM-based deployments operating on text, the
+
+    transcription layer is the practically relevant input modality; however, the telephone
+
+    acoustic conditions, spontaneous spoken-register transcription artifacts, and 1992 vintage
+
+    language all represent meaningful distributional mismatches from contemporary counseling
+
+    chatbot text corpora.
+
+    '
+  output_ontology: 'NOT DOCUMENTED: The paper contains no quotes describing label categories, output label
+
+    sets, or ground-truth annotation schemas for dialogue acts or any classification task.
+
+    This is consistent with SWITCHBOARD''s original design for speaker authentication and
+
+    speech recognition, not dialogue classification. The absence of a native label ontology
+
+    is a high-priority validity finding: any dialogue-act taxonomy applied to SWITCHBOARD
+
+    (such as SWBD-DAMSL, developed as a subsequent external annotation layer) is not
+
+    described in this paper. The benchmark provides no ground truth mapping onto single-label
+
+    or multi-label dialogue-act schemes, let alone one calibrated to CBT-style therapeutic
+
+    communicative acts. The benchmark was designed to support "multiple testing runs and a
+
+    variety of technical approaches" [Q12] for speaker verification, not utterance-level
+
+    classification. The system was designed for speaker authentication and telephone speech
+
+    recognition [Q11], confirming that the output decision space is entirely orthogonal to
+
+    dialogue-act evaluation.
+
+    '
+  output_content: 'The conversations were collected under automated computer control, explicitly designed to
+
+    eliminate human intervention and experimenter bias [Q9, Q10] — appropriate for speaker
+
+    verification research but irrelevant to clinical annotation expertise. Post-collection,
+
+    human transcribers produced word-level transcriptions and rated conversations on
+
+    naturalness using a five-point scale [Q22], as well as on background noise, talker
+
+    intelligibility, and conversational coherence [Q25]. The average naturalness rating of
+
+    1.48 [Q23] suggests the protocol successfully elicited spontaneous speech. Critically,
+
+    transcribers were lay workers producing orthographic transcriptions, not clinical
+
+    professionals performing communicative intent annotation. There is no description of
+
+    annotator demographics, clinical training, or inter-annotator agreement for any
+
+    classification task. Demographic information about speakers — age, sex, education, and
+
+    dialect region — was collected [Q37], but this is speaker metadata, not annotator
+
+    metadata for label validity purposes. The complete absence of documentation on annotator
+
+    clinical expertise or cultural representativeness is a significant latent validity risk
+
+    for any downstream counseling dialogue application.
+
+    '
+  output_form: 'The benchmark was designed to support research in speaker authentication and speech
+
+    recognition for telephone-based applications [Q11], with design for "multiple testing
+
+    runs and a variety of technical approaches" [Q12]. The naturalness rating of 1.48 is a
+
+    data quality metric for the collection protocol [Q23], not a model evaluation metric in
+
+    the dialogue classification sense. No quantitative accuracy metrics, error rates, or
+
+    scoring rubrics for dialogue-act classification are described anywhere in the paper.
+
+    The benchmark''s native evaluation output modality — speaker-level verification decisions
+
+    and word error rates — is entirely misaligned with single-label or multi-label
+
+    dialogue-act classification outputs. Any use of SWITCHBOARD as a dialogue-act evaluation
+
+    benchmark requires a separately constructed annotation and scoring layer not present in
+
+    this document.
+
+    '
+verbatim_quotes:
+- id: Q1
+  page: 1
+  dimension: input_ontology
+  text: SWITCHBOARD is a large multispeaker corpus of conversational speech and text which should be of interest to researchers
+    in speaker authentication and large vocabulary speech recognition.
+- id: Q2
+  page: 1
+  dimension: input_content
+  text: About 2500 conversations by 500 speakers from around the U.S. were collected automatically over T1 lines at Texas
+    Instruments.
+- id: Q3
+  page: 1
+  dimension: input_content
+  text: SWITCHBOARD, which is about 65% complete at the time of this writing, will include 2500 conversations of three to
+    ten minutes' duration, carried on by about 500 paid volunteers of both sexes from every major dialect of American English.
+- id: Q4
+  page: 1
+  dimension: input_content
+  text: In round numbers, this amounts to over 250 hours of speech and nearly 3 million words of text.
+- id: Q5
+  page: 1
+  dimension: input_form
+  text: It has over an hour of speech from each of 50 speakers, and several minutes each from hundreds of others.
+- id: Q6
+  page: 1
+  dimension: input_form
+  text: A time-aligned word for word transcription accompanies each recording.
+- id: Q7
+  page: 1
+  dimension: input_form
+  text: all-digital 4-wire format
+- id: Q8
+  page: 1
+  dimension: input_form
+  text: detailed transcription and time alignment of all conversations
+- id: Q9
+  page: 1
+  dimension: output_content
+  text: The conversations in SWITCHBOARD were collected under computer control, without human intervention.
+- id: Q10
+  page: 1
+  dimension: output_content
+  text: From a human factors perspective, automation guards against the intrusion of experimenter bias, and provides a degree
+    of uniformity in the collection environment.
+- id: Q11
+  page: 1
+  dimension: input_ontology
+  text: SWITCHBOARD has a number of unique features designed to support research in both speaker authentication and speech
+    recognition for telephone-based applications.
+- id: Q12
+  page: 1
+  dimension: output_form
+  text: design for multiple testing runs and a variety of technical approaches
+- id: Q13
+  page: 1
+  dimension: input_content
+  text: There is a potential disadvantage, in that once an automated system is in place, it cannot readily be
+- id: Q14
+  page: 1
+  dimension: input_content
+  text: John J. Godfrey, Edward C. Holliman, Jane McDaniel, Texas Instruments, Inc., Dallas, TX 75265
+- id: Q15
+  page: 2
+  dimension: input_content
+  text: The SWITCHBOARD collection protocol was therefore developed over months of extensive piloting. Experiments determined
+    the kind and amount of man-machine interaction, the order of presentation, the types of prompts, and other factors needed
+    to insure smooth participation and to elicit natural and spontaneous speech by the participants.
+- id: Q16
+  page: 2
+  dimension: input_content
+  text: The hardware platform was a commercial system, known as a "Robotooperator," consisting of an IBM Model 80 computer,
+    700MB disk drive, T1 interface, and a programmable switching system for connecting among the channels of the T1 span.
+- id: Q17
+  page: 2
+  dimension: input_content
+  text: An application software package intended for commercial use was modified to control the SWITCHBOARD protocol.
+- id: Q18
+  page: 2
+  dimension: input_form
+  text: Upon receiving an incoming call on one of the T1 channels, it would play appropriate messages, tic collect touchtones
+    indicating the caller's identification and telephone number.
+- id: Q19
+  page: 2
+  dimension: input_content
+  text: Before the two callers are interconnected, they are engaged in two separate telephone calls with the computer, listening
+    to recorded messages and sending touchtones back.
+- id: Q20
+  page: 2
+  dimension: input_form
+  text: This pair of 8 kHz, mu-law encoded signal files is later integrated into one file in the NIS-7 standard SPHERE format,
+    with alternating bytes from the two sides of the conversation interleaved.
+- id: Q21
+  page: 2
+  dimension: input_form
+  text: The isolation of the two talkers is limited by the long distance telephone network's echo cancelling performance,
+    but is generally better than 20dB.
+- id: Q22
+  page: 2
+  dimension: output_content
+  text: Transcribers were later asked to rate the naturalness of conversations they listened to, using a five point scale
+    from "very natural" (1) to "forced or unnatural-sounding" (5).
+- id: Q23
+  page: 2
+  dimension: output_content
+  text: The average rating of 1.48 suggests that the collection protocol was successful in this respect.
+- id: Q24
+  page: 2
+  dimension: input_form
+  text: Each conversation is fully transcribed, with special conventions to show speakers' turns, simultaneous talking, interrupted
+    sentences, partial words, and other phenomena common in spontaneous conversational speech.
+- id: Q25
+  page: 2
+  dimension: output_content
+  text: After producing the text, the transcribers were asked to rate each conversation on a number of properties, such as
+    the amount of background noise or static, difficulty in understanding the talkers, and degree to which the conversants
+    stayed on one subject.
+- id: Q26
+  page: 3
+  dimension: input_form
+  text: The SWITCHBOARD conversations are also time aligned at the word level.
+- id: Q27
+  page: 3
+  dimension: input_form
+  text: The time alignment is accomplished using supervised phone-based recognition, as described in a companion paper by
+    Wheatley [5].
+- id: Q28
+  page: 3
+  dimension: input_form
+  text: This process produces phone to phone time markings, which are then reduced to a word by word format for publication
+    with the transcripts.
+- id: Q29
+  page: 3
+  dimension: input_form
+  text: The original phonetic base forms will be available in a dictionary with the SWITCHBOARD corpus.
+- id: Q30
+  page: 3
+  dimension: input_content
+  text: The configuration illustrated in Figure 1 shows 60% of the conversations being used for training and 40% for repeated
+    tests.
+- id: Q31
+  page: 3
+  dimension: input_ontology
+  text: The design of the SWITCHBOARD corpus emphasizes the importance of both depth and breadth of coverage, especially for
+    speaker verification research.
+- id: Q32
+  page: 3
+  dimension: input_content
+  text: Fifty 'target' speakers participated at least 25 times, which adds up to more than an hour of speech gathered over
+    a period of weeks.
+- id: Q33
+  page: 3
+  dimension: input_content
+  text: The target callers were six different from the rest of the population, except that they had to make and receive calls
+    with multiple telephone instruments.
+- id: Q34
+  page: 3
+  dimension: input_content
+  text: This was intended to prevent speakers from being identified by channel effects due to handled characteristics.
+- id: Q35
+  page: 3
+  dimension: input_ontology
+  text: The design assumes that 25 target speakers should suffice to get statistically reliable estimates of the performance
+    of a speaker verification algorithm under development; an equal number is available to be set aside for final evaluation
+    of the system.
+- id: Q36
+  page: 3
+  dimension: input_content
+  text: The other 450 speakers who participate in from one to twenty calls constitute a pool of 'imposters.'
+- id: Q37
+  page: 4
+  dimension: input_content
+  text: Demographic information about the speakers is entered in an Oracle data base when they register to participate. This
+    includes their age, sex, level of education, and the geographically-defined dialect area where they grew up.
+- id: Q38
+  page: 4
+  dimension: input_form
+  text: The callers' identification numbers, the date, time, and length of the call, as well as the area codes and telephone
+    numbers of the participants and other pertinent information about each call are all automatically entered into Oracle
+    tables.
+- id: Q39
+  page: 4
+  dimension: input_content
+  text: The information in these tables, except for protected personal data, will accompany the speech and text files when
+    the SWITCHBOARD corpus becomes publicly available.
+- id: Q40
+  page: 4
+  dimension: input_content
+  text: Distribution will be through the National Institutes of Standards and Technology.
+- id: Q41
+  page: 4
+  dimension: input_content
+  text: This work was sponsored by DARPA/SPAWAR Contract No. N00039-90-0168.
+coverage_strengths:
+- user_priority: Spontaneous conversational speech as a training/evaluation proxy
+  benchmark_coverage: 'The corpus was explicitly designed to elicit natural and spontaneous speech through months of protocol
+    piloting [Q15], with an average naturalness rating of 1.48/5.0 confirming successful elicitation [Q23]. Word-level time-aligned
+    transcriptions capture speakers'' turns, simultaneous talking, interrupted sentences, and partial words [Q24], providing
+    rich conversational structure for dialogue modeling.
+
+    '
+  dimension: input_form
+- user_priority: Large-scale English conversational data volume
+  benchmark_coverage: 'The corpus provides over 250 hours of speech and nearly 3 million words of text [Q4] from approximately
+    500 speakers [Q2], with some speakers contributing over an hour of speech [Q5]. This scale makes it a useful resource
+    for pre-training dialogue representations even if it is unsuitable as a primary evaluation benchmark for counseling dialogue
+    acts.
+
+    '
+  dimension: input_content
+- user_priority: Demographic metadata availability
+  benchmark_coverage: 'Demographic information including age, sex, education level, and dialect region of origin was collected
+    for all speakers and stored in an Oracle database [Q37], with non-protected data planned for public release [Q39]. This
+    metadata enables subgroup analyses to the extent the speaker population overlaps with groups of interest, though the population
+    itself is not representative of underserved clinical communities.
+
+    '
+  dimension: input_content
+coverage_gap_analysis:
+- user_priority: CBT-style dialogue act taxonomy (12 categories)
+  benchmark_coverage: 'NOT DOCUMENTED — SWITCHBOARD was designed for speaker authentication and large-vocabulary speech recognition
+    [Q1]; no dialogue-act annotation layer, label ontology, or utterance-level classification scheme is described anywhere
+    in the paper. The benchmark provides no native ground truth mappable to any dialogue-act taxonomy.
+
+    '
+  gap_type: full
+  web_search_target: 'SWBD-DAMSL dialogue act annotation Switchboard counseling CBT therapy mapping
+
+    '
+- user_priority: Therapy-specific dialogue acts (empathic reflection, disclosure scaffolding, crisis signaling)
+  benchmark_coverage: 'NOT DOCUMENTED — No clinical or therapeutic speech is present in the corpus, and no annotation targeting
+    communicative intent in therapeutic contexts is described [Q1, Q31]. The corpus contains general telephone conversations
+    with no domain restriction to mental health, counseling, or any clinical modality.
+
+    '
+  gap_type: full
+  web_search_target: 'dialogue act benchmark counseling therapy empathic reflection disclosure CBT clinical NLP annotation
+
+    '
+- user_priority: Substance use counseling dialogue across diverse populations
+  benchmark_coverage: 'NOT DOCUMENTED — No domain-specific content related to substance use counseling appears in the corpus
+    description. Speaker recruitment targeted general American English speakers [Q3] with no clinical population criterion.
+    The impostor/target speaker design [Q35, Q36] is oriented entirely toward speaker verification, not domain-specific dialogue
+    coverage.
+
+    '
+  gap_type: full
+  web_search_target: 'substance use counseling dialogue benchmark NLP AnnoMI MISC motivational interviewing dataset annotation
+
+    '
+- user_priority: African American, South Asian, and Latin American speech patterns
+  benchmark_coverage: 'PARTIAL — Speaker demographic metadata including dialect region of origin was collected [Q37], but
+    the corpus recruited "paid volunteers from every major dialect of American English" [Q3] using a 1992 taxonomy that almost
+    certainly underrepresents AAVE, South Asian English, Latinx-inflected English, and Indigenous English. No documentation
+    confirms or denies specific community representation, and the authors acknowledge no limitations regarding demographic
+    coverage.
+
+    '
+  gap_type: partial
+  web_search_target: 'AAVE South Asian English Latinx speech corpus clinical NLP underrepresented communities dialogue evaluation
+
+    '
+- user_priority: Multi-label or ranked dialogue act output evaluation
+  benchmark_coverage: 'NOT DOCUMENTED — The benchmark''s evaluation design supports speaker authentication and speech recognition
+    tasks only [Q11, Q12]. No multi-label annotation, ranked output scheme, or utterance-level classification framework is
+    described. Single-label dialogue-act annotation (e.g., SWBD-DAMSL) was developed as an external layer not described in
+    this paper, and no multi-label extension is referenced.
+
+    '
+  gap_type: full
+  web_search_target: 'multi-label dialogue act annotation Switchboard SWBD-DAMSL ranked output counseling NLP evaluation
+
+    '
+- user_priority: Clinical annotator expertise for dialogue act labeling
+  benchmark_coverage: 'NOT DOCUMENTED — Annotation was performed by lay transcribers producing orthographic text [Q22, Q25],
+    with no clinical training, mental health professional involvement, or inter-annotator agreement reported for any classification
+    task. The automated collection design explicitly eliminated human intervention [Q9, Q10], which is appropriate for speaker
+    verification but incompatible with clinically validated dialogue-act labeling.
+
+    '
+  gap_type: full
+  web_search_target: 'clinical annotator mental health dialogue act benchmark therapist annotation inter-rater agreement NLP
+
+    '
+- user_priority: Contemporary text-based chatbot register (asynchronous digital channels)
+  benchmark_coverage: 'PARTIAL — The benchmark provides word-level transcriptions [Q6, Q8, Q26] that constitute a text layer
+    usable for LLM evaluation, but the underlying signal is 1992 telephone speech in 8 kHz mu-law encoded SPHERE format [Q20],
+    and the transcription conventions reflect spoken spontaneous register artifacts [Q24]. The temporal and register gap between
+    1992 telephone speech and modern asynchronous text-based counseling chatbot corpora is unacknowledged by the authors.
+
+    '
+  gap_type: partial
+  web_search_target: Switchboard temporal mismatch text chatbot NLP performance degradation register 1992 telephone speech
+    modern dialogue

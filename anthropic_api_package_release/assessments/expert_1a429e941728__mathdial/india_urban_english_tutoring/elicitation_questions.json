@@ -1,0 +1,22 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "For your Grade 1\u20138 teachers in Delhi and Mumbai, do the student mistake scenarios covered by the benchmark need to reflect the Indian curriculum (e.g., NCERT/CBSE topics, Indian arithmetic conventions like the Indian place-value system with lakhs and crores, or standard algorithms taught differently in Indian textbooks)? Or would curriculum-agnostic math errors be sufficient for evaluating pedagogical quality?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "IC",
+    "question": "The benchmark's student-tutor conversations are drawn from a particular linguistic and cultural context that may not reflect Indian classroom dynamics. For your professional teachers in Indian metros, would the depicted student mistakes, student communication styles, or classroom interaction norms feel realistic and recognisable \u2014 or do you expect meaningful differences (e.g., more teacher-directed correction styles, deference patterns, or locally common conceptual misconceptions specific to Indian students)?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OO",
+    "question": "The benchmark scores pedagogical quality along a set of dimensions covering aspects such as guidance, tone, and actionability. For your teachers evaluating whether an augmented GPT-4 response is 'acceptable,' which dimensions matter most \u2014 and are there dimensions the benchmark may be missing that your teachers would actually judge responses on, such as alignment with the prescribed syllabus, appropriateness of formality in a teacher-student interaction, or compatibility with Indian pedagogical expectations?"
+  },
+  {
+    "id": "Q4",
+    "dimension": "OC",
+    "question": "The benchmark's ground-truth annotations were produced by annotators from a general (likely non-Indian) pool. When your professional Indian teachers evaluate whether a tutoring response provides good guidance, do you expect their judgments to systematically differ \u2014 for example, valuing more direct correction over Socratic probing, or prioritising exam-readiness over conceptual exploration \u2014 compared to what a Western educator might consider high-quality pedagogy?"
+  }
+]

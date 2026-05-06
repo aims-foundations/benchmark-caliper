@@ -1,0 +1,26 @@
+{
+  "collected_at": "2026-05-05T21:49:47.045259+00:00",
+  "experts_with_responses": [
+    "expert_3fcd1181e6a6",
+    "expert_1a429e941728",
+    "expert_7f59a7837eda",
+    "expert_80eb33f0e871",
+    "expert_b81915e01b62"
+  ],
+  "experts_without_responses": [
+    "expert_4f3b09a57a4c"
+  ],
+  "response_counts": {
+    "expert_3fcd1181e6a6": 1,
+    "expert_1a429e941728": 1,
+    "expert_7f59a7837eda": 1,
+    "expert_80eb33f0e871": 1,
+    "expert_b81915e01b62": 1,
+    "expert_4f3b09a57a4c": 0
+  },
+  "closing_comments": {
+    "expert_3fcd1181e6a6": "As mentioned in the comments, I believe a UI would be definitively useful for practitioners! In some assessments, I felt that the same concern/issue was repeated at different dimensions and it felt a bit predictable/repetitive.\nI personally felt a bit biased towards trusting assessments that listed valid and accurate web sources that complemented and supported the analysis. Although, after finding a source that was not adequately used, I started to pay more attention to the type of evidence used.",
+    "expert_1a429e941728": "Very useful research direction, but (1) there is a lot of subjectivity in the evaluation, (2) the scenarios may not have been described clearly, and (3) a pilot annotation would have been helpful.",
+    "expert_80eb33f0e871": "- The comment section is useful because it captures a lot of important thoughts that goes missing the point based QA tasks. Maybe more indepth text based question answering (short but text based) will be useful to identify annotator emotion and feeling."
+  }
+}

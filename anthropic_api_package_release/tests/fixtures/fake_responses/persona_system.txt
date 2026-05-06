@@ -1,0 +1,7 @@
+```json
+{
+  "Q1": "Our workers operate primarily in Swahili and English, with some Sheng in urban areas.",
+  "Q2": "We need triage-oriented categories: 'refer to clinic', 'home care', 'urgent hospital', 'watchful waiting', 'unclear — seek supervisor'.",
+  "Q3": "Inputs are short — 1 to 3 sentences — often from voice-to-text."
+}
+```

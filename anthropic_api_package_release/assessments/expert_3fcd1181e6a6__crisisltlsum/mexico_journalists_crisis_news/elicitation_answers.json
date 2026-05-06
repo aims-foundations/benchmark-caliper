@@ -1,0 +1,6 @@
+{
+  "Q1": "Yes, there are and the examples mentioned are good examples. Possible the context in which these shared crisis type occur are quite different and the type of damage, but not the type of event itself.",
+  "Q2": "This is a key part of the evaluation system, it should be able to identify correctly location and time references, grouping and aggregating along with the specific context associated with the event.",
+  "Q3": "I agree with this concern. Even in the same language, the data that is considered relevant to be included in the summary depends on the user profile. Yes, my journalists follow a particular editorial style. However, part of their job should be to adapt the summary to their needs, a next layer would be necessary for a direct use. In other words, it would be better for the summary to be less restrictive and cover more in case of uncertainty.",
+  "Q4": "A bilingual output would be needed. I would expect higher quality of summaries if the models outputs English summaries in addition to the Spanish version, which would need to be revised and adapted to the journalistic register and required reporting format."
+}

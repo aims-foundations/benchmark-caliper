@@ -1,0 +1,1015 @@
+name: arabicmmlu
+full_name: 'ArabicMMLU: Advancing Rigorous Arabic Language Evaluation'
+year: 2024
+domain: Arabic language understanding and knowledge evaluation
+porting_strategy: ground_up
+languages:
+- ar
+primary_region: Arab World (North Africa, Levant, Gulf)
+description: 'ArabicMMLU is the first large-scale multi-task language understanding benchmark
+
+  for Arabic, comprising 14,575 multiple-choice questions across 40 tasks sourced
+
+  from real school examinations in eight countries: Morocco, Egypt, Jordan,
+
+  Palestine, Lebanon, UAE, Kuwait, and KSA. Questions span primary, middle, high
+
+  school, and university levels across subjects including STEM, Social Science,
+
+  Humanities, Arabic Language, and Other. The benchmark is in Modern Standard
+
+  Arabic (MSA) only and was constructed through manual web scraping by 10 native
+
+  Arabic speakers over two months, with 96% annotation accuracy verified on a
+
+  random sample of 100 questions. 35 models were evaluated in zero-shot and
+
+  few-shot settings, with GPT-4 achieving the highest accuracy at 72.5%.
+
+  '
+documentation_excerpts: '## Key characteristics relevant to validity analysis:
+
+
+  ### Input Ontology
+
+  ArabicMMLU covers 40 tasks spanning a wide range of subjects and education
+
+  levels [Q25], explicitly framing itself as a shift from classification-heavy
+
+  Arabic NLP benchmarks toward reasoning and knowledge evaluation [Q10, Q24].
+
+  Subject groups are organized into STEM, Social Science, Humanities, Arabic
+
+  Language, and Other [Q107], with education levels spanning primary, middle,
+
+  high school, and university. For the tutoring deployment, this taxonomy is
+
+  broadly relevant: it covers the educational strata (primary through university)
+
+  the system targets and explicitly includes subjects — history, geography,
+
+  civics, political science — that carry country-specific content variation [Q72,
+
+  Q73]. High school questions are confirmed as meaningfully harder than primary
+
+  or middle school questions [Q68], and negation is examined as a distinct
+
+  analytical dimension [Q84], indicating the taxonomy captures some linguistic
+
+  complexity beyond factual recall.
+
+
+  However, university-level coverage is thin at approximately 6% of all
+
+  questions [Q71], which is a significant gap for the deployment''s goal of
+
+  supporting university students in law, management, economics, and political
+
+  science. Future work is proposed to extend ArabicMMLU to include short-answer
+
+  and essay formats, different modalities, larger regional coverage, and
+
+  professional-setting questions [Q88], but these remain aspirational. The
+
+  benchmark is the first of its kind for Arabic [Q1], and its taxonomy does not
+
+  include any dialect-specific tasks or French-medium content [Q92].
+
+
+  ### Input Content
+
+  Questions are sourced from real school examinations across eight countries in
+
+  North Africa, the Levant, and the Gulf [Q26], making the benchmark''s
+
+  content-level regional grounding considerably stronger than translated MMLU
+
+  alternatives [Q5, Q6]. Data collection involved 10 native Arabic speakers (6
+
+  internal, 4 external) who identified publicly available exam URLs and manually
+
+  scraped metadata including source URL, country, subject, level, question text,
+
+  answer options, and correct answer key [Q31, Q32, Q33]. Each external worker
+
+  collected approximately 2,000 questions; internal workers collected 1,000–2,000
+
+  each [Q34].
+
+
+  However, a critical content-level imbalance exists: Jordan alone contributed
+
+  over 6,000 questions while other countries contributed as few as 100 or, in
+
+  some cases, none at all [Q89], driven by uneven digitization of national exams
+
+  [Q90] and non-exhaustive internet search [Q91]. Documented worker nationalities
+
+  are exclusively Jordanian, Egyptian, Lebanese, Emirati, and Saudi [Q31],
+
+  with no documented collaborators from Kuwait, Palestine, or Morocco [Q96],
+
+  raising material questions about whether those national curricula were
+
+  systematically identified and collected. The benchmark also explicitly excluded
+
+  English-language questions [Q30] and questions lacking answer keys or
+
+  containing multimodal content [Q37], further constraining which exam content
+
+  was ingested. Prior multilingual benchmarks (XGLUE, XTREME, GEM) and
+
+  Arabic-centric benchmarks (Dolphin, OCRA, LAraBench) are acknowledged as
+
+  antecedents [Q22, Q23], but ArabicMMLU distinguishes itself by sourcing native
+
+  exam content rather than translated material [Q5].
+
+
+  ### Input Form
+
+  All 14,575 questions are in Modern Standard Arabic (MSA) [Q2], which is the
+
+  formal medium of instruction in public schools across all eight target countries
+
+  [Q29]. Multimodal content (images, videos, tables) was explicitly excluded [Q37],
+
+  making the benchmark entirely text-based. When contextual passages were
+
+  required by questions, they were included with each dependent question [Q38].
+
+  Prompt templates include country-, subject-, and level-aware placeholders in
+
+  both Arabic and English [Q49], as illustrated in the benchmark''s prompt figures
+
+  [Q48, Q99]. The Arabic negation analysis uses specific Arabic negation phrases
+
+  to identify negated questions [Q85], confirming Arabic-script fidelity.
+
+
+  The MSA-only format aligns well with the formal instructional medium of all
+
+  eight deployment countries at the school level. However, the benchmark''s
+
+  exclusive focus on MSA means French-medium Moroccan university content — a
+
+  legitimate deployment target — is entirely outside scope [Q92]. Dialectal
+
+  Arabic is also absent, though the deployment explicitly excludes Darija, making
+
+  this a partial rather than total mismatch.
+
+
+  ### Output Ontology
+
+  The label schema is a flat single-correct-answer MCQ structure with 2–5
+
+  candidate options per question [Q27]. This is directly shared with the
+
+  tutoring deployment''s MCQ context, reducing output ontology mismatch for
+
+  multiple-choice instructional settings. The benchmark organizes results by
+
+  subject group (STEM, Social Science, Humanities, Arabic Language, Other [Q107])
+
+  and education level, providing a diagnostic output taxonomy with granular
+
+  per-subject and per-level breakdowns [Q102, Q103].
+
+
+  However, the flat label structure encodes a single ground-truth answer without
+
+  any country-specific branching. For subjects like law or civics where correct
+
+  answers may legitimately differ by national jurisdiction — for example, a
+
+  question on civil liability sourced from an Egyptian exam may carry an Egyptian
+
+  civil-law answer as universal ground truth — the output taxonomy provides no
+
+  mechanism to represent jurisdiction-specific correctness. The benchmark notes
+
+  this implicitly by observing that Arabic-specific content makes ArabicMMLU
+
+  harder than translated MMLU [Q64, Q65], but does not document any country-
+
+  stratified label scheme or secondary annotation layer.
+
+
+  ### Output Content
+
+  Quality assurance involved two native Arabic speakers independently annotating
+
+  100 randomly sampled questions, verifying correctness using available resources
+
+  including search engines [Q42]; the agreement rate was 96%, designated as the
+
+  practical ceiling score for the benchmark [Q43, Q44]. Workers are native MSA
+
+  speakers with at least Bachelor''s degrees — internal workers are Master''s
+
+  students and Research Assistants in Computer Science, external workers hold
+
+  Bachelor''s degrees [Q35, Q39] — and compensation exceeded monthly average
+
+  wages in each respective country [Q36]. A one-hour orientation workshop was
+
+  conducted before data collection [Q40].
+
+
+  The annotation workforce is geographically limited to Jordanian, Egyptian,
+
+  Lebanese, Emirati, and Saudi workers [Q31], with no documented annotators from
+
+  Kuwait, Palestine, or Morocco [Q96]. This means ground-truth labels for
+
+  questions nominally sourced from Kuwaiti or Palestinian curricula — if such
+
+  questions exist — would have been verified by workers potentially unfamiliar
+
+  with those national educational contexts. The 96% agreement figure provides
+
+  a reasonable but not comprehensive quality signal: no formal inter-annotator
+
+  agreement statistic beyond this spot-check figure is reported, and contamination
+
+  of model pretraining data cannot be ruled out [Q94, Q95].
+
+
+  ### Output Form
+
+  The benchmark evaluates models in zero-shot and few-shot settings [Q45] across
+
+  35 models [Q46] using accuracy as the primary metric. For open-source models,
+
+  the answer is determined by the highest softmax-normalized probability among
+
+  candidate options [Q50, Q79]; for closed-source models, the first generated
+
+  token is extracted via regular expression with random assignment on failure
+
+  [Q53, Q54]. Four prompt-language and output-alphabet combinations were tested
+
+  [Q47], with English prompt and English alphabetic output found optimal for most
+
+  models [Q56, Q58], though Arabic-centric models show greater robustness to
+
+  Arabic alphabetic output [Q57]. Calibration analysis confirms r > 0.9
+
+  correlation between answer probability and accuracy for all three analyzed
+
+  open-source models [Q80].
+
+
+  The MCQ accuracy-based output form aligns well with the deployment''s use case:
+
+  the user confirmed that for MCQ tasks, explanation format is not exam-critical
+
+  [Q3 in elicitation], and the benchmark does not evaluate explanation quality.
+
+  Detailed zero-shot results per subject and education level [Q102, Q103] and per
+
+  subject group under all four prompt configurations [Q105, Q106, Q108, Q110]
+
+  provide granular diagnostic capability for the deployment context.
+
+  '
+verbatim_quotes:
+- id: Q1
+  page: 1
+  dimension: input_content
+  text: we present ArabicMMLU, the first multi-task language understanding benchmark for the Arabic language, sourced from
+    school exams across diverse educational levels in different countries spanning North Africa, the Levant, and the Gulf
+    regions.
+- id: Q2
+  page: 1
+  dimension: input_form
+  text: Our data comprises 40 tasks and 14,575 multiple-choice questions in Modern Standard Arabic (MSA) and is carefully
+    constructed by collaborating with native speakers in the region.
+- id: Q3
+  page: 1
+  dimension: output_form
+  text: Our comprehensive evaluations of 35 models reveal substantial room for improvement, particularly among the best open-source
+    models.
+- id: Q4
+  page: 1
+  dimension: output_form
+  text: Notably, BLOOMZ, mT0, LLaMA2, and Falcon struggle to achieve a score of 50%, while even the top-performing Arabic-centric
+    model only achieves a score of 62.3%.
+- id: Q5
+  page: 1
+  dimension: input_content
+  text: Although large language models (LLMs) such as GPT-3.5 (Ouyang et al., 2022), BLOOMZ (Muennighoff et al., 2022), and
+    Jais (Sengupta et al., 2023) have been pretrained with substantial coverage of Modern Standard Arabic (MSA), their reasoning
+    and knowledge assessments are primarily conducted using datasets translated from English to Arabic (Sengupta et al., 2023;
+    Huang et al., 2023), which means there is limited capacity to evaluate content specific to Arabic.
+- id: Q6
+  page: 1
+  dimension: input_content
+  text: This reliance on translation systems not only demonstrates an Anglocentric approach (Ramesh et al., 2023; Talat et
+    al., 2022) but also potentially introduces errors and biases.
+- id: Q7
+  page: 1
+  dimension: input_content
+  text: Given that Arabic is one of the most widely-spoken languages in the world, with a speaker population of over 400 million
+    people (Shoufan and Alameri, 2015; Diab et al., 2017), it is critically important that datasets be constructed for the
+    language that are regionally- and culturally-localized.
+- id: Q8
+  page: 1
+  dimension: input_content
+  text: Fajri Koto, Haonan Li, Sara Shatnawi, Jad Doughman, Abdelrahman Boda Sadallah, Aisha Alraeesi, Khalid Almubarak, Zaid
+    Alyafeai, Neha Sengupta, Shady Shehata, Nizar Habash, Preslav Nakov, Timothy Baldwin
+- id: Q9
+  page: 1
+  dimension: input_content
+  text: Department of Natural Language Processing, MBZUAI; Prince Sattam bin Abdulaziz University; King Fahd University of
+    Petroleum and Minerals; Core42; New York University Abu Dhabi; The University of Melbourne
+- id: Q10
+  page: 1
+  dimension: input_ontology
+  text: The evaluation of language models has increasingly shifted from linguistically-centric tasks, such as part-of-speech
+    (POS) tagging and named entity recognition (NER), towards reasoning and knowledge evaluation.
+- id: Q11
+  page: 2
+  dimension: input_content
+  text: Early Arabic pretrained language models typically had less than 2 billion parameters and were primarily monolingual.
+- id: Q12
+  page: 2
+  dimension: input_ontology
+  text: 'These models can be classified into three main categories: encoder-only, decoder-only, and encoder–decoder models.'
+- id: Q13
+  page: 2
+  dimension: input_content
+  text: The encoder-only models, such as AraBERT (Antoun et al., 2020), CAMeLBERT (Inoue et al., 2021), AraELECTRA (Antoun
+    et al., 2021a), and ARBERT & MARBERT (Abdul-Mageed et al., 2021), are mainly from the BERT family.
+- id: Q14
+  page: 2
+  dimension: input_content
+  text: AraGPT2 (Antoun et al., 2021b), on the other hand, is a decoder-only model available in different sizes ranging from
+    135M to 1.4B parameters.
+- id: Q15
+  page: 2
+  dimension: input_content
+  text: Examples of encoder–decoder models include AraT5 (Nagoudi et al., 2022) and AraBART (Kamal Eddine et al., 2022).
+- id: Q16
+  page: 2
+  dimension: input_content
+  text: Jais (Sengupta et al., 2023) and AceGPT (Huang et al., 2023) are two recent Arabic-centric decoder-only models with
+    parameter sizes of up to 30B and 13B, respectively.
+- id: Q17
+  page: 2
+  dimension: input_content
+  text: Jais is pretrained on a corpus of 72 billion Arabic tokens, while AceGPT builds upon LLaMA2 and is enhanced with reinforcement
+    learning from AI feedback (Lee et al., 2023) to localize the model to Arabic values and culture.
+- id: Q18
+  page: 2
+  dimension: input_content
+  text: Both models are bilingual (English and Arabic), and were fine-tuned on various instruction datasets.
+- id: Q19
+  page: 2
+  dimension: input_content
+  text: Arabic is also present in multilingual models.
+- id: Q20
+  page: 2
+  dimension: input_content
+  text: This includes earlier models such as mBERT (Devlin et al., 2019) and XLM-R (Conneau et al., 2020), and more recent
+    LLMs such as BLOOMZ (Muennighoff et al., 2022), mT0 (Muennighoff et al., 2022), Falcon (Penedo et al., 2023), GPT-3.5
+    (Ouyang et al., 2022), and GPT-4 (OpenAI, 2023).
+- id: Q21
+  page: 2
+  dimension: output_form
+  text: In the original papers, only GPT-4 was evaluated in Arabic in terms of its reasoning and knowledge capabilities, using
+    the English–Arabic translated MMLU dataset, reporting an accuracy of 80%.
+- id: Q22
+  page: 2
+  dimension: input_content
+  text: Arabic is included in various multilingual benchmarks for natural language understanding and generation, such as XGLUE
+    (Liang et al., 2020), XTREME (Hu et al., 2020), XTREME-R (Ruder et al., 2021) and GEM (Gehrmann et al., 2021).
+- id: Q23
+  page: 2
+  dimension: input_content
+  text: In recent years, several Arabic-centric benchmarks have been released, such as Dolphin (Nagoudi et al., 2023), OCRA
+    (Elmadany et al., 2023), and LAraBench (Abdelali et al., 2024).
+- id: Q24
+  page: 2
+  dimension: input_ontology
+  text: Many tasks in these benchmarks involve classification, such as natural language.
+- id: Q25
+  page: 3
+  dimension: input_ontology
+  text: ArabicMMLU is an Arabic multiple-choice question-answering dataset comprising 40 tasks spanning a wide range of subjects
+    and education levels.
+- id: Q26
+  page: 3
+  dimension: input_content
+  text: The questions are sourced from eight different countries in North Africa (Morocco and Egypt), the Levant (Jordan,
+    Palestine, and Lebanon), and the Gulf (UAE, Kuwait, and KSA).
+- id: Q27
+  page: 3
+  dimension: output_ontology
+  text: Each question has 2–5 candidate answers, with one correct answer.
+- id: Q28
+  page: 3
+  dimension: input_ontology
+  text: The subjects are drawn from different education levels (primary school, middle school, and KSA, prioritize Islamic
+    studies alongside subjects like mathematics, natural science, social science, and geography.
+- id: Q29
+  page: 3
+  dimension: input_form
+  text: In public schools, Arabic is commonly used for teaching and assessment, while in international schools, English is
+    the predominant language of instruction for most subjects, following either the UK or USA curriculum.
+- id: Q30
+  page: 3
+  dimension: input_form
+  text: When designing ArabicMMLU, we excluded questions in English and only included questions in Arabic.
+- id: Q31
+  page: 4
+  dimension: input_content
+  text: 'The data construction process involved a total of 10 Arabic native speakers from different countries: 6 internal
+    workers (1 Jordanian, 1 Egyptian, 1 Lebanese, 1 from UAE, and 2 from KSA) and 4 external workers (3 Jordanian and 1 Egyptian).'
+- id: Q32
+  page: 4
+  dimension: input_content
+  text: During the first stage of data collection, the internal workers were tasked with collecting relevant sources for data
+    collection. These sources were URLs containing the questions, which needed to be publicly available.
+- id: Q33
+  page: 4
+  dimension: input_form
+  text: In the second stage, all workers were asked to manually scrape the data within a 2-month period. The task was to collect
+    metadata, including the source (URL of the source document), country, subject, level, question, multiple-choice options,
+    and the correct answer key.
+- id: Q34
+  page: 4
+  dimension: input_content
+  text: Each external worker was assigned to gather 2,000 questions, while internal workers were tasked with gathering 1,000–2,000
+    questions each.
+- id: Q35
+  page: 4
+  dimension: output_content
+  text: Our internal workers are Master's students and Research Assistants in Computer Science, while the external workers
+    hold Bachelor's degrees.
+- id: Q36
+  page: 4
+  dimension: output_content
+  text: We ensured competitive compensation for the workers, exceeding the monthly average wage in each respective country.
+- id: Q37
+  page: 4
+  dimension: input_form
+  text: During manual data scraping, workers were instructed to include only questions accompanied by an answer key, and to
+    discard questions containing multi-modal information (e.g., images, videos, or tables).
+- id: Q38
+  page: 4
+  dimension: input_form
+  text: If a question had additional contextual information (e.g., a passage referenced by several questions), the context
+    was required to be included with each corresponding question.
+- id: Q39
+  page: 4
+  dimension: output_content
+  text: While our workers are native speakers of Modern Standard Arabic with at least Bachelor's degrees, we maintain the
+    quality of our dataset construction through meticulous steps.
+- id: Q40
+  page: 4
+  dimension: output_content
+  text: Firstly, we conducted a 1-hour workshop before the data collection stage to clarify the process.
+- id: Q41
+  page: 4
+  dimension: input_form
+  text: Secondly, we automatically filtered out repetitive questions and those without an answer key, reducing the initial
+    set of over 15,000 questions to 14,575 unique questions.
+- id: Q42
+  page: 4
+  dimension: output_content
+  text: Finally, we assessed the accuracy of our data collection by having two native Arabic speakers annotate 100 randomly
+    sampled questions. They were provided with all metadata, including the answer key, and tasked with verifying the correctness
+    of each sample using any available resources (e.g., search engines).
+- id: Q43
+  page: 4
+  dimension: output_content
+  text: We found that 96% of the questions and answer keys match on average, while the remaining could have incorrect answer
+    keys.
+- id: Q44
+  page: 4
+  dimension: output_content
+  text: This 96% score is considered to represent the maximum score meaningfully achievable for ArabicMMLU.
+- id: Q45
+  page: 5
+  dimension: output_form
+  text: Our experiments focus on zero-shot and few-shot settings across 35 models.
+- id: Q46
+  page: 5
+  dimension: output_form
+  text: 'This includes 22 open-source multilingual models (XGLM (Lin et al., 2022), BLOOMZ (Muennighoff et al., 2022), mT0
+    (Muennighoff et al., 2022), Falcon (Penedo et al., 2023), and LLaMA2 (Touvron et al., 2023), across various sizes), 11
+    open-source Arabic-centric models (AraT5 (Nagoudi et al., 2022), AraGPT2 (Antoun et al., 2021b), AceGPT (Huang et al.,
+    2023) and Jais (Sengupta et al., 2023), also across various sizes), and 2 closed-source models (GPT-3.5: gpt-3.5-turbo
+    (Ouyang et al., 2022) and GPT-4: gpt-4-0613 (OpenAI, 2023)).'
+- id: Q47
+  page: 5
+  dimension: output_form
+  text: 'We initially conducted experiments with four settings: (1) Arabic prompt and Arabic alphabetic output, (2) Arabic
+    prompt and English (i.e. Latin script) alphabetic output, (3) English prompt and Arabic alphabetic output, and (4) English
+    prompt and English alphabetic output.'
+- id: Q48
+  page: 5
+  dimension: input_form
+  text: Figure 4 illustrates the Arabic and English prompts.
+- id: Q49
+  page: 5
+  dimension: input_form
+  text: The placeholders [SUBJECT], [LEVEL], and [COUNTRY] are replaced with the corresponding Arabic and English words, while
+    the placeholders [INPUT] and [OPTION] are in Arabic.
+- id: Q50
+  page: 6
+  dimension: output_form
+  text: Following previous studies (Koto et al., 2023; Li et al., 2023), for open-source models, we determine the answer based
+    on the highest probability among all possible options.
+- id: Q51
+  page: 6
+  dimension: output_form
+  text: In the case of English alphabetic output, we measure the probability of the first generated token being A, B, C, D,
+    or E.
+- id: Q52
+  page: 6
+  dimension: output_form
+  text: For Arabic, we measure the probability of the first generated token being @, H., h., X, or è.
+- id: Q53
+  page: 6
+  dimension: output_form
+  text: For closed-source models, we determine the answer based on the first token generated in the text using a regular expression.
+- id: Q54
+  page: 6
+  dimension: output_form
+  text: If there is no match, we assign a random answer.
+- id: Q55
+  page: 6
+  dimension: output_form
+  text: To evaluate the influence of prompt language, we initially benchmarked the open-source models using all four prompt
+    settings (Section 4.1), as depicted in Figure 5.
+- id: Q56
+  page: 6
+  dimension: output_form
+  text: We observe that the optimal configuration across all models is to use an English prompt and English alphabetic output.
+- id: Q57
+  page: 6
+  dimension: output_form
+  text: Predictably, the Arabic-specific LLMs — Jais-chat (30B) and AceGPT-chat (13B) — demonstrate the greatest robustness
+    when employing Arabic alphabetic output.
+- id: Q58
+  page: 6
+  dimension: output_form
+  text: For the remaining experiments, we will report based on the setting of English prompt and English alphabetic output.
+- id: Q59
+  page: 7
+  dimension: output_form
+  text: As expected, the Arabic-centric model Jais-chat (30B) emerges as the top-performing open-source model, boasting an
+    average score of 62.3%, surpassing GPT-3.5 by 4.6 points.
+- id: Q60
+  page: 7
+  dimension: output_form
+  text: Compared to AceGPT-chat (13B), both Jais-chat models (13B and 30B) exhibit substantially higher accuracy in areas
+    including STEM, Social Science, Humanities, and Others.
+- id: Q61
+  page: 7
+  dimension: output_form
+  text: For multilingual models such as BLOOMZ (7B) and mT0 (13B), their performance lags behind Jais, with a disparity of
+    more than 14 points.
+- id: Q62
+  page: 7
+  dimension: output_form
+  text: XGLM, LLaMA2, and Falcon perform at a level close to random, suggesting their limited proficiency in Arabic.
+- id: Q63
+  page: 7
+  dimension: output_form
+  text: GPT-4 achieves the highest accuracy, with a score of 72.5%, surpassing Jais-chat (30B) by 10 points.
+- id: Q64
+  page: 7
+  dimension: output_content
+  text: It is noteworthy that in the GPT-4 technical report (OpenAI, 2023), the accuracy of the English-Arabic translated
+    MMLU dataset is reported as 80%, which is 8 points higher than our ArabicMMU results.
+- id: Q65
+  page: 7
+  dimension: output_content
+  text: One possible explanation for this difference is that our ArabicMMU presents a greater challenge due to its inclusion
+    of a higher proportion of Arabic-specific content.
+- id: Q66
+  page: 7
+  dimension: output_form
+  text: Furthermore, we notice a trend of increasing accuracy with larger models, with the exception of XGLM.
+- id: Q67
+  page: 7
+  dimension: output_form
+  text: For example, BLOOMZ (7B) achieves an accuracy 15.9 points higher than BLOOMZ (560M), while mT0 (13B) shows a 13.8-point
+    increase compared to mT0 (300M).
+- id: Q68
+  page: 7
+  dimension: input_ontology
+  text: We observe that ArabicMMU questions are more challenging at the high school level compared to the primary and middle
+    school levels.
+- id: Q69
+  page: 7
+  dimension: output_form
+  text: Specifically, for high school questions, GPT-4 achieves a score of only 61.7%, while Jais-chat scores 51.2%.
+- id: Q70
+  page: 7
+  dimension: output_form
+  text: Interestingly, we notice that the model accuracy at the university level is higher than for high school.
+- id: Q71
+  page: 7
+  dimension: input_ontology
+  text: This could be attributed to the relatively small portion (i.e., 6%) of university-level questions in ArabicMMU, which
+    potentially skews the results.
+- id: Q72
+  page: 7
+  dimension: input_ontology
+  text: We present the performance of open-source models on selected subjects that potentially contain Arabic-specific contexts.
+- id: Q73
+  page: 7
+  dimension: input_ontology
+  text: These subjects include history, geography, civics, political
+- id: Q74
+  page: 8
+  dimension: output_form
+  text: We focus our more detailed analysis in this section solely on the best open-source models, namely BLOOMZ, AceGPT,
+    and Jais, providing researchers and the community with insights to better understand these models and opportunities for
+    future improvements.
+- id: Q75
+  page: 8
+  dimension: output_form
+  text: While all the results in Section 4.2 were based on zero-shot learning, we observe in Figure 7 that when we move to
+    few-shot learning, results for base models improve but those for instruction-tuned models deteriorate.
+- id: Q76
+  page: 8
+  dimension: output_form
+  text: Specifically, AceGPT and Jais show an improvement of 2–10 points when using few-shot learning, but the results for
+    BLOOMZ and Jais-chat drop.
+- id: Q77
+  page: 8
+  dimension: output_form
+  text: These findings are consistent with prior research over IndoMMIU (Koto et al., 2023) and CMMLU (Li et al., 2023).
+- id: Q78
+  page: 8
+  dimension: output_form
+  text: We analyze whether BLOOMZ, AceGPT, and Jais are well-calibrated in answering ArabicMMLU questions by comparing the
+    probability of the correct answers with the actual accuracy for each task (i.e., subject and level combination).
+- id: Q79
+  page: 8
+  dimension: output_form
+  text: The answer probability is obtained through softmax normalization across the available candidate answers.
+- id: Q80
+  page: 8
+  dimension: output_form
+  text: In Figure 8, we observe that the three open-source models are well calibrated with correlation scores r > 0.9.
+- id: Q81
+  page: 8
+  dimension: output_form
+  text: Additionally, we investigate the correlation between model confidence and question length in Figure 9.
+- id: Q82
+  page: 8
+  dimension: output_form
+  text: We find no correlation between the length of the questions and the model confidence for either Jais or AceGPT.
+- id: Q83
+  page: 8
+  dimension: input_ontology
+  text: Despite negation being an absolutely foundational linguistic phenomenon, LLMs have been shown to be worryingly insensitive
+    to its effects in English (Kassner and Schütze, 2020; Hosseini et al., 2021; Truong et al., 2023).
+- id: Q84
+  page: 8
+  dimension: input_ontology
+  text: We thus perform an analysis of LLM performance over questions in ArabicMMLU with and without negation to determine
+    whether this observation ports across to Arabic.
+- id: Q85
+  page: 8
+  dimension: input_form
+  text: We utilize specific negation phrases to identify questions containing negations in Arabic.
+- id: Q86
+  page: 9
+  dimension: input_ontology
+  text: We introduce ArabicMMLU, the first large-scale multi-task language understanding dataset designed to evaluate real-world
+    knowledge in Arabic.
+- id: Q87
+  page: 9
+  dimension: input_content
+  text: Through experiments with over 14K multiple-choice questions spanning various subjects and education levels, we observed
+    that Arabic-centric LLMs outperform multilingual LLMs, albeit with lower accuracy than GPT-4.
+- id: Q88
+  page: 9
+  dimension: input_ontology
+  text: For future work, ArabicMMLU can be extended to include short-answer or essay questions, different modalities (i.e.,
+    images, audio, video), larger region coverage, and more questions in professional settings.
+- id: Q89
+  page: 9
+  dimension: input_content
+  text: ArabicMMLU does not represent all Arabic countries equally. For example, we have collected over 6K multiple-choice
+    questions from Jordan, while other countries are represented with only 100 questions or, in some cases, not at all.
+- id: Q90
+  page: 9
+  dimension: input_content
+  text: This is largely due to the availability of publicly-accessible exams in each country; some countries have digitized
+    their exams, but not others.
+- id: Q91
+  page: 9
+  dimension: input_content
+  text: Additionally, our search for relevant Arabic content across the internet was not exhaustive.
+- id: Q92
+  page: 9
+  dimension: input_form
+  text: The dataset primarily focuses on Modern Standard Arabic (MSA). However, multilingual and Arabic LLMs are often exposed
+    to both MSA and dialectical Arabic.
+- id: Q93
+  page: 9
+  dimension: input_form
+  text: ArabicMMLU is focused solely on text-based assessment, and the exploration of multimodal questions is left for future
+    work.
+- id: Q94
+  page: 9
+  dimension: output_content
+  text: It is important to emphasize that our experimental results do not provide conclusive answers regarding the performance
+    of LLMs in Arabic.
+- id: Q95
+  page: 10
+  dimension: output_content
+  text: to a lack of sufficient information about its training regimen. As such, we cannot assert that the model's pretraining
+    data is free from contamination.
+- id: Q96
+  page: 10
+  dimension: input_content
+  text: We extend our gratitude to all collaborators from Jordan, Egypt, Lebanon, UAE, and Saudi Arabia who participated in
+    the data collection process.
+- id: Q97
+  page: 10
+  dimension: input_content
+  text: We also acknowledge the contributions of Samta Kamboj, Sarah Al Barri, and Onkar Pandit from Core42, who assisted
+    in collecting the Arabic Language question dataset.
+- id: Q98
+  page: 14
+  dimension: input_content
+  text: Table 7 presents the distribution of ArabicMMLU data categorized by subject across different education levels.
+- id: Q99
+  page: 14
+  dimension: input_form
+  text: Figure 10 illustrates a complete example of prompts used in this study. This example features a Natural Science question
+    with prompts provided in both Arabic and English.
+- id: Q100
+  page: 14
+  dimension: input_ontology
+  text: This is a Natural Science question for primary school in Jordan. Select the correct answer!
+- id: Q101
+  page: 14
+  dimension: input_content
+  text: 'Table 7: The distribution of ArabicMMLU for each subject in different education levels.'
+- id: Q102
+  page: 15
+  dimension: output_form
+  text: Table 8 presents the detailed zero-shot results across subjects and education levels, while Table 9, Table 10, Table
+    11 display the results with different prompts and alphabetic outputs (complementing the main result at Table 8).
+- id: Q103
+  page: 15
+  dimension: output_form
+  text: Zero-shot LLM performance (% accuracy) with English prompt and English alphabetic output, for each subject and education
+    level.
+- id: Q104
+  page: 15
+  dimension: output_form
+  text: The models are BLOOMZ (7B), AceGPT-chat (13B), Jais-chat (30B), GPT-3.5 (175B), and GPT-4.
+- id: Q105
+  page: 16
+  dimension: output_form
+  text: Zero-shot LLM performance (% accuracy) with Arabic prompt and Arabic alphabetic output, combined across subject groups.
+- id: Q106
+  page: 16
+  dimension: output_form
+  text: '"Average" means the average across all questions in ArabicMMLU.'
+- id: Q107
+  page: 16
+  dimension: input_ontology
+  text: 'Table 9 presents results organized by subject groups: STEM, Social Science, Humanities, Arabic Language, and Other.'
+- id: Q108
+  page: 17
+  dimension: output_form
+  text: Zero-shot LLM performance (% accuracy) with Arabic prompt and English alphabetic output, combined across subject groups.
+- id: Q109
+  page: 17
+  dimension: input_ontology
+  text: 'Table 10: Zero-shot LLM performance (% accuracy) with Arabic prompt and English alphabetic output, combined across
+    subject groups.'
+- id: Q110
+  page: 18
+  dimension: output_form
+  text: Zero-shot LLM performance (% accuracy) with English prompt and Arabic alphabetic output, combined across subject groups.
+- id: Q111
+  page: 19
+  dimension: input_content
+  text: Table 12 lists the sources of pre-trained models used in this study. All models are sourced from Huggingface (Wolf
+    et al., 2020).
+- id: Q112
+  page: 19
+  dimension: input_content
+  text: With the exception of GPT-3.5 and GPT-4, all the models used in this study were sourced from Huggingface (Wolf et
+    al., 2020).
+coverage_strengths:
+- user_priority: Eight-country MENA curriculum coverage (Morocco, Egypt, Jordan, Palestine, Lebanon, UAE, Kuwait, KSA)
+  benchmark_coverage: 'ArabicMMLU nominally lists all eight deployment countries as source countries
+
+    [Q26], spanning North Africa, the Levant, and the Gulf — the only Arabic
+
+    benchmark of this scope [Q1]. Questions are sourced from real national exams
+
+    rather than translations [Q5], providing the strongest available content-level
+
+    regional grounding for the deployment.
+
+    '
+  dimension: input_content
+- user_priority: Primary through university educational levels
+  benchmark_coverage: 'The benchmark explicitly spans primary, middle, high school, and university
+
+    levels [Q25, Q28], and performance is disaggregated by education level [Q103],
+
+    confirming that all four tiers the deployment targets are at least nominally
+
+    represented in the taxonomy.
+
+    '
+  dimension: input_ontology
+- user_priority: Subjects with country-specific content variation (history, civics, social science, Islamic studies)
+  benchmark_coverage: 'ArabicMMLU''s subject taxonomy explicitly includes history, geography, civics,
+
+    and political science as subjects containing Arabic-specific contexts [Q72, Q73],
+
+    and KSA data prioritizes Islamic studies alongside mathematics, natural science,
+
+    social science, and geography [Q28]. These are precisely the subjects where the
+
+    deployment requires curriculum-specific alignment.
+
+    '
+  dimension: input_ontology
+- user_priority: Modern Standard Arabic as the formal instructional medium
+  benchmark_coverage: 'All 14,575 questions are in MSA [Q2], consistent with the formal language of
+
+    instruction in public schools across all eight target countries [Q29]. English-
+
+    language questions were explicitly excluded [Q30], ensuring Arabic-medium
+
+    content fidelity for school-level deployment.
+
+    '
+  dimension: input_form
+- user_priority: MCQ format for school and university exam preparation
+  benchmark_coverage: 'The benchmark is entirely MCQ with 2–5 candidate answers and a single correct
+
+    answer per question [Q27], directly matching the deployment''s primary format.
+
+    Country-, subject-, and level-aware prompt templates [Q49] allow context-
+
+    specific querying that maps naturally onto a tutoring system''s need to present
+
+    curriculum-aligned questions.
+
+    '
+  dimension: output_ontology
+- user_priority: Granular diagnostic capability by subject and education level
+  benchmark_coverage: 'Zero-shot results are reported per subject and education level [Q102, Q103]
+
+    and by subject group across all four prompt configurations [Q105, Q106, Q108,
+
+    Q110], providing fine-grained diagnostic signal for identifying which national
+
+    subjects and school levels current models handle poorly — directly actionable
+
+    for the deployment''s subject-specific tutoring goals.
+
+    '
+  dimension: output_form
+- user_priority: Comparison of Arabic-centric vs. multilingual model performance
+  benchmark_coverage: 'The benchmark evaluates 11 open-source Arabic-centric models (including Jais
+
+    and AceGPT) alongside 22 multilingual models and 2 closed-source models [Q46],
+
+    with Arabic-centric models shown to outperform multilingual alternatives [Q59,
+
+    Q61], giving the deployment team actionable model-selection evidence for
+
+    Arabic educational contexts.
+
+    '
+  dimension: output_form
+coverage_gap_analysis:
+- user_priority: Palestine curriculum coverage (HIGH — Input Content)
+  benchmark_coverage: 'Palestine is listed as a source country [Q26] but no Palestinian workers are
+
+    documented in the data collection workforce [Q31, Q96]. Jordan alone contributed
+
+    over 6,000 questions while some countries contributed as few as 100 or none [Q89],
+
+    driven by uneven national exam digitization [Q90] and non-exhaustive web search
+
+    [Q91]. Palestinian Ministry of Education exam content may be absent or negligible.
+
+    '
+  gap_type: partial
+  web_search_target: ArabicMMLU Palestine Ministry of Education exam coverage Palestinian curriculum questions
+- user_priority: Kuwait curriculum coverage (HIGH — Input Content)
+  benchmark_coverage: 'Kuwait is listed as a source country [Q26] but no Kuwaiti workers appear in
+
+    the documented workforce [Q31, Q96], and Kuwait is not mentioned in the
+
+    acknowledgments collaborator list [Q96]. Per the benchmark''s own admission,
+
+    some countries contributed as few as 100 questions [Q89] due to digitization
+
+    gaps [Q90]. Kuwaiti civic education and national history content may be
+
+    severely underrepresented.
+
+    '
+  gap_type: partial
+  web_search_target: ArabicMMLU Kuwait curriculum questions Kuwaiti school exams Arabic NLP benchmark
+- user_priority: University-level law, management, economics, CS, political science, accounting (HIGH — Input Ontology)
+  benchmark_coverage: 'University-level questions constitute only approximately 6% of all questions
+
+    [Q71], which the authors acknowledge may skew results at that level. Professional-
+
+    setting questions are listed as future work [Q88]. There is no documentation of
+
+    which specific university subjects are covered at what depth or which national
+
+    legal traditions are instantiated in any law-related questions.
+
+    '
+  gap_type: partial
+  web_search_target: ArabicMMLU university level law economics political science subject distribution Arabic higher education
+    benchmark
+- user_priority: Country-specific legal systems (Egyptian civil code, UAE, Moroccan law) (HIGH — Output Content)
+  benchmark_coverage: 'The flat single-correct-answer label schema [Q27] encodes no country-specific
+
+    branching for jurisdiction-dependent questions. Ground-truth labels sourced from
+
+    Jordanian or Egyptian exams may carry those jurisdictions'' legal frameworks as
+
+    universal ground truth for all eight deployment countries. No country-stratified
+
+    label scheme is documented. The benchmark notes Arabic-specific content difficulty
+
+    [Q64, Q65] but does not address cross-jurisdictional label validity.
+
+    '
+  gap_type: full
+  web_search_target: Arabic language benchmark legal education country-specific jurisdiction law questions MENA curriculum
+    variation
+- user_priority: Uneven national representation affecting ground-truth label validity for Kuwait and Palestine (HIGH — Output
+    Content)
+  benchmark_coverage: 'Annotators are exclusively from Jordan, Egypt, Lebanon, UAE, and KSA [Q31],
+
+    with no documented Kuwaiti or Palestinian annotators [Q96]. Questions from
+
+    Kuwait or Palestine, if collected at all, were verified by workers from other
+
+    national educational contexts. The 96% agreement ceiling [Q43, Q44] was
+
+    established on a general random sample, not stratified by country.
+
+    '
+  gap_type: partial
+  web_search_target: Arabic educational benchmark annotation Kuwait Palestine curriculum validity cross-national exam grading
+- user_priority: French-medium Moroccan university content (MODERATE — Input Form)
+  benchmark_coverage: 'ArabicMMLU is exclusively MSA [Q2, Q92]; French-medium content is entirely
+
+    outside its scope. The limitation is explicitly acknowledged [Q92], and
+
+    multimodal and multilingual extension is listed as future work [Q88, Q93].
+
+    No French-Arabic bilingual content exists in the benchmark.
+
+    '
+  gap_type: full
+  web_search_target: French Arabic bilingual benchmark Morocco university higher education science professional programs NLP
+    evaluation
+- user_priority: Islamic studies madhab specificity (Maliki for Morocco, Hanbali for KSA) (MODERATE — Output Ontology)
+  benchmark_coverage: 'Islamic studies is included as a subject, particularly prioritized in KSA data
+
+    [Q28], but the benchmark provides no documentation of whether Islamic studies
+
+    questions are madhab-neutral or calibrated to a specific school of jurisprudence.
+
+    The flat label schema [Q27] does not represent madhab-specific answer branching.
+
+    '
+  gap_type: partial
+  web_search_target: ArabicMMLU Islamic studies madhab Maliki Hanbali Shafi'i school jurisprudence Arabic benchmark question
+    calibration
+- user_priority: Marking-scheme alignment for open-ended national exam formats (MODERATE — Output Ontology)
+  benchmark_coverage: 'The benchmark is MCQ-only; short-answer and essay formats are listed as future
+
+    work [Q88]. For MCQ contexts, the user confirmed that explanation format is not
+
+    exam-critical, so this gap is mitigated for the deployment''s primary use case.
+
+    However, no rubric-alignment evaluation against national marking schemes (e.g.,
+
+    Egyptian Thanawiyya Amma answer banks) has been documented.
+
+    '
+  gap_type: partial
+  web_search_target: Arabic educational benchmark marking scheme rubric alignment Egyptian Jordanian national exam answer
+    key validation

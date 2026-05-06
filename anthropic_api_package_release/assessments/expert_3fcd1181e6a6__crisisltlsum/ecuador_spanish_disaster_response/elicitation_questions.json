@@ -1,0 +1,22 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "CrisisLTLSum covers four crisis categories: wildfires, local fires, traffic incidents, and storms. For your Ecuador-focused deployment, are there disaster types your users would prioritize that fall outside this set — for example, volcanic eruptions (Cotopaxi, Tungurahua), landslides triggered by La Niña events, floods in coastal regions like Manabí, or earthquake aftershock sequences? Which crisis types matter most to Red Cross and UN OCHA coordinators in your context?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "IC",
+    "question": "The benchmark tweets reference US-specific geographic markers (street names, county identifiers, US emergency agency handles like FEMA or local fire departments). In your deployment, location signals in tweets would reference Ecuadorian administrative units (parroquias, cantones, provincias), local emergency agencies (SGR, Cuerpo de Bomberos), and landmarks familiar to Ecuadorian users. Would your analysts expect the system to correctly anchor events to these local geographic and institutional references, or is rough regional-level geolocation sufficient?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OC",
+    "question": "The benchmark's ground-truth relevance labels and summaries were produced for US English-language tweets by annotators operating in a US crisis-response context. For your use case, relevance judgments may differ: a tweet about road access to a rural community, or an informal community radio broadcast transcribed into Twitter, might carry high operational value for an NGO coordinator but low value by US annotation standards. Who in your organization would serve as the authoritative judge of tweet relevance and summary quality — field coordinators, social analysts, or affected-community representatives — and do you have access to them for validation?"
+  },
+  {
+    "id": "Q4",
+    "dimension": "IF",
+    "question": "The benchmark is built entirely from English-language tweets. Your deployment targets Ecuadorian Spanish, which may include code-switching with Kichwa or other indigenous languages, regional slang, informal abbreviations common in disaster contexts (e.g., 'damnificados', 'albergue', 'socorristas'), and non-standard orthography in crisis conditions. Would the tweet stream your system processes be predominantly standard written Spanish, or do you expect significant informal register, dialect variation, or indigenous-language mixing that a system trained on English social media might not handle?"
+  }
+]

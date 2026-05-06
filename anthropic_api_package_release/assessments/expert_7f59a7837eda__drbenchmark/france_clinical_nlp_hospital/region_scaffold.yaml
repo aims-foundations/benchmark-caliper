@@ -1,0 +1,295 @@
+name: French Hospital Clinical NLP — Metropolitan France (DrBenchmark)
+abbreviation: fr_hospital_clinical_nlp
+deployment_context:
+  system_function: Unstructured French clinical note processing for POS tagging, NER,
+    multi-label pathology classification, and temporal entity extraction. Outputs
+    are mapped to ICD-10/PMSI classification axes to auto-generate patient clinical
+    profiles supporting clinician care prioritization.
+  decision_stakes: Life-critical. Clinicians and nursing staff act on system outputs
+    for care prioritization and medical history summarization. System is explicitly
+    framed as a Silver Standard support tool; final authority rests with clinicians.
+  silver_standard_framing: The deployer acknowledges the system as a Silver Standard
+    tool whose ICD-10 mappings may not perfectly align with hospital-specific PMSI
+    coding conventions or complex multi-morbid case nuances. Clinician adjudication
+    is the intended safeguard.
+  output_behavior: Multi-label outputs with associated confidence scores. High-uncertainty
+    entities are flagged for manual review. Ranked candidate lists support clinician
+    adjudication between plausible classification axes.
+primary_geography:
+  country: France
+  scope: Metropolitan France (mainland hospital settings)
+  excluded_scopes: Belgium, Switzerland, Quebec, and French overseas territories (DOM-TOM)
+    are explicitly out of scope for current deployment due to divergent terminology
+    and coding standards.
+  priority_extension: French overseas territories (DOM-TOM) identified as highest-priority
+    future extension gap, due to distinct tropical pathology profiles absent from
+    mainland training data.
+languages:
+  primary: French
+  register: Standard medical French — formal clinical documentation register with
+    moderate presence of common clinical abbreviations and shorthand. Not raw informal
+    speech; not highly noisy EHR dictation.
+  variants_in_scope: Metropolitan French standard medical register only. Belgian,
+    Swiss, or Quebec French medical terminology variants are out of scope.
+  note: The deployment language is well-matched to DrBenchmark's French-only text
+    corpus. Register mismatch (edited academic sources vs. moderately noisy hospital
+    notes) is a flagged gap, not a language variant gap.
+writing_systems:
+  scripts:
+  - Latin alphabet with French diacritics (é, è, ê, ë, à, â, î, ï, ô, û, ù, ü, ç,
+    œ, æ)
+  note: No script mismatch or RTL concerns. Standard French Unicode character set.
+    Tokenization of medical abbreviations and compound clinical terms is a domain-specific
+    challenge rather than a script issue.
+user_population:
+  primary_users: Hospital clinicians (physicians) and nursing staff who consume system
+    outputs for clinical decision support — not the patients whose notes are processed.
+  secondary_users: Hospital medical coders and PMSI coding specialists who may adjudicate
+    ICD-10/PMSI mappings; not directly described as system users but implicated in
+    output authority questions.
+  user_expertise: High domain expertise (medical professionals). Low expected tolerance
+    for erroneous classifications given life-critical decision context. Clinicians
+    retain final adjudication authority.
+  interaction_model: Clinicians receive synthesized clinical profiles and ranked candidate
+    classifications as a starting point for expert review, not as authoritative outputs.
+  annotator_vs_user_gap: DrBenchmark labels were produced primarily by academic NLP
+    researchers and one medical expert (DiaMed only). Deploying hospital clinicians
+    and PMSI coders represent a substantially different and more operationally authoritative
+    population for label validation.
+patient_documentation_profile:
+  documentation_type: Hospital clinical notes — unstructured free text in standard
+    medical French.
+  cleanliness_level: Moderately clean. Standard medical terminology predominates.
+    Common clinical abbreviations and shorthand are present at moderate frequency.
+  noise_sources:
+  - Common clinical abbreviations
+  - Standard shorthand (e.g., antécédents, traitement, prescription shortforms)
+  - Occasional dictation artifacts
+  - Institution-specific terminology (at some sites)
+  out_of_scope_noise: Excessively noisy or institution-specific notes require additional
+    pre-processing (custom glossaries, normalization modules) before reliable system
+    operation.
+  benchmark_register_gap: DrBenchmark sources are predominantly edited academic write-ups,
+    competition corpora, and clinical trial protocols — a more formally written register
+    than active hospital notes. CAS and PxCorpus provide partial signal but are not
+    characterized as raw EHR documentation.
+clinical_coding_framework:
+  primary_classification_system: ICD-10 (International Classification of Diseases,
+    10th Revision)
+  french_national_coding_system: PMSI (Programme de Médicalisation des Systèmes d'Information)
+    — French national hospital activity coding system
+  benchmark_alignment: DrBenchmark's DiaMed maps to 22 ICD-10 chapter-level categories;
+    DEFT-2021 uses 23 MeSH Chapter C axes. These provide coarse ontological alignment
+    but are less granular than operational PMSI codes used in French hospital billing
+    and care documentation.
+  coding_authority_gap: No DrBenchmark dataset documents annotation by PMSI coders
+    or hospital coding specialists. Only DiaMed involves a single medical expert.
+    Hospital-specific coding conventions may diverge from benchmark label definitions.
+  pmsi_specifics: '[NEEDS VERIFICATION — confirm current PMSI code structure, granularity
+    levels relevant to the deployment''s ICD-10 mapping function, and any recent French
+    regulatory updates to PMSI classification]'
+infrastructure_notes:
+  deployment_environment: French hospital IT systems. Text-only pipeline. No modality
+    mismatch with DrBenchmark.
+  it_infrastructure: '[NEEDS VERIFICATION — confirm typical French hospital IT infrastructure
+    standards, EHR system vendors predominant in Metropolitan France (e.g., Mediboard,
+    DxCare, Easily, others), and API/integration norms for clinical NLP tooling]'
+  data_protection_regulation: '[NEEDS VERIFICATION — confirm applicable French and
+    EU regulation for clinical NLP processing of patient data: RGPD/GDPR, French Health
+    Data Hub (HDH) framework, CNIL guidelines for health data AI, and any HDS (Hébergeur
+    de Données de Santé) certification requirements]'
+  compute_environment: '[NEEDS VERIFICATION — confirm whether deployment targets on-premise
+    hospital compute, French sovereign cloud (e.g., Health Data Hub infrastructure,
+    OVHcloud HDS-certified), or other compliant hosting]'
+  nlp_tooling_availability: 'Strong French biomedical NLP tooling ecosystem: DrBERT,
+    CamemBERT-bio, CamemBERT, FlauBERT evaluated in DrBenchmark. HuggingFace Datasets/Transformers/PyTorch
+    pipeline confirmed as benchmark implementation base.'
+regulatory_and_governance_context:
+  ai_medical_device_classification: '[NEEDS VERIFICATION — confirm whether this clinical
+    NLP system qualifies as a Medical Device Software (MDSW) under EU MDR (Regulation
+    2017/745) or IVDR, and if so, what risk class applies under French ANSM oversight]'
+  eu_ai_act_risk_tier: '[NEEDS VERIFICATION — assess likely EU AI Act risk classification
+    for a clinical decision support system used in life-critical care prioritization;
+    high-risk AI system designation under Annex III is plausible]'
+  french_health_authority: '[NEEDS VERIFICATION — confirm ANSM (Agence nationale de
+    sécurité du médicament et des produits de santé) or HAS (Haute Autorité de Santé)
+    guidance applicable to AI-based clinical decision support tools in French hospital
+    settings]'
+  hospital_data_governance: '[NEEDS VERIFICATION — confirm requirements under the
+    French Espace Numérique de Santé (ENS) framework and Mon Espace Santé policy for
+    clinical NLP data use]'
+  annotation_authority_for_audits: The Silver Standard framing means system outputs
+    cannot be presented as clinician-equivalent classifications. Any regulatory audit
+    of system performance would likely require validation against labels produced
+    by certified PMSI coders or board-certified clinicians, not academic NLP annotators.
+pathology_coverage_profile:
+  in_scope_metropolitan: 'Pathology profiles typical of Metropolitan French hospital
+    populations: cardiovascular disease, oncology, metabolic disorders, respiratory
+    conditions, neurological conditions, musculoskeletal disorders, infectious diseases
+    prevalent in mainland France.'
+  out_of_scope_tropical: Tropical and vector-borne pathologies characteristic of French
+    overseas territories are absent from the deployment's current training data and
+    from DrBenchmark's documented source corpora.
+  dom_tom_gap_pathologies:
+  - Dengue fever
+  - Chikungunya
+  - Zika virus
+  - Malaria (Plasmodium falciparum and vivax)
+  - Leptospirosis
+  - Sickle-cell disease at population scale (particularly Martinique, Guadeloupe,
+    French Guiana, Réunion)
+  - Tuberculosis at elevated prevalence (French Guiana)
+  - '[NEEDS VERIFICATION — confirm complete tropical pathology profile per DOM-TOM
+    territory and verify DiaMed (Pan African Medical Journal source) overlap with
+    these categories]'
+  diamedpan_african_signal: DiaMed's Pan African Medical Journal source may introduce
+    some tropical pathology signal, but its coverage of French DOM-TOM-specific disease
+    patterns is undocumented. Web search required.
+benchmark_task_alignment:
+  benchmark_name: DrBenchmark
+  benchmark_year: 2024
+  task_categories_covered:
+  - 'POS tagging (CAS: 31 tags; ESSAI: 36 tags)'
+  - NER (QUAERO, E3C, Mantra-GSC, DEFT-2021, PxCorpus)
+  - 'Multi-label classification (DEFT-2021: 23 MeSH axes; DiaMed: 22 ICD-10 chapters;
+    MorFITT: 12 medical specialties)'
+  - Multi-class classification
+  - Intent classification (PxCorpus)
+  - MCQA (FrenchMedMCQA)
+  - Semantic Textual Similarity (CLISTER, DEFT-2020)
+  deployment_task_coverage:
+    pos_tagging: Directly covered. CAS and ESSAI provide French clinical/trial POS
+      tagging tasks.
+    ner: Directly covered. Multiple NER datasets with clinical entity, temporal, anatomical,
+      pathology, and treatment labels. DEFT-2021 NER includes PATHOLOGY, SOSY, DATE,
+      DURATION, FREQUENCY, MOMENT — highly relevant to deployment.
+    multi_label_pathology_classification: Partially covered. DEFT-2021 (MeSH axes)
+      and DiaMed (ICD-10 chapters) provide structural alignment, but at coarser granularity
+      than operational PMSI codes. Scoring uses standard F1, not confidence calibration.
+    temporal_entity_extraction: Directly covered. E3C temporal labels (EVENT, TIMEX3,
+      RML) and DEFT-2021 temporal NER tags provide direct coverage.
+    confidence_scored_output: Not covered. DrBenchmark scores classification with
+      standard metrics only; no calibration, ranking, or uncertainty-flagging metrics
+      are documented.
+annotation_authority_profile:
+  benchmark_annotator_population: Primarily academic NLP researchers affiliated with
+    French universities and research institutions (Nantes Université, Université de
+    Lille, Avignon Université, INSERM, CNRS). One medical expert documented for DiaMed
+    only.
+  clinical_coder_involvement: '[NEEDS VERIFICATION — search for any PMSI coder or
+    hospital coding specialist involvement in DEFT-2021, DEFT-2020, CAS, or other
+    DrBenchmark constituent datasets]'
+  iaa_documentation: Only DiaMed provides formal inter-annotator agreement statistics
+    (Cohen's Kappa, Gwet's AC1). CAS relies on automatic POS annotations validated
+    at 98% precision. Most other datasets do not document IAA.
+  automatic_annotation_risk: CAS POS annotations are automatically generated (Tagex),
+    not fully human-adjudicated. This silver-standard provenance within the benchmark
+    mirrors the deployment's own silver-standard framing and compounds label authority
+    concerns.
+  authority_gap_summary: 'For the deployment''s most consequential function (ICD-10/PMSI
+    classification in multi-morbid cases), benchmark labels were not validated by
+    the population whose authority matters most to the deployer: practicing PMSI coders
+    and hospital clinicians.'
+output_evaluation_alignment:
+  benchmark_scoring_protocols:
+    sequence_labeling: SeqEval with IOB2 format, first-token-only prediction, tokenizer-agnostic.
+    classification: Majority-class baseline comparison; standard classification metrics
+      (F1 implied); results averaged over 4 runs with Student's t-test.
+    sts: Spearman correlation and EDRM.
+    confidence_calibration: Not documented. Absent from benchmark protocol.
+  deployment_output_requirements:
+    multi_label_with_confidence: Required. System outputs ranked candidate labels
+      with confidence scores.
+    uncertainty_flagging: Required. High-uncertainty entities must be flagged for
+      manual clinician review.
+    ranked_candidate_lists: Required for multi-morbid case adjudication.
+    benchmark_coverage_of_these: None. Structural mismatch. Standard F1 scores will
+      not reveal whether a model is well-calibrated for the ranked-confidence output
+      behavior the deployment requires.
+  mlc_performance_caveat: DrBenchmark results show poor MLC performance even for specialized
+    models (DrBERT-FS does not excel on MLC tasks). This directly implicates the deployment's
+    most challenging function but does not resolve the calibration gap.
+flagged_verification_targets:
+- gap: Tropical and DOM-TOM pathology coverage in DrBenchmark
+  search_target: French overseas territories DOM-TOM biomedical NLP clinical NER tropical
+    pathology benchmark corpus DiaMed Pan African Medical Journal scope
+  priority: HIGH
+- gap: Hospital coding specialist and PMSI coder annotator involvement in DrBenchmark
+    datasets
+  search_target: DrBenchmark DEFT-2021 annotation protocol clinical coder PMSI ICD-10
+    annotator expertise French biomedical NLP
+  priority: HIGH
+- gap: Multi-label confidence calibration and uncertainty flagging scoring in DrBenchmark
+  search_target: DrBenchmark multi-label classification confidence calibration scoring
+    uncertainty flagging ranked output French biomedical NLP
+  priority: HIGH
+- gap: Raw EHR noise robustness — register match between benchmark sources and active
+    hospital notes
+  search_target: French clinical NLP benchmark raw EHR discharge notes noise robustness
+    abbreviation shorthand hospital documentation CAS DEFT corpus
+  priority: HIGH
+- gap: Silver standard label provenance and adjudication methodology across all 20
+    DrBenchmark tasks
+  search_target: DrBenchmark annotation methodology silver standard expert adjudication
+    DEFT NER multi-label French biomedical NLP dataset provenance
+  priority: MODERATE
+- gap: French regulatory framework for clinical AI (MDR, EU AI Act, ANSM, HAS, CNIL
+    health data)
+  search_target: France ANSM HAS clinical decision support AI regulation MDR MDSW
+    EU AI Act high risk hospital NLP CNIL health data
+  priority: MODERATE
+- gap: PMSI code structure and granularity vs. ICD-10 chapter level used in DiaMed
+  search_target: PMSI Programme Médicalisation Systèmes Information ICD-10 chapter
+    granularity French hospital coding 2023 2024
+  priority: MODERATE
+- gap: French hospital EHR system landscape and clinical NLP integration norms
+  search_target: France hôpital EHR dossier patient informatisé DPI Mediboard DxCare
+    clinical NLP integration standards HDS
+  priority: LOWER
+cultural_and_institutional_norms_notes: '- French hospital system operates under a
+  unified national public health framework (Système National de Santé) with strong
+  central regulatory oversight via HAS and ANSM.
+
+  - PMSI coding is a nationally standardized but hospital-operationalized practice;
+  coding conventions can vary across institutions and clinical specialties.
+
+  - French medical culture emphasizes physician authority; clinical decision support
+  tools are expected to augment, not replace, clinician judgment — consistent with
+  the Silver Standard framing.
+
+  - Data sovereignty and patient data protection are salient concerns in French hospital
+  AI deployment; HDS certification and CNIL compliance are expected baseline requirements.
+
+  - The French biomedical NLP research community (Nantes, Lille, Avignon, INSERM affiliates)
+  overlaps substantially with the DrBenchmark author team, meaning benchmark design
+  reflects academic rather than operational hospital priorities.
+
+  - Multimorbidity and polypharmacy are clinically significant in the French hospital
+  inpatient population, making multi-label classification fidelity and confidence
+  calibration especially consequential.
+
+  '
+domain_specific_notes: '- ICD-10 to PMSI mapping is not a direct 1:1 translation;
+  PMSI uses GHM (Groupes Homogènes de Malades) groupings for hospital financing that
+  derive from but differ from raw ICD-10 codes. Benchmark alignment at ICD-10 chapter
+  level may not capture PMSI-relevant distinctions.
+
+  - Temporal entity extraction is clinically critical for care prioritization (onset
+  dates, treatment durations, follow-up schedules). DrBenchmark provides relevant
+  temporal labels (DEFT-2021, E3C) but sources are edited academic cases, not time-pressured
+  clinical documentation.
+
+  - PxCorpus (spoken drug prescription transcripts) is the benchmark''s closest analogue
+  to noisy clinical input, but its domain (pharmacist-patient drug prescription) differs
+  from inpatient clinical note authorship.
+
+  - The deployer''s requirement for confidence-scored multi-label outputs is not addressable
+  with standard benchmark F1 metrics. A supplementary evaluation protocol (e.g., calibration
+  curves, ECE scores, AUROC per label) would be needed to assess deployment-relevant
+  performance.
+
+  - French clinical abbreviations (e.g., ATCD for antécédents, TTT for traitement,
+  HDJ for hôpital de jour) are common in hospital notes and may not be well-represented
+  in DrBenchmark''s more formally edited source corpora.
+
+  '

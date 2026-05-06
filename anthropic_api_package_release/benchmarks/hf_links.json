@@ -1,0 +1,388 @@
+{
+  "ltzglue": {
+    "hf_dataset_id": null,
+    "hf_config": null,
+    "benchmark_name": "ltzGLUE",
+    "per_tuple": {
+      "tuple_1": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "In a public administration setting, a civil servant uses LLM-powered software to manage Luxembourgish citizen feedback b"
+      },
+      "tuple_2": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "In a newsroom setting, journalists and editors use LLM-powered software to manage Luxembourgish news articles by applyin"
+      }
+    }
+  },
+  "drbenchmark": {
+    "hf_dataset_id": null,
+    "hf_config": null,
+    "hf_org": "DrBenchmark",
+    "benchmark_name": "DrBenchmark",
+    "note": "Multi-dataset benchmark. hf_org resolves all 12 datasets under the org.",
+    "per_tuple": {
+      "tuple_3": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "In a hospital setting, a clinician uses software to manage unstructured French clinical cases by applying a model evalua"
+      },
+      "tuple_4": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "In a pharmaceutical setting, a regulatory specialist uses document management software to ensure compliance in French dr"
+      }
+    }
+  },
+  "milu_the_indicmmlu_benchmark": {
+    "hf_dataset_id": "ai4bharat/MILU",
+    "hf_config": null,
+    "benchmark_name": "MILU",
+    "note": "Gated dataset \u2014 requires HF_TOKEN with approved access. Auto-discovers all 11 language configs.",
+    "per_tuple": {
+      "tuple_1": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Deployment scenario: A Hindi-speaking student in India is testing his/her preparation for competitive job-related examin"
+      },
+      "tuple_2": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Deployment scenario: A Hindi-speaking teacher in India uses an LLM to evaluate student responses in an examination setti"
+      }
+    }
+  },
+  "arabicmmlu": {
+    "hf_dataset_id": "MBZUAI/ArabicMMLU",
+    "hf_config": null,
+    "benchmark_name": "ArabicMMLU",
+    "per_tuple": {
+      "tuple_1": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Educational tutoring and supporting students studying with answers related to their curriculums in different subjects on"
+      },
+      "tuple_2": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Support foreigners visiting Morocco, Egypt, Jordan, Palestine, Lebanon, UAE, Kuwait, or KSA in answering their general q"
+      }
+    }
+  },
+  "laila": {
+    "hf_dataset_id": null,
+    "hf_config": null,
+    "benchmark_name": "LAILA",
+    "per_tuple": {
+      "tuple_3": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Assist high school (G10-12) Arabic teachers in Arab countries (teaching students who are native in Arabic) in grading Ar"
+      },
+      "tuple_4": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Support high school students (G10-12) in editing and revising their Arabic essay drafts before submitting them for gradi"
+      }
+    }
+  },
+  "mrbench": {
+    "hf_dataset_id": null,
+    "hf_config": null,
+    "benchmark_name": "MRBench",
+    "per_tuple": {
+      "tuple_3": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Deployment scenario: A GPT-4 model is implemented in a one-on-one tutoring session, where its responses are augmented wi"
+      },
+      "tuple_4": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Deployment scenario: A GPT-4 model is implemented in a one-on-one tutoring session, where its responses are augmented wi"
+      }
+    }
+  },
+  "afridoc_mt_document_level_mt_corpus_for_african_languages": {
+    "hf_dataset_id": "masakhane/AfriDocMT",
+    "hf_config": null,
+    "benchmark_name": "AFRIDOC-MT: Document-level MT Corpus for African Languages",
+    "note": "Requires config name. Configs: tech, health, doc_tech, doc_health, doc_tech_25, doc_health_25, doc_tech_5, doc_health_5, doc_tech_10, doc_health_10. Multi-parallel EN→5 African langs (am, ha, sw, yo, zu).",
+    "per_tuple": {
+      "tuple_1": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Translating clinical practice guidelines, vaccination schedules, and maternal-health booklets into Amharic for ministry-"
+      },
+      "tuple_2": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Document-level translation of agricultural input subsidy notices, land-use policy updates, and credit-scheme terms from "
+      }
+    }
+  },
+  "injongo_a_multicultural_intent_detection_and_slot_filling_dataset_for_16_african_languages": {
+    "hf_dataset_id": "masakhane/InjongoIntent",
+    "hf_config": null,
+    "benchmark_name": "INJONGO: A Multicultural Intent Detection and Slot-filling Dataset for 16 African Languages",
+    "note": "Requires config name (per-language). Configs: amh, eng, ewe, hau, ibo, kin, lin, lug, orm, sna, sot, swa, twi, wol, xho, yor, zul. Amharic (amh) is relevant for the African-languages expert's tuples.",
+    "per_tuple": {
+      "tuple_3": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Amharic utility chatbots for Ethiopian Electric Utility and Addis Ababa Water handling prepaid meter top-ups, outage rep"
+      },
+      "tuple_4": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Amharic intercity-travel booking bots for Sky Bus, Selam Bus, and Ride covering routes, fares, and seat changes"
+      }
+    }
+  },
+  "milu": {
+    "hf_dataset_id": "ai4bharat/MILU",
+    "hf_config": null,
+    "benchmark_name": "MILU",
+    "note": "Gated dataset \u2014 requires HF_TOKEN with approved access. Same dataset as the other MILU entry (milu_the_indicmmlu_benchmark). Auto-discovers all 11 language configs.",
+    "per_tuple": {
+      "tuple_1": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "The focus is region-dependent generic llm adaptation. \n\nTask: domain-dependent language and dialect understanding\nLLMs e"
+      },
+      "tuple_2": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Task: Environment science and geograpy-specific agricultural knowledge understanding\nLLMs evaluated: Generic frontier mo"
+      }
+    }
+  },
+  "toxigen": {
+    "hf_dataset_id": "toxigen/toxigen-data",
+    "hf_config": null,
+    "benchmark_name": "TOXIGEN",
+    "note": "Public parquet (streams without auth despite 'gated' label on HF page). Configs: annotated, train, annotations.",
+    "per_tuple": {
+      "tuple_3": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Task: Toxicity evaluation in different language varieties (llm given toxicity rating)\nModel: Large to small llms\nDomain:"
+      },
+      "tuple_4": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Task: Domain specific content moderation systems\nModel: Large to small llms\nDomain: From clinical chatbot to shopping as"
+      }
+    }
+  },
+  "wximpactbench": {
+    "hf_dataset_id": "Michaelyya/wximpactbench-1386",
+    "hf_config": null,
+    "benchmark_name": "WXImpactBench",
+    "per_tuple": {
+      "tuple_1": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Use Case: Early identification of damage type caused by a disaster and reported in local news and social media posts fro"
+      },
+      "tuple_2": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Use case: Reliability of disaster reporting in news at national/local level, finding alignment with effective and verifi"
+      }
+    }
+  },
+  "multihumes": {
+    "hf_dataset_id": null,
+    "hf_config": null,
+    "benchmark_name": "MultiHumES",
+    "per_tuple": {
+      "tuple_3": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Summarization of quick messages (e.g. tweets) for event reporting in the crisis domain for news writing in American Engl"
+      },
+      "tuple_4": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Timeline generation for coordination and evaluation of response efforts across time published in social media. The data "
+      }
+    }
+  },
+  "crisisltlsum": {
+    "hf_dataset_id": null,
+    "hf_config": null,
+    "benchmark_name": "CrisisLTLSum",
+    "per_tuple": {
+      "tuple_3": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Summarization of quick messages (e.g. tweets) for event reporting in the crisis domain for news writing in American Engl"
+      },
+      "tuple_4": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Timeline generation for coordination and evaluation of response efforts across time published in social media. The data "
+      }
+    }
+  },
+  "_comment_comparative": "=== Reference benchmarks for comparative assessment (stage 3) ===",
+  "glue": {
+    "hf_dataset_id": "nyu-mll/glue",
+    "hf_config": null,
+    "benchmark_name": "GLUE",
+    "note": "Reference benchmark for LTZGLUE comparative assessment. Auto-discovers all configs (12 total incl. ax, mnli_matched, mnli_mismatched)."
+  },
+  "blurb": {
+    "hf_dataset_id": "EMBO/BLURB",
+    "hf_config": null,
+    "benchmark_name": "BLURB",
+    "note": "Reference benchmark for DrBenchmark comparative assessment. Uses a custom loading script \u2014 DA step will be auto-skipped."
+  },
+  "mathdial": {
+    "hf_dataset_id": "eth-nlped/mathdial",
+    "hf_config": null,
+    "benchmark_name": "MathDial",
+    "note": "Reference benchmark for MRBench comparative assessment. Single flat dataset (train/test)."
+  },
+  "mmlu": {
+    "hf_dataset_id": "cais/mmlu",
+    "hf_config": null,
+    "benchmark_name": "MMLU",
+    "note": "Reference benchmark for MILU and ArabicMMLU comparative assessments. Auto-discovers all configs (57 subjects + 'all' + 'auxiliary_train')."
+  },
+  "crisisbench": {
+    "hf_dataset_id": "QCRI/CrisisBench-all-lang",
+    "hf_config": null,
+    "benchmark_name": "CrisisBench",
+    "note": "Reference benchmark for WXImpactBench comparative assessment. Consolidation of 8 crisis NLP datasets (CrisisNLP, CrisisLex, etc.). Fallback rule \u2014 WXImpactBench is the first in its niche; CrisisBench is the closest established standard for disaster text classification."
+  },
+  "cnn_dailymail": {
+    "hf_dataset_id": "abisee/cnn_dailymail",
+    "hf_config": "3.0.0",
+    "benchmark_name": "CNN/DailyMail",
+    "note": "Reference benchmark for CrisisLTLSum comparative assessment. Most-cited English-language summarization benchmark (162/226 publications). Fallback rule \u2014 CrisisLTLSum is the first crisis timeline summarization benchmark; CNN/DailyMail is the established standard for abstractive summarization."
+  },
+  "asap_pp": {
+    "hf_dataset_id": null,
+    "hf_config": null,
+    "benchmark_name": "ASAP++",
+    "note": "Reference benchmark for LAILA comparative assessment. Leading English-language AES dataset (Mathias & Bhattacharyya, LREC 2018). Not on HuggingFace \u2014 original data on Kaggle (asap-aes)."
+  },
+  "civil_comments": {
+    "hf_dataset_id": "google/civil_comments",
+    "hf_config": null,
+    "benchmark_name": "Civil Comments",
+    "note": "Reference benchmark for ToxiGen comparative assessment. Jigsaw Unintended Bias dataset (Borkan et al., WWW 2019). ~2M news comments with toxicity scores and identity group annotations. Fallback rule \u2014 ToxiGen compares against many datasets without singling one out; Civil Comments is the most widely used English toxicity classification benchmark with identity-bias annotations."
+  },
+  "flores200": {
+    "hf_dataset_id": "facebook/flores",
+    "hf_config": null,
+    "benchmark_name": "FLORES-200",
+    "note": "Reference benchmark for AFRIDOC-MT comparative assessment. Standard multilingual MT evaluation benchmark (200 languages, sentence-level). NLLB Team et al. 2022 'No Language Left Behind'. Primary rule \u2014 AFRIDOC-MT explicitly positions itself against FLORES-200 in Table 1 as filling the document-level MT gap for African languages."
+  },
+  "massive": {
+    "hf_dataset_id": "AmazonScience/massive",
+    "hf_config": null,
+    "benchmark_name": "MASSIVE",
+    "note": "Reference benchmark for INJONGO comparative assessment. Largest multilingual intent detection and slot-filling dataset (51 languages, 60 intents, 55 slots). FitzGerald et al., ACL 2023. Primary rule \u2014 INJONGO explicitly positions itself against MASSIVE's limited African language coverage (3 languages) and Western-centric cultural bias."
+  },
+  "swda": {
+    "hf_dataset_id": "cgpotts/swda",
+    "hf_config": null,
+    "benchmark_name": "Switchboard Dialog Act Corpus",
+    "note": "Reference benchmark for HOPE comparative assessment. Standard dialogue act classification benchmark (Godfrey et al. 1992). Primary rule \u2014 HOPE explicitly positions itself against Switchboard, evaluating SPARTA on both."
+  },
+  "samsum": {
+    "hf_dataset_id": "knkarthick/samsum",
+    "hf_config": null,
+    "benchmark_name": "SAMSum",
+    "note": "Reference benchmark for MentalClouds comparative assessment. Most-cited English dialogue summarization benchmark (~740 citations, Gliwa et al. EMNLP 2019). Fallback rule \u2014 MentalClouds extends MEMO without positioning against a single external benchmark; SAMSum is the standard for abstractive dialogue summarization."
+  },
+  "sea_helm": {
+    "hf_dataset_id": null,
+    "hf_config": null,
+    "benchmark_name": "SEA-HELM",
+    "per_tuple": {
+      "tuple_1": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Evaluating LLMs for a public-facing Bahasa Indonesia chatbot answering citizen questions about administrative procedures"
+      },
+      "tuple_2": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Evaluating LLMs for helping legal aid caseworkers document refugee cases \u2014 transcribing intake interviews and extracting"
+      }
+    }
+  },
+  "iberbench": {
+    "hf_dataset_id": null,
+    "hf_config": null,
+    "benchmark_name": "IberBench",
+    "per_tuple": {
+      "tuple_3": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Evaluating LLMs for automated content moderation on a Catalan-language news platform \u2014 detecting hate speech and toxicit"
+      },
+      "tuple_4": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Evaluating LLMs for AI-assisted educational assessment in bilingual indigenous schools \u2014 generating and scoring reading "
+      }
+    }
+  },
+  "counselbench": {
+    "hf_dataset_id": null,
+    "hf_config": null,
+    "benchmark_name": "CounselBench",
+    "per_tuple": {
+      "tuple_1": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "A mental health professional or researcher deploys an LLM to automatically summarize counseling session transcripts. The"
+      },
+      "tuple_2": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Researchers and developers building or evaluating AI-driven counseling support tools assess the capability of LLMs to pr"
+      }
+    }
+  },
+  "hope": {
+    "hf_dataset_id": null,
+    "hf_config": null,
+    "benchmark_name": "HOPE",
+    "per_tuple": {
+      "tuple_3": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "A conversational AI system for mental health counseling classifies dialogue acts in real-time counseling conversations u"
+      },
+      "tuple_4": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "An NLP/AI researcher uses the HOPE benchmark dataset to evaluate and improve dialogue-understanding for AI-assistive cha"
+      }
+    }
+  },
+  "mentalclouds": {
+    "hf_dataset_id": null,
+    "hf_config": null,
+    "benchmark_name": "MentalClouds",
+    "per_tuple": {
+      "tuple_1": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "A mental health professional or researcher deploys an LLM to automatically summarize counseling session transcripts. The"
+      },
+      "tuple_2": {
+        "hf_dataset_id": null,
+        "hf_config": null,
+        "note": "Researchers and developers building or evaluating AI-driven counseling support tools assess the capability of LLMs to pr"
+      }
+    }
+  }
+}

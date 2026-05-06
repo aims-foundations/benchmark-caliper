@@ -1,0 +1,22 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "The benchmark covers four crisis types: wildfires, local fires, traffic incidents, and storms — all drawn from US contexts. For your journalists covering Mexico City, Central America, and the US-Mexico border region, are there crisis types that matter but likely fall outside those four categories — for example, volcanic activity (Popocatépetl), earthquakes, flooding from tropical systems, or civil unrest? And within the shared categories like storms, do the local sub-types (e.g., hurricane landfalls on Pacific vs Gulf coasts of Mexico) differ meaningfully from US storm patterns your journalists would need covered?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "IC",
+    "question": "The benchmark's crisis events are tied to specific US locations — named streets, buildings, and counties. For your journalists covering Mexican and Central American crises, how place-specific does the system need to be? For instance, would it need to correctly identify and contextualize references to colonias, municipios, delegaciones (like Iztapalapa or Tlalpan in CDMX), or regional landmarks that would appear in Spanish-language social media posts but not in US-sourced training data?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OC",
+    "question": "The benchmark's human-written summaries were produced by annotators working from US English Twitter data. For your journalists, what counts as a good crisis summary may differ — for example, the level of official source attribution expected, how casualty figures are framed, or how community impact is described in Mexican media conventions. Do your journalists follow a specific editorial style (e.g., AP Español, local outlet guidelines) that defines what a 'good' summary looks like, and would that diverge from US news writing norms?"
+  },
+  {
+    "id": "Q4",
+    "dimension": "OF",
+    "question": "The benchmark produces abstractive summaries as free-form text. For your journalists' actual workflow, do they need the system to output in both English and Spanish, or would they typically receive an English-language summary and translate/adapt it themselves? If bilingual output is needed, would the Spanish output need to match Mexican journalistic register specifically, or would a neutral Latin American Spanish be acceptable?"
+  }
+]

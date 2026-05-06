@@ -1,0 +1,516 @@
+{
+  "benchmark": "drbenchmark",
+  "region": "French Hospital Clinical NLP — Metropolitan France (DrBenchmark)",
+  "dimensions": {
+    "input_ontology": {
+      "score": 3,
+      "justification": "DrBenchmark's task taxonomy spans 20 tasks across POS, NER, MCQA, MCC, MLC, intent classification, and STS [Q1, Q4, Q18, Q81], covering most of the deployment's required functions: POS tagging (CAS, ESSAI), NER with clinical/temporal/anatomical/treatment entities (DEFT-2021, E3C, QUAERO), and multi-label pathology classification (DEFT-2021 MeSH, DiaMed ICD-10 chapters, MorFITT specialties). However, several ontological gaps directly affect the deployment. First, the elicitation flagged tropical/DOM-TOM pathology as a HIGH-priority future extension; while the deployment scope is Metropolitan France only, DiaMed's source (Pan African Medical Journal) introduces sub-Saharan/North African case content that does not match the metropolitan target population (DIAMED-D7, DIAMED-D8, DIAMED-D9). Second, MorFITT's 12 specialty labels and CAS/ESSAI's negation/speculation labels do not map to ICD-10/PMSI diagnostic axes (MORFITT-D11, CAS-D19, ESSAI-D9), introducing construct-irrelevant variance into aggregate benchmark scores. Third, FrenchMedMCQA's pharmacy-exam content (analytical chemistry, electroanalysis, health economics) is largely irrelevant to hospital clinical NLP (FRENCHMEDMCQA-D2, FRENCHMEDMCQA-D23, FRENCHMEDMCQA-D43, FRENCHMEDMCQA-D45). Fourth, the deployment requires confidence-scored multi-label outputs and uncertainty flagging, but no benchmark task category targets confidence-calibrated or ranked-candidate outputs [Q56]. The taxonomy partially aligns with metropolitan deployment needs but contains both omissions (PMSI-granular codes, calibration tasks) and irrelevant categories (veterinary, pharmacy exam, encyclopedic content).",
+      "strengths": [
+        "Native multi-label classification structure in DEFT-2021 with up to 7 concurrent MeSH labels per case directly exercises multi-morbid pathology classification (DEFT2021-D1, DEFT2021-D2)",
+        "DEFT-2021 NER scheme covers PATHOLOGY, TREATMENT, ANATOMY, DATE, DURATION, FREQUENCY, MOMENT — full alignment with deployment's clinical and temporal entity extraction needs (DEFT2021-D3, DEFT2021-D4, DEFT2021-D5)",
+        "Breadth of 20 tasks ensures most deployment functions (POS, NER, MLC, temporal extraction) have at least one structurally aligned dataset"
+      ],
+      "checklist_responses": {
+        "IO-1": "Required deployment categories include: POS tagging on clinical text, clinical-entity NER (pathology, anatomy, treatment, dosage), temporal-entity NER (date, duration, frequency, moment), multi-label pathology classification mapped to ICD-10/PMSI, and confidence-scored ranked-candidate output. DrBenchmark covers POS (CAS, ESSAI) [Q42, Q43], clinical NER [Q108], temporal NER [Q104, Q108, DEFT2021-D3, DEFT2021-D5], and multi-label classification [Q26, Q27, Q45, DEFT2021-D1].",
+        "IO-2": "Confidence-scored / ranked-candidate / uncertainty-flagged output categories are absent — the benchmark uses standard classification metrics and majority-class baselines [Q56]. PMSI-granular code classification is also absent; DiaMed only reaches ICD-10 chapter level (DIAMED-D11). Tropical/DOM-TOM pathology categories not present in French clinical subsets (E3C-D4, E3C-D13).",
+        "IO-3": "FrenchMedMCQA pharmacy exam content covering electroanalysis, analytical chemistry, and health economics is largely irrelevant to clinical NLP deployment (FRENCHMEDMCQA-D23, FRENCHMEDMCQA-D43, FRENCHMEDMCQA-D45). MorFITT contains substantial veterinary content (equine, porcine, canine) off-domain for human hospital deployment (MORFITT-D5, MORFITT-D9, MORFITT-D26). DEFT-2020 contains 30–40% off-domain encyclopedic content (railways, video games, sports) (DEFT2020-D9, DEFT2020-D10, DEFT2020-D11, DEFT2020-D12). CAS/ESSAI negation/speculation classification labels are linguistically rather than clinically relevant to ICD-10 mapping (CAS-D19, ESSAI-D9).",
+        "IO-4": "Construct underrepresentation: confidence calibration, PMSI-granular codes, DOM-TOM tropical pathology (out of immediate scope but flagged priority extension). Construct-irrelevant variance: pharmacy exam content, veterinary content, encyclopedic STS pairs. Aggregate scores across 20 tasks may obscure deployment-relevant performance."
+      },
+      "evidence_quotes": [
+        "[Q1] 'It encompasses 20 diversified tasks, including named-entity recognition, part-of-speech tagging, question-answering, semantic textual similarity, and classification.' (p.1)",
+        "[Q18] 'A variety of tasks with different requirements and objectives: Part-of-Speech (POS) tagging, Multi-class, Multi-label and Intent classification, Named-Entity Recognition (NER), Multiple-Choice Question-Answering (MCQA), and Semantic Textual Similarity (STS).' (p.2)",
+        "[Q26] 'The multi-label classification task focuses on identifying the patient's clinical profile based on the diseases, signs, or symptoms mentioned in the clinical cases.' (p.3)",
+        "[Q39] 'FrenchMedMCQA... contains 3,105 questions coming from real exams of the French medical specialization diploma in pharmacy' (p.4)",
+        "[Q56] 'The results of the 8 models are reported in Table 6 and compared to a baseline obtained by considering the majority class for all predictions.' (p.6)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-2] PMSI uses GHM groupings derived from ICD-10 principal/secondary diagnoses, CCAM procedures, age, and length of stay — substantially more granular than ICD-10 chapter labels"
+      ],
+      "evidence_dataset": [
+        "DEFT2021-D1: 6 concurrent MeSH labels in single case — multi-morbid classification structure",
+        "DEFT2021-D3: 'cotrimoxazole pour 10 jours' annotated with TREATMENT+DURATION — direct temporal NER alignment",
+        "DIAMED-D11: ICD-10 chapter-level only (e.g., A00-B99); PMSI granular codes not evaluated",
+        "FRENCHMEDMCQA-D45: electroanalytical chemistry question — irrelevant to clinical NLP",
+        "MORFITT-D5: equine veterinary immunology — off-domain for human hospital deployment",
+        "DEFT2020-D9: railway infrastructure content in STS pair — off-domain"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "Q1",
+          "Q18",
+          "Q26",
+          "Q108",
+          "DEFT2021-D1",
+          "DEFT2021-D3"
+        ],
+        "IO-2": [
+          "Q56",
+          "DIAMED-D11",
+          "WEB-2",
+          "E3C-D4",
+          "E3C-D13"
+        ],
+        "IO-3": [
+          "Q39",
+          "FRENCHMEDMCQA-D23",
+          "FRENCHMEDMCQA-D43",
+          "FRENCHMEDMCQA-D45",
+          "MORFITT-D5",
+          "MORFITT-D9",
+          "DEFT2020-D9",
+          "CAS-D19",
+          "ESSAI-D9"
+        ],
+        "IO-4": [
+          "Q56",
+          "DIAMED-D11",
+          "FRENCHMEDMCQA-D45",
+          "MORFITT-D5"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether aggregate benchmark scores can be decomposed to filter out off-domain content (veterinary, encyclopedic, pharmacy exam) for deployment-relevant interpretation"
+      ],
+      "requires_expert_verification": [
+        "Whether DEFT-2021's 23 MeSH axes provide adequate proxy for PMSI Catégorie Majeure groupings used in operational hospital coding"
+      ]
+    },
+    "input_content": {
+      "score": 2,
+      "justification": "Input Content was flagged HIGH priority in elicitation due to the deployment's requirement to handle moderately noisy hospital notes with abbreviations and shorthand. The benchmark provides standard-French biomedical text [Q19] across diverse sources, which superficially aligns with the deployment language. However, multiple critical concerns surface. First, no DrBenchmark dataset uses raw hospital EHR notes; sources are clinical trial protocols (ESSAI) [Q43], competition corpora (DEFT-2021, DEFT-2020) [Q24], peer-reviewed published case reports (CAS, CLISTER, E3C, DiaMed) [Q42, Q41, Q29, Q45], drug regulatory documents (QUAERO-EMEA) [Q34], MEDLINE titles, and patent claims. Web-source confirmation: no French raw-EHR clinical NLP benchmark exists [WEB-1, WEB-18]. Examples of formality gap include CAS-D20, E3C-D9, DEFT2021-D14, DIAMED-D12. Second, substantial non-Metropolitan content contaminates several datasets: DiaMed's cases originate from Burkina Faso, Morocco, and Niger (DIAMED-D7, DIAMED-D8, DIAMED-D9); MorFITT contains Canadian, Jordanian, Saudi, and Arabic-population research content (MORFITT-D10, MORFITT-D20, MORFITT-D22, MORFITT-D31); E3C non-French configs (Basque, English, Italian, Spanish) dominate the multilingual structure (E3C-D7, E3C-D8). Third, DEFT-2020 contains 30–40% off-domain encyclopedic material (DEFT2020-D9, DEFT2020-D10, DEFT2020-D11). Fourth, PxCorpus — the closest noise proxy — contains system-prompt contamination corrupting clinical register (PXCORPUS-D22, PXCORPUS-D23). The CAS, CLISTER, DEFT-2021, and ESSAI corpora provide partial metropolitan-French clinical signal with quantified lab values and standard medical terminology (CAS-D2, CLISTER-D2, DEFT2021-D7), but all are edited published materials with cleaner register than active hospital notes (CAS-D20).",
+      "strengths": [
+        "CAS, CLISTER, and DEFT-2021 provide authentic French clinical case prose with quantified lab values, surgical narratives, and diagnostic reasoning closely matching standard hospital documentation register (CAS-D2, CLISTER-D2, DEFT2021-D7)",
+        "Explicit diversity of data origins — scientific literature, clinical trials, clinical cases, speech transcriptions [Q19] — provides cross-register robustness signal",
+        "PxCorpus offers the benchmark's only naturally noisy register (transcribed speech with hesitations, truncations, ASR artifacts) (PXCORPUS-D1, PXCORPUS-D2, PXCORPUS-D4)"
+      ],
+      "checklist_responses": {
+        "IC-1": "Inputs are in standard medical French and largely match the deployment's primary language. However, the deployment processes notes with French clinical abbreviations (ATCD, TTT, HDJ) and dictation artifacts that are absent or rare in benchmark sources. Region-specific PMSI/CIM-10 FR coding conventions [WEB-2] are not represented in the source text register.",
+        "IC-2": "Substantial non-Metropolitan French clinical content is mixed into the benchmark. DiaMed cases are sub-Saharan/North African (DIAMED-D7, DIAMED-D8, DIAMED-D9); MorFITT contains Canadian (Quebec), Jordanian, Saudi, Arabic-population research (MORFITT-D10, MORFITT-D20, MORFITT-D22, MORFITT-D31); DEFT2021 contains some Quebec French terminology (DEFT2021-D20). This may distort performance estimates for the metropolitan target population.",
+        "IC-3": "The benchmark does not contain Western-specific knowledge unsuitable to the metropolitan French context per se; however, DEFT-2020 contains substantial off-domain encyclopedic content (railways, video games, Russian historical figures, Japanese script) that introduces construct-irrelevant variance (DEFT2020-D9, DEFT2020-D10, DEFT2020-D12, DEFT2020-D13). MorFITT veterinary content is similarly off-domain (MORFITT-D5, MORFITT-D9).",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — would require recruitment of metropolitan French hospital clinicians and PMSI coders to assess whether benchmark content matches the moderate-noise register of active EHR notes.",
+        "IC-5": "Critical content gaps: (1) no raw EHR notes [WEB-1, WEB-18]; (2) non-metropolitan content in DiaMed and MorFITT misrepresents the deployment population; (3) edited register systematically cleaner than active hospital documentation (CAS-D20, DEFT2021-D14, DIAMED-D12); (4) French clinical abbreviations (ATCD, TTT, HDJ) under-represented. These collectively harm content validity for the deployment."
+      },
+      "evidence_quotes": [
+        "[Q19] 'A diverse range of data origins: Scientific literature, clinical trials, clinical cases, speech transcriptions, and more as described in Table 2.' (p.2)",
+        "[Q43] 'ESSAI (Dalloux et al., 2021) contains 7,247 clinical trial protocols annotated in 41 POS tags using TreeTagger' (p.4)",
+        "[Q42] 'CAS (Grabar et al., 2018) comprises 3,790 clinical cases that have been annotated for POS tagging with 31 classes using automatic annotations through Tagex 3' (p.4)",
+        "[Q45] 'DiaMed is an original dataset created specifically for DrBenchmark. It comprises 739 new French clinical cases collected from an open source journal (The Pan African Medical Journal).' (p.4)",
+        "[Q44] 'PxCorpus (Kocabiyikoglu et al., 2022) is a spoken language understanding dataset in the domain of medical drug prescription transcripts.' (p.4)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-1] EHRNoteQA (NeurIPS 2024) demonstrates that existing clinical NLP benchmarks typically fail to represent raw multi-note EHR documentation; no equivalent French benchmark identified",
+        "[WEB-18] Recent 2025 meta-analysis confirms a significant proportion of medical LLM benchmarks are constructed from academic materials rather than authentic clinical data — applicable to DrBenchmark's source composition"
+      ],
+      "evidence_dataset": [
+        "CAS-D2: dense quantified lab values typical of hospital documentation — partial register match",
+        "CAS-D20: 'narrative clinical description; more formal than raw EHR shorthand' — register gap",
+        "DEFT2021-D14: 'Standard abbreviation in complete sentence — published case report register, not raw EHR shorthand'",
+        "DIAMED-D7: case from Burkina Faso (Ouagadougou) — non-metropolitan French clinical setting",
+        "DIAMED-D8: Niger-based case",
+        "DIAMED-D9: Moroccan clinical case",
+        "MORFITT-D10: Quebec, Canada beekeeping disease management study",
+        "MORFITT-D20: Jordanian (Amman) patient population",
+        "MORFITT-D22: Arabic-population food addiction study",
+        "DEFT2020-D9: railway infrastructure content — off-domain",
+        "DEFT2020-D10: Russian historical biography with Cyrillic script — off-domain",
+        "PXCORPUS-D22: system prompt embedded in clinical NER training data — register contamination",
+        "DEFT2021-D20: Quebec French terminology ('acétaminophène' vs metropolitan 'paracétamol')"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "Q19",
+          "Q42",
+          "WEB-2",
+          "CAS-D2"
+        ],
+        "IC-2": [
+          "Q45",
+          "DIAMED-D7",
+          "DIAMED-D8",
+          "DIAMED-D9",
+          "MORFITT-D10",
+          "MORFITT-D20",
+          "MORFITT-D22",
+          "DEFT2021-D20"
+        ],
+        "IC-3": [
+          "DEFT2020-D9",
+          "DEFT2020-D10",
+          "DEFT2020-D12",
+          "DEFT2020-D13",
+          "MORFITT-D5",
+          "MORFITT-D9"
+        ],
+        "IC-4": [],
+        "IC-5": [
+          "WEB-1",
+          "WEB-18",
+          "CAS-D20",
+          "DEFT2021-D14",
+          "DIAMED-D12"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Quantitative measure of how performance on edited-register benchmarks transfers to noisy active EHR documentation in metropolitan French hospitals",
+        "Full geographic distribution across all 739 DiaMed cases (only sample-confirmed as non-metropolitan)"
+      ],
+      "requires_expert_verification": [
+        "Whether French clinical abbreviation handling (ATCD, TTT, HDJ, etc.) by models trained on DrBenchmark is sufficient for deployment without a custom normalization layer"
+      ]
+    },
+    "input_form": {
+      "score": 4,
+      "justification": "Input Form was flagged LOWER priority in elicitation, and the benchmark aligns well on this dimension. DrBenchmark is exclusively text-based in standard written French [Q31], implemented via HuggingFace Datasets, Transformers, and PyTorch [Q48], matching the deployment's text-only clinical NLP pipeline. The Latin alphabet with French diacritics is the natural encoding for both benchmark and deployment, with no script mismatch (QUAERO-D9, MANTRAGSC-D4). Tokenization behavior is investigated through average sub-token counts per word [Q75, Q89], and document splitting at sentence boundaries [Q37] mirrors typical preprocessing. Minor concerns: (1) DEFT-2020 contains a single Japanese-script example (DEFT2020-D13) which is an isolated artifact; (2) some PxCorpus examples contain ASR artifacts, garbled transcriptions, and embedded system prompts that mix register and form (PXCORPUS-D3, PXCORPUS-D22, PXCORPUS-D27); (3) CLISTER includes degenerate tabular-row inputs (CLISTER-D17) and OCR/PDF extraction artifacts like mid-word line breaks (CLISTER-D18); (4) E3C contains single-punctuation tokenization artifacts in Basque configs (E3C-D15, E3C-D16). None of these compromises the fundamental form alignment for the deployment.",
+      "strengths": [
+        "Exclusively text-only standard French aligned to deployment's text-only pipeline [Q31, Q48]",
+        "Latin alphabet with French diacritics natively supported throughout (QUAERO-D9, MANTRAGSC-D4, DEFT2021-D1)",
+        "HuggingFace/PyTorch implementation provides reproducible toolkit matching modern French biomedical NLP practice [Q48]",
+        "Tokenization investigated empirically across 8 MLMs [Q75, Q78, Q89]"
+      ],
+      "checklist_responses": {
+        "IF-1": "Both benchmark and deployment are text-only, standard written French with French diacritics. No mismatch in signal encoding.",
+        "IF-2": "Regional infrastructure (French hospital IT) supports the same UTF-8 / Latin-diacritical text encoding. HDS-certified hosting requirements [WEB-4] govern data hosting but do not affect signal form.",
+        "IF-3": "Domain-specific form: tokenization of medical compounds and abbreviations. DrBenchmark studies sub-token counts across 8 models [Q75, Q78] and finds tokenization plays a minor role in performance [Q80].",
+        "IF-4": "Minor form mismatches: DEFT-2020 contains incidental Japanese script (DEFT2020-D13); PxCorpus contains ASR artifacts and embedded system prompts (PXCORPUS-D3, PXCORPUS-D22); CLISTER contains OCR/PDF extraction noise (CLISTER-D18). These are isolated and do not threaten external validity for the deployment."
+      },
+      "evidence_quotes": [
+        "[Q31] 'While the dataset covers 5 languages, only the French portion is retained for the benchmark.' (p.3)",
+        "[Q48] 'We developed a practical toolkit based on the HuggingFace Datasets library... HuggingFace Transformers and PyTorch libraries.' (p.5)",
+        "[Q75] 'Tokenizers play a crucial role in MLMs by utilizing size-limited vocabularies to split texts into sub-units' (p.8)",
+        "[Q80] 'Yet, tokenization, as it is currently done in MLMs, seems to play a minor role in the performance of systems.' (p.8)",
+        "[Q37] 'considering that some documents from EMEA exceed the maximum input sequence length that most current language models can handle, we decided to split these documents into sentences.' (p.3)"
+      ],
+      "evidence_web_sources": [],
+      "evidence_dataset": [
+        "QUAERO-D9: standard written French medical prose — confirms script/register alignment",
+        "DEFT2020-D13: Japanese script embedded in French text — isolated form artifact",
+        "PXCORPUS-D3: garbled ASR transcription artifact ('/chet')",
+        "PXCORPUS-D22: system prompt embedded mid-utterance — form contamination",
+        "CLISTER-D18: OCR artifact 'chi miothérapie' (line break mid-word)",
+        "E3C-D15: single-punctuation tokenization artifact in Basque config"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q31",
+          "Q48",
+          "QUAERO-D9"
+        ],
+        "IF-2": [
+          "Q48"
+        ],
+        "IF-3": [
+          "Q75",
+          "Q80"
+        ],
+        "IF-4": [
+          "DEFT2020-D13",
+          "PXCORPUS-D3",
+          "PXCORPUS-D22",
+          "CLISTER-D18"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": []
+    },
+    "output_ontology": {
+      "score": 2,
+      "justification": "Output Ontology was flagged HIGH priority in elicitation due to the structural mismatch between the deployment's confidence-scored multi-label outputs with uncertainty flagging and the benchmark's standard classification metrics. The benchmark provides rich label ontologies — POS tags (CAS 31, ESSAI 36) [Q101, Q102], NER schemes (QUAERO 10 UMLS Semantic Groups [Q103, Q35], E3C clinical/temporal [Q104], DEFT-2021 14 entity types [Q108], Mantra-GSC [Q106]), DEFT-2021 23 MeSH axes [Q27], DiaMed 22 ICD-10 chapters [Q45, Q107], MorFITT 12 specialties [Q105]. DEFT-2021's NER scheme covers exactly the entity types the deployment needs (PATHOLOGY, ANATOMY, TREATMENT, DOSAGE, DURATION, FREQUENCY, MOMENT, DATE) [Q108, DEFT2021-D3, DEFT2021-D4, DEFT2021-D5]. However, multiple structural mismatches harm output ontology validity: (1) CRITICAL — no benchmark task has confidence-scored, ranked-candidate, or uncertainty-flagging outputs; DEFT-2021's specialities_one_hot is strictly binary 0/1 (DEFT2021-D11), DiaMed is single-label per case (DIAMED-D10), and DEFT-2020 averages annotator scores into a single float (DEFT2020-D16); (2) ICD-10 chapter granularity in DiaMed (22 categories) is far coarser than operational PMSI/GHM codes derived from CIM-10 FR (DIAMED-D11) [WEB-2]; (3) several datasets have output taxonomies orthogonal to the deployment's pathology classification function — CAS/ESSAI measure negation/speculation modality (CAS-D19, ESSAI-D9), FrenchMedMCQA measures answer-set selection (FRENCHMEDMCQA-D1), DEFT-2020 measures sentence similarity (DEFT2020-D14, DEFT2020-D15); (4) UMLS Semantic Group NER provides no ICD-10 sub-typing (MANTRAGSC-D10); (5) E3C French_clinical uses only binary CLINENTITY annotation, underspecifying multi-type pathology distinction (E3C-D14); (6) QUAERO and Mantra-GSC contain no temporal entity labels at all (QUAERO-D13, QUAERO-D14, MANTRAGSC-D9); (7) PxCorpus NER lacks pathology/diagnosis entities (PXCORPUS-D16). The benchmark explicitly notes that even specialized models perform poorly on MLC and STS [Q82, Q86, Q87], directly implicating the deployment's most challenging function.",
+      "strengths": [
+        "DEFT-2021 NER ontology covers all entity types the deployment requires: PATHOLOGY, ANATOMY, TREATMENT, DOSAGE, DURATION, FREQUENCY, MOMENT, DATE [Q108, DEFT2021-D3, DEFT2021-D4]",
+        "DiaMed provides ICD-10 chapter-level labels aligned with the deployment's classification ontology, the only direct ICD-10 alignment in the benchmark (DIAMED-D1, DIAMED-D2)",
+        "DEFT-2021 23 MeSH axes support multi-label structure with up to 7 concurrent labels per case (DEFT2021-D1, DEFT2021-D2)",
+        "Benchmark's own findings flag MLC/STS as poor-performance areas [Q82, Q86] — useful diagnostic signal for deployment risk"
+      ],
+      "checklist_responses": {
+        "OO-1": "Output label categories partially align: NER tag schemes (DEFT-2021, E3C temporal) cover deployment-needed entity types [Q108, Q104]; ICD-10 chapter labels in DiaMed align coarsely with PMSI mapping [Q45]; POS tag inventories match standard French biomedical morphology [Q101, Q102].",
+        "OO-2": "Missing categories: (1) confidence scores / ranked candidates / uncertainty flags — absent across all 20 tasks [Q56, DEFT2021-D11, DIAMED-D10]; (2) PMSI-granular codes — DiaMed only at chapter level (DIAMED-D11) [WEB-2]; (3) tropical/DOM-TOM-specific pathology subcategories — absent from French subsets (E3C-D4, E3C-D13); (4) pathology entities in PxCorpus NER (PXCORPUS-D16); (5) temporal labels in QUAERO and Mantra-GSC (QUAERO-D13, MANTRAGSC-D9).",
+        "OO-3": "MorFITT's 12 medical specialty labels (microbiology, surgery, pharmacology) encode research-specialty routing rather than ICD-10 diagnostic axes, and do not reflect French hospital coding conventions (MORFITT-D11, MORFITT-D21). CAS/ESSAI's negation/speculation modality measures linguistic phenomena, not pathology classification (CAS-D19, ESSAI-D9). DEFT-2020 STS continuous similarity score has no diagnostic correspondence (DEFT2020-D14).",
+        "OO-4": "A stakeholder-driven taxonomy redesign would be needed to introduce: (a) calibrated confidence scoring layer over multi-label outputs; (b) PMSI/GHM code-level granularity beyond ICD-10 chapter; (c) ranked-candidate output format with uncertainty thresholds. The deployment's Silver Standard framing requires these for clinician adjudication.",
+        "OO-5": "Structural validity is harmed by absence of confidence/uncertainty output structure [Q56, DEFT2021-D11]. Content validity is harmed by orthogonal classification labels (negation/speculation in CAS/ESSAI; STS continuous in DEFT-2020/CLISTER; pharmacy MCQA in FrenchMedMCQA) and by chapter-level rather than PMSI-level granularity [WEB-2]. The benchmark itself observes that 'biomedical tasks in DrBenchmark exhibit relatively poor performance, even when utilizing specialized biomedical models' [Q86] and 'state-of-the-art MLMs may not be the most effective choices for specific tasks such as question-answering or multi-label classification' [Q87]."
+      },
+      "evidence_quotes": [
+        "[Q27] 'The dataset is annotated with 23 axes from Chapter C of the Medical Subject Headings (MeSH).' (p.3)",
+        "[Q45] 'DiaMed... manually annotated by several annotators, one of which is a medical expert, into 22 chapters of the International Classification of Diseases, 10th Revision (ICD-10)' (p.4)",
+        "[Q56] 'The results of the 8 models are reported in Table 6 and compared to a baseline obtained by considering the majority class for all predictions.' (p.6)",
+        "[Q82] 'Upon analyzing the average performance by task category, it becomes evident that the leading model, DrBERT-FS, does not excel in tasks such as MLC or STS.' (p.8)",
+        "[Q86] 'We have observed that several biomedical tasks in DrBenchmark exhibit relatively poor performance, even when utilizing specialized biomedical models.' (p.9)",
+        "[Q87] 'state-of-the-art MLMs, may not be the most effective choices for specific tasks such as question-answering or multi-label classification.' (p.9)",
+        "[Q108] 'Named-entity recognition: O, ANATOMY, DATE, DOSAGE, DURATION, MEDICAL EXAM, FREQUENCY, MODE, MOMENT, PATHOLOGY, SOSY, SUBSTANCE, TREATMENT and VALUE' (p.14)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-2] PMSI uses GHM groupings derived from CIM-10 FR principal/secondary diagnoses + CCAM procedures + age + length of stay — substantially more granular than ICD-10 chapter labels"
+      ],
+      "evidence_dataset": [
+        "DEFT2021-D11: specialities_one_hot is strictly binary 0/1 — no confidence dimension",
+        "DIAMED-D10: multi-system case forced into single chapter — masks multi-morbidity",
+        "DIAMED-D11: ICD-10 chapter only; PMSI granular codes not evaluated",
+        "DEFT2020-D16: annotator disagreement averaged into single float — calibration signal lost",
+        "MANTRAGSC-D10: DISO undifferentiated by disease type — no ICD-10 subcategory",
+        "QUAERO-D13: temporal expressions present but unlabeled",
+        "MANTRAGSC-D9: temporal word 'récente' present, no temporal NER label exists",
+        "PXCORPUS-D16: no PATHOLOGY/DIAGNOSIS entity in tag scheme",
+        "E3C-D14: coarse two-class CLINENTITY annotation lacks pathology/anatomy/treatment distinction",
+        "CAS-D19: classification labels measure linguistic modality, not ICD-10 categories",
+        "ESSAI-D9: rich pathology content labeled only for negation/speculation",
+        "MORFITT-D21: specialty labels do not resolve to ICD-10 output"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q27",
+          "Q45",
+          "Q108",
+          "Q104",
+          "Q101",
+          "Q102",
+          "DEFT2021-D3"
+        ],
+        "OO-2": [
+          "Q56",
+          "DEFT2021-D11",
+          "DIAMED-D10",
+          "DIAMED-D11",
+          "WEB-2",
+          "QUAERO-D13",
+          "MANTRAGSC-D9",
+          "PXCORPUS-D16",
+          "E3C-D4"
+        ],
+        "OO-3": [
+          "MORFITT-D11",
+          "MORFITT-D21",
+          "CAS-D19",
+          "ESSAI-D9",
+          "DEFT2020-D14"
+        ],
+        "OO-4": [
+          "Q56",
+          "DEFT2021-D11",
+          "DIAMED-D10"
+        ],
+        "OO-5": [
+          "Q56",
+          "Q86",
+          "Q87",
+          "DEFT2021-D11",
+          "WEB-2",
+          "MORFITT-D11",
+          "CAS-D19"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether the 23 MeSH axes in DEFT-2021 map systematically to PMSI Catégories Majeures groupings"
+      ],
+      "requires_expert_verification": [
+        "Calibration thresholds appropriate for the deployment's uncertainty-flagging behavior; benchmark provides no protocol for setting these"
+      ]
+    },
+    "output_content": {
+      "score": 2,
+      "justification": "Output Content was flagged HIGH priority due to the deployment's Silver Standard framing and the explicit gap between academic NLP annotators and practicing PMSI coders/hospital clinicians. Findings strongly confirm this concern. Annotation provenance varies dramatically across the 20 datasets and is generally undocumented for clinical-coding authority. DiaMed is the only dataset with explicit IAA statistics and medical expert involvement (one expert) [Q45, Q46]; CAS POS tags are silver-standard automatic via Tagex [Q42, CAS-D15]; ESSAI POS tags are automatic via TreeTagger [Q43]; DEFT-2021's MeSH multi-label and NER annotations are described as 'manually annotated' but annotator credentials are not documented [Q25, DEFT2021-D16]; CLISTER STS scores are averaged across multiple annotators of unspecified expertise [Q41, CLISTER-D12]. Web-source confirmation: no PMSI coder or hospital coding specialist involvement is documented in any DrBenchmark constituent dataset. Multiple dataset-level findings show this matters: CLISTER-D12 ('lost to follow-up' vs. 'death at J13' rated as 1.0 similarity — clinically critical distinction underweighted by non-specialist annotators); CLISTER-D13 (clinical abbreviation 'UB' likely Buruli ulcer requires domain expertise); E3C-D11, E3C-D12 (identifiable pathogens like Nocardia asteroides and treatments left unlabeled — annotation incompleteness); CAS-D17 (annotation rationale opaque for ambiguous speculation labels); ESSAI-D14 (consecutive all-zero NER sequences despite clinically relevant content). DiaMed's annotation is further compromised for the metropolitan deployment by sub-Saharan/North African case origin (DIAMED-D7, DIAMED-D8, DIAMED-D9) — the labels reflect Pan African Medical Journal cases, not metropolitan French hospital coding. Author affiliations are exclusively academic (Nantes Université, Avignon Université, INSERM, CNRS, Université de Lille) [Q7, Q8] with no PMSI coder or hospital coding specialist representation. The deployment's explicit annotator-vs-user gap concern is fully confirmed.",
+      "strengths": [
+        "DiaMed provides documented IAA with Cohen's Kappa and Gwet's AC1 across two annotation sessions and explicit medical-expert involvement [Q45, Q46]",
+        "DEFT-2021 is described as manually annotated for both MLC and NER tasks [Q25]",
+        "CAS Tagex automatic POS annotations were validated against manual annotations at 98% precision [Q42] — partial quality assurance",
+        "Benchmark authors include clinical-affiliated institutions (CHU Nantes, Service de Neuroradiologie, l'institut du thorax) [Q8] indicating clinical proximity even if not PMSI-coder authority"
+      ],
+      "checklist_responses": {
+        "OC-1": "Ground-truth labels do not reflect practicing PMSI coder or hospital clinical coding specialist perspectives. The single documented medical expert is in DiaMed [Q45], whose cases are non-metropolitan (DIAMED-D7, DIAMED-D8). Labels reflect academic NLP annotator judgment, not the operational hospital coding population whose authority the deployer requires.",
+        "OC-2": "Significant disagreement potential. Examples: CLISTER-D12 (clinically distinct outcomes 'lost to follow-up' vs. 'death' rated as low similarity but clinical significance is asymmetric); CLISTER-D13 ('UB' abbreviation requires domain expertise non-specialist annotators may lack); E3C-D11, E3C-D12 (pathogens and treatments left unlabeled — practicing clinicians would likely tag these). Documented PMSI coding quality concerns [WEB-19, WEB-20] independently confirm that even within practicing coder populations, ICD coding has documented inter-coder variability.",
+        "OC-3": "Annotator demographics are minimally documented. Author affiliations [Q7, Q8] are academic NLP and clinical research institutions; no Datasheet or Data Statement at annotator level is published for most constituent datasets. CAS uses automatic Tagex annotations [Q42, CAS-D15]. ESSAI uses automatic TreeTagger [Q43]. DEFT-2021 MeSH annotation provenance is described only as 'manually annotated' [Q25, DEFT2021-D16]. CLISTER documents 'several annotators' without expertise breakdown [Q41, CLISTER-D12].",
+        "OC-4": "Re-annotation by a representative regional pool (PMSI coders + hospital clinicians) is recommended for at least DEFT-2021 (the deployment's most aligned multi-label task) and DiaMed (the only ICD-10-labeled task). The deployment's Silver Standard framing implicitly already plans for clinician adjudication; the benchmark itself does not provide labels validated by this population.",
+        "OC-5": "Aggregation methods erase minority perspectives. CLISTER averages multi-annotator similarity into a single float [Q41, DEFT2020-D16]; CAS and ESSAI use silver-standard automatic POS tags with no human disagreement signal [CAS-D15]; DiaMed's IAA captures inter-annotator agreement but final labels are not multi-label or confidence-scored (DIAMED-D10). The aggregation discards the very disagreement signal that could inform deployment uncertainty flagging.",
+        "OC-6": "Convergent validity is harmed: labels do not correlate with PMSI coder or hospital clinician judgments in documented form. External validity is harmed: judgments by academic NLP annotators on edited published cases are not expected to generalize to active hospital coding by certified coders. Documented PMSI coding quality concerns [WEB-19] reinforce that even mapping to practicing-coder-equivalent labels is non-trivial."
+      },
+      "evidence_quotes": [
+        "[Q42] 'CAS... annotated for POS tagging with 31 classes using automatic annotations through Tagex 3, with an evaluation conducted by comparing the automatic outputs against manual annotations. This evaluation yielded 98% precision.' (p.4)",
+        "[Q45] 'DiaMed... manually annotated by several annotators, one of which is a medical expert, into 22 chapters of the International Classification of Diseases, 10th Revision (ICD-10)... The inter-annotator agreement between the 4 annotators has been computed for two annotation sessions' (p.4)",
+        "[Q46] 'Inter-annotator agreement statistics. κ is referring to Kappa Cohen and G to Gwet's AC1.' (p.4)",
+        "[Q41] 'CLISTER... 1,000 sentence pairs manually annotated by several annotators, who assigned similarity scores ranging from 0 to 5 to each pair. The scores were then averaged together to obtain a floating-point number' (p.4)",
+        "[Q25] 'This dataset is manually annotated in two tasks: (i) multi-label classification and (ii) NER.' (p.3)",
+        "[Q8] 'LIA, Avignon Université, Zenidoc, Nantes Université, CHU Nantes, Clinique des données, INSERM, CIC 1413, École Centrale Nantes, CNRS, LS2N, UMR 6004, Service de Neuroradiologie diagnostique et interventionnelle, l'institut du thorax, UMR 8163 – STL CNRS, Université de Lille' (p.1)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-19] PMSI-MCO bacterial resistance study: ICD coding quality is unequal and some disease categories cannot be reliably characterized from PMSI coding alone, partly due to initial coding errors",
+        "[WEB-20] French PMSI bacterial resistance study (ScienceDirect 2018): documented inconsistencies between infection types, causative agents, and resistance codes attributed to initial coding errors"
+      ],
+      "evidence_dataset": [
+        "CAS-D15: silver-standard label provenance for POS config (Tagex automatic, 98% precision)",
+        "CAS-D17: 'Cholstat ® 0.1' labeled as speculation with no apparent epistemic marker; annotation rationale opaque",
+        "DEFT2021-D16: annotator PMSI credentials undocumented for complex multi-drug cases",
+        "CLISTER-D12: 'Le patient a été perdu de vue' vs 'Le patient décède à J13' rated low similarity; clinically significant distinction may be underweighted by non-specialists",
+        "CLISTER-D13: 'UB' abbreviation (likely Buruli ulcer) requires domain expertise for reliable similarity annotation",
+        "E3C-D11: 'Nocardia asteroides' (pathogen) not tagged as CLINENTITY — suggests annotation incompleteness",
+        "E3C-D12: 'leucémie aigue myéloblastique' untagged — annotation completeness concern",
+        "ESSAI-D12: only 'atteinte ganglionnaire' tagged in negation NER; annotation completeness undocumented",
+        "ESSAI-D14: consecutive all-zero NER sequences despite clinically relevant content",
+        "DEFT2020-D16: annotator disagreement (4.5 vs 0.0) averaged into single score — calibration signal lost",
+        "DIAMED-D7: case from Burkina Faso — non-metropolitan PMSI coding context",
+        "DIAMED-D8: Niger-based case",
+        "DIAMED-D9: Moroccan clinical case"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q45",
+          "Q8",
+          "DIAMED-D7",
+          "DIAMED-D8"
+        ],
+        "OC-2": [
+          "CLISTER-D12",
+          "CLISTER-D13",
+          "E3C-D11",
+          "E3C-D12",
+          "WEB-19",
+          "WEB-20"
+        ],
+        "OC-3": [
+          "Q7",
+          "Q8",
+          "Q41",
+          "Q42",
+          "Q43",
+          "Q25",
+          "CAS-D15",
+          "DEFT2021-D16"
+        ],
+        "OC-4": [
+          "Q45",
+          "DEFT2021-D16"
+        ],
+        "OC-5": [
+          "Q41",
+          "DEFT2020-D16",
+          "CAS-D15",
+          "DIAMED-D10"
+        ],
+        "OC-6": [
+          "Q45",
+          "WEB-19",
+          "CLISTER-D12",
+          "E3C-D11"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Specific clinical credentials of the 'medical expert' in DiaMed annotation [Q45]",
+        "DEFT-2021 competition annotator demographic breakdown not published in benchmark documentation"
+      ],
+      "requires_expert_verification": [
+        "Empirical inter-annotator agreement between DrBenchmark labels and a sample of PMSI-coder re-annotations on a representative metropolitan French hospital subset"
+      ]
+    },
+    "output_form": {
+      "score": 2,
+      "justification": "Output Form was flagged MODERATE priority. The benchmark uses well-defined, reproducible scoring protocols: SeqEval with IOB2 format and first-token prediction for sequence labeling [Q52, Q53], Spearman correlation and EDRM for STS [Q54], standard classification metrics with majority-class baselines [Q56], 4-run averaging with Student's t-test [Q51], and full hyperparameter documentation [Q49, Q99, Q100]. These are well-matched to typical NER/POS/MLC pipeline outputs (E3C-D5, E3C-D6 confirm IOB2 alignment). However, the deployment requires three output forms the benchmark does not measure: (1) confidence-scored multi-label outputs, (2) uncertainty flagging for high-uncertainty entities, (3) ranked candidate lists for multi-morbid case adjudication. None of these is directly evaluable within the benchmark's scoring framework — DEFT-2021 uses binary 0/1 one-hot label vectors (DEFT2021-D11), DiaMed uses single-label per case (DIAMED-D10), and STS averages annotator scores discarding disagreement signal (DEFT2020-D16, CLISTER-D8). Several datasets exhibit severe class imbalance that masks minority-class performance under standard metrics: PxCorpus medical_prescription ~89% vs replace <1% and negate ~2% (PXCORPUS-D14, PXCORPUS-D15); CAS cls neutral ~74% (CAS-D21); ESSAI cls neutral ~77% (ESSAI-D13). For prescription correction intents and clinical negation/speculation distinctions, standard accuracy will hide deployment-relevant failure modes. The benchmark's finding that 'all the models based on CamemBERT face difficulties in corpora with limited amount of data, such as MantraGSC Patents, where they fail to generate labels other than O' [Q73] is itself a manifestation of how standard metrics interact with imbalance. The output form is structurally aligned for sequence-labeling and standard classification but does not measure the calibration/uncertainty/ranking behavior central to the deployment.",
+      "strengths": [
+        "Reproducible unified protocol: 4-run averaging, Student's t-test significance, hyperparameters in appendix [Q51, Q99, Q100]",
+        "Tokenizer-agnostic SeqEval IOB2 evaluation aligns with standard NER pipeline output formats [Q52, Q53, E3C-D5, E3C-D6]",
+        "MIT-licensed code release supports deployment-side audit and reproducibility [Q95]",
+        "Explicit majority-class baselines provide a floor for classification performance interpretation [Q56]"
+      ],
+      "checklist_responses": {
+        "OF-1": "Output modality is text labels and sequence tags, matching deployment NLP outputs. However, the deployment additionally requires confidence scores, uncertainty flags, and ranked candidates — none of which are directly evaluated. The deployer's specified multi-label-with-confidence output behavior is not measurable with the current scoring framework [Q56, DEFT2021-D11].",
+        "OF-2": "Not applicable — deployment is text-based with no speech output requirement.",
+        "OF-3": "Not directly applicable — primary users (clinicians, nursing staff) have high domain expertise [elicitation Q2]; literacy is not a concern.",
+        "OF-4": "External validity is harmed by absence of confidence calibration, uncertainty flagging, and ranked-candidate scoring (DEFT2021-D11, DIAMED-D10, DEFT2020-D16). Severe class imbalance in CAS, ESSAI, and PxCorpus (CAS-D21, ESSAI-D13, PXCORPUS-D15) means standard accuracy can mask poor minority-class performance on clinically critical correction intents and rare ICD-10 chapters. The benchmark's own observation that CamemBERT models produce only 'O' labels in low-resource scenarios [Q73] illustrates this mode of evaluation failure."
+      },
+      "evidence_quotes": [
+        "[Q51] 'All the models are fine-tuned regarding a strict protocol using the same hyperparameters for each downstream task. The reported results are obtained by averaging the scores from four separate runs... We also report statistical significance computed using Student's t-test.' (p.5)",
+        "[Q52] 'we chose the SeqEval (Nakayama, 2018) metric in conjunction with the IOB2 format and the training of all the models to predict only the label on the first token of each word' (p.6)",
+        "[Q54] 'For STS tasks, the models' performance was assessed using two metrics: (1) the Spearman correlation, and (2) the mean relative solution distance accuracy (EDRM)' (p.6)",
+        "[Q56] 'compared to a baseline obtained by considering the majority class for all predictions.' (p.6)",
+        "[Q73] 'all the models based on CamemBERT face difficulties in corpora with limited amount of data, such as MantraGSC Patents, where they fail to generate labels other than O.' (p.7)"
+      ],
+      "evidence_web_sources": [],
+      "evidence_dataset": [
+        "DEFT2021-D11: specialities_one_hot strictly binary 0/1 — no confidence dimension",
+        "DIAMED-D10: single-label forced choice for inherently multi-morbid case",
+        "DEFT2020-D16: annotator disagreement averaged into single float — calibration signal discarded",
+        "CLISTER-D8: continuous label gradient present but no calibration metric reported",
+        "PXCORPUS-D14: ambiguity in minority 'negate' class with no confidence ranking",
+        "PXCORPUS-D15: severe class imbalance — negate=11, replace=3 in 500 sampled — masks minority-class performance",
+        "CAS-D21: heavy class imbalance with neutral dominating ~74%",
+        "ESSAI-D13: trivially neutral sentences inflate neutral class to ~77%",
+        "E3C-D5: IOB2 multi-token entity span — confirms NER output form alignment with SeqEval"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q56",
+          "DEFT2021-D11",
+          "DIAMED-D10"
+        ],
+        "OF-2": [],
+        "OF-3": [],
+        "OF-4": [
+          "Q56",
+          "Q73",
+          "DEFT2021-D11",
+          "DEFT2020-D16",
+          "PXCORPUS-D15",
+          "CAS-D21",
+          "ESSAI-D13"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Per-class F1 (not just macro/aggregate) and calibration curves are not reported in the benchmark for the deployment-critical minority classes"
+      ],
+      "requires_expert_verification": [
+        "What calibration thresholds (ECE, Brier score, AUROC per label) are operationally adequate for the deployer's clinician-adjudication workflow"
+      ]
+    }
+  },
+  "overall_summary": "DrBenchmark is the most comprehensive French biomedical NLP benchmark available and provides genuine partial coverage for the Metropolitan French hospital clinical NLP deployment, particularly through DEFT-2021 (multi-label MeSH classification + rich NER with temporal entities), CAS and CLISTER (clinical-case French), and DiaMed (only ICD-10 chapter-level labels with documented IAA and medical-expert involvement). Input Form is well aligned (text-only standard French, Latin diacritics, HuggingFace toolkit). However, four of the six dimensions show significant validity concerns for this deployment: Input Content (score 2) — no raw-EHR register, substantial non-metropolitan content in DiaMed and MorFITT, register systematically cleaner than active hospital notes; Output Ontology (score 2) — no confidence-scored / ranked-candidate / uncertainty-flagging output structure, ICD-10 chapter granularity coarser than operational PMSI/GHM codes, several datasets with orthogonal labels (negation/speculation, pharmacy MCQA); Output Content (score 2) — no documented PMSI coder or hospital coding specialist involvement in any constituent dataset, automatic silver-standard POS annotations in CAS/ESSAI, annotation completeness concerns in E3C and ESSAI; Output Form (score 2) — standard F1/Spearman/SeqEval cannot measure the deployment's required confidence calibration and uncertainty flagging behavior, severe class imbalance in CAS/ESSAI/PxCorpus masks minority-class performance. Input Ontology scores 3 due to broad task coverage but with several irrelevant categories (pharmacy exam, veterinary, encyclopedic) consuming evaluation weight. The deployment's elicitation-flagged HIGH-priority concerns (IC, OO, OC) all map to validity scores of 2.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "DrBenchmark measures core French biomedical language understanding capabilities — POS tagging, clinical and temporal NER, multi-label clinical-profile classification, semantic textual similarity, and intent classification — across 8 state-of-the-art masked language models with reproducible 4-run averaged metrics. For the deployment, the strongest constructs measured are: (1) French clinical NER for pathology, anatomy, treatment, dosage, and temporal entities (via DEFT-2021's 14-type scheme and E3C temporal annotations); (2) multi-label classification capacity across MeSH and ICD-10 chapter axes (via DEFT-2021 and DiaMed); (3) POS tagging on French clinical case text (via CAS).",
+    "construct_depth": "Construct depth is shallow-to-moderate for the deployment's core functions. Input Form (4) and Input Ontology (3) provide reasonable construct coverage, but the four dimensions most consequential to the deployment — Input Content, Output Ontology, Output Content, Output Form — all score 2. The benchmark provides binary or single-label evaluation only; the deployment's required confidence-scored multi-label outputs with uncertainty flagging is structurally unmeasurable. Annotation authority for the deployment-critical ICD-10/PMSI mapping function rests on a single medical expert in one non-metropolitan dataset (DiaMed). Aggregate scores conflate clinically relevant tasks with off-domain content (pharmacy exam, veterinary, encyclopedic STS pairs).",
+    "supplementation_needed": "Three concrete supplementation streams are needed before deployment-relevant evaluation conclusions can be drawn: (1) Custom calibration evaluation — calibration curves, ECE, Brier scores, per-label AUROC, and ranked-candidate quality metrics on DEFT-2021 and DiaMed multi-label outputs (addresses OO/OF gaps); (2) Re-annotation by certified PMSI coders on a held-out metropolitan French hospital subset to validate label authority for ICD-10/PMSI mapping (addresses OC gap and the elicitation-flagged annotator-vs-user gap); (3) Construction or curation of a moderate-noise active-hospital-note evaluation set with French clinical abbreviations (ATCD, TTT, HDJ) and dictation artifacts to assess register-transfer performance (addresses IC gap, since web search confirms no French raw-EHR benchmark exists [WEB-1, WEB-18]). Aggregate DrBenchmark scores should be decomposed task-by-task and filtered to exclude FrenchMedMCQA, MorFITT veterinary content, and DEFT-2020 off-domain encyclopedic pairs when interpreting deployment-relevant signal."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_content",
+      "gap": "No DrBenchmark dataset uses raw active-hospital EHR notes; benchmark sources are systematically cleaner than the deployment's moderately noisy hospital documentation, and DiaMed/MorFITT introduce non-metropolitan content (Burkina Faso, Niger, Morocco, Quebec, Jordan, Saudi Arabia)",
+      "recommendation": "Construct a deployment-internal validation set of metropolitan French hospital notes (with appropriate HDS-certified hosting [WEB-4]) annotated by hospital coders, sized for stratified evaluation across PMSI Catégories Majeures. Filter MorFITT and DiaMed evaluation results to exclude non-metropolitan cases when reporting deployment-relevant performance."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "No benchmark task evaluates confidence-scored multi-label outputs, uncertainty flagging, or ranked-candidate quality — the deployment's central output behavior is structurally unmeasurable; ICD-10 chapter granularity is coarser than operational PMSI/GHM codes",
+      "recommendation": "Extend the DrBenchmark protocol on DEFT-2021 and DiaMed with calibration metrics (Expected Calibration Error, Brier score, per-label AUROC, top-k ranked-candidate F1). Build a supplementary PMSI-code-level evaluation set using a hospital-internal stratified sample mapped to CIM-10 FR / GHM groupings per ATIH 2024 guidance [WEB-2]."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "No DrBenchmark dataset documents PMSI coder or hospital coding specialist annotation; only DiaMed has one medical expert; CAS/ESSAI POS tags are silver-standard automatic; CLISTER and E3C show domain-expertise concerns and annotation incompleteness",
+      "recommendation": "Recruit certified PMSI coders to re-annotate a representative subset of DEFT-2021 multi-label cases and DiaMed ICD-10 assignments. Compute Cohen's Kappa / Gwet's AC1 between PMSI-coder labels and benchmark labels to quantify the annotation-authority gap explicitly. Use the disagreement signal as a calibration target for the deployment's uncertainty-flagging behavior."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "Standard F1/Spearman/SeqEval scoring with majority-class baselines cannot measure calibration, uncertainty flagging, or ranked-candidate behavior; severe class imbalance in CAS/ESSAI/PxCorpus masks minority-class performance",
+      "recommendation": "Augment the benchmark's reporting with per-class F1, calibration plots, and ECE for all classification tasks. For PxCorpus minority classes (negate, replace) and CAS/ESSAI non-neutral labels, report F1 explicitly stratified by class to surface clinically critical failure modes in prescription correction and negation detection."
+    },
+    {
+      "dimension": "input_ontology",
+      "gap": "Several DrBenchmark tasks contribute construct-irrelevant variance to aggregate scores — FrenchMedMCQA pharmacy exam (chemistry/economics), MorFITT veterinary content, DEFT-2020 encyclopedic pairs",
+      "recommendation": "When interpreting DrBenchmark performance for this deployment, decompose aggregate scores task-by-task and weight DEFT-2021 (NER + MLC), CAS (POS + clinical case register), CLISTER (clinical STS), and E3C French_temporal as deployment-relevant; treat FrenchMedMCQA, MorFITT veterinary subsets, and DEFT-2020 encyclopedic content as low-relevance signal for aggregate interpretation."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "French clinical abbreviations (ATCD, TTT, HDJ, etc.) characteristic of hospital notes are under-represented in benchmark sources",
+      "recommendation": "Build a custom abbreviation expansion / normalization layer using French hospital coding documentation (CI-SIS / ANS standards) and validate it against held-out hospital notes before relying on DrBenchmark-trained models for production NER outputs."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "output_content",
+    "output_ontology",
+    "input_content",
+    "output_form"
+  ],
+  "strongest_dimensions": [
+    "input_form",
+    "input_ontology"
+  ]
+}

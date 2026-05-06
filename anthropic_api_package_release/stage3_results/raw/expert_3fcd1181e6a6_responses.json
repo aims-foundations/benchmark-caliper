@@ -1,0 +1,1972 @@
+{
+  "responses": [
+    {
+      "responseId": "REDACTED",
+      "createTime": "2026-05-05T04:37:07.431Z",
+      "lastSubmittedTime": "2026-05-05T04:37:07.431303Z",
+      "respondentEmail": "expert_3fcd1181e6a6@anonymous.invalid",
+      "answers": {
+        "73a3c923": {
+          "questionId": "73a3c923",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "0ebab002": {
+          "questionId": "0ebab002",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "50823c1d": {
+          "questionId": "50823c1d",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "637d663a": {
+          "questionId": "637d663a",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "As mentioned in the comments, I believe a UI would be definitively useful for practitioners! In some assessments, I felt that the same concern/issue was repeated at different dimensions and it felt a bit predictable/repetitive.\nI personally felt a bit biased towards trusting assessments that listed valid and accurate web sources that complemented and supported the analysis. Although, after finding a source that was not adequately used, I started to pay more attention to the type of evidence used."
+              }
+            ]
+          }
+        },
+        "64c6b85a": {
+          "questionId": "64c6b85a",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "58bc909f": {
+          "questionId": "58bc909f",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "2 — Disagree"
+              }
+            ]
+          }
+        },
+        "57d1b63d": {
+          "questionId": "57d1b63d",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "47be44f8": {
+          "questionId": "47be44f8",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "70108423": {
+          "questionId": "70108423",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "3 — Neutral"
+              }
+            ]
+          }
+        },
+        "7e864f06": {
+          "questionId": "7e864f06",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Overconfident"
+              }
+            ]
+          }
+        },
+        "00c1b317": {
+          "questionId": "00c1b317",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "The checklist has some evidences not used in the items/justifications (WEB-21, Q106)\nIt would be useful to have some sort of interpretation of the scores to better understand what makes a benchmark and use cases more suitable"
+              }
+            ]
+          }
+        },
+        "2ff85bd6": {
+          "questionId": "2ff85bd6",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "51a58c17": {
+          "questionId": "51a58c17",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "3 — Neutral"
+              }
+            ]
+          }
+        },
+        "101ce861": {
+          "questionId": "101ce861",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "649a9921": {
+          "questionId": "649a9921",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "4a4bcce5": {
+          "questionId": "4a4bcce5",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "02bea0f4": {
+          "questionId": "02bea0f4",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "7733e23d": {
+          "questionId": "7733e23d",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "0491605c": {
+          "questionId": "0491605c",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "31c942af": {
+          "questionId": "31c942af",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "4b047103": {
+          "questionId": "4b047103",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "370bb9b4": {
+          "questionId": "370bb9b4",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "6edac68c": {
+          "questionId": "6edac68c",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "0035b227": {
+          "questionId": "0035b227",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "41799a6a": {
+          "questionId": "41799a6a",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "2f8ff4e9": {
+          "questionId": "2f8ff4e9",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "CRISISLTLSUM should score higher than CNN_DAILYMAIL_RC"
+              }
+            ]
+          }
+        },
+        "60004067": {
+          "questionId": "60004067",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "44b9fa10": {
+          "questionId": "44b9fa10",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "61f96f11": {
+          "questionId": "61f96f11",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "4b62a31f": {
+          "questionId": "4b62a31f",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "14c746f5": {
+          "questionId": "14c746f5",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "3c04cc53": {
+          "questionId": "3c04cc53",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "3 — Neutral"
+              }
+            ]
+          }
+        },
+        "0e75f2e8": {
+          "questionId": "0e75f2e8",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "4cf0ed12": {
+          "questionId": "4cf0ed12",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "3 — Neutral"
+              }
+            ]
+          }
+        },
+        "4f4b2027": {
+          "questionId": "4f4b2027",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "37f81e3b": {
+          "questionId": "37f81e3b",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "3 — Neutral"
+              }
+            ]
+          }
+        },
+        "3aadc8e7": {
+          "questionId": "3aadc8e7",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "56917a76": {
+          "questionId": "56917a76",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "CRISISLTLSUM should score higher than CNN_DAILYMAIL_RC"
+              }
+            ]
+          }
+        },
+        "61332ef9": {
+          "questionId": "61332ef9",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "No — but it confirmed my existing concerns"
+              }
+            ]
+          }
+        },
+        "36ee9a06": {
+          "questionId": "36ee9a06",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "4920ecae": {
+          "questionId": "4920ecae",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "62fbe93a": {
+          "questionId": "62fbe93a",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "597cc8f5": {
+          "questionId": "597cc8f5",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "- Annotation inconsistencies found with specific examples\n- Slightly related, consideration of benchmark accessibility in terms of computational resources    "
+              }
+            ]
+          }
+        },
+        "2452ae2f": {
+          "questionId": "2452ae2f",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "1f0aa7e3": {
+          "questionId": "1f0aa7e3",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "CRISISLTLSUM should score higher than CNN_DAILYMAIL_RC"
+              }
+            ]
+          }
+        },
+        "2a55f7f4": {
+          "questionId": "2a55f7f4",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "04909176": {
+          "questionId": "04909176",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "4ced8783": {
+          "questionId": "4ced8783",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "63ff80ef": {
+          "questionId": "63ff80ef",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "4e70726a": {
+          "questionId": "4e70726a",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "2f4829ec": {
+          "questionId": "2f4829ec",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "79a633df": {
+          "questionId": "79a633df",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "54488915": {
+          "questionId": "54488915",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "7f24695b": {
+          "questionId": "7f24695b",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "4e69e454": {
+          "questionId": "4e69e454",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "2885c541": {
+          "questionId": "2885c541",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "23feb592": {
+          "questionId": "23feb592",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "2b929aca": {
+          "questionId": "2b929aca",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "7c20b385": {
+          "questionId": "7c20b385",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "7ab5169e": {
+          "questionId": "7ab5169e",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "0fbc7a17": {
+          "questionId": "0fbc7a17",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "CRISISLTLSUM should score higher than CNN_DAILYMAIL_RC"
+              }
+            ]
+          }
+        },
+        "1650ee8d": {
+          "questionId": "1650ee8d",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "I think the assessment highlights a format mismatch between the benchmark data and the use case output format (e.g. reporting structure from UN OCHA documents), which is a problem other use cases would have. This issue is hard to address unless a specific benchmark for the use case is developed. I would focus more on the content and less on stylistic genre-convention: \"(numbered bullets, standardized headers, parroquia-level\ndamnificado figures)\". In other words, if the content is there in the output summary, a follow up stage could focus on reformatting the output. \nAs a minor comment, I believe the term \"parroquia-level damnificado\" is an hallucinations or super specific example that I would not expect in this type of document"
+              }
+            ]
+          }
+        },
+        "1b95fcb6": {
+          "questionId": "1b95fcb6",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "74d5b109": {
+          "questionId": "74d5b109",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "WEB-3 not used in the checklist"
+              }
+            ]
+          }
+        },
+        "295978a8": {
+          "questionId": "295978a8",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "22c6ddc1": {
+          "questionId": "22c6ddc1",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "4153c701": {
+          "questionId": "4153c701",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "5568d38c": {
+          "questionId": "5568d38c",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "71403e2e": {
+          "questionId": "71403e2e",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "40ef597b": {
+          "questionId": "40ef597b",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "293215eb": {
+          "questionId": "293215eb",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "32b65607": {
+          "questionId": "32b65607",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "6ebb5cf7": {
+          "questionId": "6ebb5cf7",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "71abd246": {
+          "questionId": "71abd246",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "3 — Neutral"
+              }
+            ]
+          }
+        },
+        "1a702589": {
+          "questionId": "1a702589",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "04335a85": {
+          "questionId": "04335a85",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "5adc8bd4": {
+          "questionId": "5adc8bd4",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "3cdb9c6b": {
+          "questionId": "3cdb9c6b",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "6fb4cae6": {
+          "questionId": "6fb4cae6",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "1a3d8bad": {
+          "questionId": "1a3d8bad",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "4ae65487": {
+          "questionId": "4ae65487",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Yes — one or two"
+              }
+            ]
+          }
+        },
+        "6a109890": {
+          "questionId": "6a109890",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "12fbc791": {
+          "questionId": "12fbc791",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Starting point that needs substantial revision"
+              }
+            ]
+          }
+        },
+        "50d6b0b1": {
+          "questionId": "50d6b0b1",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "5c68cc49": {
+          "questionId": "5c68cc49",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "6ff2fecd": {
+          "questionId": "6ff2fecd",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "03492396": {
+          "questionId": "03492396",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "1bd30fb8": {
+          "questionId": "1bd30fb8",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "21f746ff": {
+          "questionId": "21f746ff",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "2a3152b1": {
+          "questionId": "2a3152b1",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "There was an ambiguity In the deployment context, the use case focuses on 'news' but in the target user sections other channels are mentioned: \"social media, press\". These benchmarks cover different channels and maybe this is not a fair comparison. \nWXIMPACTBENCH focuses and news and CRISISBENCH on social media, both having validity concerns for this use case that are well explained in the comparison. "
+              }
+            ]
+          }
+        },
+        "3f0265d9": {
+          "questionId": "3f0265d9",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "No — but it confirmed my existing concerns"
+              }
+            ]
+          }
+        },
+        "79074bbd": {
+          "questionId": "79074bbd",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "67055b02": {
+          "questionId": "67055b02",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "6ab7f55a": {
+          "questionId": "6ab7f55a",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "6da47333": {
+          "questionId": "6da47333",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "2bcc653d": {
+          "questionId": "2bcc653d",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "6850eb12": {
+          "questionId": "6850eb12",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "6a0d7f3a": {
+          "questionId": "6a0d7f3a",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "381f280e": {
+          "questionId": "381f280e",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "The information gap focused on a very specific regular and well-known event (ENSO/El Niño). I was expecting this assessment to rely on external sources for disaster reporting/misinformation in Argentina to justify its justifications."
+              }
+            ]
+          }
+        },
+        "5555aa2c": {
+          "questionId": "5555aa2c",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "380246d6": {
+          "questionId": "380246d6",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "4fa8dbea": {
+          "questionId": "4fa8dbea",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "7b837490": {
+          "questionId": "7b837490",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "6262bf5a": {
+          "questionId": "6262bf5a",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "272893f8": {
+          "questionId": "272893f8",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "122fae26": {
+          "questionId": "122fae26",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Starting point that needs substantial revision"
+              }
+            ]
+          }
+        },
+        "0548512f": {
+          "questionId": "0548512f",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "6847c3cb": {
+          "questionId": "6847c3cb",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "370b54c1": {
+          "questionId": "370b54c1",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "0fabe87c": {
+          "questionId": "0fabe87c",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "795e882b": {
+          "questionId": "795e882b",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "4292c267": {
+          "questionId": "4292c267",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "2f816526": {
+          "questionId": "2f816526",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "None. Minor comment, this is probably a bug: \"elicitation IF-priority=LOWER].\""
+              }
+            ]
+          }
+        },
+        "2e99b1ec": {
+          "questionId": "2e99b1ec",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "669f3442": {
+          "questionId": "669f3442",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "56454ee8": {
+          "questionId": "56454ee8",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "673d22e1": {
+          "questionId": "673d22e1",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "27386b0f": {
+          "questionId": "27386b0f",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "63e6a7f3": {
+          "questionId": "63e6a7f3",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "002af0b1": {
+          "questionId": "002af0b1",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "CRISISLTLSUM should score higher than CNN_DAILYMAIL_RC"
+              }
+            ]
+          }
+        },
+        "213271ef": {
+          "questionId": "213271ef",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "3e776717": {
+          "questionId": "3e776717",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "I think an interactive interface to review and verify the assessment would be very helpful, especially if experts from different backgrounds analyzed the documents together. For example, someone with a more technical background could check and validate the sources/recommendations (for example, see the comment left above about https://arxiv.org/pdf/2007.05848). Probably practitioners/users might need more contextualized explanations about some terminologies (e.g. sacreROUGE). I can imagine that in some contexts a technical profile/expert might not be available. I wonder how this tool could help in those cases. If available for limited time, I definitively believe this assessment would accelerate a manual expert review."
+              }
+            ]
+          }
+        },
+        "311e263f": {
+          "questionId": "311e263f",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "223f5676": {
+          "questionId": "223f5676",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "3 — Neutral"
+              }
+            ]
+          }
+        },
+        "317781cc": {
+          "questionId": "317781cc",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "72dc08b9": {
+          "questionId": "72dc08b9",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "1c6adb1d": {
+          "questionId": "1c6adb1d",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "3 — Neutral"
+              }
+            ]
+          }
+        },
+        "1dfe87a2": {
+          "questionId": "1dfe87a2",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "3 — Neutral"
+              }
+            ]
+          }
+        },
+        "62ac5809": {
+          "questionId": "62ac5809",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "778ec996": {
+          "questionId": "778ec996",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "4fdbd6e8": {
+          "questionId": "4fdbd6e8",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "590abe0a": {
+          "questionId": "590abe0a",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "3d3c66a5": {
+          "questionId": "3d3c66a5",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "415e92ba": {
+          "questionId": "415e92ba",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "The remediation section cites the a \"#Verificado19S model\" but this paper is a user study without any model development."
+              }
+            ]
+          }
+        },
+        "29be0565": {
+          "questionId": "29be0565",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "2 — Disagree"
+              }
+            ]
+          }
+        },
+        "7ba4e159": {
+          "questionId": "7ba4e159",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Overconfident"
+              }
+            ]
+          }
+        },
+        "4015a08e": {
+          "questionId": "4015a08e",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "4bddba16": {
+          "questionId": "4bddba16",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "The assessment refers to \"villa miseria\" in the same way its refers to other major issues that are much more concerning \"Major content issues: zero Spanish-language content; zero Argentine geography; zero villa miseria framing; zero social\nmedia content;\". "
+              }
+            ]
+          }
+        },
+        "3ce242a9": {
+          "questionId": "3ce242a9",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "14e7fcc1": {
+          "questionId": "14e7fcc1",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "33331218": {
+          "questionId": "33331218",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "6beb6349": {
+          "questionId": "6beb6349",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "0af08a9f": {
+          "questionId": "0af08a9f",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "493a4c68": {
+          "questionId": "493a4c68",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "4d286e0c": {
+          "questionId": "4d286e0c",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "34ffcefe": {
+          "questionId": "34ffcefe",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "2f7e8900": {
+          "questionId": "2f7e8900",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "The information gaps mentioned are at different levels of relevance. \"• No Spanish crisis-summarization reference dataset exists to enable bilingual evaluation construction\" is the main one, an at a minor level \"Operationalizable AP Español rubric criteria not openly accessible\""
+              }
+            ]
+          }
+        },
+        "304da15b": {
+          "questionId": "304da15b",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "2e504d48": {
+          "questionId": "2e504d48",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "4da64570": {
+          "questionId": "4da64570",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "3f3bfa1f": {
+          "questionId": "3f3bfa1f",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "2 — Disagree"
+              }
+            ]
+          }
+        },
+        "16089d9b": {
+          "questionId": "16089d9b",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "3de9083c": {
+          "questionId": "3de9083c",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "68f2284f": {
+          "questionId": "68f2284f",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "I believe this assessment and all the documents would be highly useful as a starting point of discussion/analysis for interdisciplinary roundtables. In my experience in applied domains, the instances where experts meets for in-depth analysis on how to evaluate/design tools for specific use cases are quite limited."
+              }
+            ]
+          }
+        },
+        "26e387d8": {
+          "questionId": "26e387d8",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "22c66c76": {
+          "questionId": "22c66c76",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "3 — Neutral"
+              }
+            ]
+          }
+        },
+        "2f5b00e2": {
+          "questionId": "2f5b00e2",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "0e237a06": {
+          "questionId": "0e237a06",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "I believe the document gives more weight to concerns related to Kichwa than I'd expect. These communities would use their language mainly to connect among them, and not that much to report a disaster-related problem. In such cases, I'd expect them to use Spanish since this is the official language responders and authorities would understand. This would be the case for platforms such as Twitter, that are used as broadcasters. But on Facebook I can imagine finding more Kichwa/Shear groups/communities where they actually write in this language. I'd emphasize the limit more due to the lack of the Ecuadorian lexicon, local name entities and locations."
+              }
+            ]
+          }
+        },
+        "6bcdb4e5": {
+          "questionId": "6bcdb4e5",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "643aaf4a": {
+          "questionId": "643aaf4a",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "11e82c76": {
+          "questionId": "11e82c76",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "576641fa": {
+          "questionId": "576641fa",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "3 — Neutral"
+              }
+            ]
+          }
+        },
+        "7f3e345e": {
+          "questionId": "7f3e345e",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "2ddf42e2": {
+          "questionId": "2ddf42e2",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "CRISISBENCH should score higher than WXIMPACTBENCH"
+              }
+            ]
+          }
+        },
+        "164d10a0": {
+          "questionId": "164d10a0",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "20f29d72": {
+          "questionId": "20f29d72",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "679e8cf0": {
+          "questionId": "679e8cf0",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "1d1020d9": {
+          "questionId": "1d1020d9",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Useful complement to expert review"
+              }
+            ]
+          }
+        },
+        "4122a1fb": {
+          "questionId": "4122a1fb",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "69c1b62e": {
+          "questionId": "69c1b62e",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "3 — Neutral"
+              }
+            ]
+          }
+        },
+        "427f1cf6": {
+          "questionId": "427f1cf6",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "384ce1a9": {
+          "questionId": "384ce1a9",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Underconfident"
+              }
+            ]
+          }
+        },
+        "29b5f70e": {
+          "questionId": "29b5f70e",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "5a7f45bb": {
+          "questionId": "5a7f45bb",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Useful complement to expert review"
+              }
+            ]
+          }
+        },
+        "35f186e3": {
+          "questionId": "35f186e3",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "4d6f46ea": {
+          "questionId": "4d6f46ea",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "5334736b": {
+          "questionId": "5334736b",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "61d9e020": {
+          "questionId": "61d9e020",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "74b2b2d4": {
+          "questionId": "74b2b2d4",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "208557b5": {
+          "questionId": "208557b5",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "10c4b21f": {
+          "questionId": "10c4b21f",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "6ba1d95f": {
+          "questionId": "6ba1d95f",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "56c18250": {
+          "questionId": "56c18250",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "214ba619": {
+          "questionId": "214ba619",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "757c472e": {
+          "questionId": "757c472e",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "68200b07": {
+          "questionId": "68200b07",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "54787b47": {
+          "questionId": "54787b47",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "68bd6a57": {
+          "questionId": "68bd6a57",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "3df8c978": {
+          "questionId": "3df8c978",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "57f307e0": {
+          "questionId": "57f307e0",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "2b457f2f": {
+          "questionId": "2b457f2f",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "7430bc93": {
+          "questionId": "7430bc93",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "2b4c7d10": {
+          "questionId": "2b4c7d10",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "4afd60e1": {
+          "questionId": "4afd60e1",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "7ec71a54": {
+          "questionId": "7ec71a54",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "No — but it confirmed my existing concerns"
+              }
+            ]
+          }
+        },
+        "24e287ab": {
+          "questionId": "24e287ab",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

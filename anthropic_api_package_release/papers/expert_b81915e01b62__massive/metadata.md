@@ -1,0 +1,11 @@
+- name: massive
+- full_name: MASSIVE: A 1M-Example Multilingual Natural Language Understanding Dataset with 51 Typologically-Diverse Languages
+- year: 2023
+- domain: Natural Language Understanding for virtual assistants, specifically slot-filling and intent classification across 18 domains, 60 intents, and 55 slot types.
+- languages: 51 languages from 29 genera (English plus 50 additional languages)
+- primary_region: Global/Multilingual (typologically diverse, no specific geographic region)
+- porting_strategy: translation
+- input_modalities: text
+- output_modalities: label, score
+- brief_description: MASSIVE is a 1M-example multilingual NLU dataset created by localizing the English-only SLURP dataset into 50 typologically diverse languages through professional translation. The dataset contains realistic, parallel labeled virtual assistant utterances spanning 51 languages and includes modeling results on XLM-R and mT5 with benchmarks for exact match accuracy, intent classification accuracy, and slot-filling F1 score.
+- source_culture: transferred from different cultural context

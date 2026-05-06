@@ -1,0 +1,11 @@
+- name: dummybench
+- full_name: DummyBench — A Synthetic Benchmark for Pipeline Testing
+- year: 2026
+- domain: general cultural knowledge evaluation for LLMs
+- languages: en
+- primary_region: United States
+- porting_strategy: translated
+- input_modalities: text
+- output_modalities: label
+- brief_description: DummyBench is a synthetic benchmark for testing the validity analysis pipeline. It evaluates general cultural knowledge across six validity dimensions using multiple-choice questions.
+- source_culture: transferred from Western context

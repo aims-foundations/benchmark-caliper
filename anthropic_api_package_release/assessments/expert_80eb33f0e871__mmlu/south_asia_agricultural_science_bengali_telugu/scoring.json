@@ -1,0 +1,460 @@
+{
+  "benchmark": "mmlu",
+  "region": "South Asian Agricultural and Environmental Science — Mymensingh–Telangana–Andhra Pradesh Deployment",
+  "dimensions": {
+    "input_ontology": {
+      "score": 1,
+      "justification": "MMLU's 57-subject taxonomy is organized around US/Western academic disciplines [Q1, Q9, Q18] and contains no subject addressing agro-ecology, delta hydrology, haor wetland systems, boro/aman/aus rice cultivation, char-land farming, Deccan dry-land cropping, or coastal aquaculture — the precise subdomains required for this deployment. The dataset analysis confirmed this empirically across 175+ examples sampled from 37 configs: the closest environmental content observed is generic water chemistry and pastoralism definitions, with no South Asian agricultural systems represented [DATASET-D19, D22, D32]. Many subjects are actively irrelevant (US foreign policy, US history, US government), introducing construct-irrelevant variance for an agricultural science deployment. Given IO is a HIGH-priority dimension and the gap is structural and complete, this is a major validity violation.",
+      "strengths": [
+        "Universal STEM reasoning items (abstract algebra, formal logic, physics) provide a culturally-neutral baseline for cross-model comparison [DATASET Strength 1]",
+        "Statistical inference items (hypothesis testing, sampling, Type I/II error) test methodology skills transferable to environmental science research [DATASET-D30]"
+      ],
+      "checklist_responses": {
+        "IO-1": "Required categories for this deployment include haor/beel wetland ecology, boro/aman/aus rice cultivation, char-land farming, Brahmaputra-Jamuna floodplain hydrology, Deccan Rabi/Kharif dry-land cropping, brackishwater shrimp aquaculture, and Bangladesh–India transboundary water management — none of which are present in the 57-subject taxonomy.",
+        "IO-2": "MMLU's taxonomy omits every regionally-relevant agricultural and environmental science category. Subjects are bounded by US/Western academic disciplines [Q9, Q18, Q33], with history/geography framed through Western lenses [Q28, DATASET-D16, D20]. The 'breadth' claim of 57 tasks [Q11, Q83] does not translate into agro-ecological coverage.",
+        "IO-3": "MMLU includes substantial content irrelevant to South Asian agriculture: US Foreign Policy [Q171, DATASET-D5, D6], US History [Q151, DATASET-D2], US Government [DATASET-D3, D4], US tort/contract law [DATASET-D7, D8, D25], and Western European history [DATASET-D16, D17]. These consume evaluation weight without informing agricultural reasoning.",
+        "IO-4": "The complete absence of any agro-ecological subject combined with heavy weighting toward US-centric subjects creates content underrepresentation (missing constructs) and construct-irrelevant variance simultaneously — both validity-harming patterns."
+      },
+      "evidence_quotes": [
+        "[Q1] 'The test covers 57 tasks including elementary mathematics, US history, computer science, law, and more.' (p.1)",
+        "[Q9] 'The benchmark covers 57 subjects across STEM, the humanities, the social sciences, and more.' (p.1)",
+        "[Q18] 'The test spans subjects in the humanities, social sciences, hard sciences, and other areas that are important for some people to learn.' (p.3)",
+        "[Q33] 'STEM subjects include physics, computer science, mathematics, and more.' (p.4)",
+        "[Q117] 'Table 2: Summary of all 57 tasks.' (p.15)"
+      ],
+      "evidence_web_sources": [],
+      "evidence_dataset": [
+        "DATASET-D19: high_school_geography pastoralism definition is closest agriculture-adjacent content; no South Asian system represented",
+        "DATASET-D22: college_biology covers cellular/molecular content, not agro-ecology",
+        "DATASET-D32: nearest 'environmental science' is generic water-pollutant chemistry, not delta/saline-intrusion or haor ecology",
+        "DATASET-D5: us_foreign_policy entirely US-centric — irrelevant to deployment",
+        "DATASET-D2: high_school_us_history US Populist movement — no South Asian relevance",
+        "DATASET-D21: nutrition is clinical biochemistry, not crop nutrition or soil science"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "Q117"
+        ],
+        "IO-2": [
+          "Q9",
+          "Q18",
+          "Q33",
+          "Q117",
+          "DATASET-D19",
+          "DATASET-D22",
+          "DATASET-D32"
+        ],
+        "IO-3": [
+          "Q1",
+          "DATASET-D2",
+          "DATASET-D3",
+          "DATASET-D4",
+          "DATASET-D5",
+          "DATASET-D6",
+          "DATASET-D7"
+        ],
+        "IO-4": [
+          "Q117",
+          "DATASET-D21"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Approximately 20 of 57 configs were not directly sampled by the dataset analysis; rare South Asian agricultural items in unreviewed configs cannot be entirely ruled out, though structural sourcing makes them improbable."
+      ],
+      "requires_expert_verification": [
+        "Whether any single MMLU item across the full 14,079-question test set addresses South Asian agro-ecology would require exhaustive scan of all 57 configs by a regional expert."
+      ]
+    },
+    "input_content": {
+      "score": 1,
+      "justification": "All MMLU content is sourced from US standardized tests (GRE, USMLE), undergraduate course materials, and Oxford University Press books [Q19], with Professional Law supplemented by Harvard Law Library case law [Q77] and history items drawing on English primary sources [Q140, Q141]. The authorship team is entirely US-based [Q10] and funding is from US sources [Q87, Q88]. Empirical sampling confirms US-centric content saturation: US tort law [DATASET-D7], US contract law [DATASET-D8], US Social Security [DATASET-D9], US birth control statistics [DATASET-D10], US Populist movement [DATASET-D2], MCAT references [DATASET-D39], and US measurement units [DATASET-D29]. South Asian content is limited to three tangential references (India internet 2017, India vs. Congo university graduates, Jainism/samsara) and one colonially-framed Indian Uprising item [DATASET-D13, D40, D36, D18]. No content from BRRI, BARI, BAU, ICAR, PJTSAU, or ANGRAU was identified, and gap searches confirmed no Bengali- or Telugu-language agricultural NLP corpus exists in the public landscape [WEB-22, WEB-6]. The Mymensingh-dialect agricultural vocabulary, Telugu dry-land terminology, and cross-border water-policy content required for this deployment are absent by construction.",
+      "strengths": [
+        "A handful of global_facts and world_religions items reference South Asia, providing a minimal foothold of non-exclusively-Western reference [DATASET-D13, D36, D40]",
+        "PDF/separate-page sourcing reduces verbatim memorization risk, preserving construct measurement integrity for the topics it does cover [Q110]"
+      ],
+      "checklist_responses": {
+        "IC-1": "Yes — many MMLU items require US-specific cultural and institutional knowledge (US tort law, Social Security, MCAT system, US demographic statistics) [DATASET-D7, D9, D10, D11, D39]. Conversely, items requiring Mymensingh, Bangladeshi, or Telugu-region knowledge are absent.",
+        "IC-2": "Culturally sensitive content (moral_scenarios anchored in 'US 2020 norms', US-centric birth control and aging facts) does not align with target deployment culture [DATASET-D1, D10, D11, D12]. Cross-border Bangladesh–India water-sharing topics — actively contested as of 2025 [WEB-1, WEB-2, WEB-4] — are not represented at all.",
+        "IC-3": "Inputs requiring Western-specific knowledge are pervasive: US Constitutional structure [DATASET-D3, D5], US legislative history [DATASET-D4], Burgess Chicago-school urban model [DATASET-D20], UK educational sociology [DATASET-D26]. These do not transfer to South Asian agricultural contexts.",
+        "IC-4": "INSUFFICIENT DOCUMENTATION on whether regional annotators reviewed any items; paper documents only US graduate/undergraduate collectors [Q19] and US MTurk baseline [Q22]. Full assessment would require recruiting Mymensingh, Telugu, and West Bengal agricultural experts to flag culturally sensitive instances.",
+        "IC-5": "Combined with Q19's exclusively US sourcing and the empirical pattern across 175+ sampled examples, content validity for this deployment is severely compromised."
+      },
+      "evidence_quotes": [
+        "[Q19] 'The questions in the dataset were manually collected by graduate and undergraduate students from freely available sources online. These include practice questions for tests such as the Graduate Record Examination and the United States Medical Licensing Examination.' (p.3)",
+        "[Q77] 'We also had RoBERTa continue pretraining on approximately 1.6 million legal case summaries using Harvard's Law Library case law corpus' (p.8)",
+        "[Q10] 'Dan Hendrycks, UC Berkeley; Collin Burns, Columbia University; Steven Basart, UChicago; Andy Zou, UC Berkeley; Mantas Mazeika, UIUC; Dawn Song, UC Berkeley; Jacob Steinhardt, UC Berkeley' (p.1)",
+        "[Q140] 'This question refers to the following information.' (p.19)",
+        "[Q141] 'English Parliament, Act of Supremacy, 1534' (p.19)",
+        "[Q81] 'Data may also become a bottleneck, as there is far less written about esoteric branches of knowledge than about everyday situations.' (p.8)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-22] AI4Bharat IndicNLP Catalog — no Bangladeshi-Bengali or Mymensingh-dialect agricultural corpus listed",
+        "[WEB-6] ICICC 2024 Telugu agricultural perplexity study explicitly notes lack of Telugu agricultural NLP resources",
+        "[WEB-1] Ganges Water Treaty expires Dec 2026, renewal pending — active geopolitical context absent from MMLU",
+        "[WEB-2] Teesta water dispute remains unresolved as of 2025 — cross-border content not represented",
+        "[WEB-4] Teesta Master Plan extended to Dec 2026 with Chinese financing — current South Asian agri-policy context absent"
+      ],
+      "evidence_dataset": [
+        "DATASET-D7: professional_law US tort scenario — confirms US legal context saturation",
+        "DATASET-D8: professional_law US contract law — US cultural framing",
+        "DATASET-D9: human_aging US Social Security — US institution as universal answer",
+        "DATASET-D10: human_sexuality explicitly US-framed factual question",
+        "DATASET-D11: human_sexuality 1988-1990 US-only survey data as correct answer",
+        "DATASET-D29: elementary_mathematics uses miles per hour (US customary units)",
+        "DATASET-D39: college_medicine references MCAT — US academic system",
+        "DATASET-D13: global_facts India internet 2017 — only tangential South Asian factual reference",
+        "DATASET-D40: global_facts India vs Congo university graduates — tangential",
+        "DATASET-D36: world_religions Jainism — one of few South Asian cultural anchors",
+        "DATASET-D18: high_school_world_history Cawnpore framed through British colonial journalism"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "Q19",
+          "DATASET-D7",
+          "DATASET-D9",
+          "DATASET-D10",
+          "DATASET-D11",
+          "DATASET-D39"
+        ],
+        "IC-2": [
+          "DATASET-D1",
+          "DATASET-D10",
+          "DATASET-D11",
+          "DATASET-D12",
+          "WEB-1",
+          "WEB-2",
+          "WEB-4"
+        ],
+        "IC-3": [
+          "DATASET-D3",
+          "DATASET-D4",
+          "DATASET-D5",
+          "DATASET-D20",
+          "DATASET-D26"
+        ],
+        "IC-4": [
+          "Q19",
+          "Q22"
+        ],
+        "IC-5": [
+          "Q19",
+          "Q81",
+          "WEB-22",
+          "WEB-6"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether any unsampled config contains incidental Bangladesh- or Telugu-region agricultural content",
+        "Whether annotators included any with South Asian regional expertise (paper does not document annotator demographics beyond US institutional affiliation)"
+      ],
+      "requires_expert_verification": [
+        "BRRI/BARI/BAU agricultural extension experts could confirm absence of dialect-specific Mymensingh terminology",
+        "Telugu agricultural linguistic experts (PJTSAU/ANGRAU) could confirm absence of Deccan dry-land cropping vocabulary"
+      ]
+    },
+    "input_form": {
+      "score": 1,
+      "justification": "MMLU is exclusively English-language, text-only, multiple-choice [Q8, Q21, Q45, Q46]. The HuggingFace metadata confirms monolingual English; every one of the 175+ examples sampled is English-only [DATASET-D2, D29, etc.]. The deployment elicitation explicitly requires Telugu, Bangladeshi Bengali (Mymensingh dialect), and Indian Bengali as query languages [elicitation A4, Q4]. Bengali script (বাংলা) and Telugu script (తెలుగు) are entirely unsupported. The paper's own authors acknowledge the limitation that 'many important concepts are conveyed mainly through other modalities' [Q64]. No transliteration, code-switching, or multilingual variant exists. Web research confirms no Bengali or Telugu agricultural-domain LLM evaluation infrastructure exists [WEB-5, WEB-17, WEB-18, WEB-25] and that LLMs perform meaningfully worse in Bengali than English [WEB-5]. This is an absolute, format-level mismatch that no in-format remediation can address. IF is a HIGH-priority dimension for this deployment, making this a fundamental validity violation.",
+      "strengths": [
+        "Standardized text-MCQ format is portable and computationally tractable for cross-model comparison [Q23, Q35]",
+        "Format insensitivity findings for GPT-3 [Q100] mean that translated/adapted versions could in principle preserve relative model rankings if translation pipeline were added"
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal distribution mismatch is total: source benchmark is English ASCII text [Q8, Q45]; target deployment requires Bengali script (Bangladeshi and Indian variants), Telugu script, and English. No regional language input is supported.",
+        "IF-2": "Regional infrastructure does support text input — Bangladesh has 44.5–80% internet penetration [WEB-13, WEB-14] and mobile-first usage [WEB-15] — but this is irrelevant since MMLU's English-only constraint is the binding one, not regional capture capacity.",
+        "IF-3": "Domain-specific form differences include: (a) Bengali/Telugu script Unicode handling (no uppercase/lowercase distinction), (b) absence of multimodal capacity (acknowledged limitation [Q64]) which excludes diagrams/maps relevant to delta hydrology and AEZ classification, (c) no code-switching support relevant to Bengali-English bilingual scientific register.",
+        "IF-4": "Form mismatch is absolute and constitutes a complete external validity violation for the multilingual deployment requirement; no within-benchmark workaround exists."
+      },
+      "evidence_quotes": [
+        "[Q8] 'We design the benchmark to measure knowledge acquired during pretraining by evaluating models exclusively in zero-shot and few-shot settings.' (p.1)",
+        "[Q45] 'We feed GPT-3 prompts like that shown in Figure 1a. We begin each prompt with \"The following are multiple choice questions (with answers) about [subject].\"' (p.6)",
+        "[Q64] 'many important concepts are conveyed mainly through other modalities, such as images, audio, and physical interaction (Bisk et al., 2020). Existing large-scale NLP models, such as GPT-3, do not incorporate multimodal information, so we design our benchmark to capture a diverse array of tasks in a text-only format.' (p.7)",
+        "[Q21] 'We collected 15908 questions in total' (p.3)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-5] arXiv 2507.23248 — LLMs perform worse in Bengali than English; smaller models especially degraded",
+        "[WEB-17] AI4Bharat IndicBERT covers Bengali and Telugu but not agricultural domain",
+        "[WEB-18] IndicTrans2 covers 22 Indian languages including Telugu but is a translation system, not knowledge benchmark",
+        "[WEB-25] IndicXTREME (ACL 2023) covers Bengali/Telugu for general NLU but no agricultural evaluation"
+      ],
+      "evidence_dataset": [
+        "DATASET-D2: typical English-only question format with no provision for non-Latin scripts",
+        "DATASET-D29: even basic numeric items use English with US customary units"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q8",
+          "Q45",
+          "DATASET-D2",
+          "DATASET-D29"
+        ],
+        "IF-2": [
+          "WEB-13",
+          "WEB-14",
+          "WEB-15"
+        ],
+        "IF-3": [
+          "Q64",
+          "WEB-5"
+        ],
+        "IF-4": [
+          "Q8",
+          "WEB-5",
+          "WEB-17"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Mymensingh-dialect-specific phonological/lexical variants in agricultural register are not documented in any retrievable NLP corpus and would require in-region linguist elicitation"
+      ],
+      "requires_expert_verification": []
+    },
+    "output_ontology": {
+      "score": 1,
+      "justification": "MMLU applies a uniform four-class MCQ schema (A/B/C/D) across all 57 tasks [Q23, Q35], with no mechanism to encode legitimate regional divergence in correct answers. The deployment explicitly anticipates such divergence — particularly for Bangladesh–India water-sharing questions [elicitation A3] where active 2025 geopolitical context (Ganges Treaty renewal, unresolved Teesta dispute, Kushiyara agreement) [WEB-1, WEB-2, WEB-4, WEB-21] would yield nationally divergent correct answers. The moral_scenarios config (500 items) explicitly anchors correctness to 'ordinary moral standards in the US as of 2020' as a constitutive framing across every item [DATASET-D1, D12], structurally precluding pluralism. The four-option forced-choice schema also cannot capture practice differences between delta flood-cycle planning and Deccan dry-land cropping. Models perform especially poorly on socially-important subjects (morality, law) [Q6, Q86] and on procedural/calculation tasks [Q14, Q72] — precisely the categories most relevant to agricultural decision-making. OO is HIGH-priority for this deployment, and the schema rigidity is a structural validity violation.",
+      "strengths": [
+        "Four-option MCQ schema is simple and reproducible for cross-model accuracy comparison [Q23, Q35]",
+        "Difficulty levels (Elementary/High School/College/Professional) provide some stratification useful for capacity profiling [Q20]"
+      ],
+      "checklist_responses": {
+        "OO-1": "The MCQ label space (A/B/C/D) [Q23] is generic and content-agnostic; it is not regionally relevant or irrelevant per se, but it cannot represent the categorical decision boundaries needed for regional agricultural reasoning (e.g., 'optimal under delta flood regime' vs. 'optimal under Deccan dry-land regime' as parallel correct answers).",
+        "OO-2": "Missing categories include: regional-pluralism markers (which national policy regime applies), agro-ecological zone qualifiers, and any output that would let a model express 'this depends on whether the question is from a Bangladeshi or Indian regulatory perspective' [WEB-1, WEB-2 — active treaty divergence].",
+        "OO-3": "The moral_scenarios subtask explicitly encodes US 2020 norms as the constitutive correctness criterion [DATASET-D1, D12], embedding non-regional values directly into the output ontology. Human_sexuality and human_aging similarly embed US institutional facts as universally correct outputs [DATASET-D9, D10, D11].",
+        "OO-4": "Significant misalignment exists; stakeholder-driven taxonomy redesign would require either (a) adding parallel-answer schema for regionally-divergent items or (b) excluding the affected subtasks. The paper itself notes models 'are notably poor at modeling human (dis)approval' [Q71], compounding OO concerns on socially-situated items.",
+        "OO-5": "The combination of forced single-correct-answer MCQ + US-anchored normative subtasks + procedural-calculation weakness [Q72] across calculation-heavy tasks (Elementary Mathematics RMS calibration error 19.4% [Q62]) creates structural validity issues for an agricultural decision-support evaluation."
+      },
+      "evidence_quotes": [
+        "[Q23] 'we instead create a simple-to-evaluate test that measures classification accuracy on multiple choice questions.' (p.3)",
+        "[Q6] 'Worse, they still have near-random accuracy on some socially important subjects such as morality and law.' (p.1)",
+        "[Q14] 'The tasks with near-random accuracy include calculation-heavy subjects such as physics and mathematics and subjects related to human values such as law and morality.' (p.2)",
+        "[Q71] 'They are notably poor at modeling human (dis)approval, as evident by the low performance on the Professional Law and Moral Scenarios tasks.' (p.8)",
+        "[Q86] 'Worryingly, models also perform especially poorly on socially relevant subjects including morality and law.' (p.8)",
+        "[Q72] 'Models also have difficulty performing calculations, so much so that they exhibit poor performance on Elementary Mathematics' (p.8)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-1] Ganges Water Treaty expires Dec 2026 — bilateral water policy actively divergent",
+        "[WEB-2] Teesta dispute unresolved with no formal treaty — nationally-divergent correct answers likely",
+        "[WEB-4] Teesta Master Plan with Chinese financing — Bangladeshi vs Indian framings differ",
+        "[WEB-21] 2022 Kushiyara Agreement — recent bilateral agreement requires up-to-date grounding"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: moral_scenarios explicitly frames correctness as 'US as of 2020' — constitutive framing",
+        "DATASET-D12: moral_scenarios US 2020 framing repeats across all five sampled items, confirming structural rather than incidental",
+        "DATASET-D9: human_aging encodes US Social Security as universally correct",
+        "DATASET-D10: human_sexuality encodes US birth control statistics as correct answer"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q23"
+        ],
+        "OO-2": [
+          "WEB-1",
+          "WEB-2",
+          "WEB-4"
+        ],
+        "OO-3": [
+          "DATASET-D1",
+          "DATASET-D9",
+          "DATASET-D10",
+          "DATASET-D12"
+        ],
+        "OO-4": [
+          "Q71",
+          "Q86"
+        ],
+        "OO-5": [
+          "Q6",
+          "Q14",
+          "Q72"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether any individual MMLU item explicitly flags regional divergence in its answer key (none observed in sample)"
+      ],
+      "requires_expert_verification": [
+        "Bangladeshi and Indian water-policy experts would be needed to systematically identify items whose correct answer differs by national perspective"
+      ]
+    },
+    "output_content": {
+      "score": 1,
+      "justification": "The paper is silent on annotator demographics, selection criteria, regional or disciplinary backgrounds, or inter-annotator agreement [Q19]. The only documented human reference is US Amazon Mechanical Turk workers (34.5% accuracy) [Q22], with expert-level estimated from 'real-world test-taker human accuracy at the 95th percentile' on US standardized exams. The HuggingFace dataset card tags annotations_creators as 'no-annotation' [DATASET Concern 8]. The authorship team is entirely US-based [Q10] and content is sourced from US/Anglophone institutions [Q19, Q77]. There is no evidence — and no plausible mechanism — for South Asian agronomic, Mymensingh-dialect, or Telugu-region expert validation of any answer key. The user explicitly confirmed [elicitation A3] that cross-border water/agricultural questions could yield divergent correct answers and that practice differences between regions are not reflected in answer keys. Empirical sampling confirmed multiple items where US-specific facts (Social Security age increases, US birth control prevalence, US 2020 moral norms) are encoded as universally correct [DATASET-D1, D9, D10, D11, D12]. OC is HIGH-priority and represents a fundamental convergent and external validity violation.",
+      "strengths": [
+        "Authors commit to publishing question sources to enable downstream auditing [Q112]",
+        "Memorization analysis suggests labels are not artifacts of pretraining contamination [Q107, Q108], so label correctness is at least an honest measurement of US-anchored ground truth"
+      ],
+      "checklist_responses": {
+        "OC-1": "Ground truth labels reflect US/Anglophone academic standards [Q19, Q22], not Bangladeshi or Telugu-region stakeholder perspectives. The user [elicitation A3] confirms they would not be considered authoritative for cross-border or Bangladeshi-context agricultural questions.",
+        "OC-2": "Substantial disagreement is expected for: (a) moral_scenarios items (US 2020 framing) [DATASET-D1, D12]; (b) any cross-border water-policy item [WEB-1, WEB-2, WEB-4]; (c) human_aging/human_sexuality US institutional facts [DATASET-D9, D10, D11]; (d) potentially historical framings such as the Cawnpore item [DATASET-D18].",
+        "OC-3": "INSUFFICIENT DOCUMENTATION — paper provides no Datasheet/Data Statement; only documents that questions were 'manually collected by graduate and undergraduate students' [Q19] without demographic breakdown. HF metadata indicates 'no-annotation' [DATASET Concern 8].",
+        "OC-4": "Re-annotation by representative regional annotator pool (BAU, BRRI, PJTSAU, ANGRAU agronomists; Bangladeshi and Indian water-policy experts) would be required for any deployment-relevant subset; the paper offers no such pool.",
+        "OC-5": "Aggregation methods are not described; the single-correct-answer MCQ format inherently erases minority perspectives [Q23], which is particularly concerning for cross-border and culturally-situated questions.",
+        "OC-6": "The combined absence of regional annotator validation, the explicit US-normative framing of large subtasks, and the user-confirmed expectation of divergent correct answers constitute serious convergent and external validity violations."
+      },
+      "evidence_quotes": [
+        "[Q19] 'The questions in the dataset were manually collected by graduate and undergraduate students from freely available sources online.' (p.3)",
+        "[Q22] 'Unspecialized humans from Amazon Mechanical Turk obtain 34.5% accuracy on this test.' (p.3)",
+        "[Q10] 'Dan Hendrycks, UC Berkeley; Collin Burns, Columbia University; Steven Basart, UChicago...' (p.1)",
+        "[Q87] 'DH is supported by the NSF GRFP Fellowship and an Open Philanthropy Project Fellowship.' (p.9)",
+        "[Q88] 'This research was also supported by the NSF Frontier Award 1804794.' (p.9)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-1] Active Bangladesh–India treaty renewal context — divergent correct answers likely",
+        "[WEB-2] Teesta dispute unresolved — Bangladesh and India would adjudicate water-allocation questions differently",
+        "[WEB-21] Kushiyara River Agreement — recent bilateral agreement not reflected in 2021 benchmark labels"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: moral_scenarios US 2020 framing as constitutive answer criterion",
+        "DATASET-D9: human_aging Social Security as universally correct answer",
+        "DATASET-D10: human_sexuality US birth control statistics as correct answer",
+        "DATASET-D11: human_sexuality 1988-1990 US-specific survey data as correct answer",
+        "DATASET-D12: US 2020 moral framing replicated across all sampled moral_scenarios items",
+        "DATASET-D18: Indian Uprising framed via British colonial journalism — label set by US team",
+        "DATASET Concern 8: HF metadata tags annotations_creators as 'no-annotation'"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q19",
+          "Q22",
+          "DATASET-D9",
+          "DATASET-D10"
+        ],
+        "OC-2": [
+          "DATASET-D1",
+          "DATASET-D12",
+          "DATASET-D9",
+          "DATASET-D10",
+          "DATASET-D11",
+          "DATASET-D18",
+          "WEB-1",
+          "WEB-2"
+        ],
+        "OC-3": [
+          "Q19",
+          "Q22"
+        ],
+        "OC-4": [],
+        "OC-5": [
+          "Q23"
+        ],
+        "OC-6": [
+          "Q19",
+          "DATASET-D1",
+          "WEB-1",
+          "WEB-21"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Annotator demographic information is entirely absent from documentation",
+        "No quality-assurance or inter-annotator agreement statistics reported"
+      ],
+      "requires_expert_verification": [
+        "Specific items where Bangladeshi vs Indian agronomic standards would diverge would require BAU/PJTSAU/ANGRAU expert review",
+        "Cross-border water-policy item answer keys would require Joint Rivers Commission expert adjudication"
+      ]
+    },
+    "output_form": {
+      "score": 2,
+      "justification": "MMLU evaluates only text-based MCQ classification accuracy [Q23, Q35] via predicted A/B/C/D tokens [Q45]. The metric (accuracy) and calibration measures (RMS calibration error, accuracy-confidence gap) [Q60, Q62] partially align with the deployment's stated need for cross-model comparison. However, the format cannot evaluate open-ended agronomic reasoning, does not penalize language mismatches (e.g., model responding in English to a Bengali prompt), and does not support regional-language outputs. The user did not flag output form as a primary concern (MODERATE priority), and MCQ accuracy is at least usable as a baseline. But the format precludes evaluating practice-difference reasoning, generative explanations of flood-cycle decisions, or Bengali/Telugu-language extension communication — all relevant for downstream farmer/agronomist applications. Combined with the 'esoteric knowledge' data bottleneck [Q81] amplified for South Asian agricultural content, output form is partially aligned but insufficient for deployment-validity evaluation.",
+      "strengths": [
+        "Single accuracy metric is reproducible and supports cross-model comparison [Q35, Q42]",
+        "Calibration analysis (RMS calibration error, accuracy-confidence gap) provides useful uncertainty diagnostics for downstream deployment risk assessment [Q60, Q61, Q62, Q106]",
+        "Per-task and per-grouping reporting [Q52, Q92] would in principle let a user isolate STEM-reasoning subscores even while ignoring US-content subscores"
+      ],
+      "checklist_responses": {
+        "OF-1": "Output modality (single letter token) [Q45] does not match deployment needs — environmental science applications often require open-ended explanation, calculation, or recommendation. The MCQ format aligns only with the cross-model comparison goal.",
+        "OF-2": "Text-to-speech is not relevant to MMLU's evaluation metric; not applicable to this benchmark form.",
+        "OF-3": "Literacy considerations: Bangladesh national literacy is 77.9% [WEB-7], functional literacy 62.92% [WEB-8]; Telangana 66.54% and Andhra Pradesh 67.02% [WEB-9, WEB-11]. The downstream farmer/agronomist sub-population would not directly interact with an English-MCQ output anyway, but for any extension-tool evaluation, output form would need to support Bengali/Telugu generative output — which MMLU does not assess.",
+        "OF-4": "Form mismatches are real but partial; MCQ accuracy can serve as a baseline benchmark while requiring substantial supplementation (open-ended generation, multilingual generation evaluation) for deployment-level validity."
+      },
+      "evidence_quotes": [
+        "[Q35] 'To measure performance on our multitask test, we compute the classification accuracy across all examples and tasks.' (p.5)",
+        "[Q45] 'The model then produces probabilities for the tokens \"A,\" \"B,\" \"C,\" and \"D,\" and we treat the highest probability option as the prediction.' (p.6)",
+        "[Q60] 'We evaluate the calibration of GPT-3 by testing how well its average confidence estimates its actual accuracy for each subject.' (p.7)",
+        "[Q61] 'GPT-3 is uncalibrated. In fact, its confidence is only weakly related to its actual accuracy in the zero-shot setting, with the difference between its accuracy and confidence reaching up to 24% for some subjects.' (p.7)",
+        "[Q81] 'Data may also become a bottleneck, as there is far less written about esoteric branches of knowledge than about everyday situations.' (p.8)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-7] Bangladesh literacy 77.9% (BBS 2024)",
+        "[WEB-8] Bangladesh functional literacy 62.92% (BBS LAS 2023)",
+        "[WEB-9] Telangana literacy 66.54% (Census 2011)",
+        "[WEB-11] Andhra Pradesh literacy 67.02% (Census 2011)"
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "OF-1": [
+          "Q35",
+          "Q45"
+        ],
+        "OF-2": [],
+        "OF-3": [
+          "WEB-7",
+          "WEB-8",
+          "WEB-9",
+          "WEB-11"
+        ],
+        "OF-4": [
+          "Q35",
+          "Q81"
+        ]
+      },
+      "confidence": "medium",
+      "information_gaps": [
+        "Whether deployment will require open-ended generation or remain MCQ-style was not fully specified in elicitation"
+      ],
+      "requires_expert_verification": []
+    }
+  },
+  "overall_summary": "MMLU is fundamentally misaligned with the South Asian Agricultural and Environmental Science deployment across five of six dimensions. Five HIGH-priority dimensions (Input Ontology, Input Content, Input Form, Output Ontology, Output Content) score 1 — the lowest possible — with multiple structural validity violations: complete absence of agro-ecological subjects, US/Anglophone-saturated content, English-only input, MCQ schema unable to encode regional pluralism, and US-anchored ground-truth labels with no South Asian annotator validation. Output Form scores 2, partially supporting cross-model comparison via accuracy metrics. The single biggest concern is that the benchmark cannot, by construction, measure the constructs the user needs to evaluate — there is no item in MMLU's 14,079-question test set addressing haor wetland ecology, boro/aman/aus rice cultivation, char-land farming, Deccan dry-land cropping, or coastal aquaculture. Cross-border Bangladesh–India water-policy questions, which are actively contested in 2025, are entirely absent and could not be represented in the four-option MCQ format even if added. The benchmark is suitable only as a weak generic STEM-reasoning baseline for cross-model comparison.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "MMLU measures English-language MCQ accuracy on US/Western academic and professional knowledge across 57 subjects, with primary signal in mathematical reasoning, formal logic, and physical sciences (the dimensions where it scores least poorly for cultural neutrality). For this deployment, MMLU can provide a baseline cross-model accuracy comparison on culturally-neutral STEM and statistics items (per Strength 1 and Strength 3 in dataset analysis), and calibration diagnostics [Q60-62, Q106] useful for understanding model uncertainty behavior. It cannot measure South Asian agricultural or environmental science knowledge, nor any multilingual capability.",
+    "construct_depth": "Construct depth for the deployment's intended construct (South Asian agricultural and environmental science knowledge) is essentially zero: Input Ontology contains no agro-ecological subjects, Input Content contains no regional sourcing, Input Form precludes regional languages, Output Ontology cannot encode regional divergence, and Output Content has no regional annotator validation. Where MMLU does probe deeply (US legal/medical/historical knowledge), the construct is irrelevant to the deployment. The only modest depth is in language-independent STEM reasoning, which provides shallow but stable signal for cross-model comparison.",
+    "supplementation_needed": "Substantial supplementation is required across five dimensions: (1) Input Ontology — construct or adopt a South Asian agricultural knowledge taxonomy (BRRI/BARI/ICAR-aligned); (2) Input Content — recruit BAU, PJTSAU, ANGRAU agronomists to author items in Bengali, Telugu, and English covering haor/delta/dry-land/aquaculture systems; (3) Input Form — build multilingual evaluation infrastructure leveraging IndicTrans2 [WEB-18] and IndicBERT v2 [WEB-25] foundations, with explicit Bangladeshi-Bengali and Mymensingh-dialect coverage; (4) Output Ontology — design schema permitting regional-pluralism annotation for cross-border policy items; (5) Output Content — establish a regional annotator pool spanning Bangladesh and the Indian states, with explicit protocol for nationally-divergent answer keys (informed by current Ganges/Teesta context [WEB-1, WEB-2, WEB-4]). The synthetic agricultural QA methodology in arXiv 2507.16974 [WEB-26] provides a methodological precedent but covers only Hindi/Punjabi."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "MMLU's 57-subject taxonomy contains no agro-ecological, delta-ecology, or South Asian regional agricultural subjects — the precise constructs the deployment must measure.",
+      "recommendation": "Treat MMLU as a generic STEM/reasoning baseline only and pair it with a purpose-built South Asian agricultural knowledge benchmark organized by AEZ (haor, char-land, Deccan dry-land, coastal aquaculture) co-designed with BAU, BRRI, PJTSAU, and ANGRAU. Restrict MMLU reporting to a curated subset of culturally-neutral STEM configs (abstract algebra, college mathematics, college physics, formal logic, high school statistics)."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "Content is entirely sourced from US/Anglophone institutions [Q19, Q77]; no Bengali- or Telugu-language agricultural content; cross-border policy context (Ganges/Teesta) absent.",
+      "recommendation": "Author a parallel evaluation set sourcing items from BRRI/BARI technical bulletins, PJTSAU/ANGRAU extension publications, and Joint Rivers Commission documents. Use the AgriPriceBD [WEB-23] LLM-assisted PDF parsing methodology to digitize Bengali agricultural reports. Build dialect-aware Mymensingh-Bengali corpus through BAU faculty elicitation (acknowledging this is unsearchable web-research territory)."
+    },
+    {
+      "dimension": "input_form",
+      "gap": "English-only text input precludes Bengali (both variants), Telugu, and any multilingual evaluation explicitly required by the deployment.",
+      "recommendation": "Do not use MMLU for any multilingual capability assessment. Build a multilingual evaluation pipeline using IndicXTREME [WEB-25] as the structural template and IndicTrans2 [WEB-18] for translation infrastructure, with native-script Bengali and Telugu items. Plan evaluation to detect language-mismatch failures (e.g., model responding in English to Bengali prompts)."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "Four-option MCQ schema cannot encode legitimate regional divergence in correct answers (especially cross-border water/agricultural policy); moral_scenarios encodes US 2020 norms structurally [DATASET-D1, D12].",
+      "recommendation": "Exclude moral_scenarios, human_sexuality, human_aging, and US-jurisdiction-specific configs from any deployment-relevant scoring. For the supplementary regional benchmark, design schema permitting parallel-correct-answer annotation flagged by jurisdiction (Bangladesh / India / state-level) for water-policy and agricultural-policy items."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "No South Asian annotators were involved in label creation; user confirmed cross-border questions would yield divergent correct answers; HF metadata tags annotations as 'no-annotation'.",
+      "recommendation": "For any subset of MMLU items used in deployment evaluation, conduct a relabeling pass with at least three annotators per item drawn from a pool spanning Bangladesh (BAU, BRRI), Telangana (PJTSAU), and Andhra Pradesh (ANGRAU). Track inter-annotator disagreement rates and exclude items where regional disagreement exceeds threshold. Document annotator demographics in a Datasheet."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "MCQ accuracy cannot capture open-ended agronomic reasoning needed for downstream farmer/agronomist applications, and does not penalize language-mismatch failures.",
+      "recommendation": "Supplement MMLU MCQ accuracy with open-ended generative evaluation in Bengali and Telugu, evaluated by regional experts using rubrics that explicitly penalize language drift (English response to Bengali prompt) and reward dialect-appropriate register for Mymensingh-Bengali agricultural extension communication."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_ontology",
+    "input_content",
+    "input_form",
+    "output_ontology",
+    "output_content"
+  ],
+  "strongest_dimensions": [
+    "output_form"
+  ]
+}

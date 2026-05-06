@@ -1,0 +1,11 @@
+- name: cnn-daily-mail
+- full_name: Teaching Machines to Read and Comprehend
+- year: 2015
+- domain: Machine reading comprehension, evaluating models' ability to answer questions about news articles by understanding document content and linguistic relationships between entities.
+- languages: English
+- primary_region: UNKNOWN
+- porting_strategy: none
+- input_modalities: text
+- output_modalities: label
+- brief_description: This benchmark introduces a methodology for creating large-scale supervised reading comprehension datasets by converting news article bullet-point summaries into Cloze-style questions through entity replacement. Two corpora were collected from CNN and Daily Mail websites, yielding roughly 1 million document-query-answer triples. The benchmark evaluates models' core ability to detect and understand linguistic relationships in context without relying on world knowledge or co-occurrence statistics.
+- source_culture: transferred from different cultural context

@@ -1,0 +1,2 @@
+Use case and domain: Use Case: Early identification of damage type caused by a disaster and reported in local news and social media posts from Northwest Argentina, Paraguay and South Bolivia (e.g. Gran Chaco regions).
+Target population: Target population: National emergency responders, gendarmerie, civil forces, technical practitioners in public emergency sector from Argentina, Bolivia or Paraguay. They all would speak and write in Spanish, Andean variety, and would have an intermediate level of English.

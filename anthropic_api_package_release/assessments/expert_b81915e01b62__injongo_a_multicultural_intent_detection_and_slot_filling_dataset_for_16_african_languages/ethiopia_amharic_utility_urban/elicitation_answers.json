@@ -1,0 +1,6 @@
+{
+  "Q1": "I do not think there are many differences in Ethiopia, but there might be some differences when it comes to payment methods, and some specific issues tailored to Ethiopian use case scenarios.",
+  "Q2": "Yes this is expected because especially code-switching is becoming more common in different part of Ethiopia. We expect the deployment to handle this kind of differences. In case of Amharic usually the speakers mix it english especially the younger generations so we expect more code-switching.",
+  "Q3": "In Ethiopia, for utility related issues are handled by their respective customer service and/or agents,  For electric utility Ethiopian,  their customer service and/or agents judgments should determince correct extraction.",
+  "Q4": "Telegram is most popular app in Ethiopia and there are a lot of government and non-government organizations using it for different tasks. As far as I know users use full Ethiopic script , i would suggest only handle  full Ethiopic script  instead of romanized Amharic."
+}

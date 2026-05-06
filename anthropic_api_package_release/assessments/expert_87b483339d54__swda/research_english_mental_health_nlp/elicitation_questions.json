@@ -1,0 +1,17 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "The benchmark covers a particular set of conversation types and clinical contexts. Do the AI-assistive chatbot applications your researchers are building target specific therapy modalities or clinical populations that may or may not be well represented \u2014 for example, group therapy, crisis intervention, substance use counseling, or culturally adapted therapeutic models (e.g., culturally responsive CBT used in Black, Latino, or Indigenous communities)? Which therapy types matter most for the downstream systems being evaluated?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "OC",
+    "question": "The benchmark's dialogue-act labels were annotated by annotators from a particular cultural and professional background. When your researchers apply the benchmark to evaluate chatbots intended to serve underrepresented regional communities \u2014 for example, South Asian, African American, or Latin American populations \u2014 would the communicative intent categories and their ground-truth assignments still reflect how therapeutic dialogue functions in those communities? Are there community-specific communicative moves (e.g., indirect disclosure, spiritually framed coping talk, collectivist framing of distress) that annotators outside those communities might miscategorize?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OO",
+    "question": "For the downstream chatbot systems your researchers are building, does dialogue-act classification feed into a decision or generation pipeline where multiple labels could plausibly be valid for the same utterance \u2014 for instance, an utterance that is simultaneously a self-disclosure and a request for advice? Or does the evaluation assume each utterance maps to exactly one ground-truth label? Knowing whether your use case tolerates or requires multi-label or ranked outputs would clarify whether single-label accuracy metrics from the benchmark are the right signal to optimize."
+  }
+]

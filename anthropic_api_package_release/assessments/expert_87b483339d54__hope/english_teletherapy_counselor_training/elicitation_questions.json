@@ -1,0 +1,22 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "The benchmark covers cognitive-behavioral therapy, child therapy, and family therapy sessions. Does your deployment also need to handle other modalities such as peer support conversations, crisis intervention, group therapy, or psychiatric intake interviews — and if so, do those session types involve communicative patterns (e.g., motivational interviewing moves, psychoeducation delivery, safety planning exchanges) that differ meaningfully from CBT-style dialogue acts?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "IC",
+    "question": "The benchmark's counseling sessions were drawn from a US clinical context. Your deployment includes teletherapy and peer support services — does that include practitioners or clients from non-US English-speaking contexts (e.g., UK, Australia, South Asia, sub-Saharan Africa) where therapeutic communication norms, formality levels, or colloquial expressions during sessions might differ from the source data?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OO",
+    "question": "The benchmark uses twelve dialogue-act labels designed for counseling conversations. For your downstream tasks — session quality assessment, counselor feedback, and training — are those twelve categories the right granularity, or does your clinical workflow require distinctions the taxonomy may not capture, such as differentiating empathic reflection from simple restatement, or distinguishing directive interventions from collaborative ones? Would clinical supervisors in your setting dispute how certain utterance types should be categorized?"
+  },
+  {
+    "id": "Q4",
+    "dimension": "OC",
+    "question": "The benchmark's utterance labels were annotated by a specific set of researchers or clinicians. For your system's quality-assessment and feedback outputs to be trusted by clinical supervisors and trainee evaluators, whose judgment needs to be treated as ground truth — licensed clinical supervisors, experienced counselors, or trainees themselves — and is there a risk that your target practitioner population would systematically disagree with how certain ambiguous utterances (e.g., a counselor sharing a personal anecdote) were labeled in the source data?"
+  }
+]

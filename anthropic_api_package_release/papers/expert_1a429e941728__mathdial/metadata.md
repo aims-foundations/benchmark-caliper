@@ -1,0 +1,11 @@
+- name: mathdial
+- full_name: MATHDIAL: A Dialogue Tutoring Dataset with Rich Pedagogical Properties Grounded in Math Reasoning Problems
+- year: 2023
+- domain: A dialogue tutoring dataset for math education, designed to enable training of dialogue tutoring systems that provide equitable pedagogical feedback on multi-step math reasoning problems through scaffolding rather than direct solution revelation.
+- languages: English
+- primary_region: UNKNOWN
+- porting_strategy: none
+- input_modalities: text
+- output_modalities: text
+- brief_description: MATHDIAL is a dataset of 3,061 one-to-one teacher-student tutoring dialogues grounded in multi-step math word problems. The dataset was collected using a novel approach pairing human teachers with an LLM prompted to simulate common student errors and confusions. Dialogues are annotated with rich pedagogical properties including teacher moves (scaffolding questions) and grounding information to ensure equitable tutoring that provides learning opportunities rather than premature solution revelation.
+- source_culture: mixed

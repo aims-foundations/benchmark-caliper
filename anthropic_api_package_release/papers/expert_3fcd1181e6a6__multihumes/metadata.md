@@ -1,0 +1,11 @@
+- name: multihumes
+- full_name: MultiHumES: Multilingual Humanitarian Response Dataset for Extractive Summarization
+- year: 2021
+- domain: Extractive summarization for humanitarian response, enabling rapid processing of secondary data sources (reports, news) to derive situational awareness during disaster response.
+- languages: English, French, Spanish
+- primary_region: Global (159 countries represented in dataset)
+- porting_strategy: none
+- input_modalities: text
+- output_modalities: text, label
+- brief_description: MultiHumES is a multilingual dataset of approximately 50K documents (35K annotated) in English, French, and Spanish collected from the DEEP platform for humanitarian response projects from 2016-2019. Documents are annotated with informative snippets selected by humanitarian analysts according to global analysis frameworks. The dataset underwent rigorous quality control (inter-annotator consistency of 0.974) and is evaluated with LEAD4, TextRank, and NeuSum baselines for extractive summarization tasks.
+- source_culture: transferred from different cultural context

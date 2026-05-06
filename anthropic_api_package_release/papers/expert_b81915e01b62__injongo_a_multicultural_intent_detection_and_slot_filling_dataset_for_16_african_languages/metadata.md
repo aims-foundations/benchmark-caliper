@@ -1,0 +1,11 @@
+- name: injongo
+- full_name: INJONGO: A Multicultural Intent Detection and Slot-filling Dataset for 16 African Languages
+- year: 2025
+- domain: Intent detection and slot-filling for task-oriented dialogue systems across five domains (banking, home, travel, utility, and kitchen & dining) for African languages.
+- languages: Amharic, Afrikaans, Swahili, Hausa, Yoruba, Zulu, Wolof, Igbo, Twi, Xhosa, Somali, Oromo, Tigrinya, Kikuyu, Sesotho, Setswana, English
+- primary_region: Sub-Saharan Africa
+- porting_strategy: ground_up
+- input_modalities: text
+- output_modalities: label
+- brief_description: INJONGO is the first large-scale multicultural intent detection and slot-filling dataset covering 16 African languages and English. Native speakers generated culturally-relevant utterances across five domains, avoiding Western-centric bias present in translated benchmarks. The dataset contains 3,200 instances per African language across 40 intents and 23 slot types, with experiments showing fine-tuning achieves 93.7% accuracy on intent detection while LLMs struggle significantly on slot-filling tasks.
+- source_culture: designed by target population

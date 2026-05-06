@@ -1,0 +1,11 @@
+- name: milu
+- full_name: MILU: A Multi-task Indic Language Understanding Benchmark
+- year: 2025
+- domain: A comprehensive evaluation benchmark for assessing Large Language Models across multiple tasks and domains in Indic languages, covering both general knowledge and culturally specific knowledge relevant to India.
+- languages: Bengali, English, Gujarati, Hindi, Kannada, Malayalam, Marathi, Odia, Punjabi, Tamil, Telugu
+- primary_region: India
+- porting_strategy: regional_exams
+- input_modalities: text
+- output_modalities: label
+- brief_description: MILU spans 8 domains and 41 subjects across 11 Indic languages, designed with an India-centric approach by collecting questions from over 1500 national, state, and regional competitive exams. The benchmark includes culturally relevant subjects such as local history, arts, festivals, and laws alongside traditional academic subjects like science. The authors evaluated 42+ LLMs and found that current models struggle with MILU, with GPT-4o achieving the highest average accuracy at 74%, and that models perform poorly on culturally relevant domains like Arts & Humanities and Law & Governance.
+- source_culture: designed by target population

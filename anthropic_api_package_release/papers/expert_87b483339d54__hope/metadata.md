@@ -1,0 +1,11 @@
+- name: hope
+- full_name: HOPE (Mental Health cOunselling of PatiEnts)
+- year: 2022
+- domain: Dialogue-act classification in mental health counseling conversations. The benchmark evaluates systems' ability to classify utterances by their communicative intent within therapy sessions.
+- languages: English
+- primary_region: United States
+- porting_strategy: ground_up
+- input_modalities: text
+- output_modalities: label
+- brief_description: HOPE is a manually annotated dataset of ~12.9K utterances from 212 mental-health counseling sessions covering cognitive-behavioral therapy, child therapy, and family therapy. Each utterance is labeled with one of twelve domain-specific dialogue-act labels designed for counseling conversations. The paper also proposes SPARTA, a transformer-based architecture with speaker- and time-aware contextual learning for dialogue-act classification that achieves state-of-the-art performance on the benchmark.
+- source_culture: designed by target population

@@ -1,0 +1,11 @@
+- name: mmlu
+- full_name: Measuring Massive Multitask Language Understanding
+- year: 2021
+- domain: Evaluates language models' multitask accuracy across 57 diverse subjects spanning STEM, humanities, social sciences, and professional domains, testing both world knowledge and problem-solving ability at elementary to advanced professional levels.
+- languages: English
+- primary_region: United States
+- porting_strategy: none
+- input_modalities: text
+- output_modalities: label
+- brief_description: MMLU is a benchmark consisting of 57 tasks covering subjects including elementary mathematics, US history, computer science, law, and ethics. It measures knowledge acquired during pretraining by evaluating models in zero-shot and few-shot settings. The benchmark ranges from elementary to advanced professional difficulty and evaluates both factual knowledge and reasoning ability, revealing that while large models like GPT-3 significantly outperform random chance, they still struggle with calculation-heavy subjects and topics related to human values.
+- source_culture: transferred from different cultural context

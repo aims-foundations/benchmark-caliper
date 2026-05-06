@@ -1,0 +1,48 @@
+## Use Case
+An environmental scientist based in Mymensingh, Bangladesh, uses LLMs (both generic frontier models and region-specific small LLMs) to retrieve and reason over agricultural and environmental science knowledge spanning South Asian regions — including the Bangladeshi delta system, Bangladeshi Bengali-specific farming contexts, and contrasting agro-ecological zones in India (e.g., Telangana dry-land cropping, Andhra coastal aquaculture). The benchmark MILU is being evaluated for its validity in this cross-regional, multilingual agricultural knowledge-assessment context.
+
+## Target Population
+- **Geography:** Primarily Mymensingh, Bangladesh, with cross-referencing to Indian agricultural zones (Telangana/Andhra Pradesh, West Bengal)
+- **Sub-national cohort:** Mymensingh district — Brahmaputra-Jamuna floodplain farming belt; haor wetland ecology zones
+- **Languages:** Bangladeshi Bengali (Mymensingh dialect), standard Indian Bengali (West Bengal variant), Telugu, and potentially other Indic languages; English as a secondary query language
+- **Occupation/Role:** Environmental scientist / agronomist seeking region-specific agricultural practice knowledge
+- **Relevant demographics:** Cross-border professional context (India–Bangladesh agricultural and hydrological overlap); user likely queries in a mix of Bengali and English; some familiarity with standard Bengali script but natural query style likely differs from exam-register prompts
+
+## Elicitation Responses
+
+Q1 [IO]: Does MILU's culturally specific subject coverage (local history, arts, festivals, law) adequately represent the agro-ecological, soil, crop, and climate-specific knowledge an environmental scientist targeting South Asian agricultural regions would need?
+A1: No. MILU contains only surface-level agricultural content about different parts of India; the depth of subject-specific knowledge required for serious agricultural or environmental science work is largely absent from the benchmark's subject taxonomy.
+
+Q2 [IC]: Do MILU's Bengali-language questions reflect standard Indian Bengali (West Bengal exam corpus) rather than Bangladeshi or Mymensingh dialect conventions, and would dialect-specific agricultural terminology (local crop names, land-tenure terms, irrigation vocabulary) be represented?
+A2: The wording is mostly standard across Bengali variants, with potentially slight implicit Indian Bengali stylistic bias. Dialect-specific agricultural terminology from the Bangladeshi/Mymensingh context is absent but would meaningfully improve benchmark robustness.
+
+Q3 [OC]: Would Indian exam-derived answer keys be considered authoritative for environmental/agricultural science questions relevant to Bangladesh (e.g., haor ecology, boro rice cycles, trans-border river management), and are there cases where the correct answer for a Bangladeshi context would differ from what an Indian exam marks correct?
+A3: Indian exam answers would generally be considered authoritative by Bangladeshi environmental scientists, with a few notable exceptions around trans-border water agreements and policy — where shared rivers and bilateral treaties can generate legitimately different national perspectives. The more significant gap is the absence of Bangladesh-specific agricultural practice differences and regional knowledge, rather than outright answer-key conflict.
+
+Q4 [IF]: Will the LLMs receive queries in regional Indian languages, Bengali, English, or a mix — and is the Mymensingh scientist expected to query in standard Bengali script, colloquial Bangladeshi Bengali, or English?
+A4: Queries will span Indian languages and Bengali as used in both India and Bangladesh. The input modality mix is text-based across these languages, but the benchmark's exam-style standardized prompts may not reflect the natural phrasing style of a domain expert in Bangladesh querying in Bangladeshi Bengali.
+
+## Dimension Priority Weights
+
+| Dimension | Priority | Rationale |
+|-----------|----------|-----------|
+| IO | HIGH | The benchmark's subject taxonomy covers surface-level Indian agricultural content and culturally-oriented categories (arts, law, festivals) but is confirmed to lack the depth of agro-ecological, soil-science, and crop-specific knowledge the deployment requires, and entirely omits Bangladesh-specific agricultural subdomains. |
+| IC | HIGH | Individual datapoints draw from Indian regional competitive exams with no representation of Bangladeshi farming contexts, Mymensingh dialect terminology, haor wetland ecology, or trans-border river-system knowledge — all of which are central to the deployment's content needs. |
+| IF | MODERATE | The deployment is text-only and Indic-script text is supported by MILU, but the exam-register query format is misaligned with how a domain expert in Bangladesh would naturally phrase agricultural science questions, and Bangladeshi Bengali as a script/dialect variant is underrepresented. |
+| OO | MODERATE | MILU's output taxonomy is MCQ label-selection derived from Indian exam answer keys; the deployment requires knowledge retrieval and reasoning over legitimately pluralistic agro-ecological contexts where a single correct label may not capture cross-border agricultural practice differences. |
+| OC | HIGH | Ground-truth labels originate from Indian exam corpora and reflect Indian educational and policy contexts; for Bangladesh-specific agricultural practice, river management, and bilateral water-agreement questions, Indian exam answer keys are not fully authoritative and may marginalize Bangladeshi scientific and practitioner perspectives. |
+| OF | LOWER | Both the benchmark and the deployment operate in text-based, label/response format; the output modality mismatch is minimal, though MCQ framing may suppress nuanced agricultural knowledge that an open-ended deployment context would benefit from capturing. |
+
+## Flagged Gaps
+
+1. **Bangladesh-specific agricultural knowledge absence:** MILU was constructed entirely from Indian competitive exams. There is no representation of Bangladesh's agro-ecological systems — haor and beel wetland farming, boro and aman rice cultivation calendars, char-land agriculture in the Brahmaputra-Jamuna floodplain, or flood-recession cropping in Mymensingh district. Downstream web search should investigate whether any MILU subject or question set includes Bangladeshi agricultural content or whether the benchmark is structurally India-only.
+
+2. **Mymensingh/Bangladeshi Bengali dialect gap:** MILU's Bengali content derives from West Bengal state and Indian national exam corpora. The Mymensingh regional dialect, Bangladeshi Standard Bengali, and associated agricultural vocabulary (local crop names, beel/haor/char land-tenure terminology) are unrepresented. Web search should investigate whether any MILU Bengali subset includes questions authored or validated by Bangladeshi institutions or exam bodies.
+
+3. **Trans-border water and agricultural policy knowledge:** India–Bangladesh water-sharing agreements (e.g., Ganges/Farakka, Teesta) and jointly managed river systems create a domain where Indian exam answer keys may encode nationally partial perspectives. Environmental scientists in Mymensingh may hold different scientifically and politically valid positions on these issues. Web search should look for any benchmark documentation addressing cross-border or politically contested agricultural/environmental topics.
+
+4. **Depth of agricultural science coverage:** The user confirmed that MILU's agricultural content is surface-level. Web search should verify the actual distribution of MILU questions across its 8 domains and 41 subjects to quantify how many questions fall under agriculture, environmental science, or related applied science categories — and whether any subject specifically addresses agro-ecological or soil/crop science at a technical depth.
+
+5. **Telugu-speaking zone agricultural coverage:** The deployment also targets Telangana/Andhra Pradesh agro-ecological contexts (dry-land cropping, coastal aquaculture). Web search should assess whether MILU's Telugu-language questions include regionally specific Telangana/Andhra agricultural content or default to generic Indian exam material without sub-national agro-ecological specificity.
+
+6. **Absence of Bangladeshi annotators or validators:** Since MILU was designed by and for Indian target populations using Indian exam corpora, there are no Bangladeshi subject-matter experts or farmers in the annotation pool. This is a structural gap for any use case targeting Bangladesh. Web search should confirm whether MILU's design documentation mentions any cross-border or Bangladeshi input into benchmark construction.

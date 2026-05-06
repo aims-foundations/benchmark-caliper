@@ -1,0 +1,11 @@
+- name: switchboard
+- full_name: SWITCHBOARD: Telephone Speech Corpus for Research and Development
+- year: 1992
+- domain: A large multispeaker corpus of conversational speech and text designed for training and testing speech processing algorithms, speaker authentication, and speech recognition for telephone-based applications.
+- languages: English
+- primary_region: United States
+- porting_strategy: none
+- input_modalities: audio, text
+- output_modalities: transcription, label
+- brief_description: SWITCHBOARD is a large corpus of approximately 2500 conversational telephone speech recordings from around 500 speakers across major American English dialects. The corpus includes over 250 hours of speech and nearly 3 million words of text, with time-aligned word-for-word transcriptions. It was designed to support speaker authentication and speech recognition research for telephone-based applications.
+- source_culture: transferred from different cultural context

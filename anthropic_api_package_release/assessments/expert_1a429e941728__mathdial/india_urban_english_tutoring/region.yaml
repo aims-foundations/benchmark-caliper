@@ -1,0 +1,323 @@
+name: Indian Metropolitan Professional Teachers (Grades 1–8)
+abbreviation: IN-METRO-TEACHERS
+deployment_context:
+  country: India
+  cities:
+  - Delhi
+  - Mumbai
+  institutional_setting: Formal school sector, Grades 1–8, operating under NCERT/CBSE
+    curricular framework
+  population_description: Experienced, formally credentialed professional teachers
+    working in major Indian metropolitan cities (Delhi and Mumbai), evaluating the
+    pedagogical quality of AI-augmented one-on-one math tutoring responses. Evaluators
+    are English-fluent, accustomed to exam-oriented and teacher-directed instructional
+    norms, and expected to judge response quality primarily on the adequacy of guidance
+    provided to the student.
+  role_in_system: Human evaluators who assess whether GPT-4-augmented tutoring responses
+    meet teacher-acceptable pedagogical standards, with particular emphasis on the
+    'providing guidance' dimension.
+  grade_band: Grades 1–8 (ages approximately 6–14)
+  subject_domain: Mathematics (curriculum-agnostic math reasoning errors; no NCERT/CBSE
+    topic alignment required per user confirmation)
+languages:
+  deployment_language: English (text only)
+  note: Single-language deployment confirmed. No code-switching, script variation,
+    or vernacular-language content is present in the benchmark or deployment interface.
+    Hindi and other Indian languages are not part of the evaluation interface, though
+    they are the home languages of many students being discussed.
+writing_systems:
+  scripts_in_use:
+  - Latin (English)
+  note: No script mismatch between benchmark and deployment. All dialogue instances
+    and evaluation rubrics are English Latin-script text.
+population_characteristics:
+  professional_credentials: 'Formally trained and credentialed teachers regulated
+    by the National Council for Teacher Education (NCTE), a statutory body established
+    under the NCTE Act 1993. For primary (Grades 1–5), the minimum qualification is
+    a 2-year Diploma in Elementary Education (D.El.Ed.); for upper primary (Grades
+    6–8), a Bachelor of Education (B.Ed.) or equivalent is required per NCTE norms.
+    A 2023 Supreme Court ruling confirmed B.Ed. holders cannot apply for primary posts
+    without a D.El.Ed. bridge course. By 2030, the 4-year integrated B.A./B.Sc.B.Ed.
+    (ITEP) will become the minimum qualification for all school teachers. Source:
+    NCTE official qualification norms — [|https://ncte.gov.in/Website/NCTEACT12.aspx|];
+    CTET eligibility 2026 — [|https://competition.careers360.com/articles/ctet-eligibility-criteria|]'
+  experience_profile: '[NEEDS VERIFICATION — deferred: below search budget; no India
+    metro-specific median experience figure found in UDISE or comparable source]'
+  english_proficiency: 'English-fluent; English is the primary medium of instruction
+    in a large proportion of private and government-aided schools in Delhi and Mumbai.
+    Delhi alone lists over 3,000 English-medium schools (directory data). Government
+    Schools of Excellence in Delhi operate in English medium. Mumbai similarly has
+    a substantial English-medium private school sector alongside Marathi-medium government
+    schools. No aggregate percentage of English-medium enrollment at metro level was
+    found; this remains a partially verified slot. Source: Delhi English-medium school
+    directory — [|https://ezyschooling.com/english-medium-schools-in-delhi|]; Delhi
+    Schools of Excellence (English medium, govt) — [|https://www.schoolmykids.com/schools/list-of-schools-of-excellence-in-delhi-india|]'
+  gender_distribution: 'Teaching workforce nationally skews female at the school level:
+    54% of all Indian school teachers are female per UDISE+ 2024-25 data, with private
+    schools at 66% female in 2023-24. Delhi specifically: women constitute 61% of
+    government school teachers (UDISE+ 2023-24 state-level data). Metro private-school
+    figures for Mumbai are not separately published but the national private-school
+    trend (66% female) is indicative. Source: IndiaSpend/UDISE+ 2024-25 — [|https://idronline.org/article/education/a-closer-look-at-indias-expanding-teaching-workforce/|];
+    UDISE+ 2023-24 (Delhi 61% figure) — [|https://www.ensureias.com/blog/current-affairs/udise-2023-24-report-reveals-sharp-decline-in-school-enrolment|]'
+  employment_sector: 'India''s overall school teacher distribution (UDISE+ 2024-25):
+    ~51% in government schools, ~40% in private unaided, remainder in government-aided
+    schools. In metropolitan contexts the private unaided share is higher. Source:
+    IndiaSpend/UDISE+ 2024-25 — [|https://www.newslaundry.com/2025/09/22/mapping-indias-10-million-teachers-in-six-charts|]'
+  digital_literacy: '[NEEDS VERIFICATION — deferred: below search budget; likely unsearchable
+    at metro teacher cohort level; UDISE+ 2024-25 reports 64.7% of schools nationally
+    have computers and 63.5% have internet connectivity, but teacher-level digital
+    literacy figures for Delhi/Mumbai are not published separately. Source: UDISE+
+    2024-25 analysis — [|https://educationforallinindia.com/analysis-of-udise-2024-25-data-by-prof-arun-c-mehta/|]]'
+pedagogical_norms:
+  dominant_orientation: Exam-oriented, teacher-directed instruction; emphasis on procedural
+    correctness and exam-readiness over constructivist exploration
+  guidance_style: Direct correction and explicit solution guidance are valorized;
+    Socratic scaffolding is less normative than in Western constructivist frameworks
+  student_interaction_expectations: Indian metro students are typically brief and
+    deferential in teacher interactions; low verbalization of reasoning; deference
+    to teacher authority
+  procedure_emphasis: High weight placed on step-by-step procedural accuracy, standard
+    algorithms, and exam-relevant solution formats
+  socratic_scaffolding_reception: Extended Socratic probing may be perceived as withholding
+    guidance rather than facilitating learning; systematic divergence from MATHDIAL's
+    constructivist orientation expected
+  telling_as_legitimate_move: Direct revelation of correct steps or answers is considered
+    pedagogically appropriate (not a failure mode) in exam-preparation contexts; contrasts
+    sharply with MATHDIAL's Telling@k penalty framework
+  exam_readiness_weighting: Exam performance is a primary success criterion; responses
+    that build toward board/competitive exam formats are rated favorably
+  language_related_misunderstandings: English-medium instruction may create comprehension
+    gaps for students; teachers account for L2-mediated mathematical misunderstandings
+    not captured in MATHDIAL's US-origin dialogues
+benchmark_alignment_notes:
+  primary_evaluation_criterion: Providing adequate guidance to the student (user-confirmed
+    as the single most critical dimension among the eight pedagogical categories)
+  accepted_ontology: The benchmark's eight pedagogical categories are accepted as
+    necessary and sufficient per user confirmation; curriculum-agnostic math errors
+    are sufficient
+  key_divergence_ic: MATHDIAL's LLM-simulated student is calibrated to Western tutoring
+    conventions — expressive, reasoning-out-loud behavior — that does not reflect
+    the brief, deferential, low-verbalization interaction style typical of Indian
+    metro classrooms
+  key_divergence_oc: Ground-truth quality annotations are dominated by UK/US educators
+    instructed to favor Socratic scaffolding; Indian professional teachers are expected
+    to systematically rate more directive responses higher, particularly on guidance
+    and exam-readiness dimensions
+  equitable_tutoring_mismatch: MATHDIAL's 'Equitable Tutoring' dimension encodes a
+    constructivist anti-telling orientation (κ=0.34 inter-annotator agreement) that
+    may systematically penalize responses Indian teachers would judge as appropriately
+    guidance-rich
+  telling_framing_mismatch: The benchmark treats Telling as a last resort and measures
+    Telling@k as a negative metric; Indian professional teachers may view directive
+    telling as a primary pedagogical tool rather than a failure mode
+  form_alignment: No modality, script, or language mismatch — both benchmark and deployment
+    are English text-only
+annotator_provenance:
+  mathdial_annotator_pool: 91 professional teachers recruited via Prolific; majority
+    UK nationals, followed by USA, Canada, Australia, India, Germany
+  indian_representation: India listed as minority contributor (fifth of six named
+    countries); no disaggregated count of Indian annotators reported
+  indian_educator_involvement_in_guidance_annotation: '[NOT FOUND — searched MATHDIAL
+    paper (arXiv:2305.14536) and ACL Anthology version; no disaggregated count of
+    Indian annotators by rating dimension is reported. The paper confirms annotator
+    country-level breakdown at Q27 but provides no sub-analysis of which dimensions
+    Indian annotators rated. This remains unresolvable from public sources.]'
+  annotator_instruction_bias: All annotators explicitly instructed to avoid direct
+    correction and to favor Socratic exploration — encoding Western constructivist
+    norms regardless of annotator origin
+infrastructure_and_access:
+  device_context: Mobile and enterprise platforms; English text interface
+  internet_connectivity: 'Metro deployment assumes reliable internet access. National
+    UDISE+ 2024-25 data: 63.5% of Indian schools have internet connectivity (up from
+    53.9% in 2023-24); metro schools in Delhi and Mumbai are expected to have significantly
+    higher connectivity rates, though no disaggregated metro-level figure is published.
+    Source: UDISE+ 2024-25 — [|https://educationforallinindia.com/analysis-of-udise-2024-25-data-by-prof-arun-c-mehta/|]'
+  platform_used: '[NEEDS VERIFICATION — deferred: below search budget; the specific
+    LMS or interface through which teachers access tutoring dialogue evaluation is
+    not publicly documented and is likely proprietary to the deploying organization]'
+  data_protection_regulation: 'The Digital Personal Data Protection Act 2023 (DPDPA),
+    enacted 11 August 2023 and operationalized by the DPDP Rules notified 13 November
+    2025, is the applicable framework for AI deployments processing personal data
+    in India. The Act specifically prohibits processing of children''s data for tracking,
+    behavioral monitoring, or targeted advertising, with narrow educational exemptions
+    only for defined purposes (e.g., delivering education services). Full substantive
+    compliance obligations take effect from May 2027 (Phase III, 18 months from notification).
+    Educational AI deployments must comply with consent, notice, data minimization,
+    and security obligations as Data Fiduciaries. Source: DPDPA official text (MeitY)
+    — [|https://www.meity.gov.in/static/uploads/2024/06/2bf1f0e9f04e6fb4f8fef35e82c42aa5.pdf|];
+    DPDP Rules 2025 (Hogan Lovells analysis) — [|https://www.hoganlovells.com/en/publications/indias-digital-personal-data-protection-act-2023-brought-into-force-|];
+    DLA Piper implementation timeline — [|https://www.dlapiperdataprotection.com/?t=law&c=IN|]'
+sub_national_variation:
+  delhi_notes: 'Delhi government schools are primarily Hindi-medium, but the government
+    has introduced English-medium Schools of Excellence since 2018 and English-medium
+    instruction is widespread in the large private-school sector. Women constitute
+    61% of Delhi government school teachers (UDISE+ 2023-24). Delhi operates under
+    both CBSE and the Delhi Board of Secondary Education. No specific evidence found
+    of Delhi-unique pedagogical norms diverging from national-level findings on exam
+    orientation and direct instruction. Source: Delhi Schools of Excellence — [|https://www.schoolmykids.com/schools/list-of-schools-of-excellence-in-delhi-india|];
+    Delhi teacher gender — [|https://www.ensureias.com/blog/current-affairs/udise-2023-24-report-reveals-sharp-decline-in-school-enrolment|]'
+  mumbai_notes: Mumbai has significant linguistic diversity (Marathi, Hindi, Gujarati,
+    English-medium schools coexist); government schools are predominantly Marathi-medium
+    while private schools are heavily English-medium. No metro-specific published
+    figure found on the share of English-medium enrollment or teacher gender breakdown
+    in Mumbai separately. The sub-national variation (Marathi vs. English medium instruction
+    norms) may affect evaluation expectations for teachers from different sectors;
+    this is a flagged gap requiring stakeholder elicitation. [NOT FOUND — no Mumbai-specific
+    teacher evaluation norm study found in public sources]
+  city_level_differentiation_by_user: User did not differentiate between Delhi and
+    Mumbai in elicitation; sub-national variation is a flagged gap requiring investigation
+regulatory_and_curricular_context:
+  curriculum_framework: NCERT/CBSE (National Council of Educational Research and Training
+    / Central Board of Secondary Education)
+  curriculum_alignment_requirement: Curriculum-agnostic math errors confirmed sufficient;
+    no NCERT/CBSE topic or algorithm alignment required for this assessment
+  teacher_regulatory_body: 'National Council for Teacher Education (NCTE), a statutory
+    body established under the NCTE Act 1993, is the regulatory authority for teacher
+    education and minimum qualification standards in India. NCTE sets minimum qualifications
+    (D.El.Ed. for primary; B.Ed. for upper primary), accredits teacher education institutions,
+    and is revising programs in line with NEP 2020 through the 4-year Integrated Teacher
+    Education Programme (ITEP). Source: NCTE official site — [|https://web.ncte.gov.in/page/introduction|];
+    NCTE minimum qualifications — [|https://ncte.gov.in/Website/NCTEACT12.aspx|]'
+  ai_in_education_policy: 'India''s NEP 2020 and NCERT''s CIET (Central Institute
+    of Educational Technology) have both addressed AI in schools. NEP 2020 emphasizes
+    technology integration and acknowledges AI''s potential for personalized learning
+    and intelligent tutoring systems. CIET-NCERT ran a ''Leveraging AI for Transforming
+    School Education'' teacher training series in January 2026, framing AI as a tool
+    that ''augments teachers'' pedagogical capabilities rather than replacing the
+    human element.'' The national DIKSHA platform is positioned as the primary ecosystem
+    for AI-enabled educational resources. No specific regulation on AI tutoring tool
+    use in classrooms was found; the DPDPA 2023/Rules 2025 and the NEP 2020 framework
+    together constitute the operative policy environment. Source: CIET-NCERT AI training
+    program (Jan 2026) — [|https://ciet.ncert.gov.in/activity/laie|]'
+  national_education_policy_2020_relevance: 'NEP 2020 explicitly promotes technology
+    integration including AI and coding from Class 6 onward, personalized learning,
+    and teacher training in technology use. It also envisages a National Educational
+    Technology Forum (NETF). The policy shift from rote learning toward competency-based
+    education may create a slight receptivity gap relative to the exam-oriented direct-instruction
+    culture that currently dominates Indian metro classrooms — a tension relevant
+    to how Indian teachers evaluate AI tutoring quality. NCTE is revising all teacher
+    education programs in alignment with NEP 2020. Source: Multiple NEP 2020 AI integration
+    analyses — [|https://www.researchgate.net/publication/377437769_The_Role_of_Artificial_Intelligence_in_Implementing_the_National_Education_Policy-2020_Challenges_and_Opportunities|];
+    CIET-NCERT — [|https://ciet.ncert.gov.in/activity/laie|]'
+existing_india_specific_benchmarks:
+  known_alternatives: 'No India-specific math tutoring dialogue benchmark capturing
+    CBSE/NCERT classroom interaction dynamics or Indian student deferential behavior
+    profiles was found. The closest existing resources are: (1) MILU (Multi-task Indic
+    Language Understanding, Verma et al. 2024) — covers 11 Indic languages across
+    8 domains including STEM, India-first perspective using national/state exam questions,
+    but is a knowledge QA benchmark not a tutoring dialogue benchmark; (2) IndicEval
+    (2026) — bilingual (English/Hindi) evaluation using UPSC/JEE/NEET questions, grounded
+    in Indian high-stakes examinations, but again a reasoning benchmark not a pedagogical
+    dialogue benchmark; (3) GSM8K-Hi — Hindi version of GSM8K (the same base dataset
+    as MATHDIAL), created by NVIDIA with human annotation + translate-and-verify,
+    but focused on math reasoning not tutoring interaction. None of these capture
+    Indian classroom discourse, deferential student interaction styles, or tutoring
+    quality evaluation from an Indian pedagogical standpoint. Source: MILU — [|https://arxiv.org/html/2501.13912v1|];
+    IndicEval — [|https://arxiv.org/html/2602.16467|]; Hindi LLM benchmarks suite
+    (NVIDIA) — [|https://arxiv.org/abs/2508.19831|]'
+  relevant_datasets: 'The PARIKSHA benchmark (Watts et al. 2024) evaluates LLM outputs
+    across 10 Indic languages using human annotators in a multicultural setting, covering
+    finance, health, and culture topics. A key finding directly relevant to this deployment:
+    ''LLM evaluators tend to align less with human evaluations on assessing culturally
+    nuanced responses.'' This supports the expectation of divergence between MATHDIAL''s
+    Western-norm ground truth and Indian teacher judgments. No dataset capturing Hindi-English
+    code-switching in math tutoring or Indian classroom discourse corpora was found.
+    Source: PARIKSHA — [|https://arxiv.org/html/2406.15053v1|]'
+  net_new_finding_indic_benchmark_gap: 'A systematic review of Indic LLM evaluation
+    datasets (2025) found that ''a majority of these datasets are a direct translation
+    of existing English datasets which is a serious limitation'' and that ''models
+    may fare poorly on tasks where socio-cultural understanding is required.'' This
+    directly corroborates the OC validity risk: even general cultural benchmarks for
+    India are predominantly translated from English, and no pedagogical-dialogue benchmark
+    with Indian classroom grounding exists. Source: Analysis of Indic Language Capabilities
+    in LLMs — [|https://arxiv.org/html/2501.13912v1|]'
+validity_risk_summary:
+  highest_risk_dimensions:
+  - dimension: IC — Input Content (HIGH)
+    risk: MATHDIAL's simulated student dialogues do not reflect Indian classroom interaction
+      norms (deferential, brief, low-verbalization students); construct-irrelevant
+      variance at the individual datapoint level
+  - dimension: OC — Output Content (HIGH)
+    risk: Ground-truth quality standards encoded by predominantly Western annotators
+      instructed toward Socratic scaffolding; systematic divergence expected from
+      Indian professional teachers' direct-correction preferences
+  moderate_risk_dimensions:
+  - dimension: OO — Output Ontology (MODERATE)
+    risk: Primacy of 'providing guidance' in Indian context not commensurately weighted
+      in MATHDIAL's three co-equal human evaluation dimensions; Equitable Tutoring
+      operationalization encodes constructivist anti-telling bias
+  lower_risk_dimensions:
+  - dimension: IO — Input Ontology (LOWER)
+    risk: Curriculum-agnostic errors and eight benchmark categories accepted as sufficient;
+      reduced ontological gap
+  - dimension: IF — Input Form (LOWER)
+    risk: No modality or script mismatch; both benchmark and deployment are English
+      text-only
+  - dimension: OF — Output Form (LOWER)
+    risk: No output-form mismatch; text-based open-ended tutoring dialogue in both
+      benchmark and deployment
+cultural_norms_notes: 'Key pedagogical and cultural characteristics relevant to this
+  deployment population:
+
+  - Teacher authority: Strong hierarchical teacher-student relationship; teachers
+  are primary knowledge source, not Socratic facilitators
+
+  - Exam orientation: Evaluation of tutoring quality is heavily mediated by perceived
+  exam-readiness of the guidance provided
+
+  - Direct correction norm: Explicit correction of student errors is a culturally
+  accepted and expected teacher behavior, not a pedagogical failure
+
+  - Student deference: Students are expected to be brief, deferential, and receptive
+  rather than expressive or reasoning-out-loud
+
+  - Procedure primacy: Step-by-step algorithmic correctness is valued over conceptual
+  exploration
+
+  - L2 math instruction: Many students receive math instruction in English as a second
+  language; teachers calibrate guidance for language-mediated misunderstandings
+
+  - Professional identity: Teachers identify as subject-matter authorities and correctors,
+  not as coaches or facilitators in the constructivist sense
+
+  - Rote and drill culture: Memorization and repeated practice of standard procedures
+  remain normative in many Delhi/Mumbai school environments [NEEDS VERIFICATION —
+  deferred: likely unsearchable (lived practice); sub-school-type variation not aggregated
+  in public sources]
+
+  - NEP 2020 tension: The policy aspiration toward competency-based, technology-assisted
+  personalized learning (NEP 2020) exists alongside the deeply entrenched exam-oriented
+  direct-instruction culture; the degree to which metro teachers have internalized
+  NEP 2020''s constructivist framing is unknown and requires stakeholder elicitation'
+net_new_fields:
+  ncte_regulatory_update_2025: 'NCTE issued new rules for B.Ed and D.El.Ed programs
+    effective 2025, including: banning simultaneous enrollment in both programs, mandatory
+    6-month school internship for all teacher trainees, and stricter admission rules.
+    The 4-year Integrated Teacher Education Programme (ITEP) is slated to become mandatory
+    for all school teachers by 2030. These reforms affect the credential profile of
+    incoming teachers but do not change the current minimum standards for the deployed
+    evaluator population. Source: NCTE new B.Ed/D.El.Ed rules 2025 — [|https://sardarpateleducation.com/ncte-new-rules-for-b-ed-and-d-el-ed/|]'
+  dpdpa_child_data_provisions: 'The DPDP Rules 2025 (notified November 2025) include
+    specific provisions for educational institutions: they are among the exempt classes
+    for certain child data processing (e.g., delivering education services), but this
+    is a narrow, purpose-specific carve-out. The Act prohibits processing detrimental
+    to child well-being or involving behavioral monitoring/targeted advertising of
+    children. For the AI tutoring deployment, the DPDPA''s child data protections
+    are highly relevant: student interaction data in tutoring sessions likely constitutes
+    personal data of minors, requiring careful data governance design. Source: Hogan
+    Lovells DPDP Rules 2025 analysis — [|https://www.hoganlovells.com/en/publications/indias-digital-personal-data-protection-act-2023-brought-into-force-|]'
+  indic_llm_evaluator_human_alignment_gap: 'The PARIKSHA study (2024) found that LLM
+    evaluators align less with human evaluations specifically on culturally nuanced
+    responses across 10 Indian languages. This is a directly relevant methodological
+    caution for the deployment: if LLM-as-judge is used at any stage of the pipeline
+    (e.g., filtering, pre-screening), alignment with Indian teacher judgments cannot
+    be assumed and may be lower than alignment with the Western-norm MATHDIAL ground
+    truth. Source: PARIKSHA — [|https://arxiv.org/html/2406.15053v1|]'
+  india_specific_math_education_benchmarks_absence: 'A search across ACL Anthology,
+    arXiv, and general academic sources found no India-specific math tutoring dialogue
+    benchmark capturing Indian classroom interaction norms, CBSE/NCERT curricular
+    alignment, or deferential student behavior profiles. The most India-relevant educational
+    evaluation frameworks (MILU, IndicEval, GSM8K-Hi) are all knowledge/reasoning
+    benchmarks, not pedagogical dialogue quality benchmarks. This confirms a genuine
+    documentation gap that materially strengthens the case for the high IC and OC
+    validity risk ratings. Source: Indic LLM evaluation landscape review — [|https://arxiv.org/html/2501.13912v1|]'

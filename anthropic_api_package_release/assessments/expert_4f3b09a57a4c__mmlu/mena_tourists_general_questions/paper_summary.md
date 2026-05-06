@@ -1,0 +1,256 @@
+```markdown
+# Validity Extraction: Measuring Massive Multitask Language Understanding
+<!-- Model routing: Haiku (per-page extraction) → script (registry assembly) → Sonnet (narrative) -->
+
+## Metadata
+- **Title**: Measuring Massive Multitask Language Understanding
+- **Authors**: Dan Hendrycks, Collin Burns, Steven Basart, Andy Zou, Mantas Mazeika, Dawn Song, Jacob Steinhardt
+- **Venue/Year**: ICLR 2021
+- **Total Pages**: 27
+- **Quotes Extracted**: 171
+
+## Narrative Context
+
+Interpretive prose organized by extraction category. Each factual claim
+references quote IDs from the registry. **This section is non-authoritative
+— it provides readability but is not evidence. Only the Quote Registry
+contains verbatim text from the paper.**
+
+### 1. Task Taxonomy / Test Case Categories
+
+MMLU covers 57 subjects spanning STEM, humanities, social sciences, and other areas [Q4], ranging from elementary to advanced professional difficulty [Q1], with the explicit goal of requiring "extensive world knowledge and problem solving ability" [Q2]. The subject areas within the humanities include law, philosophy, history, and moral reasoning [Q37, Q40, Q41], while social sciences cover economics, sociology, politics, geography, and psychology [Q43, Q44, Q46]. STEM subjects include physics, computer science, and mathematics [Q47], and the benchmark also includes more esoteric topics such as security studies [Q45], virology [Q170], and world religions [Q171].
+
+From the perspective of the Arab-region deployment context, this taxonomy presents a critical **Input Ontology (IO) gap**. There is no dedicated subject category for Arab history, Middle Eastern geography, Arabic language, or any regionally specific knowledge domain that would serve tourists and expats visiting Morocco, Egypt, Jordan, Palestine, Lebanon, UAE, Kuwait, or KSA. The history subject — illustrated by questions ranging across "a wide range of time periods and geographical locations, including prehistory" [Q41] — and the world history examples shown in figures [Q153] suggest some non-US coverage, but no evidence in the registry indicates dedicated or substantive Arab-region content. The 57 subjects are described as covering "topics that humans are incentivized to learn" [Q17], a framing rooted in Western academic curricula; the example questions throughout the appendix (Q120–Q171) are overwhelmingly anchored in US and European academic contexts — from US tax law [Q164] to US bar examination scenarios [Q165] — with no example questions drawn from Arab history, Islamic jurisprudence, regional geography, or Arabic linguistics. The benchmark's stated comprehensiveness ("greater breadth and depth than previous benchmarks" [Q90]) does not translate into Arab-region subject coverage, making it structurally misaligned with the core knowledge domains this deployment must serve.
+
+### 2. Data Sources and Collection
+
+Questions were manually collected by graduate and undergraduate students from freely available online sources [Q23], including practice materials for standardized tests such as the GRE and USMLE [Q24], undergraduate course materials, and Oxford University Press publications [Q25]. The underlying assumption is that models acquire knowledge from "massive text corpora including educational books and websites" [Q18], and the benchmark is designed to probe that pretraining knowledge rather than require dedicated training sets [Q72, Q73]. Additional domain-specific data was gathered for at least one task: approximately 2,000 Professional Law training examples [Q83] and 1.6 million legal case summaries from Harvard's Law Library [Q85] were used for supplementary fine-tuning experiments. Questions predominantly came from PDFs or websites where questions and answers appear on separate pages [Q112], which the authors suggest reduces contamination risk.
+
+The data collection process carries a significant **Input Content (IC) implication** for the Arab-region deployment: all identified source types — US standardized tests, US undergraduate courses, Oxford University Press books — are products of Anglophone Western academic institutions. No sources from Arab educational systems, regional universities, Arabic-language curricula, or Middle Eastern publishing houses are identified. This means even subjects that nominally touch on world history or global geography will reflect the framing, selection, and emphasis of US and UK academic traditions rather than Arab or pan-regional perspectives on contested events and geographies.
+
+### 3. Data Format and Preprocessing
+
+The benchmark is designed exclusively for zero-shot and few-shot evaluation [Q3], comprising 15,908 multiple-choice questions with four answer options (A–D) [Q27, Q56]. These are split into a 5-question-per-subject few-shot development set, a 1,540-question validation set, and a 14,079-question test set [Q28], with a minimum of 100 test examples per subject [Q29]. GPT-3 is prompted with a standardized text prefix followed by the question and, in the few-shot setting, up to five demonstration examples [Q56]; the model produces token probabilities over "A," "B," "C," and "D" [Q56]. UnifiedQA uses a distinct normalized, lowercased input format [Q104], and sensitivity to minor formatting changes (e.g., removing a separator token) can cause multi-percentage-point accuracy swings [Q105]. Fine-tuning experiments use the UnifiedQA MCQ question format [Q97]. Question length is not strongly predictive of difficulty [Q108].
+
+From an **Input Form (IF)** perspective, the benchmark's text-only, English-language multiple-choice format aligns with the deployment's primary English-language interaction mode. However, the benchmark is entirely English-only [Q71], and the deployment anticipates a meaningful sub-cohort of Arabic-learning users who may prompt in Arabic — a use pattern MMLU cannot evaluate or validate at all. The fixed four-option MCQ structure also imposes constraints that are relevant to the Output Form dimension discussed below.
+
+### 4. Label Categories and Output Types
+
+The label schema is a straightforward four-option multiple-choice format (A, B, C, D), with some subjects further stratified by difficulty level — "Elementary," "High School," "College," or "Professional" [Q26]. The ground-truth label for each question is a single correct answer among the four options, as indicated by the evaluation methodology of computing classification accuracy across all examples [Q49].
+
+This single-answer label schema is a critical **Output Ontology (OO) and Output Content (OC) concern** for the Arab-region deployment. The deployment context requires the system to acknowledge multiple valid perspectives on contested historical and political topics — for example, different national framings of the 1948 war, the Lebanese Civil War, or the status of Western Sahara — rather than selecting a single authoritative answer [Elicitation Q3]. MMLU's binary correct/incorrect scoring is structurally incompatible with this requirement. Furthermore, for any Arab history or regional geography content that does appear within subjects like world history or global facts, the ground-truth labels would have been determined by the Western academic sources from which questions were drawn [Q23, Q24, Q25], meaning label correctness as judged by Arab regional stakeholders may diverge substantially from what MMLU encodes as the single correct answer.
+
+### 5. Annotation Process
+
+NOT DOCUMENTED: The paper is entirely silent on annotator demographics, the annotation process for verifying or validating the collected questions, inter-annotator agreement, or any quality-assurance procedures applied to the question-answer pairs. The registry contains no quotes in this category. This absence is itself a validity-relevant finding: given that questions were collected by graduate and undergraduate students from online sources [Q23], with no described review process by subject-matter experts from diverse cultural or regional backgrounds, there is no documented mechanism by which Arab-region perspectives, contested historical framings, or non-Western academic standards could have been incorporated into the ground-truth labels. For the **Output Content (OC)** dimension, this is a significant gap — the benchmark cannot demonstrate that its labels reflect anything other than the implicit cultural assumptions of its US-based academic collectors.
+
+### 6. Evaluation Metrics and Output Modality
+
+The primary evaluation metric is classification accuracy across all examples and tasks [Q49], with human baselines established both from Amazon Mechanical Turk workers (34.5% accuracy) [Q31] and from domain expert performance estimated at approximately 89.8% [Q34], derived from 95th-percentile test-taker accuracy on real-world professional exams [Q33]. Model performance is reported both in aggregate and broken down by the four broad subject clusters (humanities, social sciences, STEM, other) [Q99, Q100, Q101], as well as per-task [Q62]. The benchmark evaluates GPT-3 variants at four scales [Q51], UnifiedQA at multiple scales [Q59, Q60], and fine-tuned versions of RoBERTa, ALBERT, and GPT-2 [Q54, Q95]. Calibration — the alignment between a model's stated confidence and its actual accuracy — is also assessed using RMS calibration error and correlation analysis [Q65, Q67, Q118], revealing that GPT-3's confidence can be up to 24% off from its actual accuracy [Q66].
+
+From an **Output Form (OF)** perspective, the MCQ accuracy metric is moderately misaligned with the deployment, which produces open-ended explanatory text responses rather than selecting among four labeled options. The accuracy and calibration metrics do not capture whether a model can generate appropriately nuanced, multi-perspective responses to contested questions — the behavior the deployment prioritizes [Elicitation Q3]. The human baseline drawn from Mechanical Turk [Q31] further suggests that "unspecialized" annotators are the reference population for general questions, which may not reflect the cultural competency needed to evaluate Arab-region content accurately.
+
+### 7. Stated Limitations
+
+The authors acknowledge several categories of limitation directly relevant to this deployment. On knowledge coverage, models still have near-random accuracy on "socially important subjects such as morality and law" [Q8], and perform poorly on "subjects related to human values such as law and morality" [Q14], with particular concern that future models need "a strong understanding of what is legal and what is ethical" [Q15] — a concern amplified in Arab-region contexts where legal and ethical norms differ substantially from US baselines. The benchmark is explicitly text-only, and the authors note that "many important concepts are conveyed mainly through other modalities" [Q70], designing the benchmark to capture only text-format tasks [Q71]. Models show lopsided performance across subjects [Q7, Q13], do not know when they are wrong [Q7, Q16], and fail to match expert-level accuracy on any subject [Q81].
+
+On data contamination, the authors address the possibility that models may have seen exact questions during pretraining [Q107], arguing that entropy analysis suggests memorization is not a major driver [Q109, Q110], while acknowledging that "models encountered text related to our questions through processing Wikipedia" [Q111] and committing to publishing question sources to mitigate future contamination [Q114]. Format sensitivity in UnifiedQA [Q103, Q105] and the gap between pretraining input format and evaluation format [Q76] are also noted. The authors are candid that it is "unclear whether simply scaling up existing language models will solve the test" [Q87] and that additional pretraining on relevant domain text may not be sufficient [Q86].
+
+For the Arab-region deployment, the most deployment-critical limitation the authors do *not* state is the absence of Arab-region subject coverage — this is a gap the paper does not acknowledge because MMLU makes no claim to regional coverage outside the Western academic tradition. The authors' own note that the benchmark covers "topics that humans are incentivized to learn" [Q17] implicitly treats a US academic curriculum as universal, which is a significant unstated limitation for any non-Western deployment context. The concern about near-random performance on law and morality [Q8, Q79] is especially pertinent given that Arab legal systems (Islamic law, civil law hybrids) are not represented in MMLU's Professional Law task, which is drawn from US bar exam materials [Q165].
+
+### 8. Authors and Affiliations
+
+The authorship team is entirely US-based: Dan Hendrycks, Andy Zou, Dawn Song, and Jacob Steinhardt are at UC Berkeley; Collin Burns is at Columbia University; Steven Basart is at the University of Chicago; and Mantas Mazeika is at UIUC [Q10]. The paper was published at ICLR 2021 [Q166], and funding includes the NSF GRFP Fellowship, an Open Philanthropy Project Fellowship, and NSF Frontier Award 1804794 [Q92, Q93]. Acknowledgments include researchers at AI2, DeepMind, and other US institutions [Q91], and the evaluated models — GPT-3 and UnifiedQA — are also US-developed systems [Q50].
+
+The exclusively US-institutional authorship and funding base is consistent with the benchmark's US-centric curricular framing and further confirms that no subject-matter expertise in Arab history, Middle Eastern studies, Arabic language, or regional cultural knowledge was part of the design team. This is a relevant background factor for assessing the **Input Content (IC)** and **Output Content (OC)** validity dimensions: the benchmark reflects the knowledge priorities and cultural assumptions of elite US research universities, with no documented input from regional stakeholders in the Arab world.
+```
+
+---
+
+## Quote Registry
+
+**This section is authoritative.** Every entry is verbatim text from the paper.
+
+| ID | Page | Category | Text |
+|----|------|----------|------|
+| Q1 | 1 | task_taxonomy | "We propose a new test to measure a text model's multitask accuracy. The test covers 57 tasks including elementary mathematics, US history, computer science, law, and more." |
+| Q2 | 1 | task_taxonomy | "To attain high accuracy on this test, models must possess extensive world knowledge and problem solving ability." |
+| Q3 | 1 | data_format | "We design the benchmark to measure knowledge acquired during pretraining by evaluating models exclusively in zero-shot and few-shot settings." |
+| Q4 | 1 | task_taxonomy | "The benchmark covers 57 subjects across STEM, the humanities, the social sciences, and more. It ranges in difficulty from an elementary level to an advanced professional level, and it tests both world knowledge and problem solving ability." |
+| Q5 | 1 | evaluation_metrics | "We find that while most recent models have near random-chance accuracy, the very largest GPT-3 model improves over random chance by almost 20 percentage points on average." |
+| Q6 | 1 | stated_limitations | "However, on every one of the 57 tasks, the best models still need substantial improvements before they can reach expert-level accuracy." |
+| Q7 | 1 | stated_limitations | "Models also have lopsided performance and frequently do not know when they are wrong." |
+| Q8 | 1 | stated_limitations | "Worse, they still have near-random accuracy on some socially important subjects such as morality and law." |
+| Q9 | 1 | evaluation_metrics | "By comprehensively evaluating the breadth and depth of a model's academic and professional understanding, our test can be used to analyze models across many tasks and to identify important shortcomings." |
+| Q10 | 1 | authors_affiliations | "Dan Hendrycks, UC Berkeley; Collin Burns, Columbia University; Steven Basart, UChicago; Andy Zou, UC Berkeley; Mantas Mazeika, UIUC; Dawn Song, UC Berkeley; Jacob Steinhardt, UC Berkeley" |
+| Q11 | 2 | task_taxonomy | "Since our test consists in 57 tasks, it can be used to analyze aggregate properties of models across tasks and to track important shortcomings." |
+| Q12 | 2 | evaluation_metrics | "We find that meaningful progress on our benchmark has only become possible in recent months. In particular, few-shot models up to 13 billion parameters (Brown et al., 2020) achieve random chance performance of 25% accuracy, but the 175 billion parameter GPT-3 model reaches a much higher 43.9% accuracy (see Figure 1b)." |
+| Q13 | 2 | evaluation_metrics | "On the other hand, unlike human professionals GPT-3 does not excel at any single subject. Instead, we find that performance is lopsided, with GPT-3 having almost 70% accuracy for its best subject but near-random performance for several other subjects." |
+| Q14 | 2 | stated_limitations | "Our results indicate that while recent advances have been impressive, state-of-the-art models still struggle at learning and applying knowledge from pretraining. The tasks with near-random accuracy include calculation-heavy subjects such as physics and mathematics and subjects related to human values such as law and morality." |
+| Q15 | 2 | stated_limitations | "This second weakness is particularly concerning because it will be important for future models to have a strong understanding of what is legal and what is ethical." |
+| Q16 | 2 | stated_limitations | "Worryingly, we also find that GPT-3 does not have an accurate sense of what it does or does not know since its average confidence can be up to 24% off from its actual accuracy." |
+| Q17 | 2 | task_taxonomy | "We comprehensively evaluate the breadth and depth of a model's text understanding by covering numerous topics that humans are incentivized to learn." |
+| Q18 | 2 | data_sources | "The dominant paradigm in NLP is to pretrain large models on massive text corpora including educational books and websites." |
+| Q19 | 2 | task_taxonomy | "Many recent benchmarks aim to assess a model's general world knowledge and basic reasoning ability by testing its "commonsense."" |
+| Q20 | 3 | task_taxonomy | "We create a massive multitask test consisting of multiple-choice questions from various branches of knowledge." |
+| Q21 | 3 | task_taxonomy | "The test spans subjects in the humanities, social sciences, hard sciences, and other areas that are important for some people to learn." |
+| Q22 | 3 | task_taxonomy | "There are 57 tasks in total, which is also the number of Atari games (Bellemare et al., 2013), all of which are listed in Appendix B." |
+| Q23 | 3 | data_sources | "The questions in the dataset were manually collected by graduate and undergraduate students from freely available sources online." |
+| Q24 | 3 | data_sources | "These include practice questions for tests such as the Graduate Record Examination and the United States Medical Licensing Examination." |
+| Q25 | 3 | data_sources | "It also includes questions designed for undergraduate courses and questions designed for readers of Oxford University Press books." |
+| Q26 | 3 | label_categories | "Some tasks cover a subject, like psychology, but at a specific level of difficulty, such as "Elementary," "High School," "College," or "Professional."" |
+| Q27 | 3 | data_format | "We collected 15908 questions in total, which we split into a few-shot development set, a validation set, and a test set." |
+| Q28 | 3 | data_format | "The few-shot development set has 5 questions per subject, the validation set may be used for selecting hyperparameters and is made of 1540 questions, and the test set has 14079 questions." |
+| Q29 | 3 | data_format | "Each subject contains 100 test examples at the minimum, which is longer than most exams designed to assess people." |
+| Q30 | 3 | evaluation_metrics | "Human-level accuracy on this test varies." |
+| Q31 | 3 | evaluation_metrics | "Unspecialized humans from Amazon Mechanical Turk obtain 34.5% accuracy on this test." |
+| Q32 | 3 | evaluation_metrics | "Meanwhile, expert-level performance can be far higher." |
+| Q33 | 3 | evaluation_metrics | "For example, real-world test-taker human accuracy at the 95th percentile is around 87% for US Medical Licensing Examinations, and these questions make up our "Professional Medicine" task." |
+| Q34 | 3 | evaluation_metrics | "If we take the 95th percentile human test-taker accuracy for exams that build up our test, and if we make an educated guess when such information is unavailable, we then estimate that expert-level accuracy is approximately 89.8%." |
+| Q35 | 3 | stated_limitations | "Since our test aggregates different subjects and several levels of difficulty, we measure more than straightforward commonsense or narrow linguistic understanding." |
+| Q36 | 4 | task_taxonomy | "The humanities is a group of disciplines that make use of qualitative analysis and analytic methods rather than scientific empirical methods." |
+| Q37 | 4 | task_taxonomy | "Branches of the humanities include law, philosophy, history, and so on (Appendix B)." |
+| Q38 | 4 | task_taxonomy | "For example, legal understanding requires knowledge of how to apply rules and standards to complex scenarios, and also provide answers with stipulations and explanations." |
+| Q39 | 4 | task_taxonomy | "For philosophy, our questions cover concepts like logical fallacies, formal logic, and famous philosophical arguments." |
+| Q40 | 4 | task_taxonomy | "It also covers moral scenarios, including questions from the ETHICS dataset (Hendrycks et al., 2020) that test a model's understanding of normative statements through predicting widespread moral intuitions about diverse everyday scenarios." |
+| Q41 | 4 | task_taxonomy | "Finally, our history questions cover a wide range of time periods and geographical locations, including prehistory and other advanced subjects." |
+| Q42 | 4 | task_taxonomy | "Social science includes branches of knowledge that examine human behavior and society." |
+| Q43 | 4 | task_taxonomy | "Subject areas include economics, sociology, politics, geography, psychology, and so on." |
+| Q44 | 4 | task_taxonomy | "Our economics questions include microeconomics, macroeconomics, and econometrics, and cover different types of problems, including questions that require a mixture of world knowledge, qualitative reasoning, or quantitative reasoning." |
+| Q45 | 4 | task_taxonomy | "We also include important but more esoteric topics such as security studies in order to test the boundaries of what is experienced and learned during pretraining." |
+| Q46 | 4 | task_taxonomy | "Social science also includes psychology, a field that may be especially important for attaining a nuanced understanding of humans." |
+| Q47 | 4 | task_taxonomy | "STEM subjects include physics, computer science, mathematics, and more." |
+| Q48 | 4 | task_taxonomy | "Conceptual physics tests understanding of simple physics principles and may be thought" |
+| Q49 | 5 | evaluation_metrics | "To measure performance on our multitask test, we compute the classification accuracy across all examples and tasks." |
+| Q50 | 5 | authors_affiliations | "We evaluate GPT-3 (Brown et al., 2020) and UnifiedQA (Khashabi et al., 2020)." |
+| Q51 | 5 | evaluation_metrics | "For GPT-3 we use the OpenAI API, which provides access to four model variants, "Ada," "Babbage," "Curie," and "Davinci," which we refer to as "Small" (2.7 billion parameters), "Medium" (6.7 billion), "Large" (13 billion) and "X-Large" (175 billion)." |
+| Q52 | 5 | evaluation_metrics | "UnifiedQA uses the T5 (Raffel et al., 2019) text-to-text backbone and is fine-tuned on previously proposed question answering datasets (Lai et al., 2017), where the prediction is the class with the highest token overlap with UnifiedQA's text output." |
+| Q53 | 5 | evaluation_metrics | "Since UnifiedQA is fine-tuned on other datasets, we evaluate it without any further tuning to assess its transfer accuracy." |
+| Q54 | 5 | evaluation_metrics | "We also fine-tune RoBERTa-base, ALBERT-xxlarge, and GPT-2 on UnifiedQA training data and our dev+val set." |
+| Q55 | 5 | evaluation_metrics | "We primarily focus on UnifiedQA and GPT-3 in the rest of this document, but additional discussion of RoBERTa, ALBERT, and GPT-2 is in Appendix A." |
+| Q56 | 6 | data_format | "We feed GPT-3 prompts like that shown in Figure 1a. We begin each prompt with "The following are multiple choice questions (with answers) about [subject]." For zero-shot evaluation, we append the question to the prompt. For few-shot evaluation, we add up to 5 demonstration examples with answers to the prompt before appending the question. All prompts end with "Answer: ". The model then produces probabilities for the tokens "A," "B," "C," and "D," and we treat the highest probability option as the prediction. For consistent evaluation, we create a dev set with 5 fixed few-shot examples for each subject." |
+| Q57 | 6 | evaluation_metrics | "We compare the few-shot accuracy of each GPT-3 size in Table 1. We find that the three smaller GPT-3 models have near random accuracy (around 25%). In contrast, we find that the X-Large 175 billion parameter GPT-3 model performs substantially better than random, with an accuracy of 43.9%." |
+| Q58 | 6 | evaluation_metrics | "We also find qualitatively similar results in the zero-shot setting. While the smaller models have around 25% zero-shot accuracy, Figure 10 in Appendix A shows that the largest GPT-3 model has a much higher zero-shot accuracy of about 37.7%." |
+| Q59 | 6 | evaluation_metrics | "The largest UnifiedQA model we test has 11 billion parameters, which is slightly smaller than GPT-3 Large. Nevertheless, we show in Table 1 that it attains 48.9% accuracy. This performs better than the few-shot GPT-3 X-Large model, despite UnifiedQA have an order of magnitude fewer parameters." |
+| Q60 | 6 | evaluation_metrics | "We also find that even the smallest UnifiedQA variant, with just 60 million parameters, has approximately 29.3% accuracy." |
+| Q61 | 6 | stated_limitations | "These results suggest that while model size is a key component for achieving strong performance, fine-tuning also helps." |
+| Q62 | 6 | evaluation_metrics | "Using our test, we discover that GPT-3 and UnifiedQA have lopsided performance and several substantial knowledge gaps. Figure 6 shows the accuracy of GPT-3 (few-shot) and UnifiedQA for all 57 tasks. It shows the both models are below expert-level performance for all tasks, with GPT-3's accuracy ranging from 69% for US Foreign Policy to 26% for College Chemistry. UnifiedQA does best on marketing, with an accuracy of 82.5%." |
+| Q63 | 6 | stated_limitations | "Overall, models do poorly on highly procedural problems. Figure 6 shows that calculation-heavy STEM subjects tend to have low accuracy compared to verbal subjects. For GPT-3, 9 out of the 10" |
+| Q64 | 7 | evaluation_metrics | "We should not trust a model's prediction unless the model is calibrated, meaning that its confidence is a good estimate of the actual probability the prediction is correct." |
+| Q65 | 7 | evaluation_metrics | "We evaluate the calibration of GPT-3 by testing how well its average confidence estimates its actual accuracy for each subject." |
+| Q66 | 7 | evaluation_metrics | "Its confidence is only weakly related to its actual accuracy in the zero-shot setting, with the difference between its accuracy and confidence reaching up to 24% for some subjects." |
+| Q67 | 7 | evaluation_metrics | "Another calibration measure is the Root Mean Squared (RMS) calibration error (Hendrycks et al., 2019a; Kumar et al., 2019)." |
+| Q68 | 7 | evaluation_metrics | "Elementary Mathematics which has a zero-shot RMS calibration error of 19.4%." |
+| Q69 | 7 | evaluation_metrics | "Models are only somewhat more calibrated in the few-shot setting, as shown in Appendix A." |
+| Q70 | 7 | stated_limitations | "While text is capable of conveying an enormous number of concepts about the world, many important concepts are conveyed mainly through other modalities, such as images, audio, and physical interaction (Bisk et al., 2020)." |
+| Q71 | 7 | stated_limitations | "Existing large-scale NLP models, such as GPT-3, do not incorporate multimodal information, so we design our benchmark to capture a diverse array of tasks in a text-only format." |
+| Q72 | 7 | data_sources | "A major distinction between our benchmark and previous multitask NLP benchmarks is that we do not require large training sets." |
+| Q73 | 7 | data_sources | "Instead, we assume that models have acquired the requisite knowledge from reading vast quantities of diverse text from the Internet." |
+| Q74 | 8 | evaluation_metrics | "For this reason we assess pretrained models in a zero-shot, few-shot, or transfer setting and we provide a dev, val, and test set for each task." |
+| Q75 | 8 | evaluation_metrics | "The dev set is used for few-shot prompts, the val set could be used for hyperparameter tuning, and the test set is used to compute the final accuracy." |
+| Q76 | 8 | evaluation_metrics | "Importantly, the format of our evaluation is not identical to the format in which information is acquired during pretraining." |
+| Q77 | 8 | stated_limitations | "This has the benefit of obviating concerns about spurious training set annotation artifacts (Geirhos et al., 2020; Hendrycks et al., 2019b) and is in stark contrast to the previous paradigm of identically distributed training and test sets." |
+| Q78 | 8 | stated_limitations | "We find that current large-scale Transformers have wide room for improvement." |
+| Q79 | 8 | stated_limitations | "They are notably poor at modeling human (dis)approval, as evident by the low performance on the Professional Law and Moral Scenarios tasks." |
+| Q80 | 8 | stated_limitations | "Models also have difficulty performing calculations, so much so that they exhibit poor performance on Elementary Mathematics and many other STEM subjects with "plug and chug" problems." |
+| Q81 | 8 | stated_limitations | "Additionally, they do not match expert-level performance (90%) on any subject, so for all subjects it is subhuman." |
+| Q82 | 8 | stated_limitations | "On average, models are only now starting to move beyond random-chance accuracy levels." |
+| Q83 | 8 | data_sources | "We collected approximately 2,000 additional Professional Law training examples." |
+| Q84 | 8 | evaluation_metrics | "After fine-tuning a RoBERTa-base model (Liu et al., 2019) using this custom training set, our model attained 32.8% test accuracy." |
+| Q85 | 8 | data_sources | "We also had RoBERTa continue pretraining on approximately 1.6 million legal case summaries using Harvard's Law Library case law corpus case.law, but after fine-tuning it only attained 36.1% accuracy." |
+| Q86 | 8 | stated_limitations | "This suggests that while additional pretraining on relevant high quality text can help, it may not be enough to substantially increase the performance of current models." |
+| Q87 | 8 | stated_limitations | "It is unclear whether simply scaling up existing language models will solve the test." |
+| Q88 | 8 | stated_limitations | "Current understanding indicates that a 10× increase in model size must be accompanied by an approximate 5× increase in data (Kaplan et al., 2020)." |
+| Q89 | 8 | task_taxonomy | "We introduced a new test that measures how well text models can learn and apply knowledge encountered during pretraining." |
+| Q90 | 8 | task_taxonomy | "By covering 57 subjects at varying levels of difficulty, the test assesses language understanding in greater breadth and depth than previous benchmarks." |
+| Q91 | 9 | authors_affiliations | "We would like to thank the following for their helpful comments: Oyvind Tafjord, Jan Leike, David Krueger, Alex Tamkin, Girish Sastry, and Henry Zhu." |
+| Q92 | 9 | authors_affiliations | "DH is supported by the NSF GRFP Fellowship and an Open Philanthropy Project Fellowship." |
+| Q93 | 9 | authors_affiliations | "This research was also supported by the NSF Frontier Award 1804794." |
+| Q94 | 11 | task_taxonomy | "This appendix includes figures with sorted results (Figure 9), few-shot examples vs. accuracy (Figure 10), and few-shot calibration (Figure 11). It also includes sections on fine-tuning, error analysis, and format sensitivity." |
+| Q95 | 11 | evaluation_metrics | "We primarily analyzed models with more than 10 billion parameters in the main body of the paper. For this section, we analyze smaller models including RoBERTa-base (125 million parameters) (Liu" |
+| Q96 | 11 | evaluation_metrics | "On the left are GPT-3 few shot accuracies for all of the 57 tasks. On the right are UnifiedQA transfer accuracies for all of the 57 tasks. For both models, capabilities are lopsided." |
+| Q97 | 12 | data_format | "Models are fine-tuned to predict one of four classes using the UnifiedQA MCQ questions and using our dev+val set." |
+| Q98 | 12 | evaluation_metrics | "We test on our multitask test set." |
+| Q99 | 12 | evaluation_metrics | "RoBERTa-base attains an overall accuracy of 27.9%, with 27.9% accuracy for the humanities, 28.8% for social sciences, 27.0% for STEM, and 27.7% for other." |
+| Q100 | 12 | evaluation_metrics | "ALBERT-xxlarge attains an accuracy of 27.1%, with 27.2% accuracy for the humanities, 25.7% for the social sciences, 27.7% for STEM, and 27.9% for other." |
+| Q101 | 12 | evaluation_metrics | "GPT-2 attains an accuracy of 32.4%, with 32.8% accuracy for the humanities, 33.3% for the social sciences, 30.2% for STEM, and 33.1% for other." |
+| Q102 | 12 | evaluation_metrics | "We qualitatively analyze when GPT-3 makes high confidence mistakes." |
+| Q103 | 12 | stated_limitations | "While different question formatting choices often lead to similar GPT-3 accuracies, we find that UnifiedQA is more sensitive." |
+| Q104 | 12 | data_format | "UnifiedQA's input format is of the form QUESTION1 \\n (A) CHOICE1 (B) CHOICE2 (C) CHOICE3 (D) CHOICE4</s> where questions and choices are normalized and made lowercase." |
+| Q105 | 12 | stated_limitations | "If we remove the </s> from the input, accuracy declines by several percentage points." |
+| Q106 | 13 | task_taxonomy | "We provide analysis of question length and difficulty in Figure 12. We list all tasks and the topics they test in Table 2. We also provide an example for each task starting with Figure 14." |
+| Q107 | 13 | stated_limitations | "Since language models train on vast text corpora, there is some chance that they have seen the exact question and answer during pretraining. If they memorized the exact question and answer, then they would attain higher accuracy than their true ability. Likewise, a question's entropy would be especially low if it were memorized. Memorized questions and answers should have low entropy and" |
+| Q108 | 13 | data_format | "For questions longer than a tweet (280 characters), the correlation between question length and true label confidence is slightly positive. This shows that longer questions are not necessarily harder." |
+| Q109 | 14 | stated_limitations | "However, in Figure 13, we see that accuracy and question entropy are not positively correlated, suggesting that the test's low-entropy questions do not correspond to memorized (and thereby correctly predicted) answers." |
+| Q110 | 14 | stated_limitations | "This suggests that our exact questions were not memorized." |
+| Q111 | 14 | stated_limitations | "However, during pretraining models encountered text related to our questions through processing Wikipedia." |
+| Q112 | 14 | data_sources | "We also note that most of our questions came from PDFs or websites where questions and answers are on separate pages." |
+| Q113 | 14 | stated_limitations | "See Brown et al. (2020) for a previous discussion of contamination showing that the phenomena hardly affects performance." |
+| Q114 | 14 | stated_limitations | "To reduce the probability that future models encounter exact questions during test-time, we will provide a list of question sources." |
+| Q115 | 14 | evaluation_metrics | "The average log probability of the question (without answer) is not strongly positively correlated with accuracy, all else equal." |
+| Q116 | 14 | evaluation_metrics | "Each point corresponds to a task." |
+| Q117 | 14 | evaluation_metrics | "Higher log probability indicates higher compression, and especially high log probability would suggest memorization." |
+| Q118 | 14 | evaluation_metrics | "In the zero-shot question prompt, the correlation between average log probability and accuracy is r = −0.43, and for the few-shot setting the correlation is r = −0.56." |
+| Q119 | 15 | task_taxonomy | "Table 2: Summary of all 57 tasks." |
+| Q120 | 16 | task_taxonomy | "Find all c in Z₃ such that Z₃[x]/(x² + c) is a field." |
+| Q121 | 16 | task_taxonomy | "What is the embryological origin of the hyoid bone?" |
+| Q122 | 16 | task_taxonomy | "Why isn't there a planet where the asteroid belt is located?" |
+| Q123 | 16 | task_taxonomy | "Three contrasting tactics that CSO's can engage in to meet their aims are ___ which typically involves research and communication, ___, which may involve physically attacking a company's operations or ___, often involving some form of ___." |
+| Q124 | 16 | task_taxonomy | "How many attempts should you make to cannulate a patient before passing the job on to a senior colleague?" |
+| Q125 | 16 | task_taxonomy | "In a given population, 1 out of every 400 people has a cancer caused by a completely recessive allele, b. Assuming the population is in Hardy-Weinberg equilibrium, which of the following is the expected proportion of individuals who carry the b allele but are not expected to develop the cancer?" |
+| Q126 | 16 | task_taxonomy | "Which of the following statements about the lanthanide elements is NOT true?" |
+| Q127 | 17 | task_taxonomy | "Consider a computer design in which multiple processors, each with a private cache memory, share global memory using a single bus." |
+| Q128 | 17 | task_taxonomy | "Let A be a real 2 × 2 matrix. Which of the following statements must be true?" |
+| Q129 | 17 | task_taxonomy | "In a genetic test of a newborn, a rare genetic disorder is found that has X-linked recessive transmission." |
+| Q130 | 17 | task_taxonomy | "One end of a Nichrome wire of length 2L and cross-sectional area A is attached to an end of another Nichrome wire of length L and cross- sectional area 2A." |
+| Q131 | 17 | task_taxonomy | "Why is it that anti-virus scanners would not have found an exploitation of Heartbleed?" |
+| Q132 | 17 | task_taxonomy | "A model airplane flies slower when flying into the wind and faster with wind at its back." |
+| Q133 | 18 | task_taxonomy | "Consider the following AR(1) model with the disturbances having zero mean and unit variance yt = 0.2 + 0.4yt−1 + ut The (unconditional) mean of y will be given by (A) 0.2 (B) 0.4 (C) 0.5 (D) 0.33" |
+| Q134 | 18 | task_taxonomy | "A point pole has a strength of 4π × 10−4 weber. The force in newtons on a point pole of 4π × 1.5 × 10−4 weber placed at a distance of 10 cm from it will be (A) 15 N. (B) 20 N. (C) 7.5 N. (D) 3.75 N." |
+| Q135 | 18 | task_taxonomy | "A total of 30 players will play basketball at a park. There will be exactly 5 players on each team. Which statement correctly explains how to find the number of teams needed? (A) Add 5 to 30 to find 35 teams. (B) Divide 30 by 5 to find 6 teams. (C) Multiply 30 and 5 to find 150 teams. (D) Subtract 5 from 30 to find 25 teams." |
+| Q136 | 18 | task_taxonomy | "Determine whether the statements are logically equivalent or contradictory. If neither, determine whether they are consistent or inconsistent. E ⊃ (F · E) and ∼ E · F (A) Logically equivalent (B) Contradictory (C) Neither logically equivalent nor contradictory, but consistent (D) Inconsistent" |
+| Q137 | 18 | task_taxonomy | "As of 2017, how many of the world's 1-year-old children today have been vaccinated against some disease? (A) 80% (B) 60% (C) 40% (D) 20%" |
+| Q138 | 18 | task_taxonomy | "Homologous structures are often cited as evidence for the process of natural selection. All of the following are examples of homologous structures EXCEPT (A) the wings of a bird and the wings of a bat (B) the flippers of a whale and the arms of a man (C) the pectoral fins of a porpoise and the flippers of a seal (D) the forelegs of an insect and the forelimbs of a dog" |
+| Q139 | 18 | task_taxonomy | "From the solubility rules, which of the following is true? (A) All chlorides, bromides, and iodides are soluble (B) All sulfates are soluble (C) All hydroxides are soluble (D) All ammonium-containing compounds are soluble" |
+| Q140 | 19 | task_taxonomy | "A list of numbers has n elements, indexed from 1 to n. The following algorithm is intended to display the number of elements in the list that have a value greater than 100. The algorithm uses the variables count and position. Steps 3 and 4 are missing." |
+| Q141 | 19 | task_taxonomy | "Which of the following could be used to replace steps 3 and 4 so that the algorithm works as intended?" |
+| Q142 | 19 | task_taxonomy | "This question refers to the following information." |
+| Q143 | 19 | task_taxonomy | "From the passage, one may infer that the English Parliament wished to argue that the Act of Supremacy would" |
+| Q144 | 19 | task_taxonomy | "During the third stage of the demographic transition model, which of the following is true?" |
+| Q145 | 20 | task_taxonomy | "Figure 37: A High School Government and Politics example." |
+| Q146 | 20 | task_taxonomy | "Figure 38: A High School Macroeconomics example." |
+| Q147 | 20 | task_taxonomy | "Figure 39: A High School Mathematics example." |
+| Q148 | 20 | task_taxonomy | "Figure 40: A High School Microeconomics example." |
+| Q149 | 20 | task_taxonomy | "Figure 41: A High School Physics example." |
+| Q150 | 20 | task_taxonomy | "Figure 42: A High School Psychology example." |
+| Q151 | 21 | task_taxonomy | "Figure 43: A High School Statistics example." |
+| Q152 | 21 | task_taxonomy | "Figure 44: A High School US History example." |
+| Q153 | 21 | task_taxonomy | "Figure 45: A High School World History example." |
+| Q154 | 21 | task_taxonomy | "Figure 46: A Human Aging example." |
+| Q155 | 22 | task_taxonomy | "Morning sickness is typically a problem: (A) during the first trimester (B) during the second trimester (C) during the third trimester (D) all through the pregnancy" |
+| Q156 | 22 | task_taxonomy | "Would a reservation to the definition of torture in the ICCPR be acceptable in contemporary practice? (A) This is an acceptable reservation if the reserving country's legislation employs a different definition (B) This is an unacceptable reservation because it contravenes the object and purpose of the ICCPR (C) This is an unacceptable reservation because the definition of torture in the ICCPR is consistent with customary international law (D) This is an acceptable reservation because under general international law States have the right to enter reservations to treaties" |
+| Q157 | 22 | task_taxonomy | "Which position does Rawls claim is the least likely to be adopted by the POP (people in the original position)? (A) The POP would choose equality above liberty. (B) The POP would opt for the 'maximin' strategy. (C) The POP would opt for the 'difference principle.' (D) The POP would reject the 'system of natural liberty.'" |
+| Q158 | 22 | task_taxonomy | "John Stuart Mill: Each person's happiness is a good to that person, and the general happiness, therefore, a good to the aggregate of all persons. (A) Fallacy of Composition (B) Fallacy of Division (C) Gambler's Fallacy (D) Equivocation" |
+| Q159 | 22 | task_taxonomy | "A 6-sided die is rolled 15 times and the results are: side 1 comes up 0 times; side 2: 1 time; side 3: 2 times; side 4: 3 times; side 5: 4 times; side 6: 5 times. Based on these results, what is the probability of side 3 coming up when using Add-1 Smoothing? (A) 2/15 (B) 1/7 (C) 3/16 (D) 1/5" |
+| Q160 | 22 | task_taxonomy | "According to Lewin, Lippet and White's 1939 experiment, which form of leadership produced the most work from participants? (A) Laissez-faire (B) Democratic (C) Authoritarian (D) A mix of laissez-faire and democratic" |
+| Q161 | 23 | stated_limitations | "Figure 57: A Moral Scenarios example. The formatting of this task hinders UnifiedQA performance substantially." |
+| Q162 | 24 | task_taxonomy | "According to Moore's "ideal utilitarianism," the right action is the one that brings about the greatest amount of: (A) pleasure. (B) happiness. (C) good. (D) virtue." |
+| Q163 | 24 | task_taxonomy | "Researchers now believe that the decline of the Maya was caused chiefly by: (A) a cataclysm of some kind, such as an earthquake, volcano, or tsunami. (B) ecological degradation resulting from slash-and-burn farming techniques. (C) endless wars between neighboring Mayan city-states. (D) practices of interbreeding that led to a steep rise in congenital disorders." |
+| Q164 | 24 | task_taxonomy | "Krete is an unmarried taxpayer with income exclusively from wages. By December 31, year 1, Krete's employer has withheld $16,000 in federal income taxes and Krete has made no estimated tax payments. On April 15, year 2, Krete timely filed for an extension request to file her individual tax return, and paid $300 of additional taxes. Krete's year 1 tax liability was $16,500 when she timely filed her return on April 30, year 2, and paid the remaining tax liability balance. What amount would be subject to the penalty for underpayment of estimated taxes? (A) $0 (B) $500 (C) $1,650 (D) $16,500" |
+| Q165 | 24 | task_taxonomy | "The night before his bar examination, the examinee's next-door neighbor was having a party. The music from the neighbor's home was so loud that the examinee couldn't fall asleep. The examinee called the neighbor and asked her to please keep the noise down. The neighbor then abruptly hung up. Angered, the examinee went into his closet and got a gun. He went outside and fired a bullet through the neighbor's living room window. Not intending to shoot anyone, the examinee fired his gun at such an angle that the bullet would hit the ceiling. He merely wanted to cause some damage to the neighbor's home to relieve his angry rage. The bullet, however, ricocheted off the ceiling and struck a partygoer in the back, killing him. The jurisdiction makes it a misdemeanor to discharge a firearm in public. The examinee will most likely be found guilty for which of the following crimes in connection to the death of the partygoer? (A) Murder. (B) Involuntary manslaughter. (C) Voluntary manslaughter. (D) Discharge of a firearm in public." |
+| Q166 | 25 | authors_affiliations | "Published as a conference paper at ICLR 2021" |
+| Q167 | 26 | task_taxonomy | "Figure 66: A Security Studies example." |
+| Q168 | 26 | task_taxonomy | "Figure 67: A Sociology example." |
+| Q169 | 26 | task_taxonomy | "Figure 68: A US Foreign Policy example." |
+| Q170 | 26 | task_taxonomy | "Figure 69: A Virology example." |
+| Q171 | 27 | task_taxonomy | "Figure 70: A World Religions example." |
+
+### Category Index
+- **task_taxonomy**: Q1, Q2, Q4, Q11, Q17, Q19, Q20, Q21, Q22, Q36, Q37, Q38, Q39, Q40, Q41, Q42, Q43, Q44, Q45, Q46, Q47, Q48, Q89, Q90, Q94, Q106, Q119, Q120, Q121, Q122, Q123, Q124, Q125, Q126, Q127, Q128, Q129, Q130, Q131, Q132, Q133, Q134, Q135, Q136, Q137, Q138, Q139, Q140, Q141, Q142, Q143, Q144, Q145, Q146, Q147, Q148, Q149, Q150, Q151, Q152, Q153, Q154, Q155, Q156, Q157, Q158, Q159, Q160, Q162, Q163, Q164, Q165, Q167, Q168, Q169, Q170, Q171
+- **data_sources**: Q18, Q23, Q24, Q25, Q72, Q73, Q83, Q85, Q112
+- **data_format**: Q3, Q27, Q28, Q29, Q56, Q97, Q104, Q108
+- **label_categories**: Q26
+- **annotation_process**: NO QUOTES — paper is silent
+- **evaluation_metrics**: Q5, Q9, Q12, Q13, Q30, Q31, Q32, Q33, Q34, Q49, Q51, Q52, Q53, Q54, Q55, Q57, Q58, Q59, Q60, Q62, Q64, Q65, Q66, Q67, Q68, Q69, Q74, Q75, Q76, Q84, Q95, Q96, Q98, Q99, Q100, Q101, Q102, Q115, Q116, Q117, Q118
+- **stated_limitations**: Q6, Q7, Q8, Q14, Q15, Q16, Q35, Q61, Q63, Q70, Q71, Q77, Q78, Q79, Q80, Q81, Q82, Q86, Q87, Q88, Q103, Q105, Q107, Q109, Q110, Q111, Q113, Q114, Q161
+- **authors_affiliations**: Q10, Q50, Q91, Q92, Q93, Q166

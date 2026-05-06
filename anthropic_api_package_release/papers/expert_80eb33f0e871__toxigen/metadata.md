@@ -1,0 +1,11 @@
+- name: toxigen
+- full_name: TOXIGEN: A Large-Scale Machine-Generated Dataset for Adversarial and Implicit Hate Speech Detection
+- year: 2022
+- domain: Detection of implicit and adversarial hate speech targeting minority groups. The benchmark evaluates toxicity classifiers' ability to identify subtle, non-explicit toxic language about marginalized communities.
+- languages: English
+- primary_region: United States
+- porting_strategy: none
+- input_modalities: text
+- output_modalities: label, score
+- brief_description: TOXIGEN is a machine-generated dataset of 274k toxic and benign statements about 13 U.S. minority groups created using GPT-3 with demonstration-based prompting and an adversarial classifier-in-the-loop decoding method (ALICE). The dataset focuses on implicit toxicity (98.2% devoid of explicit profanity), balances toxic and benign examples per demographic group, and is validated through human evaluation showing 90% of machine-generated sentences could be mistaken for human-written text. Fine-tuning classifiers on TOXIGEN improves performance (+7-19%) on existing human-written implicit hate datasets.
+- source_culture: transferred from different cultural context

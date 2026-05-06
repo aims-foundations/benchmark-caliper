@@ -1,0 +1,543 @@
+name: Arab High-School Arabic Essay Feedback (Qatar Primary)
+abbreviation: AHS-AEF-QA
+assessment_slug: laila
+deployment_scope:
+  description: AI system providing formative, trait-level feedback on Arabic essay
+    drafts written by Grade 10–12 students in Arab countries, with Qatar as the primary
+    validated geography. The system produces natural-language revision suggestions
+    tied to CAST rubric dimensions (REL, ORG, VOC, STY, DEV, MEC, GRA), not merely
+    numeric scores.
+  primary_geography: Qatar
+  secondary_geographies:
+  - Egypt
+  - Saudi Arabia
+  - Jordan
+  - Lebanon
+  - Other Arab-world countries (unspecified)
+  primary_institution_context: Qatari Ministry of Education and Higher Education public
+    and private high schools; partially validated against 24-school LAILA sample
+  secondary_institution_context: National Ministry of Education equivalents in Egypt,
+    Saudi Arabia, Jordan, Lebanon — unvalidated against benchmark
+target_population:
+  role: High school students (Grade 10–12) submitting Arabic essay drafts for AI-assisted
+    formative feedback before teacher assessment
+  age_range: Approximately 15–18 years old
+  academic_stage: Late secondary; preparing for national or university-entrance level
+    Arabic language examinations
+  writing_context: Formative (pre-submission) essay drafts in academic Arabic; written
+    under school-assigned prompt conditions
+  gender_balance: Intended to serve both male and female students; LAILA benchmark
+    was designed with explicit gender balance (design principle D3)
+  national_curricula_served:
+    qatar:
+      curriculum_body: Qatar Ministry of Education and Higher Education (Arabic Section,
+        Department of Educational Supervision)
+      rubric_anchor: CAST rubric developed by Qatar University Testing Center (QUTC)
+      benchmark_coverage: PRIMARY — benchmark essays drawn from 24 Qatari schools,
+        grades 10–12
+      notes: 'Strongest validity signal; all annotation norms grounded here. Qatar
+        operates four school types: government schools (Arabic-medium national curriculum),
+        Arabic private schools (also follow Qatari national curriculum), international
+        private schools (follow diverse foreign curricula — British, American, French,
+        German, etc.), and community schools. As of 2024–2025, there are 278 government
+        schools serving ~137,048 students and 351 private schools enrolling ~228,488
+        students (629 total), with approximately 60% of secondary students attending
+        private schools. There are 23 different curricula in operation in Qatar. Arabic
+        language and Islamic studies are mandatory for Qatari and Arab students even
+        in private schools. The LAILA sample''s coverage of this school-type diversity
+        is undocumented. Sources: Grokipedia/MoEHE data 2024–2025 — [|https://grokipedia.com/page/List_of_schools_in_Qatar|];
+        Springer chapter on Qatari private school market (Amin & Cochrane 2023) —
+        [|https://link.springer.com/chapter/10.1007/978-981-97-9667-0_11|]; TutorChase
+        2023 secondary enrollment figure — [|https://www.tutorchase.com/blog/the-education-system-in-qatar-explained|];
+        Consulting Haus 2023 curriculum count — [|https://consulting-haus.com/wp-content/uploads/2023/09/CH_Education_Sector-Overview_September-2023.pdf|]'
+    egypt:
+      curriculum_body: 'Ministry of Education (وزارة التربية والتعليم) — responsible
+        for Egyptian national curriculum. Since 2018, Egypt has been implementing
+        a sweeping curriculum reform initiative aimed at aligning with international
+        benchmarks. Source: IMPACT-se 2025 — [|https://www.impact-se.org/middle-eastern-curriculum-reform-a-window-into-national-values/|]'
+      rubric_anchor: '[NEEDS VERIFICATION — deferred: no publicly searchable Egyptian
+        secondary Arabic writing rubric found; requires direct consultation with Egyptian
+        MoE curriculum documents or subject specialists]'
+      benchmark_coverage: NOT COVERED — no Egyptian student essays in LAILA
+      notes: Potential dialectal MSA influence (Egyptian Arabic lexis/syntax in student
+        writing) unaddressed by benchmark. Egypt's 2018+ curriculum reform is ongoing;
+        writing assessment norms may be in transition.
+    saudi_arabia:
+      curriculum_body: 'Ministry of Education (وزارة التعليم / moe.gov.sa). Saudi
+        Arabia has historically relied on textbooks to determine what to teach and
+        assess, and recently developed a national curriculum framework focused on
+        skills and competences under Vision 2030 reforms. Source: OECD review of Saudi
+        education — [|https://www.moe.gov.sa/ar/education/studies/Documents/Education%20in%20Saudi%20Arabia.pdf|]'
+      rubric_anchor: '[NEEDS VERIFICATION — deferred: no publicly searchable Saudi
+        secondary Arabic writing rubric found; Saudi assessment relies on centrally
+        produced rating tools managed by supervisors; requires direct MoE curriculum
+        access]'
+      benchmark_coverage: NOT COVERED
+      notes: Saudi education is gender-segregated; both sexes follow the same curriculum
+        and take the same exams. Arabic is the official language and main medium of
+        instruction. Saudi curriculum is actively reforming under Vision 2030, including
+        introducing multiple learning pathways at upper secondary level. Scoring norm
+        alignment with Qatar CAST rubric is unverified and likely diverges given different
+        institutional frameworks.
+    jordan:
+      curriculum_body: 'Ministry of Education (وزارة التربية والتعليم — Jordan). Jordan''s
+        curriculum has been subject to targeted modifications, though some curriculum
+        content has been characterized as regressive. Source: IMPACT-se 2025 — [|https://www.impact-se.org/middle-eastern-curriculum-reform-a-window-into-national-values/|]'
+      rubric_anchor: '[NEEDS VERIFICATION — deferred: no publicly searchable Jordanian
+        secondary Arabic writing rubric found; requires direct consultation with Jordanian
+        MoE curriculum documents]'
+      benchmark_coverage: NOT COVERED
+      notes: Levantine-influenced MSA writing norms likely diverge from Qatar's Gulf
+        MSA conventions. Rubric divergence from Qatar CAST unverified and unstudied.
+    lebanon:
+      curriculum_body: 'Ministry of Education and Higher Education (MEHE / وزارة التربية
+        والتعليم العالي). Curriculum is developed by the Centre de Recherche et de
+        Développement Pédagogiques (CRDP / المركز التربوي للبحوث والإنماء). The Lebanese
+        national curriculum is used in all public and private schools; schools implementing
+        foreign curricula (French, English, IB) must simultaneously meet Lebanese
+        curriculum requirements. Source: WENR Education in Lebanon 2017 — [|https://wenr.wes.org/2017/05/education-in-lebanon|]'
+      rubric_anchor: '[NEEDS VERIFICATION — deferred: no publicly searchable Lebanese
+        secondary Arabic writing rubric found; CRDP is the authoritative source but
+        Arabic writing assessment criteria are not available in searchable form]'
+      benchmark_coverage: NOT COVERED
+      notes: 'Lebanon has a mandatory trilingual system: Arabic plus either English
+        or French (with English/French as compulsory medium for mathematics and sciences).
+        Schools offering foreign curricula must apply both Lebanese and foreign frameworks
+        simultaneously. Research documents that many Lebanese students prefer writing
+        in English or French over Arabic, and that Arabic ''has to be in the literary
+        form, which they do not like'', suggesting potential MSA register avoidance
+        that would affect essay quality norms. Levantine Arabic and French-contact
+        influence on MSA writing is likely strong and is not accounted for in LAILA''s
+        annotation scheme. Sources: Wikipedia Education in Lebanon — [|https://en.wikipedia.org/wiki/Education_in_Lebanon|];
+        Foreign Language Education in Lebanon (Shaaban et al.) — [|https://www.researchgate.net/publication/267714826_Foreign_Language_Education_in_Lebanon_A_Context_of_Cultural_and_Curricular_Complexities|]'
+languages:
+  primary: Modern Standard Arabic (MSA / الفصحى) — the target language for all student
+    essay production and system feedback
+  register_note: Students write in MSA, but regional dialect influence on vocabulary,
+    syntax, and discourse structure is expected, particularly for non-Qatari populations.
+    The degree to which the CAST rubric penalizes regional MSA variation is undocumented
+    and requires verification.
+  dialect_influence_by_country:
+    qatar_gulf: Gulf Arabic influence possible but less pronounced given formal exam
+      context; benchmark population partially mitigated by Qatar's Arab expatriate
+      diversity
+    egypt: 'Egyptian Arabic lexical and syntactic interference in MSA writing documented
+      in Arabic NLP literature; [NEEDS VERIFICATION — deferred: LAILA-specific handling
+      not documented; likely unsearchable without direct examination of annotation
+      guidelines]'
+    lebanon: 'Strong Levantine and French-contact influence on MSA register documented;
+      Lebanese students frequently code-switch and have been found to prefer writing
+      in English/French over Arabic literary form, suggesting reduced MSA register
+      fluency. Source: Shaaban & Ghaith (1999) as cited in — [|https://www.researchgate.net/publication/267714826_Foreign_Language_Education_in_Lebanon_A_Context_of_Cultural_and_Curricular_Complexities|]'
+    jordan: 'Levantine influence; [NEEDS VERIFICATION — deferred: likely unsearchable
+      without dedicated Arabic NLP dialectal interference study for Jordan]'
+    saudi_arabia: 'Gulf/Najdi influence; [NEEDS VERIFICATION — deferred: likely unsearchable
+      without dedicated Arabic NLP dialectal interference study for Saudi Arabia]'
+  system_output_language: Modern Standard Arabic (feedback and revision suggestions
+    must be delivered in MSA accessible to G10–12 students)
+  diglossia_note: Students are assessed on MSA production but communicate informally
+    in regional dialects; the feedback system must remain register-appropriate for
+    a formal educational context while remaining comprehensible to adolescent learners
+writing_system:
+  script: Arabic script (right-to-left)
+  rtl_handling: Required for all input display and output rendering; mixed-direction
+    text (Arabic + numerals or Latin citations) may appear in student essays
+  morphological_note: Arabic root-pattern morphology creates tokenization complexity;
+    short vowel diacritics (tashkeel) are typically absent in student prose, which
+    affects NLP processing and readability of generated feedback
+genre_coverage:
+  benchmark_genres:
+  - Explanatory (3 prompts)
+  - Persuasive/Argumentative (5 prompts)
+  deployment_genres_required:
+  - Explanatory
+  - Persuasive/Argumentative
+  - Literary analysis
+  - Religious/Quranic text commentary
+  - Cultural commentary
+  - Narrative (possible, curriculum-dependent)
+  - Descriptive (possible, curriculum-dependent)
+  genre_gap_severity: HIGH — benchmark covers only 2 of approximately 5–7 genre types
+    required by deployment; CAST rubric is explicitly designed for persuasive/argumentative
+    writing and its applicability to literary analysis or religious text commentary
+    is unvalidated
+  genre_gap_notes: 'No Arabic AES dataset or rubric framework covering literary analysis,
+    religious text commentary, or cultural commentary genres was found in any existing
+    benchmark or shared task. The TAQEEM 2025 shared task — the first Arabic AES shared
+    task (ArabicNLP 2025, Suzhou) — introduced 1,265 essays but continued the same
+    explanatory and persuasive genre restriction, indicating the field has not yet
+    addressed genre breadth. The ZaQQ dataset (2025, MDPI) uses a human–AI collaborative
+    framework on 7 traits including Relevance, Organization, Vocabulary, Style, Development,
+    Mechanics, and Structure, but also remains confined to standard essay genres.
+    No Arabic AES resource for Quranic/religious text commentary or literary analysis
+    genre exists in the public literature as of searches conducted May 2026. Sources:
+    TAQEEM 2025 ACL Anthology — [|https://aclanthology.org/2025.arabicnlp-sharedtasks.134/|];
+    ZaQQ 2025 MDPI — [|https://www.mdpi.com/2306-5729/10/9/148|]'
+rubric_and_scoring:
+  benchmark_rubric: CAST (Core Academic Skills Test) rubric, developed by Qatar University
+    Testing Center (QUTC), provided in Arabic
+  traits:
+  - id: REL
+    name: Relevance
+    scale: 0–2 (3-point)
+    note: Narrow scale; QWK may underrepresent subtle model prediction differences
+  - id: ORG
+    name: Organization
+    scale: 0–5 (6-point)
+  - id: VOC
+    name: Vocabulary
+    scale: 0–5 (6-point)
+  - id: STY
+    name: Style
+    scale: 0–5 (6-point)
+    note: Highly subjective; cross-national norm transferability unverified
+  - id: DEV
+    name: Development
+    scale: 0–5 (6-point)
+    note: Highly subjective; cross-national norm transferability unverified
+  - id: MEC
+    name: Mechanics
+    scale: 0–5 (6-point)
+  - id: GRA
+    name: Grammar
+    scale: 0–5 (6-point)
+  holistic_score: Sum of all 7 trait scores
+  zero_rule: If REL = 0, all other trait scores are set to 0
+  rubric_genre_scope: Explicitly designed for persuasive/argumentative writing; applicability
+    to other genres in deployment is unvalidated
+  cross_national_norm_transferability: '[NOT FOUND — searched Arabic essay scoring
+    inter-rater reliability cross-national Arab teacher judgment; no empirical comparison
+    of CAST scoring norms against Egyptian, Saudi, Jordanian, or Lebanese teacher
+    annotation conventions was found in published literature. This gap is confirmed
+    absent from the Arabic AES literature; expert elicitation with teachers from each
+    target country is required.]'
+  annotator_pool:
+    size: 6 annotators + 3 supervisors
+    qualification: All Arabic language teachers or lecturers; 5 hold MSc or PhD in
+      Arabic language
+    institutional_affiliation: Qatar-based (Qatar University / associated institutions)
+    iaa_qwk_range: 0.66 (P5) to 0.75 (P1) average across prompts
+    adjudication_rate_p5: 23.3% of P5 essays required third-annotator adjudication
+    inter_rater_details: '[NEEDS VERIFICATION — deferred: full per-trait IAA breakdown
+      and whether any non-Qatari Arab teachers participated are not available in the
+      public LAILA paper; requires direct contact with authors or access to supplementary
+      annotation materials]'
+output_function:
+  benchmark_output: Numeric trait scores (ordinal) and holistic score; evaluated by
+    Quadratic Weighted Kappa (QWK) against human annotations; LLMs output structured
+    JSON scores
+  deployment_output_required: Actionable natural-language revision suggestions with
+    explanations of why points were lost on each trait dimension, delivered in MSA
+    appropriate for G10–12 students
+  output_form_mismatch: DIRECT AND DOCUMENTED — benchmark validates scoring fidelity
+    only; no model in the benchmark generates natural-language feedback; QWK cannot
+    capture pedagogical usefulness or actionability of revision suggestions
+  formative_feedback_validity_gap: 'Confirmed gap in Arabic NLP. A 2024 survey on
+    deep learning-based AES confirms that ''crucial aspects of writing evaluation,
+    such as providing feedback, have often been overlooked'' even in English, and
+    that ''building a deep learning-based AES that not only assesses essays but also
+    generates insightful feedback holds immense value for formative writing assessments.''
+    No Arabic-specific rubric-to-natural-language feedback generation system was found.
+    The eRevise system (English) demonstrates one AES-to-formative-feedback architecture
+    (score-triggered feedback messages) but has no Arabic equivalent. The AAEE system
+    (Beseiso & Alzahrani 2020, Saudi Arabia) provides grade scores and corrected essay
+    versions but does not generate trait-grounded revision suggestions. Sources: Springer
+    survey on AES and feedback generation 2024 — [|https://link.springer.com/article/10.1007/s10462-024-11017-5|];
+    AAEE Saudi system (ResearchGate) — [|https://www.researchgate.net/publication/343796441_Automated_students_arabic_essay_scoring_using_trained_neural_network_by_e-jaya_optimization_to_support_personalized_system_of_instruction|]'
+  student_comprehensibility_requirement: Feedback must be at a register and vocabulary
+    level accessible to adolescents (age ~15–18) writing in MSA; overly formal or
+    technical language may reduce actionability
+  actionability_criteria: Students must understand why they lost points on each trait,
+    not just receive a numeric rating — benchmark provides no signal on this dimension
+educational_context:
+  essay_conditions:
+    benchmark: 65-minute timed, digital submission via Microsoft Forms, supervised
+      exam-style conditions
+    deployment: Pre-submission draft review (formative context); students submit drafts
+      voluntarily before teacher grading — less time pressure than benchmark conditions;
+      essay quality and length may differ from benchmark distribution
+    length_distribution_note: Benchmark essays average 171 words (concentrated 150–180
+      words); deployment drafts may be longer or shorter depending on assignment type
+      and grade level; benchmark lacks extended writing samples (few essays >500 words)
+  within_qatar_school_type_variation:
+    benchmark_coverage: 24 schools sampled; school-type breakdown not documented
+    gap: 'The LAILA sample''s coverage across Qatar''s four school types (government
+      Arabic-medium, Arabic private, international private, community) is not documented.
+      As of 2024–2025, approximately 60% of Qatari secondary students attend private
+      schools, and 23 distinct curricula are in operation. International private schools
+      follow British (45.8% of K-12 schools), American (13.4%), or other foreign curricula;
+      Arabic private schools follow the Qatari national curriculum. If LAILA''s 24-school
+      sample skews toward government or Arabic private schools, international school
+      students — who represent a large share of the secondary population — may be
+      systematically underrepresented. Sources: Grokipedia/MoEHE 2024–2025 — [|https://grokipedia.com/page/List_of_schools_in_Qatar|];
+      Consulting Haus 2023 — [|https://consulting-haus.com/wp-content/uploads/2023/09/CH_Education_Sector-Overview_September-2023.pdf|]'
+    qatar_school_types: 'Four types: (1) government schools — free, Arabic-medium
+      national curriculum, serve primarily Qatari nationals; (2) Arabic private schools
+      — implement Qatari national curriculum with Arabic as medium of instruction;
+      (3) international private schools — follow diverse foreign curricula (British,
+      American, French, German, Indian, etc.), though Arabic language/Islamic studies
+      remain mandatory for Qatari and Arab students; (4) community schools — serve
+      expatriate nationals using home-country curricula. As of 2024–2025: 278 government
+      schools (137,048 students), 351 private schools (228,488 students). British
+      curriculum leads with 157 K-12 schools (45.8%), followed by American (46 schools,
+      13.4%), SEC/Qatari (44 schools, 12.8%), Indian (43 schools, 12.5%). Sources:
+      Grokipedia/MoEHE — [|https://grokipedia.com/page/List_of_schools_in_Qatar|];
+      Springer chapter — [|https://link.springer.com/chapter/10.1007/978-981-97-9667-0_11|];
+      Consulting Haus — [|https://consulting-haus.com/wp-content/uploads/2023/09/CH_Education_Sector-Overview_September-2023.pdf|]'
+  prompt_imbalance: Prompts P3 and P4 have fewer essays than others; may produce skewed
+    performance estimates in prompt-specific evaluation
+  student_motivation_context: Participation in LAILA was voluntary and independent
+    of academic grades; deployment use is formative and pre-submission — motivational
+    alignment is higher in deployment but writing conditions differ
+infrastructure_notes:
+  primary_access_mode: School-administered digital platform (web-based essay submission);
+    deployment interface unspecified but likely web or LMS-integrated
+  device_context: School computer labs assumed for Qatar exam context; deployment
+    may include personal devices (tablets, smartphones) for draft editing outside
+    class
+  arabic_nlp_tooling: Arabic-centric models (AraBERT, AraT5, ALLaM, Command-R7B-Arabic,
+    Fanar) are available and benchmarked; Arabic NLP tooling is improving but remains
+    behind English for tasks requiring generation quality (relevant for feedback output)
+  rtl_rendering: Must be ensured in all UI surfaces delivering feedback to students
+  internet_connectivity_qatar: '99% internet penetration in Qatar as of 2024, with
+    95.2% social media user rate. This indicates near-universal digital infrastructure
+    for web-based deployment in Qatar. Source: Data Reportal 2024, as cited in ResearchGate
+    — [|https://www.researchgate.net/figure/Total-Number-of-Schools-in-Qatar-Primary-Intermediate-Secondary_fig1_369912994|]'
+  internet_connectivity_secondary_geographies: '[NEEDS VERIFICATION — deferred: below
+    search budget; comparable figures for Egypt, Jordan, Lebanon, Saudi Arabia secondary
+    school students would require ITU/World Bank sub-national data not accessed in
+    this pass]'
+  lms_integration: 'For Qatari government schools, the official LMS is ''Qatar Education''
+    (قطر للتعليم), a mobile application developed by the Ministry of Education and
+    Higher Education (MoEHE) for managing classroom activities, assessments, and student
+    progress. Private and international schools use varied platforms. The Qatar e-learning
+    management system market is fragmented across local providers (Malomatia, Zinger
+    Stick Software) and global platforms, with no single dominant private school LMS.
+    Saudi Arabia uses ''Madrasati'' (مدرستي) for public schools. Egypt uses the national
+    ''iEN'' platform. Jordan and Lebanon do not have a single nationally mandated
+    LMS for secondary education identifiable from current search. Sources: Qatar Education
+    app (Google Play/App Store) — [|https://play.google.com/store/apps/details?id=app.qeducation.edu.gov.qa|];
+    Mordor Intelligence Qatar LMS market — [|https://www.mordorintelligence.com/industry-reports/qatar-e-learning-management-system-market|]'
+cultural_and_pedagogical_norms:
+  arabic_essay_tradition: Academic Arabic essay writing (إنشاء) is a formal, high-status
+    skill in Arab education systems; rhetorical conventions (including classical Arabic
+    stylistic expectations) differ from Western essay norms
+  religious_and_cultural_content: Essay topics involving religious texts, Quranic
+    reference, and Islamic cultural commentary are common in Arab curricula and represent
+    a genre gap in the benchmark; feedback systems must handle such content appropriately
+  teacher_authority: 'Feedback norms in Arab educational culture tend toward teacher-authoritative
+    correction; AI formative feedback as a peer-like or dialogic mechanism may require
+    cultural framing for student acceptance. Evidence from Saudi Arabia is mixed:
+    one study found Saudi teachers gave AI assessment a mean approval of only 2.26/5
+    on a Likert scale, while another found Saudi educators broadly favourable to AI
+    in teaching — ''suggesting something of a tension between two national-cultural
+    forces'' around Vision 2030 vs. traditional teacher authority. Saudi EFL students
+    generally report positive experiences with AI writing tools (valuing prompt responses
+    and grammar assistance). No Qatar-specific study of Arabic writing feedback acceptance
+    by students or teachers was found. Sources: Saudi teacher attitudes study (Tandfonline
+    2024) — [|https://www.tandfonline.com/doi/full/10.1080/2331186X.2024.2430865|];
+    Saudi EFL learner perceptions (AWEJ 2025) — [|https://awej.org/saudi-efl-learners-perceptions-of-using-artificial-intelligence-and-its-impact-on-their-writing-skills/|]'
+  gender_norms_in_schools: Qatar operates gender-segregated public schools; essays
+    from male and female students were balanced in LAILA; deployment may need to account
+    for single-gender school contexts in feedback framing. Saudi Arabia also operates
+    a gender-segregated education system.
+  student_age_appropriateness: Prompts in benchmark were designed to be developmentally
+    appropriate for G10–12 and free of sensitive topics; deployment feedback generation
+    must maintain age-appropriate register and avoid inadvertently penalizing culturally
+    normative content
+  national_identity_and_curriculum_narratives: Essay prompt topics may reference national
+    histories, cultural values, or political identities that vary across Arab countries;
+    feedback systems trained on Qatari prompts may reflect Qatar-centric content assumptions
+  qatar_national_ai_strategy: 'Qatar launched a National AI Strategy in 2019 with
+    education as a key pillar, aiming to make AI a fundamental part of education in
+    all grades and subjects; this creates an institutional environment broadly supportive
+    of AI-in-education deployment. Source: UNESCO International Forum on AI and Education
+    2022 — [|https://unesdoc.unesco.org/ark:/48223/pf0000386162|]'
+regulatory_and_ethical_context:
+  benchmark_restrictions: LAILA authors explicitly prohibit use for high-stakes educational
+    decisions affecting individual students; require fairness auditing and stakeholder
+    consultation before real-world deployment
+  qatar_data_protection: 'Qatar Law No. 13 of 2016 on Protecting Personal Data Privacy
+    (PDPPL), which took effect in January 2017. The PDPPL is the primary data protection
+    framework in Qatar; it applies to all personal data processed electronically within
+    Qatar. The competent enforcement authority is the National Cyber Governance and
+    Assurance Affairs (NCGAA) within the National Cyber Security Agency (NCSA). The
+    law is GDPR-aligned in principles (transparency, fairness, consent, breach notification,
+    data minimisation) but is not as stringent as GDPR. Penalties for non-compliance
+    range from QAR 1,000,000 to QAR 5,000,000. Fourteen regulatory guidelines were
+    issued by the Ministry of Transport and Communications in January 2021. Student
+    essay data processed by an EdTech system qualifies as electronically processed
+    personal data subject to the PDPPL. Sources: NCSA official page — [|https://assurance.ncsa.gov.qa/en/privacy/law|];
+    Securiti PDPPL overview — [|https://securiti.ai/qatar-personal-data-protection-law/|];
+    Chambers & Partners 2026 — [|https://practiceguides.chambers.com/practice-guides/data-protection-privacy-2026/qatar|]'
+  secondary_geography_data_protection:
+    egypt: '[NEEDS VERIFICATION — deferred: below search budget; Egypt enacted a Personal
+      Data Protection Law (Law No. 151 of 2020) but sub-national EdTech applicability
+      requires further verification]'
+    saudi_arabia: '[NEEDS VERIFICATION — deferred: below search budget; Saudi Arabia
+      enacted a Personal Data Protection Law (PDPL) effective September 2023 but specific
+      provisions for student/minor data in EdTech require further verification]'
+    jordan: '[NEEDS VERIFICATION — deferred: below search budget]'
+    lebanon: '[NEEDS VERIFICATION — deferred: below search budget; Lebanon has limited
+      data protection legislation and ongoing governance challenges]'
+  irb_and_consent_model: LAILA collection covered by Qatar University IRB (QU-IRB
+    159/2024-EA) with student and guardian consent; deployment system requires its
+    own consent and data governance framework
+  minor_student_data: All target users are minors (approximately 15–18); heightened
+    data protection obligations apply in all jurisdictions. Qatar PDPPL requires explicit
+    consent and additional safeguards for sensitive data; student academic data collected
+    by a deployment system would require explicit consent from students and guardians
+    as minors.
+  fairness_auditing_requirement: Benchmark authors specifically recommend fairness
+    auditing before deployment; gender, nationality, and school-type fairness dimensions
+    are relevant
+flagged_research_gaps:
+- gap_id: 1
+  label: Cross-national curriculum rubric alignment
+  description: It is unknown how much scoring norms for STY, DEV, and other subjective
+    traits diverge between Qatar's CAST rubric and writing assessment standards in
+    Egypt, Saudi Arabia, Jordan, and Lebanon. No published cross-national comparison
+    was found in the Arabic AES literature.
+  search_target: Arabic language national curriculum writing rubrics Egypt Saudi Arabia
+    Jordan Lebanon; comparison with Qatar CAST AES grading conventions for secondary
+    level
+  search_status: SEARCHED — no empirical cross-national comparison found. Individual
+    national MoE curriculum frameworks exist but published Arabic writing rubrics
+    for secondary level are not in the searchable literature. Expert elicitation with
+    teachers from each target country is required.
+- gap_id: 2
+  label: Genre coverage for literary analysis, religious text, and cultural commentary
+  description: No benchmark data or rubric covers these genres despite their prevalence
+    in Arab secondary curricula. CAST rubric is explicitly persuasive/argumentative.
+    TAQEEM 2025 (the first Arabic AES shared task) also remains confined to explanatory
+    and persuasive genres, confirming this is a field-wide gap.
+  search_target: Arabic AES dataset or rubric framework covering literary analysis,
+    Quranic/religious text commentary, cultural commentary; Arab high-school writing
+    assessment genre breadth
+  search_status: 'SEARCHED — gap confirmed. No Arabic AES dataset or rubric for these
+    genres exists. TAQEEM 2025 and ZaQQ 2025 are the most recent resources; both maintain
+    the explanatory/persuasive genre restriction. Source: TAQEEM 2025 — [|https://aclanthology.org/2025.arabicnlp-sharedtasks.134/|]'
+- gap_id: 3
+  label: Actionable feedback generation validity
+  description: No evidence that LAILA's trait-score framework maps onto quality natural-language
+    revision suggestions; benchmark validates scoring, not feedback generation. The
+    broader AES field acknowledges this gap even in English; no Arabic rubric-to-feedback
+    system exists.
+  search_target: Arabic automated essay scoring formative feedback natural language
+    explanation revision suggestion generation Arabic NLP writing feedback system
+  search_status: 'SEARCHED — gap confirmed. The 2024 Springer survey on deep learning-based
+    AES explicitly identifies feedback generation as an overlooked area. The AAEE
+    Saudi system generates corrected essay versions but not trait-grounded revision
+    suggestions. No Arabic system bridges CAST trait scores to actionable natural-language
+    feedback for secondary students. Sources: Springer 2024 — [|https://link.springer.com/article/10.1007/s10462-024-11017-5|];
+    AAEE Saudi — [|https://www.sciencedirect.com/science/article/abs/pii/S0306457319304935|]'
+- gap_id: 4
+  label: Regional MSA variation in student writing
+  description: Whether LAILA's annotation scheme penalizes or accommodates Levantine,
+    Egyptian, or other dialectal influence on MSA student writing is undocumented.
+    Lebanese students are documented to resist formal MSA writing norms.
+  search_target: Modern Standard Arabic regional variation in secondary student writing;
+    Egyptian Levantine dialect interference in MSA essays; Arabic essay annotation
+    rubric treatment of dialectal features
+  search_status: SEARCHED — gap confirmed from indirect evidence. Lebanese multilingual
+    research documents resistance to MSA literary register among secondary students.
+    No direct study of LAILA annotation treatment of regional MSA variation was found.
+    Likely unsearchable without direct examination of LAILA annotation guidelines
+    by researchers.
+- gap_id: 5
+  label: Within-Qatar school-type representativeness
+  description: LAILA's 24-school sample may not include international schools, private
+    Arabic-medium schools, or lower-performing public schools. Qatar has 4 school
+    types, 23 distinct curricula, and ~60% of secondary students in private schools
+    — school-type breakdown of the LAILA sample is undocumented.
+  search_target: 'Qatar secondary school system composition: government, independent,
+    international, private school proportions; G10–12 student population distribution
+    by school type'
+  search_status: 'SEARCHED — Qatar school type landscape verified; LAILA sample breakdown
+    remains unresolved (requires authors or data documentation). Qatar school data:
+    278 government schools, 351 private schools (2024–2025); ~60% of secondary students
+    in private schools; 23 curricula. Sources: [|https://grokipedia.com/page/List_of_schools_in_Qatar|];
+    [|https://www.tutorchase.com/blog/the-education-system-in-qatar-explained|]'
+- gap_id: 6
+  label: Annotator demographics and inter-rater reliability for subjective traits
+  description: Whether STY and DEV scores reflect a single institutional norm or broader
+    teacher-community consensus is unknown; per-trait IAA details and annotator backgrounds
+    need verification.
+  search_target: LAILA dataset annotator demographics; per-trait inter-annotator agreement
+    statistics for STY and DEV; Arabic essay annotation reliability for style and
+    development dimensions
+  search_status: 'NEEDS VERIFICATION — deferred: per-trait IAA and annotator nationality/background
+    are not in the published LAILA paper''s public-facing sections; requires direct
+    contact with authors or access to supplementary data.'
+- gap_id: 7
+  label: Student and teacher attitudes toward AI formative feedback in Arab educational
+    culture
+  description: Cultural acceptance of AI-generated feedback in teacher-authoritative
+    Arab educational systems is partially characterized for Saudi Arabia (mixed teacher
+    attitudes, generally positive student attitudes for EFL writing) but uncharacterized
+    for Qatar specifically for Arabic writing feedback.
+  search_target: AI writing feedback student teacher attitudes Arab world Qatar Egypt
+    Saudi Arabia; EdTech adoption secondary schools MENA; AI feedback cultural acceptance
+  search_status: 'SEARCHED — partial evidence found. Saudi teacher attitudes to AI
+    assessment: one study found mean approval of 2.26/5; another found broad favourability
+    (mixed). Saudi EFL students generally positive about AI writing tools. Jordan:
+    one study of 120 undergraduate EFL students found AI feedback comparable to teacher
+    feedback for writing improvements. Qatar: one 2025 study of 553 G10–12 students
+    (QU-IRB 222-EA/24) measured attitudes toward AI generally (positive), but not
+    specifically toward Arabic essay feedback. No Qatar-specific Arabic essay AI feedback
+    acceptance study found. Sources: Saudi teacher attitudes — [|https://www.tandfonline.com/doi/full/10.1080/2331186X.2024.2430865|];
+    Jordan AI vs teacher feedback — [|https://www.frontiersin.org/journals/education/articles/10.3389/feduc.2025.1614673/full|];
+    Qatar student AI attitudes — [|https://journals.sagepub.com/doi/10.1177/21582440251378375|]'
+net_new_fields:
+  taqeem_2025_shared_task: 'TAQEEM 2025 (First Shared Task for Arabic Quality Evaluation
+    of Essays in Multi-dimensions, ArabicNLP 2025, Suzhou) is the first Arabic AES
+    shared task and introduces a new dataset of 1,265 essays annotated with holistic
+    and trait-specific scores (Relevance, Organization, Vocabulary, Style, Development,
+    Mechanics, Grammar). It includes two subtasks: holistic scoring (Task A) and trait-specific
+    scoring (Task B). Critically, TAQEEM 2025 continues the explanatory and persuasive
+    genre restriction of LAILA and does not address the genre coverage gap for literary
+    analysis, religious text, or cultural commentary. The task attracted 11 registered
+    teams for Task A and 10 for Task B, with 5 teams submitting final runs. This is
+    the most recent community benchmark and confirms genre breadth remains an unsolved
+    problem in Arabic AES. Relevance for scoring: confirms that as of late 2025, no
+    community benchmark addresses deployment''s genre gap. Source: ACL Anthology —
+    [|https://aclanthology.org/2025.arabicnlp-sharedtasks.134/|]'
+  zaqq_2025_dataset: 'ZaQQ (2025, MDPI Data) is a new Arabic AES dataset constructed
+    using a human–AI collaborative framework based on QAES, annotated for 7 writing
+    traits (Relevance, Organization, Vocabulary, Style, Development, Mechanics, Structure).
+    LLMs (including Gemini-Revision) achieved QWK scores of 0.810 on Vocabulary and
+    0.700 on Relevance when tested against ZAEBUC and QALB datasets. The dataset addresses
+    data scarcity but remains confined to standard essay genres; it does not cover
+    religious, literary, or cultural commentary genres. Relevance: provides additional
+    Arabic AES validation evidence for trait-level LLM scoring but does not resolve
+    the genre or formative feedback gaps. Source: MDPI Data — [|https://www.mdpi.com/2306-5729/10/9/148|]'
+  qatar_national_ai_strategy_education: 'Qatar launched a National AI Strategy in
+    2019 with education as one of its key pillars; the strategy explicitly argues
+    that AI should be ''a fundamental part of education in all grades and subjects
+    in primary and secondary schools.'' This provides a nationally supportive policy
+    environment for AI-in-education deployment, which may lower institutional barriers
+    to adoption relative to other Arab countries. Relevance: deployment in Qatar benefits
+    from policy tailwinds but must still satisfy PDPPL data protection requirements
+    and LAILA''s recommended fairness auditing. Source: UNESCO report citing Qatar''s
+    National AI Strategy — [|https://unesdoc.unesco.org/ark:/48223/pf0000386162|]'
+  arabic_essay_scoring_data_scarcity_confirmed: 'The Arabic AES literature consistently
+    confirms that data scarcity remains the primary challenge: existing Arabic resources
+    ''are often small in scale, lack trait-specific annotations, or consist solely
+    of unannotated essays.'' The 2025 synthetic data augmentation work (arXiv 2503.17739)
+    uses GPT-4o to generate CEFR-aligned Arabic essays to address this gap, but LLM-generated
+    data without in-region human validation introduces stereotype risks for scoring
+    norm accuracy. Relevance: confirms that any Arabic formative feedback system faces
+    both data scarcity and a training-evaluation circularity challenge that the LAILA
+    benchmark only partially resolves. Source: arXiv 2025 — [|https://arxiv.org/html/2503.17739v2|]'
+  saudi_ai_assessment_teacher_attitudes_caveat: 'A 2024 study of Saudi university
+    EFL teachers using AI grading tool CoGrader found that ''the review also showed
+    no studies like ours focused specifically on AI powered essay grading in Saudi
+    Arabia'' and identified a tension between teacher desire to support Vision 2030
+    technology goals and traditional teacher authority norms around assessment. One
+    item measuring AI for assessment received a mean approval of only 2.26/5 among
+    Saudi teachers. This is the closest available proxy for deployment cultural acceptance
+    in an Arab educational context, but it concerns English essay grading by university
+    teachers — generalizability to Arabic secondary essay feedback is uncertain. Relevance:
+    flags a potential cultural acceptance risk for the deployment''s formative feedback
+    framing in Saudi Arabia that warrants in-country stakeholder consultation. Source:
+    Tandfonline 2024 — [|https://www.tandfonline.com/doi/full/10.1080/2331186X.2024.2430865|]'

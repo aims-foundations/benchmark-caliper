@@ -1,0 +1,22 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "Your students are in grades 1–8 in metropolitan India. Should the tutoring system handle content tied to the Indian school curriculum (e.g., NCERT-aligned topics, Indian numeral naming conventions like lakhs and crores, word problems referencing rupees or local contexts like train timetables)? Or is the math content entirely curriculum-agnostic in your deployment?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "IC",
+    "question": "Word problems and tutoring examples in Western benchmarks often use culturally specific contexts (e.g., baseball statistics, US grocery prices, American school scenarios). In your deployment, would students encounter these kinds of culture-distant examples, or would the system generate problems grounded in familiar Indian everyday contexts — like cricket scores, local market transactions, or school fee calculations?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OC",
+    "question": "The benchmark's pedagogical quality labels were annotated by human raters — but your actual measure of success is student satisfaction with GPT-4 responses. Who in your deployment context would be the right judges of a 'good' tutor response: the students themselves (grades 1–8), their parents, or the human tutors co-authoring the responses? Would satisfaction judgments from a metropolitan Indian child likely align with those of the benchmark's annotators?"
+  },
+  {
+    "id": "Q4",
+    "dimension": "OO",
+    "question": "The benchmark scores tutoring responses on pedagogical dimensions like guidance, tone, and mistake identification — but your deployment goal is student satisfaction, which may not map cleanly onto those dimensions. For your users, would a response that is pedagogically 'correct' but feels overly formal or culturally distant still count as a satisfying response? Or does satisfaction for your students depend on warmth, encouragement, or communication style cues that may be culturally specific to Indian classroom norms?"
+  }
+]

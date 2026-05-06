@@ -1,0 +1,1872 @@
+{
+  "responses": [
+    {
+      "responseId": "REDACTED",
+      "createTime": "2026-05-05T12:55:32.663Z",
+      "lastSubmittedTime": "2026-05-05T12:55:32.663479Z",
+      "respondentEmail": "expert_7f59a7837eda@anonymous.invalid",
+      "answers": {
+        "60fce76f": {
+          "questionId": "60fce76f",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "No — but it confirmed my existing concerns"
+              }
+            ]
+          }
+        },
+        "0480dbcb": {
+          "questionId": "0480dbcb",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "641b92db": {
+          "questionId": "641b92db",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "5941247c": {
+          "questionId": "5941247c",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "4a55780e": {
+          "questionId": "4a55780e",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "67cca19e": {
+          "questionId": "67cca19e",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "7c378651": {
+          "questionId": "7c378651",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "6201ab04": {
+          "questionId": "6201ab04",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "65218496": {
+          "questionId": "65218496",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "3652c185": {
+          "questionId": "3652c185",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "6d558186": {
+          "questionId": "6d558186",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "00b85a7d": {
+          "questionId": "00b85a7d",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "66b20d02": {
+          "questionId": "66b20d02",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "0d786f3e": {
+          "questionId": "0d786f3e",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "33b1f50b": {
+          "questionId": "33b1f50b",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "43a9dbaf": {
+          "questionId": "43a9dbaf",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "62c482f5": {
+          "questionId": "62c482f5",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "766e6702": {
+          "questionId": "766e6702",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "70d560a8": {
+          "questionId": "70d560a8",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Yes — several new concerns"
+              }
+            ]
+          }
+        },
+        "78be4d85": {
+          "questionId": "78be4d85",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "4eae8758": {
+          "questionId": "4eae8758",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "21c5f58f": {
+          "questionId": "21c5f58f",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "74a8065f": {
+          "questionId": "74a8065f",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "07676cb7": {
+          "questionId": "07676cb7",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "1) The benchmark's similarity scoring is too \"forgiving\" (OO); 2) the NER schema merges different distinct categories into a single category CHEM (IO); 3) long EMEA documents are split into sentences"
+              }
+            ]
+          }
+        },
+        "46e201dd": {
+          "questionId": "46e201dd",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "247fbecc": {
+          "questionId": "247fbecc",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "1f0fd6bb": {
+          "questionId": "1f0fd6bb",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "35ec93a3": {
+          "questionId": "35ec93a3",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "3a30562d": {
+          "questionId": "3a30562d",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "466b8b87": {
+          "questionId": "466b8b87",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "78633659": {
+          "questionId": "78633659",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "3bf2fb6f": {
+          "questionId": "3bf2fb6f",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "42815a8a": {
+          "questionId": "42815a8a",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "21f1378d": {
+          "questionId": "21f1378d",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "4d3b710c": {
+          "questionId": "4d3b710c",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "5d0d5deb": {
+          "questionId": "5d0d5deb",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "41b20c99": {
+          "questionId": "41b20c99",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "6132c5a7": {
+          "questionId": "6132c5a7",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "02670b40": {
+          "questionId": "02670b40",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "0739f8d2": {
+          "questionId": "0739f8d2",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "50e32d5f": {
+          "questionId": "50e32d5f",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "6c8c025b": {
+          "questionId": "6c8c025b",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Useful complement to expert review"
+              }
+            ]
+          }
+        },
+        "0ea917c9": {
+          "questionId": "0ea917c9",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "5a702f35": {
+          "questionId": "5a702f35",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "096d0165": {
+          "questionId": "096d0165",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "49c0f9b0": {
+          "questionId": "49c0f9b0",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "27c27bc3": {
+          "questionId": "27c27bc3",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "7efa4112": {
+          "questionId": "7efa4112",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "7a7646c6": {
+          "questionId": "7a7646c6",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "39e11cfa": {
+          "questionId": "39e11cfa",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "4b8889d0": {
+          "questionId": "4b8889d0",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "45039520": {
+          "questionId": "45039520",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "7be0e0ee": {
+          "questionId": "7be0e0ee",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "363d30e2": {
+          "questionId": "363d30e2",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "30ba64e2": {
+          "questionId": "30ba64e2",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "48aacb9f": {
+          "questionId": "48aacb9f",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "5d226e04": {
+          "questionId": "5d226e04",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "09fad357": {
+          "questionId": "09fad357",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Yes — one or two"
+              }
+            ]
+          }
+        },
+        "05a01ef8": {
+          "questionId": "05a01ef8",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "58569dc2": {
+          "questionId": "58569dc2",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "075bc2a0": {
+          "questionId": "075bc2a0",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "6e208981": {
+          "questionId": "6e208981",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "0884c9c4": {
+          "questionId": "0884c9c4",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "206a5dbc": {
+          "questionId": "206a5dbc",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "15977a90": {
+          "questionId": "15977a90",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "7d2bef76": {
+          "questionId": "7d2bef76",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "612e701c": {
+          "questionId": "612e701c",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Useful complement to expert review"
+              }
+            ]
+          }
+        },
+        "20d85bf5": {
+          "questionId": "20d85bf5",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "795c063c": {
+          "questionId": "795c063c",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "244bc7c1": {
+          "questionId": "244bc7c1",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "4a298615": {
+          "questionId": "4a298615",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "7c7f98ae": {
+          "questionId": "7c7f98ae",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "156640fd": {
+          "questionId": "156640fd",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "06fc1398": {
+          "questionId": "06fc1398",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "7acfef6d": {
+          "questionId": "7acfef6d",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "558391a4": {
+          "questionId": "558391a4",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "5bf34bb9": {
+          "questionId": "5bf34bb9",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "33148612": {
+          "questionId": "33148612",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "7afcc9ae": {
+          "questionId": "7afcc9ae",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "5a377ec2": {
+          "questionId": "5a377ec2",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "235a5892": {
+          "questionId": "235a5892",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "1480c1bd": {
+          "questionId": "1480c1bd",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "5466fe17": {
+          "questionId": "5466fe17",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "409927a0": {
+          "questionId": "409927a0",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "1a95385e": {
+          "questionId": "1a95385e",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "5376e3b9": {
+          "questionId": "5376e3b9",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "309c6129": {
+          "questionId": "309c6129",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "3d33d56e": {
+          "questionId": "3d33d56e",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "6873b5bd": {
+          "questionId": "6873b5bd",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "42d71028": {
+          "questionId": "42d71028",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "486ba12e": {
+          "questionId": "486ba12e",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "5cdcbbcd": {
+          "questionId": "5cdcbbcd",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "6c72ca6c": {
+          "questionId": "6c72ca6c",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "45e33ca0": {
+          "questionId": "45e33ca0",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "04cb2df2": {
+          "questionId": "04cb2df2",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "3a00f982": {
+          "questionId": "3a00f982",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "0232b940": {
+          "questionId": "0232b940",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "153b7a51": {
+          "questionId": "153b7a51",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "7e74ef69": {
+          "questionId": "7e74ef69",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "5a3e6eb4": {
+          "questionId": "5a3e6eb4",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "1c78d73b": {
+          "questionId": "1c78d73b",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "2e7f80fc": {
+          "questionId": "2e7f80fc",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Low level of agreement among annotators for sentiment analysis task"
+              }
+            ]
+          }
+        },
+        "3193007b": {
+          "questionId": "3193007b",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "5cdd31d5": {
+          "questionId": "5cdd31d5",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "5631ed6e": {
+          "questionId": "5631ed6e",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "55520b97": {
+          "questionId": "55520b97",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "25e891af": {
+          "questionId": "25e891af",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "29ce1366": {
+          "questionId": "29ce1366",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "78a29b57": {
+          "questionId": "78a29b57",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "36dc5189": {
+          "questionId": "36dc5189",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "5d10c9a2": {
+          "questionId": "5d10c9a2",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "4 — Agree"
+              }
+            ]
+          }
+        },
+        "2a9aac63": {
+          "questionId": "2a9aac63",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "3d80fbdc": {
+          "questionId": "3d80fbdc",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "09d2ca4c": {
+          "questionId": "09d2ca4c",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "2f149dfe": {
+          "questionId": "2f149dfe",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "329d80fa": {
+          "questionId": "329d80fa",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "774339f5": {
+          "questionId": "774339f5",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "0256aec0": {
+          "questionId": "0256aec0",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "20b08c73": {
+          "questionId": "20b08c73",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "3384787f": {
+          "questionId": "3384787f",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "6403a6eb": {
+          "questionId": "6403a6eb",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "34f35da3": {
+          "questionId": "34f35da3",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "0561498b": {
+          "questionId": "0561498b",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "637337ab": {
+          "questionId": "637337ab",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "0f11bb98": {
+          "questionId": "0f11bb98",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "096d8267": {
+          "questionId": "096d8267",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "573fb34d": {
+          "questionId": "573fb34d",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "7da6b3b7": {
+          "questionId": "7da6b3b7",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "0e739bc0": {
+          "questionId": "0e739bc0",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "0e50970b": {
+          "questionId": "0e50970b",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "57195ca4": {
+          "questionId": "57195ca4",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "00ac4b69": {
+          "questionId": "00ac4b69",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "35136412": {
+          "questionId": "35136412",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "62503191": {
+          "questionId": "62503191",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "3f690bd9": {
+          "questionId": "3f690bd9",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "660f89af": {
+          "questionId": "660f89af",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "24d5bc41": {
+          "questionId": "24d5bc41",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "023b311d": {
+          "questionId": "023b311d",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "4b624f23": {
+          "questionId": "4b624f23",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "78bfe40b": {
+          "questionId": "78bfe40b",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Yes — several new concerns"
+              }
+            ]
+          }
+        },
+        "07416f86": {
+          "questionId": "07416f86",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "2ce1718d": {
+          "questionId": "2ce1718d",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "2c349219": {
+          "questionId": "2c349219",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "414ccea2": {
+          "questionId": "414ccea2",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "4a36d43e": {
+          "questionId": "4a36d43e",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Personally, I agree with the justification and arguments but I would argue that the score should be slightly higher (3/5 maybe) since even though code-switching is indeed not well documented in the benchmark, it should still follow a media-like pattern since many tasks are sourced from news data."
+              }
+            ]
+          }
+        },
+        "49eff584": {
+          "questionId": "49eff584",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "667ba953": {
+          "questionId": "667ba953",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "6fca99f9": {
+          "questionId": "6fca99f9",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "1fa3b44d": {
+          "questionId": "1fa3b44d",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "5c0792de": {
+          "questionId": "5c0792de",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "48a3682d": {
+          "questionId": "48a3682d",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "57739896": {
+          "questionId": "57739896",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "6a9c6083": {
+          "questionId": "6a9c6083",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "488bd4eb": {
+          "questionId": "488bd4eb",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "022f9ed5": {
+          "questionId": "022f9ed5",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "5946cf59": {
+          "questionId": "5946cf59",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "14101336": {
+          "questionId": "14101336",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "23b66c1a": {
+          "questionId": "23b66c1a",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "5c0b62dc": {
+          "questionId": "5c0b62dc",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "4461aacf": {
+          "questionId": "4461aacf",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "375ab020": {
+          "questionId": "375ab020",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "788e6386": {
+          "questionId": "788e6386",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "227d2acb": {
+          "questionId": "227d2acb",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Underconfident"
+              }
+            ]
+          }
+        },
+        "44a0ce3f": {
+          "questionId": "44a0ce3f",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Underconfident"
+              }
+            ]
+          }
+        },
+        "39e8bb33": {
+          "questionId": "39e8bb33",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "273c10d1": {
+          "questionId": "273c10d1",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "565a3d5a": {
+          "questionId": "565a3d5a",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "6c0a076b": {
+          "questionId": "6c0a076b",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Useful complement to expert review"
+              }
+            ]
+          }
+        },
+        "69dcde93": {
+          "questionId": "69dcde93",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "741e8beb": {
+          "questionId": "741e8beb",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "1ebf10b3": {
+          "questionId": "1ebf10b3",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "76ccd2f1": {
+          "questionId": "76ccd2f1",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Useful complement to expert review"
+              }
+            ]
+          }
+        },
+        "2b973f86": {
+          "questionId": "2b973f86",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "48c45a74": {
+          "questionId": "48c45a74",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "17c03ada": {
+          "questionId": "17c03ada",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "043b497f": {
+          "questionId": "043b497f",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "4688115b": {
+          "questionId": "4688115b",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "3c26d71c": {
+          "questionId": "3c26d71c",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "5b255707": {
+          "questionId": "5b255707",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "2e340532": {
+          "questionId": "2e340532",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "The presence of computer-generated system prompts that contaminate the clinical text (IC), a heavy data imbalance where \"neutral\" cases overwhelm (OF), and the inclusion of entirely irrelevant topics like animal medicine and entertainment trivia (IO)."
+              }
+            ]
+          }
+        },
+        "6c9542a4": {
+          "questionId": "6c9542a4",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "2dc2ce62": {
+          "questionId": "2dc2ce62",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "About right"
+              }
+            ]
+          }
+        },
+        "3cc03e95": {
+          "questionId": "3cc03e95",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "4a2e9faa": {
+          "questionId": "4a2e9faa",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        },
+        "0e8420ba": {
+          "questionId": "0e8420ba",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "Relative ordering is about right"
+              }
+            ]
+          }
+        },
+        "354c0b2b": {
+          "questionId": "354c0b2b",
+          "textAnswers": {
+            "answers": [
+              {
+                "value": "5 — Strongly agree"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

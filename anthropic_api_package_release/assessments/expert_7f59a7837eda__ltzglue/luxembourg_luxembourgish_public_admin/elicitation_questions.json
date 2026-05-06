@@ -1,0 +1,22 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "Citizen feedback to Luxembourgish government agencies likely spans topics specific to local governance — such as cross-border worker issues, multilingual administrative procedures (French/German/Luxembourgish coexistence), housing, transport like the free public transit policy, or EU institutional matters. Does the topic taxonomy your system needs to classify cover these Luxembourg-specific administrative domains, or does it extend to other areas not typical of local government correspondence?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "IC",
+    "question": "Citizen messages to public administration are often written in non-standard Luxembourgish — code-switching with French or German, informal orthography, or dialect forms. Does your deployment need to handle this kind of mixed or non-standardized language input, or can you assume messages are written in reasonably standard Luxembourgish prose?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OC",
+    "question": "For sentiment and frustration detection specifically, the judgment of what counts as 'disgruntled' or 'urgent' can vary by annotator background. Were the sentiment or tone labels used to evaluate the system validated by people familiar with Luxembourgish civil communication norms — for example, the typically understated or formal register citizens use when writing to government bodies — or were they produced by a broader, potentially non-Luxembourg-resident annotator pool?"
+  },
+  {
+    "id": "Q4",
+    "dimension": "OO",
+    "question": "Your system triggers automated routing and prioritization decisions based on classified intent and sentiment. If the model outputs a single label per message, does that capture enough nuance — for example, a message that is both a formal complaint (intent) and moderately frustrated (sentiment) about a specific named entity (a department)? Or does your routing logic require multi-label or confidence-scored outputs rather than a single hard classification?"
+  }
+]

@@ -1,0 +1,11 @@
+- name: crisisbench
+- full_name: CrisisBench: Benchmarking Crisis-related Social Media Datasets for Humanitarian Information Processing
+- year: 2021
+- domain: Evaluates classification of crisis-related social media data for humanitarian information processing, including informativeness and humanitarian information type classification tasks to support disaster response operations.
+- languages: English
+- primary_region: Global (disaster events)
+- porting_strategy: none
+- input_modalities: text
+- output_modalities: label
+- brief_description: CrisisBench consolidates eight publicly available crisis-related datasets containing 166.1k tweets for informativeness classification and 141.5k tweets for humanitarian type classification. The benchmark addresses standardization challenges including inconsistent class labels, duplicate content filtering, and language tagging. It provides benchmark results using CNN, fastText, and transformer models on binary and multiclass classification tasks.
+- source_culture: transferred from different cultural context

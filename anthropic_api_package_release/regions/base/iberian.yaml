@@ -1,0 +1,86 @@
+# Iberian Peninsula and Latin America - Regional Context for Validity Analysis
+
+name: "Iberian"
+abbreviation: "Iberian"
+
+countries:
+  primary:
+    - Spain
+    - Portugal
+  extended:
+    - Argentina
+    - Brazil
+    - Mexico
+    - Colombia
+    - Chile
+    - Peru
+    - Venezuela
+    - Ecuador
+    - Bolivia
+    - Paraguay
+    - Uruguay
+    - Cuba
+    - Dominican Republic
+    - Guatemala
+    - Honduras
+    - El Salvador
+    - Nicaragua
+    - Costa Rica
+    - Panama
+    - Puerto Rico
+    - Angola
+    - Mozambique
+
+languages:
+  major:
+    - Spanish (Castilian)
+    - Portuguese (European and Brazilian)
+    - Catalan
+    - Galician
+    - Basque (Euskara)
+  variants:
+    - Argentinian Spanish
+    - Mexican Spanish
+    - Colombian Spanish
+    - Brazilian Portuguese
+  note: "Significant dialectal variation across Latin America. Basque is a language isolate unrelated to other Iberian languages."
+
+writing_systems:
+  scripts:
+    - Latin alphabet with diacritics (á, é, í, ó, ú, ñ, ç, ã, õ, ü)
+  note: "All target languages use the Latin alphabet. No script mismatch concerns."
+
+literacy_rates:
+  Spain: 0.98
+  Portugal: 0.96
+  Argentina: 0.99
+  Brazil: 0.93
+  Mexico: 0.95
+  Colombia: 0.95
+  Chile: 0.97
+  Peru: 0.94
+  note: "Generally high literacy rates across all target countries. Some variation in rural and indigenous communities."
+
+cultural_norms_notes: |
+  - Significant cultural variation between Iberian Peninsula and Latin American countries
+  - Regional humor norms differ (Iberian vs. Latin American comedy traditions)
+  - Formality levels in language vary (e.g., voseo in Argentina vs. tuteo in Spain)
+  - Political and historical sensitivities differ across regions (colonialism,
+    dictatorships, indigenous rights)
+  - Religious and social norms vary (more secular in Spain/Uruguay, more conservative
+    in some Central American countries)
+
+infrastructure_notes: |
+  - High internet penetration in Spain, Portugal, and urban Latin America
+  - Mobile internet dominant in many Latin American countries
+  - Text-based interfaces appropriate given high literacy rates
+  - Good NLP tooling availability for Spanish and Portuguese
+
+domain_specific_notes: |
+  - Legal systems: Civil law tradition across all countries, but specific laws and
+    precedents vary significantly
+  - Healthcare: Mix of public and private systems; traditional medicine practices
+    in indigenous communities
+  - Education: National curricula vary; language of instruction debates (Catalan
+    in Catalonia, Basque in Basque Country)
+  - Media: Rich tradition of regional journalism, social media, and online discourse

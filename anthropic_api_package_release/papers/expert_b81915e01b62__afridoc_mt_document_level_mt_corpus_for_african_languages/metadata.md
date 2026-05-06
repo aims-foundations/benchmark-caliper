@@ -1,0 +1,11 @@
+- name: afridoc-mt
+- full_name: AFRIDOC-MT: Document-level MT Corpus for African Languages
+- year: 2025
+- domain: Document-level machine translation evaluation for health and information technology domains, with focus on translating between English and African languages while maintaining discourse coherence and consistency across sentences.
+- languages: English, Amharic, Hausa, Swahili, Yorùbá, Zulu
+- primary_region: Africa
+- porting_strategy: ground_up
+- input_modalities: text
+- output_modalities: text
+- brief_description: AFRIDOC-MT is a document-level multi-parallel translation dataset comprising 334 health documents and 271 IT news documents, all manually translated from English to five African languages. The benchmark evaluates both neural machine translation models and large language models on their ability to translate complete documents while preserving context and coherence, rather than translating sentences in isolation.
+- source_culture: designed by target population

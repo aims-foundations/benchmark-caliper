@@ -1,0 +1,22 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "OC",
+    "question": "The benchmark essays were scored by annotators in Qatar. For teachers in other Arab countries — such as Egypt, Saudi Arabia, Jordan, Lebanon, or Morocco — would you expect grading standards to differ meaningfully on traits like style, vocabulary, or development? For instance, would a Lebanese teacher apply different expectations for formal register or rhetorical organization than a Qatari one, and should the system's scoring reflect each country's local norms or a pan-Arab standard?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "IO",
+    "question": "In your deployment, are teachers expected to grade essays on all seven trait dimensions (relevance, organization, vocabulary, style, development, mechanics, grammar), or do different countries or curricula emphasize a subset — for example, some systems prioritizing grammar and mechanics over style and development? Are there grading criteria important to teachers in your target countries that might not be captured by these seven traits?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OO",
+    "question": "Should the system produce a single recommended score per trait that the teacher can accept or override, or are teachers expecting the system to flag uncertainty and present a score range when an essay falls between levels? In other words, does your deployment require the model to express confidence or provide explanatory justification alongside each score, rather than just a label?"
+  },
+  {
+    "id": "Q4",
+    "dimension": "IC",
+    "question": "The benchmark essays come from Qatari high school students writing on prompts set in a Qatari educational context. For teachers in other Arab countries, could essay prompts and expected content knowledge differ enough — for example, essays on Egyptian history, Gulf social norms, or Levantine literary traditions — that a model trained on Qatari essays might misjudge relevance or development scores for locally grounded content?"
+  }
+]

@@ -1,0 +1,435 @@
+{
+  "benchmark": "mmlu",
+  "region": "Non-Arab Tourists and Expats in Eight Arab Countries",
+  "dimensions": {
+    "input_ontology": {
+      "score": 1,
+      "justification": "MMLU's 57-subject taxonomy is anchored in US academic curricula with no dedicated Arab history, Middle Eastern geography, Arabic language, or Islamic jurisprudence subjects. Dataset analysis confirms that even subjects nominally relevant to the deployment (high_school_world_history, high_school_geography, global_facts, world_religions) contain little to no Arab-region content in sampled examples. Given IO is rated HIGH priority and the deployment's core domain is precisely what MMLU omits, this is a fundamental construct underrepresentation.",
+      "strengths": [
+        "Universal STEM and formal reasoning subjects (mathematics, physics, chemistry, formal logic, computer science) test culturally neutral content valid for any region, including Arab contexts (Strength 1; D1–D43 passim)",
+        "World religions subject nominally covers multiple faith traditions, providing at least a structural slot where Islamic content could appear [Q171]",
+        "History subject claims to span 'a wide range of time periods and geographical locations' [Q41], even if dataset evidence shows minimal Arab-region instantiation"
+      ],
+      "checklist_responses": {
+        "IO-1": "Required categories per the deployment YAML and elicitation include Arab history (Islamic Golden Age, Ottoman period, modern state formation), regional geography of eight countries, Arabic language basics, Islamic religious knowledge, and pan-Arab cultural background.",
+        "IO-2": "Yes — MMLU has no dedicated subject for any of these categories. The 57 subjects include high_school_us_history, high_school_european_history, us_foreign_policy, professional_law (US bar exam), but no Arab/MENA equivalents [Q1, Q4, Q37, Q43]; dataset confirms exhaustively (D1, D3, D4, D9–D11).",
+        "IO-3": "Yes — multiple subjects (high_school_us_history, high_school_government_and_politics, us_foreign_policy, professional_law, human_aging, human_sexuality) are US-institution-specific and contribute construct-irrelevant variance for an Arab-region deployment (D1–D11, D32–D35).",
+        "IO-4": "Confirmed structural gap: zero dedicated Arab-region subjects out of 57; nominally relevant subjects (global_facts, world_religions, high_school_geography) contain little or no Arab-region content in 5–6 sampled examples each (D22–D28). ArabicMMLU and ILMAAM exist as supplements but are not part of MMLU [WEB-2, WEB-5]."
+      },
+      "evidence_quotes": [
+        "[Q1] 'The test covers 57 tasks including elementary mathematics, US history, computer science, law, and more.' (p.1)",
+        "[Q17] 'We comprehensively evaluate the breadth and depth of a model's text understanding by covering numerous topics that humans are incentivized to learn.' (p.2)",
+        "[Q37] 'Branches of the humanities include law, philosophy, history, and so on (Appendix B).' (p.4)",
+        "[Q43] 'Subject areas include economics, sociology, politics, geography, psychology, and so on.' (p.4)",
+        "[Q169] 'Figure 68: A US Foreign Policy example.' (p.26)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-2] ArabicMMLU (ACL 2024) provides 14,575 native MSA questions across 40 tasks from Arab school exams — confirming the Arab-region taxonomy MMLU omits",
+        "[WEB-5] ILMAAM (2025) found 'significant cultural misalignments and biases, particularly in sensitive areas like religion and morality' in MMLU-derived Arabic content",
+        "[WEB-12] Survey of Arabic benchmarks notes gaps in coverage of North Africa, Levant, Iraq even within the Arabic NLP ecosystem"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: high_school_government_and_politics is exclusively US constitutional law (First Amendment) — no Arab governance content",
+        "DATASET-D9: us_foreign_policy framed entirely from US perspective (NSC 68 Cold War containment)",
+        "DATASET-D22–D26: global_facts sample contains China, India, Mexico, Congo references but zero Arab countries across five sampled examples",
+        "DATASET-D17–D21: world_religions sample contains Christianity, Jainism, Judaism but no Islamic content in six sampled examples",
+        "DATASET-D27–D28: high_school_geography frames around US religious demographics and Burgess US urban model",
+        "DATASET-D16: only Middle East reference in sampled world_history is a pre-Islamic Sasanian Persian inscription",
+        "DATASET-D36: prehistory mentions Middle East only as cattle domestication origin"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "WEB-2",
+          "WEB-5"
+        ],
+        "IO-2": [
+          "Q1",
+          "Q37",
+          "Q43",
+          "Q169",
+          "DATASET-D1",
+          "DATASET-D9",
+          "DATASET-D22",
+          "DATASET-D27"
+        ],
+        "IO-3": [
+          "DATASET-D1",
+          "DATASET-D3",
+          "DATASET-D9",
+          "DATASET-D11",
+          "DATASET-D32",
+          "DATASET-D34"
+        ],
+        "IO-4": [
+          "DATASET-D16",
+          "DATASET-D17",
+          "DATASET-D22",
+          "DATASET-D36",
+          "WEB-2",
+          "WEB-12"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "No published quantitative audit of original English MMLU for Arab-region content proportion across all 15,908 items (FV1)",
+        "Whether the full world_religions set (171 questions) contains Islamic content beyond the sample"
+      ],
+      "requires_expert_verification": [
+        "Full-set count of Arab-region or Islamic-content questions across world_history, world_religions, global_facts, and miscellaneous subjects"
+      ]
+    },
+    "input_content": {
+      "score": 1,
+      "justification": "All identified MMLU source materials are Anglophone Western institutions (GRE, USMLE, US undergraduate courses, Oxford University Press, Harvard Law Library) [Q23–Q25, Q83, Q85]. No Arab educational systems, regional universities, or Arabic-language curricula are represented. Dataset analysis confirms the moral_scenarios subject explicitly anchors ground truth to 'ordinary moral standards in the US as of 2020' (D12–D14) — a direct cultural-frame conflict for a deployment serving users in Arab countries. Web evidence (CAMeL, MENAValues) empirically confirms LLMs trained on such data exhibit Western/Anglocentric bias in Arab contexts.",
+      "strengths": [
+        "Source materials are documented (GRE, USMLE, Oxford Press) [Q24, Q25], enabling provenance audit",
+        "Some non-Western primary sources do appear in world_history (Nkrumah, Sasanian inscription) showing the subject is not exclusively Western European (D16, D37)",
+        "Contamination-mitigation steps documented (questions/answers on separate pages) [Q112] reduce one form of construct-irrelevant variance"
+      ],
+      "checklist_responses": {
+        "IC-1": "Yes — the deployment requires Arab cultural, geographic, and (for the Arabic-learning sub-cohort) dialectal knowledge. MMLU inputs require almost exclusively US/Western cultural and institutional knowledge (D1–D11, D32–D35).",
+        "IC-2": "Culturally sensitive content (moral_scenarios) is misaligned: explicitly labeled by 'US standards as of 2020' (D12), conflicting with Arab regional norms on alcohol, gender, and family across all eight deployment countries.",
+        "IC-3": "Multiple inputs require Western-specific knowledge that does not transfer: US tort/contract law (D6, D8), US Social Security (D32), US ethnic demographics (D33), Burgess concentric zone urban model (D28), US contraceptive statistics (D34).",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — MMLU paper does not document any regional annotator review. ArabicMMLU and ILMAAM provide separate Arab-annotated supplements [WEB-2, WEB-5] but are external to MMLU.",
+        "IC-5": "Documented: no Arab educational sources [Q24, Q25]; no Arabic-language content; explicit US moral framing in moral_scenarios [D12]; cross-lingual value shifts empirically demonstrated for Arabic vs. English prompts [WEB-11]."
+      },
+      "evidence_quotes": [
+        "[Q23] 'The questions in the dataset were manually collected by graduate and undergraduate students from freely available sources online.' (p.3)",
+        "[Q24] 'These include practice questions for tests such as the Graduate Record Examination and the United States Medical Licensing Examination.' (p.3)",
+        "[Q25] 'It also includes questions designed for undergraduate courses and questions designed for readers of Oxford University Press books.' (p.3)",
+        "[Q85] 'We also had RoBERTa continue pretraining on approximately 1.6 million legal case summaries using Harvard's Law Library case law corpus case.law' (p.8)",
+        "[Q164] 'Krete is an unmarried taxpayer with income exclusively from wages...' (p.24)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-15] Naous et al. 2024 (CAMeL) demonstrate multilingual and Arabic monolingual LLMs exhibit bias toward Western entities even when prompted in Arabic",
+        "[WEB-11] MENAValues benchmark documents Cross-Lingual Value Shifts where LLMs respond differently in Arabic vs. English on value-based questions",
+        "[WEB-2] ArabicMMLU draws content from Arab school exams across Jordan, Egypt, Lebanon, UAE, KSA — the source-institution coverage MMLU lacks"
+      ],
+      "evidence_dataset": [
+        "DATASET-D12: moral_scenarios explicitly anchors ground truth to 'ordinary moral standards in the US as of 2020'",
+        "DATASET-D6, D8: professional_law content is exclusively US tort/contract law scenarios",
+        "DATASET-D32, D33: human_aging encodes US Social Security and US ethnic demographic categories as ground truth",
+        "DATASET-D34, D35: human_sexuality cites US-specific contraceptive and partner-count statistics as correct answers",
+        "DATASET-D31: business_ethics question on civil society lists Russia, China, Britain — Arab world entirely absent from options"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "DATASET-D1",
+          "DATASET-D6",
+          "DATASET-D32"
+        ],
+        "IC-2": [
+          "DATASET-D12",
+          "DATASET-D13",
+          "DATASET-D14",
+          "WEB-15"
+        ],
+        "IC-3": [
+          "Q24",
+          "Q25",
+          "Q164",
+          "DATASET-D6",
+          "DATASET-D28",
+          "DATASET-D34"
+        ],
+        "IC-4": [],
+        "IC-5": [
+          "Q23",
+          "Q24",
+          "Q85",
+          "DATASET-D12",
+          "WEB-11"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Inter-annotator agreement and annotator demographics for MMLU are not documented in the paper",
+        "Specific framing of any 1948 war / Palestinian / Levantine history questions, if present anywhere in MMLU (FV3)"
+      ],
+      "requires_expert_verification": [
+        "Arab regional expert review of any world_religions Islamic content for framing perspective",
+        "Arab expert review of any Middle East / Ottoman / 20th-century Arab references in world_history"
+      ]
+    },
+    "input_form": {
+      "score": 3,
+      "justification": "MMLU's text-only English MCQ format [Q3, Q56, Q71] matches the deployment's primary interaction modality (English text), which the elicitation rates MODERATE priority. However, the Arabic-learning secondary cohort cannot be evaluated by MMLU at all, and MENAValues research [WEB-11] documents cross-lingual value shifts indicating that English MMLU performance does not predict Arabic-prompt behavior. Format brittleness (e.g., separator-token sensitivity [Q105]) adds modest external-validity concern but is not region-specific.",
+      "strengths": [
+        "English text-only MCQ format aligns with the primary user cohort's interaction modality (Strength 2; D6, D7)",
+        "Zero-shot/few-shot evaluation paradigm [Q3] matches the open-domain generalization required for tourist/expat queries (Strength 4)",
+        "Formal English register is appropriate for educated adult tourist/expat users [Q56]"
+      ],
+      "checklist_responses": {
+        "IF-1": "MMLU is exclusively English text [Q71]; primary deployment interaction is English text — match. Arabic-script and dialect inputs from the secondary cohort are unsupported by MMLU and require separate benchmarking [WEB-1, WEB-2].",
+        "IF-2": "Regional infrastructure not a concern — tourists/expats use standard text-based devices; deployment YAML notes this is not a connectivity gap context.",
+        "IF-3": "DialectalArabicMMLU [WEB-1] covers Moroccan, Egyptian, Emirati, Saudi dialects (4 of 8 countries) but not Kuwaiti, Jordanian, Palestinian, or Lebanese dialects; format-level dialect sensitivity is unaddressed in MMLU.",
+        "IF-4": "Form mismatch is moderate: English MCQ matches primary cohort; Arabic-language input form is entirely unevaluated by MMLU. Cross-lingual value shifts [WEB-11] mean MMLU scores cannot be assumed to transfer to Arabic prompts."
+      },
+      "evidence_quotes": [
+        "[Q3] 'We design the benchmark to measure knowledge acquired during pretraining by evaluating models exclusively in zero-shot and few-shot settings.' (p.1)",
+        "[Q71] 'Existing large-scale NLP models, such as GPT-3, do not incorporate multimodal information, so we design our benchmark to capture a diverse array of tasks in a text-only format.' (p.7)",
+        "[Q56] 'We feed GPT-3 prompts like that shown in Figure 1a... All prompts end with \"Answer: \". The model then produces probabilities for the tokens \"A,\" \"B,\" \"C,\" and \"D,\"' (p.6)",
+        "[Q105] 'If we remove the </s> from the input, accuracy declines by several percentage points.' (p.12)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-1] DialectalArabicMMLU covers five Arabic dialects (Syrian, Egyptian, Emirati, Saudi, Moroccan) with substantial cross-dialect performance variation",
+        "[WEB-2] ArabicMMLU is the closest available substitute for the Arabic-language secondary cohort (14,575 MSA questions)",
+        "[WEB-11] MENAValues documents Cross-Lingual Value Shifts — same model gives drastically different responses in Arabic vs. English"
+      ],
+      "evidence_dataset": [
+        "DATASET-D6, D7: clear, formal English register confirms format match for the primary English-speaking cohort"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q71",
+          "WEB-1",
+          "WEB-2"
+        ],
+        "IF-2": [],
+        "IF-3": [
+          "WEB-1"
+        ],
+        "IF-4": [
+          "Q71",
+          "WEB-11",
+          "DATASET-D6"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Tourist/expat device interface preferences (mobile vs. desktop) not searchable at required precision (FV10)",
+        "Whether Arabic-learning users predominantly prompt in MSA vs. dialect"
+      ],
+      "requires_expert_verification": [
+        "Empirical sizing of the Arabic-prompting sub-cohort relative to the English primary cohort"
+      ]
+    },
+    "output_ontology": {
+      "score": 1,
+      "justification": "MMLU's single-answer four-option MCQ schema [Q49, Q56] is structurally incompatible with the deployment's required output behavior — acknowledging multiple perspectives on contested topics (1948 war/Nakba, Western Sahara, Lebanese Civil War, Palestinian statehood, Jerusalem status), per elicitation Q3 and the contested-topics YAML section. Every sampled MMLU example has exactly one labeled correct answer with no mechanism for multi-perspective or uncertainty-flagging responses. The authors note near-random model accuracy on 'morality and law' [Q8, Q14] but do not address the structural taxonomy issue. No identified Arab-focused benchmark uses multi-perspective scoring (FV5). Given OO is HIGH priority, this is a fundamental structural-validity violation.",
+      "strengths": [
+        "Difficulty stratification (Elementary/High School/College/Professional) [Q26] does provide useful granularity within the MCQ schema",
+        "Aggregation across four broad clusters (humanities, social sciences, STEM, other) [Q99–Q101] supports diagnostic interpretation"
+      ],
+      "checklist_responses": {
+        "OO-1": "MCQ A/B/C/D label categories are regionally neutral in form but cannot encode multi-perspective or contested-topic acknowledgment, which the deployment explicitly requires per elicitation Q3.",
+        "OO-2": "Missing categories: no schema slot for 'this is contested,' 'depends on country,' or 'multiple perspectives apply' — required for Palestinian narrative, Western Sahara, Lebanese Civil War, etc. [contested_topics YAML section].",
+        "OO-3": "moral_scenarios schema explicitly encodes 'US standards as of 2020' as the decision rule (D12), a non-regional value framing.",
+        "OO-4": "Stakeholder-driven redesign would require moving beyond MCQ entirely; no Arab-focused benchmark using multi-label or open-ended contested-history scoring has been identified (FV5).",
+        "OO-5": "Documented structural-validity violation: the construct (multi-perspective handling of contested Arab regional topics) cannot be represented in the MMLU output schema; MMLU paper itself flags weak performance on 'human values such as law and morality' [Q14, Q15] without addressing the schema issue."
+      },
+      "evidence_quotes": [
+        "[Q49] 'To measure performance on our multitask test, we compute the classification accuracy across all examples and tasks.' (p.5)",
+        "[Q56] 'The model then produces probabilities for the tokens \"A,\" \"B,\" \"C,\" and \"D,\" and we treat the highest probability option as the prediction.' (p.6)",
+        "[Q8] 'Worse, they still have near-random accuracy on some socially important subjects such as morality and law.' (p.1)",
+        "[Q14] 'The tasks with near-random accuracy include calculation-heavy subjects such as physics and mathematics and subjects related to human values such as law and morality.' (p.2)",
+        "[Q15] 'This second weakness is particularly concerning because it will be important for future models to have a strong understanding of what is legal and what is ethical.' (p.2)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-5] ILMAAM identified 'significant cultural misalignments and biases, particularly in sensitive areas like religion and morality' in MMLU-derived content",
+        "[WEB-11] MENAValues uses population-level survey distributions rather than single-answer ground truth — illustrating an alternative ontology MMLU lacks"
+      ],
+      "evidence_dataset": [
+        "DATASET-D12, D13, D14: moral_scenarios encodes 'US standards as of 2020' as the decision rule, with no slot for cultural variation",
+        "DATASET-D9: us_foreign_policy resolves Cold War historiography to a single labeled answer",
+        "DATASET-D15: colonial-era framing (Indian revolt) resolved to single answer with no multi-perspective accommodation"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q49",
+          "Q56"
+        ],
+        "OO-2": [
+          "DATASET-D12",
+          "DATASET-D9",
+          "WEB-11"
+        ],
+        "OO-3": [
+          "DATASET-D12",
+          "DATASET-D14"
+        ],
+        "OO-4": [],
+        "OO-5": [
+          "Q8",
+          "Q14",
+          "Q15",
+          "WEB-5"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether any planned MMLU successor or supplement supports multi-perspective scoring (none identified per FV5)"
+      ],
+      "requires_expert_verification": [
+        "Region-stakeholder design of an output schema that accommodates contested-topic acknowledgment"
+      ]
+    },
+    "output_content": {
+      "score": 1,
+      "justification": "MMLU annotator population is graduate/undergraduate students from US institutions [Q23] with Mechanical Turk and US 95th-percentile test-taker baselines [Q31, Q33, Q34] — no Arab regional stakeholders. Ground-truth labels reflect Western academic framing, with moral_scenarios explicitly encoding 'US standards as of 2020' (D12). Inter-annotator agreement is not documented. Empirical evidence (CAMeL, ILMAAM) confirms Western framing of Arab content in LLM evaluation systematically diverges from Arab stakeholder judgments [WEB-5, WEB-15]. With OC rated HIGH and the deployment serving eight Arab countries with contested historical narratives, this is a major convergent- and external-validity violation.",
+      "strengths": [
+        "Annotator source institutions are documented [Q23, Q24, Q25], enabling diagnosis even though the demographics themselves are problematic",
+        "Domain-expert performance is benchmarked against US 95th-percentile test-takers [Q33], providing a calibrated US-centric ceiling — useful as a baseline even if not regionally valid"
+      ],
+      "checklist_responses": {
+        "OC-1": "Ground-truth labels do not reflect Arab regional stakeholder perspectives. moral_scenarios labels are explicitly US-2020-anchored (D12); professional_law labels reflect US common law (D6–D8); us_foreign_policy labels reflect US institutional framing (D9–D11).",
+        "OC-2": "High disagreement expected on contested topics (Palestinian narrative, Western Sahara, Jerusalem) where Arab stakeholder judgments diverge from US-academic-sourced labels [contested_topics YAML, WEB-5].",
+        "OC-3": "MMLU paper does not document annotator demographics beyond 'graduate and undergraduate students' [Q23] — INSUFFICIENT DOCUMENTATION on country, ethnicity, or expertise composition.",
+        "OC-4": "Re-annotation is what ArabicMMLU [WEB-2, WEB-6] and ILMAAM [WEB-5] effectively do — but for separate Arabic-content benchmarks, not for MMLU itself.",
+        "OC-5": "INSUFFICIENT DOCUMENTATION — MMLU paper does not describe label aggregation methods or treatment of annotator disagreement; whether minority perspectives are erased cannot be assessed from the paper.",
+        "OC-6": "Confirmed convergent- and external-validity violations: US-centric annotation [Q23, Q31, Q33], explicit US-2020 moral framing (D12), no Arab expert review documented; CAMeL evidence of LLM Western bias [WEB-15] confirms practical impact."
+      },
+      "evidence_quotes": [
+        "[Q23] 'The questions in the dataset were manually collected by graduate and undergraduate students from freely available sources online.' (p.3)",
+        "[Q31] 'Unspecialized humans from Amazon Mechanical Turk obtain 34.5% accuracy on this test.' (p.3)",
+        "[Q33] 'For example, real-world test-taker human accuracy at the 95th percentile is around 87% for US Medical Licensing Examinations' (p.3)",
+        "[Q34] 'If we take the 95th percentile human test-taker accuracy for exams that build up our test... we then estimate that expert-level accuracy is approximately 89.8%.' (p.3)",
+        "[Q79] 'They are notably poor at modeling human (dis)approval, as evident by the low performance on the Professional Law and Moral Scenarios tasks.' (p.8)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-5] ILMAAM (2025) identified significant cultural misalignments in religion and morality content; 11 expert annotators reviewed for cultural appropriateness, bias, religious sensitivity",
+        "[WEB-15] Naous et al. 2024 (CAMeL) empirically demonstrate LLM Western cultural bias in Arabic prompts",
+        "[WEB-6] ArabicMMLU annotated by 10 Arab native speakers from Jordan, Egypt, Lebanon, UAE, KSA — illustrating the regional annotation MMLU lacks"
+      ],
+      "evidence_dataset": [
+        "DATASET-D12: moral_scenarios labels explicitly encode 'ordinary moral standards in the US as of 2020' as the ground-truth criterion",
+        "DATASET-D6, D7, D8: professional_law ground-truth labels reflect US tort, contract, and federal court procedural rules",
+        "DATASET-D9: us_foreign_policy ground-truth answer encodes US institutional perspective on NSC 68"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "DATASET-D12",
+          "DATASET-D6",
+          "DATASET-D9"
+        ],
+        "OC-2": [
+          "WEB-5",
+          "WEB-15"
+        ],
+        "OC-3": [
+          "Q23"
+        ],
+        "OC-4": [
+          "WEB-2",
+          "WEB-5"
+        ],
+        "OC-5": [],
+        "OC-6": [
+          "Q23",
+          "Q31",
+          "Q33",
+          "Q79",
+          "DATASET-D12",
+          "WEB-15"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Annotator country/ethnicity composition beyond 'students'",
+        "Inter-annotator agreement statistics (not reported in MMLU paper)",
+        "Aggregation methodology for any items where annotators disagreed (not reported)"
+      ],
+      "requires_expert_verification": [
+        "Arab regional expert relabeling of any Arab-region or Islamic-content questions in MMLU (e.g., world_religions Islamic items, world_history Middle East items)"
+      ]
+    },
+    "output_form": {
+      "score": 2,
+      "justification": "Both MMLU and the deployment use text output, satisfying basic modality match. However, MMLU's classification-accuracy metric over A/B/C/D tokens [Q49, Q56] cannot evaluate the open-ended, multi-perspective explanatory responses the deployment's tourist/expat assistant produces. Calibration evaluation [Q64–Q67] is a useful auxiliary signal — GPT-3's 24% confidence-accuracy gap [Q66] is informative — but does not address the form mismatch. With OF rated MODERATE, this is a real but partial concern: MMLU can score factual recall in MCQ form but not the explanatory output form the deployment expects.",
+      "strengths": [
+        "Text output modality matches deployment text interface",
+        "Calibration metrics (RMS calibration error, confidence-accuracy correlation) [Q65, Q67] provide useful auxiliary signals on whether models 'know what they don't know' [Q16] — directly relevant to a tourist/expat assistant that should hedge on contested topics",
+        "Zero-shot/few-shot evaluation regime [Q3] aligns with deployment's open-domain generalization requirement (Strength 4)"
+      ],
+      "checklist_responses": {
+        "OF-1": "Modality matches (text), but output granularity mismatches: MCQ token probability [Q56] vs. open-ended explanation expected by deployment users.",
+        "OF-2": "Not applicable — text-based deployment, no TTS requirement documented.",
+        "OF-3": "Tourist/expat target population is literate adult readers; literacy not a concern. INSUFFICIENT DOCUMENTATION on accessibility-specific output requirements.",
+        "OF-4": "Form mismatch documented: MCQ scoring [Q49] cannot credit appropriately-hedged multi-perspective open-ended responses; the authors note their evaluation format 'is not identical to the format in which information is acquired during pretraining' [Q76]."
+      },
+      "evidence_quotes": [
+        "[Q49] 'To measure performance on our multitask test, we compute the classification accuracy across all examples and tasks.' (p.5)",
+        "[Q56] 'The model then produces probabilities for the tokens \"A,\" \"B,\" \"C,\" and \"D,\" and we treat the highest probability option as the prediction.' (p.6)",
+        "[Q66] 'Its confidence is only weakly related to its actual accuracy in the zero-shot setting, with the difference between its accuracy and confidence reaching up to 24% for some subjects.' (p.7)",
+        "[Q76] 'Importantly, the format of our evaluation is not identical to the format in which information is acquired during pretraining.' (p.8)",
+        "[Q16] 'GPT-3 does not have an accurate sense of what it does or does not know since its average confidence can be up to 24% off from its actual accuracy.' (p.2)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-11] MENAValues evaluates LLMs across neutral, personalized, and observer framings — illustrating richer output-form evaluation that MMLU's MCQ accuracy cannot match"
+      ],
+      "evidence_dataset": [
+        "DATASET-D12, D13, D14: every sampled item resolves to a single A/B/C/D label, with no mechanism for partial credit on multi-perspective or hedged responses"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q49",
+          "Q56"
+        ],
+        "OF-2": [],
+        "OF-3": [],
+        "OF-4": [
+          "Q49",
+          "Q76",
+          "DATASET-D12",
+          "WEB-11"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether the deployed system generates free-form text or also offers MCQ-style confirmations (interface design not specified in YAML)"
+      ],
+      "requires_expert_verification": [
+        "Whether deployment evaluation will supplement MMLU MCQ accuracy with open-ended generation metrics (e.g., MENAValues-style prompting)"
+      ]
+    }
+  },
+  "overall_summary": "MMLU is fundamentally misaligned with this deployment across the four HIGH-priority dimensions (IO, IC, OO, OC). Documentation, web evidence, and dataset analysis converge on a clear finding: MMLU's 57 subjects are anchored in US academic curricula with no dedicated Arab-region content; ground-truth labels reflect US-academic and (in moral_scenarios) explicitly US-2020 framings; and the single-answer MCQ schema is structurally incapable of representing the multi-perspective output behavior required for contested Arab historical and political topics. The two MODERATE-priority dimensions (IF, OF) match deployment modality at the surface (English text) but cannot evaluate the Arabic-learning sub-cohort or open-ended explanatory output. Universal STEM and formal-reasoning content remains usable as a transferable competence baseline, but the core deployment domain — Arab history, regional geography, Arabic language basics, and Islamic religious knowledge — is essentially uncovered.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "MMLU can usefully measure transferable academic competence in subjects with no cultural dependence — STEM, formal logic, mathematics — and can serve as a baseline for English-language reading comprehension and MCQ reasoning. It cannot measure the deployment's core constructs: Arab history knowledge, Middle Eastern geography, Arabic language basics, Islamic religious knowledge, or the ability to acknowledge multiple perspectives on contested topics.",
+    "construct_depth": "Construct depth is shallow for the deployment's purpose. The benchmark probes broad academic recall via MCQ but cannot surface (a) regional factual accuracy on Arab content, (b) framing perspective on contested events, (c) calibrated hedging on politically sensitive topics, or (d) Arabic-language competence. Even the calibration evaluation [Q64–Q67], while informative about confidence-accuracy gaps, cannot diagnose region-specific overconfidence patterns documented in CAMeL and MENAValues research [WEB-11, WEB-15].",
+    "supplementation_needed": "Substantial supplementation is required. For IO and IC: ArabicMMLU [WEB-2] (40 tasks, 8 countries, 14,575 MSA questions) and ILMAAM [WEB-5] (culturally refined with 11-expert annotation). For dialect/IF coverage of the Arabic-learning cohort: DialectalArabicMMLU [WEB-1] (Moroccan, Egyptian, Emirati, Saudi). For OC value alignment across all eight countries: MENAValues [WEB-11]. For Islamic-cultural content: PalmX 2025 [WEB-13] and IslamicMMLU [WEB-14]. None of these supplements solve the OO contested-topic schema gap, which is a confirmed ecosystem-wide gap (FV5) and would require new evaluation methodology (multi-perspective scoring, expert adjudication of contested labels)."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "No dedicated Arab history, Middle Eastern geography, Arabic language, or Islamic content subjects in MMLU's 57-subject taxonomy.",
+      "recommendation": "Replace MMLU as the primary Arab-region knowledge evaluation with ArabicMMLU [WEB-2] (40 tasks across 8 Arab countries) and PalmX 2025 [WEB-13] (Arabic and Islamic culture). Retain MMLU only for transferable STEM/formal-reasoning subjects."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "All MMLU source materials are Anglophone Western institutions; moral_scenarios explicitly encodes US-2020 standards as ground truth.",
+      "recommendation": "Supplement with ILMAAM [WEB-5] for culturally aligned content and explicitly exclude moral_scenarios from the deployment evaluation suite. Document the Western-source provenance of any MMLU subjects retained."
+    },
+    {
+      "dimension": "input_form",
+      "gap": "English-only format does not evaluate the Arabic-learning sub-cohort.",
+      "recommendation": "Add DialectalArabicMMLU [WEB-1] for Moroccan/Egyptian/Emirati/Saudi dialect coverage and ArabicMMLU [WEB-2] for MSA. Note that Kuwaiti, Jordanian, Palestinian, and Lebanese dialects remain unbenchmarked — flag as residual gap."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "Single-answer MCQ schema cannot represent multi-perspective handling of contested topics (1948 war, Western Sahara, Lebanese Civil War, Palestinian statehood, Jerusalem) — the deployment's explicitly required output behavior per elicitation Q3.",
+      "recommendation": "Develop a custom evaluation harness for contested topics using multi-perspective rubrics with Arab regional expert adjudication; do not rely on MMLU MCQ accuracy for these topics. MENAValues [WEB-11] cross-lingual framing methodology is the closest published model."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Ground-truth labels were determined by US graduate/undergraduate annotators with no documented Arab regional stakeholder review.",
+      "recommendation": "For any MMLU items retained that touch Arab or Islamic content (world_religions Islamic items, world_history Middle East items, geography items), commission Arab regional expert relabeling. Use ILMAAM's 11-expert annotation methodology [WEB-5] as a template."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "MCQ accuracy metric cannot evaluate open-ended explanatory or perspective-acknowledging responses that the deployed assistant produces.",
+      "recommendation": "Add open-ended generation evaluation with rubric-based scoring (cultural appropriateness, multi-perspective acknowledgment, calibrated hedging on contested topics). Re-evaluate every 6–12 months given rapid Arabic-benchmark ecosystem growth [WEB-12]."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_ontology",
+    "input_content",
+    "output_ontology",
+    "output_content"
+  ],
+  "strongest_dimensions": [
+    "input_form",
+    "output_form"
+  ]
+}

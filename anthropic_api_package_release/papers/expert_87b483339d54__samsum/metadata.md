@@ -1,0 +1,11 @@
+- name: samsum
+- full_name: SAMSum Corpus: A Human-annotated Dialogue Dataset for Abstractive Summarization
+- year: 2019
+- domain: A dataset for abstractive summarization of messenger-like dialogue conversations, designed to address the lack of high-quality chat dialogue corpora with manually annotated abstractive summaries.
+- languages: English
+- primary_region: UNKNOWN
+- porting_strategy: ground_up
+- input_modalities: text
+- output_modalities: text
+- brief_description: SAMSum Corpus contains over 16,000 natural messenger-like chat dialogues created by English-fluent linguists, each with a single manually annotated abstractive summary. The conversations reflect diverse styles and topics ranging from informal chitchat to formal discussions, and were validated to resemble authentic messenger app conversations (94% agreement). The paper evaluates the corpus by testing several summarization models and shows that dialogue summarization requires dedicated models and non-standard quality measures compared to news summarization.
+- source_culture: designed by target population

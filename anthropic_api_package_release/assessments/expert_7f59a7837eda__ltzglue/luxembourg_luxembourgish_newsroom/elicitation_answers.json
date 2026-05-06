@@ -1,0 +1,6 @@
+{
+  "Q1": "The system adheres strictly to standard international news categories without introducing major country-specific sub-categories.",
+  "Q2": "The system must absolutely handle code-switching as a core requirement.",
+  "Q3": "The system would prioritize the flexible register accepted by professional journalists and editors over strict adherence to official orthographic guidelines. However, this would indeed naturally create borderline cases where a formal authority might disagree with an editorial choice.",
+  "Q4": "The system generates individual significance scores for each output, which are visible to editors. If any score crosses a pre-defined threshold, the article is flagged, allowing the team to see exactly which criterion triggered the review. While the system does not provide human-readable explanations by default, editors can request them if recurring issues arise or if specific cases require deeper debugging."
+}

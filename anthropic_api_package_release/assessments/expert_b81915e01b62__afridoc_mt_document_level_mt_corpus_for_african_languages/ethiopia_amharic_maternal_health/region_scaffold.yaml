@@ -1,0 +1,280 @@
+name: Ethiopia Ministry of Health — Amharic Clinical Translation Deployment
+abbreviation: ETH-MOH-AM-MT
+deployment_context:
+  description: An AI-powered machine translation system converting English-language
+    clinical practice guidelines, vaccination schedules, and maternal-health booklets
+    into Amharic for distribution by Ethiopia's Ministry of Health. Primary consumers
+    are health workers and patients across Ethiopia's regional health bureaus. Evaluation
+    is scoped to prose/narrative health content aligned with WHO-sourced benchmark
+    documents; structured document types (tables, timetables, administrative forms)
+    are out of scope.
+  commissioning_body: Ethiopia Ministry of Health (MOH)
+  regulatory_reference_bodies:
+  - Ethiopia Ministry of Health (MOH)
+  - Ethiopian Food and Drug Authority (EFDA)
+  benchmark_used: AFRIDOC-MT (2024)
+geography:
+  country: Ethiopia
+  sub_national_scope:
+  - Tigray Regional Health Bureau
+  - Oromia Regional Health Bureau
+  - Amhara Regional Health Bureau
+  - Somali Regional Health Bureau
+  note: Distribution is nationwide through MOH regional bureau network. Translations
+    produced centrally (likely Addis Ababa-centric) but consumed across highly diverse
+    regional contexts. Whether a single national-standard Amharic register is trusted
+    uniformly across all bureaus is an open question not resolved in elicitation.
+languages:
+  target_translation_language: Amharic
+  source_language: English
+  writing_system: Ethiopic (Ge'ez) script
+  script_notes: Amharic uses the Ethiopic/Ge'ez syllabic script (abugida). This is
+    a non-Latin, non-RTL script with distinct tokenization profiles — AFRIDOC-MT documents
+    that Amharic produces the largest average token counts across evaluated tokenizers,
+    requiring increased token limits for model evaluation.
+  register_variation:
+    acknowledged: true
+    description: Amharic spoken and written registers vary across Ethiopia's regional
+      health bureaus (Tigray, Oromia, Amhara, Somali). Whether Addis Ababa-centric
+      clinical Amharic translations are equally trusted and comprehensible across
+      all bureaus was not resolved in elicitation. Regional health-terminology preferences
+      may diverge.
+    resolution_status: UNRESOLVED — downstream web search should investigate documented
+      dialectal or register variation in Amharic health communication across these
+      bureaus
+  additional_languages_in_region:
+  - Afaan Oromo (Oromia)
+  - Tigrinya (Tigray)
+  - Somali (Somali region)
+  - Afar
+  - Sidamo/Sidaama
+  note: The deployment targets Amharic as a lingua franca for MOH materials. Many
+    health extension workers and patients in Oromia, Somali, and Tigray regions may
+    have limited Amharic proficiency, but this is outside the current system scope.
+target_population:
+  primary_consumers:
+  - MOH-trained clinical translators (ground-truth authority for quality evaluation)
+  - Amharic-speaking physicians (acceptable fallback ground-truth authority)
+  - Community health extension workers (Health Extension Program)
+  - Semi-literate patients receiving maternal-health and vaccination materials
+  occupational_roles_detail:
+    clinical_translators: MOH-credentialed professionals responsible for authoritative
+      Amharic rendering of clinical guidelines; designated as primary ground-truth
+      judges for translation quality.
+    physicians: Amharic-speaking medical doctors serving as fallback quality judges;
+      presumed familiar with MOH and EFDA approved terminology.
+    health_extension_workers: Community-level frontline health workers operating under
+      the Health Extension Program; likely vary in Amharic literacy and clinical training
+      depth.
+    patients: End recipients of translated materials; may include semi-literate or
+      low-literacy individuals, particularly in rural and pastoral communities.
+  literacy_profile:
+    national_literacy_rate: '[NEEDS VERIFICATION]'
+    urban_rural_gap: '[NEEDS VERIFICATION]'
+    health_worker_literacy_assumption: Assumed high literacy for clinical translators
+      and physicians; health extension workers and patients range from moderate to
+      low literacy
+    note: Semi-literate patients are explicitly named as a target consumer group,
+      implying readability for lower-literacy audiences is a deployment success criterion
+      alongside MOH/EFDA glossary compliance.
+ground_truth_authority:
+  primary: MOH-trained clinical translators
+  fallback: Amharic-speaking physicians
+  excluded_as_authoritative:
+  - General Amharic translators without clinical credentials
+  - Academic linguists without MOH affiliation
+  - Health extension workers (users, not judges)
+  benchmark_annotator_alignment:
+    status: UNVERIFIED — CRITICAL GAP
+    description: AFRIDOC-MT names four Amharic translators (Bereket Tilahun, Hana
+      M. Tamiru, Biniam Asmlash, Lidetewold Kebede) but documents no professional
+      credentials, institutional affiliations, clinical backgrounds, or MOH certification.
+      It is unknown whether any holds MOH clinical translation credentials or has
+      been trained under Ethiopia MOH terminology standards.
+    web_search_target: Credentials and institutional affiliations of AFRIDOC-MT Amharic
+      translators; MOH Ethiopia clinical translation certification or accreditation
+      pathways
+approved_terminology_resources:
+  moh_glossary:
+    name: Ethiopia Ministry of Health Amharic Medical Terminology Glossary
+    status: '[NEEDS VERIFICATION — confirm existence, scope, version, and public availability]'
+    role_in_deployment: Primary compliance reference; glossary conformance is a required
+      success criterion for this deployment
+  efda_glossary:
+    name: Ethiopian Food and Drug Authority Approved Terminology List
+    status: '[NEEDS VERIFICATION — confirm existence, scope, version, and public availability]'
+    role_in_deployment: Co-equal compliance reference alongside MOH glossary
+  benchmark_glossary_integration:
+    status: NOT IMPLEMENTED — AFRIDOC-MT planned a terminology harmonization step
+      for translators but there is no evidence it was completed or that any approved
+      Ethiopian institutional glossary was used. Benchmark scoring functions (d-BLEU,
+      d-chrF, GPT-4o, human DA) are all agnostic to MOH/EFDA terminology lists.
+    gap_severity: HIGH — this is the primary OO construct gap between benchmark scoring
+      and deployment success criteria
+document_scope:
+  in_scope:
+  - Prose and narrative health content
+  - Clinical practice guidelines (narrative sections)
+  - Maternal-health booklets (narrative sections)
+  - Vaccination schedule text (narrative descriptions, not timetable grids)
+  - WHO-style general health articles
+  out_of_scope:
+  - Structured document types (tables, dosage grids, immunization timetables)
+  - Administrative forms
+  - Numbered protocol lists with complex formatting
+  - HMIS data entry forms
+  benchmark_alignment: Good alignment — AFRIDOC-MT corpus consists entirely of narrative
+    prose articles from WHO (health domain) and Techpoint Africa (tech domain), with
+    no structured document types included.
+  source_document_representativeness:
+    note: WHO articles are the benchmark source; downstream search should verify whether
+      WHO clinical language and document structures align sufficiently with actual
+      Ethiopia MOH distribution materials, or whether key document genres are systematically
+      absent.
+    web_search_target: Ethiopia MOH maternal health booklet vaccination schedule language
+      register comparison WHO articles Amharic translation representativeness
+success_criteria:
+  approach: Multi-metric
+  primary_criteria:
+  - criterion: MOH/EFDA glossary compliance
+    description: Translated terms must conform to MOH and EFDA approved Amharic medical
+      terminology lists
+    benchmark_operationalization: NOT OPERATIONALIZED — no benchmark scoring function
+      captures this criterion
+    gap_severity: HIGH
+  - criterion: Document-level terminological consistency
+    description: The same source term must be rendered identically throughout a translated
+      document
+    benchmark_operationalization: PARTIALLY — lexical cohesion errors (LE) in GPT-4o-as-judge
+      protocol capture vocabulary inconsistency; human DA captures overall quality
+      but not term-by-term consistency explicitly
+    gap_severity: MODERATE
+  - criterion: Faithfulness to source meaning
+    description: Translation must not introduce incorrect clinical information, omit
+      key content, or add unsupported claims
+    benchmark_operationalization: COVERED — content errors (CE) dimension in GPT-4o-as-judge
+      protocol captures incorrect translations, omissions, additions; human DA provides
+      overall faithfulness signal
+    gap_severity: LOW
+  - criterion: Automatic MT metric performance
+    description: BLEU, chrF, and COMET-class scores serve as proxies for translation
+      quality
+    benchmark_operationalization: COVERED — d-BLEU, d-chrF with bootstrap CI; chrF
+      prioritized for Amharic morphological richness; AfriCOMET available for sentence-level
+    gap_severity: LOW
+  - criterion: Readability for semi-literate patients
+    description: Translations should be comprehensible to lower-literacy end-users
+    benchmark_operationalization: PARTIALLY — fluency dimension (1–5 scale) in GPT-4o-as-judge
+      and human DA capture surface readability; neither is specifically calibrated
+      for semi-literate populations
+    gap_severity: MODERATE
+infrastructure_notes:
+  technology_type: AI-powered machine translation system (software deployment, not
+    consumer device)
+  output_modality: Text-only Amharic documents for print and digital distribution
+  script_processing: Ethiopic/Ge'ez script requires correct Unicode handling; Amharic
+    token counts are among the highest of all AFRIDOC-MT languages due to syllabic
+    script, requiring increased model token limits
+  connectivity_context_for_end_users: '[NEEDS VERIFICATION — internet penetration
+    and device access across Ethiopia regional health bureaus]'
+  health_system_infrastructure:
+    health_extension_program: '[NEEDS VERIFICATION — confirm current scale, worker
+      count, and material distribution modality]'
+    regional_bureau_distribution_mechanism: '[NEEDS VERIFICATION — how translated
+      materials are distributed from MOH to regional health bureaus and down to health
+      posts]'
+ethiopia_specific_clinical_context:
+  endemic_diseases_of_concern:
+    note: While user accepted generic coverage as sufficient for current evaluation,
+      real deployment serves a context with Ethiopia-specific endemic conditions.
+      Benchmark does not cover these.
+    diseases:
+    - Malaria (Plasmodium falciparum and vivax, regionally variable)
+    - Tuberculosis (high burden country)
+    - Kala-azar / visceral leishmaniasis (especially Tigray, Amhara lowlands)
+    - Trachoma (leading cause of preventable blindness, endemic in several regions)
+    - Neglected tropical diseases
+    - Undernutrition / acute malnutrition
+    terminology_gap: Whether existing Amharic MT models or AFRIDOC-MT specifically
+      have documented failure modes on kala-azar, trachoma, or other Ethiopia-endemic
+      disease terminology requires verification
+    web_search_target: Amharic MT evaluation kala-azar trachoma visceral leishmaniasis
+      Ethiopia terminology translation failure modes
+  ethiopian_calendar:
+    note: The Ethiopian calendar (Ge'ez calendar) is 7–8 years behind the Gregorian
+      calendar and uses 13 months. Clinical documents referencing dates may require
+      calendar conversion.
+    benchmark_coverage: NOT COVERED — user accepted generic handling as sufficient;
+      AFRIDOC-MT WHO source documents use Gregorian dates
+    web_search_target: Amharic MT Ethiopian calendar date conversion clinical document
+      translation failure modes NLP
+  referral_pathways:
+    note: Ethiopia's tiered health system (health post → health center → primary hospital
+      → referral hospital) involves institution-specific referral language not present
+      in WHO-sourced benchmark documents.
+    benchmark_coverage: NOT COVERED
+    status: Accepted as out-of-scope for current evaluation by user
+cultural_norms_notes: '- Amharic is the federal working language of Ethiopia but is
+  a native language primarily of the Amhara ethnic group; its use as a clinical lingua
+  franca across Oromia, Tigray, and Somali regions has political and social dimensions.
+
+  - Clinical communication norms in Ethiopia may differ from WHO document register;
+  health extension workers often use simplified explanatory language with patients.
+
+  - Religious diversity (Ethiopian Orthodox Christianity, Islam, Protestant Christianity,
+  traditional beliefs) affects receptiveness to certain health messaging (e.g., family
+  planning, vaccination).
+
+  - Community and family decision-making structures influence patient behavior; materials
+  may need to address household-level not just individual-level decisions.
+
+  - Age and gender hierarchies affect how health messages are received and acted upon,
+  particularly in maternal health contexts.'
+benchmark_validity_gaps_summary:
+  annotator_credentials:
+    priority: HIGH
+    description: AFRIDOC-MT Amharic translators are unnamed professionals without
+      documented MOH credentials; deployment requires MOH-trained clinical translators
+      as ground-truth authority.
+    web_search_target: '[NEEDS VERIFICATION — investigate credentials of AFRIDOC-MT
+      Amharic translators and whether any MOH clinical translation certification pathway
+      exists in Ethiopia]'
+  glossary_compliance_scoring:
+    priority: HIGH
+    description: No benchmark scoring function operationalizes MOH/EFDA glossary conformance,
+      which is the primary deployment success criterion.
+    web_search_target: '[NEEDS VERIFICATION — investigate whether MOH Ethiopia or
+      EFDA have published Amharic medical terminology glossaries and whether any MT
+      evaluation protocol incorporates them]'
+  regional_register_variation:
+    priority: HIGH
+    description: Whether a single Addis Ababa-centric reference translation is valid
+      across Tigray, Oromia, Amhara, and Somali regional bureaus is unresolved.
+    web_search_target: '[NEEDS VERIFICATION — investigate documented Amharic dialect
+      or health-register variation across Ethiopia''s regional health bureaus]'
+  ethiopia_specific_clinical_content:
+    priority: MODERATE
+    description: WHO-sourced benchmark documents do not include Ethiopia-endemic disease
+      terminology, regional referral pathways, or Ethiopian calendar expressions.
+    web_search_target: '[NEEDS VERIFICATION — assess whether WHO health articles used
+      in AFRIDOC-MT are representative of Ethiopia MOH distribution materials in genre
+      and clinical content]'
+  gpt4o_judge_reliability_for_amharic:
+    priority: MODERATE
+    description: AFRIDOC-MT itself documents GPT-4o-as-judge inconsistency for African
+      languages including Amharic; deployment cannot rely on this as a scalable quality
+      proxy.
+    web_search_target: '[NEEDS VERIFICATION — investigate alternative scalable evaluation
+      approaches for Amharic clinical MT in lieu of GPT-4o-as-judge]'
+  document_level_embedding_metrics_for_amharic:
+    priority: MODERATE
+    description: No document-level embedding-based metric is validated for Amharic;
+      AfriCOMET is limited to sentence-level; long-context QE model excludes Amharic.
+    web_search_target: '[NEEDS VERIFICATION — investigate 2024–2025 progress on document-level
+      neural quality estimation for Amharic]'
+inter_annotator_agreement_note: 'Krippendorff''s alpha for Amharic human direct assessment
+  in AFRIDOC-MT is 0.46 — relatively low, meaning even the benchmark''s own human
+  evaluation signal for Amharic is noisy. This compounds the annotator-credentials
+  gap: even if benchmark annotators were acceptable proxies for MOH-credentialed translators,
+  the low agreement suggests substantial annotation uncertainty in the Amharic reference
+  quality signal.'

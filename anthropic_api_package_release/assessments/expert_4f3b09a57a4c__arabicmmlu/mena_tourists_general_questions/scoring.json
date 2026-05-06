@@ -1,0 +1,439 @@
+{
+  "benchmark": "arabicmmlu",
+  "region": "Non-Arab Tourists and Expats in Eight Arabic-Speaking Countries (ArabicMMLU Deployment)",
+  "dimensions": {
+    "input_ontology": {
+      "score": 3,
+      "justification": "The benchmark's taxonomy of 40 tasks across school subjects and education levels [Q25] aligns well with the deployment's school-curriculum knowledge scope (history, geography, Arabic language, civics) [Q72, Q73]. However, several taxonomic issues materially harm content validity for this deployment: (a) the taxonomy includes categories irrelevant to the tourist/expat school-knowledge use case — Driving Test, professional Law (Morocco-only), vocational General Knowledge — that were observed in the sampled data [DATASET-D5, DATASET-D26, DATASET-D27]; (b) university-level content is only 6% of the dataset [Q71]; (c) Civics content as instantiated is overwhelmingly Jordanian-specific rather than pan-Arab [DATASET-D4]; (d) Morocco's school-curriculum (history/geography/civics) is essentially absent from the sample, with Morocco's contribution concentrated in professional law [DATASET-D5]; (e) Kuwait does not appear at all in the sample [Limitations.5]. The future-work acknowledgment of needed extensions — short-answer questions, larger regional coverage, professional-domain content [Q88] — confirms these are recognized gaps.",
+      "strengths": [
+        "Authentic school-curriculum framing across primary/middle/high school directly matches the deployment's knowledge scope [Q25, Q28, DATASET-D38, DATASET-D34]",
+        "Subject groups explicitly include Arabic-specific contexts (history, geography, civics, political science) that are deployment-relevant [Q72, Q73]",
+        "Broad multi-subject taxonomy with level-appropriate complexity confirmed in sampled data [DATASET-D38, DATASET-D22, DATASET-D34]"
+      ],
+      "checklist_responses": {
+        "IO-1": "Required categories for this deployment: Arabic language, Arab history, Arab geography, civics/social science at school-curriculum level [elicitation Q1, A1]; explicitly out of scope are dialectal phrases, tourist etiquette, practical travel, and professional domains.",
+        "IO-2": "Yes — country-specific school-curriculum coverage is unequal. Morocco's school subjects are largely absent from the sample (only professional law observed) [DATASET-D5]; Kuwait does not appear at all [Limitations.5]; civics is Jordan-only in the sample [DATASET-D4]. The paper acknowledges unequal country representation [Q89, Q90, Q91].",
+        "IO-3": "Yes — Driving Test [DATASET-D26], professional Law [DATASET-D5], vocational General Knowledge (sheet metal screws, hospital names) [DATASET-D27, DATASET-D10], and University Accounting/Management [DATASET-D22, DATASET-D23] are out of scope for the deployment's school-curriculum tourist knowledge use case.",
+        "IO-4": "Documented gaps: (1) absence of Maghrebi school-curriculum content for Morocco; (2) absence of Kuwaiti curriculum; (3) lack of a multi-perspective or contested-content taxonomic dimension despite the subjects most relevant to the deployment being inherently contested [Q72, Q73]; (4) university-level content underrepresented at 6% [Q71]."
+      },
+      "evidence_quotes": [
+        "[Q25] 'ArabicMMLU is an Arabic multiple-choice question-answering dataset comprising 40 tasks spanning a wide range of subjects and education levels.' (p.3)",
+        "[Q71] 'This could be attributed to the relatively small portion (i.e., 6%) of university-level questions in ArabicMMU' (p.7)",
+        "[Q72] 'We present the performance of open-source models on selected subjects that potentially contain Arabic-specific contexts.' (p.7)",
+        "[Q88] 'ArabicMMLU can be extended to include short-answer or essay questions, different modalities, larger region coverage, and more questions in professional settings.' (p.9)",
+        "[Q89] 'ArabicMMLU does not represent all Arabic countries equally.' (p.9)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-3] Jordan, Egypt, and Palestine confirmed as top-3 source countries; Kuwait not in top tier",
+        "[WEB-2] Morocco-sourced questions present but model performance distinctively lower"
+      ],
+      "evidence_dataset": [
+        "DATASET-D4: All 5 sampled Civics MS items are exclusively Jordan-specific — confirms Jordan-skew in the civics taxonomy slot",
+        "DATASET-D5: All 5 Morocco samples are professional law, none from school-curriculum subjects",
+        "DATASET-D26: Driving Test items (UAE, Lebanon, Egypt) — out of scope for school-curriculum deployment",
+        "DATASET-D27: Vocational General Knowledge items (sheet metal screws) — irrelevant to tourist/expat use case",
+        "Kuwait absence: zero Country=Kuwait examples across ~210 sampled examples"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "Q25",
+          "Q72",
+          "Q73"
+        ],
+        "IO-2": [
+          "Q89",
+          "Q90",
+          "Q91",
+          "DATASET-D4",
+          "DATASET-D5",
+          "WEB-3"
+        ],
+        "IO-3": [
+          "DATASET-D5",
+          "DATASET-D26",
+          "DATASET-D27",
+          "DATASET-D22"
+        ],
+        "IO-4": [
+          "Q71",
+          "Q72",
+          "Q88",
+          "DATASET-D4"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Exact per-country, per-subject distribution counts not extractable from documentation",
+        "Whether Country=null items are truly pan-Arab or reflect missing metadata"
+      ],
+      "requires_expert_verification": [
+        "Whether sub-regional curriculum distinctions (Maghrebi, Levantine, Gulf) are meaningfully represented in the full dataset beyond the sampled configs"
+      ]
+    },
+    "input_content": {
+      "score": 2,
+      "justification": "Authentic ground-up sourcing from school exams across eight countries [Q1, Q26] is a substantial strength over translation-based prior work [Q5, Q6], and Palestine being a top-3 source country is materially better than the scaffold anticipated [WEB-3, WEB-4]. However, content distribution is severely unequal: Jordan contributes 6,000+ questions while some countries contribute as few as 100 [Q89]; Morocco lacks annotators and Maghrebi school-curriculum coverage [DATASET-D5]; Kuwait is effectively absent [Limitations.5]; and contested historical content is framed through Jordanian curriculum perspective [DATASET-D1, DATASET-D2, DATASET-D3]. OCR corruption in some Egyptian university items [DATASET-D23, DATASET-D24] introduces construct-irrelevant variance. Islamic Studies content is presented prescriptively from an internal Muslim perspective [DATASET-D14, DATASET-D35], misaligned with the non-Muslim tourist target population. Per the elicitation, pan-Arab framing is acceptable [A2], but the system should flag country-specific content — yet the benchmark's ground-truth treats Jordanian framing as the silent default for civic and historical questions [DATASET-D4].",
+      "strengths": [
+        "Ground-up data collection from authentic school exams in eight countries, distinct from prior translation-based approaches [Q1, Q5, Q6, Q26]",
+        "Palestine confirmed as top-3 source country with substantive curriculum content across multiple subjects [WEB-3, WEB-4, DATASET-D17, DATASET-D20, DATASET-D21]",
+        "Native-speaker workforce with regional collaborators from Jordan, Egypt, Lebanon, UAE, and Saudi Arabia [Q31, Q96]",
+        "GPT-4 performance gap (80% on translated MMLU vs 72.5% on ArabicMMLU) supports construct validity for culturally grounded knowledge [Q64, Q65]"
+      ],
+      "checklist_responses": {
+        "IC-1": "Yes — many inputs require region-specific knowledge of Arab history, geography, Jordanian/Egyptian/Palestinian curricula, and Islamic religious practice [Q72, Q73, DATASET-D1, DATASET-D14].",
+        "IC-2": "Partially — pan-Arab framing is acceptable per elicitation [A2], but contested historical content (e.g., King Abdullah I and Zionism [DATASET-D1], 1948 events) is framed from Jordanian curriculum perspective without flagging this country-specificity, conflicting with the deployment requirement to flag rather than silently generalize country-specific content.",
+        "IC-3": "Limited Western-specific content concern — some Geography items ask about non-Arab global facts (Kilimanjaro, Shanghai) [MINOR Concern 11], but these are general world knowledge rather than Western-specific cultural content. The more pressing issue is Jordan-specific content presented as default Arab content.",
+        "IC-4": "Verified by 2 native Arabic speakers on 100 sampled questions [Q42], yielding 96% match [Q43] — but no Moroccan, Palestinian, or Kuwaiti annotators participated in collection or verification [Q31, Q96]. Palestinian-sourced contested content was verified by non-Palestinian workers.",
+        "IC-5": "Documented content issues: (1) Jordan-skew (~6,000+ questions) vs. ~100 for others [Q89]; (2) Morocco's school-curriculum content largely absent [DATASET-D5]; (3) Kuwait effectively absent [Limitations.5]; (4) OCR corruption in university Egyptian items [DATASET-D23, DATASET-D24]; (5) Islamic Studies presented prescriptively for Muslim students rather than explanatorily for non-Muslim visitors [DATASET-D14, DATASET-D35]; (6) Jordanian-curriculum framing of contested historical events [DATASET-D1, DATASET-D2, DATASET-D3]."
+      },
+      "evidence_quotes": [
+        "[Q1] 'we present ArabicMMLU, the first multi-task language understanding benchmark for the Arabic language, sourced from school exams across diverse educational levels in different countries spanning North Africa, the Levant, and the Gulf regions.' (p.1)",
+        "[Q26] 'The questions are sourced from eight different countries in North Africa (Morocco and Egypt), the Levant (Jordan, Palestine, and Lebanon), and the Gulf (UAE, Kuwait, and KSA).' (p.3)",
+        "[Q89] 'ArabicMMLU does not represent all Arabic countries equally. For example, we have collected over 6K multiple-choice questions from Jordan, while other countries are represented with only 100 questions or, in some cases, not at all.' (p.9)",
+        "[Q96] 'We extend our gratitude to all collaborators from Jordan, Egypt, Lebanon, UAE, and Saudi Arabia who participated in the data collection process.' (p.10)",
+        "[Q65] 'our ArabicMMU presents a greater challenge due to its inclusion of a higher proportion of Arabic-specific content.' (p.7)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-3] Jordan, Egypt, Palestine named as top-3 source countries",
+        "[WEB-4] HuggingFace dataset card confirms Palestine as top-3 contributor",
+        "[WEB-2] BLOOMZ and Jais perform notably worse on Morocco-sourced questions, indicating Morocco content is distinctive but underrepresented"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: Question on King Abdullah I and Zionism — Jordanian curriculum framing of contested Palestinian history",
+        "DATASET-D4: All 5 Civics MS items are Jordan-only, confirming Jordan-skew in civics domain",
+        "DATASET-D5: Morocco's representation concentrated in professional law, absent from school-curriculum subjects",
+        "DATASET-D14: Islamic Studies questions presuppose Muslim reader perspective",
+        "DATASET-D23, DATASET-D24: Severe OCR corruption in Egyptian university items",
+        "DATASET-D35: Arabic Language reading passage frames Islamic ritual prescriptively"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "Q72",
+          "Q73",
+          "DATASET-D1",
+          "DATASET-D14"
+        ],
+        "IC-2": [
+          "DATASET-D1",
+          "DATASET-D2",
+          "DATASET-D3"
+        ],
+        "IC-3": [
+          "DATASET-D4"
+        ],
+        "IC-4": [
+          "Q42",
+          "Q43",
+          "Q31",
+          "Q96"
+        ],
+        "IC-5": [
+          "Q89",
+          "DATASET-D5",
+          "DATASET-D23",
+          "DATASET-D24",
+          "DATASET-D14",
+          "DATASET-D35",
+          "DATASET-D1"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Exact per-country question counts beyond top-3 not published",
+        "Proportion of OCR-corrupted items in full dataset"
+      ],
+      "requires_expert_verification": [
+        "Whether ground-truth labels for Palestinian-sourced contested-history questions reflect Palestinian historiography",
+        "Whether Moroccan curriculum perspectives in history/geography are present in the full dataset beyond the sampled configs",
+        "Whether Islamic Studies items would be considered appropriately framed for non-Muslim educational use"
+      ]
+    },
+    "input_form": {
+      "score": 3,
+      "justification": "The benchmark is uniformly text-only MSA [Q2, Q92], aligning with the deployment's text-only modality [A4] and MSA target [elicitation]. Multimodal content was discarded [Q37] and contextual passages preserved where needed [Q38]. However, the benchmark's MSA is fluent native-speaker register from school exams, while the deployment's users are non-native learners with basic-to-intermediate MSA proficiency, likely producing grammatically imperfect or code-switched Arabic [elicitation, expected_arabic_proficiency]. This signal-distribution gap is structural and undocumented as a design trade-off in the paper. The benchmark also notes that real-world Arabic LLM exposure includes dialectal Arabic, which is excluded here [Q92]. One minor data-quality issue observed: an Arabic Language Grammar item with English question stem [DATASET-D16] inconsistent with the stated Arabic-only design [Q30].",
+      "strengths": [
+        "Text-only MSA format directly aligns with deployment's text-based modality [Q2, Q93, A4]",
+        "Multimodal content systematically excluded; contextual passages preserved for dependent questions [Q37, Q38]",
+        "Prompt language variants (Arabic/English) tested, providing some signal on cross-lingual prompt sensitivity [Q47]",
+        "Uniform MSA register confirmed across all sampled configs [DATASET-D29, DATASET-D15]"
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal distribution mismatch: benchmark assumes fluent native-speaker MSA from school exams [Q2], while deployment users produce learner-register MSA potentially with grammatical imperfection and code-switching [elicitation expected_arabic_proficiency, languages.user_input_register]. No dedicated benchmark for non-native Arabic robustness identified [WEB-6, gap_id 5].",
+        "IF-2": "Infrastructure supports text-only Arabic input; RTL rendering requirement noted [writing_systems]. No infrastructure barriers identified for tourists/expats with personal devices [infrastructure_notes].",
+        "IF-3": "Domain-specific form differences: dialectal Arabic excluded from benchmark [Q92] but is common in real-world MENA usage; learner code-switching with Latin script likely [writing_systems] but not represented.",
+        "IF-4": "Form mismatch: learner-register input vs. fluent-MSA evaluation creates undocumented signal-distribution gap. One data-quality artifact: English question stem in nominally Arabic-only benchmark [DATASET-D16]."
+      },
+      "evidence_quotes": [
+        "[Q2] 'Our data comprises 40 tasks and 14,575 multiple-choice questions in Modern Standard Arabic (MSA) and is carefully constructed by collaborating with native speakers in the region.' (p.1)",
+        "[Q30] 'When designing ArabicMMLU, we excluded questions in English and only included questions in Arabic.' (p.3)",
+        "[Q37] 'workers were instructed to include only questions accompanied by an answer key, and to discard questions containing multi-modal information' (p.4)",
+        "[Q92] 'The dataset primarily focuses on Modern Standard Arabic (MSA). However, multilingual and Arabic LLMs are often exposed to both MSA and dialectical Arabic.' (p.9)",
+        "[Q93] 'ArabicMMLU is focused solely on text-based assessment' (p.9)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-6] Arabic LLM benchmark survey (40+ benchmarks) does not list any learner-register robustness benchmark"
+      ],
+      "evidence_dataset": [
+        "DATASET-D29: Clear MSA grammar question, text-only — confirms uniform MSA register",
+        "DATASET-D15: MSA prose passage with comprehension question",
+        "DATASET-D16: English question stem in Arabic-language config — minor inconsistency with stated Arabic-only design"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q2",
+          "Q92",
+          "WEB-6"
+        ],
+        "IF-2": [
+          "Q93"
+        ],
+        "IF-3": [
+          "Q92"
+        ],
+        "IF-4": [
+          "DATASET-D16",
+          "Q30"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "No empirical evaluation of model performance on learner-register or code-switched Arabic input"
+      ],
+      "requires_expert_verification": [
+        "Whether tourist/expat learner Arabic deviates from benchmark MSA in ways that materially affect downstream system behavior"
+      ]
+    },
+    "output_ontology": {
+      "score": 1,
+      "justification": "This is the most critical structural mismatch for this deployment. The label schema is exclusively single-correct-answer MCQ with 2–5 candidate options [Q27], and every sampled example confirms this format [DATASET-D1, all]. The deployment explicitly requires multi-perspective acknowledgment of contested historical and civic questions [elicitation A3], but the benchmark's output taxonomy structurally cannot represent or score such pluralistic responses. The four prompt-configuration variants tested vary only in prompt language and output script [Q47], not in label structure. Contested questions like King Abdullah I and Zionism [DATASET-D1], GCC founding states [DATASET-D25], and 'elements of a state' with 'occupation' as a distractor option [DATASET-D18] are all reduced to single correct labels reflecting one curriculum's framing. The future-work note proposing short-answer and essay questions [Q88] tacitly acknowledges this limitation. Open-ended Arabic evaluation alternatives exist (AraGen, 'Beyond MCQ' — [WEB-5, WEB-6]) but are not part of ArabicMMLU itself.",
+      "strengths": [
+        "MCQ format produces well-defined, reproducible scoring for factual recall tasks [Q27]",
+        "Multiple prompt-configuration variants enable analysis of prompt-language sensitivity [Q47]"
+      ],
+      "checklist_responses": {
+        "OO-1": "Output label categories are uniform single-correct MCQ [Q27], reviewed against deployment requirement for multi-perspective acknowledgment [elicitation A3] — fundamental misalignment.",
+        "OO-2": "Missing categories: multi-perspective/multi-correct labels, perspective-flagging labels, explanatory/short-answer outputs, abstention labels for contested content. None present in benchmark [Q27, Q88].",
+        "OO-3": "The single-correct-answer assumption encodes a 'one curriculum framing is correct' value that conflicts with the deployment's pluralistic requirement [elicitation A3]; instances like the King Abdullah I question [DATASET-D1] and 'occupation' distractor [DATASET-D18] make this concrete.",
+        "OO-4": "Stakeholder-driven taxonomy redesign needed for deployment use; supplementary frameworks (AraGen 3C3H, 'Beyond MCQ') identified but not specifically targeted at contested historical content [WEB-5, WEB-6, net_new_findings].",
+        "OO-5": "Documented: structural validity violation (construct of multi-perspective knowledge cannot be represented), content validity violation (multi-perspective categories absent), and external validity risk (benchmark performance will not predict pluralistic response quality)."
+      },
+      "evidence_quotes": [
+        "[Q27] 'Each question has 2–5 candidate answers, with one correct answer.' (p.3)",
+        "[Q47] 'We initially conducted experiments with four settings... vary only in prompt language and output script' (p.5)",
+        "[Q88] 'For future work, ArabicMMLU can be extended to include short-answer or essay questions' (p.9)",
+        "[Q100] 'This is a Natural Science question for primary school in Jordan. Select the correct answer!' (p.14)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-5] 'Beyond MCQ' Arabic open-ended benchmark identified as supplementary option",
+        "[WEB-6] AraGen with 3C3H LLM-as-judge metric for open-ended Arabic generation"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: Contested Jordanian/Palestinian history reduced to single Jordanian-curriculum correct answer",
+        "DATASET-D18: 'Occupation' (الاحتلال) used as distractor in 'elements of a state' — politically loaded MCQ framing without multi-perspective acknowledgment",
+        "DATASET-D25: GCC founding states reduced to single true/false answer"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q27"
+        ],
+        "OO-2": [
+          "Q27",
+          "Q88"
+        ],
+        "OO-3": [
+          "DATASET-D1",
+          "DATASET-D18",
+          "DATASET-D25"
+        ],
+        "OO-4": [
+          "WEB-5",
+          "WEB-6"
+        ],
+        "OO-5": [
+          "Q27",
+          "Q88",
+          "DATASET-D1"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": [
+        "Which specific contested questions in the full dataset would require multi-perspective treatment under the deployment's pluralistic framing"
+      ]
+    },
+    "output_content": {
+      "score": 2,
+      "justification": "Label-correctness verification process — 96% inter-annotator agreement on 100 sampled questions [Q42, Q43] with native MSA speakers holding Bachelor's degrees and competitive compensation [Q35, Q36, Q39] — establishes a reasonable practical ceiling [Q44]. However, annotator-pool composition undermines convergent validity for the multi-country deployment: 10 annotators are from Jordan (4), Egypt (2), Lebanon (1), UAE (1), KSA (2), with no Moroccan, Kuwaiti, or Palestinian annotators [Q31] despite Palestine being a top-3 source country [WEB-3, WEB-4]. For contested historical questions where 'correct' answers vary across national curricula, the 96% agreement likely reflects Jordanian/Egyptian consensus rather than pan-regional validity. The sampled data shows concrete examples of Jordanian-curriculum framing for shared Arab history [DATASET-D1, DATASET-D2, DATASET-D3, DATASET-D11]. Training data contamination is acknowledged as unverifiable [Q95]. OCR corruption in university Egyptian items [DATASET-D23, DATASET-D24] suggests label quality may degrade in some sub-corpora. No aggregation method considerations for minority perspectives are documented.",
+      "strengths": [
+        "96% answer-key accuracy verification on a 100-question sample provides a documented quality ceiling [Q42, Q43, Q44]",
+        "Native-speaker annotator workforce with at least Bachelor's degrees and competitive pay [Q35, Q36, Q39]",
+        "Pre-collection workshop standardized annotator process [Q40]",
+        "Annotators include workers from 5 of 8 deployment countries (Jordan, Egypt, Lebanon, UAE, KSA) [Q31, Q96]"
+      ],
+      "checklist_responses": {
+        "OC-1": "Partially — labels reflect curriculum-stated 'correct' answers from source exams, which encode national perspectives. For non-contested STEM content this is acceptable [DATASET-D21, DATASET-D38]; for contested civic/historical content [DATASET-D1, DATASET-D3], labels reflect source-country curriculum perspective without acknowledgment.",
+        "OC-2": "High potential for disagreement on contested content — Palestinian, Moroccan, and Kuwaiti perspectives are not represented in the verifier pool [Q31] despite Palestine being a major source [WEB-3, WEB-4]. The 96% figure [Q43] likely overstates regional validity for politically sensitive items.",
+        "OC-3": "Documented: 6 internal workers (1 Jordanian, 1 Egyptian, 1 Lebanese, 1 UAE, 2 KSA), 4 external workers (3 Jordanian, 1 Egyptian) [Q31]; internal workers are Master's/RA-level CS students, external workers hold Bachelor's [Q35]. Demographics are documented but skew Jordanian/Egyptian.",
+        "OC-4": "Re-annotation by Palestinian, Moroccan, and Kuwaiti annotators recommended for contested-content items, especially history/civics from those source countries.",
+        "OC-5": "No aggregation method for minority/competing perspectives is documented — the benchmark's structure precludes it [Q27].",
+        "OC-6": "Documented: (1) annotator-pool skew toward Jordan/Egypt with absent Moroccan/Palestinian/Kuwaiti perspectives [Q31, Q96]; (2) 96% ceiling does not account for cross-curriculum disagreement on contested content [Q43, Q44]; (3) OCR corruption in some sub-corpora [DATASET-D23, DATASET-D24]; (4) contamination unverifiable [Q95]."
+      },
+      "evidence_quotes": [
+        "[Q31] 'a total of 10 Arabic native speakers from different countries: 6 internal workers (1 Jordanian, 1 Egyptian, 1 Lebanese, 1 from UAE, and 2 from KSA) and 4 external workers (3 Jordanian and 1 Egyptian).' (p.4)",
+        "[Q42] 'we assessed the accuracy of our data collection by having two native Arabic speakers annotate 100 randomly sampled questions' (p.4)",
+        "[Q43] 'We found that 96% of the questions and answer keys match on average' (p.4)",
+        "[Q44] 'This 96% score is considered to represent the maximum score meaningfully achievable for ArabicMMLU.' (p.4)",
+        "[Q95] 'we cannot assert that the model's pretraining data is free from contamination.' (p.10)",
+        "[Q96] 'collaborators from Jordan, Egypt, Lebanon, UAE, and Saudi Arabia' (p.10)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-3] Palestine confirmed top-3 source country — yet no Palestinian annotators in pool",
+        "[WEB-4] HuggingFace dataset card confirms Palestine major contributor"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: Jordanian-framing of King Abdullah I/Zionism question — verified by non-Palestinian workers",
+        "DATASET-D3: Jordanian-British 1928 treaty framing as authoritative",
+        "DATASET-D11: Jordanian royal history as primary social science fact",
+        "DATASET-D23, DATASET-D24: OCR-corrupted Egyptian university items where label correctness becomes ambiguous"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "DATASET-D1",
+          "DATASET-D3",
+          "DATASET-D21"
+        ],
+        "OC-2": [
+          "Q31",
+          "WEB-3",
+          "WEB-4"
+        ],
+        "OC-3": [
+          "Q31",
+          "Q35"
+        ],
+        "OC-4": [
+          "Q31",
+          "Q96"
+        ],
+        "OC-5": [
+          "Q27"
+        ],
+        "OC-6": [
+          "Q31",
+          "Q43",
+          "Q44",
+          "Q95",
+          "DATASET-D23",
+          "DATASET-D24"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether the 100-question verification sample included contested-content items",
+        "Distribution of OCR corruption across the full dataset"
+      ],
+      "requires_expert_verification": [
+        "Whether Palestinian, Moroccan, and Kuwaiti subject-matter experts would agree with ground-truth labels on country-sourced contested items"
+      ]
+    },
+    "output_form": {
+      "score": 1,
+      "justification": "The benchmark measures performance as percentage MCQ accuracy [Q3, Q45] via highest-token-probability scoring for open-source models [Q50, Q79] or first-token regex matching for closed-source models [Q53, Q54]. This output form is fundamentally misaligned with the deployment's requirement for open-ended, explanatory, multi-perspective natural-language responses [elicitation A3]. The benchmark cannot evaluate whether a model produces appropriately nuanced, perspective-flagging answers — it can only score whether the model selects the curriculum-designated correct option. Additional output-form analyses (calibration [Q80], length-confidence correlation [Q82], few-shot trends [Q75, Q76], negation sensitivity [Q83, Q84]) all operate on the same MCQ scoring surface. The text-based MCQ form is appropriate for literacy-capable populations [Q93] in principle, but the form mismatch with the deployment's natural-language explanatory output requirement is structural and not addressable through reweighting or filtering. Supplementary frameworks (AraGen 3C3H, 'Beyond MCQ') exist [WEB-5, WEB-6] but are separate evaluations.",
+      "strengths": [
+        "Standardized accuracy metric is reproducible and comparable across 35 evaluated models [Q3, Q45]",
+        "Auxiliary analyses (calibration, length-confidence, negation sensitivity) provide robustness signal beyond raw accuracy [Q80, Q82, Q83]",
+        "Two scoring methods documented for open-source vs closed-source models [Q50, Q53]"
+      ],
+      "checklist_responses": {
+        "OF-1": "Mismatch — benchmark output is discrete MCQ labels [Q3, Q50, Q53]; deployment requires open-ended natural-language responses with multi-perspective acknowledgment [elicitation A3, output_form_mismatch].",
+        "OF-2": "Not applicable — deployment is text-only [A4], so TTS availability is not required.",
+        "OF-3": "Target population is literate non-native Arabic learners [target_population_description]; text output is appropriate, but the benchmark's discrete-label form does not assess natural-language fluency, explanatory quality, or perspective-flagging.",
+        "OF-4": "Documented: external validity violation — benchmark MCQ accuracy will not predict whether the system produces appropriately explanatory, multi-perspective natural-language responses required by the deployment [elicitation A3, output_form_mismatch.mismatch_severity=HIGH]."
+      },
+      "evidence_quotes": [
+        "[Q3] 'Our comprehensive evaluations of 35 models reveal substantial room for improvement' (p.1)",
+        "[Q45] 'Our experiments focus on zero-shot and few-shot settings across 35 models.' (p.5)",
+        "[Q50] 'for open-source models, we determine the answer based on the highest probability among all possible options.' (p.6)",
+        "[Q53] 'For closed-source models, we determine the answer based on the first token generated in the text using a regular expression.' (p.6)",
+        "[Q93] 'ArabicMMLU is focused solely on text-based assessment, and the exploration of multimodal questions is left for future work.' (p.9)",
+        "[Q94] 'our experimental results do not provide conclusive answers regarding the performance of LLMs in Arabic.' (p.9)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-5] 'Beyond MCQ' Arabic open-ended benchmark — supplementary alternative for OF",
+        "[WEB-6] AraGen 3C3H LLM-as-judge framework for open-ended Arabic generation"
+      ],
+      "evidence_dataset": [
+        "All sampled examples uniformly use single-correct MCQ format with no explanatory or multi-answer outputs"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q3",
+          "Q50",
+          "Q53"
+        ],
+        "OF-2": [
+          "Q93"
+        ],
+        "OF-3": [
+          "Q93"
+        ],
+        "OF-4": [
+          "Q3",
+          "Q94"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": []
+    }
+  },
+  "overall_summary": "ArabicMMLU is a serious ground-up Arabic-language knowledge benchmark whose subject taxonomy and authentic source materials provide reasonable construct validity for evaluating school-curriculum knowledge of Arabic language, history, and geography. For the specific deployment of non-Arab tourists/expats across eight Arabic-speaking countries seeking educational-level knowledge, however, two structural mismatches dominate the assessment: (1) the single-correct-answer MCQ output ontology and form fundamentally cannot evaluate the multi-perspective, explanatory natural-language responses the deployment explicitly requires [Q27, Q88, elicitation A3]; and (2) input content and verification skew heavily Jordanian, with Morocco's school-curriculum content largely absent, Kuwait effectively absent, and no Palestinian annotators despite Palestine being a top-3 source country [Q31, Q89, WEB-3, DATASET-D4, DATASET-D5]. The 96% answer-key verification ceiling [Q43] likely reflects Jordanian/Egyptian consensus rather than pan-regional validity for contested historical and civic content. Strengths include authentic exam sourcing across eight countries, level-appropriate subject coverage, MSA text-only format matching the deployment modality, and confirmed substantial Palestinian STEM/curriculum content.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "ArabicMMLU measures a model's ability to select curriculum-designated correct answers on MCQ school-exam questions across 40 subjects spanning STEM, social science, humanities, Arabic language, and other domains, drawn predominantly from Jordan with substantial Egyptian and Palestinian content. The strongest dimension for this deployment is Input Ontology (subject coverage approximately matches the deployment's school-curriculum scope) and Input Form (uniform MSA text matches deployment modality). It can usefully assess whether a system has acquired the factual content of Jordanian-curriculum school knowledge in MSA.",
+    "construct_depth": "The benchmark probes factual recall and basic reasoning at primary, middle, and high school levels (university content only 6% [Q71]), but only at the depth of single-correct-answer MCQ. It does not probe explanatory quality, multi-perspective reasoning, perspective-flagging on contested content, robustness to learner-register Arabic, or appropriate framing for non-Muslim/non-Arab audiences — all of which are central to the deployment requirements. The Output Ontology and Output Form dimensions, scored 1, indicate that even a model achieving the 96% verification ceiling [Q44] would not have been evaluated on the pluralistic, explanatory behaviors the deployment demands.",
+    "supplementation_needed": "For valid deployment evaluation, substantial supplementation is required: (1) an open-ended Arabic generation evaluation such as AraGen with 3C3H LLM-as-judge [WEB-6] or 'Beyond MCQ' [WEB-5] to address the OO/OF gap; (2) a bespoke contested-content evaluation with Palestinian, Moroccan, and Kuwaiti subject-matter experts to address the OC gap; (3) Moroccan and Kuwaiti school-curriculum item collection to address the IO/IC coverage gaps for those deployment countries; (4) a learner-register Arabic robustness evaluation (none exists [WEB-6, gap_id 5]) to address the IF gap; and (5) explicit perspective-flagging evaluation specific to the eight-country contested-content scope, which no existing benchmark targets."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "output_ontology",
+      "gap": "Single-correct-answer MCQ format cannot represent multi-perspective acknowledgment required by deployment [Q27, elicitation A3]",
+      "recommendation": "Supplement ArabicMMLU with an open-ended Arabic generation evaluation (e.g., AraGen 3C3H [WEB-6] or 'Beyond MCQ' [WEB-5]) and develop a custom rubric that scores perspective-flagging on contested historical/civic items, with explicit credit for acknowledging country-specific framings."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "MCQ accuracy scoring cannot evaluate explanatory natural-language quality required by deployment [Q3, Q50, Q53]",
+      "recommendation": "Adopt LLM-as-judge or human-rater scoring of free-form responses to a curated subset of ArabicMMLU history/civics/Islamic-studies questions reformulated as open-ended questions, scoring on correctness, completeness, and multi-perspective coverage."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Annotator pool lacks Palestinian, Moroccan, and Kuwaiti members despite Palestine being a top-3 source country [Q31, WEB-3]",
+      "recommendation": "Re-verify a stratified sample of Palestinian-, Moroccan-, and Egyptian-sourced contested-content items with annotators from those countries; report disagreement rates separately from the 96% pooled figure to expose curriculum-specific disagreement."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "Morocco's school-curriculum content (history/geography/civics) is largely absent; Kuwait is effectively absent [DATASET-D5, Limitations.5]",
+      "recommendation": "Commission targeted collection of Moroccan and Kuwaiti primary/middle/high school exam items in history, geography, and civics, with native annotators from each country, to extend country coverage before deployment-relevant evaluation."
+    },
+    {
+      "dimension": "input_ontology",
+      "gap": "Out-of-scope categories (Driving Test, professional Law, vocational General Knowledge) inflate aggregate scores irrelevantly [DATASET-D5, DATASET-D26, DATASET-D27]",
+      "recommendation": "Define a deployment-relevant subset of ArabicMMLU configs (history, geography, civics, Arabic language, social science, Islamic studies at appropriate framing) and report scores only on this subset; exclude driving test, professional law, and vocational items."
+    },
+    {
+      "dimension": "input_form",
+      "gap": "Benchmark MSA register does not represent learner-register, code-switched Arabic produced by non-native users [Q92, elicitation expected_arabic_proficiency]",
+      "recommendation": "Construct a small bespoke evaluation set of learner-register and code-switched Arabic queries paraphrasing ArabicMMLU items, and measure performance degradation; this addresses the documentation gap noted in [WEB-6] where no learner-register Arabic benchmark exists."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "output_ontology",
+    "output_form",
+    "input_content",
+    "output_content"
+  ],
+  "strongest_dimensions": [
+    "input_form",
+    "input_ontology"
+  ]
+}

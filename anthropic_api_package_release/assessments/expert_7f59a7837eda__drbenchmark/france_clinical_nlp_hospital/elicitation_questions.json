@@ -1,0 +1,22 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "The benchmark covers clinical cases and scientific literature sourced primarily from metropolitan France. Does your deployment also serve French-speaking health systems outside mainland France — such as Belgium, Switzerland, Quebec, or French overseas territories — where medical terminology, administrative coding conventions, or disease prevalence patterns may differ meaningfully from French norms? If so, which regions are most critical to support?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "OC",
+    "question": "Your system maps pathologies to standardized medical classification chapters and axes (for example, ICD or PMSI codes). The correctness of those mappings depends on who validated the ground-truth labels. For your specific clinical context, would the labeling judgments of the benchmark's annotators — likely academic biomedical NLP researchers rather than practicing hospital clinicians — be considered authoritative by the physicians and nurses who will act on the system's outputs, particularly for ambiguous or multi-morbid cases?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "IC",
+    "question": "Your use case involves identifying temporal entities and severity signals that directly inform care prioritization. Clinical notes in active hospital use often contain highly abbreviated language, non-standard shorthand, transcription errors from dictation, and institution-specific terminology. Does your patient documentation resemble the relatively well-formed clinical case write-ups typical of academic or published sources, or is it closer to raw, informal clinician-authored notes where this kind of noise is common?"
+  },
+  {
+    "id": "Q4",
+    "dimension": "OO",
+    "question": "For multi-label classification of pathologies, a given clinical finding can plausibly belong to multiple classification axes or chapters simultaneously, and experienced clinicians may legitimately disagree on the primary mapping. Does your system need to surface multiple candidate classifications with confidence signals for the clinician to adjudicate, or is it expected to output a single authoritative label per entity — and how does the benchmark's scoring approach align with whichever behavior you require?"
+  }
+]

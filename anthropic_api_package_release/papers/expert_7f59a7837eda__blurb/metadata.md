@@ -1,0 +1,11 @@
+- name: blurb
+- full_name: BLURB (Biomedical Language Understanding & Reasoning Benchmark)
+- year: 2021
+- domain: Evaluates natural language processing tasks in the biomedical domain, including named entity recognition, document classification, and other language understanding tasks.
+- languages: English
+- primary_region: UNKNOWN
+- porting_strategy: none
+- input_modalities: text
+- output_modalities: label, text
+- brief_description: BLURB is a comprehensive biomedical NLP benchmark compiled from publicly-available datasets to evaluate domain-specific language models. The paper demonstrates that pretraining language models from scratch on biomedical text outperforms continual pretraining of general-domain models, and provides state-of-the-art pretrained models and a leaderboard for the biomedical NLP community.
+- source_culture: unclear

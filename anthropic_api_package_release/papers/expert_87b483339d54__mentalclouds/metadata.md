@@ -1,0 +1,11 @@
+- name: mentalclouds
+- full_name: MentalCLOUDS: A Counseling-Component Guided Summarization Dataset
+- year: UNKNOWN
+- domain: Evaluates the effectiveness of Large Language Models in summarizing mental health counseling sessions through aspect-based summarization of distinct counseling components.
+- languages: English
+- primary_region: India
+- porting_strategy: ground_up
+- input_modalities: text
+- output_modalities: text
+- brief_description: MentalCLOUDS is a benchmarking dataset consisting of 191 counseling sessions with summaries focused on three distinct counseling components. The benchmark evaluates 11 state-of-the-art LLMs on their ability to perform component-guided summarization in mental health counseling. Generated summaries are assessed using standard summarization metrics (ROUGE, BERTScore) and qualitatively verified by mental health professionals.
+- source_culture: designed by target population

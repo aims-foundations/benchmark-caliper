@@ -1,0 +1,1048 @@
+name: milu
+full_name: 'MILU: A Multi-task Indic Language Understanding Benchmark'
+year: 2024
+domain: Indic language understanding and culturally grounded knowledge evaluation
+porting_strategy: ground_up
+languages:
+- hi
+- bn
+- gu
+- kn
+- ml
+- mr
+- or
+- pn
+- ta
+- te
+- en
+primary_region: India (pan-Indic, with regional exam coverage across national and state levels)
+description: 'MILU is a large-scale multiple-choice question benchmark covering 41 subjects across
+
+  8 domains in 11 Indic languages, drawn from over 1,500 competitive examinations in
+
+  India. It spans national civil services, state-level PSC, government, and private
+
+  organization exams, encompassing approximately 79,000 questions with an India-centric
+
+  design emphasizing culturally specific content such as local history, arts, festivals,
+
+  and law alongside standard academic subjects. MILU is self-described as the first
+
+  benchmark of its kind for Indic languages.
+
+  '
+documentation_excerpts: '## Key characteristics relevant to validity analysis:
+
+
+  ### Input Ontology
+
+  MILU structures its task taxonomy around 41 subjects grouped into 8 macro-domains:
+
+  Arts and Humanities, Social Sciences, Environmental Sciences, Law and Governance,
+
+  Health and Medicine, Science, Engineering and Technology, and Business Studies [Q42].
+
+  The benchmark explicitly emphasizes India-specific knowledge, covering Science, Social
+
+  Sciences, Humanities, Arts, Business Studies, and Law [Q23], and is designed to
+
+  evaluate LLMs across diverse domains and culturally relevant subjects [Q74]. Detailed
+
+  subject-level statistics across languages are reported in Table 9 [Q98].
+
+
+  For the central-exam deployment context, several domains map meaningfully onto
+
+  priority subjects (History → Social Sciences; Polity → Law & Governance; GK → multiple
+
+  domains), but the taxonomy does not separately enumerate Mathematics/Reasoning or
+
+  Current Affairs as distinct categories — a notable gap for UPSC/SSC/banking syllabi.
+
+  MILU also evaluates Indic language LLMs built on English base models [Q60], confirming
+
+  its intent to probe knowledge-intensive reasoning across Indic languages. Questions
+
+  span over 40 exam types at national and state levels [Q27], meaning central-exam
+
+  and state-PSC items are pooled without a published breakdown by exam tier.
+
+
+  ### Input Content
+
+  MILU''s content is grounded in actual Indian competitive examination papers, sourced
+
+  from online exam portals that host previously released question papers [Q25], following
+
+  an approach analogous to AGIEVAL [Q13]. The source pool includes over 40 exam types
+
+  spanning national civil services, government and private organization exams, and
+
+  state-level civil services exams [Q92], with dedicated overview tables for each
+
+  category [Q95, Q96, Q97]. Regional state exams are explicitly valued for capturing
+
+  local knowledge in the respective regional language [Q28], and English-language
+
+  questions are included to address Indian culture-specific content absent from existing
+
+  benchmarks [Q30]. An India-first design perspective is stated explicitly [Q11], and
+
+  the benchmark incorporates culturally relevant subjects such as local history, arts,
+
+  festivals, and laws alongside standard academic subjects [Q2].
+
+
+  Of the approximately 79,000 released questions [Q46], roughly 25% were translated
+
+  from English to fill language-specific subject gaps [Q47] using GPT-4O [Q44, Q45].
+
+  This introduces translation artifact risk for Hindi items: it is undocumented what
+
+  fraction of MILU''s Hindi questions originated as English items, whether translated
+
+  phrasing reflects Hindi-medium vocabulary conventions, and what the code-mixing rate
+
+  is across the Hindi subset. Approximately 45% of questions arrived with accurate
+
+  topic labels; the rest were labeled via machine translation into English followed by
+
+  GPT-4O-MINI topic assignment [Q37, Q38] — a process that may not preserve
+
+  Hindi-specific terminology or phrasing fidelity.
+
+
+  A separate validation set of approximately 9,000 questions is maintained for few-shot
+
+  examples [Q51], and all data will be released under permissible licenses [Q88, Q89].
+
+
+  ### Input Form
+
+  MILU is exclusively text-based, with reading-comprehension-style questions,
+
+  image-based questions, and items with more than four options explicitly excluded
+
+  to ensure uniformity [Q33]. Language identification filtering via INDICLID and
+
+  Unicode-based methods ensures questions appear in the correct script and language [Q34],
+
+  and duplicate removal [Q35] together with multiple layers of manual and automated
+
+  cleaning [Q31, Q32, Q36] further standardize the input signal. For Hindi, Devanagari
+
+  script is the native encoding, and no signal-distribution mismatch concerns arise
+
+  for a text-based, Hindi-medium student population. The text-only MCQ format aligns
+
+  well with the deployment''s input modality.
+
+
+  ### Output Ontology
+
+  MILU''s output label set is a closed-form MCQ answer: one correct option selected
+
+  from up to four choices [Q33]. The 41 subjects organized into 8 macro-domains [Q42]
+
+  provide a hierarchical label ontology for domain-level performance analysis, and
+
+  culturally relevant subjects such as local history, arts, festivals, and laws are
+
+  explicitly included within this taxonomy [Q12]. However, approximately 20,000
+
+  fine-grained topic tags were generated and subsequently merged into the 41-subject
+
+  taxonomy [Q39] — these granular tags are not part of the evaluation output schema.
+
+
+  This output ontology is a fundamental mismatch with the deployment context. The
+
+  deployment requires a correct/incorrect verdict accompanied by a substantive
+
+  Hindi-language explanatory rationale [elicitation Q3], but MILU produces only
+
+  MCQ accuracy scores. The benchmark documents no rubric, label set, or scoring
+
+  function for rationale quality. Culturally relevant domains (Arts & Humanities,
+
+  Social Sciences, Law & Governance) consistently show the weakest model performance
+
+  [Q6, Q20, Q62, Q71], directly implicating the benchmark''s evaluation scope for
+
+  precisely the subjects most relevant to the deployment''s priority areas (History,
+
+  Polity, GK).
+
+
+  ### Output Content
+
+  MILU''s answer labels are inherited from the online exam portals from which questions
+
+  were scraped: subject experts at those portals ensure answer accuracy at source [Q26].
+
+  This provides a credible chain of label provenance for the MCQ correct-answer labels,
+
+  grounded in India''s established competitive exam ecosystem. Internal to MILU, AI4Bharat
+
+  volunteers conducted manual audits [Q87], and researchers manually reviewed topic-tag
+
+  clusters to assign final subject labels [Q41].
+
+
+  However, the paper does not report annotator demographics, inter-annotator agreement
+
+  statistics, or a formal QA protocol beyond manual sampling. It is unknown whether
+
+  auditors were Hindi-medium graduates, domain-subject experts, or bilingual researchers
+
+  — a gap bearing on whether question difficulty and phrasing were calibrated for the
+
+  target Hindi-medium student population. More critically, the deployment''s core output
+
+  (the Hindi-language explanatory rationale) is wholly outside the scope of MILU''s
+
+  annotation and label-correctness framework: no ground-truth rationales exist, and
+
+  no annotator demographics relevant to rationale quality have been documented.
+
+
+  ### Output Form
+
+  MILU evaluates models using MCQ accuracy. For non-API models, evaluation uses the
+
+  LM Evaluation Harness with a log-likelihood method: the answer string with the
+
+  highest conditional log probability given the question is selected [Q52, Q53, Q54, Q55].
+
+  API-based proprietary models are evaluated in a zero-shot generative setup using
+
+  structured JSON prompts [Q56, Q57], limited to zero-shot due to cost constraints [Q58].
+
+  Models are tested under 0-shot, 1-shot, and 5-shot setups where feasible [Q50],
+
+  with results reported at domain and subject level across languages [Q59].
+
+
+  The benchmark authors themselves flag that the log-likelihood approach may yield
+
+  different results compared to generation-based evaluation and chain-of-thought
+
+  prompting [Q85] — a limitation directly relevant to the deployment, which requires
+
+  open-ended explanatory generation in Hindi rather than option selection. The output
+
+  form mismatch is therefore documented by the paper itself: MCQ label accuracy cannot
+
+  directly validate whether a model produces accurate, coherent, or pedagogically
+
+  appropriate Hindi-language explanations for competitive exam questions. Extensive
+
+  per-model, per-subject evaluation tables spanning pages 22–57 provide fine-grained
+
+  accuracy scores [Q99–Q132, Q100], but none capture fluency, correctness, or
+
+  cultural appropriateness of Hindi-language free-text output.
+
+  '
+verbatim_quotes:
+- id: Q1
+  page: 1
+  dimension: input_ontology
+  text: MILU spans 8 domains and 41 subjects across 11 Indic languages, reflecting both general and culturally specific knowledge.
+- id: Q2
+  page: 1
+  dimension: input_content
+  text: With an India-centric design, MILU incorporates material from regional and state-level examinations, covering topics
+    such as local history, arts, festivals, and laws, alongside standard subjects like science.
+- id: Q3
+  page: 1
+  dimension: output_form
+  text: We evaluate over 42 LLMs, and find that current LLMs struggle with MILU, with GPT-4o achieving the highest average
+    accuracy at 74%.
+- id: Q4
+  page: 1
+  dimension: output_form
+  text: Open multilingual models outperform language-specific fine-tuned models, which perform only slightly better than random
+    baselines.
+- id: Q5
+  page: 1
+  dimension: input_ontology
+  text: Models also perform better in high-resource languages as compared to low-resource ones.
+- id: Q6
+  page: 1
+  dimension: output_ontology
+  text: Domain-wise analysis indicates that models perform poorly in culturally relevant areas like Arts & Humanities and
+    Law & Governance compared to general fields like STEM.
+- id: Q7
+  page: 1
+  dimension: input_ontology
+  text: To the best of our knowledge, MILU is the first of its kind benchmark focused on Indic languages, serving as a crucial
+    step towards comprehensive cultural evaluation.
+- id: Q8
+  page: 1
+  dimension: input_content
+  text: All code, benchmarks, and artifacts will be made publicly available to foster open research.
+- id: Q9
+  page: 1
+  dimension: output_content
+  text: Sshubam Verma, Mohammed Safi Ur Rahman Khan, Vishwajeet Kumar, Rudra Murthy, Jaydeep Sen
+- id: Q10
+  page: 1
+  dimension: output_content
+  text: Nilekani Centre at AI4Bharat, Indian Institute of Technology, Madras, IBM Research, India
+- id: Q11
+  page: 2
+  dimension: input_content
+  text: We designed MILU with an India-first perspective by collecting questions from various national, state, and regional
+    exams.
+- id: Q12
+  page: 2
+  dimension: output_ontology
+  text: These questions include culturally relevant subjects such as local history, arts, festivals, and laws, alongside traditional
+    academic subjects like science.
+- id: Q13
+  page: 2
+  dimension: input_content
+  text: Following previous efforts (Hendrycks et al., 2021; Zhong et al., 2023), we create this benchmark by collecting questions
+    from over 1500 competitive exams from India.
+- id: Q14
+  page: 2
+  dimension: input_content
+  text: We focus on region-specific exams to authentically capture local knowledge in the respective language.
+- id: Q15
+  page: 2
+  dimension: output_form
+  text: We evaluate 45 different LLMs - a mix of closed proprietary, open-source, and language-specific models- on MILU.
+- id: Q16
+  page: 2
+  dimension: output_form
+  text: Our findings suggest that models struggle with MILU, with GPT-4o achieving the highest average accuracy at 74%.
+- id: Q17
+  page: 2
+  dimension: output_form
+  text: Interestingly, open multilingual models outperform language-specific models, which only achieve slightly better than
+    random scores.
+- id: Q18
+  page: 2
+  dimension: output_form
+  text: Our analysis of in-context learning reveals that adding more examples improves performance in base models, but the
+    effect on instruct models remains inconclusive.
+- id: Q19
+  page: 2
+  dimension: output_form
+  text: We also explore how performance scales with the number of parameters, finding significant improvements as model size
+    increases.
+- id: Q20
+  page: 2
+  dimension: output_ontology
+  text: Our domain-wise analysis reveals that models perform poorly in culturally relevant areas, such as Arts & Humanities
+    and Social Sciences, compared to more general fields like STEM.
+- id: Q21
+  page: 2
+  dimension: input_content
+  text: All the artifacts will be released publicly.
+- id: Q22
+  page: 3
+  dimension: input_ontology
+  text: MILU is a large, multi-domain test set containing multiple-choice based questions (MCQs) taken from over 41 subjects
+    with an emphasis on India-specific knowledge.
+- id: Q23
+  page: 3
+  dimension: input_ontology
+  text: This benchmark covers many domains, including Science, Social Sciences, Humanities, Arts, Business Studies, and Law,
+    among others.
+- id: Q24
+  page: 3
+  dimension: input_content
+  text: These questions were sourced following an approach similar to AGIEVAL (Zhong et al., 2023), collecting the questions
+    from various public exams taken by individuals intending to either pursue higher studies or seek career advancements,
+    such as qualification tests and national and state-level civil services exams, among others.
+- id: Q25
+  page: 3
+  dimension: input_content
+  text: We gathered exam-specific questions by scraping various online exam portals that offer previously released question
+    papers from various exams in multiple different languages.
+- id: Q26
+  page: 3
+  dimension: output_content
+  text: These portals typically tag questions manually with topic names and language details, and subject experts ensure the
+    accuracy of the answers.
+- id: Q27
+  page: 3
+  dimension: input_ontology
+  text: Our benchmark includes questions from over 40 different types of exams conducted both at the national and state levels
+    over recent years.
+- id: Q28
+  page: 3
+  dimension: input_content
+  text: Regional state exams are particularly valuable as they cover various state-level topics and emphasize the official
+    language of each state.
+- id: Q29
+  page: 3
+  dimension: input_form
+  text: In total, we collected more than 150K questions across 11 Indian Languages- Bengali (bn), Gujarati (gu), Hindi (hi),
+    Kannada (kn), Malayalam (ml), Marathi (mr), Odia (or), Punjabi (pn), Tamil (ta), Telugu (te), and English (en)-spanning
+    41 diverse subjects.
+- id: Q30
+  page: 3
+  dimension: input_content
+  text: English questions are also included as these often address Indian culture-specific content, which is notably missing
+    from existing popular benchmarks.
+- id: Q31
+  page: 4
+  dimension: input_form
+  text: Despite our best efforts to maintain the quality of questions collected, some amount of noise or errors may still
+    be present. To address potential noise in the questions, we employ multiple layers of manual and automated cleaning filters.
+- id: Q32
+  page: 4
+  dimension: input_form
+  text: Initially, we manually review a large sample of questions to detect and eliminate potential sources of noise.
+- id: Q33
+  page: 4
+  dimension: input_form
+  text: During the collection process, we exclude any reading-comprehension-style questions, images-based questions, and those
+    with more than four answer options to ensure uniformity and consistency.
+- id: Q34
+  page: 4
+  dimension: input_form
+  text: To remove incorrect language entries, we utilize a combination of INDICLID (Madhani et al., 2023) and Unicode-based
+    filtering (Khan et al., 2024), ensuring that the questions are in the correct language.
+- id: Q35
+  page: 4
+  dimension: input_form
+  text: To further refine the dataset, we remove any duplicate questions to retain only the unique ones.
+- id: Q36
+  page: 4
+  dimension: input_form
+  text: As a final step, we manually verify a sample of questions from each language to ensure accuracy and correct any remaining
+    errors.
+- id: Q37
+  page: 4
+  dimension: input_content
+  text: Upon examination, we found that approximately 45% of questions were accurately labeled with a topic name, while the
+    remaining questions lacked this information.
+- id: Q38
+  page: 4
+  dimension: input_content
+  text: To address this issue, we first translate the untagged questions into English using INDICTRANS2 (Gala et al., 2023)
+    and then prompt GPT-4O-MINI model to assign an appropriate topic name to the question.
+- id: Q39
+  page: 4
+  dimension: output_ontology
+  text: Finally, in total, we get around 20K tags. However, these tags are highly fine-grained, often having a heavy overlap.
+- id: Q40
+  page: 4
+  dimension: output_ontology
+  text: To organize them, we embed the tags using the NV-EMBED-V2 (Lee et al., 2024) model and apply K-means clustering to
+    group tags into 50 clusters.
+- id: Q41
+  page: 4
+  dimension: output_content
+  text: We manually review these clusters and assign appropriate subject labels.
+- id: Q42
+  page: 4
+  dimension: output_ontology
+  text: 'Following the manual merging of related clusters, we determine 41 distinct subject names, which fall into eight main
+    domains: Arts and Humanities, Social Sciences, Environmental Sciences, Law and Governance, Health and Medicine, Science,
+    Engineering and Technology, and Business Studies.'
+- id: Q43
+  page: 4
+  dimension: input_content
+  text: Finally, we observed that some topics in certain languages had less than 100 questions. To ensure thorough evaluation
+    across all subjects and languages, we aimed to have at least 100 questions per subject in each language.
+- id: Q44
+  page: 4
+  dimension: input_content
+  text: For subjects with insufficient questions, we sampled questions from the English set from that subject and translated
+    them into the required language using GPT-4O.
+- id: Q45
+  page: 4
+  dimension: input_content
+  text: We chose GPT-4O over specialized translation models for their ability to remain task-aware during translation (Ahuja
+    et al., 2024), ensuring the translated content aligns with the intent of the question.
+- id: Q46
+  page: 4
+  dimension: input_ontology
+  text: In total, we release around 79K questions across 41 subjects across 8 domains in 11 languages, capping each subject-language
+    pair at 500 questions for feasible evaluations.
+- id: Q47
+  page: 4
+  dimension: input_content
+  text: Table 2 shows the overall statistics of MILU. Of the total 79K questions, only 25% of questions are translated from
+    English, with the remainder
+- id: Q48
+  page: 5
+  dimension: output_form
+  text: We evaluate 42 different models on MILU, including large proprietary models, open-source multilingual models, and
+    popular fine-tuned models specific to Indic languages.
+- id: Q49
+  page: 5
+  dimension: output_form
+  text: Both the base versions and instruction fine-tuned variants of these models, wherever applicable, are evaluated to
+    measure the improvements gained from fine-tuning.
+- id: Q50
+  page: 5
+  dimension: output_form
+  text: All models, except for proprietary models and LLAMA-3.1-405B, are tested under 0-shot, 1-shot, and 5-shot setups.
+- id: Q51
+  page: 5
+  dimension: input_content
+  text: We maintain a separate validation set of approximately 9,000 questions to serve as examples for few-shot evaluations.
+- id: Q52
+  page: 5
+  dimension: output_form
+  text: For non-API-based models, we use the LM-EVALUATION-HARNESS (Gao et al., 2024; Biderman et al., 2024) to ensure clean
+    and reproducible evaluations.
+- id: Q53
+  page: 5
+  dimension: output_form
+  text: We use the log-likelihood method, where the probability of a given output string is computed by conditioning it on
+    some provided input (Brown et al., 2020).
+- id: Q54
+  page: 5
+  dimension: output_form
+  text: Specifically, the log-likelihood of an answer (a) given the question (x), i.e., logP(a|x), is calculated by concatenating
+    the answer (a) with question (x), and then summing up the log probabilities, of each target token.
+- id: Q55
+  page: 5
+  dimension: output_form
+  text: For multiple choice questions, given k possible answer strings, we select the answer string (ai) with the highest
+    conditional log probability, i.e., argmax(logP(a1|x), ..., logP(ak|x)).
+- id: Q56
+  page: 5
+  dimension: output_form
+  text: The API-based models are evaluated using the generative approach due to the lack of support for prompt log probabilities.
+- id: Q57
+  page: 5
+  dimension: output_form
+  text: We explicitly prompt these models to generate the correct response in a structured JSON format to simplify response
+    parsing.
+- id: Q58
+  page: 5
+  dimension: output_form
+  text: Due to the high costs involved, these models are evaluated only in the zero-shot setup.
+- id: Q59
+  page: 6
+  dimension: output_form
+  text: We report 5-shot accuracies for all open models (except for LLAMA-3.1-70B-INSTRUCT & LLAMA-3.1-405B for which we report
+    0-shot accuracy) with the accuracy averaged across all the domains per language.
+- id: Q60
+  page: 6
+  dimension: input_ontology
+  text: We evaluate around 16 Indic language LLMs on MILU. These models are primarily built by adapting English LLMs, such
+    as LLAMA-2-7B, by first continually pretraining on small amount Indic language data, followed by optionally instruction
+    finetuning them.
+- id: Q61
+  page: 6
+  dimension: output_form
+  text: As seen from Table 4, across languages, the models exhibit average performance comparable to random baselines, with
+    minimal variations among them.
+- id: Q62
+  page: 6
+  dimension: output_ontology
+  text: When analyzed across domains, the models generally perform worse in Arts, Humanities, and Social Sciences than in
+    STEM subjects.
+- id: Q63
+  page: 6
+  dimension: output_form
+  text: We compare the performance of different Base and Instruct models across zero, one, and five-shot setups.
+- id: Q64
+  page: 6
+  dimension: output_form
+  text: As shown in Figure 3, the performance of base models consistently improves with an increasing number of in-context
+    examples, with the 5-shot setup yielding the best results.
+- id: Q65
+  page: 6
+  dimension: output_form
+  text: In contrast, Instruct models exhibit more varied behavior, where models either stagnate or even degrade in performance.
+- id: Q66
+  page: 6
+  dimension: output_form
+  text: This also aligns with expectations, as Instruct models are specifically fine-tuned as conversation assistants and
+    may not respond well to the few-shot in-context examples format.
+- id: Q67
+  page: 7
+  dimension: output_form
+  text: 'Table 4: Evaluation results of all the language-specific fine-tuned models on MILU. We report domain level 5-shot
+    accuracies for all the models on the language supported by the model. Higher values indicate better model performance
+    for the given domain.'
+- id: Q68
+  page: 7
+  dimension: output_form
+  text: 'Figure 3: Comparison of Base and Instruct models averaged across all languages for varying number of in-context examples.
+    We plot the average accuracies of the GEMMA and LLAMA series of models, highlighting the performance trend as the number
+    of in-context examples increases.'
+- id: Q69
+  page: 7
+  dimension: output_form
+  text: We evaluate the LLAMA and GEMMA family of models, ranging from 1B to 405B parameters, to analyze how performance scales
+    with model size.
+- id: Q70
+  page: 7
+  dimension: output_form
+  text: Figure 5 shows that the model performance improves significantly with increasing scale. Notably, instruction-tuned
+    models in the LLAMA family show more substantial improvements as compared to those in the GEMMA family.
+- id: Q71
+  page: 7
+  dimension: output_ontology
+  text: We analyze the performance of various base and instruct models across multiple domains and languages. Similar trends
+    to those in Section (§5.2) are observed where the open models perform poorly in domains specific to Indian culture—such
+    as Arts & Humanities, Social Sciences, and Law & Governance—but demonstrate higher performance in STEM fields.
+- id: Q72
+  page: 7
+  dimension: input_content
+  text: This suggests that the training corpora for these models lack sufficient culturally specific data. Bridging this gap
+    requires a more inclusive data distribution that ensures equitable representation of all cultures and languages.
+- id: Q73
+  page: 7
+  dimension: output_form
+  text: As most Indic LLMs are built on English base models like LLAMA-2-7B, we assess the impact of language adaptation on
+    their performance. Table 5 compares language-specific models with the original LLAMA-2-7B, and instruction-tuned models
+    with LLAMA-2-7B-CHAT. Our findings show minimal gains, with some models even underperforming post-adaptation.
+- id: Q74
+  page: 8
+  dimension: input_ontology
+  text: In this paper, we introduced MILU—Multilingual Indic Language Understanding Benchmark-a comprehensive benchmark specifically
+    designed to evaluate LLMs across 11 Indic languages, spanning diverse domains and culturally relevant subjects.
+- id: Q75
+  page: 8
+  dimension: output_form
+  text: We evaluate 45 different LLMs and find that the majority of LLMs struggle on MILU, with GPT4o achieving the highest
+    average accuracy.
+- id: Q76
+  page: 8
+  dimension: input_ontology
+  text: The analysis also shows that models perform significantly better in high-resource languages than low-resource ones,
+    highlighting the need for more robust multilingual strategies.
+- id: Q77
+  page: 8
+  dimension: output_ontology
+  text: Additionally, the domain-specific analysis indicates that models perform better in general fields such as STEM while
+    facing challenges in culturally relevant subjects like Arts, Humanities, and Law, highlighting the lack of this knowledge
+    in the current models and datasets.
+- id: Q78
+  page: 8
+  dimension: output_form
+  text: We conjecture that limited performance gains may result from small language-specific datasets and reliance on parameter-efficient
+    methods like LoRA (Hu et al., 2022).
+- id: Q79
+  page: 8
+  dimension: output_form
+  text: Another contributing factor could be the lack of diversity in instruction fine-tuning datasets.
+- id: Q80
+  page: 8
+  dimension: output_form
+  text: Models like AIRAVATA, which utilize more diverse data (Gala et al., 2024), exhibit noticeably better performance.
+- id: Q81
+  page: 8
+  dimension: output_form
+  text: Further investigation is required to fully understand the limitations and opportunities in this area.
+- id: Q82
+  page: 9
+  dimension: input_ontology
+  text: First, we restricted our study to the top 11 languages due to the lack of readily available questions in low-resource
+    languages, which we aim to address in future work.
+- id: Q83
+  page: 9
+  dimension: output_form
+  text: Second, limited computational resources prevented a thorough evaluation of larger models, such as LLAMA-3.1-70B-INSTRUCT
+    and LLAMA-3.1-405B.
+- id: Q84
+  page: 9
+  dimension: input_content
+  text: Third, the scarcity of questions necessitated translating a portion of the dataset.
+- id: Q85
+  page: 9
+  dimension: output_form
+  text: Finally, our evaluation primarily relies on the log-likelihood approach, which may yield different results compared
+    to other established methods, such as generation-based evaluation and chain-of-thought (CoT) prompting.
+- id: Q86
+  page: 9
+  dimension: output_content
+  text: We would like to thank EkStep Foundation and Nilekani Philanthropies for their generous grant towards building datasets,
+    models, tools and other resources for Indian languages.
+- id: Q87
+  page: 9
+  dimension: output_content
+  text: We are also immensely grateful to the volunteers from the AI4Bharat team for their motivation and meticulous efforts
+    in conducting manual audits.
+- id: Q88
+  page: 9
+  dimension: input_content
+  text: All data described in this work was scraped from publicly available resources.
+- id: Q89
+  page: 9
+  dimension: input_content
+  text: The datasets used in this paper will be made available under permissible licenses.
+- id: Q90
+  page: 9
+  dimension: input_content
+  text: Additionally, the code used for our evaluations will be made publicly available under the MIT License.
+- id: Q91
+  page: 10
+  dimension: input_content
+  text: 'Sumanth Doddapaneni, Rahul Aralikatte, Gowtham Ramesh, Shreya Goyal, Mitesh M. Khapra, Anoop Kunchukuttan, and Pratyush
+    Kumar. 2023. Towards leaving no Indic language behind: Building monolingual corpora, benchmark and models for Indic languages.
+    In Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pages
+    12402–12426, Toronto, Canada. Association for Computational Linguistics.'
+- id: Q92
+  page: 17
+  dimension: input_content
+  text: We collected our questions from over 40 exam types ranging from various National and state level civil service examinations
+    to examinations conducted by various government and private organizations.
+- id: Q93
+  page: 17
+  dimension: input_form
+  text: Detailed analysis of topic and language distribution across languages can be found in Table 9 and Figure 6
+- id: Q94
+  page: 17
+  dimension: output_form
+  text: Model details about the different models evaluated in this work is present in Table 10.
+- id: Q95
+  page: 18
+  dimension: input_content
+  text: 'Table 6: Overview of various national-level exams and the corresponding years of coverage considered in MILU.'
+- id: Q96
+  page: 18
+  dimension: input_content
+  text: 'Table 7: Overview of various government and private organization exams and the corresponding years of coverage considered
+    in MILU.'
+- id: Q97
+  page: 18
+  dimension: input_content
+  text: 'Table 8: Overview of various State-level civil services exams and the corresponding years of coverage considered
+    in MILU.'
+- id: Q98
+  page: 20
+  dimension: input_ontology
+  text: 'Table 9: Detailed subject level statistics of MILU across different languages.'
+- id: Q99
+  page: 22
+  dimension: output_form
+  text: 'Table 11: Detailed subject-wise evaluation for ABHINAND/TAMIL-LLAMA-7B-INSTRUCT-V0.2 on MILU across different languages.'
+- id: Q100
+  page: 22
+  dimension: output_form
+  text: The results reported are X / Y / Z where X denote the 0-shot, Y denotes 1-shot and Z denotes 5-shot performance respectively.
+- id: Q101
+  page: 23
+  dimension: output_form
+  text: 'Table 12: Detailed subject-wise evaluation for AI4BHARAT/AIRAVATA on MILU across different languages. The results
+    reported are X / Y / Z where X denote the 0-shot, Y denotes 1-shot and Z denotes 5-shot performance respectively.'
+- id: Q102
+  page: 24
+  dimension: output_form
+  text: 'Table 13: Detailed subject-wise evaluation for BHABHAAI/GAJENDRA-V0.1 on MILU across different languages. The results
+    reported are X / Y / Z where X denote the 0-shot, Y denotes 1-shot and Z denotes 5-shot performance respectively.'
+- id: Q103
+  page: 25
+  dimension: output_form
+  text: 'Table 14: Detailed subject-wise evaluation for COGNITIVE-LAB/AMBARI-7B-BASE-V0.1 on MILU across different languages.
+    The results reported are X / Y / Z where X denote the 0-shot, Y denotes 1-shot and Z denotes 5-shot performance respectively.'
+- id: Q104
+  page: 26
+  dimension: output_form
+  text: 'Table 15: Detailed subject-wise evaluation for COGNITIVE-LAB/AMBARI-7B-INSTRUCT-V0.1 on MILU across different languages.
+    The results reported are X / Y / Z where X denote the 0-shot, Y denotes 1-shot and Z denotes 5-shot performance respectively.'
+- id: Q105
+  page: 27
+  dimension: output_form
+  text: 'Table 16: Detailed subject-wise evaluation for GENVRADMIN/ARYABHATTA-GEMMAGENZ-VIKAS-MERGED on MILU across different
+    languages.'
+- id: Q106
+  page: 28
+  dimension: output_form
+  text: 'Table 17: Detailed subject-wise evaluation for MANISHIITG/OPEN-ADITI-V6-LLAMA3 on MILU across different languages.
+    The results reported are X / Y / Z where X denote the 0-shot, Y denotes 1-shot and Z denotes 5-shot performance respectively.'
+- id: Q107
+  page: 29
+  dimension: output_form
+  text: 'Table 18: Detailed subject-wise evaluation for NICKMALHOTRA/PROJECTINDUS on MILU across different languages. The
+    results reported are X / Y / Z where X denote the 0-shot, Y denotes 1-shot and Z denotes 5-shot performance respectively.'
+- id: Q108
+  page: 30
+  dimension: output_form
+  text: 'Table 19: Detailed subject-wise evaluation for SARVAMAI/OPENHATHI-7B-HI-V0.1-BASE on MILU across different languages.
+    The results reported are X / Y / Z where X denote the 0-shot, Y denotes 1-shot and Z denotes 5-shot performance respectively.'
+- id: Q109
+  page: 31
+  dimension: output_form
+  text: 'Table 20: Detailed subject-wise evaluation for TENSOIC/KAN-LLAMA-7B-BASE on MILU across different languages. The
+    results reported are X / Y / Z where X denote the 0-shot, Y denotes 1-shot and Z denotes 5-shot performance respectively.'
+- id: Q110
+  page: 32
+  dimension: output_form
+  text: 'Table 21: Detailed subject-wise evaluation for ABHINAND/MALAYALAM-LLAMA-7B-INSTRUCT-V0.1 on MILU across different
+    languages.'
+- id: Q111
+  page: 33
+  dimension: output_form
+  text: 'Table 22: Detailed subject-wise evaluation for ABHINAND/TELUGU-LLAMA-7B-INSTRUCT-V0.1 on MILU across different languages.
+    The results reported are X / Y / Z where X denote the 0-shot, Y denotes 1-shot and Z denotes 5-shot performance respectively.'
+- id: Q112
+  page: 34
+  dimension: output_form
+  text: 'Table 23: Detailed subject-wise evaluation for SMALLSTEPAI/MISAL-7B-INSTRUCT-V0.1 on MILU across different languages.
+    The results reported are X / Y / Z where X denote the 0-shot, Y denotes 1-shot and Z denotes 5-shot performance respectively.'
+- id: Q113
+  page: 35
+  dimension: output_form
+  text: 'Table 24: Detailed subject-wise evaluation for SMALLSTEPAI/MISAL-7B-BASE-V0.1 on MILU across different languages.'
+- id: Q114
+  page: 36
+  dimension: output_form
+  text: 'Table 25: Detailed subject-wise evaluation for TELUGU-LLM-LABS/TELUGU-LLAMA2-7B-V0-BASE on MILU across different
+    languages. The results reported are X / Y / Z where X denote the 0-shot, Y denotes 1-shot and Z denotes 5-shot performance
+    respectively.'
+- id: Q115
+  page: 37
+  dimension: output_form
+  text: 'Table 26: Detailed subject-wise evaluation for GPT-4o on MILU across different languages. The results reported are
+    for 0-shot experiments.'
+- id: Q116
+  page: 38
+  dimension: output_form
+  text: 'Table 27: Detailed subject-wise evaluation for GPT-4O-MINI on MILU across different languages. The results reported
+    are for 0-shot experiments.'
+- id: Q117
+  page: 39
+  dimension: output_form
+  text: 'Table 28: Detailed subject-wise evaluation for GEMINI-1.5-PRO on MILU across different languages. The results reported
+    are for 0-shot experiments.'
+- id: Q118
+  page: 40
+  dimension: output_form
+  text: 'Table 29: Detailed subject-wise evaluation for GEMINI-1.5-FLASH on MILU across different languages. The results reported
+    are for 0-shot experiments.'
+- id: Q119
+  page: 41
+  dimension: output_form
+  text: 'Table 30: Detailed subject-wise evaluation for KRUTRIM-SPECTRE-V2 on MILU across different languages. The results
+    reported are for 0-shot experiments.'
+- id: Q120
+  page: 42
+  dimension: output_form
+  text: 'Table 31: Detailed subject-wise evaluation for SARVAMAI/SARVAM-1 on MILU across different languages. The results
+    reported are for 5-shot experiments.'
+- id: Q121
+  page: 43
+  dimension: output_form
+  text: 'Table 32: Detailed subject-wise evaluation for META-LLAMA/LLAMA-3.2-1B on MILU across different languages. The results
+    reported are X / Y / Z where X denote the 0-shot, Y denotes 1-shot and Z denotes 5-shot performance respectively.'
+- id: Q122
+  page: 43
+  dimension: output_form
+  text: 'Table 33: Detailed subject-wise evaluation for META-LLAMA/LLAMA-3.2-1B-INSTRUCT on MILU across different languages.
+    The results reported are X / Y / Z where X denote the 0-shot, Y denotes 1-shot and Z denotes 5-shot performance respectively.'
+- id: Q123
+  page: 44
+  dimension: output_form
+  text: 'Table 34: Detailed subject-wise evaluation for GOOGLE/GEMMA-2-2B on MILU across different languages. The results
+    reported are X / Y / Z where X denote the 0-shot, Y denotes 1-shot and Z denotes 5-shot performance respectively.'
+- id: Q124
+  page: 44
+  dimension: output_form
+  text: 'Table 35: Detailed subject-wise evaluation for GOOGLE/GEMMA-2-2B-IT on MILU across different languages. The results
+    reported are X / Y / Z where X denote the 0-shot, Y denotes 1-shot and Z denotes 5-shot performance respectively.'
+- id: Q125
+  page: 46
+  dimension: output_form
+  text: 'Table 38: Detailed subject-wise evaluation for META-LLAMA/LLAMA-3.2-3B-INSTRUCT on MILU across different languages.'
+- id: Q126
+  page: 47
+  dimension: output_form
+  text: 'Table 39: Detailed subject-wise evaluation for NVIDIA/NEMOTRON-4-MINI-HINDI-4B-BASE on MILU across different languages.
+    The results reported are for 5-shot experiments.'
+- id: Q127
+  page: 49
+  dimension: output_form
+  text: 'Table 42: Detailed subject-wise evaluation for NEULAB/PANGEA-7B on MILU across different languages. The results reported
+    are for 5-shot experiments.'
+- id: Q128
+  page: 52
+  dimension: output_form
+  text: 'Table 47: Detailed subject-wise evaluation for GOOGLE/GEMMA-2-9B-IT on MILU across different languages. The results
+    reported are X / Y / Z where X denote the 0-shot, Y denotes 1-shot and Z denotes 5-shot performance respectively.'
+- id: Q129
+  page: 52
+  dimension: output_form
+  text: 'Table 48: Detailed subject-wise evaluation for GOOGLE/GEMMA-2-27B on MILU across different languages. The results
+    reported are X / Y / Z where X denote the 0-shot, Y denotes 1-shot and Z denotes 5-shot performance respectively.'
+- id: Q130
+  page: 55
+  dimension: output_form
+  text: 'Table 52: 0-shot subject-wise evaluation for META-LLAMA/LLAMA-3.1-70B-INSTRUCT on MILU across different languages.'
+- id: Q131
+  page: 56
+  dimension: output_form
+  text: 'Table 53: 1-shot subject-wise evaluation for META-LLAMA/LLAMA-3.1-70B-INSTRUCT on MILU across different languages.'
+- id: Q132
+  page: 57
+  dimension: output_form
+  text: 'Table 54: Detailed subject-wise evaluation for META-LLAMA/LLAMA-3.1-405B on MILU across different languages. The
+    results reported are for 0-shot experiments.'
+coverage_strengths:
+- user_priority: Central-exam subject coverage (GK, History, Polity, Science)
+  benchmark_coverage: 'MILU spans 8 domains including Social Sciences, Law and Governance, Science, and
+
+    Arts and Humanities [Q42], sourced from over 40 national and state exam types
+
+    including UPSC, SSC, and banking examinations [Q92, Q95, Q96]. The India-first
+
+    design explicitly targets culturally relevant subjects like local history, arts,
+
+    festivals, and laws [Q2], aligning with the GK, History, and Polity subjects
+
+    prioritized by the deployment.
+
+    '
+  dimension: input_ontology
+- user_priority: Pan-India and North India–specific regional knowledge for central exams
+  benchmark_coverage: 'MILU is designed with an India-first perspective collecting questions from national,
+
+    state, and regional exams [Q11], and explicitly includes culturally relevant content
+
+    such as local history, arts, festivals, and laws [Q2, Q12]. English-language
+
+    questions are additionally included to cover Indian culture-specific content absent
+
+    from other benchmarks [Q30]. Coverage tables for national-level, government, and
+
+    state-level civil services exams provide granular sourcing documentation [Q95, Q96, Q97].
+
+    '
+  dimension: input_content
+- user_priority: Hindi-language text input modality
+  benchmark_coverage: 'MILU is exclusively text-based, explicitly excluding image-based and
+
+    reading-comprehension questions, and applies INDICLID and Unicode-based filtering
+
+    to ensure correct script and language per question [Q33, Q34]. The 11 Indic
+
+    languages include Hindi as a high-resource language, and the Devanagari script
+
+    is natively supported throughout the benchmark pipeline.
+
+    '
+  dimension: input_form
+- user_priority: Ground-truth label correctness for competitive exam questions
+  benchmark_coverage: 'MILU inherits answer labels from online exam portals where subject experts ensure
+
+    answer accuracy at source [Q26], providing institutional provenance for MCQ
+
+    correct-answer labels grounded in India''s established competitive exam ecosystem.
+
+    Internal manual audits by AI4Bharat volunteers further validate label quality [Q87].
+
+    '
+  dimension: output_content
+coverage_gap_analysis:
+- user_priority: Mathematics/Reasoning and Current Affairs as distinct subject categories
+  benchmark_coverage: 'MILU''s 8 macro-domains (Arts and Humanities, Social Sciences, Environmental Sciences,
+
+    Law and Governance, Health and Medicine, Science, Engineering and Technology, Business
+
+    Studies) [Q42] do not include Mathematics/Reasoning or Current Affairs as named
+
+    subject categories, despite these being top-priority areas for UPSC, SSC, and banking
+
+    exams. The subject-level breakdown in Table 9 [Q98] provides detail, but no quote
+
+    confirms these categories are represented.
+
+    '
+  gap_type: partial
+  web_search_target: MILU benchmark Mathematics Reasoning Current Affairs subject coverage Hindi UPSC SSC
+- user_priority: Proportion of MILU Hindi items from central-level versus state-level exams
+  benchmark_coverage: 'MILU aggregates questions from over 40 exam types at national and state levels [Q27,
+
+    Q92] without publishing a breakdown of the Hindi subset by exam tier. Regional state
+
+    exams are explicitly included and valued [Q28], but the share of items from central
+
+    exams (UPSC, SSC, banking) versus state PSC exams in the Hindi language partition
+
+    is not documented in any available quote.
+
+    '
+  gap_type: partial
+  web_search_target: MILU Hindi subset exam-tier distribution UPSC SSC banking versus state PSC proportion
+- user_priority: Hindi code-mixing rate within ~10% ceiling for Hindi-medium students
+  benchmark_coverage: 'MILU documents language-identification filtering [Q34] and script-level cleaning,
+
+    but does not report what fraction of Hindi questions contain English technical terms,
+
+    Roman-script fragments, or English-medium phrasing. Approximately 25% of the dataset
+
+    was translated from English using GPT-4O [Q47], and topic labels for ~55% of
+
+    questions were assigned via English translation and GPT-4O-MINI prompting [Q37, Q38],
+
+    raising undocumented code-mixing risks for Hindi items.
+
+    '
+  gap_type: full
+  web_search_target: MILU Hindi benchmark code-mixing English terms linguistic accessibility Hindi-medium students
+- user_priority: Explanatory rationale output in Hindi (correct/incorrect + explanation)
+  benchmark_coverage: 'MILU''s output schema is limited to MCQ accuracy — one correct option from up to four
+
+    choices [Q33]. No rubric, label set, annotation layer, or scoring function for
+
+    Hindi-language explanatory rationale quality is documented anywhere in the benchmark.
+
+    The paper itself acknowledges that log-likelihood evaluation may yield different
+
+    results from generation-based approaches [Q85], but does not extend evaluation to
+
+    open-ended Hindi explanations at all.
+
+    '
+  gap_type: full
+  web_search_target: Hindi language explanation quality evaluation benchmark competitive exam NLG rationale generation
+- user_priority: Open-ended Hindi-language output evaluation (fluency, coherence, pedagogy)
+  benchmark_coverage: 'MILU evaluates output strictly via MCQ accuracy using log-likelihood (non-API models)
+
+    [Q52, Q53, Q54, Q55] or structured JSON generative parsing (API models) [Q56, Q57].
+
+    No metric for Hindi-language fluency, coherence, or pedagogical appropriateness is
+
+    defined or measured. The mismatch between this output form and the deployment''s
+
+    free-text Hindi explanation requirement is total.
+
+    '
+  gap_type: full
+  web_search_target: Hindi NLG evaluation metrics fluency coherence open-ended generation assessment competitive exam
+- user_priority: North India–specific regional content within central-exam scope (Chhath Puja, land-revenue systems, North
+    Indian historical figures)
+  benchmark_coverage: 'MILU includes culturally relevant subjects like local history, arts, and festivals [Q2,
+
+    Q12] and draws from regional state exams that cover state-level topics [Q28]. However,
+
+    no quote documents whether MILU''s Hindi questions specifically cover North India
+
+    sub-regional content (e.g., UP/Bihar/Rajasthan administrative systems, Chhath Puja,
+
+    North Indian historical figures) as distinct from pan-India or South Indian regional
+
+    content tested in other language partitions.
+
+    '
+  gap_type: partial
+  web_search_target: MILU Hindi questions North India regional content UP Bihar Rajasthan Chhath Puja competitive exam coverage
+- user_priority: Hindi-medium student accessibility (vocabulary, difficulty calibration)
+  benchmark_coverage: 'MILU''s annotation and design documentation does not report annotator demographics,
+
+    inter-annotator agreement, or calibration for Hindi-medium students. The AI4Bharat
+
+    team (IIT Madras, IBM Research India) provides institutional India-centricity [Q10],
+
+    but no quote indicates that Hindi-medium North Indian graduate student perspectives
+
+    were incorporated into question selection, difficulty calibration, or phrasing review.
+
+    Manual audits are noted [Q87] but without demographic specifics.
+
+    '
+  gap_type: full
+  web_search_target: MILU Hindi-medium student user study difficulty calibration North India exam aspirant linguistic profile

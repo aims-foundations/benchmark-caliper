@@ -1,0 +1,576 @@
+name: Bangladeshi Bengali University Student — Story Generation Thesis Deployment
+abbreviation: BD-BN-SGT
+deployment_context:
+  country: Bangladesh
+  primary_city: Dhaka
+  geographic_scope: Urban Dhaka as the user's base; deployment content spans rural/village
+    Bangladesh, Chittagong Hill Tracts, and river delta regions
+  institution_type: Undergraduate university (BSc thesis work)
+  task: Bengali story generation with locally grounded Bangladeshi cultural, geographic,
+    linguistic, and historical context
+  user_role: Undergraduate university student conducting BSc thesis research on LLM
+    cultural grounding in Bangladeshi Bengali
+target_population_description: Native Bangladeshi Bengali speakers — primarily undergraduate
+  university students in Dhaka — who expect LLMs to accurately reproduce Bangladesh-specific
+  cultural touchstones, named entities, historical narratives, geographic references,
+  and linguistic register. The deployment evaluates how well generic frontier models,
+  small LLMs, and region-specific LLMs handle Bangladesh-specific context in open-ended
+  Bengali story generation. The population is literate, academically oriented, and
+  digitally active, but expects grounding in both urban (Dhaka) and rural/riverine
+  Bangladesh contexts.
+languages:
+  primary: Bangladeshi Standard Bengali (Cholti register)
+  register_notes: Bangladeshi Standard Bengali (Cholti) is the required register.
+    It is distinguished from West Bengali Standard Bengali by vocabulary, idiom, and
+    a higher density of Arabic and Persian loanwords reflecting Bangladeshi Islamic
+    cultural heritage. Indian exam-derived Bengali content almost certainly reflects
+    West Bengali or pan-Indian orthographic and lexical norms and is considered inadequate
+    for this deployment.
+  script: Bengali script (Bangla lipi)
+  script_notes: Text-only deployment; Bengali script is used throughout. No script
+    mismatch with the benchmark at the writing-system level. Routine verification
+    of non-Latin script rendering and tokenization behavior in Bengali is still advisable.
+  dialect_stratification_in_benchmark: NOT DOCUMENTED in MILU — no dialect or register
+    stratification within the Bengali split is disclosed; downstream verification
+    required.
+  colloquial_variants_relevant:
+  - Dhaka urban Bengali (educated Cholti)
+  - Rural/village Bengali (regional dialects of Mymensingh, Sylhet, Chittagong, Barisal
+    areas)
+  - Chittagong Hill Tracts minority language contact varieties
+  dialect_bias_research_note: 'A 2026 paper (arXiv:2603.21359) documents a multi-stage
+    framework for benchmarking Bengali dialectal bias across 9 Bengali dialects, using
+    a 4,000-question dataset, confirming that dialectal variation remains broadly
+    underexplored in Bengali NLP evaluation and that standard tokenization metrics
+    fail to capture semantic equivalence in dialectal variants. Source: arXiv:2603.21359
+    — [|https://arxiv.org/abs/2603.21359|]'
+writing_system:
+  script: Bengali script (Bangla lipi)
+  directionality: left-to-right
+  capitalization: Bengali script has no uppercase/lowercase distinction
+  nlp_notes: Bengali script tokenization is generally supported in major NLP toolchains,
+    but sub-register differences (Bangladeshi vs. West Bengali orthographic conventions)
+    are rarely captured in standard tooling. Arabic/Persian loanword patterns in Bangladeshi
+    Bengali may tokenize differently from West Bengali equivalents.
+  tokenization_corpus_note: 'Bengali''s allocation in the Sangraha multilingual corpus
+    is approximately 30 billion tokens, compared to approximately 2 trillion tokens
+    available for English in large-scale multilingual corpora — a gap that constrains
+    LLM Bengali performance. Bengali''s alphasyllabary script with diacritics and
+    conjunct forms creates tokenization challenges not present in Latin-script languages.
+    Source: arXiv:2507.23248 — [|https://arxiv.org/abs/2507.23248|]'
+literacy_and_education:
+  target_user_literacy: High — undergraduate university students; fluent literate
+    Bangladeshi Bengali speakers
+  national_literacy_rate: '74.66% (2022 National Census of Bangladesh). Functional
+    literacy rate (age 7+) is 62.92%; general literacy rate 74.23% per BBS Literacy
+    Assessment Survey 2020–2023. Urban functional literacy (ages 11–45) is 80.35%
+    vs. rural 70.54%. Source: Bangladesh 2022 Census cited in Wikipedia Education
+    in Bangladesh — [|https://en.wikipedia.org/wiki/Education_in_Bangladesh|]; BBS
+    LAS Survey reported in Dhaka Tribune — [|https://www.dhakatribune.com/bangladesh/education/319301/bbs-functional-literacy-rate-7-above-years-in|].
+
+    Note: a 2025 BBS Health and Morbidity Status Survey found 42.45% of the population
+    still below fifth-grade literacy (23.51% never attended school, 18.94% did not
+    progress past primary), indicating significant variation around the headline figure;
+    the target user cohort (university students) is well above the national average.'
+  higher_education_enrollment_rate: '[NEEDS VERIFICATION — deferred: below search
+    budget; World Bank tertiary enrollment data for Bangladesh available at https://data.worldbank.org/indicator/SE.TER.ENRR?locations=BD
+    but specific figure not retrieved in this pass]'
+  key_national_exam_system:
+    secondary: SSC (Secondary School Certificate)
+    higher_secondary: HSC (Higher Secondary Certificate)
+    notes: 'SSC and HSC are the primary national curriculum exams in Bangladesh, administered
+      by multiple education boards. These are entirely absent from MILU''s Indian
+      exam-sourced content. Note: the JSC (Junior School Certificate) examination
+      was last held in November 2024 and is now defunct; PEC was last held in 2019.
+      Source: Wikipedia Education in Bangladesh — [|https://en.wikipedia.org/wiki/Education_in_Bangladesh|]'
+  key_universities_in_deployment_scope:
+  - Dhaka University (DU)
+  - Bangladesh University of Engineering and Technology (BUET)
+  - Islamic University of Technology (IUT)
+  - Dhaka Medical College (DMC)
+  - Rajshahi University
+  - Shahjalal University of Science and Technology (SUST)
+  - BRAC University
+  university_representation_in_benchmark: NOT DOCUMENTED — none of these institutions
+    are mentioned in MILU documentation; their absence from the benchmark's ontology
+    is a confirmed gap.
+cultural_norms_and_touchstones:
+  overview: The target population expects LLMs to demonstrate fluency with Bangladeshi
+    national identity, which is distinct from Indian national identity and draws on
+    a specific historical, linguistic, and cultural formation centered on the 1952
+    Language Movement, the 1971 Liberation War, and subsequent Bangladeshi state history.
+  foundational_national_events:
+  - event: 1952 Language Movement (Bhasha Andolan)
+    notes: The movement for recognition of Bengali as an official language of Pakistan;
+      foundational to Bangladeshi national identity. Commemorated annually on 21 February
+      (Shaheed Dibosh / International Mother Language Day). MILU may frame this as
+      an Indian or pan-Bengali event rather than a Bangladeshi national narrative
+      — framing differences affect answer correctness.
+  - event: 1971 Liberation War (Muktijuddho)
+    notes: The independence war against Pakistan resulting in the founding of Bangladesh.
+      Central to all Bangladeshi cultural, political, and historical discourse. Absent
+      from MILU's Indian exam-derived ontology as a Bangladeshi national event.
+  - event: Post-1971 political history (1975–2026)
+    notes: 'Includes the 1975 coup and assassination of Sheikh Mujibur Rahman, the
+      1990 uprising against Ershad, the parliamentary democracy period, and major
+      political developments through 2026. 2024 update: In July–August 2024, a student-led
+      mass uprising known as the ''July Revolution'' or ''Monsoon Revolution'' (triggered
+      by the reinstatement of civil service quotas reserving 30% of posts for descendants
+      of 1971 Liberation War freedom fighters) concluded with the resignation and
+      exile of Prime Minister Sheikh Hasina on 5 August 2024 after 15 years in power.
+      An interim government led by Nobel laureate Muhammad Yunus was formed. The UN
+      estimated up to 1,400 people may have been killed during the crackdown. The
+      Bangladesh War Crimes Tribunal sentenced Hasina to death in absentia for crimes
+      against humanity in November 2025. As of early 2026, general elections are planned
+      and a constitutional referendum on the ''July Charter'' is underway. The uprising
+      has profoundly influenced popular culture, discourse, and cultural reference
+      frames for the target student cohort. Sources: Wikipedia July Revolution (Bangladesh)
+      — [|https://en.wikipedia.org/wiki/July_Revolution_(Bangladesh)|]; EUAA situation
+      update — [|https://www.euaa.europa.eu/news-events/bangladesh-situation-update-one-year-after-students-protests|];
+      Chatham House analysis — [|https://www.chathamhouse.org/2025/11/sheikh-hasina-verdict-and-bangladeshs-upcoming-referendum-signal-transitional-moment-south|]'
+  cultural_events:
+  - event: Ekushe Boi Mela (February Book Fair)
+    notes: Annual book fair held at Bangla Academy, Dhaka, in February. Directly linked
+      to the Language Movement; a flagship Bangladeshi literary and cultural event
+      with no Indian equivalent.
+  - event: Pohela Boishakh (Bengali New Year)
+    notes: Celebrated on 14 April as the Bangladeshi New Year. The Bangladeshi observance
+      — particularly the Mangal Shobhajatra procession in Dhaka — has distinct forms
+      from West Bengali celebrations.
+  - event: Shaheed Dibosh (21 February)
+    notes: Martyrs' Day commemorating the Language Movement; now also International
+      Mother Language Day (UNESCO).
+  - event: Victory Day (16 December)
+    notes: National holiday marking Bangladesh's victory in the 1971 Liberation War.
+  literary_and_cultural_figures:
+  - figure: Humayun Ahmed
+    domain: Novelist, playwright, filmmaker; the most widely read Bangladeshi author
+      of the modern era
+  - figure: Muhammad Zafar Iqbal
+    domain: Science fiction author and educator; major figure in Bangladeshi youth
+      literature
+  - figure: Selim Al Deen
+    domain: Playwright; central figure in Bangladeshi drama tradition
+  - figure: Rabindranath Tagore (Bangladeshi reception)
+    notes: Tagore is claimed by both Bangladesh and West Bengal; Bangladeshi cultural
+      framing of Tagore differs from Indian national framing
+  - figure: '[NEEDS VERIFICATION — deferred: likely unsearchable (lived canon); requires
+      stakeholder/expert elicitation from Bangladeshi literary scholars to surface
+      additional major film, drama, and literary figures expected as reference points
+      in story generation contexts]'
+  bangladeshi_drama_and_film:
+    notes: '[NEEDS VERIFICATION — deferred: likely unsearchable at the level of expected
+      granularity (specific BTV drama series, private channel productions, canonical
+      film directors); requires expert elicitation or community sourcing from Bangladeshi
+      film/media scholars]'
+  islamic_cultural_context:
+    notes: 'Bangladesh is a majority-Muslim country; Islamic cultural practices, vocabulary
+      (Arabic/Persian loanwords in everyday Bengali), and observances (Eid ul-Fitr,
+      Eid ul-Adha, Ramadan) are embedded in everyday language and narrative. This
+      is distinct from the Hindu-majority or syncretic cultural framing dominant in
+      West Bengali content. The BengaliMoralBench (2025) benchmark explicitly grounds
+      its moral reasoning scenarios in Bangladeshi traditions including Religious
+      Activities (Daily Activities and Religious Activities have the highest country-specific
+      content), providing independent evidence that Islamic cultural context is a
+      primary differentiator for Bangladeshi Bengali LLM evaluation. Source: arXiv:2511.03180
+      — [|https://arxiv.org/abs/2511.03180|]'
+  rural_and_riverine_context:
+    notes: A significant share of Bangladeshi narrative tradition is rooted in rural
+      and riverine life — the river delta (Padma, Meghna, Jamuna, Buriganga river
+      systems), farming communities (paddy cultivation, jute), fishing villages, and
+      seasonal flood cycles. These contexts are structurally absent from competitive
+      exam content and represent a deployment-critical gap.
+    key_ecological_features:
+    - River delta agriculture (haor, beel, char lands)
+    - Paddy and jute farming traditions
+    - Boat culture and riverine transport
+    - Seasonal flood (borsha) as cultural and narrative motif
+    - Sundarbans mangrove ecosystem (shared Bangladesh/India, but Bangladeshi portion
+      is larger)
+geographic_scope:
+  primary_urban_center: Dhaka
+  dhaka_neighborhoods_relevant:
+  - Dhanmondi
+  - Old Dhaka (Puran Dhaka)
+  - Wari
+  - Mirpur
+  - Gulshan
+  - Shahbagh
+  - '[NEEDS VERIFICATION — deferred: below search budget; additional Dhaka neighborhoods
+    (Badda, Uttara, Mohammadpur, Lalbagh, Shyampur, Rayer Bazar, Banani) are plausible
+    candidates but require local expert confirmation of salience in story generation
+    contexts]'
+  major_rivers:
+  - Buriganga (Dhaka)
+  - Padma (as it flows through Bangladesh; distinct from Indian section called Ganges)
+  - Meghna
+  - Jamuna (Bangladeshi name for the Brahmaputra)
+  - Surma
+  - '[NEEDS VERIFICATION — deferred: below search budget; Karnaphuli (Chittagong),
+    Teesta (Rangpur), Kushiyara (Sylhet), Halda (Chittagong) are plausible candidates
+    for narrative salience but require local expert confirmation]'
+  tourism_and_cultural_sites:
+  - Cox's Bazar (world's longest natural sea beach)
+  - Rangamati (Chittagong Hill Tracts lake district)
+  - Bandarban (Hill Tracts; hill tribe communities)
+  - Sajek Valley (Hill Tracts)
+  - Sundarbans (mangrove forest, Bangladesh portion)
+  - Srimangal (tea gardens)
+  - Paharpur (Buddhist ruins, UNESCO site)
+  - '[NEEDS VERIFICATION — deferred: below search budget; Kuakata (sea beach, Barisal),
+    Mainamati (Buddhist ruins, Comilla), Lalbagh Fort (Old Dhaka), Ahsan Manzil (Pink
+    Palace, Old Dhaka), Ratargul Swamp Forest (Sylhet) are plausible candidates]'
+  sub_national_regions:
+  - region: Chittagong Hill Tracts (CHT)
+    notes: Ethnically diverse region; home to Chakma, Marma, Tripuri, and other indigenous
+      communities. Distinct cultural and linguistic context from Bengali plains.
+  - region: Sylhet Division
+    notes: Distinct Sylheti dialect; large diaspora in UK; tea-growing region.
+  - region: Barisal Division
+    notes: River delta heartland; strong association with riverine rural life and
+      narrative tradition.
+  - region: Rajshahi Division
+    notes: Padma riverside; silk production; Rajshahi University.
+  - region: Mymensingh Division
+    notes: Agricultural heartland; Bangladesh Agricultural University (BAU) located
+      here; haor wetlands in the north (Netrokona, Sunamganj border). Relevant to
+      rural narrative contexts.
+  - region: Khulna Division
+    notes: Gateway to the Sundarbans; industrial city; distinct dialect. The Bangladeshi
+      Sundarbans portion falls primarily within this division.
+  - region: '[NEEDS VERIFICATION — deferred: below search budget; Rangpur Division
+      (northern Bangladesh, Teesta river, Barind Tract) and Comilla/Chattogram Division
+      sub-regions are also narratively salient]'
+benchmark_alignment_notes:
+  benchmark: MILU (Multi-task Indic Language Understanding Benchmark)
+  language_coverage: Bengali (bn) is one of MILU's 11 languages, but content derives
+    exclusively from Indian competitive examinations. The Bengali split almost certainly
+    reflects West Bengali or pan-Indian Bengali-medium exam norms.
+  critical_ontological_gaps:
+  - 1971 Liberation War as a Bangladeshi national event
+  - SSC/HSC national curriculum exams
+  - Bangladeshi universities (Dhaka University, BUET, IUT, DMC, BRAC University, etc.)
+  - Post-1971 Bangladeshi political history
+  - Bangladeshi cultural events (Ekushe Boi Mela, Pohela Boishakh as Bangladeshi observance)
+  - Bangladeshi named entities (Dhaka neighborhoods, Bangladeshi rivers, tourism sites)
+  - Rural and riverine Bangladesh sub-contexts
+  - Bangladeshi literary and cultural figures (Humayun Ahmed, Selim Al Deen, Muhammad
+    Zafar Iqbal)
+  - 2024 July Uprising and post-uprising political context (entirely post-benchmark)
+  register_gap: Bangladeshi Standard Bengali (Cholti register, Arabic/Persian loanword
+    patterns) is not documented as the target register in MILU's Bengali split; West
+    Bengali norms are presumed dominant.
+  annotator_mismatch: MILU's Bengali content was validated entirely within Indian
+    institutional frameworks (AI4Bharat, IIT Madras, IBM Research India). No Bangladeshi
+    annotators are documented. Native Bangladeshi Bengali speakers are required as
+    primary ground truth for this deployment.
+  output_form_mismatch: MILU evaluates closed-form MCQ accuracy; the deployment targets
+    open-ended Bengali story generation. Benchmark accuracy scores measure factual
+    recall, not culturally grounded generative quality.
+  language_movement_framing_risk: The 1952 Language Movement may be framed in MILU
+    as an Indian or pan-Bengali event rather than a foundational Bangladeshi national
+    narrative; this framing difference can affect answer correctness for Bangladeshi
+    users.
+infrastructure_notes:
+  internet_penetration: '44.5% of total population (approximately 77.36 million users)
+    as of January 2024, rising slightly to ~77.7 million users by January 2025. However,
+    by mid-2024, the BTRC noted mobile internet subscribers declined by ~13.2 million
+    in seven months due to increased taxes on mobile services (supplementary duty
+    raised from 15% to 20%, total tax burden exceeding 39%), the July 2024 political
+    disruption, and rising costs. Over 50% of households had internet access in July–September
+    2024 (BBS ICT Access and Use Survey 2024–25). Sources: DataReportal Digital 2024
+    Bangladesh — [|https://datareportal.com/reports/digital-2024-bangladesh|]; The
+    Business Standard BTRC data — [|https://www.tbsnews.net/bangladesh/over-50-households-use-internet-bangladesh-bbs-1032411|];
+    Prothom Alo BTRC data — [|https://en.prothomalo.com/bangladesh/7ifddqcbtf|]'
+  mobile_internet_penetration: '118.49 million mobile internet subscribers recorded
+    at end of 2023 per BTRC (Bangladesh Telecommunication Regulatory Commission),
+    representing the high-water mark; this figure declined by approximately 13.2 million
+    mobile internet users in the seven months to January 2025 due to economic and
+    political factors. 3G and 4G network coverage reported at 100% as of 2025. Note:
+    national-level figure; urban Dhaka university students are expected to be active
+    smartphone users well above the national average. Sources: The Business Standard
+    BTRC — [|https://www.tbsnews.net/bangladesh/internet-users-bangladesh-reach-131-million-2023-791442|];
+    ngital.com 2025 analysis — [|https://ngital.com/bangladesh-internet-penetration-2025-data-insights/|]'
+  primary_access_device: 'Mobile-dominant internet access is expected; laptop/desktop
+    access common among urban university students. Smartphone usage has risen to 70.1%
+    of households as of 2024 (up from 63.3% in 2023). Only 9.2% of households own
+    computers. Source: BBS ICT Access and Use Survey 2024–25 via The Business Standard
+    — [|https://www.tbsnews.net/bangladesh/over-50-households-use-internet-bangladesh-bbs-1032411|]'
+  connectivity_notes: 'Urban Dhaka has relatively good connectivity. Median mobile
+    internet connection speed: 23.00 Mbps (January 2024) rising to 28.26 Mbps (January
+    2025). Rural Bangladesh connectivity is lower: 46% rural household internet penetration
+    vs. 60.3% urban (BBS 2024). A meaningful rural-urban digital divide is confirmed.
+    Sources: DataReportal — [|https://datareportal.com/reports/digital-2024-bangladesh|];
+    BBS via The Business Standard — [|https://www.tbsnews.net/bangladesh/over-50-households-use-internet-bangladesh-bbs-1032411|]'
+  relevant_platforms: '[NEEDS VERIFICATION — deferred: below search budget; likely
+    requires community survey or expert elicitation to identify which Bengali-language
+    LLM interfaces (e.g., ChatGPT Bengali, Google Bard/Gemini, local academic platforms)
+    are actively used by Bangladeshi university students for thesis work]'
+  nlp_infrastructure_notes: 'Bengali is a relatively high-resource Indic language
+    for NLP purposes, but tooling predominantly reflects West Bengali norms (e.g.,
+    many tokenizers trained on Indian Bengali corpora). Bangladeshi Bengali-specific
+    NLP resources are less developed. Recent Bengali-focused models include TituLLM
+    (2025), TigerLLM (2025), BanglaGPT, and BanglaBERT. Bengali''s allocation in the
+    Sangraha multilingual corpus is ~30 billion tokens vs. ~2 trillion tokens for
+    English, posing a significant constraint on model performance. Bengali''s alphasyllabary
+    script creates tokenization challenges (diacritics, conjunct forms) not well-handled
+    by standard LLM tokenizers. Sources: arXiv:2507.23248 — [|https://arxiv.org/abs/2507.23248|];
+    arXiv:2502.11187 — [|https://arxiv.org/abs/2502.11187|]'
+evaluation_population_requirements:
+  primary_ground_truth: Native Bangladeshi Bengali speakers
+  acceptable_secondary: Mixed annotator pool including at least a substantial Bangladeshi
+    Bengali speaker proportion
+  explicitly_insufficient: Indian-only annotator pools, including Indian Bengali (West
+    Bengali) speakers evaluating Bangladeshi-specific cultural content
+  annotation_criteria: Annotators must be familiar with Bangladeshi national history
+    (1971 Liberation War, post-independence political history including the 2024 July
+    Uprising), Bangladeshi educational institutions, Bangladeshi cultural events,
+    Bangladeshi geography, and Bangladeshi Standard Bengali register including Arabic/Persian
+    loanword patterns
+  story_generation_evaluation_methodology: 'No validated methodology exists in MILU
+    for evaluating culturally grounded open-ended story generation; this is a structural
+    gap requiring a purpose-built evaluation rubric. Existing Bengali cultural benchmarks
+    (BLUCK, BengaliMoralBench, BanglaSocialBench) use MCQ or binary labeling frameworks;
+    none target generative story quality. However, BanglaSocialBench (2026) offers
+    a native-speaker-written, context-dependent evaluation methodology that could
+    inform rubric design for culturally grounded generation. Sources: arXiv:2505.21092
+    — [|https://arxiv.org/abs/2505.21092|]; arXiv:2603.15949 — [|https://arxiv.org/abs/2603.15949|];
+    arXiv:2511.03180 — [|https://arxiv.org/abs/2511.03180|]'
+domain_specific_notes:
+  historical_and_political: 'The 1971 Liberation War is not a peripheral topic — it
+    is the foundational national narrative. Any Bengali story generation benchmark
+    for Bangladesh must be able to evaluate correct, nuanced representation of this
+    event and subsequent political history (1975 coup, 1990 uprising, democratic transitions,
+    and the 2024 July Uprising). The July 2024 student-led uprising that ousted PM
+    Sheikh Hasina after 15 years is now embedded in the cultural and political consciousness
+    of the exact student cohort this deployment targets — it is likely to appear as
+    a narrative context in story generation prompts. The interim government led by
+    Muhammad Yunus, the ''Students Against Discrimination'' movement, the quota reform
+    controversy, and the term ''July 36'' (referring to 5 August 2024) are all live
+    cultural references for Bangladeshi university students as of 2025–2026. Sources:
+    Wikipedia July Revolution — [|https://en.wikipedia.org/wiki/July_Revolution_(Bangladesh)|];
+    EUAA situation update — [|https://www.euaa.europa.eu/news-events/bangladesh-situation-update-one-year-after-students-protests|]'
+  educational_system: 'The Bangladeshi national curriculum (SSC/HSC) and the specific
+    institutions named (Dhaka University, BUET, IUT, DMC, Rajshahi University, SUST,
+    BRAC University) are expected cultural reference points in student-centered story
+    contexts. These are entirely absent from MILU. Note: PEC and JSC sub-secondary
+    examinations are now defunct (last held 2019 and 2024 respectively); SSC and HSC
+    remain the primary national benchmark examinations. Source: Wikipedia Education
+    in Bangladesh — [|https://en.wikipedia.org/wiki/Education_in_Bangladesh|]'
+  religious_and_cultural: 'Islamic cultural context — including vocabulary, observances,
+    and values — is woven into everyday Bangladeshi Bengali. Story generation grounding
+    requires sensitivity to the Islamic cultural register that distinguishes Bangladeshi
+    Bengali from the more Sanskritic West Bengali register. BengaliMoralBench (2025)
+    confirms that Bangladeshi-specific moral and religious contexts (religious activities,
+    daily life, family) are structurally underserved by current multilingual LLMs.
+    Source: arXiv:2511.03180 — [|https://arxiv.org/abs/2511.03180|]'
+  rural_and_environmental: River delta ecology, monsoon seasonality, agricultural
+    life, and boat culture are recurring narrative motifs in Bangladeshi literature.
+    A model that cannot render these contexts authentically will fail on a significant
+    portion of culturally grounded story generation tasks.
+  literary_tradition: Bangladeshi literature has a distinct modern tradition (Humayun
+    Ahmed's novels, Selim Al Deen's drama, the Ekushe Boi Mela literary ecosystem)
+    that is not well represented in Indian competitive exam content. Evaluation of
+    story generation quality requires familiarity with this tradition.
+flagged_verification_priorities:
+- priority: 1
+  item: Whether any MILU Bengali items reference Bangladeshi-specific named entities,
+    institutions, or historical events
+  search_target: MILU Bengali split content analysis Bangladeshi named entities Liberation
+    War SSC HSC
+  resolution_status: NOT SEARCHED — the existing MILU documentation makes the answer
+    structurally clear (all content from Indian exam portals, no Bangladeshi sources
+    mentioned). Direct examination of MILU's Bengali question set would require dataset
+    access, not web search. Treat as confirmed absent pending dataset audit.
+- priority: 2
+  item: Whether the MILU Bengali split uses Bangladeshi Standard Bengali (Cholti)
+    or West Bengali register
+  search_target: Bangladeshi Standard Bengali Cholti register MILU NLP benchmark dialect
+  resolution_status: NOT SEARCHED — the documentation gap is confirmed (MILU does
+    not disclose dialect stratification). Resolving this definitively requires linguistic
+    analysis of MILU's Bengali questions, not web search.
+- priority: 3
+  item: Whether any Bangladeshi Bengali speakers participated in MILU annotation or
+    validation
+  search_target: MILU Bengali annotation annotator demographics Bangladeshi Bengali
+    speaker
+  resolution_status: NOT SEARCHED — MILU documentation confirms exclusively Indian
+    institutional affiliation (AI4Bharat, IIT Madras, IBM Research India); no Bangladeshi
+    annotators are mentioned. Treat as confirmed absent.
+- priority: 4
+  item: Existing Bangladeshi Bengali-specific NLP benchmarks or story generation evaluation
+    frameworks
+  search_target: Bangladesh Bengali NLP benchmark story generation evaluation cultural
+    grounding 2023 2024
+  resolution_status: 'RESOLVED — see net-new section below. Multiple Bangladesh-specific
+    benchmarks now exist: BLUCK (2025), BengaliMoralBench (2025), BanglaSocialBench
+    (2026), BnMMLU (2025). None target open-ended story generation; all use MCQ or
+    binary labeling. See net-new fields for details.'
+- priority: 5
+  item: Current internet and mobile penetration statistics for Bangladesh, particularly
+    urban Dhaka vs. rural
+  search_target: Bangladesh internet penetration mobile usage statistics 2024 Dhaka
+    rural
+  resolution_status: RESOLVED — see infrastructure_notes above. National internet
+    penetration ~44.5% (DataReportal 2024); household internet 50.4% (BBS 2024); urban
+    60.3% vs. rural 46%; mobile internet subscriber count at ~118M peak (end 2023)
+    declined by ~13.2M by January 2025 due to tax increases and July 2024 political
+    disruption.
+- priority: 6
+  item: How MILU frames the 1952 Language Movement — as Indian, pan-Bengali, or Bangladeshi
+    national event
+  search_target: MILU Language Movement 1952 Bengali content Indian framing Bangladeshi
+  resolution_status: NOT SEARCHED — resolving this requires examining MILU's actual
+    Bengali question content, not web search. The structural risk (Indian exam framing)
+    remains confirmed as a gap.
+- priority: 7
+  item: Bangladeshi Bengali NLP resources and tools currently in active use (tokenizers,
+    corpora, language models trained on Bangladeshi Bengali)
+  search_target: Bangladeshi Bengali NLP resources corpus tokenizer language model
+    2024
+  resolution_status: PARTIALLY RESOLVED — see infrastructure_notes and net-new NLP
+    models section. TituLLM, TigerLLM, BanglaGPT, BanglaBERT are current models; Sangraha
+    corpus has ~30B Bengali tokens. Bangladeshi-specific tokenizers or corpora are
+    not separately identified in the literature; models are typically trained on mixed
+    Bengali corpora dominated by West Bengali norms.
+- priority: 8
+  item: Post-2024 political developments in Bangladesh relevant to cultural context
+    of story generation
+  search_target: Bangladesh 2024 political events cultural context student protests
+  resolution_status: 'RESOLVED — see foundational_national_events and domain_specific_notes
+    above. The July 2024 Uprising (July Revolution / Monsoon Revolution), the fall
+    of the Hasina government on 5 August 2024, the interim government under Muhammad
+    Yunus, the ''Students Against Discrimination'' movement, and ongoing constitutional
+    reform process (July Charter, planned 2026 elections) are all highly salient for
+    the target student cohort and likely to appear in story generation prompts. Sources:
+    multiple, cited in-place.'
+net_new_fields:
+  bangladeshi_bengali_nlp_benchmarks:
+    overview: As of 2025–2026, a cluster of Bangladesh-specific Bengali NLP benchmarks
+      has emerged that is directly relevant to this deployment's validity assessment.
+      None targets open-ended story generation, but several provide partial coverage
+      of the cultural and linguistic gaps identified above.
+    benchmarks:
+    - name: BLUCK (Bengali Linguistic Understanding and Cultural Knowledge)
+      year: 2025
+      description: '2,366 MCQs across 23 categories covering Bangladesh''s culture,
+        history, and Bengali linguistics. Sourced from Bangladesh Civil Service (BCS)
+        exams, university entrance exams, bar council, and bank job exams — making
+        it the first MCQ benchmark centered on native Bangladeshi culture, history,
+        and linguistics. Domains include Bangladesh history, Bangladeshi culture,
+        Bengali phonetics, and Bengali semantics. GPT-4o achieves ~73% accuracy (0-shot),
+        approximately 7% below its English performance. All models struggle with Bengali
+        phonetics. Note: MCQ-only; does not address open-ended generation or rural/riverine
+        contexts.'
+      arxiv: arXiv:2505.21092
+      url: '[|https://arxiv.org/abs/2505.21092|]'
+      acl_anthology: '[|https://aclanthology.org/2025.banglalp-1.14/|]'
+      relevance_to_deployment: HIGH — directly addresses the Bangladesh-specific cultural
+        ontology gap in MILU. Sourced from Bangladeshi examinations rather than Indian
+        ones. Can serve as a supplementary cultural knowledge evaluation alongside
+        the story generation assessment.
+    - name: BengaliMoralBench
+      year: 2025
+      description: 3,000 hand-crafted moral dilemmas grounded in everyday Bangladeshi
+        life, covering Daily Activities, Habits, Parenting, Family Relationships,
+        and Religious Activities across 50 subtopics. Annotated via native Bangladeshi
+        speaker consensus using Virtue, Commonsense, and Justice ethics frameworks.
+        52% of instances are country-specific to Bangladesh. Performance varies widely
+        (50–91% accuracy) across evaluated LLMs, with consistent failures in cultural
+        grounding.
+      arxiv: arXiv:2511.03180
+      url: '[|https://arxiv.org/abs/2511.03180|]'
+      relevance_to_deployment: MEDIUM — confirms the Islamic cultural context and
+        Bangladeshi daily-life register gap. The native Bangladeshi annotator methodology
+        is a model for the annotation approach this deployment requires. Does not
+        cover story generation or historical/geographic named entities.
+    - name: BanglaSocialBench
+      year: 2026
+      description: 1,719 culturally grounded instances written and verified by native
+        Bangla speakers, spanning Bangla Address Terms, Kinship Reasoning, and Social
+        Customs. Evaluates sociopragmatic competence in context-dependent language
+        use (not factual recall). Finds that current LLMs 'frequently default to overly
+        formal address forms, fail to recognize multiple socially acceptable address
+        pronouns, and conflate kinship terminology across religious contexts.' Described
+        as the first benchmark for sociopragmatic competence in Bangla.
+      arxiv: arXiv:2603.15949
+      url: '[|https://arxiv.org/abs/2603.15949|]'
+      relevance_to_deployment: HIGH — the three-tiered Bangladeshi pronominal system,
+        kinship-based addressing, and social customs evaluated here are directly relevant
+        to culturally grounded story generation (character dialogue, narrator register,
+        social interaction scenes). The native-speaker-written methodology is the
+        closest existing model for a story generation evaluation rubric.
+    - name: BnMMLU (Bengali Massive Multitask Language Understanding)
+      year: 2025
+      description: A comprehensive multitask Bengali benchmark with 41 subjects sourced
+        from Bangladeshi educational and professional materials (NCTB-approved textbooks,
+        competitive exam guides processed via OCR). Covers STEM, humanities, social
+        sciences, and other domains. Explicitly sources from Bangladeshi materials,
+        distinguishing it from MILU's Indian exam provenance.
+      arxiv: arXiv:2505.18951
+      url: '[|https://arxiv.org/abs/2505.18951|]'
+      relevance_to_deployment: HIGH — provides a Bangladeshi-sourced MMLU-style complement
+        to MILU for factual knowledge evaluation. The Bangladeshi educational materials
+        provenance addresses the core content ontology gap.
+    - name: BEnQA
+      year: 2024
+      description: Official English-Bengali corpus of MCQs sourced from Bangladesh's
+        national board exams, focusing on STEM subjects. Cited in BLUCK as an earlier
+        Bangladeshi-sourced benchmark.
+      relevance_to_deployment: MEDIUM — STEM-only; does not address humanities, culture,
+        or story generation contexts, but confirms that Bangladesh national board
+        exam sourcing is feasible for NLP benchmarks.
+    - name: Bengali Dialectal Bias Benchmark
+      year: 2026
+      description: 4,000-question benchmark across 9 Bengali dialects (including Barishal,
+        Chittagong, Noakhali, Rangpur, Sylhet) for bias evaluation, using a RAG-based
+        translation pipeline and RLAIF-inspired evaluation. Confirms that dialectal
+        variation is systematically underexplored and that standard BLEU/WER metrics
+        fail to capture semantic equivalence in Bengali dialects.
+      arxiv: arXiv:2603.21359
+      url: '[|https://arxiv.org/abs/2603.21359|]'
+      relevance_to_deployment: MEDIUM — directly relevant to the Bangladeshi dialect
+        stratification gap; documents the specific dialects (Barisal, Chittagong,
+        Sylhet, Rangpur, Noakhali) relevant to sub-national story generation contexts.
+    story_generation_gap_confirmed: No existing benchmark evaluates open-ended culturally
+      grounded Bengali story generation. All existing Bangladeshi Bengali benchmarks
+      use MCQ, binary label, or short-answer formats. A purpose-built evaluation rubric
+      is required for this deployment. BanglaSocialBench's native-speaker-written,
+      context-dependent evaluation methodology is the closest methodological precedent.
+  bangladeshi_bengali_llm_models:
+    overview: Several Bangla-specific LLM families exist that may be relevant to the
+      deployment's comparison of frontier vs. regional LLMs.
+    models:
+    - name: TigerLLM
+      year: 2025
+      description: A family of Bangla large language models, presented at ACL 2025.
+        Aggregates diverse Bengali corpora including educational, literary, and QA
+        datasets.
+      reference: Raihan and Zampieri (2025), ACL 2025 Short Papers, arXiv:2503.10995
+        — [|https://arxiv.org/abs/2503.10995|]
+    - name: TituLLM
+      year: 2025
+      description: A family of Bangla LLMs with comprehensive benchmarking, including
+        a TituLM-Bangla MMLU diagnostic. Presented at ACL 2025 Findings.
+      reference: Nahin et al. (2025), ACL 2025 Findings, arXiv:2502.11187 — [|https://arxiv.org/abs/2502.11187|]
+    caveat: Both models are primarily trained on mixed Bengali corpora; whether their
+      training data prioritizes Bangladeshi Standard Bengali over West Bengali norms
+      is not documented in available sources. This ambiguity parallels the MILU register
+      gap and should be investigated before using either as a 'Bangladeshi Bengali-specific'
+      baseline in the thesis.
+  2024_political_context_for_story_generation:
+    summary: 'The July 2024 Uprising (Monsoon Revolution / July Revolution) is now
+      a live cultural reference for the target student cohort and is likely to appear
+      as a story generation context. Key reference points: the quota reform protests
+      (30% job quota for freedom fighters'' descendants), the ''Students Against Discrimination''
+      movement, the events of 5 August 2024, the term ''July 36'' (colloquial reference
+      to 5 August as a day beyond the calendar), the interim government under Muhammad
+      Yunus, and ongoing trials of Sheikh Hasina for crimes against humanity. The
+      uprising has been described as ''the world''s first successful Gen Z revolution.''
+      The political context also includes a resurgence of Islamist politics (Jamaat-e-Islami
+      re-legalization), Bangladesh-India tensions, and an upcoming constitutional
+      referendum. Any story generation evaluation rubric for this deployment should
+      account for the possibility that students include 2024 political events as story
+      contexts, and evaluate whether LLMs can handle this post-training-cutoff material.
+      Sources: Wikipedia July Revolution — [|https://en.wikipedia.org/wiki/July_Revolution_(Bangladesh)|];
+      Chatham House — [|https://www.chathamhouse.org/2025/11/sheikh-hasina-verdict-and-bangladeshs-upcoming-referendum-signal-transitional-moment-south|]'

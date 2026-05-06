@@ -1,0 +1,11 @@
+- name: mrbench
+- full_name: MRBench – Unifying AI Tutor Evaluation: An Evaluation Taxonomy for Pedagogical Ability Assessment of LLM-Powered AI Tutors
+- year: 2025
+- domain: Evaluation of pedagogical abilities of LLM-powered AI tutors in student mistake remediation within the mathematics domain. Assesses whether LLMs effectively provide tutoring through eight pedagogical dimensions based on learning sciences principles.
+- languages: English
+- primary_region: General/Multilingual (no specific regional focus)
+- porting_strategy: none
+- input_modalities: text
+- output_modalities: label, score
+- brief_description: MRBench is an evaluation benchmark containing 192 conversations and 1,596 responses from seven state-of-the-art LLMs and human tutors, annotated across eight pedagogical dimensions (mistake identification, mistake location, revealing of answer, providing guidance, actionability, coherence, tutor tone, human-likeness). The benchmark was derived from two existing public datasets (MathDial and Bridge) and includes human annotations to assess the pedagogical value of AI tutor responses grounded in student mistakes or confusions in mathematics.
+- source_culture: transferred from different cultural context

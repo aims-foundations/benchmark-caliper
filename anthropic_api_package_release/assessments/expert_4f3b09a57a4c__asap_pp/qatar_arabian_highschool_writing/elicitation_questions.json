@@ -1,0 +1,22 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "Does your deployment target students across multiple Arab countries (e.g., Egypt, Saudi Arabia, Jordan, Lebanon), or is it focused on Qatar? If multi-country, do the essay prompts, curricula, and writing conventions differ meaningfully across those countries \u2014 for instance, do Egyptian or Saudi students write to different rhetorical norms or exam formats than Qatari students?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "OC",
+    "question": "When your system gives feedback on traits like 'style,' 'vocabulary,' or 'development,' whose standards should define what counts as correct or high-quality? For example, would a student in Jordan writing in Levantine-influenced Modern Standard Arabic be judged by the same norms as a Qatari student? Are there local curriculum bodies or teacher communities in each target country whose scoring conventions differ from one another?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OO",
+    "question": "Your system gives formative feedback on drafts \u2014 not just a final score. Does the system need to produce actionable revision suggestions (e.g., 'your introduction lacks a clear thesis') rather than numeric trait scores, or is a scored rubric sufficient for students to act on? Would students in your target schools find trait-level scores self-explanatory, or do they need natural-language explanations of why they lost points on, say, 'mechanics' or 'organization'?"
+  },
+  {
+    "id": "Q4",
+    "dimension": "IC",
+    "question": "Do the essay prompts your students write to (their actual assignments) resemble the types of prompts likely covered by the benchmark under assessment \u2014 e.g., argumentative, expository, narrative \u2014 or do they include genres like literary analysis, religious texts, or cultural commentary that might require different evaluative knowledge?"
+  }
+]

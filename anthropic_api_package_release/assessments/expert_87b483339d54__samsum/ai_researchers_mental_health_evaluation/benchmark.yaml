@@ -1,0 +1,808 @@
+name: samsum
+full_name: 'SAMSum Corpus: A Human-annotated Dialogue Dataset for Abstractive Summarization'
+source_url: https://huggingface.co/datasets/samsum
+paper_url: https://arxiv.org/abs/1911.12237
+year: 2019
+domain: Abstractive dialogue summarization
+porting_strategy: none
+languages:
+- en
+primary_region: Europe (Poland) / Global North
+description: 'The SAMSum Corpus is a benchmark dataset containing over 16,000 English messenger-style
+
+  chat dialogues manually created and annotated by Polish linguists affiliated with Samsung
+
+  R&D Institute Poland. Each dialogue is paired with a single human-authored abstractive
+
+  summary. The benchmark was created to address the absence of a comprehensive dialogue
+
+  summarization dataset analogous to CNN/Daily Mail for news, and it evaluates models using
+
+  ROUGE metrics (R-1, R-2, R-L F1) supplemented by human quality ratings. A central finding
+
+  of the benchmark paper is that ROUGE scores are unreliable for dialogue summarization: models
+
+  achieving high ROUGE scores on dialogues are rated as lower quality than news summaries by
+
+  human evaluators. The corpus covers informal everyday topics (chit-chat, gossip, meeting
+
+  arrangements, political discussion) and is explicitly designed for general NLP research
+
+  rather than any clinical or domain-specific application.
+
+  '
+documentation_excerpts: '## Key characteristics relevant to validity analysis
+
+
+  ### 1. Input Ontology
+
+  The benchmark''s task taxonomy is anchored in **abstractive dialogue summarization** of
+
+  informal messenger-style conversations, explicitly positioned against single-speaker document
+
+  summarization of news articles and scientific publications [Q7]. The authors identify the
+
+  benchmark''s target dialogue types as chit-chats, gossip, meeting arrangements, political
+
+  discussion, and university assignment consultation [Q20], referencing mainstream consumer
+
+  messaging platforms (Messenger, WhatsApp, WeChat [Q12]) as the genre inspiration. Prior
+
+  dialogue summarization work cited (AMI meeting corpus [Q10]) is similarly domain-agnostic.
+
+  Evaluated architectures — Pointer Generator, Transformer, Fast Abs RL variants, LightConv,
+
+  DynamicConv [Q44] — are generic NLP models with no clinical or domain-specialized components.
+
+  The benchmark paper frames its contribution as "a step towards abstractive summarization of
+
+  dialogues" through dataset introduction and comparison with news summarization [Q61], and
+
+  its concluding summary confirms this general-purpose positioning [Q70].
+
+
+  From the perspective of South Asian and MENA clinical NLP deployment, the input ontology
+
+  constitutes a **full gap**: there are no task categories corresponding to counseling session
+
+  components (CBT structure, psychoeducation, symptom elicitation), and no representation of
+
+  culturally specific counseling constructs such as izzat, family-mediated help-seeking,
+
+  stigma-driven non-disclosure, religious or fatalistic framing of distress, or intergenerational
+
+  conflict dynamics. The lack of a baseline for the dialogue summarization task [Q38] further
+
+  underscores that the ontology was constructed without reference to any existing clinical
+
+  taxonomy.
+
+
+  ### 2. Input Content
+
+  The concrete dialogue instances were **synthetically constructed** by linguists fluent in
+
+  English at Samsung R&D Institute Poland [Q17], who were asked to create conversations similar
+
+  to those they write on a daily basis, reflecting the proportion of topics in their real-life
+
+  messenger conversations [Q19]. Each dialogue was authored by a single person [Q22], and the
+
+  dataset contains no sensitive data or fragments drawn from real conversations [Q21]. The
+
+  corpus comprises 16,369 conversations [Q32], approximately 75% of which are two-party
+
+  dialogues, with the remainder involving three or more interlocutors [Q34]. In order to
+
+  build dialogue summarization models, authors additionally trained on CNN/Daily Mail data
+
+  joined with SAMSum [Q40], grounding the content further in a news-adjacent paradigm.
+
+
+  For the target deployment context, this construction methodology is a **high-priority validity
+
+  concern**: the dialogue instances reflect the lived communication norms, topic distributions,
+
+  and help-seeking language of a European Polish-speaking linguist population. They do not contain
+
+  Arabic discourse patterns, Urdu or Hindi code-switching conventions, expressions of distress
+
+  mediated by concepts of izzat or namus, religious framing (tawakkul, qadar), or the indirect
+
+  communication styles characteristic of stigma-mediated help-seeking in South Asian and MENA
+
+  contexts. The synthetic origin also means there is no ecological validity for counseling use:
+
+  dialogues were not drawn from real clinical sessions, peer support forums, or mental health
+
+  helpline transcripts from any population.
+
+
+  ### 3. Input Form
+
+  The benchmark uses **plain text** exclusively, structured as turn-by-turn dialogues with each
+
+  utterance attributed to a named speaker separated by a colon [Q29], with each utterance on
+
+  a separate line [Q33]. The register is diversified — informal, semi-formal, and formal — and
+
+  may include slang, emoticons, and typos [Q18]. A semi-automatic cleaning process normalized
+
+  structural deviations and speaker name typos using Levenshtein distance [Q28, Q30, Q35].
+
+  Experimental preprocessing added utterance separator tokens (e.g., `<EOU>` or `|`) to mark
+
+  turn boundaries [Q41] and interlocutor name annotations at utterance ends [Q46]. Inputs
+
+  and summaries were truncated to 400 and 100 tokens respectively [Q42], with generated summary
+
+  length unconstrained [Q43]. Speaker attribution structure was shown to benefit models [Q65, Q66].
+
+
+  The text-only format partially aligns with the deployment context''s text-based pipeline.
+
+  However, all formatting conventions, preprocessing, tokenization decisions, and length
+
+  calibrations assume English plain text. There is no provision for Arabic right-to-left
+
+  formatting, Urdu Nastaliq or Devanagari script, morphologically rich non-Latin languages,
+
+  or cross-lingual input structures. The dataset split sizes are documented in Table 1 [Q36]
+
+  but exact train/dev/test token distributions across conversation lengths are not reproduced
+
+  in the registry. This represents a **partial infrastructure mismatch** for multilingual
+
+  South Asian and MENA deployment pipelines.
+
+
+  ### 4. Output Ontology
+
+  The label schema pairs each dialogue with exactly **one reference summary** [Q24], authored
+
+  according to a four-point style guide: summaries should be short, extract important information,
+
+  name interlocutors, and be written in the third person [Q23]. This implicit salience taxonomy
+
+  reflects generic messenger conversation summarization norms. No sub-categories of output
+
+  label are defined (e.g., action items, risk indicators, emotional content, therapeutic
+
+  interventions). Models are evaluated by automated ROUGE metrics [Q47] and a three-point
+
+  human rating scale [Q48], with moderate inter-annotator agreement (Cohen''s kappa 0.506 for
+
+  dialogues [Q51]).
+
+
+  From the standpoint of clinical and culturally adapted evaluation, the output ontology
+
+  constitutes a **full gap** for both South Asian and MENA deployment. The scoring taxonomy
+
+  does not distinguish between clinical summarization dimensions (symptom identification, CBT
+
+  formulation, safety risk, therapeutic alliance), nor does it provide scoring categories for
+
+  region-specific counseling outputs — such as religious reframing, family-mediated resolution
+
+  plans, or stigma-sensitive omissions. The single-reference design forecloses any representation
+
+  of how regional practitioners with different clinical norms might weight information differently.
+
+  The stated need for "non-standard quality measures" for dialogue summarization [Q4, Q74]
+
+  applies a fortiori to cross-cultural clinical deployment, where the mismatch between embedded
+
+  salience criteria and regional practitioner judgments is both more severe and less documented.
+
+
+  ### 5. Output Content
+
+  Summaries were authored by the same **language experts (linguists)** who created the dialogues
+
+  [Q23], creating a circularity between data generation and ground-truth labeling. Annotation
+
+  validation asked two linguists to doubly annotate 50 conversations; 94% passed the quality
+
+  check [Q25, Q26]. Human evaluation of model outputs involved two linguists rating on a −1/0/1
+
+  scale [Q48], with conflicting annotations (4 for dialogues) resolved by a third annotator
+
+  [Q49]. Inter-annotator agreement was Cohen''s kappa 0.506 for dialogues and 0.371 for news
+
+  [Q51]. The acknowledgments credit four contributors — Tunia Błachno, Oliwia Ebebenge,
+
+  Monika Jędras, and Małgorzata Krawentek [Q75] — whose names are consistent with a Polish
+
+  or Central European background.
+
+
+  **Annotator demographics are not reported in the paper.** Nationalities, cultural backgrounds,
+
+  clinical training levels, and regional expertise are undisclosed. For the target deployment
+
+  context, this opacity is a high-priority finding: the salience judgments embedded in reference
+
+  summaries — what counts as an important conversational event, whose action matters, what
+
+  information is omissible — are culturally situated. Without demographic transparency, it is
+
+  impossible to assess the degree of norm divergence between the annotator pool and South Asian
+
+  or MENA mental health practitioners. The user''s elicitation confirmed that annotators were
+
+  not specifically briefed on regional context when validating summaries, and that their
+
+  judgments likely reflect generic CBT protocols rather than consciously incorporating regional
+
+  clinical norms. This divergence risk is real but of uncertain magnitude given the absence of
+
+  a regional breakdown of the annotation pool.
+
+
+  ### 6. Output Form
+
+  The benchmark evaluates model outputs using **ROUGE** (R-1, R-2, R-L F1 with stemming [Q47])
+
+  as its primary automated metric, supplemented by manual human ratings [Q48, Q53]. A central
+
+  documented finding is that ROUGE scores are **misleading for dialogue summarization**: models
+
+  achieving higher ROUGE scores on dialogues than on news are consistently rated as lower quality
+
+  by human evaluators [Q3, Q63, Q67, Q68]. The authors measure Pearson''s correlation between
+
+  ROUGE and human ratings and find the correspondence substantially stronger for news than for
+
+  dialogues [Q55]. The benchmark paper explicitly calls for a new dedicated metric for
+
+  abstractive dialogue summarization [Q69, Q74] but proposes no alternative within the
+
+  benchmark itself. Most summarization tools and metrics were developed for single-speaker
+
+  documents and are not necessarily the best choice for multi-speaker conversations [Q62].
+
+
+  For the target deployment context, this represents a **full and high-priority gap**:
+
+  ROUGE and BERTScore are English-reference-dependent metrics that provide no valid signal
+
+  for Arabic, Hindi, Urdu, Farsi, or Dari system outputs. The deployment elicitation confirmed
+
+  that users would need entirely separate multilingual evaluation infrastructure — including
+
+  target-language reference summaries that this benchmark does not provide — to evaluate
+
+  non-English systems. The metric validity problem documented by the authors for English
+
+  dialogue summarization is thus further compounded in cross-lingual clinical deployment,
+
+  where both the dialogue-summarization unreliability of ROUGE and its complete inapplicability
+
+  to non-English outputs interact to render the benchmark''s output form misaligned with the
+
+  multilingual deployment need.
+
+  '
+verbatim_quotes:
+- id: Q1
+  page: 1
+  dimension: input_content
+  text: This paper introduces the SAMSum Corpus, a new dataset with abstractive dialogue summaries.
+- id: Q2
+  page: 1
+  dimension: input_ontology
+  text: We investigate the challenges it poses for automated summarization by testing several models and comparing their results
+    with those obtained on a corpus of news articles.
+- id: Q3
+  page: 1
+  dimension: output_form
+  text: We show that model-generated summaries of dialogues achieve higher ROUGE scores than the model-generated summaries
+    of news – in contrast with human evaluators' judgement.
+- id: Q4
+  page: 1
+  dimension: output_form
+  text: This suggests that a challenging task of abstractive dialogue summarization requires dedicated models and non-standard
+    quality measures.
+- id: Q5
+  page: 1
+  dimension: input_content
+  text: To our knowledge, our study is the first attempt to introduce a high-quality chat-dialogues corpus, manually annotated
+    with abstractive summarizations, which can be used by the research community for further studies.
+- id: Q6
+  page: 1
+  dimension: input_ontology
+  text: In the abstractive approach important pieces of information are presented using words and phrases not necessarily
+    appearing in the source text.
+- id: Q7
+  page: 1
+  dimension: input_ontology
+  text: Major research efforts have focused so far on summarization of single-speaker documents like news (e.g., Nallapati
+    et al. (2016)) or scientific publications (e.g., Nikolov et al. (2018)).
+- id: Q8
+  page: 1
+  dimension: input_content
+  text: One of the reasons is the availability of large, high-quality news datasets with annotated summaries, e.g., CNN/Daily
+    Mail (Hermann et al., 2015; Nallapati et al., 2016).
+- id: Q9
+  page: 1
+  dimension: input_ontology
+  text: Such a comprehensive dataset for dialogues is lacking.
+- id: Q10
+  page: 1
+  dimension: input_ontology
+  text: The challenges posed by the abstractive dialogue summarization task have been discussed in the literature with regard
+    to AMI meeting corpus (McCowan et al., 2005), e.g. Banerjee et al. (2015), Mehdad et al. (2014), Goo and Chen (2018).
+- id: Q11
+  page: 1
+  dimension: input_ontology
+  text: Since the corpus has a low number of summaries (for 141 dialogues), Goo and Chen (2018) proposed to use assigned topic
+    descriptions as gold references.
+- id: Q12
+  page: 1
+  dimension: input_ontology
+  text: With the growing popularity of online conversations via applications like Messenger, WhatsApp and WeChat, summarization
+    of chats between a few participants is a new interesting direction of summarization research.
+- id: Q13
+  page: 1
+  dimension: input_content
+  text: For this purpose we have created the SAMSum Corpus which contains over 16k chat dialogues with manually annotated
+    summaries.
+- id: Q14
+  page: 1
+  dimension: input_content
+  text: The dataset is freely available for the research community.
+- id: Q15
+  page: 1
+  dimension: output_content
+  text: Bogdan Gliwa, Iwona Mochol, Maciej Biesek, Aleksander Wawer
+- id: Q16
+  page: 1
+  dimension: output_content
+  text: Samsung R&D Institute Poland
+- id: Q17
+  page: 2
+  dimension: input_content
+  text: Our dialogue summarization dataset contains natural messenger-like conversations created and written down by linguists
+    fluent in English.
+- id: Q18
+  page: 2
+  dimension: input_form
+  text: The style and register of conversations are diversified – dialogues could be informal, semi-formal or formal, they
+    may contain slang phrases, emoticons and typos.
+- id: Q19
+  page: 2
+  dimension: input_content
+  text: We asked linguists to create conversations similar to those they write on a daily basis, reflecting the proportion
+    of topics of their real-life messenger conversations.
+- id: Q20
+  page: 2
+  dimension: input_ontology
+  text: It includes chit-chats, gossiping about friends, arranging meetings, discussing politics, consulting university assignments
+    with colleagues, etc.
+- id: Q21
+  page: 2
+  dimension: input_content
+  text: Therefore, this dataset does not contain any sensitive data or fragments of other corpora.
+- id: Q22
+  page: 2
+  dimension: input_content
+  text: Each dialogue was created by one person.
+- id: Q23
+  page: 2
+  dimension: output_ontology
+  text: After collecting all of the conversations, we asked language experts to annotate them with summaries, assuming that
+    they should (1) be rather short, (2) extract important pieces of information, (3) include names of interlocutors, (4)
+    be written in the third person.
+- id: Q24
+  page: 2
+  dimension: output_ontology
+  text: Each dialogue contains only one reference summary.
+- id: Q25
+  page: 2
+  dimension: output_content
+  text: We asked two linguists to doubly annotate 50 conversations in order to verify whether the dialogues could appear in
+    a messenger app and could be summarized (i.e. a dialogue is not too general or unintelligible) or not (e.g. a dialogue
+    between two people in a shop).
+- id: Q26
+  page: 2
+  dimension: output_content
+  text: The results revealed that 94% of examined dialogues were classified by both annotators as good i.e. they do look like
+    conversations from a messenger app and could be condensed in a reasonable way.
+- id: Q27
+  page: 2
+  dimension: output_content
+  text: In a similar validation task, conducted for the existing dialogue-type datasets (described in the Initial approach
+    section), the annotators agreed that only 28% of the dialogues resembled conversations from a messenger app.
+- id: Q28
+  page: 2
+  dimension: input_form
+  text: After preparing the dataset, we conducted a process of cleaning it in a semi-automatic way.
+- id: Q29
+  page: 2
+  dimension: input_form
+  text: 'Beforehand, we specified a format for written dialogues with summaries: a colon should separate an author of utterance
+    from its content, each utterance is expected to be in a separate line.'
+- id: Q30
+  page: 2
+  dimension: input_form
+  text: Therefore, we could easily find all deviations from the agreed structure – some of them could be automatically fixed
+    (e.g. when instead of a colon, someone used a semicolon right after the interlocutor's name at the beginning of an utterance),
+    others were passed for verification to linguists.
+- id: Q31
+  page: 2
+  dimension: input_form
+  text: We also tried to correct typos in interlocutors' names (if one person has several utter-
+- id: Q32
+  page: 3
+  dimension: input_content
+  text: 'The created dataset is made of 16369 conversations distributed uniformly into 4 groups based on the number of utterances
+    in conversations: 3-6, 7-12, 13-18 and 19-30.'
+- id: Q33
+  page: 3
+  dimension: input_form
+  text: Each utterance contains the name of the speaker.
+- id: Q34
+  page: 3
+  dimension: input_content
+  text: Most conversations consist of dialogues between two interlocutors (about 75% of all conversations), the rest is between
+    three or more people.
+- id: Q35
+  page: 3
+  dimension: output_content
+  text: we used the Levenshtein distance to find very similar names (possibly with typos e.g. 'George' and 'Goerge') in a
+    single conversation, and those cases with very similar names were passed to linguists for verification.
+- id: Q36
+  page: 3
+  dimension: input_form
+  text: Table 1 presents the size of the dataset split used in our experiments.
+- id: Q37
+  page: 3
+  dimension: output_form
+  text: Results of the evaluation of the above models are reported in Table 3.
+- id: Q38
+  page: 3
+  dimension: input_ontology
+  text: There is no obvious baseline for the task of dialogues summarization.
+- id: Q39
+  page: 3
+  dimension: input_ontology
+  text: We expected rather low results for Lead-3, as the beginnings of the conversations usually contain greetings, not the
+    main part of the discourse.
+- id: Q40
+  page: 4
+  dimension: input_content
+  text: 'In order to build a dialogue summarization model, we adopt the following strategies: (1) each candidate architecture
+    is trained and evaluated on the dialogue dataset; (2) each architecture is trained on the train set of CNN/Daily Mail
+    joined together with the train set of the dialogue data, and evaluated on the dialogue test set.'
+- id: Q41
+  page: 4
+  dimension: input_form
+  text: In addition, we prepare a version of dialogue data, in which utterances are separated with a special token called
+    the separator (artificially added token e.g. '<EOU>' for models using word embeddings, '|' for models using subword embeddings).
+- id: Q42
+  page: 4
+  dimension: input_form
+  text: In all our experiments, news and dialogues are truncated to 400 tokens, and summaries – to 100 tokens.
+- id: Q43
+  page: 4
+  dimension: input_form
+  text: The maximum length of generated summaries was not limited.
+- id: Q44
+  page: 4
+  dimension: input_ontology
+  text: 'We carry out experiments with the following summarization models (for all architectures we set the beam size for
+    beam search decoding to 5): Pointer generator network, Transformer, Fast Abs RL, Fast Abs RL Enhanced, LightConv and DynamicConv.'
+- id: Q45
+  page: 4
+  dimension: input_form
+  text: For dialogues, we change the convolutional word-level sentence encoder (used in extractor part) to only use kernel
+    with size equal 3 instead of 3-5 range. It is caused by the fact that some of utterances are very short and the default
+    setting is unable to handle that.
+- id: Q46
+  page: 4
+  dimension: input_form
+  text: The additional variant of the Fast Abs RL model with slightly changed utterances i.e. to each utterance, at the end,
+    after artificial separator, we add names of all other interlocutors.
+- id: Q47
+  page: 4
+  dimension: output_form
+  text: We evaluate models with the standard ROUGE metric (Lin, 2004), reporting the F1 scores (with stemming) for ROUGE-1,
+    ROUGE-2 and ROUGE-L following previous works (Chen and Bansal, 2018; See et al., 2017).
+- id: Q48
+  page: 5
+  dimension: output_form
+  text: We asked two linguists to mark the quality of every summary on the scale of −1, 0, 1, where −1 means that a summarization
+    is poor, extracts irrelevant information or does not make sense at all, 1 – it is understandable and gives a brief overview
+    of the text, and 0 stands for a summarization that extracts only a part of relevant information, or makes some mistakes
+    in the produced summary.
+- id: Q49
+  page: 5
+  dimension: output_content
+  text: We noticed a few annotations (7 for news and 4 for dialogues) with opposite marks (i.e. one annotator judgement was
+    −1, whereas the second one was 1) and decided to have them annotated once again by another annotator who had to resolve
+    conflicts.
+- id: Q50
+  page: 5
+  dimension: output_form
+  text: For the rest, we calculated the linear weighted Cohen's kappa coefficient (McHugh, 2012) between annotators' scores.
+- id: Q51
+  page: 5
+  dimension: output_content
+  text: For news examples, we obtained agreement on the level of 0.371 and for dialogues – 0.506.
+- id: Q52
+  page: 5
+  dimension: output_content
+  text: The annotators' agreement is higher on dialogues than on news, probably because of structures of those data – articles
+    are often long and it is difficult to decide what the key-point of the text is; dialogues, on the contrary, are rather
+    short and focused mainly on one topic.
+- id: Q53
+  page: 5
+  dimension: output_form
+  text: For manually evaluated samples, we calculated ROUGE metrics and the mean of two human ratings; the prepared statistics
+    is presented in Table 6.
+- id: Q54
+  page: 5
+  dimension: output_form
+  text: Models generating dialogue summaries can obtain high ROUGE results, but their outputs are marked as poor by human
+    annotators.
+- id: Q55
+  page: 5
+  dimension: output_form
+  text: Our conclusion is that the ROUGE metric corresponds with the quality of generated summaries for news much better than
+    for dialogues, confirmed by Pearson's correlation between human evaluation and the ROUGE metric.
+- id: Q56
+  page: 6
+  dimension: input_ontology
+  text: In a structured text, such as a news article, the information flow is very clear. However, in a dialogue, which contains
+    discussions (e.g. when people try to agree on a date of a meeting), questions (one person asks about something and the
+    answer may appear a few utterances later) and greetings, most important pieces of information are scattered across the
+    utterances of different speakers.
+- id: Q57
+  page: 6
+  dimension: input_form
+  text: What is more, articles are written in the third-person point of view, but in a chat everyone talks about themselves,
+    using a variety of pronouns, which further complicates the structure.
+- id: Q58
+  page: 6
+  dimension: input_form
+  text: Additionally, people talking on messengers often are in a hurry, so they shorten words, use the slang phrases (e.g.
+    'u r gr8' means 'you are great') and make typos. These phenomena increase the difficulty of performing dialogue summarization.
+- id: Q59
+  page: 6
+  dimension: output_content
+  text: 'Firstly, the models frequently have difficulties in associating names with actions, often repeating the same name,
+    e.g., for Dialogue 1 in Table 8, Fast Abs RL generates the following summary: ''lilly and lilly are going to eat salmon''.'
+- id: Q60
+  page: 6
+  dimension: input_form
+  text: To help the model deal with names, the utterances are enhanced by adding information about the other interlocutors
+    – Fast Abs RL enhanced variant de-
+- id: Q61
+  page: 7
+  dimension: input_ontology
+  text: This paper is a step towards abstractive summarization of dialogues by (1) introducing a new dataset, created for
+    this task, (2) comparison with news summarization by the means of automated (ROUGE) and human evaluation.
+- id: Q62
+  page: 7
+  dimension: output_form
+  text: Most of the tools and the metrics measuring the quality of text summarization have been developed for a single-speaker
+    document, such as news; as such, they are not necessarily the best choice for conversations with several speakers.
+- id: Q63
+  page: 7
+  dimension: output_form
+  text: In terms of human evaluation, the results of dialogues summarization are worse than the results of news summarization.
+- id: Q64
+  page: 7
+  dimension: input_ontology
+  text: This is connected with the fact that the dialogue structure is more complex – information is spread in multiple utterances,
+    discussions, questions, more typos and slang words appear there, posing new challenges for summarization.
+- id: Q65
+  page: 7
+  dimension: input_form
+  text: On the other hand, dialogues are divided into utterances, and for each utterance its author is assigned.
+- id: Q66
+  page: 7
+  dimension: input_form
+  text: We demonstrate in experiments that the models benefit from the introduction of separators, which mark utterances for
+    each person.
+- id: Q67
+  page: 8
+  dimension: output_form
+  text: We show that the most popular summarization metric ROUGE does not reflect the quality of a summary.
+- id: Q68
+  page: 8
+  dimension: output_form
+  text: We performed an independent, manual analysis of summaries and we demonstrated that high ROUGE results, obtained for
+    automatically-generated dialogue summaries, correspond with lower evaluation marks given by human annotators.
+- id: Q69
+  page: 8
+  dimension: output_form
+  text: We conclude that when measuring the quality of model-generated summaries, the ROUGE metrics are more indicative for
+    news than for dialogues, and a new metric should be designed to measure the quality of abstractive dialogue summaries.
+- id: Q70
+  page: 8
+  dimension: input_ontology
+  text: In our paper we have studied the challenges of abstractive dialogue summarization.
+- id: Q71
+  page: 8
+  dimension: input_content
+  text: To the best of our knowledge, this is the first attempt to create a comprehensive resource of this type which can
+    be used in future research.
+- id: Q72
+  page: 8
+  dimension: input_ontology
+  text: The next step could be creating an even more challenging dataset with longer dialogues that not only cover one topic,
+    but span over
+- id: Q73
+  page: 9
+  dimension: output_form
+  text: As shown, summarization of dialogues is much more challenging than of news.
+- id: Q74
+  page: 9
+  dimension: output_form
+  text: In order to perform well, it may require designing dedicated tools, but also new, non-standard measures to capture
+    the quality of abstractive dialogue summaries in a relevant way.
+- id: Q75
+  page: 9
+  dimension: output_content
+  text: We would like to express our sincere thanks to Tunia Błachno, Oliwia Ebebenge, Monika Jędras and Małgorzata Krawentek
+    for their huge contribution to the corpus collection – without their ideas, management of the linguistic task and verification
+    of examples we would not be able to create this paper.
+coverage_strengths:
+- user_priority: Generic clinical summarization structure as baseline across regions
+  benchmark_coverage: 'The benchmark''s four-point summary style guide (short, information-extractive,
+
+    interlocutor-naming, third-person [Q23]) provides a minimal but transferable
+
+    output convention that partially aligns with clinical documentation norms around
+
+    brevity and attribution — the user confirmed generic CBT-aligned clinical structure
+
+    transfers reasonably across regions as a baseline.
+
+    '
+  dimension: output_ontology
+- user_priority: Text-only pipeline compatibility
+  benchmark_coverage: 'Both the benchmark and the deployment context operate as text-only systems.
+
+    The structured turn-by-turn plain-text format with speaker attribution [Q29, Q33]
+
+    is compatible with standard NLP preprocessing pipelines and requires no
+
+    multimodal infrastructure.
+
+    '
+  dimension: input_form
+- user_priority: Multi-party dialogue structure relevant to counseling sessions
+  benchmark_coverage: 'Approximately 25% of the corpus involves three or more interlocutors [Q34], and
+
+    the benchmark explicitly documents modeling challenges arising from information
+
+    scattered across multiple speakers [Q56], pronoun ambiguity [Q57], and the
+
+    benefit of speaker-turn separators [Q65, Q66] — structural features that overlap
+
+    with multi-party clinical session dynamics.
+
+    '
+  dimension: input_form
+- user_priority: Documented metric validity concerns flagged for downstream users
+  benchmark_coverage: 'The paper explicitly documents that ROUGE is unreliable for dialogue summarization
+
+    [Q3, Q54, Q55, Q67, Q68, Q69] and calls for dedicated metrics [Q4, Q74], providing
+
+    downstream users with documented grounds for supplementing or replacing ROUGE with
+
+    alternative evaluation methods when adapting the benchmark to clinical or multilingual
+
+    contexts.
+
+    '
+  dimension: output_form
+coverage_gap_analysis:
+- user_priority: Counseling ontology with region-specific components (stigma, izzat, religious framing)
+  benchmark_coverage: 'NOT DOCUMENTED — task categories cover only informal everyday messenger topics
+
+    (chit-chat, gossip, meeting arrangements, political discussion [Q20]). No
+
+    counseling session structure, clinical communication acts, or culturally specific
+
+    constructs (izzat, tawakkul, purdah, intergenerational obligation) appear anywhere
+
+    in the benchmark''s taxonomy.
+
+    '
+  gap_type: full
+  web_search_target: South Asian mental health NLP dataset counseling dialogue benchmark Hindi Urdu stigma
+- user_priority: Arabic-language counseling discourse instances
+  benchmark_coverage: 'NOT DOCUMENTED — all dialogues are English, synthetically authored by Polish
+
+    linguists [Q17]. No Arabic-language dialogue instances, Arabic reference summaries,
+
+    or Arabic preprocessing pipelines are present.
+
+    '
+  gap_type: full
+  web_search_target: Arabic clinical dialogue summarization benchmark mental health NLP dataset
+- user_priority: Urdu, Hindi, Farsi, and Dari clinical NLP reference data
+  benchmark_coverage: 'NOT DOCUMENTED — the benchmark is monolingual English throughout. No South Asian
+
+    or Central/West Asian language data, reference summaries, or cross-lingual
+
+    evaluation provisions exist.
+
+    '
+  gap_type: full
+  web_search_target: Urdu Hindi Farsi Dari clinical NLP mental health dialogue dataset summarization
+- user_priority: MENA-specific counseling norms in annotator pools
+  benchmark_coverage: 'NOT DOCUMENTED — annotator demographics are entirely undisclosed [Q15, Q16, Q75].
+
+    The paper reports no nationality, cultural background, or clinical training
+
+    information for any annotator or dialogue author. Acknowledgments name contributors
+
+    consistent with Polish or Central European backgrounds only [Q75].
+
+    '
+  gap_type: full
+  web_search_target: cultural annotator bias clinical summarization benchmark MENA Middle East mental health NLP
+- user_priority: South Asian counseling ontology (izzat, purdah, joint-family conflict, stigma-mediated help-seeking)
+  benchmark_coverage: 'NOT DOCUMENTED — dialogue topics are limited to everyday informal messenger
+
+    communication norms of the Polish linguist authors [Q19]. None of the documented
+
+    topic categories [Q20] intersect with South Asian clinical counseling constructs.
+
+    '
+  gap_type: full
+  web_search_target: South Asian counseling AI evaluation izzat stigma mental health India Pakistan NLP benchmark
+- user_priority: Religious and fatalistic framing of distress in MENA contexts
+  benchmark_coverage: 'NOT DOCUMENTED — benchmark dialogues reflect secular, consumer-messaging
+
+    communication norms with no representation of Islamic framing of distress,
+
+    tawakkul, fatalistic distress narratives, or religiously mediated help-seeking.
+
+    '
+  gap_type: full
+  web_search_target: Islamic framing mental health Arabic counseling NLP fatalism distress dialogue dataset
+- user_priority: Sub-national variation within South Asia (India, Pakistan, Bangladesh, Afghanistan)
+  benchmark_coverage: 'NOT DOCUMENTED — the benchmark has no regional granularity whatsoever; even
+
+    at the country level no South Asian data is present, making sub-national
+
+    distinctions completely out of scope.
+
+    '
+  gap_type: full
+  web_search_target: sub-national clinical NLP benchmark India Pakistan Bangladesh Afghanistan mental health dialogue
+- user_priority: Evaluation metrics valid for non-English output (Arabic, Hindi, Urdu BERTScore)
+  benchmark_coverage: 'The benchmark uses only English-reference ROUGE and human ratings [Q47, Q48].
+
+    The paper itself documents that ROUGE is unreliable even for English dialogue
+
+    summarization [Q67, Q69]; for non-English outputs it provides no valid signal
+
+    at all. Cross-lingual BERTScore variants are not discussed or provided.
+
+    '
+  gap_type: full
+  web_search_target: Arabic BERTScore clinical summarization evaluation Hindi Urdu cross-lingual metric mental health NLP
+- user_priority: Annotator salience norms aligned with regional mental health practitioner judgments
+  benchmark_coverage: 'The single-reference design [Q24] and undisclosed annotator demographics [Q75]
+
+    mean reference summaries embed unarticulated salience norms of a likely-European
+
+    linguist pool. The user confirmed annotators were not briefed on regional clinical
+
+    context, and divergence from South Asian and MENA practitioner judgments is a
+
+    real but unquantified risk. No secondary annotation by regional practitioners
+
+    is documented.
+
+    '
+  gap_type: full
+  web_search_target: cultural salience annotation clinical summarization replication study mental health practitioner South
+    Asia MENA

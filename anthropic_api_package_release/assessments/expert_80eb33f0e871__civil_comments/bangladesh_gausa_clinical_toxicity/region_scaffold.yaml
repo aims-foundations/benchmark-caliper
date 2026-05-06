@@ -1,0 +1,349 @@
+name: Gazipur Peri-Urban Low-Literacy Health Chatbot Users (Bangladesh)
+abbreviation: GAZ-BD-HEALTH
+deployment_context:
+  country: Bangladesh
+  sub_national_unit: Gazipur District, Dhaka Division
+  settlement_type: Peri-urban / industrial (garment and manufacturing belt north of
+    Dhaka metropolitan area)
+  deployment_system: Patient-centric clinical chatbot with content moderation layer
+    for toxicity detection and blocking
+  interaction_modality: Text-based chat; no documented voice/speech interface
+  user_role: Patients and health-information seekers interacting with a clinical chatbot
+    in a low-resource, mobile-first environment
+population_description: Low-literacy peri-urban residents of Gazipur, Bangladesh —
+  predominantly garment-industry and manufacturing workers — who use a clinical chat
+  assistant for health guidance. Interaction patterns are characterized by irregular
+  orthography, absent punctuation, phonetic spelling approximations, and frequent
+  code-switching between Bangla and English (Banglish). The population includes both
+  ordinary users and potential adversarial actors who operate in the same degraded-text
+  register, making clean separation of benign and adversarial input impossible at
+  the form level.
+languages:
+  primary: Bangla (Bengali)
+  varieties_and_registers:
+  - Standard Bangla (Shuddo Bangla) — unlikely to be dominant for this population
+  - Colloquial Dhaka-region Bangla
+  - Banglish — Bangla lexicon written in Roman/Latin script
+  - Phonetic ASCII approximation of Bangla (e.g., 'apni ki thik achen' rendered without
+    diacritics or consistent romanization convention)
+  - Code-switched Bangla-English with variable English borrowing (medical terms, product
+    names)
+  - Gazipur/Dhaka-region dialect features
+  minority_languages_present:
+  - Sylheti (speakers migrated for garment work) — [NEEDS VERIFICATION]
+  - Chittagonian (speakers migrated for garment work) — [NEEDS VERIFICATION]
+  note: No single standard orthography governs Banglish or phonetic ASCII Bangla;
+    individual users apply idiosyncratic romanization. Code-switching density and
+    English-borrowing rates vary by user education level and workplace exposure.
+writing_systems:
+  scripts_in_use:
+  - Bengali script (Unicode block U+0980–U+09FF) — formal/educated register
+  - Latin/Roman script — Banglish and phonetic approximations
+  - Mixed Bengali-Latin within single messages
+  orthographic_degradation_patterns:
+  - Absent punctuation (no sentence-terminal marks, no commas)
+  - Absent or inconsistent spacing between words
+  - No capitalization conventions in Roman-script Bangla
+  - Phoneme-to-grapheme mapping varies per user (e.g., 'sh', 's', 'c' all used for
+    the same Bangla sibilant)
+  - Vowel omission in rapid typing
+  - Numerals substituted for phonetically similar syllables (e.g., '4' for 'for')
+  nlp_processing_challenge: Toxicity classifiers trained on clean Bengali script or
+    clean English will encounter near-complete input distribution mismatch. Tokenization,
+    normalization, and script identification must all precede toxicity inference,
+    and toxic signals may be deliberately or accidentally embedded within orthographically
+    irregular forms.
+literacy_profile:
+  population_literacy_rate_gazipur: '[NEEDS VERIFICATION]'
+  national_adult_literacy_rate_bangladesh: '[NEEDS VERIFICATION]'
+  functional_literacy_rate_peri_urban_industrial_workers: '[NEEDS VERIFICATION]'
+  female_literacy_rate_gazipur: '[NEEDS VERIFICATION]'
+  note: Literacy figures for Gazipur specifically, and for garment-worker cohorts
+    in particular, are likely to diverge from national averages. Functional literacy
+    (ability to compose and read short messages) is more operationally relevant than
+    formal literacy statistics. Users may have mobile phone literacy without Bengali
+    script reading fluency.
+demographic_profile:
+  religious_composition:
+    muslim_majority_estimated_pct: '[NEEDS VERIFICATION]'
+    hindu_minority_estimated_pct: '[NEEDS VERIFICATION]'
+    christian_minority_estimated_pct: '[NEEDS VERIFICATION]'
+    other: '[NEEDS VERIFICATION]'
+    note: Inter-communal religious dynamics are a primary toxicity fault line in this
+      deployment. Anti-Hindu slurs (e.g., 'malaun') and other religiously coded derogatory
+      language must be explicitly represented in any evaluation taxonomy.
+  caste_dynamics: Caste-coded language and discrimination exist in the Bangladeshi
+    Muslim and Hindu communities despite official abolition; caste-based slurs may
+    appear in health-query-embedded toxic content. [NEEDS VERIFICATION — extent of
+    caste salience in Gazipur specifically]
+  gender_composition:
+    female_worker_proportion_garment_sector: '[NEEDS VERIFICATION]'
+    note: Gazipur's garment industry is female-majority by workforce composition.
+      Gender norms, son-preference beliefs, and reproductive health queries are high-frequency
+      interaction types. Son-preference framing (queries oriented toward conceiving
+      male children) is identified as a primary health-context toxicity category.
+  age_bands_most_prevalent: '[NEEDS VERIFICATION — likely working-age 18–45 dominant
+    given industrial employment context]'
+  migration_background: Significant proportion of residents are internal migrants
+    from rural districts; sub-regional dialect diversity is higher than Dhaka urban
+    average. [NEEDS VERIFICATION]
+cultural_norms_notes: 'Key cultural dimensions relevant to toxicity evaluation in
+  this deployment:
+
+
+  **Religious identity and inter-communal dynamics:**
+
+  - Muslim majority norms (halal/haram framing in health contexts, Islamic calendar,
+  Ramadan health queries)
+
+  - Hindu minority vulnerability to targeted slurs; ''malaun'' is an operationally
+  documented anti-Hindu derogatory term
+
+  - Christian minority present but smaller; specific slurs [NEEDS VERIFICATION]
+
+  - Religious identity references in health queries should not be flagged as toxic
+  per se; over-flagging of religious identity mentions is a primary bias risk
+
+
+  **Gender norms and son preference:**
+
+  - Son-preference belief systems are culturally embedded and produce health queries
+  that encode gender discrimination (e.g., queries seeking to influence fetal sex)
+
+  - These queries are not overtly rude but encode harm; standard toxicity definitions
+  anchored in ''making someone want to leave a conversation'' would not capture them
+
+  - Female users may use chatbot as a private channel to ask questions they cannot
+  raise with male family members or male health workers
+
+
+  **Superstitious and traditional health belief systems:**
+
+  - Locally held beliefs about illness causation (jinn possession, evil eye / ''nazar'',
+  mal-intentioned supernatural agents) shape health queries
+
+  - Queries embedding these beliefs may recommend harmful non-medical interventions
+
+  - Kabiraj (traditional healer) and homeopathy referral patterns are common [NEEDS
+  VERIFICATION — prevalence in Gazipur specifically]
+
+
+  **Colorism:**
+
+  - Skin-whitening as a health/beauty goal is a documented pattern in South Asian
+  health-adjacent discourse
+
+  - Queries about skin-whitening products or procedures encode colorist harm distinct
+  from Western racial identity categories
+
+
+  **Social hierarchy and face:**
+
+  - Direct criticism of authority figures (doctors, employers) may be heavily mitigated
+  in user messages; indirect or coded complaint framing is likely
+
+  - Adversarial inputs from deliberate bad actors may exploit social-deference phrasing
+  to embed toxic content'
+locally_grounded_toxicity_taxonomy:
+  description: Toxicity categories operationally relevant to this deployment that
+    are absent from the benchmark's Western online-comment identity taxonomy
+  categories:
+  - category_id: HEALTH_INDUCED_IMPLICIT
+    label: Health-query-induced implicit toxicity
+    examples:
+    - Son-preference reproductive queries (how to conceive a boy)
+    - Queries framing female reproductive health as less important than male
+    - Harmful traditional medicine requests embedded in symptom description
+    benchmark_coverage: None — no health-query subtask exists in benchmark
+  - category_id: RELIGIOUS_SLUR_BD
+    label: Bangladeshi inter-communal religious slurs
+    examples:
+    - '''Malaun'' (anti-Hindu derogatory term)'
+    - Other community-specific derogatory terms [NEEDS VERIFICATION — comprehensive
+      list]
+    benchmark_coverage: None — identity term list is Western online-comment curated
+  - category_id: COLORIST_HARM
+    label: Colorism and skin-tone-based harmful content
+    examples:
+    - Queries promoting skin-whitening via unsafe products
+    - Derogatory references to dark skin tone in health or social context
+    benchmark_coverage: None — racial identity categories are Western; colorism as
+      distinct sub-category absent
+  - category_id: SUPERSTITION_HEALTH_HARM
+    label: Superstition-encoded harmful health content
+    examples:
+    - Queries recommending jinn-related rituals as medical treatment
+    - Evil-eye belief-driven harmful advice
+    - Kabiraj intervention as substitute for emergency medical care
+    benchmark_coverage: None — no health-misinformation or superstition category in
+      benchmark taxonomy
+  - category_id: CASTE_CODED
+    label: Caste-coded derogatory language
+    examples:
+    - Occupational-caste slurs in Bengali/Bangla [NEEDS VERIFICATION — specific terms]
+    benchmark_coverage: None — caste is not represented in benchmark identity list
+  - category_id: GENDER_NORM_DISCRIMINATORY
+    label: Gender-norm-discriminatory framing (non-overt)
+    examples:
+    - Queries presupposing female health concerns are less urgent than male
+    - Reproductive coercion framing embedded in health questions
+    benchmark_coverage: Partial — gender is a benchmark identity category, but discriminatory
+      framing within health queries is not captured
+input_form_profile:
+  dominant_input_register: Degraded, code-switched, low-punctuation text indistinguishable
+    in form between ordinary and adversarial messages
+  adversarial_input_distinguishability: Low — toxic signals are embedded within the
+    same degraded register as benign queries; no clean separation exists
+  preprocessing_requirements:
+  - Script identification (Bengali Unicode vs. Latin/Roman)
+  - Banglish normalization or parallel processing pipeline
+  - Phonetic-to-standard-Bangla mapping (approximate; user-idiosyncratic)
+  - Punctuation and spacing reconstruction (heuristic)
+  - Code-switch boundary detection
+  benchmark_input_form_match: Severe mismatch — benchmark assumes clean standard English
+    throughout; no preprocessing for degraded or non-Latin-script input is documented
+infrastructure_notes: '- Mobile-first or mobile-only internet access is the expected
+  dominant mode for Gazipur''s industrial workforce [NEEDS VERIFICATION — smartphone
+  penetration rate in Gazipur specifically]
+
+  - Mobile internet penetration in Gazipur district: [NEEDS VERIFICATION]
+
+  - Dominant device type: low-to-mid-range Android smartphones [NEEDS VERIFICATION]
+
+  - Dominant input method: software keyboard with Bangla phonetic or Roman input;
+  Bangla Unicode keyboard adoption rate: [NEEDS VERIFICATION]
+
+  - Data connectivity: 3G/4G coverage in peri-urban Gazipur [NEEDS VERIFICATION —
+  coverage gaps near industrial outskirts]
+
+  - Platform delivery mechanism for chatbot (app, SMS, WhatsApp, web): [NEEDS VERIFICATION]
+
+  - SMS-based fallback: relevant given literacy and connectivity constraints [NEEDS
+  VERIFICATION — whether SMS channel is in scope]
+
+  - Bandwidth constraints may affect whether the system can run heavy NLP preprocessing
+  client-side or must rely on server-side inference'
+regulatory_and_policy_context:
+  applicable_data_protection_law_bangladesh: '[NEEDS VERIFICATION — Digital Security
+    Act and any health data provisions]'
+  health_information_regulation: '[NEEDS VERIFICATION — Bangladesh Directorate General
+    of Health Services guidelines for digital health tools]'
+  content_moderation_legal_obligations: '[NEEDS VERIFICATION — any Bangladesh-specific
+    platform content liability framework]'
+  clinical_chatbot_regulatory_status: '[NEEDS VERIFICATION — whether the deployment
+    requires regulatory clearance from DGDA or equivalent]'
+  note: Regulatory environment for AI-based health tools in Bangladesh is evolving;
+    downstream verification should check most recent MOHFW and DGDA guidance.
+annotator_representativeness_requirements:
+  minimum_viable_standard: At least one or two native Bangladeshi annotators with
+    clinical and cultural context, as specified in elicitation — explicitly preferred
+    over no regional representation even if not fully sufficient
+  ideal_standard: Multiple annotators from the target region (Bangladesh) with clinical
+    domain knowledge, familiarity with Gazipur peri-urban sociolinguistics, and coverage
+    of Muslim, Hindu, and minority community perspectives
+  known_gap: The benchmark's ~450,000 annotated comments were labeled by crowdworkers
+    with no documented Bangladeshi or South Asian representation; this is a critical
+    OC-dimension mismatch
+  existing_bangladeshi_annotation_resources: '[NEEDS VERIFICATION — BUET Bengali NLP
+    datasets, HatEval Bengali, other Bangladeshi institutional annotation efforts]'
+  caste_and_religion_annotator_diversity: Annotators should represent both Muslim
+    and Hindu community perspectives to avoid systematic blind spots in inter-communal
+    slur detection
+sub_national_variation:
+  gazipur_vs_dhaka_urban:
+    linguistic_difference: Gazipur peri-urban register may include more rural-origin
+      dialect features than Dhaka urban; garment-worker migrant population introduces
+      inter-district dialect mixing [NEEDS VERIFICATION]
+    health_system_access: '[NEEDS VERIFICATION — Gazipur-specific primary healthcare
+      facility density vs. Dhaka urban]'
+  gazipur_vs_sylheti_speakers:
+    notes: Sylheti is mutually unintelligible with standard Bangla to a significant
+      degree; Sylheti-speaking workers in Gazipur may produce inputs that confound
+      Bangla NLP models [NEEDS VERIFICATION — proportion of Sylheti speakers in Gazipur
+      garment workforce]
+  gazipur_vs_chittagonian_speakers:
+    notes: '[NEEDS VERIFICATION — Chittagonian presence in Gazipur garment sector
+      and linguistic distance from standard Bangla]'
+  intra_gazipur_variation: '[NEEDS VERIFICATION — variation between Gazipur City Corporation
+    area, Tongi, Kaliakair, and more rural upazila units within the district]'
+benchmark_alignment_summary:
+  identity_ontology_match: Very low — benchmark identity taxonomy is drawn from Western
+    English-language online communities; Bangladeshi inter-communal, caste, and colorism
+    categories are absent
+  input_content_match: Very low — benchmark data is English-language online comments;
+    no Banglish, phonetic Bangla ASCII, or health-context conversational content is
+    present
+  input_form_match: Very low — benchmark assumes clean standard English; deployment
+    input is systematically degraded with absent punctuation, irregular spacing, and
+    code-switching
+  output_ontology_match: Very low — benchmark toxicity axis ('rude, disrespectful,
+    or unreasonable') does not capture health-context implicit harm, son-preference
+    framing, superstition-encoded harm, or colorism
+  output_content_match: Very low — no Bangladeshi or South Asian annotator representation
+    documented; identity category list excludes South Asian-specific slurs and caste
+    categories
+  output_form_match: Moderate — both systems use text-in, continuous-score-out pipelines;
+    threshold-agnostic AUC metrics are structurally reusable, but score calibration
+    was derived from an entirely different input and population distribution
+  transferable_elements:
+  - Threshold-agnostic metric framework (Subgroup AUC, BPSN AUC, BNSP AUC, Positive
+    AEG, Negative AEG) is structurally applicable if recalibrated on Bangladeshi-annotated
+    data
+  - Methodology of comparing subgroup performance against background performance is
+    valid for auditing Muslim/Hindu identity-mention bias in the deployed classifier
+  - Finding that real data reveals more bias than synthetic data is a methodological
+    caution directly applicable to planning evaluation data collection in Gazipur
+flagged_gaps_for_downstream_search:
+- gap_id: G1
+  description: Banglish / Roman-script Bangla toxicity detection benchmarks
+  search_target: Banglish Roman script Bengali toxicity hate speech detection benchmark
+    NLP dataset
+- gap_id: G2
+  description: Health-context-induced toxicity patterns in South Asian clinical NLP
+  search_target: health chatbot toxicity safety benchmark South Asia Bangladesh clinical
+    NLP patient interaction
+- gap_id: G3
+  description: Religiously coded implicit toxicity in Bengali — anti-Hindu slurs and
+    inter-communal language
+  search_target: Bengali hate speech dataset anti-Hindu slur malaun toxicity annotation
+    Bangladesh BUET HatEval
+- gap_id: G4
+  description: Colorism and skin-tone-based harmful content in South Asian NLP evaluation
+  search_target: colorism skin tone harmful content South Asia Bengali NLP evaluation
+    dataset fairness
+- gap_id: G5
+  description: Superstition-encoded harmful health content datasets in Bangladesh
+    or South Asia
+  search_target: health misinformation superstition harmful content detection South
+    Asia Bengali NLP dataset jinn kabiraj
+- gap_id: G6
+  description: Bangladeshi community annotation efforts and regional content moderation
+    guidelines
+  search_target: Bangladeshi annotators content moderation cultural annotation South
+    Asian NLP community BUET
+- gap_id: G7
+  description: Sub-national dialect variation in Bangladesh relevant to NLP — Sylheti,
+    Chittagonian, peri-urban Dhaka
+  search_target: sub-national dialect variation Bangladesh Sylheti Chittagong peri-urban
+    Gazipur NLP benchmark
+- gap_id: G8
+  description: Noisy-text and degraded-input toxicity detection methodology
+  search_target: noisy text toxicity detection code-switching degraded input NLP low-literacy
+    mobile keyboard
+- gap_id: G9
+  description: Son-preference and reproductive gender discrimination in South Asian
+    health NLP
+  search_target: son preference gender discrimination health chatbot NLP Bangladesh
+    South Asia harmful query detection
+- gap_id: G10
+  description: Caste-coded derogatory language in Bengali NLP datasets
+  search_target: caste slur Bengali Bangla NLP hate speech dataset Bangladesh discrimination
+    annotation
+- gap_id: G11
+  description: Mobile internet and smartphone penetration in Gazipur district
+  search_target: mobile internet penetration Gazipur Bangladesh smartphone adoption
+    garment worker survey
+- gap_id: G12
+  description: Bangladesh digital health and clinical AI regulatory framework
+  search_target: Bangladesh DGDA MOHFW digital health AI regulation clinical chatbot
+    guideline 2023 2024

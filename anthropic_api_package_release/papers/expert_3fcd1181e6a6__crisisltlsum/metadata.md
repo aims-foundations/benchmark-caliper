@@ -1,0 +1,11 @@
+- name: crisistltsum
+- full_name: CrisisLTLSum: A Benchmark for Local Crisis Event Timeline Extraction and Summarization
+- year: 2022
+- domain: Timeline extraction and abstractive summarization of local crisis events from social media. The benchmark focuses on extracting relevant tweet updates about specific crisis events and generating summaries of evolving incidents.
+- languages: English
+- primary_region: United States (crisis events are location-bound to specific buildings, streets, or counties)
+- porting_strategy: none
+- input_modalities: text
+- output_modalities: text, label
+- brief_description: CrisisLTLSum is a dataset of 1,000 local crisis event timelines across four domains (wildfires, local fires, traffic, and storms) collected from Twitter using a semi-automated cluster-then-refine approach. The benchmark supports two tasks: timeline extraction (identifying relevant tweets about an ongoing crisis event from a noisy stream) and abstractive timeline summarization (generating human-written summaries of event progression). Experiments show significant gaps between strong baselines and human performance on both tasks.
+- source_culture: transferred from different cultural context

@@ -1,0 +1,578 @@
+name: Ecuador — Humanitarian Crisis Social Media Analysts
+abbreviation: ECU-HumSMA
+country: Ecuador
+sub_national_scope:
+  regions:
+  - Costa (coastal region, including Guayas, Manabí, Esmeraldas provinces)
+  - Sierra (Andean highlands, including Pichincha, Chimborazo, Cotopaxi, Tungurahua
+    provinces)
+  - Oriente / Amazonía (including Napo, Pastaza, Morona Santiago, Zamora Chinchipe
+    provinces)
+  note: Disaster risk profiles, language use, and infrastructure differ substantially
+    across these three macro-regions. Coastal provinces face flood and tsunami risk;
+    Sierra provinces face volcanic, earthquake, and landslide risk; Amazonian provinces
+    face flooding, displacement, and environmental emergency risk with higher indigenous-language
+    presence.
+deployment_population:
+  description: Data and social analysts, field coordinators, and domain experts employed
+    by or partnering with international humanitarian organizations (Red Cross / Cruz
+    Roja Ecuatoriana, UN OCHA) and NGOs operating in Ecuador. These professionals
+    use AI-generated crisis event timelines derived from Ecuadorian Spanish Twitter/social
+    media streams to track evolving humanitarian situations. They are fluent in both
+    American English and Spanish, may hold advanced degrees, and are operationally
+    familiar with inter-agency coordination protocols, humanitarian needs assessments,
+    and Ecuador-specific crisis response structures.
+  roles:
+  - Social media / data analysts (monitoring and classification of social media signals)
+  - Field coordinators (ground-truth authority on operational relevance of events)
+  - Domain experts (thematic specialists in displacement, WASH, food security, protection)
+  - Inter-operational team members serving as joint ground-truth annotators and evaluators
+  organizational_context: Red Cross / Cruz Roja Ecuatoriana, UN OCHA Ecuador, and
+    partner NGOs operating under inter-agency coordination frameworks (e.g., Cluster
+    system). Analysts may be international staff (Spanish/English bilingual) or locally-hired
+    Ecuadorian nationals.
+languages:
+  primary_working:
+  - Ecuadorian Spanish (predominant language of the tweet stream being analyzed)
+  - American English (primary professional and reporting language of analysts)
+  tweet_stream_characteristics:
+    dominant: Ecuadorian Spanish — informal and semi-formal registers, crisis-specific
+      lexicon
+    register_notes: Mix of informal abbreviations, phonetic spelling, hashtag-driven
+      discourse, and semi-formal agency announcements. Crisis-specific vocabulary
+      includes terms such as 'damnificados', 'albergue', 'colapsado', 'desbordamiento',
+      'lahares', 'evacuar', 'cordón de seguridad', 'reubicación'.
+    code_switching: Kichwa-Spanish code-switching present, particularly in tweets
+      originating from or about Sierra and Amazonian communities. Kichwa toponyms
+      (place names) appear even in otherwise all-Spanish tweets. Shuar-Spanish mixing
+      may occur in southeastern Amazonian content.
+    indigenous_language_entity_names: Kichwa place names are common across Sierra
+      and Oriente coverage areas; Shuar toponyms present in Morona Santiago and Zamora
+      Chinchipe. These may not be recognized by standard Spanish NLP pipelines.
+  analyst_language_profile: Bilingual Spanish-English professionals; may have varying
+    familiarity with specific Ecuadorian regional slang or Kichwa vocabulary.
+writing_systems:
+  scripts:
+  - Latin alphabet (Spanish tweets and English analyst outputs)
+  - Latin alphabet with Kichwa orthographic conventions (Kichwa toponyms and code-switched
+    fragments)
+  note: Kichwa has a standardized written orthography established through the intercultural
+    bilingual education system. The 2008 constitutional reform recognised Kichwa as
+    an official language of intercultural communication and mandated a unified spelling
+    system, but changes in Kichwa orthography introduced in 2008 were contested by
+    many highland communities, leading to rejection of teaching materials and continued
+    spelling variation in practice (Open Book Publishers — [|https://books.openbookpublishers.com/10.11647/obp.0032/chapter11.html|]).
+    Each of Ecuador's indigenous languages now has its own official alphabet, but
+    social media usage is informal and may vary. Non-standard orthography, phonetic
+    spelling, and abbreviations are common in crisis tweets.
+literacy_and_education:
+  analyst_population: University-educated professionals; high literacy in Spanish
+    and English. This dimension is not a barrier for the analyst user population.
+  tweet_author_population_note: Tweets in the monitored stream originate from a broad
+    population including affected community members, local journalists, NGO field
+    staff, and government agencies. Literacy rates and register formality vary significantly
+    by source.
+  national_literacy_rate_ecuador: '94–96% (adult population age 15+). TheGlobalEconomy.com
+    reports 94% as of 2022 (World Bank source — [|https://www.theglobaleconomy.com/Ecuador/literacy_rate/|]);
+    WorldViewData reports 96.3% for 2022 (World Bank — [|https://www.worldviewdata.com/countries/ecuador/literacy-rate|]).
+    Youth literacy (ages 15–24) is approximately 99% (2020 estimate — [|http://www.mannaproject.org/ecuador|]).
+    Caveat: national aggregate; rural and indigenous communities have significantly
+    lower rates.'
+  rural_indigenous_community_literacy_rate: Literacy rates are lower among indigenous
+    peoples than in the general population; indigenous families face elevated poverty
+    and school dropout rates (IWGIA Indigenous World 2023 — [|https://iwgia.org/en/ecuador/5087-iw-2023-ecuador.html|]).
+    A large portion of the indigenous ethnic population remains illiterate, particularly
+    in written use of indigenous languages outside schools (Open Book Publishers —
+    [|https://books.openbookpublishers.com/10.11647/obp.0032/chapter11.html|]). No
+    sub-national figure by province is publicly available in a citable aggregate source.
+    This field requires expert or stakeholder elicitation for operational precision.
+  kichwa_written_literacy_rate: '[NEEDS VERIFICATION — deferred: likely unsearchable
+    (lived practice). Available evidence suggests Kichwa written literacy is minimal
+    outside formal school settings; sources note that reading and writing of indigenous
+    languages outside schools is minimal and that only a small number of indigenous
+    speakers can read and write in their native languages (Open Book Publishers —
+    [|https://books.openbookpublishers.com/10.11647/obp.0032/chapter11.html|]). No
+    numeric figure is published in a searchable source.]'
+crisis_typology:
+  benchmark_crisis_types:
+  - Wildfire
+  - Local fire
+  - Traffic incident
+  - Storm
+  deployment_priority_crisis_types:
+  - type: Volcanic eruption and associated hazards (lahares, ash fall, exclusion zones)
+    key_examples: Cotopaxi, Tungurahua, Sangay, Reventador
+    benchmark_coverage: absent
+  - type: Earthquake and aftershock sequences
+    key_examples: Manabí 2016 earthquake sequence and aftermath
+    benchmark_coverage: absent
+  - type: Landslide and debris flow (movimiento en masa)
+    key_examples: Sierra and Oriente rainy-season cascades; La Niña-driven events
+    benchmark_coverage: absent
+  - type: Coastal and riverine flooding (desbordamiento, inundación)
+    key_examples: Guayas basin flooding, Manabí coastal flood events, Oriente river
+      overflow
+    benchmark_coverage: absent
+  - type: Mass displacement and population movement
+    key_examples: Displacement from volcanic exclusion zones, conflict-driven displacement
+      from Colombian border, Venezuelan migration flows
+    benchmark_coverage: absent
+  - type: Complex humanitarian emergencies (food insecurity, protection crises, disease
+      outbreaks)
+    key_examples: COVID-19 response coordination, border emergency situations
+    benchmark_coverage: absent
+  - type: Tsunami and coastal alert sequences
+    key_examples: Pacific coastal risk areas
+    benchmark_coverage: absent
+  note: The benchmark's four crisis types are almost entirely absent from the operational
+    priority list of Ecuadorian humanitarian coordinators. Only storm events have
+    partial overlap with Ecuadorian flooding scenarios, but the benchmark's 'storm'
+    category reflects North American meteorological contexts, not Andean or coastal
+    tropical precipitation events.
+geographic_and_institutional_entities:
+  administrative_hierarchy:
+  - level: Provincia (province)
+    count: 24 provinces (Wikipedia Provinces of Ecuador — [|https://en.wikipedia.org/wiki/Provinces_of_Ecuador|];
+      confirmed by multiple sources including ResearchGate — [|https://www.researchgate.net/figure/Geographic-map-of-Ecuador-Administratively-Ecuador-is-divided-in-24-provinces-containing_fig1_360575372|])
+    examples: Pichincha, Guayas, Manabí, Tungurahua, Chimborazo, Napo, Morona Santiago
+  - level: Cantón (canton)
+    count: Approximately 221–224 cantons. One source reports 221 cantons including
+      three unassigned (Storyteller Travel — [|https://storyteller.travel/map-provinces-ecuador/|]);
+      a scientific diagram caption cites 224 cantons (ResearchGate 2022 — [|https://www.researchgate.net/figure/Geographic-map-of-Ecuador-Administratively-Ecuador-is-divided-in-24-provinces-containing_fig1_360575372|]).
+      A new canton (Sevilla Don Bosco, Morona Santiago) was created in 2024 (Wikipedia
+      Cantons of Ecuador — [|https://en.wikipedia.org/wiki/Cantons_of_Ecuador|]).
+    examples: Quito, Guayaquil, Ambato, Latacunga, Tena, Macas
+  - level: Parroquia (parish — urban and rural)
+    count: More than 1,500 parroquias (Storyteller Travel — [|https://storyteller.travel/map-provinces-ecuador/|])
+    examples: Rural parroquias are the operational unit most relevant for last-mile
+      crisis coverage
+  key_emergency_institutions:
+  - name: SNGR — Secretaría Nacional de Gestión de Riesgos (formerly SGR, renamed
+      per Ley Orgánica para la Gestión Integral del Riesgo de Desastres, January 2024)
+    role: National disaster risk management authority; issues official alerts and
+      situation reports
+    social_media_presence: Maintains official website at gestionderiesgos.gob.ec with
+      situation reports (SITREP), real-time monitoring reports, and alert levels (confirmed
+      active — [|https://www.gestionderiesgos.gob.ec/|]). Twitter/X handle presence
+      for alert dissemination is documented in operational practice but handle not
+      directly verified in this search pass.
+    institutional_note: Renamed from SGR to SNGR under Decreto Ejecutivo No. 641 (January
+      2023) and formalized by Ley Orgánica para la Gestión Integral del Riesgo de
+      Desastres (Registro Oficial No. 488, 30 January 2024 — [|https://www.gestionderiesgos.gob.ec/wp-content/uploads/downloads/2024/05/Resol.SNGR-102-2024.pdf|]).
+      Analysts and tweets may still reference 'SGR'; both acronyms should be recognized.
+  - name: Cuerpo de Bomberos (provincial and cantonal fire and rescue corps)
+    role: First-responder coordination; local fire and rescue operations
+    social_media_presence: '[NEEDS VERIFICATION — deferred: below search budget]'
+  - name: Cruz Roja Ecuatoriana
+    role: Humanitarian response, shelter, emergency health; key inter-agency partner
+    social_media_presence: '[NEEDS VERIFICATION — deferred: below search budget]'
+  - name: Fuerzas Armadas del Ecuador
+    role: Military support to disaster response; logistics and engineering in large-scale
+      events
+    social_media_presence: '[NEEDS VERIFICATION — deferred: below search budget]'
+  - name: Policía Nacional del Ecuador
+    role: Security, evacuation enforcement, traffic and crowd control in crisis areas
+    social_media_presence: '[NEEDS VERIFICATION — deferred: below search budget]'
+  - name: Ministerio de Salud Pública (MSP)
+    role: Health emergency coordination, disease surveillance
+    social_media_presence: '[NEEDS VERIFICATION — deferred: below search budget]'
+  - name: IGEPN — Instituto Geofísico de la Escuela Politécnica Nacional
+    role: Volcanic and seismic monitoring authority; issues eruption alerts and technical
+      bulletins
+    social_media_presence: '[NEEDS VERIFICATION — deferred: below search budget]'
+  - name: INAMHI — Instituto Nacional de Meteorología e Hidrología
+    role: Weather and hydrological alerts (rainfall, river levels, flood risk)
+    social_media_presence: '[NEEDS VERIFICATION — deferred: below search budget]'
+  international_humanitarian_actors_in_country:
+  - UN OCHA Ecuador
+  - UNHCR Ecuador (Venezuelan displacement focus)
+  - WFP Ecuador
+  - UNICEF Ecuador
+  - IOM Ecuador
+  - MSF / Médecins Sans Frontières Ecuador
+  - '[NEEDS VERIFICATION — deferred: below search budget; confirm current active presence
+    and social media handles for key actors]'
+  landmark_and_geographic_references_in_crisis_tweets: Tweets will reference local
+    landmarks, barrio names, road identifiers (e.g., 'la vía Latacunga-Quito cortada'),
+    river names (Río Pastaza, Río Coca), volcano names (Cotopaxi, Tungurahua, Sangay),
+    and neighborhood-level identifiers absent from any US/Australian geographic reference
+    database.
+indigenous_language_context:
+  primary_indigenous_languages_in_tweet_stream:
+  - language: Kichwa (Quichua ecuatoriano)
+    geographic_presence: Sierra (Andean highlands) and Oriente (Amazonia); largest
+      indigenous language in Ecuador; also present in some coastal cities through
+      labour migration
+    speaker_population: 'Approximately 527,333 speakers per INEC 2010 census data
+      (Wikipedia Demographics of Ecuador — [|https://en.wikipedia.org/wiki/Demographics_of_Ecuador|]);
+      IWGIA 2023 cites the Kichwa nationality as comprising 85.87% of Ecuador''s indigenous
+      population, accounting for nearly 800,000 individuals (IWGIA Indigenous World
+      2023 — [|https://iwgia.org/en/ecuador/5087-iw-2023-ecuador.html|]). Note: ethnic
+      self-identification and actual speaker population differ; total indigenous population
+      is estimated at over 1 million, with highland communities comprising approximately
+      68% (IWGIA — [|https://iwgia.org/en/ecuador/5087-iw-2023-ecuador.html|]).'
+    tweet_stream_relevance: Kichwa toponyms appear in tweets about Sierra and Amazonian
+      disasters even when the tweet is predominantly in Spanish. Full Kichwa-language
+      tweets are less common but possible from community sources.
+    NLP_resource_availability: No dedicated Kichwa pre-trained language model or large
+      NLP corpus was identified in this search pass. The 2008 unified Kichwa alphabet
+      is contested, adding orthographic variation. An Ecuadorian Spanish NLP corpus
+      (first corpus for the country) was developed (IEEE Xplore — [|https://ieeexplore.ieee.org/document/7889589|])
+      but does not cover Kichwa. No Kichwa-specific NER, word embeddings, or transformer
+      model was found in the literature. This is a confirmed gap requiring specialist
+      elicitation.
+  - language: Shuar
+    geographic_presence: Southeastern Amazonia (Morona Santiago, Zamora Chinchipe,
+      parts of Pastaza)
+    speaker_population: Approximately 59,894 speakers per INEC 2010 census (Wikipedia
+      Demographics of Ecuador — [|https://en.wikipedia.org/wiki/Demographics_of_Ecuador|]);
+      constitutes approximately 4.6% of the indigenous population.
+    tweet_stream_relevance: Shuar toponyms and occasional Shuar-Spanish code-switching
+      in tweets about southeastern Oriente events
+    NLP_resource_availability: No Shuar NLP tools or corpora identified. Shuar has
+      an official alphabet established through the bilingual education system, but
+      written use outside schools is minimal (Open Book Publishers — [|https://books.openbookpublishers.com/10.11647/obp.0032/chapter11.html|]).
+      Confirmed gap.
+  - language: Other Amazonian indigenous languages (Achuar, Waorani, Siona, Secoya,
+      Cofán, Zápara, etc.)
+    geographic_presence: Various Oriente provinces
+    tweet_stream_relevance: Low frequency in tweet stream but toponyms may appear
+      in coverage of Oriente disasters
+    NLP_resource_availability: No NLP tools identified for any of these languages.
+      The Ecuador 2008 Constitution recognises all indigenous languages as official
+      in their respective ethnic territories, but written literacy is very recent
+      and very limited. Zápara (Zapara) has only 5 elderly speakers remaining (Open
+      Book Publishers — [|https://books.openbookpublishers.com/10.11647/obp.0032/chapter11.html|]).
+      Confirmed gap for all.
+  kichwa_toponym_examples: '[NEEDS VERIFICATION — deferred: likely unsearchable as
+    a compiled list; requires field expert or indigenous federations (CONAIE, ECUARUNARI)
+    for authoritative curation. Representative examples known from general sources:
+    Latacunga (La Tacunga), Ambato, Riobamba (Liribamba), Cotopaxi, Tungurahua — many
+    Sierra province and canton names are of Kichwa origin but are now fully absorbed
+    into standard Spanish administrative usage. Novel community-level Kichwa toponyms
+    in high-risk zones require stakeholder elicitation.]'
+  code_switching_pattern: Predominantly Kichwa nouns (place names, community names)
+    embedded in Spanish syntax; full Kichwa sentences rare in public Twitter stream
+    but possible from community-managed accounts or civil society organizations.
+  indigenous_community_crisis_relevance: Indigenous communities in Sierra and Oriente
+    face elevated exposure to volcanic, seismic, flooding, and environmental crisis
+    events. Their social media presence (community radio announcements shared on social
+    media, indigenous organization accounts) constitutes operationally critical signal
+    that may be underrepresented in any English-trained crisis NLP system.
+infrastructure_notes:
+  internet_access:
+    national_internet_penetration: '77.2% of the population in 2024 (World Bank /
+      ITU via TradingEconomics — [|https://tradingeconomics.com/ecuador/individuals-using-the-internet-percent-of-population-wb-data.html|]).
+      A separate estimate puts internet users at approximately 15.4 million as of
+      October 2025 (DataReportal Digital 2026: Ecuador — [|https://datareportal.com/reports/digital-2026-ecuador|]).'
+    urban_rural_gap: 'As of late 2025, 65.4% of Ecuador''s population lived in urban
+      centres and 34.6% in rural areas (DataReportal Digital 2026: Ecuador — [|https://datareportal.com/reports/digital-2026-ecuador|]).
+      Rural and Amazonian communities have significantly lower internet access; specific
+      rural-vs-urban internet penetration sub-figures are not published in a single
+      citable aggregate for Ecuador.'
+    mobile_internet_penetration: As of end 2025, 95.8% of mobile connections in Ecuador
+      connect via 3G, 4G, or 5G broadband networks (GSMA Intelligence data via DataReportal
+      — [|https://datareportal.com/reports/digital-2026-ecuador|]). Total mobile connections
+      reached approximately 18.43 million in 2024, roughly 1.0 per person (WorldData.info
+      — [|https://www.worlddata.info/america/ecuador/telecommunication.php|]).
+    dominant_device_type: '[NEEDS VERIFICATION — deferred: below search budget. Available
+      evidence indicates smartphone penetration is high nationally (mobile broadband
+      at 95.8% of connections), but rural/Oriente-specific device distribution requires
+      stakeholder elicitation.]'
+  social_media_platform_usage:
+    primary_platform_for_crisis_tweets: 'Existing Ecuadorian crisis NLP research (e.g.,
+      UrbangEnCy dataset, 2020–2021) used Twitter as the primary data source for Ecuador
+      emergency monitoring (ScienceDirect — [|https://www.sciencedirect.com/science/article/pii/S2352340920315729|]).
+      Government agencies including SNGR, IGEPN, and municipal offices also use Twitter/X
+      for official alerts. Caveat: post-2022 Twitter API changes and platform evolution
+      may have shifted dynamics toward Facebook and WhatsApp, particularly for affected-community
+      communications; this requires current field verification.'
+    government_agency_platforms: 'SNGR (formerly SGR), IGEPN, and municipal emergency
+      offices use Twitter/X for official alerts and situation reports (confirmed from
+      SNGR website — [|https://www.gestionderiesgos.gob.ec/|]). [NEEDS VERIFICATION
+      — deferred: specific handle names require direct platform verification]'
+    community_and_informal_sources: WhatsApp broadcast groups, Facebook community
+      pages, and local radio station social media accounts are often primary sources
+      for affected-population information; these may not be captured in a Twitter-only
+      stream
+  nlp_infrastructure_gaps:
+    spanish_crisis_nlp: General Spanish NLP tools exist (Spanish BERT variants, etc.)
+      but are not specifically trained on Ecuadorian social media crisis content.
+      A system developed at a Ecuadorian university filters Twitter content into four
+      categories relevant to Ecuador (volcanic, telluric/seismic, fires, climatological)
+      using NLTK (ResearchGate — [|https://www.researchgate.net/publication/312485537_System_for_monitoring_natural_disasters_using_natural_language_processing_in_the_social_network_Twitter|]),
+      but this is a keyword-based prototype, not a validated NLP model.
+    ecuadorian_spanish_specificity: A first corpus for Ecuadorian natural language
+      words was developed as of 2017 (IEEE Xplore — [|https://ieeexplore.ieee.org/document/7889589|]).
+      The UrbangEnCy dataset (2020–2021) provides over 25,500 Spanish-language emergency/non-emergency
+      labeled tweets from Ecuador, covering urban scenarios (ScienceDirect — [|https://www.sciencedirect.com/science/article/pii/S2352340920315729|]).
+      This is the only Ecuador-specific Spanish crisis tweet dataset identified. It
+      is publicly available at [|https://doi.org/10.17632/4x37zz82k8|] and covers
+      binary emergency classification but not timeline extraction, summarization,
+      or humanitarian coordinator relevance criteria.
+    kichwa_nlp: No pre-trained Kichwa language model, word embeddings, or annotated
+      NLP corpus identified in this search. This is a confirmed documentation gap.
+      The language is low-resource with contested orthographic conventions. Stakeholder
+      elicitation required.
+    ecuador_ner_tools: No NER tool validated on Ecuadorian administrative geography
+      (parroquia/cantón level) was identified. A Spanish NER approach for disaster
+      tweet toponyms was developed for Mexico City earthquakes using CoNLL-2002 merged
+      with manually inspected Spanish tweets (PMC — [|https://pmc.ncbi.nlm.nih.gov/articles/PMC6484392/|]),
+      offering a methodological template, but not validated on Ecuadorian geography.
+    openstreetmap_coverage_quality: '[NEEDS VERIFICATION — deferred: below search
+      budget. OpenStreetMap coverage of rural Ecuadorian parroquias, Kichwa community
+      names, and informal settlement names has not been specifically assessed in the
+      literature identified by this search. Known limitation: benchmark''s OSM-based
+      location augmentation was calibrated to US/Australian cities.]'
+operational_context_notes:
+  analyst_workflow: Analysts consume AI-generated event timelines to track how affected-population
+    needs evolve over time, feeding information into situation reports, inter-agency
+    dashboards (e.g., ReliefWeb, OCHA HDX), and operational decisions (resource allocation,
+    evacuation guidance, needs assessment triggers).
+  ground_truth_authority: An inter-operational team combining field coordinators,
+    social analysts, and domain experts jointly determines tweet relevance and summary
+    quality — not any single role or automated annotator pool. This is structurally
+    different from the MTurk crowd-sourcing model used in the benchmark.
+  relevance_criteria_for_humanitarian_coordinators:
+  - Information about road or bridge access status to affected communities (critical
+    for logistics)
+  - Informal community broadcasts indicating shelter, water, food, or medical needs
+  - Displacement movement indicators (population leaving affected zones, arrival at
+    collection points)
+  - Institutional coordination signals (agency activation, inter-agency meeting announcements)
+  - Casualty and affected population counts (including 'damnificados' counts at parroquia/cantón
+    level)
+  - Infrastructure damage affecting service delivery (hospital, school, water system)
+  - Official alert level changes (e.g., IGEPN volcanic alert color changes, SNGR declarations)
+  reporting_language_and_format: Analysts produce operational outputs in English (UN
+    OCHA situation reports, Red Cross global reporting) and Spanish (national-level
+    coordination with Ecuadorian government counterparts). Summary quality must be
+    evaluated in both languages.
+  inter_agency_coordination_frameworks: '[NEEDS VERIFICATION — deferred: below search
+    budget; confirm current active Cluster system lead agencies and coordination mechanisms
+    for Ecuador humanitarian response]'
+  annotation_and_evaluation_protocols:
+    existing_red_cross_guidelines: '[NEEDS VERIFICATION — deferred: below search budget]'
+    existing_un_ocha_guidelines: '[NEEDS VERIFICATION — deferred: below search budget]'
+    echo_of_crs_frameworks: '[NEEDS VERIFICATION — deferred: below search budget]'
+cultural_norms_notes: '- Ecuadorian crisis communication often involves a mix of official
+  agency accounts (SNGR, IGEPN, municipal governments) and informal community-level
+  broadcasting, with the latter carrying operationally critical information not available
+  through official channels.
+
+  - Affected communities may refer to events using local place names, community identifiers,
+  or informal neighborhood names that do not appear in any official geographic database.
+
+  - Indigenous community social media presence (especially Kichwa-speaking Sierra
+  communities organized through indigenous federations such as CONAIE or ECUARUNARI)
+  may generate crisis signals in Kichwa or bilingual Kichwa-Spanish that standard
+  NLP pipelines will not process correctly.
+
+  - Humanitarian response in Ecuador operates through a mixed national-international
+  coordination structure; institutional references in tweets will include both Ecuadorian
+  government bodies (SNGR, MSP, fuerzas armadas) and international actors (Cruz Roja,
+  OCHA, ACNUR/UNHCR).
+
+  - The concept of ''damnificado'' (disaster-affected person with loss of livelihood
+  or home) carries specific operational and legal weight in Ecuadorian disaster response
+  and appears frequently in both tweet stream and humanitarian reporting.
+
+  - Ecuadorian crisis social media frequently references ''albergues'' (collective
+  shelters) as both locations and indicators of displacement scale; these references
+  carry high operational salience for humanitarian coordinators.
+
+  '
+domain_specific_notes:
+  crisis_nlp_benchmark_gap: 'No Spanish-language crisis NLP benchmark covering Ecuadorian
+    or Andean disaster types (volcanic eruptions, landslides, displacement) with timeline
+    extraction or summarization tasks has been identified. The UrbangEnCy dataset
+    (Parraga-Alava et al., 2021) is the closest existing resource: 25,500+ Spanish
+    tweets from Ecuador labeled for binary emergency classification, collected January–August
+    2020 (ScienceDirect — [|https://www.sciencedirect.com/science/article/pii/S2352340920315729|]).
+    It covers urban emergency scenarios broadly but does not include timeline structure,
+    summarization annotation, volcanic/geophysical crisis types, or humanitarian coordinator
+    relevance criteria. It is referenced in the HumVI multilingual humanitarian dataset
+    paper as a known Ecuador-specific resource (arXiv — [|https://arxiv.org/html/2410.06370|]).'
+  applicable_crisis_nlp_datasets: 'Key existing crisis NLP resources and their Ecuador/Spanish
+    relevance:
+
+    1. CrisisNLP / HumAID (QCRI): HumAID includes 19 disaster events (2016–2019) with
+    ~77K English-labeled tweets; includes tweets from the 2016 Ecuador Earthquake
+    as one event (approximately 1.7M raw tweets, 2K annotated — ResearchGate HumAID
+    — [|https://www.researchgate.net/publication/350720422_HumAID_Human-Annotated_Disaster_Incidents_Data_from_Twitter|]).
+    All annotations are in English; covers earthquake type but not timeline structure.
+    HumAID also includes a multimodal sub-corpus (CrisisMMD) with Ecuador Earthquake
+    2016 images (CrisisNLP — [|https://crisisnlp.qcri.org/|]).
+
+    2. UrbangEnCy (Parraga-Alava et al., 2021): Ecuador-specific Spanish-language
+    emergency tweet dataset, 25,500+ texts, binary classification only (ScienceDirect
+    — [|https://www.sciencedirect.com/science/article/pii/S2352340920315729|]). Available
+    at [|https://doi.org/10.17632/4x37zz82k8|].
+
+    3. Mexico 2017 Earthquake Spanish NLP: Spanish NER approach merging CoNLL-2002
+    with manually annotated Spanish earthquake tweets for toponym extraction (PMC
+    — [|https://pmc.ncbi.nlm.nih.gov/articles/PMC6484392/|]). Latin American Spanish
+    context but not Ecuador-specific.
+
+    4. HumVI (2024): Multilingual humanitarian incident dataset including Spanish;
+    covers violent incidents impacting humanitarian aid workers, not natural disaster
+    timelines (arXiv — [|https://arxiv.org/html/2410.06370|]).
+
+    5. No timeline extraction or abstractive summarization benchmark in Spanish or
+    for Ecuador has been identified. This is a confirmed full gap.'
+  volcanic_crisis_timeline_specifics: 'Volcanic crises in Ecuador (Cotopaxi, Tungurahua,
+    Sangay, Reventador) involve multi-phase sequences: early warning signals, alert
+    level escalation (IGEPN color codes), lahar flow advisories, exclusion zone declarations,
+    evacuation orders, and shelter/return phases. These temporal structures differ
+    from the single-location, short-duration events in the benchmark.'
+  humanitarian_information_management:
+    relevant_platforms:
+    - ReliefWeb
+    - OCHA Humanitarian Data Exchange (HDX)
+    - OCHA Financial Tracking Service (FTS)
+    ecuador_specific_dashboards: '[NEEDS VERIFICATION — deferred: below search budget]'
+  evaluation_metric_adaptation:
+    rouge_for_spanish: ROUGE computed against Spanish-language reference summaries
+      is feasible but requires Spanish-tokenization-aware implementation; multilingual
+      BERTScore or other semantic similarity metrics may be more appropriate for evaluating
+      Spanish humanitarian summaries against English-trained baselines.
+    available_multilingual_metrics: '[NEEDS VERIFICATION — deferred: below search
+      budget]'
+    humanitarian_reporting_style_norms: UN OCHA situation reports and Red Cross emergency
+      appeals follow specific genre conventions (numbered bullet points, standardized
+      section headers, use of figures and percentages) that differ from the abstractive
+      summary style elicited in the benchmark. Evaluation rubrics should be anchored
+      to these conventions for deployment-relevant assessment.
+sub_national_variation:
+- region: Costa (coastal region)
+  key_provinces: Guayas, Manabí, Esmeraldas, Los Ríos, El Oro, Santa Elena
+  primary_crisis_types: Coastal flooding, El Niño-driven inundation, earthquake (Manabí
+    2016), tsunami risk, tropical storms
+  language_notes: Predominantly coastal Ecuadorian Spanish; lower Kichwa presence
+    than Sierra/Oriente
+  infrastructure_notes: '[NEEDS VERIFICATION — deferred: below search budget; internet
+    and mobile coverage in coastal rural areas]'
+  key_risk_indicators: '[NEEDS VERIFICATION — deferred: below search budget]'
+- region: Sierra (Andean highlands)
+  key_provinces: Pichincha, Tungurahua, Chimborazo, Cotopaxi, Azuay, Imbabura, Carchi,
+    Loja, Bolívar, Cañar
+  primary_crisis_types: Volcanic eruptions, lahares, earthquakes, landslides, cold
+    waves (heladas), páramo fires
+  language_notes: Significant Kichwa-speaking population; highest frequency of Kichwa
+    toponyms and code-switching in tweet stream; indigenous federations (ECUARUNARI,
+    CONAIE) maintain active social media presence. Indigenous population is largest
+    in the highlands, comprising approximately 68% of Ecuador's total indigenous population
+    (IWGIA 2023 — [|https://iwgia.org/en/ecuador/5087-iw-2023-ecuador.html|]).
+  infrastructure_notes: '[NEEDS VERIFICATION — deferred: below search budget; coverage
+    in high-altitude rural communities]'
+  key_risk_indicators: '[NEEDS VERIFICATION — deferred: below search budget; current
+    volcanic alert levels and risk zones around Cotopaxi, Tungurahua, Sangay]'
+- region: Oriente / Amazonía
+  key_provinces: Napo, Pastaza, Orellana, Sucumbíos, Morona Santiago, Zamora Chinchipe
+  primary_crisis_types: River flooding (desbordamiento), landslides, environmental
+    emergencies (oil spills), displacement, disease outbreaks
+  language_notes: Kichwa-speaking communities throughout; Shuar in southeastern Morona
+    Santiago and Zamora Chinchipe (59,894 speakers per 2010 INEC census — Wikipedia
+    Demographics of Ecuador — [|https://en.wikipedia.org/wiki/Demographics_of_Ecuador|]);
+    Achuar, Waorani, and other Amazonian indigenous languages in specific areas; nine
+    of Ecuador's eleven indigenous languages are spoken in the Amazon lowlands (Open
+    Book Publishers — [|https://books.openbookpublishers.com/10.11647/obp.0032/chapter11.html|]).
+    Very low presence in general social media monitoring streams.
+  infrastructure_notes: '[NEEDS VERIFICATION — deferred: below search budget; internet
+    and mobile coverage in Amazonian communities is severely limited in many areas]'
+  key_risk_indicators: '[NEEDS VERIFICATION — deferred: below search budget; current
+    displacement situation from Colombian border and Venezuelan migration route]'
+- region: Galápagos and Insular region
+  notes: Low population; crisis types include volcanic activity (Fernandina, Sierra
+    Negra), tourism-related incidents; low relevance to primary humanitarian coordination
+    use case
+  language_notes: Standard Ecuadorian Spanish; no significant indigenous-language
+    presence in tweet stream
+  infrastructure_notes: '[NEEDS VERIFICATION — deferred: below search budget]'
+regulatory_and_institutional_framework:
+  national_disaster_risk_law: 'Ecuador''s primary disaster risk management legal framework
+    comprises: (1) Ley de Seguridad Pública y del Estado (State and Public Security
+    Law) — the longstanding primary disaster law, analysed by IFRC Disaster Law (IFRC
+    — [|https://disasterlaw.ifrc.org/dmi/dmi_country/49|]); (2) Ley Orgánica para
+    la Gestión Integral del Riesgo de Desastres — a new comprehensive disaster risk
+    management law published in Registro Oficial No. 488, 30 January 2024, which formally
+    renamed the SGR as Secretaría Nacional de Gestión de Riesgos (SNGR) and updated
+    its mandate (SNGR official resolution — [|https://www.gestionderiesgos.gob.ec/wp-content/uploads/downloads/2024/05/Resol.SNGR-102-2024.pdf|]).
+    The 2024 law supersedes key aspects of the earlier Ley de Seguridad Pública for
+    disaster management purposes. Tweet streams and analyst documents may reference
+    both ''SGR'' and ''SNGR''; both acronyms should be recognized in NLP pipelines.'
+  humanitarian_coordination_legal_basis: '[NEEDS VERIFICATION — deferred: below search
+    budget; identify Ecuador government agreements with OCHA, Red Cross, and other
+    international actors governing information sharing and coordination]'
+  data_protection_and_social_media_monitoring: '[NEEDS VERIFICATION — deferred: below
+    search budget; identify applicable Ecuadorian data protection regulations governing
+    social media monitoring for humanitarian purposes]'
+  indigenous_peoples_rights_framework: Ecuador's 2008 Constitution established Spanish
+    as the official language while recognising Kichwa and Shuar as official languages
+    of intercultural communication, and all other indigenous languages as official
+    in their respective ethnic territories. The Constitution mandates State promotion
+    of intercultural communication and indigenous-language education (Open Book Publishers
+    — [|https://books.openbookpublishers.com/10.11647/obp.0032/chapter11.html|]; UNESCO
+    LitBase — [|https://www.uil.unesco.org/en/litbase/basic-education-young-people-and-adults-ecuador|]).
+    This has direct bearing on the legal status of Kichwa and Shuar content in humanitarian
+    monitoring applications.
+net_new_fields:
+  ecuador_specific_crisis_twitter_monitoring_system:
+    description: 'A Twitter monitoring system specifically designed for Ecuador was
+      developed by Ecuadorian researchers, filtering tweets into four categories matching
+      Ecuador''s primary disaster risk profile: volcanic, telluric (seismic), fires,
+      and climatological. This keyword-based system (using NLTK) demonstrates that
+      Ecuador-specific crisis categorization on Twitter is feasible and needed, but
+      constitutes a prototype rather than a validated NLP benchmark.'
+    source: ResearchGate — [|https://www.researchgate.net/publication/312485537_System_for_monitoring_natural_disasters_using_natural_language_processing_in_the_social_network_Twitter|]
+    validity_relevance: Confirms that Ecuador's geophysical crisis categories (volcanic,
+      telluric) are operationally distinct from the benchmark's four-category taxonomy
+      and have been independently identified as requiring dedicated NLP treatment.
+  urbangency_dataset:
+    description: UrbangEnCy is an Ecuador-specific emergency Twitter dataset of 25,500+
+      Spanish-language tweets (January–August 2020) labeled for binary emergency/non-emergency
+      classification for urban scenarios. Developed by Universidad Técnica de Manabí
+      researchers.
+    source: ScienceDirect (Parraga-Alava et al., 2021) — [|https://www.sciencedirect.com/science/article/pii/S2352340920315729|];
+      data available at [|https://doi.org/10.17632/4x37zz82k8|]
+    validity_relevance: This is the only publicly available Ecuador-specific Spanish
+      crisis tweet dataset identified. It is useful as a starting point for Ecuadorian
+      Spanish emergency NLP but does not cover timeline structure, summarization,
+      humanitarian coordinator relevance criteria, geophysical disaster types beyond
+      urban emergencies, or indigenous-language content.
+  humaid_ecuador_earthquake_subset:
+    description: The HumAID dataset (QCRI, 2021) includes the 2016 Ecuador Earthquake
+      as one of 19 disaster events, with approximately 1.7 million raw tweets in the
+      pool and approximately 2,000 annotated tweets. However, all HumAID annotations
+      are in English and the dataset covers tweet classification (11 categories) rather
+      than timeline extraction or summarization.
+    source: ResearchGate HumAID paper — [|https://www.researchgate.net/publication/350720422_HumAID_Human-Annotated_Disaster_Incidents_Data_from_Twitter|];
+      dataset at [|https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/A7NVF7|]
+    validity_relevance: Provides earthquake-type crisis data with an Ecuador event,
+      but English-only annotations and classification-only task design mean it cannot
+      substitute for the timeline extraction and summarization tasks required by the
+      deployment. The 2016 Ecuador Earthquake subset also showed severe class imbalance
+      (e.g., only 3 tweets in the 'displaced people and evacuations' class — MDPI
+      — [|https://www.mdpi.com/2076-3417/15/8/4330|]), limiting training utility.
+  sngr_institutional_name_change_2024:
+    description: The national disaster risk management authority was renamed from
+      SGR (Secretaría de Gestión de Riesgos) to SNGR (Secretaría Nacional de Gestión
+      de Riesgos) by Decreto Ejecutivo No. 641 (January 2023) and formally codified
+      by the Ley Orgánica para la Gestión Integral del Riesgo de Desastres (Registro
+      Oficial No. 488, 30 January 2024). The Ecuador Sphere Manual was also institutionalized
+      by SNGRE-034-2020 as the technical framework for humanitarian assistance.
+    source: SNGR official resolution SNGR-102-2024 — [|https://www.gestionderiesgos.gob.ec/wp-content/uploads/downloads/2024/05/Resol.SNGR-102-2024.pdf|]
+    validity_relevance: NLP pipelines and training data referencing 'SGR' may not
+      match current entity mentions of 'SNGR' in post-2023 tweets. Any NER or entity-linking
+      system must handle both acronyms as referring to the same institution.
+  multilingual_humanitarian_disaster_nlp_english_dominance:
+    description: A 2024 review (HumVI paper) confirms that most humanitarian event
+      detection datasets are disproportionately English, and identifies this as a
+      key issue for improving adoption of NLP techniques in the humanitarian sector.
+      The HumVI dataset itself attempts to be multilingual but focuses on violent
+      incidents affecting humanitarian workers rather than natural disaster timelines.
+    source: arXiv HumVI paper (2024) — [|https://arxiv.org/html/2410.06370|]
+    validity_relevance: Confirms that the English-dominance gap identified in the
+      benchmark's coverage analysis is a known sector-wide problem, not an edge case.
+      No multilingual timeline extraction or summarization benchmark for Spanish humanitarian
+      crisis content exists.

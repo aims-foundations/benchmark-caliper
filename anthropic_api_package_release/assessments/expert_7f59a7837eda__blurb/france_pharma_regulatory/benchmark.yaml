@@ -1,0 +1,1358 @@
+name: blurb
+full_name: Biomedical Language Understanding & Reasoning Benchmark (BLURB)
+source_url: https://microsoft.github.io/BLURB/
+paper_url: https://arxiv.org/abs/2007.15779
+year: 2021
+domain: Biomedical natural language processing
+porting_strategy: none
+languages:
+- en
+primary_region: United States / English-language biomedical research
+description: 'BLURB (Biomedical Language Understanding & Reasoning Benchmark) is a comprehensive
+
+  benchmark suite from Microsoft Research designed to evaluate language models on
+
+  biomedical NLP tasks. It compiles thirteen publicly available datasets across six
+
+  task types: named entity recognition (NER), evidence-based medical information
+
+  extraction (PICO), relation extraction, sentence similarity, document classification,
+
+  and question answering. BLURB is paired with PubMedBERT, a domain-specific BERT model
+
+  pretrained exclusively on PubMed abstracts, and provides a public leaderboard for
+
+  comparing biomedical language model pretraining strategies.
+
+  '
+documentation_excerpts: '## Key characteristics relevant to validity analysis:
+
+
+  ### 1. Input Ontology
+
+  BLURB defines its task taxonomy around six biomedical NLP categories: NER, PICO
+
+  extraction, relation extraction, sentence similarity, document classification, and
+
+  question answering [Q48, Q194, Q195]. These task types are modeled after general-domain
+
+  benchmarks like GLUE and SuperGLUE [Q36, Q205, Q206] and represent the paper''s
+
+  understanding of core biomedical NLP competencies. Within NER, all entity types are
+
+  collapsed to a single class per dataset (e.g., chemical, disease, gene) [Q108]. Relation
+
+  extraction focuses on binary or multi-class classification over entity pairs in single
+
+  sentences [Q114, Q115]. Question answering is explicitly restricted to yes/no and
+
+  three-way classification formats [Q124], with more complex list and summary tasks
+
+  excluded [Q49, Q50, Q51]. The benchmark is intentionally scoped to PubMed-based
+
+  biomedical applications, deferring clinical and other high-value verticals to future
+
+  work [Q46]. Task evolution is acknowledged ("from simple tasks, such as named entity
+
+  recognition, to more sophisticated tasks, such as relation extraction and question
+
+  answering" [Q192]) but the taxonomy does not include any regulatory document genre
+
+  (SmPCs, patient information leaflets, CTD modules, patent claims) or regulatory-specific
+
+  task types such as cross-document regulatory consistency checking. The benchmark
+
+  further acknowledges limited coverage relative to recent work [Q40] and that prior
+
+  studies use heterogeneous task selections, making cross-study comparison difficult [Q37].
+
+
+  ### 2. Input Content
+
+  All NER, relation extraction, PICO, and QA datasets are drawn from PubMed abstracts
+
+  [Q53, Q54, Q56, Q57, Q58, Q59, Q64, Q68, Q70, Q71, Q77, Q81], with the pretraining
+
+  corpus itself comprising 14 million PubMed abstracts totaling 3.2 billion words [Q126,
+
+  Q127]. Shared-task corpora from BioCreative, BioNLP, SemEval, and BioASQ dominate the
+
+  collection [Q191]. BLURB deliberately excludes MIMIC-based clinical notes present in
+
+  the earlier BLUE benchmark, on the grounds that "clinical notes differ substantially
+
+  from biomedical literature" [Q43] and that separate benchmarks for the two domains are
+
+  preferable [Q44]. The EBM PICO corpus sources abstracts specifically from clinical
+
+  trials [Q59]; ChemProt covers chemical-protein interactions in research abstracts [Q64];
+
+  BIOSSES provides 100 sentence pairs drawn from PubMed [Q74]. An experiment expanding
+
+  pretraining to PubMed Central full-text articles increased the corpus to 16.8 billion
+
+  words [Q166] but produced marginal or negative effects [Q167], attributed in part to
+
+  distributional differences between full texts and abstracts [Q170]. The ChemProt
+
+  training and development sets are expanded by assigning false labels to unlabeled
+
+  chemical-protein pairs [Q66]. GAD uses semi-automatically generated positive and
+
+  negative examples from a gene-disease association archive [Q70, Q71, Q72]. No
+
+  French-language source, no regulatory submission document, and no EU pharmaceutical
+
+  nomenclature corpus appears anywhere in the data collection.
+
+
+  ### 3. Input Form
+
+  All inputs are English-language text drawn from PubMed [Q1, Q46, Q126]. Preprocessing
+
+  pipelines apply task-specific transformations including special token insertion ([CLS],
+
+  [SEP]), entity dummification for relation extraction [Q99, Q183, Q184, Q186], and
+
+  sequence-length management via padding or truncation: 128 tokens for GAD, 256 for
+
+  ChemProt and DDI, 512 for QA tasks [Q120, Q125]. PubMedBERT generates its vocabulary
+
+  from PubMed text rather than general-domain corpora [Q126], producing shorter tokenized
+
+  inputs for biomedical terminology relative to BERT [Q162, Q168]; by contrast, continually
+
+  pretrained models (BioBERT, BlueBERT, ClinicalBERT) retain the original BERT vocabulary
+
+  derived from Wikipedia and BookCorpus [Q134], which fragments common biomedical terms
+
+  (e.g., naloxone into four subword pieces, acetyltransferase into seven [Q29]). Whole-word
+
+  masking is applied at 15% [Q133]; cased and uncased model variants show negligible
+
+  performance difference [Q132]. Training required approximately five days on 16 V100 GPUs
+
+  [Q131]. The benchmark is exclusively monolingual English; no multilingual processing,
+
+  no non-Latin script handling, and no French-language variant is documented or
+
+  contemplated.
+
+
+  ### 4. Output Ontology
+
+  Task-specific prediction layers are layered atop the pretrained language model [Q93,
+
+  Q94]. The label space varies by task: BIO or BIOUL token-level tags for NER [Q107,
+
+  Q109]; five-way plus false-class classification for ChemProt relation extraction [Q65];
+
+  binary yes/no for BioASQ QA [Q90]; three-way yes/maybe/no for PubMedQA [Q86]; binary
+
+  cancer hallmark indicators for HoC [Q78]; and a 0–4 continuous regression score for
+
+  BIOSSES sentence similarity [Q75]. The BLURB summary score is the macro average of
+
+  per-task-type averages, deliberately grouping datasets by task type before averaging
+
+  to avoid over-weighting NER [Q52, Q150]. NER entity categories cover genes, chemicals,
+
+  diseases, and molecular biology entities (protein, DNA, RNA, cell line, cell type) [Q58,
+
+  Q108], with no label space for regulatory-specific entity types (INNs, ATC codes,
+
+  excipient nomenclature, posology expressions, EMA-template contraindication qualifiers).
+
+  The BIOSSES regression score operationalizes general biomedical semantic proximity
+
+  [Q74, Q75, Q76] — not regulatory equivalence. The output ontology thus reflects
+
+  research-oriented biomedical NLP norms with no structural accommodation for the
+
+  legal-consequence distinctions (dose thresholds, population qualifiers) that govern
+
+  EU regulatory compliance determination.
+
+
+  ### 5. Output Content
+
+  Annotation provenance varies across datasets and is unevenly documented. The EBM PICO
+
+  dataset exhibits a notable quality stratification: "The training and development sets
+
+  were labeled by Amazon Mechanical Turkers, whereas the test set was labeled by Upwork
+
+  contributors with prior medical training" [Q60]. BIOSSES similarity scores are produced
+
+  by "five expert-level annotators" [Q74], providing an inter-annotator basis for the
+
+  regression labels. BioASQ annotations are produced "by biomedical experts" [Q88].
+
+  Inter-annotator agreement (IAA) statistics, annotator demographics beyond general
+
+  descriptors, and structured annotation protocols are not systematically reported across
+
+  the benchmark as a whole. Hyperparameter search is conducted on development sets [Q101,
+
+  Q141] but is acknowledged to use a common fixed range across models rather than
+
+  per-model per-dataset tuning [Q142, Q143, Q145]. Variance instability on small datasets
+
+  (BIOSSES, BioASQ, PubMedQA) is addressed by averaging over ten runs rather than
+
+  structural annotation design [Q139, Q140]. No annotator population includes regulatory
+
+  affairs specialists, legal experts, or individuals operating under EMA/ANSM normative
+
+  frameworks; the gap between biomedical research community annotation norms and
+
+  regulatory compliance judgments is NOT DOCUMENTED in the paper.
+
+
+  ### 6. Output Form
+
+  The primary evaluation metric is the BLURB score, defined as "the macro average of
+
+  average test results for each of the six tasks" [Q150]. Task-specific metrics include
+
+  entity-level F1 for NER [Q176], word-level F1 per PIO element for PICO [Q61], micro
+
+  F1 for ChemProt and HoC [Q83], Pearson correlation for BIOSSES [Q76], and accuracy
+
+  for QA tasks [Q100]. Models are fine-tuned using cross-entropy loss for classification
+
+  and mean-square error for regression [Q100], with a slanted triangular learning rate
+
+  schedule and 0.1 dropout [Q138]. Evaluation compares BERT model variants using the
+
+  same fine-tuning process for each task [Q151, Q152], and compares favorably to
+
+  published BioBERT, SciBERT, and BlueBERT results [Q158]. Ablation studies report
+
+  entity-level F1 across tagging schemes [Q176, Q182] and micro F1 across linear vs.
+
+  recurrent architectures [Q175, Q180]. All metrics are aggregate text-classification
+
+  or regression scores; no confidence-calibration metrics, threshold-sensitivity
+
+  analyses, or human-review-triggering decision boundaries are documented. Pretrained
+
+  and task-specific models are publicly released alongside the leaderboard [Q3, Q196].
+
+  '
+verbatim_quotes:
+- id: Q1
+  page: 1
+  dimension: input_content
+  text: we compile a comprehensive biomedical NLP benchmark from publicly-available datasets.
+- id: Q2
+  page: 1
+  dimension: input_ontology
+  text: we discover that some common practices are unnecessary with BERT models, such as using complex tagging schemes in
+    named entity recognition (NER).
+- id: Q3
+  page: 1
+  dimension: output_form
+  text: we have released our state-of-the-art pretrained and task-specific models for the community, and created a leaderboard
+    featuring our BLURB benchmark (short for Biomedical Language Understanding & Reasoning Benchmark).
+- id: Q4
+  page: 1
+  dimension: output_content
+  text: Yu Gu, Robert Tinn, Hao Cheng, Michael Lucas, Naoto Usuyama, Xiaodong Liu, Tristan Naumann, Jianfeng Gao, and Hoifung
+    Poon, Microsoft Research
+- id: Q5
+  page: 1
+  dimension: input_content
+  text: Existing pretraining work typically focuses on the newswire and Web domains.
+- id: Q6
+  page: 1
+  dimension: input_content
+  text: the original BERT model was trained on Wikipedia and BookCorpus [62], and subsequent efforts have focused on crawling
+    additional text from the Web to power even larger-scale pretraining [39, 50].
+- id: Q7
+  page: 2
+  dimension: input_content
+  text: In specialized domains like biomedicine, past work has shown that using in-domain text can provide additional gains
+    over general-domain language models [8, 34, 45].
+- id: Q8
+  page: 2
+  dimension: input_content
+  text: However, a prevailing assumption is that out-domain text is still helpful and previous work typically adopts a mixed-domain
+    approach, e.g., by starting domain-specific pretraining from an existing general-domain language model (Figure 1 top).
+- id: Q9
+  page: 2
+  dimension: input_content
+  text: We observe that mixed-domain pretraining such as continual pretraining can be viewed as a form of transfer learning
+    in itself, where the source domain is general text, such as newswire and the Web, and the target domain is specialized
+    text such as biomedical papers.
+- id: Q10
+  page: 2
+  dimension: input_content
+  text: Based on the rich literature of multi-task learning and transfer learning [4, 13, 38, 59], successful transfer learning
+    occurs when the target data is scarce and the source domain is highly relevant to the target one.
+- id: Q11
+  page: 2
+  dimension: input_content
+  text: For domains with abundant unlabeled text such as biomedicine, it is unclear that domain-specific pretraining can benefit
+    by transfer from general domains.
+- id: Q12
+  page: 2
+  dimension: input_content
+  text: In fact, the majority of general domain text is substantively different from biomedical text, raising the prospect
+    of negative transfer that actually hinders the target performance.
+- id: Q13
+  page: 4
+  dimension: input_content
+  text: In this paper, we will use biomedicine as a running example in our study of domain-specific pretraining. In other
+    words, biomedical text is considered in-domain, while others are regarded as out-domain.
+- id: Q14
+  page: 4
+  dimension: input_content
+  text: Intuitively, using in-domain text in pretraining should help with domain-specific applications. Indeed, prior work
+    has shown that pretraining with PubMed text leads to better performance in biomedical NLP tasks [8, 34, 45].
+- id: Q15
+  page: 4
+  dimension: input_content
+  text: The main question is whether pretraining should include text from other domains. The prevailing assumption is that
+    pretraining can always benefit from more text, including out-domain text. In fact, none of the prior biomedical-related
+    BERT models have been pretrained using purely biomedical text [8, 34, 45].
+- id: Q16
+  page: 4
+  dimension: input_content
+  text: Here, we challenge this assumption and show that domain-specific pretraining from scratch can be superior to mixed-domain
+    pretraining for downstream applications.
+- id: Q17
+  page: 4
+  dimension: input_content
+  text: The standard approach to pretraining a biomedical BERT model conducts continual pretraining of a general-domain pretrained
+    model, as exemplified by BioBERT [34]. Specifically, this approach would initialize with the standard BERT model [16],
+    pretrained using Wikipedia and BookCorpus. It then continues the pretraining process with MLM and NSP using biomedical
+    text.
+- id: Q18
+  page: 4
+  dimension: input_content
+  text: In the case of BioBERT, continual pretraining is conducted using PubMed abstracts and PubMed Central full text articles.
+    BlueBERT [45] uses both PubMed text and de-identified clinical notes from MIMIC-III [26].
+- id: Q19
+  page: 4
+  dimension: input_form
+  text: Note that in the continual pretraining approach, the vocabulary is the same as the original BERT model, in this case
+    the one generated from Wikipedia and BookCorpus. While convenient, this is a major disadvantage for this approach, as
+    the vocabulary is not representative of the target biomedical domain.
+- id: Q20
+  page: 4
+  dimension: input_content
+  text: Compared to the other biomedical-related pretraining efforts, SciBERT [8] is a notable exception as it generates the
+    vocabulary and pretrains from scratch, using biomedicine and computer science as representatives for scientific literature.
+    However, from the perspective of biomedical applications, SciBERT still adopts the mixed-domain pretraining approach,
+    as computer science text is clearly out-domain.
+- id: Q21
+  page: 4
+  dimension: output_content
+  text: Gu, Tinn, Cheng, et al.
+- id: Q22
+  page: 5
+  dimension: input_content
+  text: The mixed-domain pretraining approach makes sense if the target application domain has little text of its own, and
+    can thereby benefit from pretraining using related domains.
+- id: Q23
+  page: 5
+  dimension: input_content
+  text: However, this is not the case for biomedicine, which has over thirty million abstracts in PubMed, and adds over a
+    million each year.
+- id: Q24
+  page: 5
+  dimension: input_content
+  text: We thus hypothesize that domain-specific pretraining from scratch is a better strategy for biomedical language model
+    pretraining.
+- id: Q25
+  page: 5
+  dimension: input_form
+  text: A major advantage of domain-specific pretraining from scratch stems from having an in-domain vocabulary.
+- id: Q26
+  page: 5
+  dimension: input_form
+  text: BERT models using continual pretraining are stuck with the original vocabulary from the general-domain corpora, which
+    does not contain many common biomedical terms.
+- id: Q27
+  page: 5
+  dimension: input_form
+  text: Even for SciBERT, which generates its vocabulary partially from biomedical text, the deficiency compared to a purely
+    biomedical vocabulary is substantial.
+- id: Q28
+  page: 5
+  dimension: input_form
+  text: As a result, standard BERT models are forced to divert parametrization capacity and training bandwidth to model biomedical
+    terms using fragmented subwords.
+- id: Q29
+  page: 5
+  dimension: input_form
+  text: 'For example, naloxone, a common medical term, is divided into four pieces ([na, ##lo, ##xon, ##e]) by BERT, and acetyltransferase
+    is shattered into seven pieces ([ace, ##ty, ##lt, ##ran, ##sf, ##eras, ##e]) by BERT.'
+- id: Q30
+  page: 5
+  dimension: input_content
+  text: Another advantage of domain-specific pretraining from scratch is that the language model is trained using purely in-domain
+    data.
+- id: Q31
+  page: 5
+  dimension: input_content
+  text: For example, SciBERT pretraining has to balance optimizing for biomedical text and computer science text, the latter
+    of which is unlikely to be beneficial for biomedical applications.
+- id: Q32
+  page: 5
+  dimension: input_content
+  text: Continual pretraining, on the other hand, may potentially recover from out-domain modeling, though not completely.
+- id: Q33
+  page: 6
+  dimension: input_content
+  text: that continual pretraining may not be able to completely undo suboptimal initialization from the general-domain language
+    model.
+- id: Q34
+  page: 6
+  dimension: input_content
+  text: In our experiments, we show that domain-specific pretraining with in-domain vocabulary confers clear advantages over
+    mixed-domain pretraining, be it continual pretraining of general-domain language models, or pretraining on mixed-domain
+    text.
+- id: Q35
+  page: 6
+  dimension: input_ontology
+  text: The ultimate goal of language model pretraining is to improve performance on a wide range of downstream applications.
+- id: Q36
+  page: 6
+  dimension: input_ontology
+  text: In general-domain NLP, the creation of comprehensive benchmarks, such as GLUE [56, 57], greatly accelerates advances
+    in language model pretraining by enabling head-to-head comparisons among pretrained language models.
+- id: Q37
+  page: 6
+  dimension: input_ontology
+  text: In contrast, prior work on biomedical pretraining tends to use different tasks and datasets for downstream evaluation,
+    as shown in Table 2.
+- id: Q38
+  page: 6
+  dimension: input_ontology
+  text: To the best of our knowledge, BLUE [45] is the first attempt to create an NLP benchmark in the biomedical domain.
+- id: Q39
+  page: 6
+  dimension: input_ontology
+  text: We aim to improve on its design by addressing some of its limitations.
+- id: Q40
+  page: 6
+  dimension: input_ontology
+  text: First, BLUE has limited coverage of biomedical applications used in other recent work on biomedical language models,
+    as shown in Table 2.
+- id: Q41
+  page: 6
+  dimension: input_ontology
+  text: For example, it does not include any question-answering task.
+- id: Q42
+  page: 6
+  dimension: input_content
+  text: More importantly, BLUE mixes PubMed-based biomedical applications (six datasets such as BC5, ChemProt, and HoC) with
+    MIMIC-based clinical applications (four datasets such as i2b2 and MedNLI).
+- id: Q43
+  page: 6
+  dimension: input_content
+  text: Clinical notes differ substantially from biomedical literature, to the extent that we observe BERT models pretrained
+    on clinical notes perform poorly on biomedical tasks, similar to the standard BERT.
+- id: Q44
+  page: 6
+  dimension: input_ontology
+  text: Consequently, it is advantageous to create separate benchmarks for these two domains.
+- id: Q45
+  page: 6
+  dimension: input_ontology
+  text: To facilitate investigations of biomedical language model pretraining and help accelerate progress in biomedical NLP,
+    we create a new benchmark, the Biomedical Language Understanding & Reasoning Benchmark (BLURB).
+- id: Q46
+  page: 6
+  dimension: input_ontology
+  text: We focus on PubMed-based biomedical applications, and leave the exploration of the clinical domain, and other high-value
+    verticals to future work.
+- id: Q47
+  page: 7
+  dimension: input_ontology
+  text: prior work, we prioritize the selection of datasets used in recent work on biomedical language models, and will explore
+    the addition of other datasets in future work.
+- id: Q48
+  page: 7
+  dimension: input_ontology
+  text: BLURB is comprised of a comprehensive set of biomedical NLP tasks from publicly available datasets, including named
+    entity recognition (NER), evidence-based medical information extraction (PICO), relation extraction, sentence similarity,
+    document classification, and question answering.
+- id: Q49
+  page: 7
+  dimension: input_ontology
+  text: For question answering, prior work has considered both classification tasks (e.g., whether a reference text contains
+    the answer to a given question) and more complex tasks such as list and summary [42].
+- id: Q50
+  page: 7
+  dimension: input_ontology
+  text: The latter types often require additional engineering effort that are not relevant to evaluating neural language models.
+- id: Q51
+  page: 7
+  dimension: input_ontology
+  text: For simplicity, we focus on the classification tasks such as yes/no question-answering in BLURB, and leave the inclusion
+    of more complex question-answering to future work.
+- id: Q52
+  page: 7
+  dimension: output_form
+  text: To compute a summary score for BLURB, the simplest way is to report the average score among all tasks. However, this
+    may place undue emphasis on simpler tasks such as NER for which there are many existing datasets. Therefore, we group
+    the datasets by their task types, compute the average score for each task type, and report the macro average among the
+    task types.
+- id: Q53
+  page: 7
+  dimension: input_content
+  text: The BioCreative V Chemical-Disease Relation corpus [35] was created for evaluating relation extraction of drug-disease
+    interactions, but is frequently used as a NER corpus for detecting chemical (drug) and disease entities.
+- id: Q54
+  page: 7
+  dimension: input_content
+  text: The dataset consists of 1500 PubMed abstracts broken into three even splits for training, development, and test.
+- id: Q55
+  page: 7
+  dimension: input_form
+  text: We use a pre-processed version of this dataset generated by Crichton et al. [14], discard the relation labels, and
+    train NER models for chemical (BC5-Chemical) and disease (BC5-Disease) separately.
+- id: Q56
+  page: 8
+  dimension: input_content
+  text: NCBI-Disease. The Natural Center for Biotechnology Information Disease corpus [18] contains 793 PubMed abstracts with
+    6892 annotated disease mentions linked to 790 distinct disease entities. We use a pre-processed set of train, development,
+    test splits generated by Crichton et al. [14].
+- id: Q57
+  page: 8
+  dimension: input_content
+  text: BC2GM. The Biocreative II Gene Mention corpus [53] consists of sentences from PubMed abstracts with manually labeled
+    gene and alternative gene entities. Following prior work, we focus on the gene entity annotation. In its original form,
+    BC2GM contains 15000 train and 5000 test sentences. We use a pre-processed version of the dataset generated by Crichton
+    et al. [14], which carves out 2500 sentences from the training data for development.
+- id: Q58
+  page: 8
+  dimension: input_content
+  text: 'JNLPBA. The Joint Workshop on Natural Language Processing in Biomedicine and its Applications shared task [27] is
+    a NER corpus on PubMed abstracts. The entity types are chosen for molecular biology applications: protein, DNA, RNA, cell
+    line, and cell type. Some of the entity type distinctions are not very meaningful. For example, a gene mention often refers
+    to both the DNA and gene products such as the RNA and protein. Following prior work that evaluates on this dataset [34],
+    we ignore the type distinction and focus on detecting the entity mentions. We use the same train, development, and test
+    splits as in Crichton et al. [14].'
+- id: Q59
+  page: 8
+  dimension: input_content
+  text: 'EBM PICO. The Evidence-Based Medicine corpus [44] contains PubMed abstracts on clinical trials, where each abstract
+    is annotated with P, I, and O in PICO: Participants (e.g., diabetic patients), Intervention (e.g., insulin), Comparator
+    (e.g., placebo) and Outcome (e.g., blood glucose levels). Comparator (C) labels are omitted as they are standard in clinical
+    trials: placebo for passive control and standard of care for active control. There are 4300, 500, and 200 abstracts in
+    training, development, and test, respectively.'
+- id: Q60
+  page: 8
+  dimension: output_content
+  text: The training and development sets were labeled by Amazon Mechanical Turkers, whereas the test set was labeled by Upwork
+    contributors with prior medical training.
+- id: Q61
+  page: 8
+  dimension: output_form
+  text: EBM PICO provides labels at the word level for each PIO element. For each of the PIO elements in an abstract, we tally
+    the F1 score at the word level, and then compute the final score as the average among PIO elements in the dataset.
+- id: Q62
+  page: 8
+  dimension: input_content
+  text: Occasionally, two PICO elements might overlap with each other (e.g., a participant span might contain within it an
+    intervention span). In EBM-PICO, about 3% of the PIO words are in the overlap.
+- id: Q63
+  page: 8
+  dimension: input_form
+  text: Note that the dataset released along with SciBERT appears to remove the overlapping words from the larger span (e.g.,
+    the participant span as mentioned above). We instead use the original dataset [44] and their scripts for preprocessing
+    and evaluation.
+- id: Q64
+  page: 8
+  dimension: input_content
+  text: ChemProt. The Chemical Protein Interaction corpus [31] consists of PubMed abstracts annotated with chemical-protein
+    interactions between chemical and protein entities. There are 23 interactions organized in a hierarchy, with 10 high-level
+    interactions (including NONE). The vast majority of relation instances in ChemProt are within single sentences. Following
+    prior work [8, 34], we only consider sentence-level instances.
+- id: Q65
+  page: 8
+  dimension: output_ontology
+  text: 'We follow the ChemProt authors'' suggestions and focus on classifying five high-level interactions — UPREGULATOR
+    (CPR : 3), DOWNREGULATOR (CPR : 4), AGONIST (CPR : 5), ANTAGONIST (CPR : 6), SUBSTRATE (CPR : 9) — as well as everything
+    else (false).'
+- id: Q66
+  page: 8
+  dimension: input_form
+  text: The ChemProt annotation is not exhaustive for all chemical-protein pairs. Following previous work [34, 45], we expand
+    the training and development sets by assigning a false label for all chemical-protein pairs that occur in a training or
+    development sentence, but do not have an explicit label in the ChemProt corpus.
+- id: Q67
+  page: 8
+  dimension: output_content
+  text: Note that prior work uses slightly different label expansion of the test data. To facilitate head-to-head comparison,
+    we will provide instructions for reproducing the test set in BLURB from the original dataset.
+- id: Q68
+  page: 8
+  dimension: input_content
+  text: DDI. The Drug-Drug Interaction corpus [21] was created to facilitate research on pharmaceutical information extraction,
+    with a particular focus on pharmacovigilance. It contains sentence-level annotation of drug-drug interactions on PubMed
+    abstracts. Note that some prior work [45, 61] discarded 90 training files that the authors
+- id: Q69
+  page: 9
+  dimension: input_form
+  text: We instead use the original dataset and produce our train/dev/test split of 624/90/191 files.
+- id: Q70
+  page: 9
+  dimension: input_content
+  text: The Genetic Association Database corpus [11] was created semi-automatically using the Genetic Association Archive.
+- id: Q71
+  page: 9
+  dimension: input_content
+  text: Specifically, the archive contains a list of gene-disease associations, with the corresponding sentences in the PubMed
+    abstracts reporting the association studies.
+- id: Q72
+  page: 9
+  dimension: input_form
+  text: Bravo et al. [11] used a biomedical NER tool to identify gene and disease mentions, and create the positive examples
+    from the annotated sentences in the archive, and negative examples from gene-disease co-occurrences that were not annotated
+    in the archive.
+- id: Q73
+  page: 9
+  dimension: input_form
+  text: We use an existing preprocessed version of GAD and its corresponding train/dev/test split created by Lee et al. [34].
+- id: Q74
+  page: 9
+  dimension: output_content
+  text: The Sentence Similarity Estimation System for the Biomedical Domain [54] contains 100 pairs of PubMed sentences each
+    of which is annotated by five expert-level annotators with an estimated similarity score in the range from 0 (no relation)
+    to 4 (equivalent meanings).
+- id: Q75
+  page: 9
+  dimension: output_ontology
+  text: It is a regression task, with the average score as the final annotation.
+- id: Q76
+  page: 9
+  dimension: output_form
+  text: We use the same train/dev/test split in Peng et al. [45] and use Pearson correlation for evaluation.
+- id: Q77
+  page: 9
+  dimension: input_content
+  text: The Hallmarks of Cancer corpus was motivated by the pioneering work on cancer hallmarks [20].
+- id: Q78
+  page: 9
+  dimension: output_ontology
+  text: It contains annotation on PubMed abstracts with binary labels each of which signifies the discussion of a specific
+    cancer hallmark.
+- id: Q79
+  page: 9
+  dimension: output_ontology
+  text: The authors use 37 fine-grained hallmarks which are grouped into ten top-level ones.
+- id: Q80
+  page: 9
+  dimension: output_ontology
+  text: We focus on predicting the top-level labels.
+- id: Q81
+  page: 9
+  dimension: input_content
+  text: The dataset was released with 1499 PubMed abstracts [6] and has since been expanded to 1852 abstracts [5].
+- id: Q82
+  page: 9
+  dimension: output_content
+  text: Note that Peng et al. [45] discarded a control subset of 272 abstracts that do not discuss any cancer hallmark (i.e.,
+    all binary labels are false).
+- id: Q83
+  page: 9
+  dimension: output_form
+  text: We instead adopt the original dataset and report micro F1 across the ten cancer hallmarks.
+- id: Q84
+  page: 9
+  dimension: input_form
+  text: Though the original dataset provided sentence level annotation, we follow the common practice and evaluate on the
+    abstract level [19, 60].
+- id: Q85
+  page: 9
+  dimension: input_form
+  text: We create the train/dev/test split, as they are not available previously.
+- id: Q86
+  page: 9
+  dimension: output_ontology
+  text: The PubMedQA dataset [25] contains a set of research questions, each with a reference text from a PubMed abstract
+    as well as an annotated label of whether the text contains the answer to the research question (yes/maybe/no).
+- id: Q87
+  page: 9
+  dimension: input_form
+  text: We use the original train/dev/test split with 450, 50, and 500 questions, respectively.
+- id: Q88
+  page: 9
+  dimension: output_content
+  text: The BioASQ corpus [42] contains multiple question answering tasks annotated by biomedical experts, including yes/no,
+    factoid, list, and summary questions.
+- id: Q89
+  page: 9
+  dimension: input_ontology
+  text: Pertaining to our objective of comparing neural language models, we focus on the the yes/no questions (Task 7b), and
+    leave the inclusion of other tasks to future work.
+- id: Q90
+  page: 9
+  dimension: output_ontology
+  text: Each question is paired with a reference text containing multiple sentences from a PubMed abstract and a yes/no answer.
+- id: Q91
+  page: 9
+  dimension: input_form
+  text: We use the official train/dev/test split of 670/75/140 questions.
+- id: Q92
+  page: 9
+  dimension: input_ontology
+  text: Pretrained neural language models provide a unifying foundation for learning task-specific models.
+- id: Q93
+  page: 9
+  dimension: output_ontology
+  text: Given an input token sequence, the language model produces a sequence of vectors in the contextual representation.
+- id: Q94
+  page: 9
+  dimension: output_ontology
+  text: A task-specific prediction model is then layered on top to generate the final output for a task-specific application.
+- id: Q95
+  page: 10
+  dimension: output_form
+  text: Prior work on biomedical NLP often adopts different task-specific models and fine-tuning methods, which makes it difficult
+    to understand the impact of an underlying pretrained language model on task performance.
+- id: Q96
+  page: 10
+  dimension: output_form
+  text: In our primary investigation comparing pretraining strategies, we fix the task-specific model architecture using the
+    standard method identifed here, to facilitate a head-to-head comparison among the pretrained neural language models.
+- id: Q97
+  page: 10
+  dimension: output_form
+  text: Subsequently, we start with the same pretrained BERT model, and conduct additional investigation on the impact for
+    the various choices in the task-specific models.
+- id: Q98
+  page: 10
+  dimension: output_form
+  text: For prior biomedical BERT models, our standard task-specific methods generally lead to comparable or better performance
+    when compared to their published results.
+- id: Q99
+  page: 10
+  dimension: input_form
+  text: An input instance is first processed by a TransformInput module which performs task-specific transformations such
+    as appending special instance marker (e.g., [CLS]) or dummifying entity mentions for relation extraction.
+- id: Q100
+  page: 10
+  dimension: output_form
+  text: We use cross-entropy loss for classification tasks and mean-square error for regression tasks.
+- id: Q101
+  page: 10
+  dimension: output_form
+  text: We conduct hyperparameter search using the development set based on task-specific metrics.
+- id: Q102
+  page: 10
+  dimension: output_form
+  text: We jointly fine-tune the parameters of the task-specific prediction layer as well as the underlying neural language
+    model.
+- id: Q103
+  page: 11
+  dimension: output_ontology
+  text: Many NLP applications can be formulated as a classification or regression task, wherein either individual tokens or
+    sequences are the prediction target.
+- id: Q104
+  page: 11
+  dimension: output_ontology
+  text: 'Modeling choices usually vary in two aspects: the instance representation and the prediction layer.'
+- id: Q105
+  page: 11
+  dimension: input_ontology
+  text: Given an input text span (usually a sentence), the NER task seeks to recognize mentions of entities of interest.
+- id: Q106
+  page: 11
+  dimension: output_ontology
+  text: It is typically formulated as a sequential labeling task, where each token is assigned a tag to signify whether it
+    is in an entity mention or not.
+- id: Q107
+  page: 11
+  dimension: output_ontology
+  text: BIO is the standard tagging scheme that classifies each token as the beginning of an entity (B), inside an entity
+    (I), or outside (O).
+- id: Q108
+  page: 11
+  dimension: output_ontology
+  text: The NER tasks in BLURB are only concerned about one entity type (in JNLPBA, all the types are merged into one).
+- id: Q109
+  page: 11
+  dimension: output_ontology
+  text: Prior work has also considered more complex tagging schemes such as BIOUL, where U stands for the last word of an
+    entity and L stands for a single-word entity.
+- id: Q110
+  page: 11
+  dimension: output_ontology
+  text: Classification is done using a simple linear layer or more sophisticated sequential labeling methods such as LSTM
+    or conditional random field (CRF).
+- id: Q111
+  page: 11
+  dimension: input_ontology
+  text: Conceptually, evidence-based medical information extraction is akin to slot filling, as it tries to identify the PIO
+    elements in an abstract describing a clinical trial.
+- id: Q112
+  page: 11
+  dimension: output_ontology
+  text: However, it can be formulated as a sequential tagging task like NER, by classifying tokens belonging to each element.
+- id: Q113
+  page: 11
+  dimension: output_ontology
+  text: A token may belong to more than one element, e.g., participant (P) and intervention (I).
+- id: Q114
+  page: 11
+  dimension: input_ontology
+  text: Existing work on relation extraction tends to focus on binary relations.
+- id: Q115
+  page: 11
+  dimension: input_ontology
+  text: Given a pair of entity mentions in a text span (typically a sentence), the goal is to determine if the text indicates
+    a relation for the mention pair.
+- id: Q116
+  page: 11
+  dimension: output_ontology
+  text: There are significant variations in the entity and relation representations.
+- id: Q117
+  page: 11
+  dimension: input_form
+  text: To prevent overfitting by memorizing the entity pairs, the entity tokens are often augmented with start/end markers
+    or replaced by
+- id: Q118
+  page: 12
+  dimension: input_form
+  text: For featurization, the relation instance is either represented by a special [CLS] token, or by concatenating the mention
+    representations.
+- id: Q119
+  page: 12
+  dimension: input_form
+  text: In the latter case, if an entity mention contains multiple tokens, its representation is usually produced by pooling
+    those of individual tokens (max or average).
+- id: Q120
+  page: 12
+  dimension: input_form
+  text: For computational efficiency, we use padding or truncation to set the input length to 128 tokens for GAD and 256 tokens
+    for ChemProt and DDI which contain longer input sequences.
+- id: Q121
+  page: 12
+  dimension: output_ontology
+  text: The similarity task can be formulated as a regression problem to generate a normalized score for a sentence pair.
+- id: Q122
+  page: 12
+  dimension: input_form
+  text: By default, a special [SEP] token is inserted to separate the two sentences, and a special [CLS] token is prepended
+    to the beginning to represent the pair.
+- id: Q123
+  page: 12
+  dimension: input_ontology
+  text: For each text span and category (an abstract and a cancer hallmark in HoC), the goal is to classify whether the text
+    belongs to the category.
+- id: Q124
+  page: 12
+  dimension: input_ontology
+  text: For the two-way (yes/no) or three-way (yes/maybe/no) question-answering task, the encoding is similar to the sentence
+    similarity task.
+- id: Q125
+  page: 12
+  dimension: input_form
+  text: For computational efficiency, we use padding or truncation to set the input length to 512 tokens.
+- id: Q126
+  page: 12
+  dimension: input_content
+  text: 'For biomedical domain-specific pretraining, we generate the vocabulary and conduct pretraining using the latest collection
+    of PubMed abstracts: 14 million abstracts, 3.2 billion words, 21 GB.'
+- id: Q127
+  page: 12
+  dimension: input_content
+  text: The original collection contains over 4 billion words; we filter out any abstracts with less than 128 words to reduce
+    noise.
+- id: Q128
+  page: 12
+  dimension: output_form
+  text: We use Adam [30] for the optimizer using a standard slanted triangular learning rate schedule with warm-up in 10%
+    of steps and cool-down in 90% of steps.
+- id: Q129
+  page: 12
+  dimension: output_form
+  text: Specifically, the learning rate increases linearly from zero to the peak rate of 6 × 10−4 in the first 10% of steps,
+    and then decays linearly to zero in the remaining 90% of steps.
+- id: Q130
+  page: 12
+  dimension: output_form
+  text: Training is done for 62,500 steps with batch size of 8,192, which is comparable to the computation used in previous
+- id: Q131
+  page: 13
+  dimension: input_form
+  text: The training takes about 5 days on one DGX-2 machine with 16 V100 GPUs.
+- id: Q132
+  page: 13
+  dimension: input_form
+  text: We find that the cased version has similar performance to the uncased version in preliminary experiments; thus, we
+    focus on uncased models in this study.
+- id: Q133
+  page: 13
+  dimension: input_form
+  text: We use whole-word masking (WWM), with a masking rate of 15%.
+- id: Q134
+  page: 13
+  dimension: input_form
+  text: BioBERT and BlueBERT conduct continual pretraining from BERT, whereas ClinicalBERT conducts continual pretraining
+    from BioBERT; thus, they all share the same vocabulary as BERT.
+- id: Q135
+  page: 13
+  dimension: input_form
+  text: Prior work in biomedical pretraining uses BERT-BASE only.
+- id: Q136
+  page: 13
+  dimension: output_form
+  text: BERT-LARGE appears to yield improved performance in some preliminary experiments.
+- id: Q137
+  page: 13
+  dimension: output_form
+  text: We leave an in-depth exploration to future work.
+- id: Q138
+  page: 13
+  dimension: output_form
+  text: For task-specific fine-tuning, we use Adam [30] with the standard slanted triangular learning rate schedule (warm-up
+    in the first 10% of steps and cool-down in the remaining 90% of steps) and a dropout probability of 0.1.
+- id: Q139
+  page: 13
+  dimension: output_content
+  text: Due to random initialization of the task-specific model and drop out, the performance may vary for different random
+    seeds, especially for small datasets like BIOSSES, BioASQ, and PubMedQA.
+- id: Q140
+  page: 13
+  dimension: output_form
+  text: We report the average scores from ten runs for BIOSSES, BioASQ, and PubMedQA, and five runs for the others.
+- id: Q141
+  page: 13
+  dimension: output_form
+  text: 'For all datasets, we use the development set for tuning the hyperparameters with the same range: learning rate (1e-5,
+    3e-5, 5e-5), batch size (16, 32) and epoch number (2–60).'
+- id: Q142
+  page: 13
+  dimension: output_form
+  text: Ideally, we would conduct separate hyperparameter tuning for each model on each dataset.
+- id: Q143
+  page: 13
+  dimension: output_form
+  text: However, this would incur a prohibitive amount of computation, as we have to enumerate all combinations of models,
+    datasets and hyperparameters, each of which requires averaging over multiple runs with different randomization.
+- id: Q144
+  page: 13
+  dimension: output_form
+  text: In practice, we observe that the development performance is not very sensitive to hyperparameter selection, as long
+    as they are in a ballpark range.
+- id: Q145
+  page: 13
+  dimension: output_form
+  text: Consequently, we focus on hyperparameter tuning using a subset of representative models such as BERT and BioBERT,
+    and use a common set of hyperparameters for each dataset that work well for both out-domain and in-domain language models.
+- id: Q146
+  page: 14
+  dimension: input_ontology
+  text: In this section, we conduct a thorough evaluation to assess the impact of domain-specific pretraining in biomedical
+    NLP applications.
+- id: Q147
+  page: 14
+  dimension: output_form
+  text: First, we fix the standard task-specific model for each task in BLURB, and conduct a head-to-head comparison of domain-specific
+    pretraining and mixed-domain pretraining.
+- id: Q148
+  page: 14
+  dimension: output_form
+  text: Next, we evaluate the impact of various pretraining options such as vocabulary, whole-word masking (WWM), and adversarial
+    pretraining.
+- id: Q149
+  page: 14
+  dimension: output_form
+  text: Finally, we fix a pretrained BERT model and compare various modeling choices for task-specific fine-tuning.
+- id: Q150
+  page: 14
+  dimension: output_form
+  text: The BLURB score is the macro average of average test results for each of the six tasks (NER, PICO, relation extraction,
+    sentence similarity, document classification, question answering).
+- id: Q151
+  page: 14
+  dimension: output_form
+  text: We compare BERT models by applying them to the downstream NLP applications in BLURB.
+- id: Q152
+  page: 14
+  dimension: output_form
+  text: For each task, we conduct the same fine-tuning process using the standard task-specific model as specified in subsection
+    2.4.
+- id: Q153
+  page: 14
+  dimension: output_form
+  text: By conducting domain-specific pretraining from scratch, PubMedBERT consistently outperforms all the other BERT models
+    in most biomedical NLP tasks, often by a significant margin.
+- id: Q154
+  page: 14
+  dimension: input_content
+  text: Models using biomedical text in pretraining generally perform better.
+- id: Q155
+  page: 14
+  dimension: input_content
+  text: However, mixing out-domain data in pretraining generally leads to worse performance.
+- id: Q156
+  page: 14
+  dimension: input_content
+  text: In particular, even though clinical notes are more relevant to the biomedical domain than general-domain text, adding
+    them does not confer any advantage, as evident by the results of ClinicalBERT and BlueBERT.
+- id: Q157
+  page: 15
+  dimension: output_content
+  text: notable exception is PubMedQA, but this dataset is small, and there are relatively high variances among runs with
+    different random seeds.
+- id: Q158
+  page: 15
+  dimension: output_form
+  text: Compared to the published results for BioBERT, SciBERT, and BlueBERT in their original papers, our results are generally
+    comparable or better for the tasks they have been evaluated on.
+- id: Q159
+  page: 15
+  dimension: input_ontology
+  text: To assess the impact of pretraining options on downstream applications, we conduct several ablation studies using
+    PubMedBERT as a running example.
+- id: Q160
+  page: 15
+  dimension: input_form
+  text: Using the original BERT vocabulary derived from Wikipedia & BookCorpus (by continual pretraining from the original
+    BERT), the results are significantly worse than using an in-domain vocabulary from PubMed.
+- id: Q161
+  page: 15
+  dimension: output_form
+  text: Additionally, WWM leads to consistent improvement across the board, regardless of the vocabulary in use.
+- id: Q162
+  page: 15
+  dimension: input_form
+  text: A significant advantage in using an in-domain vocabulary is that the input will be shorter in downstream tasks, as
+    shown in Table 8, which makes learning easier.
+- id: Q163
+  page: 15
+  dimension: input_content
+  text: Furthermore, we found that pretraining on general-domain text provides no benefit even if we use the in-domain vocabulary;
+    see Table 9.
+- id: Q164
+  page: 15
+  dimension: input_content
+  text: In sum, general-domain pretraining confers no advantage here in domain-specific pretraining.
+- id: Q165
+  page: 16
+  dimension: input_content
+  text: In our standard PubMedBERT pretraining, we used PubMed abstracts only.
+- id: Q166
+  page: 16
+  dimension: input_content
+  text: We also tried adding full-text articles from PubMed Central (PMC), with the total pretraining text increased substantially
+    to 16.8 billion words (107 GB).
+- id: Q167
+  page: 16
+  dimension: input_content
+  text: Surprisingly, this generally leads to a slight degradation in performance across the board.
+- id: Q168
+  page: 17
+  dimension: input_form
+  text: Table 8. Comparison of the average input length in word pieces using general-domain vs in-domain vocabulary.
+- id: Q169
+  page: 17
+  dimension: output_form
+  text: Table 9. Evaluation of the impact of pretraining corpora and time on the performance on BLURB. In the first two columns,
+    pretraining was first conducted on Wiki & Books, then on PubMed abstracts. All use the same amount of compute (twice as
+    long as original BERT pretraining), except for the third column, which only uses half (same as original BERT pretraining).
+- id: Q170
+  page: 17
+  dimension: input_content
+  text: extending pretraining for 60% longer (100K steps in total), the overall results improve and slightly outperform the
+    standard PubMedBERT using only abstracts. We hypothesize that the reason for this behavior is two-fold. First, PMC inclusion
+    is influenced by funding policy and differs from general PubMed distribution, and full texts generally contain more noise
+    than abstracts. As most existing biomedical NLP tasks are based on abstracts, full texts may be slightly out-domain compared
+    to abstracts. Moreover, even if full texts are potentially helpful, their inclusion requires additional pretraining cycles
+    to make use of the extra information.
+- id: Q171
+  page: 18
+  dimension: output_form
+  text: Adversarial pretraining has been shown to be highly effective in boosting performance in general-domain applications
+    [37]. We thus conducted adversarial pretraining in PubMedBERT and compared its performance with standard pretraining (Table
+    11). Surprisingly, adversarial pretraining generally leads to a slight degradation in performance, with some exceptions
+    such as sentence similarity (BIOSSES). We hypothesize that the reason may be similar to what we observe in pretraining
+    with full texts. Namely, adversarial training is most useful if the pretraining corpus is more diverse and relatively
+    out-domain compared to the application tasks. We leave a more thorough evaluation of adversarial pretraining to future
+    work.
+- id: Q172
+  page: 18
+  dimension: output_form
+  text: In the above studies on pretraining methods, we fix the fine-tuning methods to the standard methods described in subsection
+    2.4. Next, we will study the effect of modeling choices in task-specific fine-tuning, by fixing the underlying pretrained
+    language model to our standard PubMedBERT (WWM, PubMed vocabulary, pretrained using PubMed abstracts).
+- id: Q173
+  page: 18
+  dimension: output_ontology
+  text: Prior to the current success of pretraining neural language models, standard NLP approaches were often dominated by
+    sequential labeling methods, such as conditional random fields (CRF) and more recently recurrent
+- id: Q174
+  page: 19
+  dimension: output_ontology
+  text: Such methods were particularly popular for named entity recognition (NER) and relation extraction.
+- id: Q175
+  page: 19
+  dimension: output_form
+  text: Comparison of linear layers vs recurrent neural networks for task-specific fine-tuning in named entity recognition
+    (entity-level F1) and relation extraction (micro F1), all using the standard PubMedBERT.
+- id: Q176
+  page: 19
+  dimension: output_form
+  text: Comparison of entity-level F1 for biomedical named entity recognition (NER) using different tagging schemes and the
+    standard PubMedBERT.
+- id: Q177
+  page: 19
+  dimension: output_form
+  text: Comparison of PubMedBERT performance on BLURB using standard and adversarial pretraining.
+- id: Q178
+  page: 20
+  dimension: output_ontology
+  text: With the advent of BERT models and the self-attention mechanism, the utility of explicit sequential modeling becomes
+    questionable.
+- id: Q179
+  page: 20
+  dimension: output_ontology
+  text: We find that this is indeed the case for NER and relation extraction, as shown in Table 12.
+- id: Q180
+  page: 20
+  dimension: output_form
+  text: The use of a bidirectional LSTM (Bi-LSTM) does not lead to any substantial gain compared to linear layer.
+- id: Q181
+  page: 20
+  dimension: output_ontology
+  text: We thus conducted a head-to-head comparison of the tagging schemes using three biomedical NER tasks in BLURB.
+- id: Q182
+  page: 20
+  dimension: output_form
+  text: As we can see in Table 13, the difference is minuscule, suggesting that with self-attention, the sequential nature
+    of the tags is less essential in NER modeling.
+- id: Q183
+  page: 20
+  dimension: input_form
+  text: With entity dummification, the entity mentions in question are anonymized using entity type tags such as $DRUG or
+    $GENE.
+- id: Q184
+  page: 20
+  dimension: input_form
+  text: With entity marker, special tags marking the start and end of an entity are appended to the entity mentions in question.
+- id: Q185
+  page: 20
+  dimension: input_form
+  text: Relation encoding is derived from the special [CLS] token appended to the beginning of the text or the special entity
+    start token, or by concatenating the contextual representation of the entity mentions in question.
+- id: Q186
+  page: 20
+  dimension: input_form
+  text: It is a common practice to "dummify" entities (i.e., replace an entity with a generic tag such as $DRUG or $GENE).
+- id: Q187
+  page: 20
+  dimension: output_ontology
+  text: We thus conducted a systematic evaluation of entity dummification and relation encoding, using two relation extraction
+    tasks in BLURB.
+- id: Q188
+  page: 20
+  dimension: input_form
+  text: 'For entity marking, we consider three variants: dummify the entities in question; use the original text; add start
+    and end tags to entities in question.'
+- id: Q189
+  page: 20
+  dimension: input_form
+  text: For relation encoding, we consider three schemes. In the [CLS] encoding introduced by the original BERT paper, the
+    special token [CLS] is prepended to the beginning of the text span, and its contextual representation at the top layer
+    is used as the input in the final classification.
+- id: Q190
+  page: 20
+  dimension: input_form
+  text: Another standard approach concatenates the BERT encoding of the given entity mentions, each obtained by applying max
+    pooling.
+- id: Q191
+  page: 21
+  dimension: input_content
+  text: There are a plethora of biomedical NLP datasets, especially from various shared tasks such as BioCreative [3, 29,
+    40, 53], BioNLP [15, 28], SemEval [2, 9, 10, 17], and BioASQ [42].
+- id: Q192
+  page: 21
+  dimension: input_ontology
+  text: The focus has evolved from simple tasks, such as named entity recognition, to more sophisticated tasks, such as relation
+    extraction and question answering, and new tasks have been proposed for emerging application scenarios such as evidence-based
+    medical information extraction [44].
+- id: Q193
+  page: 21
+  dimension: input_ontology
+  text: However, while comprehensive benchmarks and leaderboards are available for the general domains (e.g., GLUE [57] and
+    SuperGLUE [56]), they are still a rarity in biomedical NLP.
+- id: Q194
+  page: 21
+  dimension: input_ontology
+  text: In this paper, inspired by prior effort towards this direction [45], we create the first leaderboard for biomedical
+    NLP, BLURB — a comprehensive benchmark containing thirteen datasets for six tasks.
+- id: Q195
+  page: 21
+  dimension: input_ontology
+  text: To facilitate this study, we create BLURB, a comprehensive benchmark for biomedical NLP featuring a diverse set of
+    tasks such as named entity recognition, relation extraction, document classification, and question answering.
+- id: Q196
+  page: 21
+  dimension: output_form
+  text: To accelerate research in biomedical NLP, we release our state-of-the-art biomedical BERT models and setup a leaderboard
+    based on BLURB.
+- id: Q197
+  page: 22
+  dimension: input_ontology
+  text: 'Future directions include: further exploration of domain-specific pretraining strategies; incorporating more tasks
+    in biomedical NLP; extension of the BLURB benchmark to clinical and other high-value domains.'
+- id: Q198
+  page: 24
+  dimension: input_content
+  text: A corpus with multi-level annotations of patients, interventions and outcomes to support language processing for medical
+    literature.
+- id: Q199
+  page: 24
+  dimension: output_form
+  text: 'Transfer Learning in Biomedical Natural Language Processing: An Evaluation of BERT and ELMo on Ten Benchmarking Datasets.'
+- id: Q200
+  page: 24
+  dimension: input_ontology
+  text: Results of the Seventh Edition of the BioASQ Challenge.
+- id: Q201
+  page: 24
+  dimension: output_ontology
+  text: 'BIOSSES: a semantic sentence similarity estimation system for the biomedical domain.'
+- id: Q202
+  page: 24
+  dimension: input_ontology
+  text: Overview of BioCreative II gene mention recognition.
+- id: Q203
+  page: 24
+  dimension: input_ontology
+  text: Drug–drug interaction extraction via hierarchical RNNs on sequence and shortest dependency paths.
+- id: Q204
+  page: 24
+  dimension: input_ontology
+  text: Enhancing clinical concept extraction with contextual embeddings.
+- id: Q205
+  page: 24
+  dimension: input_ontology
+  text: 'GLUE: A MULTI-TASK BENCHMARK AND ANALYSIS PLATFORM FOR NATURAL LANGUAGE UNDERSTANDING.'
+- id: Q206
+  page: 24
+  dimension: input_ontology
+  text: 'Superglue: A stickier benchmark for general-purpose language understanding systems.'
+coverage_strengths:
+- user_priority: NER task coverage for biomedical entity extraction
+  benchmark_coverage: 'BLURB includes five NER datasets (BC5-Chemical, BC5-Disease, NCBI-Disease, BC2GM, JNLPBA) and a PICO
+    extraction task, covering chemical, disease, and gene entity types from PubMed abstracts — directly exercising the sequence-labeling
+    pipeline the deployment relies on [Q48, Q108, Q194].
+
+    '
+  dimension: input_ontology
+- user_priority: Semantic textual similarity (STS) evaluation
+  benchmark_coverage: 'BLURB includes BIOSSES, a sentence-similarity regression task over 100 PubMed sentence pairs annotated
+    by five expert-level annotators on a 0–4 scale, with Pearson correlation as the evaluation metric [Q74, Q75, Q76] — the
+    closest structural analog to the deployment''s STS-based consistency checking.
+
+    '
+  dimension: output_ontology
+- user_priority: Chemical compound entity recognition
+  benchmark_coverage: 'BC5-Chemical and ChemProt datasets specifically cover chemical entity mentions and chemical-protein
+    interactions in PubMed abstracts, providing pretrained model exposure to chemical nomenclature in biomedical research
+    prose [Q53, Q64, Q65].
+
+    '
+  dimension: input_content
+- user_priority: Publicly available pretrained models and leaderboard
+  benchmark_coverage: 'BLURB releases pretrained PubMedBERT and task-specific fine-tuned models alongside a public leaderboard,
+    enabling baseline comparisons and model reuse for downstream adaptation [Q3, Q196].
+
+    '
+  dimension: output_form
+coverage_gap_analysis:
+- user_priority: 'French-language regulatory document processing (HIGH: Input Form)'
+  benchmark_coverage: 'NOT DOCUMENTED — BLURB is exclusively English-language, with all thirteen datasets sourced from English
+    PubMed abstracts [Q1, Q46, Q126]. No multilingual variant, French-language corpus, or non-English preprocessing pipeline
+    is mentioned anywhere in the paper. This is a foundational external validity failure for the deployment.
+
+    '
+  gap_type: full
+  web_search_target: 'French biomedical NLP benchmark regulatory pharmaceutical QUAERO CAS CLEF eHealth ANSM EMA French NER
+    STS dataset
+
+    '
+- user_priority: 'Regulatory document genre coverage — SmPCs, patient leaflets, CTD modules (HIGH: Input Ontology)'
+  benchmark_coverage: 'NOT DOCUMENTED — BLURB''s task taxonomy covers six biomedical NLP categories all anchored in PubMed
+    research abstracts [Q48, Q194]. No regulatory submission document type (SmPC, patient information leaflet, CTD module,
+    patent claim) appears in the benchmark''s input ontology. The scope is explicitly limited to PubMed-based biomedical applications,
+    with other domains deferred to future work [Q46, Q197].
+
+    '
+  gap_type: full
+  web_search_target: 'EU regulatory document NLP benchmark EMA SmPC patient leaflet CTD NER annotated corpus pharmaceutical
+    regulatory submission NLP evaluation
+
+    '
+- user_priority: 'INN, ATC codes, posology expressions, excipient nomenclature as NER targets (HIGH: Input Content)'
+  benchmark_coverage: 'PARTIAL — BLURB covers chemical entity NER (BC5-Chemical, ChemProt) and drug-drug interaction text
+    (DDI corpus) [Q53, Q64, Q68], providing some chemical/drug entity exposure. However, NER label sets cover research-oriented
+    categories (chemical, disease, gene, protein) [Q108], not regulatory-specific types such as International Nonproprietary
+    Names (INNs), ATC codes, excipient lists, or posology expressions governed by EMA SmPC templates. PubMed abstract density
+    for these regulatory entity types is undocumented and likely insufficient.
+
+    '
+  gap_type: partial
+  web_search_target: 'INN ATC code NER dataset pharmaceutical regulatory NLP excipient posology EMA SmPC entity recognition
+    annotated corpus French English
+
+    '
+- user_priority: 'Regulatory equivalence as STS output construct (HIGH: Output Ontology)'
+  benchmark_coverage: 'PARTIAL — BIOSSES provides a sentence similarity regression task scored 0–4 by expert annotators [Q74,
+    Q75], which is structurally analogous to STS but operationalizes general biomedical semantic proximity, not regulatory
+    equivalence. The benchmark offers no label space or scoring function sensitive to legally determinative lexical differences
+    (dose thresholds, contraindicated population qualifiers) required under EMA/ANSM standards. The macro-average BLURB score
+    [Q150] further obscures threshold-level behavior critical to the deployment''s human-review triggering logic.
+
+    '
+  gap_type: partial
+  web_search_target: 'regulatory STS semantic equivalence scoring EMA ANSM safety warning consistency NLP pharmaceutical label
+    equivalence evaluation dataset
+
+    '
+- user_priority: 'Regulatory-expert annotator population vs. biomedical researcher norms (HIGH: Output Content)'
+  benchmark_coverage: 'NOT DOCUMENTED — BLURB''s annotators range from Amazon Mechanical Turkers [Q60] to biomedical experts
+    [Q74, Q88], with no representation of regulatory affairs specialists, legal experts, or individuals operating under EMA/ANSM
+    normative frameworks. Inter-annotator agreement statistics are not systematically reported across datasets, and no cross-annotator-population
+    agreement study is presented. The deployment anticipates systematic disagreements between biomedical NLP annotators (who
+    prioritize clinical relevance) and regulatory experts (who apply rigid legal constraints) — a mismatch the benchmark provides
+    no basis to quantify.
+
+    '
+  gap_type: full
+  web_search_target: 'regulatory affairs specialist annotation NLP inter-annotator agreement pharmaceutical EMA ANSM NER STS
+    label validity biomedical vs regulatory expert annotator comparison
+
+    '
+- user_priority: 'Threshold-sensitive scoring and confidence calibration for human-review workflows (MODERATE: Output Form)'
+  benchmark_coverage: 'PARTIAL — BLURB reports aggregate metrics (entity-level F1, Pearson correlation, micro F1, accuracy)
+    averaged across runs [Q140, Q150, Q176]. Variance instability on small datasets is acknowledged [Q139] and mitigated by
+    multi-run averaging rather than confidence calibration. No threshold-sensitivity analysis, operating characteristic curves,
+    or calibration metrics are reported — leaving the benchmark unable to characterize model behavior at the decision boundaries
+    where the deployment triggers human review.
+
+    '
+  gap_type: partial
+  web_search_target: 'biomedical NLP confidence calibration threshold sensitivity NER STS regulatory human-in-the-loop decision
+    boundary pharmaceutical NLP evaluation
+
+    '
+- user_priority: 'EMA/ANSM normative validation of benchmark scoring (HIGH: Output Ontology)'
+  benchmark_coverage: 'NOT DOCUMENTED — No validation of BLURB''s scoring criteria, label taxonomy, or output decision rules
+    against EMA guidelines, ANSM circulars, or any EU regulatory framework is mentioned. The benchmark is validated against
+    prior biomedical NLP model comparisons [Q158] and GLUE/SuperGLUE design principles [Q36, Q205, Q206], not against regulatory
+    science or pharmacovigilance standards.
+
+    '
+  gap_type: full
+  web_search_target: NLP benchmark validation EU regulatory framework EMA ANSM pharmacovigilance SmPC NLP tool regulatory
+    science validation study pharmaceutical

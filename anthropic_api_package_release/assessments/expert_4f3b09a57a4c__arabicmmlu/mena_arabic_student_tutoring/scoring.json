@@ -1,0 +1,477 @@
+{
+  "benchmark": "arabicmmlu",
+  "region": "MENA Multi-Country Arabic Tutoring System — Eight-Country Curriculum Deployment",
+  "dimensions": {
+    "input_ontology": {
+      "score": 3,
+      "justification": "ArabicMMLU's taxonomy of 40 tasks across STEM, Social Science, Humanities, Arabic Language, and Other [Q25, Q107], spanning primary through university levels, broadly matches the deployment's educational tiers and subject scope. All six university subjects required by the deployment (law, CS, management, economics, political science, accounting) are confirmed present in the benchmark configurations [DATASET-D8, D11, D13, D14, D16]. However, university-level questions constitute only ~6.1% of the benchmark [Q71], yielding roughly ~889 questions spread across all university subjects — thin coverage for a deployment that explicitly targets university students. Country coverage at the ontology level is structurally uneven: Jordan dominates with over 6,000 questions while some countries contributed 'as few as 100 or, in some cases, none at all' [Q89]. Several configurations have null country/level metadata [DATASET-D26, D27], limiting their use for country-specific diagnostics. The taxonomy includes no madhab labeling for Islamic studies and no jurisdiction-specific branching for law, both flagged as HIGH-priority deployment requirements.",
+      "strengths": [
+        "All six deployment-required university subjects are present as queryable configurations [DATASET-D8, D11, D13, D14, D16]",
+        "Multi-level coverage (primary, middle, high school, university) is empirically confirmed in the data [DATASET-D5, D13, D21]",
+        "Subject taxonomy explicitly includes country-variation-prone subjects: history, geography, civics, political science [Q72, Q73]",
+        "Negation is treated as a distinct linguistic phenomenon [Q83, Q84], providing some construct depth beyond factual recall"
+      ],
+      "checklist_responses": {
+        "IO-1": "Required categories include MSA-medium primary/middle/high school content for Morocco, Egypt, Jordan, Palestine, Lebanon, UAE, Kuwait, KSA across STEM, humanities, civics, Islamic studies, Arabic language; plus university-level coverage for law, CS, management, economics, political science, accounting [elicitation A1, A2].",
+        "IO-2": "Several regionally-relevant categories are omitted or thinly covered: madhab-specific Islamic studies tracks (Maliki for Morocco, Hanbali for KSA) have no labeling [gap_id 7]; jurisdiction-specific law branches are absent (flat label schema [Q27]); Kuwaiti civic/national content appears absent — no Kuwaiti workers documented [Q31, Q96] and no Kuwaiti examples observed in data sample [DATASET content summary]; French-medium Moroccan university science content is fully out of scope [Q92].",
+        "IO-3": "Some included categories are not directly relevant to all deployment cohorts: 'Driving Test' configuration [DATASET-D35] is not a tutoring subject; null-country generic Islamic Studies and Arabic Language items [DATASET-D26, D27] cannot be used for country-stratified evaluation. These are not harmful inclusions per se but contribute construct-irrelevant variance to aggregate scores.",
+        "IO-4": "Documented gaps: (a) university-level coverage at ~6.1% [Q71] is structurally thin for a deployment serving university students; (b) no madhab calibration [gap_id 7]; (c) no jurisdiction-specific law taxonomy [Q27, gap_id 4]; (d) Kuwait coverage likely near-zero [Q89, Q96]; (e) French-medium Moroccan content fully absent [Q92]."
+      },
+      "evidence_quotes": [
+        "[Q25] 'ArabicMMLU is an Arabic multiple-choice question-answering dataset comprising 40 tasks spanning a wide range of subjects and education levels.' (p.3)",
+        "[Q71] 'This could be attributed to the relatively small portion (i.e., 6%) of university-level questions in ArabicMMU' (p.7)",
+        "[Q89] 'ArabicMMLU does not represent all Arabic countries equally. For example, we have collected over 6K multiple-choice questions from Jordan, while other countries are represented with only 100 questions or, in some cases, not at all.' (p.9)",
+        "[Q92] 'The dataset primarily focuses on Modern Standard Arabic (MSA).' (p.9)",
+        "[Q107] 'Table 9 presents results organized by subject groups: STEM, Social Science, Humanities, Arabic Language, and Other.' (p.16)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-1] ArabicMMLU paper Figure 1 lists Jordan, Egypt, and Palestine as top-three contributors; Kuwait not mentioned in acknowledgments",
+        "[WEB-4] Arabic LLM benchmark survey confirms structural geographic bias toward Saudi/Gulf, with Kuwait remaining underrepresented across 40+ benchmarks",
+        "[WEB-3] ArabLegalEval uses ~299 ArabicMMLU law questions and ~195 political science questions as baselines, confirming subset sizes"
+      ],
+      "evidence_dataset": [
+        "DATASET-D8, D9, D10, D34: All sampled Law (Professional) questions are exclusively from Morocco, single Google Drive PDF source — no observed multi-jurisdictional law branches",
+        "DATASET-D26: Islamic Studies (All) configuration has Country=null, Source=folderat.com — no curriculum or madhab attribution",
+        "DATASET-D27: Arabic Language (General) has Country=null, Source=madinaharabic.com — generic non-curriculum source",
+        "DATASET-D35: Driving Test contains country-specific UAE and Lebanese traffic rules — narrow but country-stratified",
+        "DATASET content summary: No Kuwait examples observed in any sampled configuration outside zero-coverage assumption"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "Q25",
+          "Q107"
+        ],
+        "IO-2": [
+          "Q27",
+          "Q31",
+          "Q89",
+          "Q92",
+          "Q96",
+          "WEB-1",
+          "WEB-4"
+        ],
+        "IO-3": [
+          "DATASET-D26",
+          "DATASET-D27",
+          "DATASET-D35"
+        ],
+        "IO-4": [
+          "Q71",
+          "Q89",
+          "Q92",
+          "WEB-1",
+          "WEB-4"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Exact per-country question counts beyond Jordan (>6,000) are not text-published [gap_id 5]",
+        "Madhab calibration of Islamic studies questions is undocumented anywhere [gap_id 7]",
+        "Jurisdictional distribution of law questions beyond Moroccan procedural law sample is unknown"
+      ],
+      "requires_expert_verification": [
+        "Whether observed Moroccan-only Law (Professional) sample generalizes to the full ~299 law questions or whether other configurations contain embedded jurisdiction-specific content",
+        "Whether Islamic Studies configurations contain madhab-specific fiqh that would diverge across Maliki/Hanbali/Shafi'i traditions"
+      ]
+    },
+    "input_content": {
+      "score": 2,
+      "justification": "Content-level validity is the dimension where ArabicMMLU diverges most sharply from the deployment's eight-country requirement. While the benchmark's content is sourced from real native Arabic exams [Q1, Q26] — a clear strength over translated alternatives [Q5, Q6] — the empirical content distribution is heavily skewed: civics, social science, history, and economics at school level are dominated by Jordanian-specific institutional, royal, and constitutional content presented as universal curriculum knowledge [DATASET-D1, D2, D3, D4, D5, D6, D7, D20, D21, D22, D25, D30, D31]. University-level economics, accounting, management, and political science come exclusively from a single Egyptian university (Assiut University) in the sample [DATASET-D13, D14, D28, D39, D40], and Law (Professional) is exclusively Moroccan in the observed sample [DATASET-D8, D9, D10, D34]. The deployment user explicitly requires country-specific tailoring for law [elicitation A2] and curriculum-aligned content for each of the eight countries [elicitation A1]. Kuwait has no observed examples and no documented annotators [Q31, Q96]; Morocco has no documented annotators [Q31, Q96]. Egypt-specific currency (جنيه) appears in university economics presented as universal [DATASET-D28]. The benchmark's own admission that countries are represented unequally [Q89] is empirically confirmed and amplified by the dataset analysis: rather than uniform under-coverage, the data shows Jordanian-curriculum content is propagated as default for non-Jordanian cohorts. This generates substantial construct-irrelevant variance for Moroccan, Emirati, Kuwaiti, Saudi, Lebanese, and Palestinian students.",
+      "strengths": [
+        "Native exam provenance avoids translation artifacts that plague competing Arabic benchmarks [Q5, Q6]",
+        "STEM content (math, biology, physics, CS factual) is genuinely curriculum-neutral and reliable across all eight countries [DATASET-D24]",
+        "Palestine is substantively represented in STEM subjects (Biology HS, CS Primary, Math Primary) [DATASET-D23, D24]",
+        "Some Moroccan legal content is present, even if narrow [DATASET-D8, D9, D10]",
+        "Native annotators and exam URLs document content provenance per question [Q32, Q33]"
+      ],
+      "checklist_responses": {
+        "IC-1": "Inputs heavily require region-specific knowledge but the regions covered diverge from the deployment's eight-country target. Civics and history items reference Jordanian royal lineage, the 1952 Jordanian constitution, Jordan's Royal Medical Services, and Central Bank of Jordan URLs as universal facts [DATASET-D1, D2, D4, D5, D6, D20, D21, D25, D31]. University accounting and economics use Egyptian institutional and currency context [DATASET-D28, D39, D40]. Law uses Moroccan procedural code [DATASET-D8, D9, D10].",
+        "IC-2": "Cultural-content alignment is partial. Islamic studies content observed (Hadith ethics, Quran recitation etiquette) appears broadly Sunni-consistent, aligning with the deployment's predominantly Sunni population [DATASET-D17, D37, D38]. However, no madhab calibration exists [gap_id 7], and Hanbali/Maliki specificity is not verified. Politically sensitive content (e.g., King Abdullah I and Zionism [DATASET-D31]) is framed in Jordanian national narrative — potentially misaligned with Palestinian, Lebanese, or other framings.",
+        "IC-3": "Western-specific knowledge is largely avoided due to native exam sourcing [Q5, Q6]. The primary content-validity threat is not Western bias but intra-regional bias — Jordanian and Egyptian content dominating non-Jordanian/non-Egyptian cohorts.",
+        "IC-4": "Annotators are exclusively from Jordan, Egypt, Lebanon, UAE, KSA [Q31] — Morocco, Kuwait, Palestine have no documented annotators despite (in Palestine's case) contributing top-three question volume [Q96, WEB-1]. Recruiting Kuwaiti, Moroccan, and Palestinian curriculum experts would be essential for any deployment use.",
+        "IC-5": "Documented content issues harming validity: (a) Jordanian-default civics/history/social science presented as universal [DATASET-D1, D2, D4, D21]; (b) single-Egyptian-university dominance of university social science subjects [DATASET-D39, D40]; (c) single-source single-jurisdiction Law (Professional) [DATASET-D34]; (d) no Kuwait content observed; (e) Egypt-specific currency in 'general' economics [DATASET-D28]; (f) French-medium Moroccan university content absent [Q92]."
+      },
+      "evidence_quotes": [
+        "[Q1] 'we present ArabicMMLU, the first multi-task language understanding benchmark for the Arabic language, sourced from school exams across diverse educational levels in different countries' (p.1)",
+        "[Q26] 'The questions are sourced from eight different countries in North Africa (Morocco and Egypt), the Levant (Jordan, Palestine, and Lebanon), and the Gulf (UAE, Kuwait, and KSA).' (p.3)",
+        "[Q31] 'a total of 10 Arabic native speakers from different countries: 6 internal workers (1 Jordanian, 1 Egyptian, 1 Lebanese, 1 from UAE, and 2 from KSA) and 4 external workers (3 Jordanian and 1 Egyptian)' (p.4)",
+        "[Q89] 'we have collected over 6K multiple-choice questions from Jordan, while other countries are represented with only 100 questions or, in some cases, not at all.' (p.9)",
+        "[Q90] 'This is largely due to the availability of publicly-accessible exams in each country' (p.9)",
+        "[Q96] 'We extend our gratitude to all collaborators from Jordan, Egypt, Lebanon, UAE, and Saudi Arabia' (p.10)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-1] ArabicMMLU Figure 1 confirms Jordan/Egypt/Palestine as top-three contributors; Morocco and UAE among lower contributors",
+        "[WEB-1] Models perform notably poorly on Morocco- and UAE-sourced questions in country-stratified analysis",
+        "[WEB-3] ArabLegalEval is Saudi-only; does not fill multi-jurisdictional legal content gap"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: Civics HS asks 'manifestations of change in modern Jordanian society' — Jordan-specific framed as general curriculum",
+        "DATASET-D2: Jordanian 1952 coalition government question framed as standard middle-school civics",
+        "DATASET-D6: Economics HS gives Central Bank of Jordan URL (cbj.gov.jo) as exam answer",
+        "DATASET-D7: 67% Jordanian financial-exclusion statistic embedded as universal economics fact",
+        "DATASET-D21: Primary social science teaches reign of Jordanian King Talal as factual content",
+        "DATASET-D28: University economics uses Egyptian pounds (جنيه) in ROI calculations",
+        "DATASET-D34: All 5 sampled Law (Professional) questions from Morocco, single PDF source",
+        "DATASET-D39, D40: All sampled Accounting and Economics (University) from Assiut University Egypt",
+        "DATASET-D31: Jordanian-narrative framing of King Abdullah I and Zionism — politically sensitive cross-country variation"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "DATASET-D1",
+          "DATASET-D2",
+          "DATASET-D4",
+          "DATASET-D5",
+          "DATASET-D6",
+          "DATASET-D20",
+          "DATASET-D28",
+          "DATASET-D34"
+        ],
+        "IC-2": [
+          "DATASET-D17",
+          "DATASET-D31",
+          "DATASET-D37",
+          "DATASET-D38"
+        ],
+        "IC-3": [
+          "Q5",
+          "Q6"
+        ],
+        "IC-4": [
+          "Q31",
+          "Q96",
+          "WEB-1"
+        ],
+        "IC-5": [
+          "Q89",
+          "Q92",
+          "DATASET-D1",
+          "DATASET-D34",
+          "DATASET-D39",
+          "DATASET-D40"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether Jordanian dominance in civics/history/social science extends to the full benchmark or is concentrated in specific level/subject configurations [gap_id 5]",
+        "Whether Law subset beyond the sampled Moroccan questions includes other jurisdictions [gap_id 4]",
+        "Madhab-specific framing in Islamic studies is undocumented [gap_id 7]"
+      ],
+      "requires_expert_verification": [
+        "Per-country curriculum review by national-curriculum experts from Kuwait, Morocco, Palestine, UAE to identify questions presented as 'universal' that are actually national-curriculum-specific",
+        "Islamic studies curriculum experts to assess madhab calibration risk for Moroccan Maliki and Saudi Hanbali contexts"
+      ]
+    },
+    "input_form": {
+      "score": 4,
+      "justification": "Input form aligns well with the deployment. All 14,575 questions are MSA [Q2], matching the formal medium of instruction across all eight target countries [Q29]. The text-only, MCQ format with embedded contextual passages [Q37, Q38] is exactly the deployment's primary use case. Arabic-script fidelity is empirically confirmed [DATASET-D24, D25]. The MSA-only scope appropriately excludes Darija (which the deployment explicitly excludes) and dialectal Arabic [Q92]. The main form-level gap is French-medium Moroccan university content [Q92], which the deployment user explicitly identified as in-scope for Moroccan university science programs [elicitation A4]. A secondary form concern is OCR corruption observed in Management and Political Science (University) questions from Egyptian PDF sources [DATASET-D14, D15, D29], which compromises the input signal quality for those configurations. A minor anomaly is one Arabic Grammar question with English-language stem [DATASET-D19].",
+      "strengths": [
+        "MSA throughout matches the formal medium of instruction in all eight countries [Q2, Q29]",
+        "MCQ + 2–5 options format directly matches deployment's primary use case [Q27]",
+        "Text-only modality matches the deployment's text-based interface [Q93, infrastructure section]",
+        "Contextual passages bundled with dependent questions [Q38] preserves single-shot evaluability"
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal distributions align: MSA Arabic text input matches the deployment's text-based interface and matches the formal language of instruction across all eight countries [Q2, Q29]. No image/audio mismatch since both the benchmark and deployment exclude multimodal content [Q37, Q93].",
+        "IF-2": "Regional infrastructure supports text-based delivery: ITU 2024 data shows ~100% internet penetration in UAE/KSA/Kuwait [WEB-8], ~83-88% in Levant per Arab Barometer [WEB-10], and majority mobile-dominant access across all eight [WEB-11]. Mobile-dominant access is compatible with text MCQ delivery.",
+        "IF-3": "Domain-specific form gap: French-medium Moroccan university science content is entirely outside benchmark scope [Q92]; deployment explicitly identifies this as in-scope for Moroccan universities [elicitation A4]. No companion benchmark identified [gap_id 6]. Additionally, OCR corruption in some Egyptian-sourced university PDFs [DATASET-D14, D15, D29] degrades input form for those subjects.",
+        "IF-4": "Documented form mismatches: (a) French-medium Moroccan university content absent [Q92, gap_id 6]; (b) OCR-corrupted text in Management and Political Science university questions [DATASET-D14, D15, D29]; (c) one English-stem grammar question [DATASET-D19]; (d) several configurations have null country/level metadata limiting form-level diagnostics [DATASET-D26, D27]."
+      },
+      "evidence_quotes": [
+        "[Q2] 'Our data comprises 40 tasks and 14,575 multiple-choice questions in Modern Standard Arabic (MSA)' (p.1)",
+        "[Q29] 'In public schools, Arabic is commonly used for teaching and assessment' (p.3)",
+        "[Q37] 'workers were instructed to include only questions accompanied by an answer key, and to discard questions containing multi-modal information' (p.4)",
+        "[Q38] 'If a question had additional contextual information (e.g., a passage referenced by several questions), the context was required to be included with each corresponding question.' (p.4)",
+        "[Q92] 'The dataset primarily focuses on Modern Standard Arabic (MSA).' (p.9)",
+        "[Q93] 'ArabicMMLU is focused solely on text-based assessment' (p.9)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-8] World Bank/ITU 2024: UAE/KSA/Kuwait at ~100% internet penetration",
+        "[WEB-11] ITU 2025: 83% mobile ownership in Arab States; mobile-dominant access patterns",
+        "[WEB-10] Arab Barometer 2020: ~84% Jordanian, ~83% Palestinian, ~88% Lebanese internet usage",
+        "[WEB-4] Arabic LLM benchmark survey confirms no French-Arabic bilingual benchmark for Moroccan higher education exists"
+      ],
+      "evidence_dataset": [
+        "DATASET-D14, D15: Severe OCR corruption in Management (University) — answer options unreadable",
+        "DATASET-D29: OCR-distorted Political Science (University) text",
+        "DATASET-D19: Single English-stem question in Arabic Grammar configuration",
+        "DATASET-D24, D25: Confirmed clean MSA in Biology HS and Civics HS"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q2",
+          "Q29"
+        ],
+        "IF-2": [
+          "WEB-8",
+          "WEB-10",
+          "WEB-11"
+        ],
+        "IF-3": [
+          "Q92",
+          "DATASET-D14",
+          "DATASET-D15",
+          "DATASET-D29"
+        ],
+        "IF-4": [
+          "Q92",
+          "DATASET-D14",
+          "DATASET-D15",
+          "DATASET-D19",
+          "DATASET-D26",
+          "WEB-4"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Total proportion of OCR-corrupted questions in Management and Political Science (University) configurations is unknown [DATASET limitations §6]"
+      ],
+      "requires_expert_verification": []
+    },
+    "output_ontology": {
+      "score": 3,
+      "justification": "The flat single-correct-answer MCQ schema with 2–5 options [Q27] structurally matches the deployment's MCQ tutoring use case, and the user explicitly noted that for MCQ tasks explanation format is not exam-critical [elicitation A3]. This is a meaningful structural alignment. However, the schema provides no mechanism for jurisdiction-specific or country-specific correct answers. The deployment user explicitly stated 'the system must tailor legal answers to each country's specific legal system' [elicitation A2], but the benchmark's flat label structure encodes a single ground-truth answer per question [Q27], with no country-stratified branching. The dataset analysis empirically confirms this: a Moroccan procedural-law answer is simply marked correct without any 'correct-for-Morocco' qualifier [DATASET-D8, D9, D10]. For civics, history, and law subjects where correct answers legitimately vary by country, this schema cannot represent the variation the deployment requires. The benchmark does provide country, subject, and level metadata fields per question [Q33], which would in principle allow country-stratified scoring — but this is a metadata affordance rather than a label-schema accommodation, and the metadata is null for some configurations [DATASET-D26, D27].",
+      "strengths": [
+        "Flat MCQ schema with 2–5 options [Q27] directly matches deployment's MCQ tutoring format",
+        "Country, subject, and level metadata fields are present per question [Q33], enabling country-stratified analysis even without label-schema branching",
+        "Subject-group taxonomy (STEM, Social Science, Humanities, Arabic Language, Other) [Q107] supports diagnostic per-subject reporting",
+        "Education-level stratification (primary, middle, high, university) [Q102, Q103] aligns with the deployment's tier structure"
+      ],
+      "checklist_responses": {
+        "OO-1": "Output label categories (single correct option from 2–5) are regionally relevant for MCQ tutoring [Q27]; the format itself is appropriate. The categorical label space (A/B/C/D/E or Arabic equivalents [Q51, Q52]) is universally usable.",
+        "OO-2": "Missing categories: no jurisdiction-specific correct-answer branching for law and civics [Q27], explicitly required by deployment [elicitation A2]; no madhab-specific branching for Islamic studies [gap_id 7]; no mechanism for 'correct in country X but not in country Y' [DATASET-D8, D34].",
+        "OO-3": "The Driving Test configuration encodes country-specific traffic regulations as correct answers [DATASET-D35] — a positive example of country-tied ground truth, but applied inconsistently across other subjects where country variation also exists.",
+        "OO-4": "Stakeholder-driven taxonomy redesign would benefit law and civics subsets to add jurisdiction tags. This is feasible given existing per-question country metadata [Q33] but not implemented in the published label schema.",
+        "OO-5": "Documented taxonomy issues harming structural validity: (a) no jurisdiction tagging in label schema for law [DATASET-D34]; (b) Jordanian-default civics presented as universal [DATASET-D1, D2]; (c) no madhab labeling [gap_id 7]; (d) null country metadata for several configurations [DATASET-D26, D27]."
+      },
+      "evidence_quotes": [
+        "[Q27] 'Each question has 2–5 candidate answers, with one correct answer.' (p.3)",
+        "[Q33] 'collect metadata, including the source (URL of the source document), country, subject, level, question, multiple-choice options, and the correct answer key.' (p.4)",
+        "[Q102] 'Table 8 presents the detailed zero-shot results across subjects and education levels' (p.15)",
+        "[Q107] 'Table 9 presents results organized by subject groups: STEM, Social Science, Humanities, Arabic Language, and Other.' (p.16)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-3] ArabLegalEval reuses ArabicMMLU law subsets without jurisdiction tagging — confirms multi-jurisdiction gap is structural",
+        "[WEB-13] ALARB 2025 confirms Arabic legal evaluation is moving toward open-ended reasoning beyond MCQ — suggests MCQ schema limits even within Arabic legal NLP"
+      ],
+      "evidence_dataset": [
+        "DATASET-D8, D9, D10, D34: Moroccan-only Law sample with no jurisdiction tag in label schema",
+        "DATASET-D35: Driving Test does encode country-specific traffic rules as correct answers — counter-example showing country-tied ground truth is technically feasible",
+        "DATASET-D26, D27: Null country metadata in some configurations limits diagnostic stratification"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q27",
+          "Q51",
+          "Q52"
+        ],
+        "OO-2": [
+          "Q27",
+          "DATASET-D8",
+          "DATASET-D34"
+        ],
+        "OO-3": [
+          "DATASET-D35"
+        ],
+        "OO-4": [
+          "Q33"
+        ],
+        "OO-5": [
+          "DATASET-D1",
+          "DATASET-D2",
+          "DATASET-D26",
+          "DATASET-D27",
+          "DATASET-D34"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether per-question country metadata is consistently populated across the full dataset (sample shows null for Islamic Studies All and Arabic Language General [DATASET-D26, D27])"
+      ],
+      "requires_expert_verification": [
+        "Whether subject-matter experts in law and civics deem the existing single-answer schema redeemable through metadata-stratified evaluation, or whether label-schema redesign is required"
+      ]
+    },
+    "output_content": {
+      "score": 2,
+      "justification": "Output content (label correctness for the deployment context) is the dimension most exposed to validity violations. The 96% spot-check agreement [Q43, Q44] was conducted on 100 randomly sampled questions [Q42] without country stratification, so it cannot speak to per-country annotation quality. Annotators are exclusively from Jordan, Egypt, Lebanon, UAE, and KSA [Q31] — Morocco, Kuwait, and Palestine have no documented annotators [Q96], yet Palestine is a top-three question contributor [WEB-1] and Moroccan law content is present [DATASET-D34]. This means Palestinian, Moroccan, and Kuwaiti questions (where present) had ground-truth labels verified by workers from other national educational contexts. Empirically, the dataset analysis shows: (a) Jordanian-curriculum facts (King Talal's reign, 1952 constitution, Royal Medical Services, CBJ URL) are encoded as universally correct answers [DATASET-D3, D4, D7, D20, D21]; (b) Egypt-specific currency and institutions are encoded as universal in university economics [DATASET-D28, D39, D40]; (c) Moroccan procedural law is encoded as 'the' law answer without jurisdiction tag [DATASET-D8, D9, D10, D34]; (d) at least one likely-incorrect ground-truth label is observed [DATASET-D32]; (e) OCR-corrupted questions [DATASET-D14, D15] cannot have reliably verifiable answer keys. Pretraining contamination is also acknowledged as not ruled out [Q94, Q95]. For a deployment that requires curriculum-aligned answers per country [elicitation A1] and country-specific legal correctness [elicitation A2], the ground-truth labels do not reliably reflect regional stakeholder perspectives for Moroccan, Emirati, Kuwaiti, Saudi, Lebanese, or Palestinian cohorts.",
+      "strengths": [
+        "Annotator credentials are documented: Master's students/Research Assistants and Bachelor's-degree-holders, all native MSA speakers [Q35, Q39]",
+        "96% inter-annotator agreement on 100-question spot check provides a baseline quality signal [Q43]",
+        "Compensation exceeded monthly average wages in respective countries [Q36]",
+        "One-hour orientation workshop conducted before data collection [Q40]",
+        "STEM ground truth (math, biology, physics, factual CS) is curriculum-neutral and reliable across all eight countries [DATASET-D24, strength 5]"
+      ],
+      "checklist_responses": {
+        "OC-1": "Ground-truth labels reflect regional stakeholder perspectives unevenly. For STEM and curriculum-neutral content, labels are reliable across all eight countries. For civics, history, social science, economics, and law, labels reflect the originating exam's jurisdiction without country-stratified validation [DATASET-D1, D7, D34].",
+        "OC-2": "Disagreement is highly likely between original annotators and regional populations for: (a) Moroccan students reviewing Jordanian civics [DATASET-D1, D2]; (b) UAE/Kuwait students reviewing Egyptian university economics [DATASET-D28]; (c) Egyptian/Saudi/Jordanian/UAE/Kuwaiti/Lebanese/Palestinian law students reviewing Moroccan procedural law [DATASET-D8, D9, D10]; (d) Palestinian students reviewing Jordanian-narrative King Abdullah I content [DATASET-D31].",
+        "OC-3": "Annotator demographics documented [Q31] but limited: 10 annotators total, all from Jordan/Egypt/Lebanon/UAE/KSA. No Morocco/Kuwait/Palestine representation [Q96]. No formal datasheet or data statement beyond paper text.",
+        "OC-4": "Re-annotation by representative annotators from Morocco, Kuwait, and Palestine is essential before deployment use, especially for civics, history, law, social science, and economics subsets.",
+        "OC-5": "Aggregation: 96% agreement reported as a single global figure [Q43] without country stratification — minority-country perspectives are erased in the aggregate. No formal IAA statistic beyond this [Q43].",
+        "OC-6": "Documented label issues: (a) Jordanian-curriculum facts as universal ground truth [DATASET-D1, D3, D4, D7, D20, D21]; (b) Egyptian university content as universal [DATASET-D28, D39, D40]; (c) Moroccan-only law ground truth [DATASET-D34]; (d) no Palestinian annotator review of Palestinian content [Q96, WEB-1]; (e) at least one likely-incorrect answer key observed [DATASET-D32]; (f) OCR-corrupted questions where verifiability is compromised [DATASET-D14, D15]; (g) potential pretraining contamination not ruled out [Q94, Q95]."
+      },
+      "evidence_quotes": [
+        "[Q31] '10 Arabic native speakers from different countries: 6 internal workers (1 Jordanian, 1 Egyptian, 1 Lebanese, 1 from UAE, and 2 from KSA) and 4 external workers (3 Jordanian and 1 Egyptian)' (p.4)",
+        "[Q42] 'we assessed the accuracy of our data collection by having two native Arabic speakers annotate 100 randomly sampled questions' (p.4)",
+        "[Q43] 'We found that 96% of the questions and answer keys match on average, while the remaining could have incorrect answer keys.' (p.4)",
+        "[Q44] 'This 96% score is considered to represent the maximum score meaningfully achievable for ArabicMMLU.' (p.4)",
+        "[Q94] 'our experimental results do not provide conclusive answers regarding the performance of LLMs in Arabic.' (p.9)",
+        "[Q95] 'we cannot assert that the model's pretraining data is free from contamination.' (p.10)",
+        "[Q96] 'We extend our gratitude to all collaborators from Jordan, Egypt, Lebanon, UAE, and Saudi Arabia' (p.10)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-1] Palestine is a top-three contributor by question count yet has no documented annotators",
+        "[WEB-1] Models perform notably poorly on Morocco- and UAE-sourced questions, consistent with thin annotation coverage"
+      ],
+      "evidence_dataset": [
+        "DATASET-D3: Jordanian Council of Ministers structure encoded as universal correct answer",
+        "DATASET-D4: Jordanian Hashemite Kingdom constitution as 'the' constitutional answer",
+        "DATASET-D7: Jordan-specific 67% financial-exclusion statistic as universal economic fact",
+        "DATASET-D28: Egyptian-pound calculation as universal university economics ROI",
+        "DATASET-D34: All 5 Law (Professional) answers from Moroccan jurisdiction without tag",
+        "DATASET-D32: Likely-incorrect Social Science (MS) answer key (gas importance attributed to scarcity)",
+        "DATASET-D14, D15: OCR-corrupted answer options where label correctness cannot be verified from text"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "DATASET-D1",
+          "DATASET-D7",
+          "DATASET-D24",
+          "DATASET-D34"
+        ],
+        "OC-2": [
+          "DATASET-D1",
+          "DATASET-D28",
+          "DATASET-D31",
+          "DATASET-D34"
+        ],
+        "OC-3": [
+          "Q31",
+          "Q96"
+        ],
+        "OC-4": [
+          "Q31",
+          "Q96",
+          "WEB-1"
+        ],
+        "OC-5": [
+          "Q43",
+          "Q44"
+        ],
+        "OC-6": [
+          "Q94",
+          "Q95",
+          "DATASET-D14",
+          "DATASET-D32",
+          "DATASET-D34",
+          "DATASET-D39"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Country-stratified inter-annotator agreement is not reported [Q43]",
+        "Pretraining contamination extent is not measured [Q95]",
+        "Total proportion of incorrect answer keys beyond the 4% noise floor implied by 96% agreement is unknown"
+      ],
+      "requires_expert_verification": [
+        "Per-country curriculum experts (especially Moroccan Maliki Islamic studies, Kuwaiti civics, Palestinian national history, UAE 4-4-4 curriculum) to re-validate ground-truth labels",
+        "Legal experts from Egypt, UAE, KSA, Jordan, Lebanon, Kuwait, Palestine to assess law-subset jurisdictional correctness"
+      ]
+    },
+    "output_form": {
+      "score": 4,
+      "justification": "Output form is the strongest dimension for this deployment. Both the benchmark and deployment use single-token MCQ accuracy [Q50, Q53], and the elicitation explicitly confirmed that for MCQ tasks 'explanations are not graded, so any correct explanation adequately supports the student's understanding without exam risk' [elicitation A3]. The benchmark provides multiple prompt-language and output-alphabet configurations [Q47] with detailed per-configuration results [Q105, Q106, Q108, Q110], offering rich diagnostic capacity. Calibration analysis (r > 0.9 between answer probability and accuracy [Q80]) provides additional signal quality. Models are evaluated in zero-shot and few-shot settings across 35 models [Q45, Q46], giving comparative reference points. The remaining concerns are residual: the form does not capture explanation quality (which is acceptable per elicitation A3) and does not evaluate generative tutoring output that the deployment may also produce. Literacy is a non-issue since target users are enrolled students [regional_context literacy section].",
+      "strengths": [
+        "Single-token MCQ accuracy directly matches deployment's MCQ scoring needs [Q50, Q53]",
+        "Four prompt-language/output-alphabet configurations tested, with per-configuration results published [Q47, Q105, Q106, Q108, Q110]",
+        "Calibration analysis (r > 0.9) confirms answer-probability reliability for open-source models [Q80]",
+        "Per-subject and per-level result breakdowns enable diagnostic targeting [Q102, Q103]"
+      ],
+      "checklist_responses": {
+        "OF-1": "Expected output modality (single-letter MCQ answer) matches the deployment's primary MCQ tutoring use case [Q50, Q53; elicitation A3]. The deployment may also need free-form explanations, which the benchmark does not evaluate — but the elicitation confirmed this is non-critical for MCQ contexts [elicitation A3].",
+        "OF-2": "Text-to-speech is not required by the deployment (text-based interface per regional_context platform_context). Not applicable.",
+        "OF-3": "Target population is enrolled students with high literacy by definition [literacy_and_educational_attainment note]; mobile-dominant access is documented [WEB-11]. Output form is compatible with regional access patterns.",
+        "OF-4": "Documented form mismatches are minimal: (a) explanation-quality output is not evaluated, but elicitation confirmed this is acceptable [elicitation A3]; (b) generative tutoring output (e.g., step-by-step explanations) falls outside benchmark scope but is a deployment use case the benchmark does not validate."
+      },
+      "evidence_quotes": [
+        "[Q45] 'Our experiments focus on zero-shot and few-shot settings across 35 models.' (p.5)",
+        "[Q47] 'we initially conducted experiments with four settings: (1) Arabic prompt and Arabic alphabetic output, (2) Arabic prompt and English alphabetic output, (3) English prompt and Arabic alphabetic output, and (4) English prompt and English alphabetic output.' (p.5)",
+        "[Q50] 'for open-source models, we determine the answer based on the highest probability among all possible options.' (p.6)",
+        "[Q53] 'For closed-source models, we determine the answer based on the first token generated in the text using a regular expression.' (p.6)",
+        "[Q80] 'we observe that the three open-source models are well calibrated with correlation scores r > 0.9.' (p.8)",
+        "[Q102] 'Table 8 presents the detailed zero-shot results across subjects and education levels' (p.15)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-8] ~100% internet penetration in UAE/KSA/Kuwait — text-based output reaches target users",
+        "[WEB-11] 83% mobile ownership in Arab States; mobile-dominant text delivery is feasible"
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "OF-1": [
+          "Q50",
+          "Q53"
+        ],
+        "OF-2": [
+          "WEB-11"
+        ],
+        "OF-3": [
+          "WEB-8",
+          "WEB-11"
+        ],
+        "OF-4": [
+          "Q45"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": []
+    }
+  },
+  "overall_summary": "ArabicMMLU is the only large-scale natively-sourced Arabic exam benchmark available and is genuinely better-suited for MENA evaluation than translated MMLU alternatives [Q5, Q6]. For the deployment's MSA school-level STEM coverage and overall MCQ format alignment, it provides meaningful and trustworthy signal. However, for the deployment's eight-country curriculum-alignment requirement, ArabicMMLU has serious validity limitations that the dataset analysis confirms empirically rather than merely speculatively. The most acute concerns are content-level (IC) and label-correctness (OC): Jordanian-curriculum civics, history, social science, and economics content is encoded as universal ground truth across school levels [DATASET-D1–D7, D20–D22, D25, D30]; university-level non-CS subjects come almost exclusively from a single Egyptian university [DATASET-D39, D40]; Law (Professional) is exclusively Moroccan procedural law in the sample [DATASET-D8–D10, D34]; Kuwait has no observed examples and no documented annotators [Q31, Q96]; Palestinian content (top-three contributor by volume) was verified without Palestinian annotators [Q96, WEB-1]. The flat label schema [Q27] cannot encode jurisdiction-specific correctness despite the deployment user explicitly requiring per-country legal tailoring [elicitation A2]. University-level coverage is also structurally thin (~6.1% [Q71]) for a deployment serving university students.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "ArabicMMLU can validly measure: (a) MSA reading comprehension and Arabic grammar at school level (input_form score 4); (b) MCQ-format scoring alignment for the deployment's primary use case (output_form score 4); (c) STEM factual recall across all eight countries since STEM content is curriculum-neutral [DATASET-D24]; (d) Jordanian school-curriculum knowledge specifically (the dominant cohort); (e) some Egyptian university accounting/economics/management/political science alignment, subject to OCR caveats; (f) Moroccan procedural law specifically. The benchmark also supports rough comparative evaluation of model robustness across prompt/output configurations [Q47, Q105–Q110].",
+    "construct_depth": "Construct depth is shallow for the deployment's stated needs. The benchmark probes factual recall and modest reasoning at primary/middle/high school levels well, but university-level depth is thin (~6.1% of items, ~889 questions across all subjects [Q71]). Country-specific construct depth is highly uneven: Jordan is over-probed, Kuwait is essentially un-probed, Morocco is probed only in law and a few Arabic items, Palestine is probed in STEM but not verified by Palestinian experts. Madhab-specific Islamic studies depth is undocumented [gap_id 7]. Jurisdiction-specific legal depth is single-jurisdiction in the sample [DATASET-D34]. Construct depth strengths are concentrated in dimensions input_form and output_form; depth weaknesses are concentrated in input_content and output_content — the dimensions the elicitation marked HIGH priority.",
+    "supplementation_needed": "For a defensible deployment, ArabicMMLU should be supplemented with: (1) per-country re-annotation of civics, history, social science, economics, and law subsets by curriculum experts from Morocco, Kuwait, Palestine, UAE (addresses input_content and output_content gaps); (2) ArabLegalEval [WEB-3] for Saudi-specific law and MizanQA [WEB-4] for additional Moroccan law coverage, with a custom evaluation built for Egyptian/UAE/Jordanian/Lebanese/Kuwaiti/Palestinian legal jurisdictions which remain unfilled; (3) AraSTEM [WEB-2] for richer STEM coverage at university level (addresses input_ontology thinness); (4) a French-Arabic bilingual evaluation for Moroccan university science (no existing benchmark, must be built [gap_id 6]); (5) madhab-stratified Islamic studies evaluation built with Maliki and Hanbali curriculum experts [gap_id 7]; (6) cleaning or replacement of OCR-corrupted Management and Political Science (University) items [DATASET-D14, D15, D29]."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_content",
+      "gap": "Jordanian-curriculum civics, history, social science, and high-school economics content is encoded as universal across configurations, creating construct-irrelevant variance for the seven non-Jordanian deployment cohorts [DATASET-D1, D2, D6, D7, D21, D25].",
+      "recommendation": "Use the per-question country metadata field [Q33] to filter or stratify evaluation by source country; do not aggregate across countries for civics, history, or social science. Build a Kuwaiti, Moroccan, and Palestinian curriculum supplement before deploying to those cohorts."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Ground-truth labels for Palestinian, Moroccan, and Kuwaiti questions were verified by workers without those national curriculum backgrounds [Q31, Q96]; 96% agreement is a global figure not stratified by country [Q43].",
+      "recommendation": "Recruit at least 2–3 curriculum experts each from Morocco, Kuwait, and Palestine to re-verify ground-truth labels for at least the civics, history, social science, and law subsets relevant to those countries. Report country-stratified IAA before deployment use."
+    },
+    {
+      "dimension": "input_ontology",
+      "gap": "University-level coverage is ~6.1% of total [Q71] (~889 questions across all subjects), and Law (Professional) is exclusively Moroccan in the sample [DATASET-D34]; jurisdiction-specific tagging is absent.",
+      "recommendation": "Supplement with ArabLegalEval [WEB-3] for Saudi law, MizanQA [WEB-4] for Moroccan law, and AraSTEM [WEB-2] for STEM university content. Commission custom evaluation sets for Egyptian, UAE, Jordanian, Lebanese, Kuwaiti, and Palestinian legal jurisdictions which remain entirely unfilled by existing Arabic benchmarks."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "Flat single-correct-answer schema [Q27] cannot represent jurisdiction-specific correctness, despite deployment requirement for country-tailored legal answers [elicitation A2].",
+      "recommendation": "Add a jurisdiction-tag overlay on top of ArabicMMLU's existing country metadata for law and civics subsets; rescore tutoring outputs against jurisdiction-conditioned ground truth rather than the flat label."
+    },
+    {
+      "dimension": "input_form",
+      "gap": "OCR-corrupted text in Management and Political Science (University) configurations [DATASET-D14, D15, D29] compromises input signal quality, and French-medium Moroccan university content is entirely outside scope [Q92].",
+      "recommendation": "Quarantine or replace OCR-corrupted university management and political science items. For Moroccan university science, build or commission a French-Arabic bilingual evaluation since no existing benchmark addresses this gap [gap_id 6, WEB-4]."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "Islamic studies has no madhab labeling anywhere in the benchmark [gap_id 7]; observed Islamic Studies HS content is Jordanian-curriculum-sourced [DATASET-D38] without Maliki (Morocco) or Hanbali (KSA) calibration.",
+      "recommendation": "Engage Islamic studies curriculum experts from Morocco (Maliki), KSA (Hanbali), and a Shafi'i-region representative to audit a stratified sample of Islamic studies items and tag madhab-specific items; flag madhab-divergent questions for country-conditioned evaluation."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_content",
+    "output_content",
+    "input_ontology"
+  ],
+  "strongest_dimensions": [
+    "output_form",
+    "input_form"
+  ]
+}

@@ -1,0 +1,2 @@
+Use case and domain: Timeline generation for coordination and evaluation of response efforts across time published in social media. The data would be tweets from natural disaster domain generated in Ecuadorian Spanish.
+Target population: Latin American data and social analysts working at NGO and international organizations (e.g. Red Cross, UN OCHA) who seek to find how affected populations' needs evolve across time. They would be fluent in American English and Spanish, potentially speakers of different accents of Latin American Spanish.

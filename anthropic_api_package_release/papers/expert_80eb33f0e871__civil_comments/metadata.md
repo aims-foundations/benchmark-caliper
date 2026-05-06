@@ -1,0 +1,11 @@
+- name: unintended-bias-metrics
+- full_name: Nuanced Metrics for Measuring Unintended Bias with Real Data for Text Classification
+- year: 2019
+- domain: Measures unintended identity-based bias in text classification models by comparing classifier score distributions across demographic groups. Focuses on toxicity detection in online comments.
+- languages: English
+- primary_region: Not region-specific; general methodology applicable to online discussions
+- porting_strategy: none
+- input_modalities: text
+- output_modalities: label, score
+- brief_description: Introduces a suite of five threshold-agnostic metrics (based on ROC-AUC, Equality Gap, and Mann-Whitney U) to measure unintended bias in text classifiers. Provides a new dataset of nearly 2 million human-annotated online comments with 450,000 labeled for identity references. Demonstrates the metrics on publicly available toxicity detection models to reveal bias in score distributions across demographic groups.
+- source_culture: transferred from different cultural context

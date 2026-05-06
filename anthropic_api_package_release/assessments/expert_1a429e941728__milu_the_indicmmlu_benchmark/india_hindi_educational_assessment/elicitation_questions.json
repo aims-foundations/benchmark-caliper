@@ -1,0 +1,22 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "Your deployment involves evaluating student responses and assigning scores — tasks that require the AI to judge partial credit, borderline answers, and reasoning quality, not just match a correct label. Does your assessment context involve open-ended or long-form student answers (e.g., essay-style, analytical responses), structured short answers, or primarily factual single-item questions? Understanding the mix will clarify whether a benchmark built around multiple-choice exam questions covers the response types your teacher actually encounters."
+  },
+  {
+    "id": "Q2",
+    "dimension": "OO",
+    "question": "In Hindi-medium educational assessment in North India, grading often involves nuanced judgment — a student may give a partially correct answer, use a regional Hindi variant, or frame a correct idea unconventionally. Should the AI system support graded scoring (e.g., 0, 1, 2 marks), binary correct/incorrect judgments, or qualitative rubric-based feedback? And would the teacher expect the AI's scoring rationale to be expressed in standard Hindi (Khari Boli / Devanagari-script formal register) or would informal or regional Hindi usage in the AI's output be acceptable?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "IC",
+    "question": "Hindi instruction in North India spans very different curricular traditions — CBSE, state boards (UP, MP, Rajasthan, Bihar, etc.), and postgraduate university syllabi each carry distinct content norms, canonical texts, and culturally loaded reference points. Does your deployment target a specific board or institution type, or must the AI handle content across multiple curricula? For example, would student responses reference Tulsidas's Ramcharitmanas, Premchand's fiction, or regional historical figures that a benchmark sourced from competitive exams might frame differently than a school or university context would?"
+  },
+  {
+    "id": "Q4",
+    "dimension": "OC",
+    "question": "For the AI's scoring and feedback to be trusted by a highly qualified Hindi teacher, its judgments need to align with what that teacher community would themselves consider correct or acceptable. Are the kinds of answers your students produce — and the mark schemes your teachers use — likely to reflect North Indian academic norms that might differ from how questions were originally keyed in national competitive exam settings? For instance, would a historically or regionally specific answer that diverges from a pan-India 'standard' answer still deserve full credit in your context?"
+  }
+]

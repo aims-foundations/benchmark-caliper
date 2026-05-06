@@ -1,0 +1,11 @@
+- name: laila
+- full_name: LAILA: A Large Trait-Based Dataset for Arabic Automated Essay Scoring
+- year: 2026
+- domain: Automated Essay Scoring (AES) for Arabic, evaluating writing proficiency across seven trait dimensions: relevance, organization, vocabulary, style, development, mechanics, and grammar.
+- languages: Arabic
+- primary_region: Qatar
+- porting_strategy: ground_up
+- input_modalities: text
+- output_modalities: label, score
+- brief_description: LAILA is the largest publicly available Arabic AES dataset, comprising 7,859 essays collected from 4,372 high school students across 24 schools in Qatar. Each essay is annotated with both holistic and trait-specific scores across seven writing proficiency dimensions. The dataset addresses a critical gap in Arabic NLP research by providing the first large-scale, richly annotated resource for developing and benchmarking Arabic essay scoring systems.
+- source_culture: designed by target population

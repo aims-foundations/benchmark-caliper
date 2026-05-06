@@ -1,0 +1,11 @@
+- name: glue
+- full_name: GLUE: A Multi-Task Benchmark and Analysis Platform for Natural Language Understanding
+- year: 2019
+- domain: A multi-task benchmark for evaluating natural language understanding across diverse tasks including question answering, sentiment analysis, textual entailment, and paraphrase detection.
+- languages: English
+- primary_region: UNKNOWN
+- porting_strategy: none
+- input_modalities: text
+- output_modalities: label, score
+- brief_description: GLUE is a collection of nine sentence and sentence-pair NLU tasks built on established annotated datasets, designed to evaluate models' ability to learn general linguistic knowledge across tasks. It includes an online evaluation platform with privately-held test data and a hand-crafted diagnostic test suite for analyzing model behavior on linguistic phenomena.
+- source_culture: transferred from different cultural context

@@ -1,0 +1,589 @@
+name: Ethiopian Intercity/Ride-Hail Commuter Cohort (Amharic-Primary)
+abbreviation: ETH-INTERCITY-AM
+deployment_context:
+  system_description: Amharic-language conversational booking system serving three
+    Ethiopian intercity and ride-hail operators (Sky Bus, Selam Bus, Ride), handling
+    intent detection and slot-filling for routes, fares, and seat changes via smartphone
+    apps.
+  operators:
+  - Sky Bus
+  - Selam Bus
+  - Ride
+  task_types:
+  - intent detection
+  - slot-filling
+  slot_filling_domains:
+  - route queries
+  - fare lookup
+  - seat selection
+  - booking
+  - cancellation/rebooking
+  benchmark_under_assessment: INJONGO
+target_population:
+  description: Ethiopian inter-regional commuters and travelers who interact with
+    smartphone-based booking apps in Amharic. The population spans multiple Ethiopian
+    regions and intercity corridors. Urban Addis Ababa users are likely over-represented
+    in any annotator pool, but actual users include travelers from Amhara, Oromia,
+    Tigray, SNNP, and other regions. Many users are L2 Amharic speakers from other
+    Ethiopian ethnic groups who code-switch within utterances.
+  primary_language: Amharic (am)
+  l2_and_code_switching_languages:
+  - Oromo (om)
+  - Tigrinya (ti)
+  - Somali (so)
+  - Sidama
+  - Wolayta
+  geography:
+    country: Ethiopia
+    relevant_regions:
+    - Addis Ababa (urban hub, annotator over-representation risk)
+    - Amhara Region (e.g., Gondar, Bahir Dar, Dessie corridors)
+    - Oromia Region (e.g., Jimma, Adama/Nazret, Shashamane corridors)
+    - Tigray Region (e.g., Mekelle corridor)
+    - SNNP Region (e.g., Hawassa corridor)
+    - Somali Region (e.g., Dire Dawa/Jigjiga corridor)
+    - Harari Region (e.g., Dire Dawa hub)
+    key_intercity_corridors:
+    - Addis Ababa – Hawassa
+    - Addis Ababa – Gondar
+    - Addis Ababa – Mekelle
+    - Addis Ababa – Dire Dawa / Jigjiga
+    - Addis Ababa – Jimma
+    - Addis Ababa – Bahir Dar
+    - Addis Ababa – Adama (Nazret)
+languages:
+  primary: Amharic (Ge'ez / Ethiopic script)
+  l2_present_in_user_utterances:
+  - Oromo (Latin script in standard written form; but spoken L2 users may produce
+    Amharic utterances with Oromo lexical items)
+  - Tigrinya (Ge'ez script; closely related to Amharic; intra-utterance mixing anticipated)
+  - Somali (Latin script; less frequent code-switching)
+  - Sidama, Wolayta, and other SNNP languages (low-frequency mixing)
+  code_switching_note: Intra-utterance code-switching between Amharic and Oromo or
+    Amharic and Tigrinya is anticipated among L2 Amharic speakers. INJONGO covers
+    Oromo and Tigrinya as separate languages but does not document intra-utterance
+    code-switching within Amharic utterances. Extent of code-switching in actual booking
+    utterances is uncertain and was not controlled for in INJONGO curation.
+  benchmark_language_coverage: Amharic (am), Oromo (om), and Tigrinya (ti) are each
+    included in INJONGO as separate language tracks, but no code-switched Amharic
+    track exists.
+writing_systems:
+  primary_script: Ge'ez (Ethiopic) script — used for Amharic and Tigrinya
+  secondary_scripts:
+  - Latin alphabet (Oromo in standard orthography; Somali)
+  script_notes: Amharic uses the Ge'ez/Ethiopic abugida script. INJONGO's Amharic
+    subset uses Ge'ez script throughout. No script mismatch exists between the benchmark
+    and the deployment context. Code-switched Oromo terms in Amharic utterances may
+    appear in either Ge'ez or Latin spelling depending on the speaker's literacy conventions
+    — this boundary condition is undocumented in INJONGO.
+  benchmark_script_match: Full match for primary Amharic deployment; code-switched
+    token script handling is undocumented.
+literacy_and_demographics:
+  national_literacy_rate_ethiopia: '~71% adult literacy (ages 15+) as of 2022 per
+    UNESCO/World Bank modelled estimates (statbase.org citing UNESCO UIS — [|https://statbase.org/data/wld-literacy-rate/|];
+    World Bank indicator — [|https://data.worldbank.org/indicator/SE.ADT.LITR.ZS?locations=ET|]).
+    Caveat: an older UNESCO survey figure of ~51.8% (2017) circulates in older sources;
+    the 71% figure reflects model-based interpolation from 2022. Addis Ababa literacy
+    substantially higher than rural regional averages. Smartphone app deployment further
+    selects for literate users.'
+  amharic_l1_speaker_population: 'Approximately 29.3% of Ethiopia''s population (~128
+    million as of 2024) speaks Amharic as a mother tongue, implying roughly 37–38
+    million L1 Amharic speakers. Source: Ethio-ASR (2026 paper on Ethiopian multilingual
+    ASR) — [|https://arxiv.org/html/2603.23654|]. Caveat: this is cited in an NLP
+    paper, not an official census figure; the 2007 Ethiopian census estimated ~29%
+    but a new census has not been fully published.'
+  amharic_l2_speaker_population_estimate: '[NEEDS VERIFICATION — deferred: below search
+    budget; figure is noted as substantial given Amharic''s role as national lingua
+    franca, but no reliable recent quantitative estimate found in searches. Requires
+    Ethiopian CSA census data or ethnologue survey.]'
+  smartphone_ownership_rate_ethiopia: '~15% of the population owned a smartphone as
+    of 2024 (18% male, 6% female). Basic mobile phone ownership: 86% male, 65% female.
+    Source: GSMA Mobile Economy Ethiopia 2024 report via birrmetrics.com — [|https://birrmetrics.com/ethiopia-narrows-mobile-gender-gap-to-24-but-smartphone-access-for-women-remains-just-6/|].
+    This strong selection effect means the actual app-user population is skewed toward
+    urban, male, higher-income travelers.'
+  urban_rural_split_ethiopia: '[NEEDS VERIFICATION — deferred: below search budget;
+    Ethiopia is predominantly rural (~80%+ rural by most estimates), but no recent
+    official figure was retrieved in searches. World Bank indicator page surfaced
+    but data not extracted.]'
+  addis_ababa_population: '[NEEDS VERIFICATION — deferred: below search budget; commonly
+    cited as 4–5 million in the city proper, 6–8 million in metro area, but no verified
+    2023/2024 figure retrieved.]'
+  intercity_bus_ridership_annual_estimate: '[NEEDS VERIFICATION — deferred: likely
+    unsearchable at national aggregate level; no Ethiopian Transport Authority ridership
+    statistics were found in searches.]'
+  notes: 'Smartphone app deployment implies a positively selected subset of the general
+    Ethiopian population: literate, smartphone-owning, and sufficiently data-connected
+    to use an app. Rural travelers who board at regional depots may have lower average
+    smartphone literacy than urban Addis Ababa users. The national smartphone penetration
+    of ~15% underscores that the actual user population is a narrow urban-skewed segment
+    of the Ethiopian public.'
+cultural_norms_notes: '- Ethiopian Orthodox Christianity is the dominant religion;
+  major holidays (Timkat/Epiphany, Meskel/Finding of the True Cross, Enkutatash/Ethiopian
+  New Year, Genna/Christmas) drive significant demand surges for intercity travel
+  bookings.
+
+  - The Ethiopian calendar (Ge''ez calendar) is 13 months long, runs approximately
+  7–8 years behind the Gregorian calendar, and has distinct month names (Meskerem,
+  Tikimt, Hidar, Tahsas, Tir, Yekatit, Megabit, Miazia, Ginbot, Sene, Hamle, Nehase,
+  Pagume). Users are expected to reference travel dates using these month names natively.
+
+  - Ethiopian time convention: the clock is offset by 6 hours from standard international
+  convention (1:00 Ethiopian time = 7:00 AM internationally). Bus departure times
+  quoted in user utterances may follow Ethiopian clock convention.
+
+  - Communal travel norms: travelers frequently book on behalf of extended family
+  members; utterances may reference third-party passengers.
+
+  - Respect for elders and hierarchical deference may influence how users phrase requests
+  or corrections to booking agents.
+
+  - Code-switching between Amharic and Oromo, Tigrinya, or other regional languages
+  is socially unremarkable and pragmatically functional in multi-ethnic urban contexts
+  such as Addis Ababa.
+
+  - Seat-class terminology may vary by operator (e.g., VIP/economy on Sky Bus or Selam
+  Bus); users may use operator-specific colloquial terms not present in any benchmark.'
+infrastructure_notes: '- Deployment is text-based smartphone app; INJONGO is a text-only
+  benchmark — full modality match, no audio or speech interface concerns.
+
+  - Mobile internet penetration in Ethiopia: 19.4% of population (24.83 million users)
+  as of January 2024. Source: DataReportal Digital 2024 Ethiopia — [|https://datareportal.com/reports/digital-2024-ethiopia|].
+
+  - Mobile network coverage: 3G covers ~98% of population (2023); 4G coverage at ~33%
+  of population (2023). Source: GSMA Mobile Economy Ethiopia Report, October 2024
+  — [|https://www.gsma.com/about-us/regions/sub-saharan-africa/wp-content/uploads/2024/10/GSMA_Ethiopia-Report_Oct-2024_v2-1.pdf|].
+  This implies significant 4G connectivity gaps on rural intercity corridors.
+
+  - Dominant mobile network operators: Ethio Telecom (state-owned, ~94.5% market share
+  with 78.3 million subscribers as of June 2024) and Safaricom Ethiopia (launched
+  October 2022, ~5.5% share with 4.6 million subscribers). Source: Business Daily
+  Africa citing Ethio Telecom IPO prospectus — [|https://www.businessdailyafrica.com/bd/corporate/companies/safaricom-ethiopia-market-share-hits-5-5pc-in-22-months-4799324|].
+  Safaricom''s entry in 2022 broke Ethio Telecom''s decades-long monopoly and prompted
+  ~70% cuts in mobile data tariffs.
+
+  - Smartphone OS distribution among Ethiopian app users (Android vs. iOS split):
+  [NEEDS VERIFICATION — deferred: below search budget; Android dominance is expected
+  given smartphone price points (~5,000 ETB entry-level) but no Ethiopia-specific
+  OS share figure was retrieved.]
+
+  - Ge''ez script keyboard availability and input method editor (IME) quality on Android:
+  [NEEDS VERIFICATION — deferred: likely unsearchable at quantitative level; qualitative
+  evidence from Ethiopian NLP community indicates Ge''ez IME support is available
+  on major Android distributions but quality varies by device tier.]
+
+  - Connectivity quality on intercity routes (bus depots, en-route rest stops): 4G
+  coverage at only 33% of population as of 2023; rural and intercity corridor connectivity
+  is predominantly 3G or below. Users on long-haul routes (e.g., Addis–Gondar, Addis–Mekelle)
+  will likely experience intermittent connectivity. This creates a latency/offline-resilience
+  requirement not reflected in any INJONGO evaluation setting.
+
+  - Data cost per MB for Ethiopian mobile users relative to income: Ethio Telecom
+  has cut data tariffs by ~70% since 2017 following Safaricom''s competitive entry;
+  median mobile download speed was 27.19 Mbps as of early 2024. Source: DataReportal
+  2024 — [|https://datareportal.com/reports/digital-2024-ethiopia|]. Absolute data
+  cost relative to income remains a barrier for low-income rural users.
+
+  - Ethio Telecom market share and competitive landscape: Duopoly as of 2024. Ethio
+  Telecom dominates with ~94.5% subscriber share; Safaricom Ethiopia holds ~5.5%.
+  A third license tender was suspended in November 2023 after no bids received. Sources:
+  Business Daily Africa — [|https://www.businessdailyafrica.com/bd/corporate/companies/safaricom-ethiopia-market-share-hits-5-5pc-in-22-months-4799324|];
+  Connecting Africa/Omdia — [|https://www.connectingafrica.com/connectivity/ethiopia-s-telecoms-liberalization-makes-progress-omdia|].'
+calendar_and_temporal_conventions:
+  ethiopian_calendar_months:
+  - Meskerem (September–October)
+  - Tikimt (October–November)
+  - Hidar (November–December)
+  - Tahsas (December–January)
+  - Tir (January–February)
+  - Yekatit (February–March)
+  - Megabit (March–April)
+  - Miazia (April–May)
+  - Ginbot (May–June)
+  - Sene (June–July)
+  - Hamle (July–August)
+  - Nehase (August–September)
+  - Pagume (intercalary month, 5–6 days)
+  injongo_date_slot_coverage_of_ethiopian_calendar: NOT DOCUMENTED — INJONGO's DATE
+    slot annotation guide examples use Gregorian conventions only; whether Ge'ez month
+    names appear as valid DATE slot values in the Amharic training instances is a
+    flagged gap requiring web search verification.
+  ethiopian_time_convention_note: Users may quote bus departure times in Ethiopian
+    clock convention (offset by 6 hours from international standard); TIME slot extraction
+    should accommodate this convention. Undocumented in INJONGO.
+  major_travel_surge_events:
+  - event: Timkat (Ethiopian Epiphany)
+    approximate_gregorian_date: 'January 19–20 (fixed in Ethiopian calendar: 11 Tir;
+      Gregorian equivalent varies slightly by year and by Ethiopian Orthodox vs. Eritrean
+      Orthodox reckoning). Gregorian date is typically January 19 in non-leap years,
+      January 20 in leap years.'
+  - event: Meskel (Finding of the True Cross)
+    approximate_gregorian_date: 'September 27 (fixed in Ethiopian calendar: 17 Meskerem;
+      Gregorian September 27 in non-leap years, September 28 in leap years).'
+  - event: Enkutatash (Ethiopian New Year)
+    approximate_gregorian_date: 'September 11 (Ethiopian calendar: 1 Meskerem; September
+      12 in leap years).'
+  - event: Genna (Ethiopian Christmas)
+    approximate_gregorian_date: 'January 7 (Ethiopian calendar: 29 Tahsas; corresponds
+      to Julian December 25).'
+  - event: Fasika (Ethiopian Easter)
+    approximate_gregorian_date: Variable — determined by Ethiopian Orthodox computus,
+      typically April–May; can differ by weeks from Western Easter. Exact date changes
+      each year.
+slot_filling_ethiopia_specific:
+  city_toponym_coverage:
+    key_ethiopian_cities_in_scope:
+    - 'Addis Ababa (also: አዲስ አበባ, colloquial abbrev. ''Addis'')'
+    - 'Hawassa (also: Awassa)'
+    - 'Mekelle (also: Mekele)'
+    - Gondar
+    - Bahir Dar
+    - Dire Dawa
+    - Jimma
+    - Adama (Nazret)
+    - Dessie
+    - Shashamane
+    - Jigjiga
+    - Arba Minch
+    - Dilla
+    - Woldia
+    injongo_toponym_coverage_status: 'NOT DOCUMENTED — CITY_OR_PROVINCE and PLACE_NAME
+      slots exist in INJONGO, but whether Amharic travel-domain instances include
+      Ethiopian intercity toponyms (vs. generic or pan-African city references) is
+      unverified. The GitHub dataset shows a banking-domain Amharic example referencing
+      ''አባይ ባንክ'' (Abay Bank), suggesting culturally grounded Ethiopian entities are
+      used in at least the banking domain (Source: INJONGO GitHub — [|https://github.com/McGill-NLP/Injongo|]),
+      but travel-domain toponym coverage remains unverified.'
+    amharic_spelling_variation_note: Many Ethiopian city names have multiple attested
+      Amharic spellings and abbreviations; slot extraction must handle orthographic
+      variation.
+  currency_and_fare:
+    currency: 'Ethiopian Birr (ETB; symbol: ብር or Br)'
+    fare_tier_conventions:
+    - VIP / First class (long-haul bus, e.g., Sky Bus, Selam Bus)
+    - Economy / Regular class
+    - Express service variants
+    injongo_birr_coverage_status: 'NOT DOCUMENTED — CURRENCY and MONEY slot types
+      are present in INJONGO, and cultural entity substitution is documented for South
+      African Rand; whether ETB/Birr appears in Amharic training instances is unverified.
+      The GitHub example shows Amharic banking utterances use Ethiopian bank names,
+      consistent with local entity substitution, but fare/currency slot coverage in
+      the travel domain specifically remains unconfirmed (Source: INJONGO GitHub —
+      [|https://github.com/McGill-NLP/Injongo|]).'
+    pricing_range_typical: '[NEEDS VERIFICATION — deferred: below search budget; typical
+      Addis–Hawassa (~275 km), Addis–Gondar (~750 km) fare ranges in Birr for VIP
+      vs. economy classes require operator-level current pricing data not found in
+      searches.]'
+  operator_specific_intents:
+    sky_bus:
+      known_service_features: '[NEEDS VERIFICATION — deferred: below search budget;
+        operator-specific cancellation policy and booking API structure not publicly
+        documented in sources retrieved.]'
+      operator_specific_intents_not_in_injongo:
+      - seat-class upgrade
+      - VIP seat selection
+      - road-closure rebooking
+      - agent-assisted cancellation
+    selam_bus:
+      known_service_features: '[NEEDS VERIFICATION — deferred: below search budget;
+        operator-specific cancellation policy and booking API structure not publicly
+        documented in sources retrieved.]'
+      operator_specific_intents_not_in_injongo:
+      - seat-class upgrade
+      - route suspension query
+      - group booking
+    ride:
+      known_service_features: '[NEEDS VERIFICATION — deferred: below search budget;
+        ride-hail vs. intercity scope, platform features not documented in retrieved
+        sources.]'
+      operator_specific_intents_not_in_injongo:
+      - ride type selection
+      - driver preference
+      - shared ride booking
+    injongo_travel_intent_coverage_note: INJONGO's travel domain contains generic
+      intents (e.g., 'exchange rate', 'book flight') derived from CLINC. Operator-specific
+      intercity bus flows (seat-class selection, road-closure rebooking, holiday-surge
+      booking, platform-specific cancellation) are absent from the 40-intent taxonomy.
+      Gap analysis between INJONGO travel intents and actual operator booking APIs
+      is recommended.
+annotator_population_vs_user_population:
+  injongo_annotator_profile_amharic:
+    documented: Native Amharic speakers; recruited via a Kenyan logistics company;
+      compensated at per-country rates.
+    undocumented:
+    - Regional origin within Ethiopia (Addis Ababa vs. other regions)
+    - Urban vs. rural background
+    - L1 vs. L2 Amharic status
+    - Age distribution
+    - Education level
+    - Familiarity with intercity bus booking apps
+    concern: Addis Ababa–centric annotator pool is a plausible hypothesis given urbanization
+      of Amharic NLP resources; if so, slot instances may under-represent regional
+      city names, route-specific terminology, and phrasing patterns of non-Addis travelers.
+  actual_user_population_characteristics: Includes L2 Amharic speakers from Oromia
+    (Oromo L1), Tigray (Tigrinya L1), SNNP, and Somali regions; code-switching anticipated;
+    regional toponyms and fare conventions vary by corridor.
+  annotator_user_mismatch_risk: HIGH — L2 Amharic speakers and code-switched utterances
+    are likely underrepresented in INJONGO Amharic annotations; label validity for
+    code-switched or regionally accented slot expressions is a primary construct-validity
+    concern.
+  web_search_target: INJONGO paper annotator section — Amharic subset regional demographics,
+    recruitment methodology detail
+code_switching_profile:
+  anticipated_patterns:
+  - Amharic matrix utterance with Oromo city/place names (e.g., Jimma, Adama in Oromo
+    phonology)
+  - Amharic matrix utterance with Tigrinya lexical items for route segments near Tigray
+  - Amharic utterances with English loanwords for booking terminology (e.g., 'seat',
+    'ticket', 'cancel')
+  - Numerals and fare amounts sometimes vocalized in Oromo or Amharic depending on
+    speaker
+  injongo_code_switching_coverage: INJONGO covers Oromo and Tigrinya as independent
+    language tracks but does not document intra-utterance Amharic–Oromo or Amharic–Tigrinya
+    code-switching. No known Ethiopian NLP benchmark specifically addresses this phenomenon
+    for intent detection or slot-filling.
+  net_new_ethiopian_code_switching_research: 'A 2025 EthioNLP workshop paper (Tadesse
+    et al.) addresses morphology-aware sentiment analysis of code-switched Ethiopian
+    social media posts mixing Amharic, Afaan Oromo, and Tigrinya, using HornMorpho
+    and XLM-R under multi-task learning. This is the closest known work to the deployment''s
+    code-switching challenge, but covers sentiment — not intent detection or slot-filling.
+    Source: EthioNLP workshop proceedings — [|https://ethionlp.github.io/|]. Confirms
+    the gap: no intent/slot benchmark for code-switched Ethiopian utterances exists.'
+  web_search_target: Amharic Oromo Tigrinya code-switching NLP benchmark Ethiopian
+    language mixing intent detection slot filling
+regulatory_and_policy_context:
+  ethiopian_data_protection_framework: 'Ethiopia''s first comprehensive Personal Data
+    Protection Proclamation (No. 1321/2024) was passed by the Federal House of Representatives
+    on April 4, 2024, and officially published in the Federal Negarit Gazette on July
+    24, 2024, entering into force on that date. The law covers all automated and non-automated
+    personal data processing by controllers/processors established in Ethiopia or
+    using equipment in Ethiopia. The Ethiopian Communications Authority (ECA) is designated
+    as the independent supervisory authority. The law includes rights of data subjects
+    (access, erasure, rectification, object to automated decisions), data localization
+    requirements (personal data must be stored domestically unless conditions for
+    cross-border transfer are met), and mandates registration of controllers/processors
+    with the ECA. Sources: CIPIT analysis — [|https://cipit.org/ethiopias-personal-data-protection-proclamation-of-2024-and-its-budding-digital-identity-regime/|];
+    Mondaq business guide — [|https://www.mondaq.com/privacy-protection/1766200/ethiopian-personal-data-protection-law-proclamation-13212024-business-compliance-guide|];
+    DLA Piper tracker — [|https://www.dlapiperdataprotection.com/index.html?t=law&c=ET|].
+    Relevance: the booking system collects personal traveler data (names, routes,
+    payment); the operators must register with ECA and conduct DPIAs for high-risk
+    automated processing.'
+  transport_sector_regulation: '[NEEDS VERIFICATION — deferred: below search budget;
+    Ethiopian Transport Authority regulations specifically applicable to digital booking
+    platforms for intercity buses were not surfaced in searches. Likely requires direct
+    review of Ethiopian federal transport proclamations.]'
+  telecom_regulatory_body: 'Ethiopian Communications Authority (ECA) — established
+    under Proclamation No. 1148/2019 as the independent regulator for the telecom
+    sector post-liberalization. ECA also serves as the data protection supervisory
+    authority under PDPP 1321/2024. ECA sets mobile and fixed termination rates and
+    issues operator licenses. Source: ECA referenced across multiple search results
+    — [|https://eca.et/wp-content/uploads/2024/05/Determination-on-Mobile-and-Fixed-Termination-Rates.pdf|].'
+  ai_policy_ethiopia: 'Ethiopia has a National Artificial Intelligence Policy referenced
+    alongside the PDPP 2024 as the data governance framework for responsible AI deployment.
+    The policy is referenced in Proclamation 1321/2024''s context but its full content
+    and effective date were not retrieved in detail. Source: regulations.ai PDPP analysis
+    — [|https://regulations.ai/regulations/RAI-ET-NA-PDPPNXX-2024|]. Ethiopia''s Digital
+    Ethiopia 2025 strategy and the 2020–2030 program also set targets for digital
+    transformation that contextualize NLP system deployment. Caveat: the specific
+    scope and enforcement provisions of the AI policy remain unverified in detail
+    — deferred below search budget.'
+domain_specific_notes: '- Travel domain is directly relevant: INJONGO includes Travel
+  as one of 5 domains, with intents covering generic travel booking scenarios.
+
+  - Key gap: INJONGO''s travel intents are derived from CLINC (''exchange rate'',
+  ''book flight'') and do not include intercity bus-specific flows that are the actual
+  deployment use case (road-closure rebooking, seat-class upgrade, operator-specific
+  cancellation).
+
+  - Ethiopian calendar is the operative temporal reference system for users; Gregorian-only
+  DATE slot annotation in INJONGO is a direct failure mode for travel-date slot extraction.
+
+  - Birr (ETB) should in principle be extractable via CURRENCY/MONEY slots, and the
+  INJONGO GitHub dataset shows culturally grounded Ethiopian entities in the banking
+  domain (e.g., Abay Bank), but empirical coverage of Birr in Amharic travel-domain
+  INJONGO instances is unverified.
+
+  - Ethiopian intercity bus fare structure (VIP vs. economy, route-specific pricing)
+  produces slot value distributions unlikely to appear in INJONGO''s training data.
+
+  - No Ethiopian NLP corpus is known to cover Amharic-language fare-slot or date-slot
+  extraction for bus booking specifically; the closest resources are EthioLLM/EthioBenchmark
+  (NER, classification, MT tasks — not intent/slot) and INJONGO itself.
+
+  - INJONGO''s fixed 80-utterances-per-intent distribution does not reflect real booking
+  interaction frequency (e.g., route queries and seat selection will dominate over
+  less frequent intents in actual operator logs).
+
+  - LLM zero-shot slot-filling performance on INJONGO Amharic is expected to be substantially
+  below fine-tuned baselines; GPT-4o achieves only ~26% average F1 zero-shot across
+  African languages; Amharic-specific figure requires verification from per-language
+  Table 5 in the INJONGO paper (not fully extractable from available search snippets).'
+benchmark_amharic_performance_data:
+  best_finetuned_model_intent_detection_accuracy_avg_all_languages: 93.7% (AfroXLMR-76L)
+  best_finetuned_model_slot_filling_f1_avg_all_languages: 85.6% (AfroXLMR-76L)
+  gpt4o_zero_shot_intent_detection_avg_all_african_languages: 70.6%
+  gpt4o_zero_shot_slot_filling_f1_avg_all_african_languages: 26%
+  amharic_specific_intent_detection_accuracy: '[NOT FOUND — searched INJONGO paper
+    PDF (arXiv 2502.09814), ResearchGate, ACL Anthology, and OpenReview; Table 5 per-language
+    columns (amh, ewe, hau, ...) are confirmed to exist in the paper but the specific
+    Amharic (amh) accuracy value was not extractable from available search snippets.
+    The per-language row data is present in the full paper PDF. Downstream assessors
+    should consult Table 5 of the ACL 2025 paper directly: [|https://aclanthology.org/2025.acl-long.464.pdf|]]'
+  amharic_specific_slot_filling_f1: '[NOT FOUND — same limitation as intent detection;
+    per-language F1 for Amharic slot-filling requires direct inspection of Table 5
+    in the INJONGO paper. ACL Anthology full paper: [|https://aclanthology.org/2025.acl-long.464.pdf|]]'
+  amharic_initial_fleiss_kappa_before_review: '0.836 — sourced from INJONGO Table
+    8 (dataset statistics across 17 languages). Source: ResearchGate full-text snippet
+    — [|https://www.researchgate.net/publication/389056008_INJONGO_A_Multicultural_Intent_Detection_and_Slot-filling_Dataset_for_16_African_Languages|]'
+  amharic_fleiss_kappa_after_review: '0.933 (+0.096 improvement) — sourced from INJONGO
+    Table 8. Among the 16 languages, Amharic showed modest improvement compared to
+    Sesotho (+0.327) and Zulu (+0.294). The initial Amharic kappa of 0.836 was already
+    the second-highest after Shona (0.934), suggesting Amharic annotation was relatively
+    consistent from the start. Source: ResearchGate full-text snippet — [|https://www.researchgate.net/publication/389056008_INJONGO_A_Multicultural_Intent_Detection_and_Slot-filling_Dataset_for_16_African_Languages|]'
+  note: Swahili (high web-resource language) achieves near-English performance (~80.6%
+    accuracy with Llama 3.3 70B); Amharic is lower-resource and likely achieves lower
+    scores, but exact figures require verification from per-language result tables
+    in the INJONGO paper. The INJONGO GitHub repository (McGill-NLP/Injongo — [|https://github.com/McGill-NLP/Injongo|])
+    provides direct access to the Amharic (amh) dataset instances, which could be
+    inspected to assess Ethiopian toponym and Birr currency coverage empirically.
+net_new_fields:
+  ethiopian_nlp_ecosystem_context:
+    ethiollm_and_ethiobenchmark: 'EthioLLM (Tonja et al., LREC-COLING 2024) introduced
+      multilingual LLMs for five Ethiopian languages (Amharic, Ge''ez, Afan Oromo,
+      Somali, Tigrinya) and EthioBenchmark covering NER, POS tagging, news classification,
+      machine translation, and sentiment analysis tasks. Notably, EthioBenchmark does
+      NOT include intent detection or slot-filling. Source: ACL Anthology — [|https://aclanthology.org/2024.lrec-main.561/|].
+      Relevance: confirms that INJONGO is the only available benchmark covering Ethiopian-language
+      intent/slot tasks, and that EthioLLM models could serve as strong baselines
+      for Amharic slot-filling.'
+    amharic_as_l2_lingua_franca: 'Amharic functions as the most learned second language
+      across Ethiopia, used by speakers of Oromo, Tigrinya, Somali, and other languages
+      for inter-ethnic communication. This L2 dominance underpins the code-switching
+      concern: the actual user base is heavily L2-Amharic. Source: Ethio-ASR paper
+      citing ~29.3% L1 speaker rate — [|https://arxiv.org/html/2603.23654|].'
+    afar_oromo_somali_tigrinya_now_official_languages: 'As of recent constitutional
+      changes, Afar, Oromo, Somali, and Tigrinya have been recognized as additional
+      official working languages of Ethiopia alongside Amharic. This changes the sociolinguistic
+      context for Amharic-only NLP deployment: users in Oromia, Tigray, and the Somali
+      region may have growing expectations for their L1 language to be supported.
+      Source: Ethio-ASR paper — [|https://arxiv.org/html/2603.23654|].'
+    afrobench_includes_injongo_amharic: 'AfroBench (ACL 2025 Findings) includes INJONGO
+      as one of its evaluated benchmarks and covers Amharic among its 14 languages,
+      providing a multi-benchmark context for Amharic LLM performance. Source: ACL
+      Anthology — [|https://aclanthology.org/2025.findings-acl.976.pdf|]. Net-new
+      relevance: AfroBench results may provide additional Amharic-specific INJONGO
+      performance data beyond what is in the INJONGO paper itself.'
+  telecom_infrastructure_connectivity_risks:
+    4g_coverage_gap_on_intercity_corridors: Only 33% population 4G coverage nationally
+      as of 2023 (GSMA). Most intercity corridors outside the Addis Ababa–Adama axis
+      will be predominantly 3G. Median mobile download speed of 27.19 Mbps nationally
+      (DataReportal 2024 — [|https://datareportal.com/reports/digital-2024-ethiopia|])
+      likely overstates corridor-level speeds. The booking app must tolerate intermittent
+      or low-bandwidth conditions.
+    ethio_telecom_data_tariff_reduction: 'Safaricom Ethiopia''s entry in October 2022
+      forced Ethio Telecom to cut mobile data tariffs by ~70%, improving affordability.
+      Source: Mordor Intelligence Ethiopia Telecom Market report — [|https://www.mordorintelligence.com/industry-reports/ethiopia-telecom-mno-market|].
+      Relevance: improved data affordability increases the feasible user base for
+      smartphone booking apps but does not resolve the coverage gap on rural corridors.'
+flagged_gaps_summary:
+- gap_id: 1
+  label: Ethiopian calendar slot coverage
+  priority: HIGH
+  description: INJONGO DATE slot annotation examples use Gregorian conventions only;
+    Ge'ez calendar month names (Meskerem, Tikimt, etc.) are not documented as valid
+    DATE slot values. This is a direct failure mode for travel-date extraction.
+  web_search_target: Ethiopian calendar Amharic NLP date extraction Ge'ez months Meskerem
+    Tikimt slot filling INJONGO
+  search_outcome: NOT FOUND — No published work on Ethiopian calendar date extraction
+    for Amharic NLP was surfaced. The INJONGO paper does not document Ethiopian calendar
+    accommodation. EthioBenchmark covers NER but not date slot filling with Ethiopian
+    calendar conventions. This gap is unresolved and constitutes a high-risk construct-validity
+    issue.
+- gap_id: 2
+  label: Ethiopian city/toponym coverage in slot instances
+  priority: HIGH
+  description: CITY_OR_PROVINCE and PLACE_NAME slots exist but whether Amharic travel-domain
+    instances include Ethiopian intercity toponyms (Hawassa, Mekelle, Gondar, Dire
+    Dawa, Jimma) is undocumented.
+  web_search_target: INJONGO Amharic travel domain slot instances Ethiopian city names
+    toponym coverage
+  search_outcome: 'PARTIALLY RESOLVED — The INJONGO GitHub dataset shows Amharic banking-domain
+    utterances use Ethiopian bank names (e.g., ''አባይ ባንክ'' = Abay Bank), confirming
+    culturally grounded entity substitution in at least one domain. Source: [|https://github.com/McGill-NLP/Injongo|].
+    However, travel-domain toponym coverage (intercity city names) remains empirically
+    unverified. Direct inspection of the Amharic travel-domain split in the dataset
+    is required.'
+- gap_id: 3
+  label: Code-switching (Amharic–Oromo, Amharic–Tigrinya) in utterances
+  priority: HIGH
+  description: INJONGO covers Oromo and Tigrinya separately but has no intra-utterance
+    code-switching track. User utterances from L2 Amharic speakers are expected to
+    contain code-switched tokens.
+  web_search_target: Amharic Oromo Tigrinya code-switching NLP benchmark Ethiopian
+    language mixing intent detection slot filling
+  search_outcome: CONFIRMED GAP — No intent detection or slot-filling benchmark for
+    code-switched Amharic–Oromo or Amharic–Tigrinya utterances exists. EthioNLP community
+    has emerging work on code-switched sentiment analysis (morphology-aware, multi-task
+    learning) using XLM-R + HornMorpho (Tadesse et al., EthioNLP 2025 — [|https://ethionlp.github.io/|]),
+    but this covers sentiment, not intent/slot. The gap is a genuine documentation
+    hole in the Ethiopian NLP ecosystem.
+- gap_id: 4
+  label: Annotator demographic representativeness
+  priority: HIGH
+  description: INJONGO's Amharic annotator regional origin, L1/L2 status, and urban/rural
+    background are undisclosed. Addis Ababa–centric annotators may produce a distribution
+    poorly matched to non-Addis traveler utterances.
+  web_search_target: INJONGO paper annotator section Amharic demographics regional
+    Ethiopia NLP crowdsourcing
+  search_outcome: NOT FOUND — The INJONGO paper confirms annotators were native speakers
+    recruited via a Kenyan logistics company compensated at per-country rates, but
+    no regional origin, urban/rural breakdown, or L1/L2 Amharic status data for the
+    Amharic annotator pool is published. Multiple versions of the paper were searched
+    (arXiv, ACL Anthology, OpenReview) without finding additional demographic detail.
+    This demographic opacity is an inherent limitation of the benchmark for this deployment.
+- gap_id: 5
+  label: Operator-specific intent gaps (Sky Bus, Selam Bus, Ride)
+  priority: MODERATE
+  description: INJONGO's 40-intent travel taxonomy is derived from generic CLINC intents
+    and does not include seat-class selection, road-closure rebooking, or operator-specific
+    cancellation flows.
+  web_search_target: Ethiopian intercity bus booking intent taxonomy Sky Bus Selam
+    Bus conversational AI NLP
+  search_outcome: NOT FOUND — No published intent taxonomy or conversational AI dataset
+    specific to Ethiopian intercity bus booking operators was found. Operator-specific
+    booking flows must be elicited directly from Sky Bus, Selam Bus, and Ride APIs/documentation.
+- gap_id: 6
+  label: Birr fare tiers and pricing utterances
+  priority: MODERATE
+  description: CURRENCY/MONEY slots are present, but whether Birr (ETB) and Ethiopian
+    fare-tier conventions (VIP vs. economy) appear in Amharic INJONGO instances is
+    undocumented.
+  web_search_target: Ethiopian Birr fare extraction Amharic NLP e-commerce transport
+    corpus slot filling ETB
+  search_outcome: 'PARTIALLY RESOLVED — INJONGO GitHub shows culturally grounded Ethiopian
+    entities in banking domain (Abay Bank). No published Amharic transport fare corpus
+    exists. Direct dataset inspection required. Source: [|https://github.com/McGill-NLP/Injongo|].'
+- gap_id: 7
+  label: Ethiopian holiday calendar events in slot instances
+  priority: MODERATE
+  description: CALENDAR_EVENT slot type exists, but whether Ethiopian religious holidays
+    (Timkat, Meskel, Enkutatash) appear as travel-domain slot instances is undocumented.
+  web_search_target: Ethiopian holiday Timkat Meskel travel booking NLP Amharic calendar
+    event slot INJONGO
+  search_outcome: NOT FOUND — No evidence that Ethiopian religious holidays appear
+    in INJONGO's CALENDAR_EVENT slot training instances. The annotation guide does
+    not reference Ethiopian holidays. Approximate Gregorian dates for all major Ethiopian
+    holidays have been resolved in the calendar_and_temporal_conventions section above.
+- gap_id: 8
+  label: Amharic-specific per-language performance metrics
+  priority: MODERATE
+  description: Aggregate INJONGO results are reported across all African languages;
+    per-language breakdowns for Amharic on intent detection accuracy and slot-filling
+    F1 are not surfaced in the registry summary.
+  web_search_target: INJONGO Amharic per-language results intent detection slot filling
+    accuracy F1 Table 5 paper
+  search_outcome: 'PARTIALLY RESOLVED — Table 5 per-language columns confirmed to
+    include ''amh'' (Amharic). Amharic Fleiss'' Kappa scores have been resolved: initial
+    κ = 0.836, post-review κ = 0.933. Per-language intent detection accuracy and slot-filling
+    F1 for Amharic require direct reading of Table 5 in the full paper PDF (ACL Anthology
+    — [|https://aclanthology.org/2025.acl-long.464.pdf|]). Snippet extraction was
+    insufficient to retrieve the exact numerical values.'

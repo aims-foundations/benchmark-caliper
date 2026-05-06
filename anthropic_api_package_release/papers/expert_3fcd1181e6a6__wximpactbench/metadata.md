@@ -1,0 +1,11 @@
+- name: wximpactbench
+- full_name: WXImpactBench: A Disruptive Weather Impact Understanding Benchmark for Evaluating Large Language Models
+- year: 2025
+- domain: Evaluates the capacity of large language models to understand disruptive weather impacts on society and climate change adaptation through analysis of historical newspaper articles.
+- languages: English
+- primary_region: North America (Canada-focused, based on newspaper sources)
+- porting_strategy: ground_up
+- input_modalities: text
+- output_modalities: label, score, ranking
+- brief_description: WXImpactBench is the first benchmark for evaluating LLMs on disruptive weather impact understanding, built from digitalized historical newspaper articles processed through a four-stage construction pipeline. The benchmark includes two evaluation tasks: multi-label classification across six impact categories (infrastructural, political, financial, ecological, agricultural, human health) and ranking-based question answering. The dataset addresses challenges in climate-related text processing including polysemy disambiguation and OCR error correction in historical newspaper content.
+- source_culture: transferred from different cultural context

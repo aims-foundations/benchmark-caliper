@@ -1,0 +1,11 @@
+- name: asap++
+- full_name: ASAP++: Enriching the ASAP Automated Essay Grading Dataset with Essay Attribute Scores
+- year: UNKNOWN
+- domain: Automatic essay grading with fine-grained attribute scoring. The benchmark provides annotations of essays with scores for individual writing attributes such as content, organization, word choice, and sentence fluency.
+- languages: English
+- primary_region: United States (essays written by students in classes 7-10)
+- porting_strategy: adapted
+- input_modalities: text
+- output_modalities: label, score
+- brief_description: ASAP++ enriches the ASAP Automated Essay Grading dataset by adding attribute-specific scores to essays that previously only had overall holistic scores. The resource includes annotations for 6 of 8 prompts covering three essay types (argumentative, source-dependent, and narrative), with each essay scored by an annotator on attributes like content, organization, word choice, sentence fluency, and conventions. Baseline results are reported using Random Forest classifiers with standard NLP features.
+- source_culture: transferred from different cultural context

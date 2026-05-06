@@ -1,0 +1,36 @@
+```yaml
+name: kenya_chw_swahili
+countries:
+  primary:
+    - Kenya
+  extended:
+    - Tanzania
+    - Uganda
+languages:
+  - name: Swahili
+    code: sw
+    notes: Primary language of community health workers.
+  - name: English
+    code: en
+    notes: Secondary / administrative language.
+  - name: Sheng
+    notes: Urban slang blend; common in peri-urban deployments.
+writing_systems:
+  - Latin
+literacy_rates:
+  - country: Kenya
+    rate: "82%"
+cultural_norms_notes: >
+  Oral communication dominates; trusted intermediaries mediate formal health
+  messaging.
+infrastructure_notes: >
+  Low-bandwidth mobile (2G/3G); voice-to-text is common.
+domain_specific_notes: >
+  CHWs operate under Kenyan MoH triage protocols.
+web_search_enrichment:
+  searches_performed:
+    - query: "Kenya community health worker mobile deployment 2024"
+      key_findings: "CHW programs use SMS and USSD as primary interfaces."
+    - query: "Swahili medical NLP benchmarks"
+      key_findings: "Limited availability; KenSwQuAD is most common reference."
+```

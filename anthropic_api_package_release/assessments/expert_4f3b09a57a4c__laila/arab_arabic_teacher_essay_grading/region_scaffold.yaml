@@ -1,0 +1,373 @@
+name: 'Arab-Country G10–12 Arabic Teachers: AI Essay Grading Assistance'
+abbreviation: arab-hs-arabic-teachers-aes
+benchmark: laila
+deployment_scope:
+  description: High school Arabic language teachers (grades 10–12) across Arab countries
+    who use an AI system to assist in grading student essays written in Modern Standard
+    Arabic (MSA). The benchmark dataset (LAILA) was collected in Qatar; the deployment
+    population extends to Egypt, Saudi Arabia, Jordan, Lebanon, Morocco, and other
+    Arab-country contexts. The system grades essays against a seven-trait rubric (Relevance,
+    Organization, Vocabulary, Style, Development, Mechanics, Grammar) derived from
+    the Qatar University Testing Center's CAST rubric.
+  benchmark_source_country: Qatar
+  deployment_countries:
+  - Qatar
+  - Egypt
+  - Saudi Arabia
+  - Jordan
+  - Lebanon
+  - Morocco
+  - Algeria
+  - Tunisia
+  - UAE
+  - Other Arab League member states
+  geographic_scope_note: Qatar is the benchmark source context; deployment extends
+    pan-Arab. Sub-national and country-level variation in curriculum and grading practice
+    is explicitly relevant to validity assessment.
+target_population:
+  occupation: High school Arabic language teachers
+  grade_levels_served: Grades 10–12
+  role_description: Teachers assign and grade student MSA essays as part of formal
+    Arabic language instruction. In the AI-assisted deployment, the system produces
+    per-trait scores and justification text; the teacher reviews, overrides, and provides
+    feedback to students.
+  estimated_population_size: '[NEEDS VERIFICATION — total number of G10–12 Arabic
+    language teachers across target Arab countries]'
+  typical_professional_background: Undergraduate or postgraduate degree in Arabic
+    language, linguistics, or Arabic literature; national teaching certification;
+    professional experience in secondary Arabic instruction
+  professional_certification_requirements: '[NEEDS VERIFICATION — per-country teacher
+    certification standards for secondary Arabic; e.g., Egypt''s Naqabat al-Mu''allimin,
+    Saudi Arabia''s Teaching Permit, Jordan''s Ministry of Education licensing]'
+  familiarity_with_rubric_based_grading: 'Highly variable: teachers in Qatar, Saudi
+    Arabia, Jordan, and UAE tend to use structured rubrics; Egyptian teachers predominantly
+    use holistic, evaluator-dependent grading without a formal trait structure'
+  digital_literacy_level: '[NEEDS VERIFICATION — survey data on Arab secondary teacher
+    digital tool adoption rates]'
+  language_of_professional_practice: Modern Standard Arabic (primary instructional
+    and assessment medium); national spoken Arabic dialect for classroom communication
+languages:
+  assessment_language: Modern Standard Arabic (MSA / الفصحى)
+  register_note: Essays are written in MSA; teachers evaluate MSA writing quality.
+    No dialectal variation in the written essay text is expected by design, though
+    student interference from regional dialects (Darija, Egyptian Arabic, Levantine
+    Arabic) may appear in mechanics and vocabulary errors.
+  teacher_interface_language: '[NEEDS VERIFICATION — whether the AI system interface
+    is delivered in MSA, a regional dialect, or a European language such as French
+    for North African users]'
+  dialectal_interference_risk_countries:
+  - country: Morocco
+    dialect: Darija (Moroccan Arabic) with heavy French and Berber substrate
+    interference_traits_at_risk:
+    - Mechanics
+    - Vocabulary
+    notes: '[NEEDS VERIFICATION — empirical evidence of Darija/French interference
+      patterns in Moroccan student MSA writing]'
+  - country: Egypt
+    dialect: Egyptian Arabic
+    interference_traits_at_risk:
+    - Vocabulary
+    - Grammar
+    notes: '[NEEDS VERIFICATION — evidence of Egyptian colloquial interference in
+      G10–12 MSA essay writing]'
+  - country: Lebanon
+    dialect: Levantine Arabic with French substrate
+    interference_traits_at_risk:
+    - Vocabulary
+    - Mechanics
+    notes: '[NEEDS VERIFICATION — evidence of French-mediated interference in Lebanese
+      student MSA]'
+  writing_system: Arabic script (right-to-left); standard MSA orthography
+  nlp_tooling_note: Arabic NLP tooling (tokenization, morphological analysis, POS
+    tagging) is improving but lags behind English; MSA is better resourced than dialectal
+    Arabic. Tools used in LAILA baselines include AraBERT, AraT5, CamelTools, AraVec.
+country_level_curriculum_variation:
+  overview: Each Arab country operates an independent national Arabic language curriculum
+    with distinct grading conventions. The LAILA seven-trait ontology (QUTC CAST rubric)
+    was designed for the Qatari context and has not been formally mapped to other
+    national frameworks.
+  countries:
+  - country: Qatar
+    curriculum_authority: Ministry of Education and Higher Education (MOEHE Qatar)
+    grading_approach: Structured rubric-based; CAST rubric used at Qatar University
+      Testing Center; traits align with LAILA schema
+    rubric_alignment_with_laila: High — LAILA was built on QUTC CAST rubric
+    known_trait_mismatches: None documented
+    official_rubric_documentation: '[NEEDS VERIFICATION — public URL or citation for
+      MOEHE Qatar secondary Arabic writing assessment rubric]'
+  - country: Egypt
+    curriculum_authority: '[NEEDS VERIFICATION — Egyptian Ministry of Education and
+      Technical Education; specific Arabic language curriculum body]'
+    grading_approach: Holistic, evaluator-dependent; no formal multi-trait rubric
+      structure in standard secondary Arabic assessment
+    rubric_alignment_with_laila: Low — the seven-trait ontology has no direct equivalent
+      in Egyptian classroom practice; the IO mismatch is flagged as HIGH priority
+      in the elicitation
+    known_trait_mismatches: All seven traits potentially unmapped; holistic score
+      is the operative construct
+    official_rubric_documentation: '[NEEDS VERIFICATION — Egyptian national secondary
+      Arabic essay grading guidelines or exam marking schemes]'
+    validated_arabic_aes_work: '[NEEDS VERIFICATION — whether any Arabic AES system
+      has been validated against Egyptian national curriculum grading practices]'
+  - country: Saudi Arabia
+    curriculum_authority: '[NEEDS VERIFICATION — Ministry of Education Saudi Arabia;
+      National Center for Assessment (QIYAS)]'
+    grading_approach: '[NEEDS VERIFICATION — rubric-based or holistic; whether national
+      secondary Arabic writing assessment uses multi-trait scoring]'
+    rubric_alignment_with_laila: '[NEEDS VERIFICATION — whether Saudi MOE Arabic writing
+      rubric traits align with REL, ORG, VOC, STY, DEV, MEC, GRA]'
+    known_trait_mismatches: '[NEEDS VERIFICATION]'
+    official_rubric_documentation: '[NEEDS VERIFICATION — public Saudi MOE secondary
+      Arabic assessment rubric]'
+  - country: Jordan
+    curriculum_authority: '[NEEDS VERIFICATION — Ministry of Education Jordan; National
+      Center for Curriculum Development]'
+    grading_approach: '[NEEDS VERIFICATION — structured or holistic; Tawjihi Arabic
+      exam marking approach]'
+    rubric_alignment_with_laila: '[NEEDS VERIFICATION — Tawjihi Arabic essay scoring
+      criteria vs. LAILA traits]'
+    known_trait_mismatches: '[NEEDS VERIFICATION]'
+    official_rubric_documentation: '[NEEDS VERIFICATION — Tawjihi exam Arabic writing
+      marking scheme]'
+  - country: Lebanon
+    curriculum_authority: '[NEEDS VERIFICATION — Lebanese Ministry of Education and
+      Higher Education; Centre de Recherches et de Développement Pédagogiques (CRDP)]'
+    grading_approach: '[NEEDS VERIFICATION — official secondary Arabic Baccalaureate
+      essay grading method; influence of French educational model on rubric design]'
+    rubric_alignment_with_laila: '[NEEDS VERIFICATION — whether CRDP Arabic writing
+      criteria map onto seven LAILA traits]'
+    known_trait_mismatches: '[NEEDS VERIFICATION — possible differences in ''style''
+      and ''development'' given Levantine rhetorical traditions]'
+    official_rubric_documentation: '[NEEDS VERIFICATION]'
+  - country: Morocco
+    curriculum_authority: '[NEEDS VERIFICATION — Ministère de l''Éducation Nationale
+      du Maroc; specific Arabic language curriculum department]'
+    grading_approach: '[NEEDS VERIFICATION — Morocco Baccalaureate Arabic writing
+      assessment method; French curriculum influence on trait structure]'
+    rubric_alignment_with_laila: '[NEEDS VERIFICATION — whether Moroccan national
+      Arabic writing rubric uses comparable trait dimensions]'
+    known_trait_mismatches: '[NEEDS VERIFICATION — possible divergence in Vocabulary
+      and Mechanics scoring given Darija and French substrate]'
+    official_rubric_documentation: '[NEEDS VERIFICATION]'
+grading_ontology_notes:
+  laila_trait_schema:
+    traits:
+    - Relevance (REL)
+    - Organization (ORG)
+    - Vocabulary (VOC)
+    - Style (STY)
+    - Development (DEV)
+    - Mechanics (MEC)
+    - Grammar (GRA)
+    rubric_source: Qatar University Testing Center CAST rubric
+    scale: 'REL: 0–2; all other traits: 0–5; Holistic = sum of seven traits'
+    genre_coverage: Explanatory and persuasive only; narrative and descriptive genres
+      absent
+  pan_arab_standards_assessment: The deployment user considers pan-Arab MSA writing
+    standards sufficiently uniform that a single scoring standard is appropriate;
+    cross-country surface linguistic quality differences are not expected to be substantial.
+    However, evaluative judgments on Style, Development, and Organization may carry
+    implicit Gulf-curriculum expectations from Qatari annotators.
+  holistic_vs_trait_tension: Egypt and potentially other countries rely on holistic
+    grading; the seven-trait structure may impose an unfamiliar cognitive framework
+    on teachers and produce output categories that do not correspond to their professional
+    grading schema.
+  io_mismatch_severity: HIGH — documented explicitly in elicitation; Egypt is the
+    clearest case but other countries may de-emphasize or re-weight specific traits
+  genre_gap: The LAILA benchmark covers only explanatory and persuasive essays. National
+    curricula may require narrative or descriptive essays; scoring models trained
+    on LAILA may not generalize to these genres.
+  genre_distribution_by_country: '[NEEDS VERIFICATION — proportion of narrative, descriptive,
+    argumentative, and explanatory essay tasks in G10–12 Arabic curricula of Egypt,
+    Saudi Arabia, Jordan, Lebanon, Morocco]'
+content_domain_notes:
+  benchmark_content_origin: All LAILA essays respond to prompts designed for a Qatari
+    educational context; all prompts are culturally relevant to the Arabic-speaking
+    context broadly but grounded in Qatari institutional design
+  cross_national_content_risk: Models trained on LAILA may systematically misjudge
+    Relevance and Development scores for essays responding to prompts grounded in
+    non-Qatari national history, literary canon, or social norms. This is flagged
+    as a HIGH-priority IC gap.
+  content_domains_at_risk:
+  - country: Egypt
+    at_risk_domains:
+    - Egyptian national history (Pharaonic, Islamic, modern)
+    - Egyptian literary canon (Naguib Mahfouz, Taha Hussein, etc.)
+    - Nile Valley social norms and values
+    notes: '[NEEDS VERIFICATION — evidence that LAILA-trained models misjudge relevance/development
+      on Egypt-specific essay prompts]'
+  - country: Lebanon
+    at_risk_domains:
+    - Levantine literary traditions (Gibran Khalil Gibran, Arabic Nahda literature)
+    - Lebanese civil conflict history
+    - Pluralist religious and political identity
+    notes: '[NEEDS VERIFICATION]'
+  - country: Morocco
+    at_risk_domains:
+    - Maghrebi history and Amazigh cultural heritage
+    - Francophone intellectual tradition in Moroccan education
+    - North African Islamic scholarly tradition
+    notes: '[NEEDS VERIFICATION]'
+  - country: Saudi Arabia
+    at_risk_domains:
+    - Gulf social norms and Islamic values in Vision 2030 context
+    - Arabian Peninsula history and tribal heritage
+    - Saudi national literary figures
+    notes: '[NEEDS VERIFICATION]'
+  laila_genre_limitations: LAILA does not include narrative or descriptive essay prompts;
+    these genres are present in multiple Arab national curricula and represent an
+    untested content domain for LAILA-trained models
+output_requirements_notes:
+  benchmark_output_form: Discrete point-score labels per trait; QWK-evaluated; no
+    uncertainty quantification, confidence intervals, or natural-language rationale
+  deployment_output_requirement: Per-trait score with accompanying confidence signal
+    and explanatory justification text so teachers can meaningfully intervene when
+    essays fall between score levels
+  mismatch_severity: HIGH — the benchmark output form does not satisfy the teacher-facing
+    use case; this is flagged as both an OO and OF high-priority gap
+  uncertainty_output_gap: '[NEEDS VERIFICATION — whether any Arabic AES system built
+    on LAILA or comparable datasets has been augmented with uncertainty quantification
+    or rationale generation, and how such outputs have been evaluated by Arabic language
+    teachers]'
+  rationale_generation_approaches: '[NEEDS VERIFICATION — current state of Arabic
+    NLP rationale/explanation generation for essay scoring; relevant systems, papers,
+    or shared tasks]'
+  teacher_acceptance_of_ai_scores: '[NEEDS VERIFICATION — evidence on Arab secondary
+    teacher attitudes toward AI-generated essay scores; trust calibration research
+    in Arabic education context]'
+annotator_pool_notes:
+  documented_composition: 6 annotators and 3 supervisors; all Arabic language teachers
+    or lecturers; 5 hold MSc or PhD in Arabic language; based at Qatar University;
+    trained on QUTC CAST rubric
+  nationality_diversity: '[NEEDS VERIFICATION — whether annotators represented diverse
+    Arab-country backgrounds or were exclusively Qatari-curriculum aligned; LAILA
+    paper does not document annotator nationalities]'
+  gulf_curriculum_bias_risk: MODERATE — Qatari annotator pool may embed implicit Gulf-curriculum
+    expectations in holistic judgments on Style, Development, and Organization; acknowledged
+    in elicitation as warranting verification rather than dismissal
+  iaa_range: QWK 0.66 (P5) to 0.75 (P1); classified as substantial agreement; highest
+    escalation rate on P5 (23.3% required third annotator)
+infrastructure_notes:
+  modality: Text-only MSA; no audio, image, or multimodal components
+  deployment_interface: '[NEEDS VERIFICATION — web-based, LMS-integrated, or standalone
+    application; specific platform names or ministry-endorsed systems]'
+  internet_access_by_country:
+    Qatar: '[NEEDS VERIFICATION — broadband/mobile penetration for school teachers]'
+    Egypt: '[NEEDS VERIFICATION — school internet connectivity rates; urban vs. rural
+      teacher access]'
+    Saudi Arabia: '[NEEDS VERIFICATION]'
+    Jordan: '[NEEDS VERIFICATION]'
+    Lebanon: '[NEEDS VERIFICATION — infrastructure disruption context]'
+    Morocco: '[NEEDS VERIFICATION]'
+  device_access: '[NEEDS VERIFICATION — tablet/laptop/desktop prevalence among G10–12
+    Arabic teachers in target countries]'
+  infrastructure_mismatch_severity: LOWER — deployment is text-only MSA matching benchmark
+    modality; no script mismatch or modality gap anticipated per elicitation
+  lms_integration_context: '[NEEDS VERIFICATION — whether target schools use LMS platforms
+    (e.g., Madrasati in Saudi Arabia, specific Jordanian or Egyptian ministry platforms)
+    into which the AI grading tool must integrate]'
+regulatory_and_policy_notes:
+  data_protection:
+    Qatar: '[NEEDS VERIFICATION — Qatar Personal Data Protection Law (Law No. 13 of
+      2016) applicability to student essay data in AI grading systems]'
+    Egypt: '[NEEDS VERIFICATION — Egyptian Personal Data Protection Law No. 151 of
+      2020 applicability]'
+    Saudi Arabia: '[NEEDS VERIFICATION — Saudi Personal Data Protection Law (PDPL)
+      enacted 2021, applicability to educational AI]'
+    Jordan: '[NEEDS VERIFICATION — Jordanian data protection framework applicability]'
+    Lebanon: '[NEEDS VERIFICATION — Lebanese data protection legislation status]'
+    Morocco: '[NEEDS VERIFICATION — Law No. 09-08 on personal data protection applicability]'
+  ai_in_education_policy:
+    regional_overview: '[NEEDS VERIFICATION — whether any target country has issued
+      ministerial guidance or policy on AI-assisted grading in secondary education]'
+    Qatar: '[NEEDS VERIFICATION — MOEHE Qatar policy on AI tools in assessment]'
+    Saudi Arabia: '[NEEDS VERIFICATION — Saudi MOE AI in education strategy under
+      Vision 2030]'
+    Egypt: '[NEEDS VERIFICATION — Egyptian MOE stance on AI-assisted grading]'
+  laila_usage_restrictions: LAILA dataset is released for research and educational
+    purposes only; explicitly prohibited for high-stakes educational decisions affecting
+    individual students; systems developed using LAILA must undergo fairness auditing
+    and stakeholder consultation before real-world application
+  high_stakes_use_warning: The elicitation deployment scenario (assisting teacher
+    grading of G10–12 essays) is proximate to high-stakes use; the benchmark's own
+    ethics statement warns against deployment in operational assessment contexts without
+    independent validation
+cultural_and_professional_norms_notes: '- Arabic language teaching in Arab secondary
+  schools carries significant cultural prestige; teacher authority over grading decisions
+  is a professional norm that AI systems must position themselves as supporting rather
+  than replacing.
+
+  - In many Arab education systems, the Arabic language subject is identity-bearing
+  and tied to national and Islamic cultural heritage; AI grading assistance may be
+  received with heightened sensitivity.
+
+  - Egypt''s holistic grading culture reflects a professional tradition where experienced
+  teacher judgment is the authoritative standard; trait-based AI scores may be perceived
+  as reductive or misaligned with professional identity.
+
+  - Gulf-country teachers (Qatar, UAE, Saudi Arabia) may be more accustomed to rubric-based
+  frameworks given standardized testing infrastructure (QUTC CAST, QIYAS, etc.).
+
+  - In Lebanon and Morocco, French educational influence may shape teacher expectations
+  about what structured writing assessment looks like, potentially creating both alignment
+  and misalignment with LAILA''s trait schema.
+
+  - Cross-country annotator trust: teachers may scrutinize whether the AI''s implicit
+  scoring standard reflects their own national curriculum expectations rather than
+  a Gulf-centric norm.'
+flagged_gaps_for_web_search:
+- gap_id: 1
+  label: Egypt holistic grading vs. LAILA seven-trait structure
+  description: Egypt is a major Arab education system where essay grading is rubric-free
+    and evaluator-dependent. No Arabic AES work has been documented as validated against
+    Egyptian national curriculum grading practices.
+  search_target: Arabic automated essay scoring Egypt national curriculum holistic
+    grading validation rubric-free secondary Arabic
+- gap_id: 2
+  label: Non-Qatari prompt content and cross-national relevance/development scoring
+    degradation
+  description: LAILA prompts are Qatari-context; models may misjudge Relevance and
+    Development for essays on Egyptian history, Levantine literature, or North African
+    social topics.
+  search_target: LAILA Arabic AES cross-national prompt generalization Egypt Levant
+    North Africa relevance development scoring degradation
+- gap_id: 3
+  label: Confidence/uncertainty output and rationale generation for teacher use
+  description: Benchmark produces only discrete scores; deployment requires confidence
+    signals and explanatory justification. No Arabic AES system with uncertainty quantification
+    or rationale generation has been documented.
+  search_target: Arabic automated essay scoring uncertainty quantification confidence
+    estimation rationale generation teacher feedback explainability
+- gap_id: 4
+  label: Country-level rubric documentation for Saudi Arabia, Jordan, Lebanon, Morocco
+  description: Official rubric structures for secondary Arabic writing assessment
+    in these four countries have not been mapped against LAILA's seven-trait schema.
+  search_target: Arabic language essay grading rubric Saudi Arabia Jordan Lebanon
+    Morocco national curriculum official assessment criteria secondary school
+- gap_id: 5
+  label: Annotator pool nationality diversity within Qatar
+  description: LAILA annotator nationalities are undocumented; if exclusively Qatari-curriculum
+    aligned, ground-truth labels may embed Gulf-curriculum norms.
+  search_target: LAILA Arabic AES annotator nationality diversity Gulf curriculum
+    bias Qatar University annotator background
+- gap_id: 6
+  label: Dialectal interference in MSA mechanics and vocabulary scoring
+  description: Morocco (Darija/French), Egypt (Egyptian Arabic), and Lebanon (Levantine/French)
+    may produce MSA with distinct interference patterns; LAILA has not analyzed scoring
+    differential by student dialect background.
+  search_target: Arabic MSA essay scoring dialectal interference Moroccan Darija Egyptian
+    Arabic Levantine vocabulary mechanics scoring bias high school
+- gap_id: 7
+  label: Genre coverage in Arab national curricula vs. LAILA (explanatory and persuasive
+    only)
+  description: LAILA excludes narrative and descriptive genres; prevalence of these
+    genres in target national curricula is undocumented.
+  search_target: Arabic essay genre distribution high school national curriculum Arab
+    countries narrative descriptive argumentative writing task types G10–12
+- gap_id: 8
+  label: Teacher digital tool adoption and AI grading acceptance in Arab secondary
+    schools
+  description: No data has been cited on Arab secondary Arabic teachers' familiarity
+    with AI grading tools or attitudes toward AI-generated scores.
+  search_target: Arab secondary school teacher digital literacy AI grading acceptance
+    automated essay scoring Arabic teacher survey

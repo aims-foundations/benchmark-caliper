@@ -1,0 +1,22 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "The benchmark covers counseling sessions likely grounded in Indian clinical and cultural contexts. For your target users in South Asia and MENA, should the evaluation framework cover counseling components that reflect region-specific concerns — for example, family honor and izzat in South Asian contexts, religious or fatalistic framing of distress in MENA settings, stigma around formal mental health help-seeking, or intergenerational conflict norms? Or is your primary concern whether the benchmark covers generic clinical components that transfer across cultures?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "IC",
+    "question": "The counseling dialogues in the benchmark likely reflect Indian therapeutic communication norms — client-counselor register, indirect expression of distress, and culturally specific metaphors for psychological suffering. For your MENA-focused users building or evaluating tools in Arabic, Urdu, Farsi, or Dari, would summaries generated from these dialogues be representative of the discourse patterns and help-seeking language their end users actually produce, or would the mismatch in communication norms make the evaluation less meaningful?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OC",
+    "question": "The benchmark's ground-truth summaries are validated by mental health professionals — likely trained in India. For researchers in MENA building clinical NLP tools, would the clinical judgments embedded in those reference summaries (about what is salient, what counts as a counseling insight, what should be omitted for clinical appropriateness) align with what mental health practitioners in their target contexts would consider a good summary, or do you anticipate professional-norm divergence across your user base?"
+  },
+  {
+    "id": "Q4",
+    "dimension": "OF",
+    "question": "Your users are NLP researchers and AI practitioners evaluating LLMs for low-resource or underrepresented languages. Does the benchmark's evaluation framework — which uses ROUGE and BERTScore against English reference summaries — provide meaningful signal for systems your users are building that generate summaries in non-English languages such as Arabic, Hindi, or Urdu? Or would your users primarily apply the benchmark to English-language systems and separately handle multilingual evaluation?"
+  }
+]

@@ -1,0 +1,433 @@
+name: Non-Arab Tourists and Expats in Eight Arabic-Speaking Countries (ArabicMMLU
+  Deployment)
+abbreviation: arabicmmlu-tourist-expat
+benchmark: arabicmmlu
+deployment_countries:
+- Morocco
+- Egypt
+- Jordan
+- Palestine
+- Lebanon
+- UAE
+- Kuwait
+- Saudi Arabia
+deployment_regions:
+  north_africa:
+  - Morocco
+  - Egypt
+  levant:
+  - Jordan
+  - Palestine
+  - Lebanon
+  gulf:
+  - UAE
+  - Kuwait
+  - Saudi Arabia
+  note: 'Sub-regional distinctions matter for content validity: Maghrebi, Levantine,
+    and Gulf curricula differ in historical framing, language instruction tradition,
+    and civic content. Users are international visitors in these countries, not residents
+    or nationals.'
+target_population_description: Non-Arab tourists and expatriates physically present
+  in one or more of the eight listed countries who use an AI assistant to answer school-curriculum-level
+  questions about Arabic language, Arab history, and Arab geography. Users are non-native
+  Arabic speakers with basic-to-intermediate MSA competence. They are likely varied
+  in nationality (European, North American, South/Southeast Asian, etc.) and are using
+  the system for educational self-enrichment rather than practical travel assistance.
+  Practical logistics, local dialect phrases, tourist etiquette, and real-time customs
+  are explicitly out of scope.
+user_role: tourists and expats seeking educational-level knowledge about the Arab
+  world
+user_nativeness: non-native Arabic speakers
+expected_arabic_proficiency: basic to intermediate MSA; learner-register Arabic likely;
+  possible grammatical imperfection and code-switching
+interaction_modality: text-only
+languages:
+  benchmark_language: Modern Standard Arabic (MSA)
+  user_input_register: Learner-level MSA; structurally distinct from the fluent native-speaker
+    MSA assumed by the benchmark. Users may produce code-switched or imperfect Arabic.
+  other_supported_languages: English and other languages anticipated by the use case
+    but outside the current benchmark scope; would require separate cross-lingual
+    evaluation
+  note: The benchmark is exclusively in MSA. A structural signal-distribution gap
+    exists between benchmark-assumed fluent MSA and the actual learner-register Arabic
+    produced by the target population.
+writing_systems:
+  scripts:
+  - Arabic script (right-to-left, used in the benchmark)
+  - Latin script (likely in learner code-switching and English-language interactions)
+  note: RTL rendering and mixed-direction text are relevant for UI/display but not
+    assessed by the benchmark. Arabic morphological complexity compounds input-parsing
+    challenges for learner-register queries.
+sub_regional_curriculum_variation:
+  north_africa:
+    morocco:
+      curriculum_tradition: Maghrebi curriculum with French-influenced educational
+        tradition; Darija-adjacent cultural framing
+      benchmark_representation: Present in benchmark — Morocco-sourced questions appear
+        in Arabic-specific-context subjects (history, geography, civics). However,
+        both BLOOMZ and Jais perform notably worse on Morocco-sourced questions compared
+        to other countries, suggesting content distinctiveness or data sparsity. No
+        Moroccan annotators in the worker pool.
+      question_count_estimate: '[NOT FOUND — the paper''s per-country distribution
+        figure is not machine-readable from the HTML; the paper states some countries
+        contribute as few as ~100 questions. Morocco is confirmed present with country-specific
+        questions but exact count not extractable from available sources. GitHub/HuggingFace
+        dataset card (ArabicMMLU paper — [|https://arxiv.org/abs/2402.12840|]) lists
+        Jordan, Egypt, Palestine as top-3 sources, implying Morocco is below that
+        tier.]'
+      notes: 'Model performance analysis in the paper confirms Morocco-sourced questions
+        exist and are harder for open-source models: ''BLOOMZ performs less well on
+        questions sourced from the UAE and Morocco compared to other countries, while
+        Jais performs best overall except in questions sourced from Morocco'' (ArabicMMLU
+        paper — [|https://arxiv.org/html/2402.12840v1|]). This suggests Morocco content
+        is both present and distinctive, reinforcing the curriculum-mismatch risk.'
+    egypt:
+      curriculum_tradition: Egyptian national curriculum; well-represented in benchmark
+        via Egyptian annotator pool
+      benchmark_representation: Moderate to good — Egyptian workers contributed to
+        both collection and verification; Egypt is confirmed as one of the top-3 source
+        countries.
+      question_count_estimate: 'Top-3 source country (Jordan #1, Egypt #2 or #3 alongside
+        Palestine — confirmed in GitHub/HuggingFace dataset card and paper HTML —
+        [|https://github.com/mbzuai-nlp/ArabicMMLU|]). Exact count not published separately.'
+      notes: '[NEEDS VERIFICATION — deferred: subject distribution breakdown for Egyptian-sourced
+        questions not separately published; below search budget]'
+  levant:
+    jordan:
+      curriculum_tradition: Jordanian national curriculum; by far the dominant source
+        in the benchmark
+      benchmark_representation: Over 6,000 questions sourced from Jordan — benchmark
+        is substantially Jordan-skewed
+      question_count_estimate: ~6,000+ (documented in benchmark paper)
+      notes: Jordan-skew means benchmark performance may disproportionately reflect
+        Jordanian curriculum framing, including Jordanian perspectives on shared Levantine
+        and pan-Arab historical events.
+    palestine:
+      curriculum_tradition: Palestinian Authority curriculum with politically distinct
+        historical narratives (1948 war, occupation, statehood); sensitive civic and
+        history content
+      benchmark_representation: CONFIRMED as top-3 source country — Jordan, Egypt,
+        and Palestine are explicitly named as the top three contributors in the dataset
+        documentation (GitHub and HuggingFace dataset card — [|https://github.com/mbzuai-nlp/ArabicMMLU|];
+        [|https://huggingface.co/datasets/MBZUAI/ArabicMMLU|]). Exact question count
+        not published separately. No Palestinian annotators in the worker pool despite
+        Palestine being a major source.
+      question_count_estimate: Top-3 source country (confirmed in dataset card — [|https://huggingface.co/datasets/MBZUAI/ArabicMMLU|]);
+        exact count not separately published.
+      notes: Palestine being a top-3 contributor is a significant positive finding
+        not anticipated by the scaffold. However, the structural MCQ format cannot
+        represent Palestinian-specific historical framings, and no Palestinian annotator
+        verified Palestinian-sourced questions — the 96% agreement reflects Jordanian/Egyptian
+        consensus applied to Palestinian content.
+    lebanon:
+      curriculum_tradition: Lebanese national curriculum; multilingual educational
+        environment (Arabic, French, English)
+      benchmark_representation: One Lebanese internal worker acknowledged; contribution
+        size unclear
+      question_count_estimate: '[NOT FOUND — exact Lebanon question count not published
+        in accessible sources; likely below the Jordan/Egypt/Palestine top-3 tier
+        given the paper''s statement that some countries contribute ~100 questions
+        (ArabicMMLU paper — [|https://arxiv.org/abs/2402.12840|])]'
+      notes: '[NEEDS VERIFICATION — deferred: whether Lebanon''s multi-confessional
+        civic framing appears in benchmark content; low impact relative to top-3 gap
+        findings already resolved]'
+  gulf:
+    uae:
+      curriculum_tradition: UAE national curriculum; Islamic studies prominent; modern
+        multicultural state context
+      benchmark_representation: One UAE internal worker acknowledged; BLOOMZ performs
+        less well on UAE-sourced questions compared to most other countries (noted
+        alongside Morocco in model performance analysis — [|https://arxiv.org/html/2402.12840v1|]),
+        suggesting UAE content is present and distinctive.
+      question_count_estimate: '[NOT FOUND — exact UAE question count not published
+        in accessible sources; below Jordan/Egypt/Palestine top-3 tier]'
+      notes: '[NEEDS VERIFICATION — deferred: subject distribution for UAE-sourced
+        questions; below search budget]'
+    kuwait:
+      curriculum_tradition: Kuwaiti national curriculum; Gulf Arabic educational tradition
+      benchmark_representation: Listed as source country but no Kuwaiti collaborators
+        acknowledged. The paper's figure showing country distribution is not machine-readable;
+        Kuwait is not mentioned among top-3 sources (Jordan, Egypt, Palestine) or
+        in model performance country-grouped analysis, suggesting it is in the lower-contribution
+        tier (~100 questions or fewer).
+      question_count_estimate: '[NOT FOUND — Kuwait not cited in any country-specific
+        performance analysis or top-contributor list; likely in the ~100-question
+        or lower tier per the paper''s general caveat about unequal representation
+        (ArabicMMLU paper — [|https://arxiv.org/abs/2402.12840|]). Absence from country-grouped
+        performance table (Table 5) in the paper suggests very low contribution.]'
+      notes: Kuwait's absence from the country-grouped Arabic-specific-context performance
+        table (which covers Jordan, Egypt, Palestine, Lebanon, UAE, KSA, Morocco)
+        in the published paper strongly implies Kuwait's contribution is minimal or
+        its questions are categorized under non-country-specific subjects.
+    saudi_arabia:
+      curriculum_tradition: Saudi national curriculum; Islamic studies heavily integrated;
+        geography and history framed through Saudi/Gulf lens
+      benchmark_representation: Two Saudi internal workers acknowledged; likely meaningful
+        contribution
+      question_count_estimate: '[NEEDS VERIFICATION — deferred: exact KSA question
+        count not separately published; below search budget]'
+      notes: '[NEEDS VERIFICATION — deferred: subject distribution for Saudi-sourced
+        questions; below search budget]'
+knowledge_domain_scope:
+  in_scope:
+  - Arabic language (grammar, vocabulary, literary tradition — school-curriculum level)
+  - Arab history (ancient, medieval, modern — school-curriculum level)
+  - Arab and MENA geography (physical and political — school-curriculum level)
+  - Civics and social science where covered by school curricula
+  explicitly_out_of_scope:
+  - Local dialect phrases and colloquial Arabic
+  - Tourist etiquette and religious customs for visitors
+  - Practical travel logistics (transport, markets, accommodation)
+  - Real-time or current-events knowledge
+  - Professional or technical domain knowledge beyond school curriculum
+  contested_content_note: History, civics, and political geography questions frequently
+    carry contested national or political framings (e.g., 1948 Arab-Israeli war, Palestinian
+    statehood, pan-Arab identity, Gulf political structures). The deployment explicitly
+    requires multi-perspective acknowledgment of such content; the benchmark's single-correct-answer
+    MCQ format structurally cannot evaluate this requirement.
+cultural_norms_notes: 'Pan-Arab framing is broadly acceptable for this deployment
+  per elicitation guidance, given shared religious and linguistic culture across the
+  region. However, the system should flag country-specific content rather than silently
+  generalizing it. Key sensitivities include:
+
+  - Palestinian historical narratives and political status — among the most contested
+  content in the region
+
+  - Varying national framings of pan-Arab historical events (Nakba, Arab Spring, Gulf
+  War)
+
+  - Morocco''s culturally distinct Maghrebi identity and French-educational-tradition
+  framing
+
+  - Gulf-state civic content (monarchies, Islamic governance) vs. Levantine republican
+  traditions
+
+  - Religious content (Islamic history and practice) is academically relevant at school-curriculum
+  level but should not be presented prescriptively to non-Muslim tourists
+
+  - Users are international visitors, so cultural sensitivity framing should be explanatory
+  and non-normative'
+annotator_pool_notes:
+  benchmark_annotators: '10 native Arabic speakers: 1 Jordanian, 1 Egyptian, 1 Lebanese,
+    1 UAE, 2 KSA (internal); 3 Jordanian, 1 Egyptian (external)'
+  absent_national_perspectives:
+  - Morocco
+  - Kuwait
+  - Palestine (annotator absent despite Palestine being a top-3 source country)
+  skew_risk: Jordanian and Egyptian perspectives dominate both collection and verification.
+    For historically sensitive content where correct answers differ by national curriculum,
+    the 96% agreement rate likely reflects Jordanian/Egyptian consensus rather than
+    pan-regional validity. Critically, Palestine is the 3rd largest source country
+    but has no Palestinian annotators — Palestinian-sourced questions were verified
+    by non-Palestinian workers.
+  verification_ceiling: 96% answer-key accuracy per post-hoc verification by 2 independent
+    native speakers — practical upper bound for benchmark label quality
+output_form_mismatch:
+  benchmark_output: Discrete single-correct-answer MCQ labels; scored as % accuracy
+    via token probability (open-source) or regex matching (closed-source)
+  deployment_required_output: Open-ended, explanatory, multi-perspective natural-language
+    responses that explicitly acknowledge contested national positions and flag country-specific
+    content
+  mismatch_severity: HIGH — this is the most critical structural mismatch. The benchmark
+    cannot evaluate whether the system correctly handles the pluralistic framing the
+    deployment requires.
+  supplementary_evaluation_needed: 'Two relevant emerging frameworks identified:
+
+    1. ''Beyond MCQ: An Open-Ended Arabic Cultural QA Benchmark with Dialect Variants''
+    (arXiv 2510.24328, 2024/2025) — first benchmark to unify dialectal Arabic QA,
+    open-ended reasoning, and CoT fine-tuning, directly addressing the MCQ-to-OEQ
+    gap. Source: [|https://arxiv.org/abs/2510.24328|]
+
+    2. AraGen benchmark (El Filali et al. 2024) uses LLM-as-judge with 3C3H metric
+    (Correctness, Completeness, Conciseness, Helpfulness, Honesty, Harmlessness) for
+    open-ended Arabic generation evaluation, included in OALL v2. Source: [|https://arxiv.org/abs/2510.13430|]
+
+    Neither covers multi-perspective historical/civic content specifically, but both
+    represent the closest available supplementary evaluation frameworks.'
+input_register_mismatch:
+  benchmark_assumption: Fluent native-speaker MSA
+  actual_user_register: Learner-level MSA; potentially grammatically imperfect, code-switched,
+    or at intermediate proficiency
+  mismatch_severity: MODERATE — creates a signal-distribution gap; benchmark scores
+    may not predict system robustness for learner-register input
+  supplementary_evaluation_needed: '[NOT FOUND — searched for Arabic learner-register
+    NLP robustness and non-native MSA evaluation benchmarks; no dedicated benchmark
+    for non-native Arabic speaker input robustness found in the literature as of 2025.
+    The survey of 40+ Arabic benchmarks (arXiv 2510.13430 — [|https://arxiv.org/abs/2510.13430|])
+    does not list any learner-register robustness benchmark. This is a confirmed documentation
+    gap requiring bespoke evaluation design or stakeholder elicitation.]'
+cross_lingual_capability:
+  benchmark_coverage: Prompt language variants tested (Arabic/English combinations)
+    but cross-lingual knowledge transfer to non-Arabic output for non-Arabic-speaking
+    users is not evaluated
+  deployment_relevance: English and other language interactions anticipated; outside
+    current benchmark scope
+  supplementary_evaluation_needed: '[NEEDS VERIFICATION — deferred: cross-lingual
+    Arabic-English knowledge transfer evaluation for history/geography domains; below
+    remaining search budget. Note: ALRAGE (included in OALL v2) targets retrieval-augmented
+    Arabic QA and may offer partial cross-lingual signal — [|https://arxiv.org/abs/2510.13430|]]'
+infrastructure_notes:
+  deployment_context: International tourists and expats; likely using personal smartphones
+    or laptops with reliable connectivity (hotel, coworking, mobile data)
+  device_assumption: Mobile-first or laptop; not constrained by low-end hardware or
+    poor connectivity as a target-population characteristic
+  connectivity: 'No specific AI service access blocks or VPN requirements identified
+    for the eight deployment countries based on current regulatory survey. UAE, KSA,
+    and Kuwait all have ''business-friendly'' soft-law AI frameworks (no binding content
+    restrictions on question-answering assistants identified). UAE''s Federal Decree-Law
+    on Fight Against Rumours and Cybercrime applies broadly to AI deployments and
+    should be reviewed for edge cases. Source: Pinsent Masons GCC AI Regulation survey
+    — [|https://www.pinsentmasons.com/out-law/analysis/gulf-governments-approach-to-ai-regulation|];
+    Library of Congress FALQs GCC AI — [|https://blogs.loc.gov/law/2024/12/falqs-ai-regulations-in-the-gulf-cooperation-council-member-states-part-one/|]'
+  language_rendering: RTL Arabic text rendering required; mixed-direction display
+    (Arabic + Latin) relevant for learner-register users
+regulatory_and_political_context:
+  content_sensitivity: Historically and politically contested content is inherent
+    to the history and civics domains in this region. Systems operating across all
+    eight countries must navigate potentially divergent legal and political sensitivities
+    about what constitutes acceptable framing of shared historical events.
+  country_specific_restrictions: 'GCC countries (UAE, KSA, Kuwait) have adopted soft-law,
+    ''business-friendly'' AI frameworks with no binding content-specific restrictions
+    on historical or political question-answering identified as of 2024-2025. UAE:
+    National AI Strategy 2031, AI Charter (June 2024, non-binding, 12 ethical principles),
+    Abu Dhabi AI and Advanced Technology Council (Law No. 3/2024). KSA: SDAIA Generative
+    AI Guidelines (Jan 2024) and AI Adoption Framework (Sep 2024) — guidance only,
+    not binding regulation. Kuwait: CITRA contributing to AI landscape; no dedicated
+    AI regulations yet issued. Source: Library of Congress GCC AI FALQs Parts 1 &
+    2 — [|https://blogs.loc.gov/law/2024/12/falqs-ai-regulations-in-the-gulf-cooperation-council-member-states-part-one/|];
+    [|https://blogs.loc.gov/law/2024/12/falqs-ai-regulations-in-the-gulf-cooperation-council-member-states-part-two/|];
+    White & Case UAE tracker — [|https://www.whitecase.com/insight-our-thinking/ai-watch-global-regulatory-tracker-uae|]'
+  palestine_legal_status: '[NEEDS VERIFICATION — deferred: how Palestine''s non-UN-member-state
+    status affects content moderation obligations or framing norms for AI systems
+    deployed there; likely unsearchable (lived regulatory practice in occupied territories)
+    and requires legal expert elicitation]'
+  data_protection: 'UAE: Federal Decree-Law No. 45 of 2021 on Personal Data Protection.
+    KSA: Personal Data Protection Law (PDPL) Royal Decree M/19 of 2024 (in full force).
+    Kuwait: Data Privacy Protection Regulation (administrative decision, applicable
+    to licensed service providers). Egypt, Morocco, Lebanon, Jordan, Palestine: [NEEDS
+    VERIFICATION — deferred: data protection law status for non-Gulf deployment countries;
+    below remaining search budget]. Source: University of York AI Regulation Middle
+    East analysis — [|https://www.york.ac.uk/assuring-autonomy/news/blog/ai-regulation-middle-east/|];
+    CMS KSA AI laws — [|https://cms.law/en/int/expert-guides/ai-regulation-scanner/kingdom-of-saudi-arabia|]'
+benchmark_country_coverage_summary:
+  jordan: Over-represented (~6,000+ questions); annotator pool skews Jordanian
+  egypt: Represented as top-3 source country; Egyptian annotators in pool (ArabicMMLU
+    GitHub — [|https://github.com/mbzuai-nlp/ArabicMMLU|])
+  palestine: CONFIRMED top-3 source country alongside Jordan and Egypt (ArabicMMLU
+    GitHub and HuggingFace — [|https://huggingface.co/datasets/MBZUAI/ArabicMMLU|]);
+    no Palestinian annotators despite major contribution — critical gap for contested
+    historical content verification
+  ksa: Represented; Saudi annotators in pool
+  uae: Represented; UAE annotator in pool; model performance notably lower on UAE-sourced
+    questions (ArabicMMLU paper — [|https://arxiv.org/html/2402.12840v1|])
+  lebanon: Represented; Lebanese annotator in pool; contribution size below top-3
+    tier
+  morocco: Present with country-specific questions; model performance notably lower
+    on Morocco-sourced questions for both BLOOMZ and Jais than most other countries
+    (ArabicMMLU paper — [|https://arxiv.org/html/2402.12840v1|]); no Moroccan annotators;
+    likely low question count below top-3 tier
+  kuwait: Presence ambiguous — not named in top-3 sources, not listed in country-grouped
+    model performance analysis (Table 5 covers Jordan, Egypt, Palestine, Lebanon,
+    UAE, KSA, Morocco); likely minimal contribution in ~100-question or lower tier
+    (ArabicMMLU paper — [|https://arxiv.org/abs/2402.12840|])
+net_new_findings:
+  palestine_top3_source_correction: 'The scaffold marked Palestine''s contribution
+    as ''undocumented'' and assumed it was small. Multiple independent sources (GitHub
+    dataset card, HuggingFace dataset card, arXiv HTML) explicitly state ''Jordan,
+    Egypt, and Palestine being the top three sources.'' This materially changes the
+    assessment: Palestinian curriculum content is substantially present in the benchmark,
+    but the structural MCQ format and absence of Palestinian annotators still prevent
+    multi-perspective verification of contested historical content. Source: [|https://github.com/mbzuai-nlp/ArabicMMLU|];
+    [|https://huggingface.co/datasets/MBZUAI/ArabicMMLU|]'
+  beyond_mcq_arabic_benchmark: 'A 2024/2025 benchmark (''Beyond MCQ: An Open-Ended
+    Arabic Cultural QA Benchmark with Dialect Variants'', arXiv 2510.24328) directly
+    addresses the OO/OF gap by converting MCQs to open-ended questions across five
+    dialects (Syrian, Egyptian, Emirati, Saudi, Moroccan) with CoT annotations and
+    human review. This is the closest available supplementary evaluation for the deployment''s
+    open-ended multi-perspective requirement, though it covers dialect variants rather
+    than contested historical content specifically. Source: [|https://arxiv.org/abs/2510.24328|]'
+  aragen_llm_as_judge_arabic: 'AraGen (El Filali et al. 2024b), now part of OALL v2,
+    uses LLM-as-judge with a 3C3H metric (Correctness, Completeness, Conciseness,
+    Helpfulness, Honesty, Harmlessness) for open-ended Arabic generation quality assessment.
+    It is the most established open-ended Arabic evaluation framework and could supplement
+    ArabicMMLU for the deployment''s explanatory output requirement, though its cultural
+    coverage (40 Arabic books) does not specifically target school-curriculum history/civic
+    content. Source: [|https://arxiv.org/abs/2510.13430|]'
+  ilmaam_culturally_aligned_refinement: 'ILMAAM (Nacar et al. 2025) is a culturally
+    aligned benchmark that refines ArabicMMLU by ensuring religious sensitivity and
+    social norms. Relevant for the deployment''s requirement to handle Islamic-history
+    content at school-curriculum level without prescriptive framing. Source: [|https://arxiv.org/abs/2510.13430|]'
+  arabic_llm_benchmark_survey_2025: 'A comprehensive survey of 40+ Arabic LLM benchmarks
+    (Alzubaidi et al. 2025, arXiv 2510.13430) identifies ''limited temporal evaluation,
+    insufficient multi-turn dialogue assessment, and cultural misalignment in translated
+    datasets'' as critical gaps — directly confirming the downstream assessment''s
+    validity concerns. No learner-register or non-native Arabic speaker benchmark
+    was identified in the survey. Source: [|https://arxiv.org/abs/2510.13430|]'
+  morocco_uae_model_performance_signal: 'The ArabicMMLU paper''s Table 5 (performance
+    on Arabic-specific-context subjects by country) shows that both BLOOMZ and Jais
+    perform notably worse on Morocco-sourced questions than on questions from other
+    countries, with Jais — the best Arabic-centric model — performing worst specifically
+    on Morocco. This is a concrete validity signal: Morocco-specific content is present
+    but more difficult for current Arabic LLMs, likely reflecting curriculum-content
+    distinctiveness and/or lower training data coverage for Maghrebi educational materials.
+    Source: ArabicMMLU paper — [|https://arxiv.org/html/2402.12840v1|]'
+  gcc_ai_soft_law_framework: 'As of 2024-2025, none of the three Gulf deployment countries
+    (UAE, KSA, Kuwait) have enacted binding AI content regulations that would specifically
+    restrict historical or political question-answering. All three operate under soft-law
+    frameworks (guidelines, principles, strategies). UAE''s cybercrime law is the
+    most relevant existing constraint for content deployed in-country. Saudi Arabia''s
+    PDPL (Royal Decree M/19/2024) governs data handling. Kuwait has no dedicated AI
+    regulations. This reduces (but does not eliminate) the regulatory risk for the
+    deployment''s contested-content handling requirement in Gulf countries. Source:
+    [|https://blogs.loc.gov/law/2024/12/falqs-ai-regulations-in-the-gulf-cooperation-council-member-states-part-one/|];
+    [|https://www.pinsentmasons.com/out-law/analysis/gulf-governments-approach-to-ai-regulation|]'
+flagged_gaps_for_downstream_search:
+- gap_id: 1
+  topic: Morocco curriculum coverage in ArabicMMLU
+  search_target: ArabicMMLU Morocco Maghrebi curriculum Arabic benchmark question
+    distribution
+  resolution_status: PARTIALLY RESOLVED — Morocco confirmed present with country-specific
+    questions; model performance distinctively lower on Morocco content; exact question
+    count not extractable. No Moroccan annotators confirmed. See net_new_findings.morocco_uae_model_performance_signal.
+- gap_id: 2
+  topic: Palestine coverage and contested historical content representation in ArabicMMLU
+  search_target: Arabic benchmark Palestinian educational content contested history
+    1948 NLP evaluation
+  resolution_status: 'SUBSTANTIALLY RESOLVED — Palestine confirmed as top-3 source
+    country (major positive finding). Structural gap remains: no Palestinian annotators,
+    MCQ format cannot represent contested narratives. See net_new_findings.palestine_top3_source_correction.'
+- gap_id: 3
+  topic: Kuwait question count and subject distribution in ArabicMMLU
+  search_target: ArabicMMLU Kuwait question distribution Arabic benchmark Gulf country
+    coverage
+  resolution_status: INFERRED — Kuwait absent from country-grouped performance table
+    and top-source lists; likely minimal contribution (~100 or fewer questions). See
+    benchmark_country_coverage_summary.kuwait.
+- gap_id: 4
+  topic: Multi-perspective and open-ended Arabic evaluation benchmarks
+  search_target: Arabic LLM evaluation open-ended multi-perspective civic history
+    question answering benchmark
+  resolution_status: PARTIALLY RESOLVED — 'Beyond MCQ' benchmark (arXiv 2510.24328)
+    and AraGen (3C3H LLM-as-judge) identified as supplementary options. Neither specifically
+    targets contested historical content. See net_new_findings.beyond_mcq_arabic_benchmark
+    and net_new_findings.aragen_llm_as_judge_arabic.
+- gap_id: 5
+  topic: Arabic learner-register robustness evaluation
+  search_target: Arabic learner register NLP robustness benchmark non-native speaker
+    MSA evaluation
+  resolution_status: NOT FOUND — confirmed documentation gap. No dedicated benchmark
+    for non-native Arabic speaker input robustness exists in 40+ benchmark survey
+    as of 2025. Requires bespoke evaluation design.
+- gap_id: 6
+  topic: Cross-lingual Arabic-English knowledge transfer evaluation
+  search_target: cross-lingual Arabic English knowledge transfer evaluation benchmark
+    MENA history geography
+  resolution_status: DEFERRED — below remaining search budget. ALRAGE (RAG-based Arabic
+    QA, in OALL v2) is a partial candidate.
+- gap_id: 7
+  topic: AI content deployment restrictions in UAE, KSA, Kuwait
+  search_target: AI deployment content restrictions UAE Saudi Arabia Kuwait political
+    historical content regulation
+  resolution_status: RESOLVED — no binding content-specific AI restrictions found
+    in Gulf countries as of 2024-2025; soft-law frameworks only. UAE cybercrime law
+    is broadest existing constraint. See regulatory_and_political_context.country_specific_restrictions.

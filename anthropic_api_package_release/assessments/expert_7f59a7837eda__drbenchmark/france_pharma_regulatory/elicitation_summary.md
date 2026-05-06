@@ -1,0 +1,44 @@
+## Use Case
+A document management system used by pharmaceutical regulatory professionals applies French biomedical NLP models—covering semantic textual similarity (STS) and fine-grained named-entity recognition (NER)—to verify that drug labeling documents (SmPCs, patient leaflets, patents) meet EU regulatory submission standards. The system flags inconsistencies in safety warnings and extracts regulatory entities (INNs, dosages, contraindications) to determine whether documentation requires manual revision before official submission.
+
+## Target Population
+Geography: France and the broader EU regulatory zone (EMA/ANSM jurisdiction). Roles: regulatory affairs specialists, pharmacologists, and legal experts at pharmaceutical companies and government health agencies. Language: French (formal, legally constrained regulatory prose). No meaningful sub-national variation, but the professional community is highly specialized and distinct from clinical or research NLP annotator pools.
+
+## Elicitation Responses
+
+Q1 [IO]: The benchmark covers biomedical NER and STS tasks drawn from scientific literature and clinical cases, but pharmaceutical regulatory documents have distinctive text types — SmPCs, patient information leaflets, patent claims, and CTD modules. Are these document genres central to your use case, and does the system need to handle the highly formulaic, legally constrained language specific to EU regulatory submissions rather than clinical or research prose?
+A1: Regulatory document genres are central to the use case. While formulaic regulatory language differs from research prose, the underlying extraction tasks (compounds, dosages, safety warnings) are considered consistent enough for the model to function as a foundational engine. For highly specialized formats like CTD modules, regulatory-specific templates are applied as a supplementary layer.
+
+Q2 [IC]: Regulatory drug labeling uses a very specific vocabulary: INNs, ATC codes, excipient nomenclature, posology expressions, and EMA-templated contraindication phrasing. Are these entity types and phrasings representative of what the system must detect, or does labeling work involve categories or patterns that diverge significantly from standard clinical or research text?
+A2: Yes — INNs, ATC codes, excipient names, posology expressions, and contraindication phrasing are precisely the entity types the system must detect. There is no significant divergence from this characterization.
+
+Q3 [OO]: For STS in the compliance workflow, two safety warnings may score as semantically equivalent under a general biomedical scorer yet be non-equivalent under EMA/ANSM standards due to small differences in dose thresholds or contraindicated-population qualifiers. Does the system require a scoring function sensitive to regulatory equivalence rather than general semantic proximity, and does a borderline score trigger automatic rejection or human review?
+A3: The system is explicitly designed for regulatory equivalence, treating minor lexical discrepancies (dose thresholds, population qualifiers) as critical mismatches rather than near-synonymy. General semantic proximity is a baseline only. Borderline or high-stakes inconsistencies flag documents for human review; automatic rejection is not used.
+
+Q4 [OC]: Ground-truth labels in biomedical benchmarks are typically produced by clinical or research annotators. For regulatory compliance, authoritative judgment may rest with regulatory affairs specialists or legal experts whose norms (EMA SmPC guidelines, ANSM circulars) differ from clinical annotation standards. Are the benchmark's annotation norms likely to align with the team's regulatory standards, or are systematic disagreements expected on borderline cases?
+A4: Significant overlap is expected on core technical entities, but systematic disagreements are anticipated on borderline cases — biomedical NLP annotators tend to prioritize clinical relevance over the rigid legal constraints that govern regulatory interpretation.
+
+## Dimension Priority Weights
+
+| Dimension | Priority | Rationale |
+|-----------|----------|-----------|
+| IO | HIGH | The benchmark draws from scientific literature and clinical cases, but the deployment centers on EU regulatory document genres (SmPCs, leaflets, CTD modules) with formulaic, legally constrained language that is underrepresented or absent in DrBenchmark's task inventory. |
+| IC | HIGH | Regulatory entities (INNs, ATC codes, excipient nomenclature, EMA-templated posology) are the exact targets of the system, yet benchmark instances are drawn from clinical and research prose where these precise phrasings and nomenclature conventions are used differently or less frequently. |
+| IF | LOWER | Both deployment and benchmark operate on French text; no modality mismatch, non-Latin script issues, or infrastructure gaps are present. |
+| OO | HIGH | The STS scoring function in the benchmark is calibrated for general semantic proximity, whereas the deployment requires regulatory equivalence scoring where small lexical differences carry legal consequence — a fundamentally different output decision rule than the benchmark implements. |
+| OC | HIGH | Benchmark annotations are produced by clinical or biomedical NLP annotators whose norms diverge systematically from the EMA/ANSM regulatory standards that govern ground-truth judgments in this deployment, particularly on borderline entity and equivalence cases. |
+| OF | LOWER | The deployment consumes label and score outputs matching the benchmark's output modalities; no mismatch in output representation format is present. |
+
+## Flagged Gaps
+
+1. **Regulatory document genre coverage**: Web search should investigate whether any DrBenchmark tasks include text drawn from SmPCs, EU Risk Management Plans, patient information leaflets, or CTD modules — or whether all NER/STS instances derive exclusively from clinical case reports, scientific abstracts, and clinical trial text. The degree of genre mismatch is the single largest validity risk.
+
+2. **Regulatory-specific entity types**: Confirm whether DrBenchmark's NER entity taxonomy includes INNs, ATC codes, excipient names, EMA-standard posology expressions, and contraindication qualifiers, or whether its schema is calibrated to clinical entities (symptoms, diagnoses, procedures). Any gap between the benchmark's 12+ entity types and the regulatory entity set should be documented.
+
+3. **STS scoring calibration for regulatory equivalence**: Investigate whether the STS tasks in DrBenchmark use scoring rubrics or annotator instructions that could detect legally significant micro-differences (e.g., dose threshold shifts, contraindicated-population qualifiers), or whether scores reflect general semantic proximity as found in MedSTS or BIOSSES-style tasks.
+
+4. **Annotator population for NER and STS labels**: Determine who annotated DrBenchmark's NER and STS ground-truth labels — whether annotators were clinical professionals, biomedical researchers, or NLP specialists — and whether any annotation guidelines reference EMA/ANSM regulatory standards. This directly informs the OC risk of systematic label disagreement on borderline regulatory cases.
+
+5. **ANSM and EMA jurisdictional specificity**: Assess whether the benchmark's French biomedical text reflects the regulatory French used in official EMA/ANSM documentation versus the clinical French of hospital records or academic publications. Differences in terminology standardization, abbreviation conventions, and sentence structure between these registers are a concrete IC validity risk.
+
+6. **Absence of patent and legal text**: Patent claims are a named document type in the deployment but are legally distinct from biomedical prose in syntax and entity usage. Confirm whether any benchmark tasks touch patent language, and if not, flag this as an untested domain segment requiring separate validation.

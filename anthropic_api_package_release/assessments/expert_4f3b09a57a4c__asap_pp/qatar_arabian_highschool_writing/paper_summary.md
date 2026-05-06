@@ -1,0 +1,154 @@
+```markdown
+# Validity Extraction: ASAP++: Enriching the ASAP Automated Essay Grading Dataset with Essay Attribute Scores
+<!-- Model routing: Haiku (per-page extraction) → script (registry assembly) → Sonnet (narrative) -->
+
+## Metadata
+- **Title**: ASAP++: Enriching the ASAP Automated Essay Grading Dataset with Essay Attribute Scores
+- **Authors**: Sandeep Mathias, Pushpak Bhattacharyya
+- **Venue/Year**: Not explicitly stated in extracted quotes (inferred from content as a workshop/conference paper, likely 2018)
+- **Total Pages**: 5
+- **Quotes Extracted**: 54
+
+## Narrative Context
+
+Interpretive prose organized by extraction category. Each factual claim references quote IDs from the registry. **This section is non-authoritative — it provides readability but is not evidence. Only the Quote Registry contains verbatim text from the paper.**
+
+---
+
+### 1. Task Taxonomy / Test Case Categories
+
+The ASAP++ benchmark extends the original ASAP Automated Essay Grading (AEG) dataset by adding attribute-level scores — such as content, organization, style, word choice, and sentence fluency — to the 6 prompts that previously had only holistic scores [Q4]. The dataset covers three essay types: argumentative/persuasive essays (where writers argue a stance, e.g., on free speech in public colleges), source-dependent responses (where writers respond to a source text), and narrative/descriptive essays [Q12, Q13, Q14, Q15]. Prior attribute-level grading work had been limited to a handful of traits such as organization, prompt adherence, and coherence, and ASAP++ represents an effort to broaden this coverage across more prompts [Q7].
+
+From a **deployment validity perspective (IO — HIGH priority)**, this taxonomy is severely misaligned with the target use case of Qatari and Arab high school students. The benchmark's three essay types are drawn entirely from a US middle-school context and contain no coverage of literary analysis, religious-text commentary, or cultural commentary genres — genres that are standard in Arab high school curricula [Q13, Q14, Q15]. Feature analysis reveals that different essay types reward different traits: source-dependent essays weight length for content, while argumentative essays prioritize coherence and cohesion [Q43, Q44, Q45]; this type-specific scoring logic was designed entirely around English-language US pedagogical norms and cannot be assumed to transfer to Arabic rhetorical conventions. The absence of genre categories relevant to the Arab curriculum is a fundamental Input Ontology gap: the benchmark's category inventory does not contain the test-case types the deployment requires.
+
+---
+
+### 2. Data Sources and Collection
+
+The underlying ASAP AEG dataset comprises approximately 13,000 essays written across 8 prompts by US students in grades 7–10, with each essay originally evaluated by 2 human raters [Q3]. Of these, 6 of the 8 prompts — approximately 10,400 essays — had only holistic scores prior to ASAP++, and the new resource adds attribute-level annotations for these [Q8]. All essays were written by **native English-speaking children** [Q10], a provenance detail that is critically important for deployment validity. The annotated dataset is publicly available for non-commercial research use [Q51, Q46].
+
+From an **Input Content validity perspective (IC — HIGH priority)**, the source population is entirely incompatible with the deployment target. The essays originate from native English-speaking US middle schoolers writing to culturally embedded American prompts [Q10], whereas the deployment targets Arabic-language high school students (Grades 10–12) in Qatar and other Arab countries writing in Modern Standard Arabic to prompts grounded in Arab cultural, literary, and religious contexts. There is no overlap in language, nationality, curriculum, or cultural frame of reference. This is not a minor domain shift — it is a complete mismatch in the source population, and no amount of fine-tuning on ASAP++ data could bridge the construct-irrelevant variance introduced by using English US student writing as a proxy for Arabic Qatari student writing.
+
+---
+
+### 3. Data Format and Preprocessing
+
+For annotation workflow, each prompt was divided into batches of approximately 100 essays, treated as one week's worth of annotator work [Q21]. For the machine learning baseline, the benchmark uses an attribute-independent feature set from Zesch et al. (2015), supplemented by entity grid coherence features from Barzilay and Lapata (2005), with all features extracted using Stanford CoreNLP [Q31, Q32, Q33].
+
+From an **Input Form validity perspective (IF — HIGH priority)**, the benchmark is built entirely on English-language text and its associated NLP toolchain (Stanford CoreNLP). The deployment operates in Modern Standard Arabic, which uses a fundamentally different script (Arabic right-to-left script), a richer morphological system (root-and-pattern morphology, cliticization, diacritical variation), and an entirely different NLP preprocessing ecosystem. The feature extraction pipeline described in the paper — including entity grids, coherence features, and the Zesch et al. attribute-independent features — was designed and validated for English and cannot be directly applied to Arabic text [Q33]. No Arabic preprocessing, tokenization, or morphological analysis is mentioned anywhere in the paper, confirming that the benchmark's signal encoding is entirely mismatched to the deployment's language modality. This represents the most fundamental form of Input Form invalidity: not merely a resolution or encoding mismatch, but a complete language-script incompatibility.
+
+---
+
+### 4. Label Categories and Output Types
+
+ASAP++ uses the same score range as the original ASAP holistic scores for each prompt [Q11]. For narrative essays, the dataset already contained 5 attribute scores — content, organization, word choice, sentence fluency, and conventions — and ASAP++ provides analogous attribute scores for the argumentative/persuasive and source-dependent essay prompts [Q16, Q17, Q18, Q19]. Two sets of attributes are defined based on essay type [Q18], and the annotations are intended to serve as a gold standard for future attribute-prediction experiments [Q50].
+
+From an **Output Ontology validity perspective (OO — HIGH priority)**, the label taxonomy is misaligned with the deployment's requirements on multiple axes. First, the scoring taxonomy was designed to evaluate English-language writing quality under US curriculum norms; categories like "word choice" and "sentence fluency" carry implicit English-language assumptions about vocabulary range and syntactic variety that do not map cleanly onto MSA writing quality criteria, where morphological correctness, diacritical accuracy, and adherence to formal Arabic rhetorical structure may be more salient. Second, and more critically, the deployment explicitly requires **natural-language revision suggestions with explanatory rationale** rather than numeric trait scores [per elicitation Q3]; the ASAP++ label schema produces ordinal scores on a fixed scale [Q11], which is a categorically different output type from the free-text actionable feedback the deployment needs. The benchmark's output ontology was never designed to validate a feedback-generation system, and using it as such would constitute a fundamental validity category error. The annotations are described as useful for "predicting scores" [Q50], not for generating or evaluating explanatory feedback.
+
+---
+
+### 5. Annotation Process
+
+Each essay in ASAP++ was scored by a single annotator across the attribute dimensions, unlike the original ASAP dataset where every essay was scored by 2 raters [Q1, Q22]. A quality control mechanism was applied: if an annotator's attribute score for an essay diverged from either original ASAP rater by 2 or more points, a second annotator re-scored it, and the score closest to the original holistic score was retained as the final label [Q24, Q25]. In practice, only about one-sixth of essays required a second annotator [Q40]. A total of three annotators (Advaith Jayakumar, Janice Pereira, and Elaine Mathias) were used across all prompts [Q27, Q53].
+
+Annotator qualifications are described in terms of English-language competence: all scored above 90% in high school English exams or above 110 on TOEFL, and all had experience with editorial or evaluative tasks (e.g., interning at The Hindu newspaper, editing a college magazine) [Q28, Q29]. All annotators were studying or had studied English at the MA level [Q30]. Annotators were instructed to mentally replace anonymized named entities (e.g., "@PERSON1") with plausible placeholders rather than penalizing essays for the anonymization [Q42].
+
+From an **Output Content validity perspective (OC — HIGH priority)**, the annotator profile reveals a significant mismatch with the target deployment context. The annotators are India-based English-language specialists associated with IIT Bombay [Q9, Q29], judging US student essays by inferred US curriculum standards using ground-truth anchoring on original US rater scores [Q23]. None of the described qualifications — English MA training, Indian newspaper editorial experience, TOEFL scores — confer expertise in Arabic writing quality assessment or Qatari/Arab curriculum norms. The quality-control mechanism of anchoring to overall holistic scores [Q25] further embeds US rater judgments as the normative standard, with no mechanism for capturing how Arab teachers or curriculum bodies would evaluate the same essays. This means even the attribute-level ground-truth labels in ASAP++ carry the value judgments of a culturally and linguistically remote annotator population, making label transfer to an Arabic-language Qatari deployment highly unreliable.
+
+---
+
+### 6. Evaluation Metrics and Output Modality
+
+The primary evaluation metric is Quadratic Weighted Kappa (QWK), chosen over accuracy and F-score because it accounts for both random agreement and the ordinal distance between predicted and actual scores [Q34, Q35, Q36]. The authors note that QWK is the dominant metric across all prior work using the ASAP dataset [Q37]. The baseline system uses an Ordinal Class Classifier in Weka with a Random Forest internal classifier, evaluated via 5-fold cross-validation [Q38, Q39]. Inter-annotator agreement between ASAP++ annotators and the original ASAP raters is also reported using QWK [Q2, Q34].
+
+From an **Output Form validity perspective (OF — HIGH priority)**, the benchmark's evaluation framework is entirely built around ordinal numeric scores and agreement metrics between human raters and predicted scores. The deployment, however, requires **free-text natural-language revision suggestions** with explanatory rationale — not numeric labels [per elicitation Q3]. QWK is a metric for ordinal classification agreement and has no mechanism for evaluating the quality, actionability, or pedagogical appropriateness of natural-language feedback. The benchmark cannot, in its current form, validate any component of the target system's output modality. This is not a minor gap but a complete mismatch: there is no output form overlap between what the benchmark measures (numeric trait score agreement) and what the deployment produces (explanatory revision suggestions for student writers).
+
+---
+
+### 7. Stated Limitations
+
+The authors explicitly identify that the original ASAP dataset's lack of attribute-specific scores — only 2 of 8 prompts had them — limits its utility for attribute-level prediction research, which is the gap ASAP++ addresses [Q5]. They also note that deep learning systems in particular are constrained by the small number of prompts available for attribute scoring [Q6]. A methodological limitation is acknowledged in the use of high correlation between holistic and attribute scores (Pearson ~0.9) as justification for anchoring the annotation quality control to holistic scores — but this circularity is not critically examined [Q26]. Annotators faced difficulty with anonymized named entities (e.g., "@ORGANIZATION1" for "The New York Times"), which could affect coherence and content scoring [Q41]. The dataset is released under a Creative Commons Attribution-ShareAlike License restricted to non-commercial research use [Q52].
+
+From a deployment validity standpoint, none of the authors' stated limitations address the linguistic, cultural, or geographic scope of the benchmark. There is no acknowledgment that the dataset is limited to English-language essays, US curriculum contexts, or native English-speaking students — all of which are critical constraints for any Arabic-language deployment. The limitations discussion is entirely internal to the benchmark's own design goals and does not surface the cross-lingual or cross-cultural transfer risks that are most salient for the target deployment context.
+
+---
+
+### 8. Authors and Affiliations
+
+The paper is authored by Sandeep Mathias and Pushpak Bhattacharyya, both affiliated with the Department of Computer Science and Engineering at the Indian Institute of Technology (IIT) Bombay [Q9]. The work is associated with CFILT (Center for Indian Language Technology) at IIT Bombay [Q54].
+
+The institutional origin signals that the benchmark was developed within an Indian academic NLP research context, focused on English-language automated essay scoring. While IIT Bombay is a world-class institution, neither its geographic location nor its CFILT center's primary mandate (Indian language technology) aligns with Arabic-language educational technology or Qatari/Arab curriculum expertise. This affiliation context reinforces the conclusion that no aspect of ASAP++ — its data, annotation standards, rubric design, or evaluation framework — was developed with Arabic-language or Arab-curriculum deployment in mind.
+```
+
+---
+
+## Quote Registry
+
+**This section is authoritative.** Every entry is verbatim text from the paper.
+
+| ID | Page | Category | Text |
+|----|------|----------|------|
+| Q1 | 1 | annotation_process | "In this paper, we describe the creation of a resource - ASAP++ - which is basically annotations of the Automatic Student Assessment Prize's Automatic Essay Grading dataset. These annotations are scores for different attributes of the essays, such as content, word choice, organization, sentence fluency, etc. Each of these essays is scored by an annotator." |
+| Q2 | 1 | evaluation_metrics | "We also report the results of each of the attributes using a Random Forest Classifier using a baseline set of attribute independent features as described by Zesch et al. (2015)." |
+| Q3 | 1 | data_sources | "The ASAP AEG dataset comprises of approximately 13,000 essays, written across 8 prompts. The essays were written by students of class 7 to 10. Each essay was evaluated by 2 evaluators. 6 out of the 8 prompts only have overall scores. Only 2 of them have scores for individual essay attributes, like content, organization, style, etc." |
+| Q4 | 1 | task_taxonomy | "Our contribution is the scoring of individual attributes of the essays, like content, organization, style, etc. in the ASAP dataset for the remainder of the essays." |
+| Q5 | 1 | stated_limitations | "A lot of the work in essay grading today makes use of the ASAP AEG dataset. However, most of the essays only have an overall score, not attribute-specific scores. This limitation limits the utility of this dataset for predicting the scores of particular attributes of essays." |
+| Q6 | 1 | stated_limitations | "However, most of them (in particular the deep learning systems) are constrained by the fact that there are very few prompts to handle scoring of individual attributes." |
+| Q7 | 1 | task_taxonomy | "While there has been a lot of work done in overall essay scoring, not much has been done with respect to scoring particular attributes of essays. Some of the attributes that have been scored include organization (Persing et al., 2010), prompt adherence (Persing and Ng, 2014), coherence (Somasundaran et al., 2014)." |
+| Q8 | 1 | data_sources | "The entire ASAP dataset has nearly 13,000 essays across 8 prompts. 6 of those 8 prompts, comprising nearly 10,400 essays, only have an overall score." |
+| Q9 | 1 | authors_affiliations | "Sandeep Mathias, Pushpak Bhattacharyya Department of Computer Science and Engineering Indian Institute of Technology, Bombay" |
+| Q10 | 2 | data_sources | "All the essays were written by native English speaking children from classes 7 to 10." |
+| Q11 | 2 | label_categories | "We use the same score range as the overall score range of the essays." |
+| Q12 | 2 | task_taxonomy | "There are 3 types of essays in the dataset." |
+| Q13 | 2 | task_taxonomy | "Argumentative / Persuasive essays - These are essays where the prompt is one in which the writer has to convince the reader about their stance for or against a topic (for example, free speech in public colleges)." |
+| Q14 | 2 | task_taxonomy | "Source-dependent responses - These essays are responses to a source text, where the writer responds to a question about the text (for instance, describing the writer's opinion about an incident that happened to him in the text)." |
+| Q15 | 2 | task_taxonomy | "Narrative / Descriptive essays - These are essays where the prompt requires us to describe / narrate a story." |
+| Q16 | 2 | label_categories | "The ASAP dataset already contains attribute scores for the narrative essays, namely content, organization, word choice, sentence fluency, conventions, etc." |
+| Q17 | 2 | label_categories | "Since we already have scores present for the narrative essays, we describe the scores for the other types of essays." |
+| Q18 | 2 | label_categories | "Based on the types of essays, there are 2 sets of attributes." |
+| Q19 | 2 | label_categories | "There are 5 attributes for narrative essays, namely 1. Content: The quantity of relevant text present in the essay. 2. Organization: The way the essay is structured. 3. Word Choice: The choice and aptness of the vocabulary used in the essay." |
+| Q20 | 3 | annotation_process | "Each of the essays in a particular prompt were scored by an annotator." |
+| Q21 | 3 | data_format | "Each prompt was split into sets of 100 essays each, with the assumption that a set would correspond to a week's worth of time for the annotator." |
+| Q22 | 3 | annotation_process | "Unlike the ASAP AEG dataset in which every essay was annotated by 2 annotators, we use only 1 annotator here for each essay." |
+| Q23 | 3 | annotation_process | "For the ground truth, we make use of the overall score of the essays given by the original annotators of the ASAP AEG dataset." |
+| Q24 | 3 | annotation_process | "In case the scoring of a particular attribute for a particular prompt differs from either of the original scorers by 2 or more points, the essay is then annotated by another annotator." |
+| Q25 | 3 | annotation_process | "The final score that is chosen is the one from the annotator that is closest to the overall scores." |
+| Q26 | 3 | stated_limitations | "One of the reasons that we do this is because, in the 2 prompts that were rated by the original raters, there is a very high Pearson correlation (nearly 0.9) between the overall scores and the individual attribute scores." |
+| Q27 | 3 | annotation_process | "We made use of a total of three annotators to annotate the essays." |
+| Q28 | 3 | annotation_process | "Each of the annotators had competence in English, either by scoring quite high marks in their high school exams (over 90% in English), or scoring over 110 in ToEFL." |
+| Q29 | 3 | annotation_process | "Each of them also had some experience in evaluating texts, such as interning at The Hindu (a top English newspaper in India), being the chief editor of the college magazine, etc." |
+| Q30 | 3 | annotation_process | "All the annotators have either studied or are studying English at a Master of Arts (MA) level." |
+| Q31 | 3 | data_format | "We used the attribute independent feature set provided by Zesch et al. (2015)." |
+| Q32 | 3 | data_format | "In addition to those features, we also made use of entity grid features described in Barzilay and Lapata (2005)." |
+| Q33 | 3 | data_format | "All the features were extracted using Stanford Core NLP (Manning et al., 2014)." |
+| Q34 | 4 | evaluation_metrics | "We evaluate each of the annotators using Cohen's Kappa, with quadratic weights - i.e. Quadratic Weighted Kappa (QWK) (Cohen, 1968)." |
+| Q35 | 4 | evaluation_metrics | "We chose this as the evaluation metric (as compared to accuracy and weighted F-Score) because of the following reasons: Unlike accuracy and F-Score, Kappa takes into account random agreement." |
+| Q36 | 4 | evaluation_metrics | "Weighted Kappa, takes into account the distance between the actual score and the reported score. Quadratic weights reward matches and penalize mismatches more than linear weights." |
+| Q37 | 4 | evaluation_metrics | "Due to these reasons, this is one of the most used evaluation metrics to evaluate the performance of essay grading systems. To the best of our knowledge, all of the papers using the ASAP dataset make use of this as the evaluation metric." |
+| Q38 | 4 | evaluation_metrics | "We made use of the Ordinal Class Classifier (Frank and Hall, 2001) in Weka (Frank et al., 2016). This classifier is a meta-classifier, that first converts ordinal data into categorical data, before running an internal classifier on the data. We used the Random Forest classifier (Breiman, 2001) as the internal classifier." |
+| Q39 | 4 | evaluation_metrics | "We used 5-fold cross validation to get the results for each attribute for each prompt." |
+| Q40 | 4 | annotation_process | "Most of the essays required only a single annotator. Only about a sixth of the essays required a second annotator." |
+| Q41 | 4 | stated_limitations | "One of the major problems that the annotators faced was the fact that all the essays were anonymized. Named entities, like The New York Times would be referred to as @ORGANIZATION1, Donald Trump would be referred to as @PERSON1, etc." |
+| Q42 | 4 | annotation_process | "The annotators were instructed not to penalize the essays because of the anonymizations, but were told to replace them with placeholders (like @PERSON1 being replaced by either Joe, or Jane, etc. wherever applicable)." |
+| Q43 | 4 | task_taxonomy | "For source-dependent essays, we found out that the most important feature for content was length, while for argumentative / persuasive essays, it was coherence and cohesion features, followed by length." |
+| Q44 | 4 | task_taxonomy | "For source-dependent essays, the coherence and cohesion feature set is the most important feature set for each of the other 3 attributes." |
+| Q45 | 4 | task_taxonomy | "For persuasive / argumentative essays, coherence and cohesion features are the most important features for 4 of the 5 attributes." |
+| Q46 | 5 | data_sources | "In this paper, we present a manually annotated dataset for automated essay grading." |
+| Q47 | 5 | annotation_process | "The annotation was done for different attributes of the essays." |
+| Q48 | 5 | annotation_process | "Most of the essays were annotated by a single annotator." |
+| Q49 | 5 | annotation_process | "However, about a sixth of them were annotated by a second annotator." |
+| Q50 | 5 | label_categories | "These annotations can be used as a gold standard for future experiments in predicting different attribute scores." |
+| Q51 | 5 | data_sources | "The resource is available online at https://cfilt.iitb.ac.in/˜egdata/." |
+| Q52 | 5 | stated_limitations | "The resource is available for non-commercial research use under the Creative Commons Attribution-ShareAlike License." |
+| Q53 | 5 | annotation_process | "We thank the annotators of our task - Advaith Jayakumar, Janice Pereira and Elaine Mathias - for their help in creating this resource." |
+| Q54 | 5 | authors_affiliations | "We also thank members of CFILT at IIT Bombay for their valuable comments and suggestions." |
+
+### Category Index
+- **task_taxonomy**: Q4, Q7, Q12, Q13, Q14, Q15, Q43, Q44, Q45
+- **data_sources**: Q3, Q8, Q10, Q46, Q51
+- **data_format**: Q21, Q31, Q32, Q33
+- **label_categories**: Q11, Q16, Q17, Q18, Q19, Q50
+- **annotation_process**: Q1, Q20, Q22, Q23, Q24, Q25, Q27, Q28, Q29, Q30, Q40, Q42, Q47, Q48, Q49, Q53
+- **evaluation_metrics**: Q2, Q34, Q35, Q36, Q37, Q38, Q39
+- **stated_limitations**: Q5, Q6, Q26, Q41, Q52
+- **authors_affiliations**: Q9, Q54

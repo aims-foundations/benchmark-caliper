@@ -1,0 +1,11 @@
+- name: ltzglue
+- full_name: LTZGLUE: Luxembourgish General Language Understanding Evaluation
+- year: 2026
+- domain: Natural Language Understanding benchmark for Luxembourgish, covering common NLP classification tasks including named entity recognition, topic classification, and intent classification.
+- languages: Luxembourgish
+- primary_region: Luxembourg
+- porting_strategy: adapted
+- input_modalities: text
+- output_modalities: label
+- brief_description: LTZGLUE is the first unified NLU benchmark for Luxembourgish based on the popular GLUE benchmark for English. It consists of 8 tasks spanning binary and multi-class sentence and token-level classification tasks, combining new tasks with reused existing ones. The benchmark also includes evaluation of pre-trained language models for Luxembourgish and introduces two new encoder models (LTZ-E1 mini/base).
+- source_culture: transferred from different cultural context

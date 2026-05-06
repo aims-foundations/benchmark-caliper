@@ -1,0 +1,454 @@
+{
+  "benchmark": "glue",
+  "region": "Luxembourgish Public Administration Civil Servants — GLUE Assessment",
+  "dimensions": {
+    "input_ontology": {
+      "score": 1,
+      "justification": "GLUE's task ontology consists of nine English sentence-understanding tasks — sentiment, paraphrase, entailment, QA, acceptability, similarity [Q3, Q18] — with no administrative-domain categories. The deployment requires routing categories that GLUE does not contain: cross-border worker (frontalier) classification, national vs. communal (État vs. commune) competency routing, housing urgency, social security, immigration, taxation, and public-transport queries (deployment_specific_categories in YAML). The diagnostic set's 'World Knowledge' [Q195] and 'Common Sense' [Q196] categories are general English-language reasoning probes with no jurisdictional specificity. IO is marked HIGH priority and the gap is total — the dataset analysis confirms zero administrative-domain content across 409 sampled examples.",
+      "strengths": [
+        "The multi-task structure with per-task scoring plus macro-average [Q15, Q59, Q60] offers a methodological template for designing a Luxembourgish administrative benchmark suite that combines NER, intent classification, sentiment, and routing tasks with separate metrics.",
+        "The diagnostic set's minimal-pair construction methodology [Q65, Q66, Q68] tagged for fine-grained linguistic phenomena [Q135, Q136] is a transferable design pattern for probing model behaviour on negation, quantifier scope, and coreference in administrative text."
+      ],
+      "checklist_responses": {
+        "IO-1": "Required categories for the deployment include: cross-border worker / frontalier vs. resident classification, national (État) vs. communal competency routing across 100 communes [WEB-16, WEB-17, WEB-18], housing/cost-of-living urgency, social security, taxation (resident vs. non-resident), immigration, public transport (including the free-transit policy [WEB-20, WEB-21]), civil registration, EU-institutional employment, and local planning. None of these are present in GLUE.",
+        "IO-2": "GLUE's taxonomy omits every regionally-relevant administrative category. The closest approximation is MNLI's inclusion of 'government reports' as one of ten premise sources [Q38], but this is a stylistic source, not an ontological category, and no government-administrative example appears in the 409-example dataset sample.",
+        "IO-3": "GLUE includes categories irrelevant to the target context: English linguistic acceptability judgments from linguistics journals [Q21], movie-review sentiment [Q26], image-caption semantic similarity (STS-B) [Q35], Winograd pronoun coreference [Q50], and English textual entailment from news/Wikipedia [Q46, Q48]. The dataset analysis (DATASET-D6, DATASET-D8, DATASET-D40) confirms CoLA tests English-specific morphosyntactic phenomena with no transfer value to Luxembourgish/French/German administrative text.",
+        "IO-4": "Content-validity gaps are total: the deployment's required test-case categories (administrative routing, frontalier status, État/commune competency) have zero coverage. Construct-irrelevant variance is also high — performance on English movie-review sentiment, Winograd schemas, and image-caption similarity will not predict performance on Luxembourgish administrative routing."
+      },
+      "evidence_quotes": [
+        "[Q3] 'GLUE is a collection of NLU tasks including question answering, sentiment analysis, and textual entailment, and an associated online platform for model evaluation, comparison, and analysis.' (p.1)",
+        "[Q18] 'GLUE is centered on nine English sentence understanding tasks, which cover a broad range of domains, data quantities, and difficulties.' (p.3)",
+        "[Q38] 'The premise sentences are gathered from ten different sources, including transcribed speech, fiction, and government reports.' (p.4)",
+        "[Q195] 'World Knowledge In this category we focus on knowledge that can clearly be expressed as facts, as well as broader and less common geographical, legal, political, technical, or cultural knowledge.' (p.20)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-16] 100 communes as of 1 September 2023 — confirms the national-vs-communal routing requirement",
+        "[WEB-19] Loi communale 1988 defines autonomous communal competencies — establishes the legal taxonomy GLUE does not cover",
+        "[WEB-20] Free public transit since 29 February 2020 — domain-specific topic absent from GLUE",
+        "[WEB-10] ltzGLUE (April 2025) provides Luxembourgish NER, topic, intent, sentiment, entailment — but its topic taxonomy (sports/animals/business/culture/technology) and voice-assistant intents do not cover administrative domains either"
+      ],
+      "evidence_dataset": [
+        "DATASET-D15: 'Who succeeded Newt Gingrich as Speaker?' — illustrates that QA tasks center on US political knowledge, not Luxembourg administrative competency routing",
+        "DATASET-D36: MRPC paraphrase pair on health follow-up examinations — confirms no administrative-routing content in 409 sampled examples",
+        "DATASET-D24: STS-B pair 'A person is boiling noodles.' / 'A woman is boiling noodles in water.' — image-caption similarity has no administrative correspondence relevance",
+        "Concern 2 in dataset analysis: 'Across 409 examples, no example touches any administrative, government, or civic domain relevant to the deployment'"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "WEB-16",
+          "WEB-17",
+          "WEB-18",
+          "WEB-19",
+          "WEB-20",
+          "WEB-21"
+        ],
+        "IO-2": [
+          "Q18",
+          "Q38",
+          "WEB-10"
+        ],
+        "IO-3": [
+          "Q21",
+          "Q26",
+          "Q35",
+          "Q50",
+          "DATASET-D6",
+          "DATASET-D8",
+          "DATASET-D40"
+        ],
+        "IO-4": [
+          "Q3",
+          "Q18",
+          "DATASET-D15",
+          "DATASET-D24",
+          "DATASET-D36"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "The deployment's full required topic taxonomy is itself not fully verified; the YAML notes that ranking categories by correspondence volume requires CTIE/ministerial access that was not available."
+      ],
+      "requires_expert_verification": [
+        "Final administrative topic taxonomy and priority ordering should be elicited from CTIE and ministry stakeholders before any custom benchmark construction."
+      ]
+    },
+    "input_content": {
+      "score": 1,
+      "justification": "GLUE's input content is entirely English, drawn from American/British movie reviews [Q26], US/UK news [Q29, Q48], Wikipedia [Q41], Quora [Q31], linguistics journals [Q21], and English-language fiction and transcribed speech [Q38]. The dataset analysis confirms across 409 sampled examples that 'every single example reviewed across all 12 configs is in English' with US-political (Clinton, Bush, Gingrich, Ryan, Tillerson — DATASET-D10, D13, D14, D15, D22, D34), India-specific (DATASET-D16, D18), and US-pop-culture (DATASET-D3) cultural references dominating. The deployment input is trilingual Luxembourgish/French/German code-switched citizen correspondence with non-standardized Luxembourgish orthography [WEB-12, WEB-11], from a population that is 47.3% non-Luxembourgish nationals [WEB-4] with 47% of the workforce being cross-border workers from France, Belgium, and Germany [WEB-6, WEB-7]. The cultural and linguistic distance is total. IC is marked HIGH priority.",
+      "strengths": [
+        "MNLI's deliberate genre diversity — ten sources including government reports, transcribed speech, and fiction [Q38] — at least demonstrates a methodological awareness that NLU evaluation should span register variation, a principle transferable to a custom Luxembourgish suite even though GLUE itself does not realize it for the target language.",
+        "The diagnostic set draws on naturally-occurring sentences from multiple domains [Q63], offering a genre-diversity template for a custom Luxembourgish administrative diagnostic."
+      ],
+      "checklist_responses": {
+        "IC-1": "Yes — the deployment requires region-specific knowledge including Luxembourgish lexicon and orthographic variation [WEB-12, WEB-15], French/German/Luxembourgish code-switching patterns [WEB-11], frontalier-vs-resident terminology, EU institutional vocabulary, communal-vs-État administrative terminology, and continental-European formal correspondence conventions. None of these are present in GLUE [Q21, Q26, Q29, Q31, Q35, Q41].",
+        "IC-2": "Cultural alignment is absent. The dominant cultural content is American (US politics, US sports, US movies, US-centric Quora threads — DATASET-D10, D13, D14, D17, D20, D22, D34, D42) with some Indian content (DATASET-D16, D18). No Luxembourgish or even Luxembourg-adjacent (Belgian/French frontalier) administrative content appears in the 409-example sample.",
+        "IC-3": "Yes — Western-specific knowledge that does not transfer is pervasive: US presidential history (DATASET-D10, D14), US congressional politics (DATASET-D15, D22), American film criticism conventions (DATASET-D1, D2, D3, D4, D29, D30), antebellum American fiction dialect (DATASET-D11, D28), American telephone-speech register (DATASET-D33), and English-specific morphosyntactic violations (DATASET-D8, D40).",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — GLUE does not document recruitment of regional annotators, and no Luxembourgish annotator pool exists in the inherited datasets. The YAML notes that no Luxembourgish administrative-correspondence corpus is publicly available and CTIE access would be required.",
+        "IC-5": "The content-validity violation is severe: the input distribution shares neither language, script-norm domain, register, nor cultural reference frame with the deployment. Construct-irrelevant variance from US/Indian cultural specificity will dominate any signal a model carries from GLUE."
+      },
+      "evidence_quotes": [
+        "[Q21] 'The Corpus of Linguistic Acceptability (Warstadt et al., 2018) consists of English acceptability judgments drawn from books and journal articles on linguistic theory.' (p.3)",
+        "[Q26] 'The Stanford Sentiment Treebank (Socher et al., 2013) consists of sentences from movie reviews and human annotations of their sentiment.' (p.3)",
+        "[Q29] 'The Microsoft Research Paraphrase Corpus (Dolan & Brockett, 2005) is a corpus of sentence pairs automatically extracted from online news sources...' (p.3)",
+        "[Q38] 'The premise sentences are gathered from ten different sources, including transcribed speech, fiction, and government reports.' (p.4)",
+        "[Q63] 'We ensure the data is reasonably diverse by producing examples for a variety of linguistic phenomena and basing our examples on naturally-occurring sentences from several domains (news, Reddit, Wikipedia, academic papers).' (p.5)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-4] 47.3% foreign nationals as of 1 January 2024; over 170 nationalities — confirms input population's linguistic diversity",
+        "[WEB-6] ~47% of workforce are cross-border workers (~231,290 frontaliers in 2024) — confirms French/German linguistic input share",
+        "[WEB-11] LuxBorrow corpus documents systematic LU/DE/FR/EN code-switching in Luxembourgish text — empirical evidence of trilingual input characteristic",
+        "[WEB-12] Best neural normalizer for Luxembourgish achieves only ~78.8% accuracy — empirical evidence of orthographic non-standardization absent from GLUE"
+      ],
+      "evidence_dataset": [
+        "DATASET-Concern 1: 'Every single example reviewed across all 12 configs is in English. The 409 sampled examples contain no Luxembourgish tokens, no French text, and no German text.'",
+        "DATASET-D10: 'I did not mention Monica in my lecture, but the first question I was asked was how President Clinton could do his job...' — US political scandal dependency",
+        "DATASET-D11: 'Yes, Mistuh Reese, suh?' — antebellum American fiction dialect",
+        "DATASET-D33: 'oh yeah no that's uh that's a that's a real interesting movie...' — American telephone speech, register opposite to formal Luxembourgish administrative correspondence",
+        "DATASET-D16: 'What is the effect of black money on India's macro economy?' — confirms even non-US content is non-Luxembourgish"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "WEB-11",
+          "WEB-12",
+          "WEB-15",
+          "Q21",
+          "Q26"
+        ],
+        "IC-2": [
+          "DATASET-D10",
+          "DATASET-D13",
+          "DATASET-D14",
+          "DATASET-D17",
+          "DATASET-D22"
+        ],
+        "IC-3": [
+          "DATASET-D8",
+          "DATASET-D11",
+          "DATASET-D15",
+          "DATASET-D33",
+          "DATASET-D40"
+        ],
+        "IC-4": [],
+        "IC-5": [
+          "Q21",
+          "Q26",
+          "Q29",
+          "WEB-4",
+          "WEB-6",
+          "DATASET-Concern 1"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "No annotator demographic information is published for the inherited GLUE component datasets, so the regional-annotator question cannot be addressed from documentation."
+      ],
+      "requires_expert_verification": [
+        "Sub-national linguistic variation within Luxembourg (Minett, Ardennes, Moselle, Stad Lëtzebuerg) requires sociolinguistic expert elicitation beyond available web sources."
+      ]
+    },
+    "input_form": {
+      "score": 1,
+      "justification": "GLUE inputs are standardized written English text in a single script with consistent orthography, formatted as single sentences or sentence pairs [Q4, Q15]. The deployment input is text in three languages with frequent code-switching at lexical, phrasal, and sentence level [WEB-11], non-standardized Luxembourgish spelling where 'large amount of orthographic variation' and homograph density are documented challenges [WEB-12, WEB-15], and a register requiring trilingual tokenization and normalization that English NLP pipelines do not provide [WEB-2, WEB-13, WEB-14]. GLUE's preprocessing transformations (recasting SQuAD into NLI [Q42], converting Winograd [Q52]) are English-specific and provide no transferable methodology for non-standardized multilingual signals. IF is HIGH priority and the gap is fundamental.",
+      "strengths": [
+        "GLUE imposes minimal architectural constraints, requiring only sentence/sentence-pair input [Q4]; this format-agnostic design means a custom Luxembourgish benchmark could in principle adopt the same I/O contract while substituting language-appropriate content."
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal distributions are fundamentally mismatched. GLUE inputs are standardized English text [Q4, Q18]; deployment inputs are trilingual lb/fr/de code-switched text with non-standardized Luxembourgish orthography. The LuxBorrow corpus [WEB-11] documents systematic token-level language switching, and the best Luxembourgish neural normalizer achieves only ~78.8% accuracy [WEB-12], indicating ~21% residual orthographic noise that GLUE-trained models would never have encountered.",
+        "IF-2": "Luxembourg's digital infrastructure for capturing citizen correspondence (MyGuichet.lu via CTIE [WEB-2]) supports text input and is technically capable of feeding any text-based pipeline; the infrastructural gap is not capture but processing — Luxembourgish NLP tooling (LuxemBERT [WEB-13], LuNa [WEB-14], spellux [WEB-15], ltz-E1 [WEB-10]) is emerging but limited compared to the standardized English NLP stack GLUE assumes.",
+        "IF-3": "Domain-specific form differences include: (a) trilingual tokenization requirements that English tokenizers do not satisfy; (b) orthographic normalization needs specific to Luxembourgish [WEB-12, WEB-15]; (c) handling of contact-linguistic phenomena [WEB-11]. GLUE's transformations [Q42, Q49, Q52] address none of these.",
+        "IF-4": "External-validity violation is severe: a model evaluated only on standardized English text input has zero exposure to the non-standard, code-switched, multilingual input form characteristic of Luxembourgish citizen correspondence. The 409-example dataset sample contains no non-English tokens, confirming the form mismatch empirically (DATASET-Concern 1)."
+      },
+      "evidence_quotes": [
+        "[Q4] 'GLUE does not place any constraints on model architecture beyond the ability to process single-sentence and sentence-pair inputs and to make corresponding predictions.' (p.1)",
+        "[Q42] 'We convert the task into sentence pair classification by forming a pair between each question and each sentence in the corresponding context, and filtering out pairs with low lexical overlap...' (p.4)",
+        "[Q49] 'We convert all datasets to a two-class split, where for three-class datasets we collapse neutral and contradiction into not entailment, for consistency.' (p.4)",
+        "[Q52] 'To convert the problem into sentence pair classification, we construct sentence pairs by replacing the ambiguous pronoun with each possible referent.' (p.4)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-11] LuxBorrow corpus with token-level LID and code-switching annotation across LU/DE/FR/EN — confirms code-switching as systematic input characteristic",
+        "[WEB-12] Neural Text Normalization for Luxembourgish — best ByT5 base achieves ~78.8% accuracy; documents 'large amount of orthographic variation'",
+        "[WEB-15] spellux Python package documents homograph density and orthographic variation as ongoing Luxembourgish NLP challenges",
+        "[WEB-13] LuxemBERT (2022) outperformed mBERT — confirms standardized English models are inadequate baselines for Luxembourgish",
+        "[WEB-2] CTIE operates MyGuichet.lu under Ministry for Digitalisation"
+      ],
+      "evidence_dataset": [
+        "DATASET-Concern 1: zero non-English tokens across 409 examples — confirms IF gap empirically",
+        "DATASET-D33: transcribed American spoken English in MNLI — illustrates that GLUE's only register variation is within-English, not cross-lingual"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q4",
+          "Q18",
+          "WEB-11",
+          "WEB-12",
+          "DATASET-Concern 1"
+        ],
+        "IF-2": [
+          "WEB-2",
+          "WEB-10",
+          "WEB-13",
+          "WEB-14",
+          "WEB-15"
+        ],
+        "IF-3": [
+          "Q42",
+          "Q49",
+          "Q52",
+          "WEB-11",
+          "WEB-12"
+        ],
+        "IF-4": [
+          "Q4",
+          "DATASET-Concern 1"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Exact distribution of language proportions and code-switching density in actual MyGuichet.lu citizen correspondence is not publicly documented and would require CTIE access."
+      ],
+      "requires_expert_verification": [
+        "Whether a normalization preprocessing step (e.g., spellux or ByT5 normalizer) is sufficient to recover GLUE-trained model performance on Luxembourgish input, or whether retraining is required, needs empirical validation."
+      ]
+    },
+    "output_ontology": {
+      "score": 1,
+      "justification": "GLUE's output ontology is hard single-label classification (binary or three-class) plus one regression task [Q12], scored via accuracy/MCC/F1/Pearson [Q20, Q23, Q30, Q33, Q35] aggregated as a macro-average [Q59, Q60]. The deployment requires multi-label classification (a single citizen message may concern multiple departments simultaneously) plus confidence scoring to flag uncertain cases for human review (elicitation A4). The dataset analysis confirms 'every classification task in the sampled data uses exactly one label per example' and 'no example has multiple labels, soft labels, or confidence scores.' Additionally, the output categories themselves (grammatical/ungrammatical, positive/negative, entailment/neutral/contradiction) have no correspondence to administrative routing categories: no État-vs-commune label, no frontalier-vs-resident label, no department-routing label, no urgency flag. OO is HIGH priority.",
+      "strengths": [
+        "GLUE explicitly diversifies metrics across tasks — using MCC for unbalanced binary classification [Q23] and Pearson/Spearman for regression [Q35] — modeling awareness that a single accuracy metric cannot capture all evaluation needs. This metric-diversity principle is transferable to a multi-label, confidence-scored Luxembourgish benchmark."
+      ],
+      "checklist_responses": {
+        "OO-1": "Output categories are not regionally relevant. CoLA's grammatical/ungrammatical [Q22], SST-2's positive/negative [Q28], MNLI's entailment/neutral/contradiction [Q56], and RTE's entailment/not-entailment [Q49] do not map to any required deployment output: department routing, urgency flag, frustration flag, frontalier classification, État/commune competency.",
+        "OO-2": "Missing categories specific to the regional context include: department-level routing labels across both État ministries and 100 communes [WEB-16, WEB-17], frontalier-vs-resident classification [WEB-6, WEB-8], urgency level (housing political-sensitivity flag, social-security urgency), and intent classes for administrative correspondence (request, complaint, status inquiry, document submission). None exist in GLUE.",
+        "OO-3": "GLUE's sentiment ontology (positive/negative [Q28]) encodes English movie-review evaluative norms; the deployment requires a frustration/urgency ontology calibrated to understated continental-European formal administrative register, where direct expressions of frustration are rare (cultural_norms_notes). The two label spaces are not compatible.",
+        "OO-4": "Stakeholder-driven taxonomy redesign is not optional but required — GLUE's label spaces cannot be repurposed; a Luxembourg-specific output ontology must be constructed from scratch with civil-servant input. ltzGLUE [WEB-10] provides a closer Luxembourgish-language template (NER, intent, sentiment) but its taxonomies are still non-administrative.",
+        "OO-5": "Structural-validity violation is fundamental: the structure of GLUE's output space (single hard labels, no multi-label, no confidence) misrepresents the routing decision structure the deployment requires. Content-validity violation is total: required categories are absent."
+      },
+      "evidence_quotes": [
+        "[Q12] 'All tasks are single sentence or sentence pair classification, except STS-B, which is a regression task. MNLI has three classes; all other classification tasks have two.' (p.2)",
+        "[Q22] 'Each example is a sequence of words annotated with whether it is a grammatical English sentence.' (p.3)",
+        "[Q28] 'We use the two-way (positive/negative) class split, and use only sentence-level labels.' (p.3)",
+        "[Q56] 'Labels are entailment (E), neutral (N), or contradiction (C).' (p.5)",
+        "[Q148] 'We place all examples involving these phenomena under the label of Factivity.' (p.16)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-16] 100 communes as of 1 September 2023 — establishes communal-routing label space requirement absent from GLUE",
+        "[WEB-6] ~47% of workforce are frontaliers — establishes the frontalier-vs-resident label requirement",
+        "[WEB-10] ltzGLUE provides Luxembourgish slot-intent and topic labels but for voice-assistant/news domains, not administrative routing"
+      ],
+      "evidence_dataset": [
+        "DATASET-Concern 4: 'every classification task in the sampled data uses exactly one label per example... No example has multiple labels, soft labels, or confidence scores.' Schema metadata confirms ClassLabel(2/3 classes) with no probability field.",
+        "DATASET-D21: ax test example with label=-1 confirms hard single-label encoding even for the diagnostic set"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q12",
+          "Q22",
+          "Q28",
+          "Q56"
+        ],
+        "OO-2": [
+          "WEB-6",
+          "WEB-16",
+          "WEB-17"
+        ],
+        "OO-3": [
+          "Q28",
+          "DATASET-D29",
+          "DATASET-D30"
+        ],
+        "OO-4": [
+          "WEB-10",
+          "Q12"
+        ],
+        "OO-5": [
+          "Q12",
+          "DATASET-Concern 4"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "The exact required output schema (number of routing labels, urgency-flag thresholds, multi-label co-occurrence patterns) is not specified in the elicitation beyond the multi-label-plus-confidence requirement."
+      ],
+      "requires_expert_verification": [
+        "Civil-servant stakeholders should define the final routing taxonomy and confidence-threshold rules, including which uncertain cases are escalated to human review."
+      ]
+    },
+    "output_content": {
+      "score": 1,
+      "justification": "Annotator demographics for the main inherited GLUE tasks are not documented in the paper [Q6 establishes the inherited-dataset reliance; no demographic disclosure for SST-2 [Q26] or MNLI crowdworkers [Q36]]. The diagnostic set's annotators are explicitly six NLP researchers [Q73] with high inter-annotator agreement (Fleiss's κ = 0.73 [Q74], R3 = 0.80 [Q75]) — but this is a specialized English-speaking population with no documented connection to Luxembourgish administrative culture or continental-European formal correspondence register. Ground-truth sentiment in SST-2 reflects English movie-review judgments (DATASET-D1 through D5, D29, D30); ground-truth entailment in MNLI/RTE reflects English crowdsourced judgments. The dataset analysis shows SST-2 fragments often labelled in ways that depend entirely on film-criticism context (DATASET-D2, D29, D30). Luxembourg's understated formal administrative register, where frustration is expressed indirectly (cultural_norms_notes), is not represented in any annotator pool. The user explicitly flagged OC as a 'live risk' (elicitation A3). Even ltzGLUE [WEB-10] and the only Luxembourgish sentiment corpus [WEB-25] do not cover administrative register — the latter sources from RTL.lu informal news comments.",
+      "strengths": [
+        "GLUE reports inter-annotator agreement (Fleiss's κ = 0.73 [Q74]) and a human baseline (R3 = 0.80 [Q75]) for the diagnostic set, establishing a methodological precedent for human-baseline reporting that any custom Luxembourgish benchmark should follow.",
+        "The diagnostic set was tested for hypothesis-only artifacts using fastText classifiers (near-chance 32.7% / 36.4% [Q72]), demonstrating attention to label-quality verification — a transferable practice."
+      ],
+      "checklist_responses": {
+        "OC-1": "No — ground-truth labels reflect English-speaking annotator pools (movie reviewers, crowdworkers, NLP researchers [Q26, Q36, Q73]) with no documented Luxembourgish or continental-European administrative-culture representation.",
+        "OC-2": "Significant disagreement is expected. Luxembourg administrative correspondence uses understated formal register (cultural_norms_notes); frustration is rarely expressed directly. English movie-review sentiment annotators (DATASET-D1, D3, D29, D30) are calibrated to overt evaluative language. A label of 'positive sentiment' on a fragment like 'at its best moments' (DATASET-D2) has no analogue in formal Luxembourgish administrative messages.",
+        "OC-3": "Annotator demographics are NOT documented for the main benchmark tasks. The paper does not describe SST-2 sentiment annotators [Q26] or MNLI crowdworker demographics [Q36], nor inter-annotator agreement for inherited datasets [Q6]. Only the diagnostic set's annotators are described — six NLP researchers [Q73].",
+        "OC-4": "Re-annotation by Luxembourgish civil servants would be required. The deployment's human-in-the-loop mechanism (elicitation A3) is positioned to produce such corrections post-hoc, but baseline labels in any GLUE-style training/evaluation would still encode the original misalignment.",
+        "OC-5": "GLUE's aggregation methods are not documented at the per-example level for inherited datasets. The diagnostic set uses majority labelling with high κ [Q74] but only six annotators from a homogeneous population — minority perspectives could be erased without detection. Multi-label phenomena tagging [Q141] is permitted but does not extend to label disagreement modeling.",
+        "OC-6": "Convergent-validity violation is severe: labels do not correlate with judgments of regional stakeholders in administrative culture. External-validity violation is also severe: judgments of English film reviewers and US crowdworkers will not generalize to Luxembourg civil servants assessing citizen correspondence."
+      },
+      "evidence_quotes": [
+        "[Q6] 'None of the datasets in GLUE were created from scratch for the benchmark; we rely on preexisting datasets...' (p.1)",
+        "[Q26] 'The Stanford Sentiment Treebank (Socher et al., 2013) consists of sentences from movie reviews and human annotations of their sentiment.' (p.3)",
+        "[Q36] 'The Multi-Genre Natural Language Inference Corpus (Williams et al., 2018) is a crowdsourced collection of sentence pairs with textual entailment annotations.' (p.4)",
+        "[Q73] 'To establish human baseline performance on the diagnostic set, we have six NLP researchers annotate 50 sentence pairs (100 entailment examples) randomly sampled from the diagnostic set.' (p.6)",
+        "[Q74] 'Inter-annotator agreement is high, with a Fleiss's κ of 0.73.' (p.6)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-25] RTL Corpus Sentiment Annotation Tool (STRIPS) — only known Luxembourgish sentiment resource, sourced from informal RTL news comments rather than administrative register",
+        "[WEB-10] ltzGLUE provides Luxembourgish sentiment (positive/neutral/negative) but not in administrative register"
+      ],
+      "evidence_dataset": [
+        "DATASET-D2: 'at its best moments' labelled positive — illustrates that SST-2 labels depend on film-critic register absent from administrative correspondence",
+        "DATASET-D4: 'no lika da' labelled negative — sentiment label nearly uninterpretable without film context",
+        "DATASET-D29: 'the horrors' labelled negative — context-dependent label inappropriate for administrative register",
+        "DATASET-D30: 'heroes' labelled positive — single-word fragment with film-review context dependency",
+        "DATASET-Concern 3 explicit conclusion: 'Labels trained on explicit, colloquial English film criticism sentiment will systematically fail to detect the understated frustration signals in Luxembourgish administrative correspondence.'"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q26",
+          "Q36",
+          "Q73"
+        ],
+        "OC-2": [
+          "DATASET-D1",
+          "DATASET-D3",
+          "DATASET-D29",
+          "DATASET-D30"
+        ],
+        "OC-3": [
+          "Q6",
+          "Q26",
+          "Q36",
+          "Q73"
+        ],
+        "OC-4": [
+          "WEB-25",
+          "WEB-10"
+        ],
+        "OC-5": [
+          "Q73",
+          "Q74",
+          "Q141"
+        ],
+        "OC-6": [
+          "DATASET-Concern 3",
+          "WEB-25"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Demographic composition of MNLI crowdworkers and SST-2 sentiment annotators is not disclosed in the paper.",
+        "Inter-annotator agreement metrics for inherited GLUE component datasets are not reported in the GLUE paper [Q6 implies inheritance without re-reporting]."
+      ],
+      "requires_expert_verification": [
+        "A pilot re-annotation of administrative-correspondence sentiment by Luxembourgish civil servants would establish empirical disagreement rates and quantify the OC gap."
+      ]
+    },
+    "output_form": {
+      "score": 2,
+      "justification": "GLUE evaluates text-based outputs only via hard single-label scoring on private test sets [Q57, Q58], with per-task scores aggregated as a macro-average [Q59, Q60] subject to two-submissions-per-day rate limiting [Q131]. The deployment is also text-in/label-out, so the surface-level format aligns — both are written-text pipelines, and OF is correctly marked MODERATE priority (lower than HIGH for the other dimensions). However, GLUE's output form lacks the multi-label structure and confidence scoring the deployment requires (elicitation A4), and the submission-based privately-held test data model [Q7, Q58] prevents the iterative, task-specific calibration a live civil-service deployment requires. The macro-average [Q60] also rewards balanced performance across nine irrelevant English NLU tasks, making the aggregate GLUE score uninformative as a deployment proxy. Score is 2 (not 1) because the underlying text-based output modality matches and the per-task evaluation infrastructure is methodologically reusable, but the specific output-form requirements (multi-label, confidence) are unsatisfied.",
+      "strengths": [
+        "Output modality matches: GLUE produces text-based predictions [Q57, Q58], aligned with the deployment's text-in/text-or-label-out pipeline.",
+        "Per-task scoring with task-appropriate metrics (accuracy, F1, MCC, Pearson [Q20, Q23, Q30, Q35]) is methodologically transferable to a custom benchmark suite, even though the specific tasks are not.",
+        "Submission rate-limiting [Q131] models a defensive-evaluation practice (preventing test-set overfitting) potentially adaptable to civil-service contexts."
+      ],
+      "checklist_responses": {
+        "OF-1": "Partial match. Output modality (text labels) matches the deployment's text-classification pipeline. However, the specific output form — single hard labels, no multi-label, no confidence scores — does not match the deployment's multi-label-plus-confidence requirement (elicitation A4, DATASET-Concern 4).",
+        "OF-2": "Not applicable — neither GLUE nor the deployment require speech-based output. The deployment is text-classification-only per the elicitation.",
+        "OF-3": "Not directly relevant to OF for this deployment (the deployment's end-users are civil servants, not citizens; outputs are routing decisions and flags consumed by an internal review interface). Literacy/accessibility considerations would apply to citizen-facing response generation, which is outside the elicited scope.",
+        "OF-4": "Form mismatches that harm external validity: (a) GLUE's macro-average over nine English tasks [Q59, Q60] is not informative as a deployment proxy; (b) hard single-label scoring [Q12] cannot evaluate multi-label routing; (c) the privately-held test-set submission model [Q7, Q58] prevents task-specific calibration; (d) two-submissions-per-day limit [Q131] is misaligned with iterative civil-service development cycles."
+      },
+      "evidence_quotes": [
+        "[Q7] 'Four of the datasets feature privately-held test data, which will be used to ensure that the benchmark is used fairly.' (p.1)",
+        "[Q12] 'All tasks are single sentence or sentence pair classification, except STS-B, which is a regression task. MNLI has three classes; all other classification tasks have two.' (p.2)",
+        "[Q57] 'The GLUE benchmark follows the same evaluation model as SemEval and Kaggle.' (p.5)",
+        "[Q58] 'To evaluate a system on the benchmark, one must run the system on the provided test data for the tasks, then upload the results to the website gluebenchmark.com for scoring.' (p.5)",
+        "[Q59] 'The benchmark site shows per-task scores and a macro-average of those scores to determine a system's position on the leaderboard.' (p.5)",
+        "[Q60] 'For tasks with multiple metrics (e.g., accuracy and F1), we use an unweighted average of the metrics as the score for the task when computing the overall macro-average.' (p.5)",
+        "[Q131] 'The GLUE website limits users to two submissions per day in order to avoid overfitting to the private test data.' (p.14)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-22] EU AI Act Annex III — automated administrative routing systems classified high-risk; requires output-form transparency including confidence-scored decisions"
+      ],
+      "evidence_dataset": [
+        "DATASET-Concern 4: schema metadata confirms ClassLabel(2/3 classes) with no probability field — empirical confirmation that GLUE's output form lacks confidence scoring"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q12",
+          "Q57",
+          "Q58",
+          "DATASET-Concern 4"
+        ],
+        "OF-2": [],
+        "OF-3": [],
+        "OF-4": [
+          "Q7",
+          "Q12",
+          "Q59",
+          "Q60",
+          "Q131"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether the deployment requires structured output beyond labels + confidence (e.g., extracted entities for NER, span annotations) is mentioned in the deployment description but not detailed in OF terms."
+      ],
+      "requires_expert_verification": [
+        "Specific output-schema requirements for the routing API (label space, confidence-threshold rules, NER span format) should be confirmed with deployment engineers."
+      ]
+    }
+  },
+  "overall_summary": "GLUE is fundamentally invalid as an evaluation benchmark for a Luxembourgish public-administration citizen-correspondence routing system. Five of six dimensions score 1 (major validity violations), with OF scoring 2 only because the surface text-in/label-out modality matches. The mismatches are total along every HIGH-priority dimension: (IO) GLUE's nine English NLU tasks contain zero administrative-routing categories and no national-vs-communal or frontalier-vs-resident classifications [Q3, Q18, WEB-16, WEB-19]; (IC) all 409 sampled examples are English with US-political/cultural dominance, while the deployment input is trilingual lb/fr/de code-switched correspondence with non-standardized Luxembourgish orthography [WEB-11, WEB-12, DATASET-Concern 1]; (IF) GLUE assumes standardized English text input, while Luxembourgish input requires trilingual tokenization and ~21% residual orthographic noise even after best-available normalization [WEB-12]; (OO) hard single-label classification cannot represent multi-label routing with confidence scoring [Q12, DATASET-Concern 4]; (OC) annotator pools are undocumented English-speaking populations with no connection to Luxembourgish administrative register [Q26, Q36, Q73]; (OF) macro-average over nine irrelevant tasks [Q60] is uninformative as a deployment proxy. The strongest reusable value is methodological — GLUE's multi-task structure, diagnostic minimal-pair design [Q65, Q66], and human-baseline reporting [Q73, Q74] are transferable design patterns, not transferable evaluation signal.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "GLUE measures generalist English-language NLU competence across nine sentence-level tasks (sentiment, paraphrase, entailment, QA, acceptability, similarity) plus diagnostic linguistic-phenomenon coverage [Q3, Q15, Q18, Q135]. For the Luxembourg deployment, it provides no direct evidence of model capability — input language, content domain, output structure, and annotator perspective all diverge fundamentally. It can serve only as a structural template for designing a custom benchmark suite (multi-task scoring, diagnostic minimal pairs, human-baseline reporting), not as a deployment proxy.",
+    "construct_depth": "GLUE probes English NLU constructs reasonably deeply via its diagnostic set's four broad categories and fine-grained subcategories [Q135, Q136], but the depth is irrelevant to the deployment's constructs (administrative routing, frontalier classification, urgency detection in formal Luxembourgish register). Even the dimensions where GLUE shows methodological strength (OO metric diversity, OC inter-annotator-agreement reporting) cannot compensate for the total absence of language and domain coverage. A model achieving state-of-the-art GLUE performance could plausibly score near-zero on the actual deployment task.",
+    "supplementation_needed": "Comprehensive supplementation is required — GLUE cannot be remediated, only replaced or augmented. Required additions: (1) a Luxembourgish-language evaluation suite drawing on ltzGLUE [WEB-10] and LuxBorrow [WEB-11] as starting points; (2) a custom administrative-routing benchmark with État/commune competency labels, frontalier classification, and topic taxonomy elicited from CTIE/civil servants; (3) a formal-register sentiment/frustration dataset annotated by Luxembourgish civil servants to address the OC gap; (4) a code-switched lb/fr/de evaluation set covering the trilingual input distribution; (5) a multi-label-plus-confidence scoring framework matching the deployment's output requirements; (6) integration with the deployment's human-in-the-loop calibration mechanism for ongoing label-quality validation."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "GLUE's task ontology contains no administrative-routing categories, no national-vs-communal competency distinction, and no cross-border-worker classification.",
+      "recommendation": "Construct a Luxembourg-specific topic and intent taxonomy via stakeholder elicitation with CTIE and ministry staff, covering: État/commune routing across 100 communes, frontalier-vs-resident status, housing urgency, social security, taxation, immigration, public transport, civil registration, and EU-institutional matters. Use ltzGLUE's slot-intent design [WEB-10] as a structural template but rebuild the label space for administrative content."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "GLUE input content is entirely English (US/UK news, movie reviews, Wikipedia, Quora) with no Luxembourgish, French, or German text and no administrative-domain content.",
+      "recommendation": "Build a Luxembourgish administrative-correspondence corpus from MyGuichet.lu data (with appropriate CTIE access and CNPD/GDPR review), supplementing with LuxBorrow [WEB-11] for code-switching patterns and adapting ltzGLUE's content domains. Ensure the corpus reflects the input population's linguistic diversity (47.3% non-Luxembourgish nationals, ~47% frontalier workforce)."
+    },
+    {
+      "dimension": "input_form",
+      "gap": "GLUE assumes standardized English text; deployment requires trilingual lb/fr/de tokenization and Luxembourgish orthographic normalization.",
+      "recommendation": "Integrate a preprocessing pipeline using spellux [WEB-15] or ByT5-based normalization [WEB-12] for Luxembourgish input, combined with multilingual tokenization (e.g., LuxemBERT [WEB-13] or LuNa [WEB-14] tooling). Empirically validate residual error rates and propagation to downstream tasks before deployment."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "GLUE's hard single-label output cannot represent the deployment's required multi-label routing with confidence scoring.",
+      "recommendation": "Design the evaluation output schema as multi-label classification with per-label confidence scores, plus separate threshold-tuning rules for human-in-the-loop escalation. Adapt GLUE's per-task metric diversity principle [Q23, Q35] by reporting micro/macro F1, label-wise precision/recall, and calibration metrics (e.g., expected calibration error) on the confidence outputs."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Ground-truth labels in GLUE reflect English-speaking annotator pools with no connection to Luxembourgish administrative register; SST-2 sentiment is calibrated to film criticism, not understated formal correspondence.",
+      "recommendation": "Recruit Luxembourgish civil servants familiar with administrative correspondence for a custom annotation task, using clear annotation guidelines for understated frustration/urgency signals. Report inter-annotator agreement following GLUE's diagnostic-set methodology [Q73, Q74] but with a representative annotator pool. Use the deployment's human-in-the-loop corrections (elicitation A3) as an ongoing label-validation feedback channel."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "GLUE's macro-average over nine English tasks [Q60] is uninformative as a deployment proxy, and the privately-held submission model [Q7, Q58] prevents iterative calibration.",
+      "recommendation": "Avoid using the GLUE macro-average as any kind of deployment indicator. Build an internal evaluation infrastructure mirroring GLUE's per-task scoring [Q59] but with task-specific thresholds aligned to civil-service operational needs, fewer submission-rate constraints, and integration with EU AI Act high-risk-system documentation requirements [WEB-22]."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_ontology",
+    "input_content",
+    "input_form",
+    "output_ontology",
+    "output_content"
+  ],
+  "strongest_dimensions": [
+    "output_form"
+  ]
+}
