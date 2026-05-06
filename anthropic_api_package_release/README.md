@@ -4,9 +4,9 @@ A framework for assessing whether AI benchmarks developed in one cultural contex
 
 This package supports three modes of engagement:
 
-1. **Inspect experiment results** -- browse the full pipeline outputs from all expert assessments
-2. **Reproduce an existing assessment** -- re-run the pipeline on any included expert tuple
-3. **Run your own assessment** -- evaluate a benchmark of your choice against a custom deployment context
+1. **Inspect experiment results**: Browse the full pipeline outputs from all expert assessments reported in the paper submission. 
+2. **Reproduce an existing assessment**: Re-run the pipeline on any included expert assessment inputs. 
+3. **Run your own assessment**: Evaluate a benchmark of your choice against a custom deployment context
 
 ---
 
