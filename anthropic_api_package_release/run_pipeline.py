@@ -302,19 +302,41 @@ def _parse_quote_registry(name: str) -> dict[str, str]:
 # Step 0 — Derive the assessment slug from the deployment description
 # ===================================================================
 
-def step_0_derive_slug(initial_description: str, name: str) -> str:
+def step_0_derive_slug(initial_description: str, name: str,
+                       force: bool = False) -> str:
     """Haiku derives a short, filesystem-safe slug from the deployment description.
 
-    Idempotent: if active_slug.txt already exists on disk for this paper, the
-    cached slug is returned immediately without a new API call. Returns the slug
-    string that scopes all downstream assessment-dir paths.
+    When force=False (default, used by --step mode), returns a cached slug from
+    active_slug.txt if the deployment description matches. When force=True
+    (used by full-pipeline mode), always derives from the description so that
+    a new deployment on the same paper gets its own slug.
     """
-    existing = _read_slug(name)
-    if existing:
-        # Slug already exists on disk — idempotent, so subsequent --step invocations
-        # always land in the same assessment directory.
-        print(f"[0] Using cached slug: {existing}")
-        return existing
+    if not force:
+        existing = _read_slug(name)
+        if existing:
+            existing_desc_path = _deployment_desc_path(name, existing)
+            if existing_desc_path.exists():
+                existing_desc = existing_desc_path.read_text().strip()
+                if existing_desc == initial_description.strip():
+                    print(f"[0] Using cached slug: {existing}")
+                    return existing
+                else:
+                    print(f"[0] Deployment description changed; deriving new slug...")
+            else:
+                print(f"[0] Using cached slug: {existing}")
+                return existing
+
+    # Check if any existing slug directory already has this exact description
+    assessments_parent = ASSESSMENTS / name
+    if assessments_parent.exists():
+        for slug_dir in assessments_parent.iterdir():
+            if not slug_dir.is_dir():
+                continue
+            desc_file = slug_dir / "deployment_description.txt"
+            if desc_file.exists() and desc_file.read_text().strip() == initial_description.strip():
+                print(f"[0] Using existing slug: {slug_dir.name}")
+                _active_slug_path(name).write_text(slug_dir.name)
+                return slug_dir.name
 
     print("[0] Haiku deriving assessment slug from deployment description...")
     slug_raw = client.call(
@@ -1078,6 +1100,17 @@ def step_2_collect_stdin(name: str, slug: str) -> Path:
         print(f"ERROR: {q_path} not found — run step 2-questions first", file=sys.stderr)
         sys.exit(1)
     questions = json.loads(q_path.read_text())
+
+    if not sys.stdin.isatty():
+        print(
+            f"\n[2-stdin] No answers file found and stdin is not interactive.\n"
+            f"         Please create {a_path} with your answers and re-run.\n"
+            f"         See templates/example_elicitation_answers.json for the format.\n"
+            f"         Questions are in {q_path}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     print("[2-stdin] Collecting answers interactively...")
     answers = {}
     for q in questions:
@@ -2454,10 +2487,21 @@ def main() -> None:
     print(f"  Dataset analysis: {da_status}\n")
 
     try:
-        # === Step 0: derive the assessment slug ===
         initial_description = _resolve_initial_description(args, name)
-        slug = step_0_derive_slug(initial_description, name)
-        _init_assessment_paths(name)
+
+        # === Slug resolution ===
+        # For --rerun-scoring and --rerun-all, the slug is embedded in the
+        # --use-case path (assessments/<name>/<slug>/deployment_description.txt).
+        # For fresh runs, derive it from the deployment description via Haiku.
+        # This avoids dependence on active_slug.txt, which can become stale.
+        if (args.rerun_scoring or args.rerun_all) and args.use_case:
+            use_case_path = Path(args.use_case)
+            slug = use_case_path.parent.name
+            print(f"[0] Slug from --use-case path: {slug}")
+            _init_assessment_paths(name)
+        else:
+            slug = step_0_derive_slug(initial_description, name, force=True)
+            _init_assessment_paths(name)
 
         if args.rerun_all or args.rerun_scoring:
             import shutil
@@ -2633,18 +2677,20 @@ def _run_single_step(args: argparse.Namespace, pdf_path: Path, name: str) -> Non
     """
     metadata_path = _metadata_path(name)
 
-    if args.step == "0":
+    if args.step == "0" or (args.use_case and not _read_slug(name)):
         initial_description = _resolve_initial_description(args, name)
-        step_0_derive_slug(initial_description, name)
+        slug = step_0_derive_slug(initial_description, name, force=True)
         _init_assessment_paths(name)
-        _print_cost_report()
-        return
+        if args.step == "0":
+            _print_cost_report()
+            return
+    else:
+        slug = _read_slug(name)
 
-    slug = _read_slug(name)
     if not slug and not client.DRY_RUN:
         print(
-            f"ERROR: no slug on disk for {name}. Run --step 0 first to derive "
-            f"the assessment slug (provide --persona or --use-case).",
+            f"ERROR: no slug on disk for {name}. Provide --use-case to derive "
+            f"the assessment slug.",
             file=sys.stderr,
         )
         sys.exit(1)

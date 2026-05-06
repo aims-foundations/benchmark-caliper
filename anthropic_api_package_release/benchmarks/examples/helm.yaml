@@ -1,0 +1,105 @@
+# HELM - Holistic Evaluation of Language Models
+# Source: Liang et al., 2023 (Stanford CRFM)
+# Ground-truth region for validation: Southeast Asia
+
+name: "HELM"
+full_name: "Holistic Evaluation of Language Models"
+source_url: "https://crfm.stanford.edu/helm/"
+paper_url: "https://arxiv.org/abs/2211.09110"
+year: 2023
+domain: "General LLM evaluation"
+porting_strategy: "none"  # Developed for Global North, not ported
+languages: ["en"]
+primary_region: "United States / Global North"
+
+description: |
+  HELM (Holistic Evaluation of Language Models) is a comprehensive benchmark suite
+  from Stanford's Center for Research on Foundation Models. It evaluates language
+  models across a broad range of scenarios including question answering, information
+  retrieval, summarization, text classification, and more. A core component is MMLU
+  (Massive Multitask Language Understanding), which tests world knowledge and
+  problem-solving ability across 57 academic subjects.
+
+documentation_excerpts: |
+  ## Key characteristics relevant to validity analysis:
+
+  ### Test Case Categories (Input Ontology)
+  HELM covers broad evaluation scenarios including: question answering, information
+  retrieval, summarization, sentiment analysis, toxicity detection, text classification,
+  and knowledge-intensive tasks [Q9]. The taxonomy is organized around NLP task types
+  rather than cultural or regional categories [Q1]. No Southeast Asian-specific evaluation
+  categories exist (e.g., no tests for cultural norms like Filipino pakikisama or
+  Thai kreng jai).
+
+  ### Content (Input Content)
+  The MMLU component contains approximately 28% of examples that require region-specific
+  cultural, geographic, or dialectal knowledge (Singh et al., 2025) [Q2]. Of those culturally
+  sensitive examples, roughly 86% require Western-specific knowledge (primarily US-centric),
+  with most focused on the United States [Q7]. There is huge variance across subjects: math
+  and physics have minimal cultural sensitivity, while history, geopolitics, and world
+  religions are nearly entirely culturally sensitive. The benchmark's abstract claims
+  models must possess "extensive world knowledge" but this knowledge is implicitly
+  Western world knowledge.
+
+  ### Input Signal Form (Input Form)
+  HELM is text-based and assumes Latin script conventions. Tasks include letter-frequency
+  analysis and capitalization-based evaluations that assume the Latin alphabet [Q3]. These
+  conventions do not apply to Thai, Khmer, Burmese, and other non-Latin writing systems
+  used in Southeast Asia.
+
+  ### Output Categories (Output Ontology)
+  Safety evaluation taxonomies in HELM encode Western value frameworks [Q4]. The safety and
+  toxicity categories reflect Anglosphere cultural norms rather than SEA-specific
+  concerns [Q10]. No documentation of how output categories were validated for non-Western
+  cultural contexts.
+
+  ### Annotation Process (Output Content)
+  Annotator pools are not documented as representing Southeast Asian populations.
+  Cross-cultural agreement on subjective tasks (e.g., hate speech detection) has been
+  found to be only 56% across different cultural groups (Lee et al., 2024) [Q5], with
+  pairwise agreement stronger among Anglosphere countries. HELM's annotators are
+  primarily from Western contexts [Q8].
+
+  ### Output Modality (Output Form)
+  HELM evaluates text-based outputs only [Q6]. Does not penalize or evaluate language
+  mismatches (e.g., model responding in English when prompted in a SEA language).
+  Does not evaluate local language/script outputs.
+
+  ### Stated Limitations
+  HELM documentation does not explicitly discuss cross-cultural or cross-regional
+  validity limitations.
+
+# NOTE: pages/dimensions below are ICL placeholders to anchor the schema for
+# Sonnet's synthesis step. Quote text is filled in programmatically from the
+# registry — only id, page, and dimension are emitted by the model.
+verbatim_quotes:
+  - id: Q1
+    page: 4
+    dimension: input_ontology
+  - id: Q2
+    page: 17
+    dimension: input_content
+  - id: Q3
+    page: 6
+    dimension: input_form
+  - id: Q4
+    page: 21
+    dimension: output_ontology
+  - id: Q5
+    page: 33
+    dimension: output_content
+  - id: Q6
+    page: 8
+    dimension: output_form
+  - id: Q7
+    page: 18
+    dimension: input_content
+  - id: Q8
+    page: 34
+    dimension: output_content
+  - id: Q9
+    page: 5
+    dimension: input_ontology
+  - id: Q10
+    page: 22
+    dimension: output_ontology

@@ -1,0 +1,2 @@
+Use case and domain: Summarization of social media posts during flood events for emergency coordination. The data would be tweets and Facebook posts in Brazilian Portuguese from the 2024 Rio Grande do Sul floods.
+Target population: Brazilian disaster response coordinators at Defesa Civil and humanitarian NGOs who need to track evolving needs across affected municipalities. They are fluent in Brazilian Portuguese and may use English-language tools.

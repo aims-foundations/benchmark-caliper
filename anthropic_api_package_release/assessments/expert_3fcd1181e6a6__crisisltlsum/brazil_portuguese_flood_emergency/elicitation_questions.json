@@ -1,0 +1,22 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "The benchmark covers four crisis types: wildfires, local fires, traffic, and storms. Flood events in Brazil — especially large-scale ones like Rio Grande do Sul — involve distinct evolving dynamics such as river level progression, dam and levee failures, isolated communities cut off by road collapse, and coordinated rescue operations across municipalities. Do these flood-specific event types need to be tracked in your summaries, and are there other recurring crisis sub-types (e.g., landslides triggered by flooding, supply convoy logistics, temporary shelter capacity) that your coordinators at Defesa Civil would expect the system to surface?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "IC",
+    "question": "The benchmark is built on US-based crisis tweets, which tend to use US emergency terminology and geographic referencing conventions. Your data is Brazilian Portuguese social media mixing tweets and Facebook posts from Rio Grande do Sul — a region with its own local place names (municipalities, bairros, rivers like the Jacuí and Guaíba), informal Gaúcho expressions, and Brazilian emergency jargon (e.g., 'alagamento', 'enchente', 'ilhado', 'Defesa Civil'). Would your coordinators consider summaries inadequate if they missed location references at the bairro or municipality level, or misread informal Brazilian Portuguese crisis vocabulary?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OC",
+    "question": "The benchmark's ground-truth summaries were written by annotators working with US crisis events in English. For your use case, what would count as a correct or useful summary — and who should be the judge? For example, would acceptability be determined by Defesa Civil coordinators familiar with operational priorities in Rio Grande do Sul, by humanitarian NGO staff, or by a broader community of affected residents? Would these groups plausibly disagree on which information (e.g., rescue needs vs. supply shortages vs. road access) is most critical to include?"
+  },
+  {
+    "id": "Q4",
+    "dimension": "OF",
+    "question": "The benchmark produces abstractive text summaries, but your coordinators are tracking evolving needs across multiple municipalities simultaneously. Do they need summaries structured around geographic units (e.g., one summary per municipality or affected area), or timeline-ordered updates for a single unfolding event, or something else — such as a prioritized action list or a structured situation report format? Would a free-flowing paragraph summary be usable in their operational workflow, or does the output need a specific format to plug into existing emergency coordination tools?"
+  }
+]

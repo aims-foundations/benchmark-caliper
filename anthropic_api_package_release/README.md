@@ -27,6 +27,8 @@ The pipeline uses `pdftk` or `qpdf` for PDF splitting. Install one of:
 ```bash
 brew install pdftk-java   # macOS
 brew install qpdf          # alternative
+sudo apt-get install pdftk  # Ubuntu/Debian
+sudo apt-get install qpdf   # alternative
 ```
 
 ---
@@ -61,15 +63,6 @@ Each expert assessment lives under `assessments/<expert_id>__<benchmark>/<deploy
 3. `pdfs/review.pdf` -- the final validity report (start here for a quick overview)
 4. `scoring.json` -- raw scores if you want to inspect dimensions programmatically
 5. `composed_prompt.md` -- the full prompt sent to Opus (to understand what the model saw)
-
-### Expert validation results (Stage 3)
-
-Expert ratings of the pipeline's outputs are in `stage3_results/`:
-
-- `primary_assessments.json` -- expert Likert ratings for each assessment
-- `comparative_assessments.json` -- expert ratings comparing regional vs. reference benchmarks
-- `plots/` -- visualizations used in the paper
-- `raw/` -- raw Google Form responses
 
 ### Directory conventions
 

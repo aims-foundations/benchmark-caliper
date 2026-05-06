@@ -1,0 +1,365 @@
+{
+  "benchmark": "switchboard_conversational_speech",
+  "region": "NLP/AI Researchers — Digital Mental Health Dialogue Systems (US-Centric, Diverse Clinical Populations)",
+  "dimensions": {
+    "input_ontology": {
+      "score": 1,
+      "justification": "SWITCHBOARD's input ontology is explicitly scoped to two tasks — speaker authentication and large-vocabulary speech recognition for telephone applications [Q1, Q11] — with a design philosophy emphasizing 'depth and breadth of coverage, especially for speaker verification research' [Q31]. There is no native dialogue-act taxonomy, no clinical conversation category, and no therapy modality coverage. The user's deployment requires a 12-category counseling dialogue-act taxonomy covering CBT-style individual counseling and substance use counseling. The benchmark provides zero native categories aligned to this deployment. Even the external SWBD-DAMSL layer (not part of this paper) uses 42 general-purpose tags whose authors explicitly decline to map to other speech-act theories [WEB-5], and HOPE — the closest direct comparator with 12 counseling-specific labels — confirms that counseling taxonomies do not map onto SWBD-DAMSL [WEB-7]. Given IO is a HIGH-priority dimension, this is a fundamental misalignment.",
+      "strengths": [
+        "Provides a well-defined, internally consistent task scope (speaker verification and telephone ASR) [Q1, Q11], which can serve as a clean pre-training signal for general spontaneous-conversation acoustic and disfluency structure even though it does not address the deployment taxonomy."
+      ],
+      "checklist_responses": {
+        "IO-1": "Required categories for the deployment include 12 counseling-specific dialogue acts (e.g., empathic reflection, disclosure scaffolding, crisis signaling, change talk elicitation, therapeutic summarizing) calibrated to CBT-style individual counseling and substance use counseling. The HOPE dataset's 12 counseling-specific labels illustrate the target taxonomy [WEB-7].",
+        "IO-2": "Yes — the benchmark omits all therapy-relevant categories. The original paper describes only speaker authentication and speech recognition tasks [Q1, Q11, Q31]; no dialogue-act taxonomy is defined. The external SWBD-DAMSL layer (not in this paper) does not include counseling acts and is not interoperable with clinical taxonomies [WEB-5, WEB-7].",
+        "IO-3": "Speaker-verification structural features (target/impostor pool design [Q35, Q36]) are irrelevant to dialogue-act evaluation for counseling chatbots and consume corpus design weight that does not benefit the deployment use case.",
+        "IO-4": "The complete absence of a counseling dialogue-act ontology is a content-validity gap of the highest severity for this deployment. No native category covers any of the therapy-relevant acts the user enumerated; clinical NLP comparators (HOPE [WEB-7], AnnoMI [WEB-12, WEB-16]) demonstrate the absent structure."
+      },
+      "evidence_quotes": [
+        "[Q1] 'SWITCHBOARD is a large multispeaker corpus of conversational speech and text which should be of interest to researchers in speaker authentication and large vocabulary speech recognition.' (p.1)",
+        "[Q11] 'SWITCHBOARD has a number of unique features designed to support research in both speaker authentication and speech recognition for telephone-based applications.' (p.1)",
+        "[Q31] 'The design of the SWITCHBOARD corpus emphasizes the importance of both depth and breadth of coverage, especially for speaker verification research.' (p.3)",
+        "[Q35] 'The design assumes that 25 target speakers should suffice to get statistically reliable estimates of the performance of a speaker verification algorithm under development...' (p.3)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-5] SWBD-DAMSL manual explicitly does not attempt to map tags to other speech-act theories",
+        "[WEB-7] HOPE (WSDM 2022) defines 12 counseling-specific dialogue-act labels co-designed by therapists; not interoperable with SWBD-DAMSL",
+        "[WEB-12] AnnoMI uses MI-specific behavior codes that operate at a different abstraction level than SWBD-DAMSL"
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "IO-1": [
+          "WEB-7"
+        ],
+        "IO-2": [
+          "Q1",
+          "Q11",
+          "Q31",
+          "WEB-5",
+          "WEB-7"
+        ],
+        "IO-3": [
+          "Q35"
+        ],
+        "IO-4": [
+          "WEB-7",
+          "WEB-12"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether any subsequent published work has attempted a partial SWBD-DAMSL→counseling crosswalk for individual acts (search returned none [WEB-5, WEB-7])."
+      ],
+      "requires_expert_verification": [
+        "Clinical/CBT expert validation of the user's chosen 12-category target taxonomy and confirmation that no SWBD-DAMSL act provides usable signal for therapy-specific intent detection."
+      ]
+    },
+    "input_content": {
+      "score": 1,
+      "justification": "Input content is 1992 telephone conversations among ~500 paid volunteers from 'every major dialect of American English' [Q3], collected on T1 lines at Texas Instruments [Q2], totaling ~250 hours and ~3M words [Q4]. There is no counseling content of any kind. The deployment targets contemporary text-based CBT and substance use counseling for diverse US populations including AAVE, South Asian English, Latinx, and Indigenous English speakers — none of which the original authors document covering. The AAVE underrepresentation is now empirically grounded: Koenecke et al. (2020) measured a 0.35 vs 0.19 WER gap for Black vs White speakers across five major commercial ASR systems, and industry analysis explicitly attributes this to early corpora like Switchboard being 'skewed toward white speakers in the middle of the country' [WEB-1, WEB-2]. A 2025 medical NLP study further found LLMs overproduce stereotypical AAVE features for clinical use cases [WEB-14]. No clinical NLP corpora exist for South Asian, Latinx, or Indigenous English communities [resolved gap 2]. Given IC is HIGH priority, this is a major distributional and content-domain mismatch.",
+      "strengths": [
+        "Documented collection of speaker demographics (age, sex, education, dialect region) [Q37] enables some downstream stratified analysis, even though the dialect taxonomy is 1992-era regional.",
+        "Successfully elicited spontaneous, naturalistic conversation (mean naturalness rating 1.48 [Q23]), which can serve as a baseline corpus of spontaneous dialogue structure for pre-training."
+      ],
+      "checklist_responses": {
+        "IC-1": "The deployment requires content reflecting CBT/substance-use counseling discourse and the dialectal/cultural varieties of AAVE, South Asian English, Latinx English, and Indigenous English. Switchboard contains none of this content [Q1–Q4] and external evidence confirms its demographic skew [WEB-1, WEB-2].",
+        "IC-2": "Switchboard's 1992 general telephone-conversation topics carry no clinical-cultural alignment with diverse US clinical populations. There is no documentation of clinical relevance [Q1, Q3].",
+        "IC-3": "The benchmark presupposes general-purpose American English telephone discourse from a non-clinical, predominantly white, mid-country speaker pool [WEB-1, WEB-2], which does not transfer to counseling chatbot deployment for underrepresented communities.",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — the original paper does not report ethnicity-stratified speaker recruitment or community-specific demographic coverage [Q37 captures only age/sex/education/dialect region]. Verification beyond historical documentation is likely impossible (resolved gap 2 marks this as a confirmed absence).",
+        "IC-5": "The combined absence of (a) clinical content, (b) AAVE/South Asian/Latinx/Indigenous English coverage, and (c) any counseling register constitutes a severe content-validity violation for the deployment. Empirical AAVE bias literature [WEB-1, WEB-2, WEB-14] and the LLM-CBT performance gap study [WEB-15] corroborate downstream harm risk."
+      },
+      "evidence_quotes": [
+        "[Q2] 'About 2500 conversations by 500 speakers from around the U.S. were collected automatically over T1 lines at Texas Instruments.' (p.1)",
+        "[Q3] '...about 500 paid volunteers of both sexes from every major dialect of American English.' (p.1)",
+        "[Q4] '...over 250 hours of speech and nearly 3 million words of text.' (p.1)",
+        "[Q37] 'Demographic information about the speakers... includes their age, sex, level of education, and the geographically-defined dialect area where they grew up.' (p.4)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-1] Koenecke et al. 2020 PNAS — average WER 0.35 (Black) vs 0.19 (White) across five major commercial ASR systems",
+        "[WEB-2] Industry commentary explicitly identifies Switchboard as skewed toward white speakers in the middle of the country, contributing to ASR bias",
+        "[WEB-14] 2025 medical NLP study found LLMs overproduce stereotypical AAVE features and underrepresent nuanced dialectal forms in clinical contexts",
+        "[WEB-15] 'Therapy as an NLP Task' (arXiv:2409.02244) — LLM CBT counselors misread cultural cues and produce 'deceptive empathy'",
+        "[WEB-21] CORAAL provides AAVE-specific speech corpus alternative not covered by Switchboard"
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "IC-1": [
+          "Q3",
+          "Q4",
+          "WEB-1",
+          "WEB-2"
+        ],
+        "IC-2": [
+          "Q1",
+          "Q3"
+        ],
+        "IC-3": [
+          "WEB-1",
+          "WEB-2"
+        ],
+        "IC-4": [
+          "Q37"
+        ],
+        "IC-5": [
+          "WEB-1",
+          "WEB-2",
+          "WEB-14",
+          "WEB-15"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Exact ethnicity/community breakdown of Switchboard speakers is not publicly documented (resolved gap 2 — confirmed absence)."
+      ],
+      "requires_expert_verification": [
+        "Sociolinguistic expert assessment of which 1992 'dialect regions' [Q37] might partially overlap with target community varieties for stratified analysis."
+      ]
+    },
+    "input_form": {
+      "score": 2,
+      "justification": "Input form is 8 kHz mu-law telephone audio in NIST SPHERE format [Q20] with time-aligned word-level transcriptions [Q6, Q26–Q28] capturing spontaneous-speech phenomena (turns, overlaps, partial words) [Q24]. The deployment is text-based LLM dialogue evaluation operating in modern synchronous/asynchronous chat channels. The audio modality and 1992 telephone band are not directly relevant; the transcription layer is the practically operative input. Even there, transcription artifacts of spontaneous spoken register diverge from contemporary chat-text register. IF is MODERATE priority. The mismatch is real but partially mitigated because text transcripts are usable, even if register-shifted. No direct empirical study quantifies the register gap (resolved gap 5 — NOT FOUND).",
+      "strengths": [
+        "High-quality time-aligned word-level transcriptions [Q6, Q26–Q28] with documented conventions for disfluencies, overlaps, and partial words [Q24] — usable as a text proxy for spontaneous dialogue structure.",
+        "Detailed phonetic base forms available in dictionary [Q29] and structured acoustic isolation (>20dB) [Q21] support reuse for ASR pre-training where applicable."
+      ],
+      "checklist_responses": {
+        "IF-1": "Source signal is 8 kHz mu-law telephone audio [Q20]; deployment signal is wideband modern chat text. The transcription layer mediates partial reuse, but spoken-register transcription artifacts differ from text-chat register.",
+        "IF-2": "Researcher infrastructure is not a constraint (standard ML compute), but downstream chatbot deployment uses different capture modalities (text input). Audio modality alignment is not required for the operative use case.",
+        "IF-3": "The form difference relevant to the use case is spontaneous-spoken transcription register vs. typed-chat register; no published quantification of impact (resolved gap 5).",
+        "IF-4": "Form mismatch produces a real but bounded external-validity concern: telephone-era spoken register transcriptions are not modern chat text, but transcripts remain usable for general dialogue-structure pre-training."
+      },
+      "evidence_quotes": [
+        "[Q20] '...8 kHz, mu-law encoded signal files... NIS-7 standard SPHERE format...' (p.2)",
+        "[Q6] 'A time-aligned word for word transcription accompanies each recording.' (p.1)",
+        "[Q24] 'Each conversation is fully transcribed, with special conventions to show speakers' turns, simultaneous talking, interrupted sentences, partial words...' (p.2)",
+        "[Q26] 'The SWITCHBOARD conversations are also time aligned at the word level.' (p.3)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-1] AAVE acoustic-model bias documented for telephone-era corpora — implies form-level bias even at the audio layer relevant for any voice-enabled accessibility extension"
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "IF-1": [
+          "Q20",
+          "Q6"
+        ],
+        "IF-2": [
+          "Q20"
+        ],
+        "IF-3": [
+          "Q24",
+          "Q26"
+        ],
+        "IF-4": [
+          "Q20",
+          "WEB-1"
+        ]
+      },
+      "confidence": "medium",
+      "information_gaps": [
+        "No empirical study directly quantifying performance degradation from 1992 telephone-spoken register to modern chat text (resolved gap 5 — NOT FOUND)."
+      ],
+      "requires_expert_verification": [
+        "Whether voice-enabled accessibility deployments would inherit the documented telephone-band ASR bias [WEB-1] for AAVE speakers."
+      ]
+    },
+    "output_ontology": {
+      "score": 1,
+      "justification": "The benchmark paper documents no output label categories for any classification task — its output ontology is speaker-verification decisions and word error rates, with design intent for 'multiple testing runs and a variety of technical approaches' for speaker verification [Q12]. There is no native dialogue-act label space at all. The deployment requires a 12-category counseling dialogue-act output space, ideally multi-label (research shows ~24% of counseling utterances need ≥2 labels and ~12% need ≥3 [WEB-9]). Even when SWBD-DAMSL is applied externally, it provides 42 general-purpose single-label tags [WEB-3] that do not align with counseling intents [WEB-7] and have no published multi-label extension (resolved gap 4). OO is HIGH priority; structural-validity violation is severe.",
+      "strengths": [
+        "Clear, well-defined output decision rule for the original speaker-verification task (target/impostor structure [Q35, Q36]) — useful precedent for benchmark scoring rigor even though the criterion does not transfer."
+      ],
+      "checklist_responses": {
+        "OO-1": "Native output categories are speaker-verification decisions [Q11, Q35]; no dialogue-act categories are defined in the paper.",
+        "OO-2": "All counseling-specific output categories are missing (empathic reflection, change talk elicitation, therapeutic summarizing, crisis signaling, etc.); HOPE's 12 counseling labels [WEB-7] and AnnoMI's MI behavior codes [WEB-12] illustrate what is absent.",
+        "OO-3": "The speaker-verification target/impostor decision schema [Q35, Q36] encodes assumptions (security/authentication context) entirely orthogonal to therapeutic dialogue scoring.",
+        "OO-4": "Stakeholder-driven taxonomy redesign is required: HOPE [WEB-7] demonstrates therapist co-design of counseling DA labels; this approach must be applied since SWBD-DAMSL is not interoperable [WEB-5, WEB-7].",
+        "OO-5": "Structural-validity and content-validity violations are severe: there is no native taxonomy and no multi-label extension of the external SWBD-DAMSL layer [WEB-9 confirms multi-label is needed; resolved gap 4 confirms none exists]."
+      },
+      "evidence_quotes": [
+        "[Q11] '...support research in both speaker authentication and speech recognition for telephone-based applications.' (p.1)",
+        "[Q12] 'design for multiple testing runs and a variety of technical approaches' (p.1)",
+        "[Q35] 'The design assumes that 25 target speakers should suffice to get statistically reliable estimates of the performance of a speaker verification algorithm...' (p.3)",
+        "[Q36] 'The other 450 speakers... constitute a pool of 'imposters.'' (p.3)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-3] SwDA documentation — SWBD-DAMSL applies 42 clustered general-purpose tags, none therapy-specific",
+        "[WEB-7] HOPE provides 12 counseling-specific dialogue-act labels, not interoperable with SWBD-DAMSL",
+        "[WEB-9] Laricheva et al. 2022 — ~24% of counseling utterances require two labels, ~12% require three or more",
+        "[WEB-23] Springer 2012 chapter proposes ranked multidimensional DA annotation as a research direction (no SWBD-DAMSL extension exists)"
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "OO-1": [
+          "Q11",
+          "Q35"
+        ],
+        "OO-2": [
+          "WEB-7",
+          "WEB-12"
+        ],
+        "OO-3": [
+          "Q35",
+          "Q36"
+        ],
+        "OO-4": [
+          "WEB-7",
+          "WEB-5"
+        ],
+        "OO-5": [
+          "WEB-9",
+          "WEB-23"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "No published multi-label SWBD-DAMSL extension (resolved gap 4)."
+      ],
+      "requires_expert_verification": [
+        "Clinical co-design validation of any 12-label counseling taxonomy adopted for the deployment, modeled on HOPE [WEB-7] or AnnoMI [WEB-12]."
+      ]
+    },
+    "output_content": {
+      "score": 1,
+      "justification": "Transcribers were lay workers producing orthographic transcriptions and rating naturalness/intelligibility [Q22, Q25]; no clinical professionals were involved and no inter-annotator agreement is reported for any classification task. The paper does not describe annotator demographics. For deployment evaluating CBT/substance-use dialogue intent for diverse clinical populations, this stands in stark contrast to AnnoMI (10 experienced MI practitioners as annotators [WEB-12, WEB-16]) and HOPE (therapist co-designed taxonomy [WEB-7]). The user's elicitation downplayed annotator-population mismatch (Q2/A2), but documented LLM failure modes — 'deceptive empathy' and cultural-cue misreading [WEB-15] and stereotypical AAVE production [WEB-14] — show that label correctness for culturally inflected counseling utterances is a substantive latent risk rather than a complementary concern. OC is MODERATE priority per elicitation, but evidence supports a low score.",
+      "strengths": [
+        "Naturalness, background noise, intelligibility, and topical-coherence ratings were systematically collected [Q22, Q25] with a documented protocol (mean 1.48 [Q23]) — methodologically rigorous for the original collection task."
+      ],
+      "checklist_responses": {
+        "OC-1": "INSUFFICIENT DOCUMENTATION — the paper documents only orthographic transcription and naturalness ratings [Q22, Q25], not dialogue-act ground truth; therefore no labels exist that could be assessed for regional-stakeholder alignment within this corpus.",
+        "OC-2": "Disagreement between original (lay, non-clinical) annotators and the target clinical/community population is highly likely for any culturally inflected counseling utterance [WEB-14, WEB-15]; clinical NLP comparators use clinical experts [WEB-7, WEB-12].",
+        "OC-3": "INSUFFICIENT DOCUMENTATION — the paper does not report annotator demographics, training, or selection criteria beyond their role as transcribers [Q22, Q25].",
+        "OC-4": "Re-annotation by representative regional clinical annotators is required for any counseling deployment use; AnnoMI's 10-MI-practitioner model [WEB-12, WEB-16] and HOPE's therapist co-design [WEB-7] are the methodological precedents.",
+        "OC-5": "INSUFFICIENT DOCUMENTATION — no aggregation method for classification labels is reported because no classification labels are produced in this paper.",
+        "OC-6": "Convergent and external validity for the counseling deployment cannot be supported by the existing annotation; lay-transcriber output does not generalize to clinical-intent labels for diverse communities [WEB-7, WEB-12, WEB-14, WEB-15]."
+      },
+      "evidence_quotes": [
+        "[Q22] 'Transcribers were later asked to rate the naturalness of conversations they listened to...' (p.2)",
+        "[Q23] 'The average rating of 1.48 suggests that the collection protocol was successful in this respect.' (p.2)",
+        "[Q25] '...the transcribers were asked to rate each conversation on a number of properties, such as the amount of background noise or static, difficulty in understanding the talkers, and degree to which the conversants stayed on one subject.' (p.2)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-7] HOPE labels co-designed by therapists and counseling experts",
+        "[WEB-12] AnnoMI annotated by 10 experienced MI practitioners; explicitly examines IAA variation",
+        "[WEB-14] LLMs overproduce stereotypical AAVE features in clinical contexts",
+        "[WEB-15] LLM CBT counselors produce 'deceptive empathy' and misread cultural cues",
+        "[WEB-16] AnnoMI publicly available with expert annotation protocol"
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "OC-1": [],
+        "OC-2": [
+          "WEB-14",
+          "WEB-15"
+        ],
+        "OC-3": [],
+        "OC-4": [
+          "WEB-7",
+          "WEB-12",
+          "WEB-16"
+        ],
+        "OC-5": [],
+        "OC-6": [
+          "WEB-7",
+          "WEB-12",
+          "WEB-14",
+          "WEB-15"
+        ]
+      },
+      "confidence": "medium",
+      "information_gaps": [
+        "Annotator demographics, training, IAA, and selection criteria are entirely undocumented in the paper."
+      ],
+      "requires_expert_verification": [
+        "Whether SWBD-DAMSL transferred annotations (developed externally in 1997) inherit lay-transcription bias when reused for clinical purposes."
+      ]
+    },
+    "output_form": {
+      "score": 2,
+      "justification": "The native output form is speaker-verification decisions and word-error metrics [Q11, Q12]; no quantitative scoring rubric for dialogue-act classification is described in the paper. The deployment needs single-label dialogue-act outputs as a baseline and ideally multi-label/ranked outputs to support response generation pipelines (the user explicitly recognizes this in elicitation A3, and clinical NLP evidence shows ~24% of utterances need ≥2 labels [WEB-9]). The benchmark output form does not match the deployment need, but text-chat output modality at the researcher tier is not fundamentally blocked. OF is MODERATE priority. End-user accessibility (text vs. voice) is not addressed by the benchmark output form.",
+      "strengths": [
+        "Designed for 'multiple testing runs and a variety of technical approaches' [Q12] — flexible enough that a separately constructed scoring layer can in principle be added for downstream tasks."
+      ],
+      "checklist_responses": {
+        "OF-1": "No — the native output modality (speaker-verification decisions / WER) [Q11] does not match the deployment need (dialogue-act labels feeding response generation).",
+        "OF-2": "INSUFFICIENT DOCUMENTATION — the benchmark itself produces no TTS or speech output; voice-enabled accessibility deployment would require external TTS infrastructure, not addressed by this corpus.",
+        "OF-3": "Researcher population literacy is not a constraint; end-user accessibility (text vs. voice channel) for diverse clinical populations is a downstream concern not addressed by the benchmark output form.",
+        "OF-4": "Output-form mismatch is moderate: single-label categorical output (when SWBD-DAMSL is applied externally) is usable as a baseline but limits signal for multi-intent counseling utterances [WEB-9]. No multi-label extension of SWBD-DAMSL exists [resolved gap 4]."
+      },
+      "evidence_quotes": [
+        "[Q11] '...support research in both speaker authentication and speech recognition for telephone-based applications.' (p.1)",
+        "[Q12] 'design for multiple testing runs and a variety of technical approaches' (p.1)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-9] Laricheva et al. 2022 — multi-label needed for counseling DA annotation (~24% two-label, ~12% three+)",
+        "[WEB-23] Ranked/multidimensional DA annotation proposed as research direction (no SWBD-DAMSL extension)"
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "OF-1": [
+          "Q11"
+        ],
+        "OF-2": [],
+        "OF-3": [],
+        "OF-4": [
+          "WEB-9",
+          "WEB-23"
+        ]
+      },
+      "confidence": "medium",
+      "information_gaps": [
+        "Whether any community-developed multi-label scoring layer for SwDA exists outside formal publication."
+      ],
+      "requires_expert_verification": [
+        "Whether ranked-output evaluation would integrate cleanly with the user's CBT response generation pipeline."
+      ]
+    }
+  },
+  "overall_summary": "SWITCHBOARD (1992) was designed for speaker authentication and large-vocabulary telephone speech recognition [Q1, Q11, Q31] using ~250 hours of spontaneous conversational speech from ~500 paid volunteers across 1992-era American English dialect regions [Q2–Q4, Q37]. For a deployment evaluating CBT-style and substance-use counseling dialogue-act understanding for diverse, underrepresented US clinical populations using LLM-based architectures, the benchmark exhibits fundamental misalignment across all three high-priority dimensions: (IO) no native dialogue-act taxonomy and no therapy-specific categories; (IC) no clinical content and an empirically documented demographic skew that excludes AAVE, South Asian, Latinx, and Indigenous English speakers [WEB-1, WEB-2, WEB-14]; (OO) no native classification output space and no multi-label extension of the external SWBD-DAMSL layer despite documented multi-label need [WEB-9]. The transcription layer can serve as a general spontaneous-dialogue pre-training substrate, but cannot validly evaluate counseling intent recognition, multi-intent classification, or culturally inflected utterance interpretation. Clinical NLP comparators — HOPE [WEB-7], AnnoMI [WEB-12, WEB-16], CORAAL [WEB-21] for AAVE — are the appropriate validity comparators for the deployment.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "SWITCHBOARD measures speaker-verification accuracy and large-vocabulary telephone speech recognition performance on 1992 spontaneous American English telephone conversations [Q1, Q11]. With the external SWBD-DAMSL layer (not part of this paper), it can also measure general-purpose dialogue-act classification on a 42-tag taxonomy [WEB-3]. For the intended deployment, it can serve as a pre-training substrate for general spontaneous-dialogue structure and disfluency handling, but it does not measure any therapy-specific construct (no IO/OO alignment) and does not measure model behavior on diverse clinical-population speech (no IC alignment).",
+    "construct_depth": "Depth is essentially zero for the deployment's target constructs: counseling dialogue-act recognition, multi-intent utterance interpretation, and culturally inflected clinical communication. The benchmark provides no native annotation supporting these constructs, and the strongest external annotation layer (SWBD-DAMSL) is documented as not interoperable with counseling taxonomies [WEB-5, WEB-7] and offers no multi-label extension [resolved gap 4]. Depth is moderate only for general spontaneous-conversation acoustic and lexical structure.",
+    "supplementation_needed": "Supplementation is required for every high-priority dimension: (IO/OO) adopt or co-design a counseling dialogue-act taxonomy via HOPE [WEB-7] and/or AnnoMI [WEB-12, WEB-16], with multi-label support informed by Laricheva et al. [WEB-9]; (IC) supplement with CORAAL for AAVE [WEB-21] and pursue community-specific corpus development for South Asian, Latinx, and Indigenous English (confirmed absent — resolved gap 2); (OC) re-annotate any deployment-relevant subset with clinical experts following AnnoMI's 10-MI-practitioner model [WEB-12]; (OF) introduce ranked or multi-label scoring rubrics; (Regulatory) align downstream deployment with FDA SaMD/AI-enabled device guidance for mental health applications [WEB-17, WEB-18, WEB-19]."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "No counseling dialogue-act taxonomy is present in the benchmark; even external SWBD-DAMSL omits all therapy-specific acts and is not interoperable with counseling taxonomies [WEB-5, WEB-7].",
+      "recommendation": "Replace or augment the benchmark's de facto SWBD-DAMSL evaluation with HOPE's 12 counseling-specific labels [WEB-7] for CBT-style evaluation and AnnoMI's MI behavior codes [WEB-12, WEB-16] for substance-use evaluation. Treat SWITCHBOARD only as a general spontaneous-dialogue pre-training source."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "Empirically documented underrepresentation of AAVE, South Asian, Latinx, and Indigenous English speakers and complete absence of clinical content [WEB-1, WEB-2, WEB-14].",
+      "recommendation": "Supplement with CORAAL [WEB-21] for AAVE evaluation; commission targeted dialect/community corpus development for South Asian, Latinx, and Indigenous English (confirmed absent in current literature — resolved gap 2); add HOPE/AnnoMI for clinical content."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "No native classification output space; no multi-label extension of SWBD-DAMSL despite documented multi-label need (~24% two-label, ~12% three+ in counseling NLP) [WEB-9, resolved gap 4].",
+      "recommendation": "Adopt a multi-label or ranked-output scoring layer co-designed with clinical experts following HOPE's design pattern [WEB-7]; report both single-label baseline and multi-label metrics so the user's recognized extension need is empirically tracked."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Lay transcribers, no clinical involvement, no IAA reported, no annotator demographic documentation [Q22, Q25].",
+      "recommendation": "For any deployment-facing evaluation subset, re-annotate with clinical experts following AnnoMI's protocol (≥10 trained MI/CBT practitioners) [WEB-12, WEB-16] and report stratified IAA across community-representative annotators."
+    },
+    {
+      "dimension": "input_form",
+      "gap": "1992 telephone-speech transcription register diverges from modern chat-text register; no published study quantifies the gap [resolved gap 5].",
+      "recommendation": "Run a controlled register-shift evaluation comparing model performance on Switchboard transcripts vs. modern counseling chat corpora (e.g., HOPE, AnnoMI text); report the delta as a register-mismatch correction factor."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "Single categorical output limits signal quality for multi-intent counseling utterances [WEB-9].",
+      "recommendation": "Add ranked top-k and multi-label F1 / set-overlap metrics to the evaluation rubric for any counseling subset, drawing on the multidimensional DA annotation framework [WEB-23]."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_ontology",
+    "input_content",
+    "output_ontology"
+  ],
+  "strongest_dimensions": [
+    "input_form",
+    "output_form"
+  ]
+}

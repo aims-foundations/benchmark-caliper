@@ -108,5 +108,16 @@
       "cache_creation_input_tokens": 0,
       "web_search_requests": 7
     }
+  },
+  "7_score": {
+    "opus": {
+      "model_id": "claude-opus-4-7",
+      "calls": 1,
+      "input_tokens": 28202,
+      "output_tokens": 11871,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
   }
 }
