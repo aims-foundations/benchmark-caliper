@@ -105,7 +105,7 @@ python run_pipeline.py papers/expert_3fcd1181e6a6__crisisltlsum.pdf \
   --rerun-scoring
 ```
 
-Since LLM outputs are non-deterministic, scores will differ slightly between runs. The pipeline structure, dimensions, and evidence citations should be consistent.
+Since LLM outputs are non-deterministic, they will differ slightly between runs. The pipeline structure, dimensions, and general judgment should remain consistent.
 
 ---
 
