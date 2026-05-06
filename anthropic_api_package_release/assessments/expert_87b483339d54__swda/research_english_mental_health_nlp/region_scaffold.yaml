@@ -1,0 +1,304 @@
+name: NLP/AI Researchers — Digital Mental Health Dialogue Systems (US-Centric, Diverse
+  Clinical Populations)
+abbreviation: NLP-MH-US
+assessment_context:
+  benchmark: switchboard_conversational_speech
+  benchmark_year: 1992
+  benchmark_domain: Conversational speech recognition and speaker authentication
+  intended_use_case: Evaluating and improving dialogue-act understanding for AI-assistive
+    chatbots operating in individual CBT-style counseling contexts, covering 12 dialogue
+    act categories, using LLM-based architectures for clinical NLP and digital mental
+    health applications.
+  primary_therapy_modality: Individual counseling, CBT-style framework
+  secondary_modality: Substance use counseling across diverse populations
+  out_of_scope_modalities:
+  - Group therapy
+  - Crisis intervention
+  cultural_adaptation_status: Acknowledged as a future gap; not addressed in current
+    benchmark evaluation layer
+target_population:
+  description: NLP/AI researchers — including PhD students, postdoctoral researchers,
+    and industry practitioners — working primarily in English-speaking countries or
+    with English-language conversational data. These researchers develop and evaluate
+    dialogue systems for digital mental health applications. While the benchmark evaluation
+    layer is researcher-facing, downstream deployed systems are intended to serve
+    diverse and underrepresented end-user communities in the United States and potentially
+    internationally.
+  researcher_roles:
+  - PhD students in NLP, computational linguistics, or clinical informatics
+  - Postdoctoral researchers in AI/ML for healthcare or human-computer interaction
+  - Industry practitioners in clinical NLP, conversational AI, or digital therapeutics
+  institutional_contexts:
+  - Academic research groups (NLP, AI, clinical psychology intersections)
+  - Digital mental health startups and platforms
+  - Healthcare system AI/informatics departments
+  - Government-funded research labs (e.g., NIH-adjacent, DARPA successors)
+  geographic_primary: United States (primary); English-speaking countries broadly
+    (secondary)
+  end_user_communities:
+    description: Diverse and underrepresented communities in the United States served
+      by downstream chatbot deployments
+    named_communities:
+    - South Asian Americans
+    - African Americans (including AAVE speakers)
+    - Latin American / Latinx communities
+    - Indigenous communities (implied)
+    clinical_population_note: End users are individuals seeking CBT-style counseling
+      or substance use counseling; they are not researchers but are the ultimate subjects
+      of system quality decisions made using this benchmark.
+languages:
+  benchmark_language: English (American, general, 1992 telephone register)
+  researcher_working_language: English (primary)
+  end_user_language_variation:
+    description: Although the benchmark and researcher layer are English-only, downstream
+      clinical populations speak varieties of English that are almost certainly absent
+      from Switchboard's speaker pool.
+    underrepresented_varieties:
+    - African American Vernacular English (AAVE)
+    - South Asian English (Indian English, Pakistani English, etc.)
+    - Latinx-inflected English (code-switching with Spanish)
+    - Indigenous English varieties
+    multilingual_context: Some target end-user communities may be bilingual or code-switching;
+      the benchmark provides no coverage of code-switching phenomena.
+  nlp_tooling_note: English is well-resourced in NLP tooling, but dialect- and community-specific
+    models for AAVE, South Asian English, and Latinx English remain scarce. Clinical
+    NLP tooling calibrated to counseling register is a separate and underresourced
+    area.
+writing_systems:
+  scripts:
+  - Latin alphabet (English)
+  modality_note: The benchmark is speech-primary (8 kHz mu-law telephone audio) with
+    time-aligned orthographic transcriptions. Researcher deployments operate on text;
+    the transcription layer is the practically relevant modality for LLM-based evaluation.
+    Transcription artifacts from 1992 spontaneous spoken register are present.
+researcher_profile:
+  technical_background: Strong ML/NLP; familiarity with transformer-based LLMs, dialogue
+    modeling, and sequence classification tasks
+  clinical_background: Variable; typically limited unless collaborating with clinical
+    psychology or psychiatry departments
+  benchmark_evaluation_goals:
+  - Pre-training or fine-tuning dialogue representations
+  - Evaluating utterance-level dialogue-act classification accuracy
+  - Developing response generation pipelines for mental health chatbots
+  - Assessing model robustness across diverse speaker communities
+  known_methodological_assumptions:
+    label_granularity: Single-label ground truth accepted as baseline; multi-label
+      recognized as needed extension
+    label_transferability: User views SWBD-DAMSL-style labels as sufficiently intent-general
+      to transfer across communities, while acknowledging annotator bias as a complementary
+      concern
+    cultural_fidelity: Not claimed as a property of the current label set; deferred
+      to future dataset expansion
+dialogue_act_taxonomy:
+  benchmark_native_taxonomy: None documented in original Switchboard paper; designed
+    for speaker authentication and speech recognition only
+  external_annotation_layer: SWBD-DAMSL (developed as a subsequent external layer,
+    not described in the benchmark paper)
+  claimed_category_count: 12
+  therapy_relevant_acts_absent:
+  - Empathic reflection
+  - Disclosure scaffolding
+  - Crisis signaling
+  - Open question (counseling-specific)
+  - Affirmation and support (MITI-style)
+  - Change talk elicitation
+  - Summarizing (therapeutic)
+  external_clinical_taxonomies_to_investigate:
+  - MISC (Motivational Interviewing Skill Code)
+  - MITI (Motivational Interviewing Treatment Integrity)
+  - CAMS-derived dialogue act schemes
+  - AnnoMI annotation scheme
+  - HOPE dataset annotation scheme
+  multi_label_status:
+    benchmark_provision: Single-label only
+    user_need: Multi-label or ranked outputs recognized as necessary for counseling
+      utterances carrying simultaneous intents
+    gap_severity: HIGH — single-label accuracy metrics may systematically misrepresent
+      model capability for response generation pipelines
+corpus_characteristics:
+  collection_year: 1992
+  collection_modality: Telephone speech (T1 lines, 8 kHz mu-law encoded, NIST SPHERE
+    format)
+  speaker_count: ~500
+  conversation_count: ~2,500
+  total_speech_hours: '[NEEDS VERIFICATION — approximately 250 hours per benchmark
+    documentation]'
+  word_count: '[NEEDS VERIFICATION — approximately 3 million words per benchmark documentation]'
+  speaker_recruitment: Paid volunteers, general American English, 1992 dialect taxonomy
+  demographic_metadata_available:
+  - Age
+  - Sex
+  - Education level
+  - Dialect region of origin
+  community_representation:
+    aave_speakers: '[NEEDS VERIFICATION — almost certainly underrepresented given
+      1992 recruitment and dialect taxonomy]'
+    south_asian_english_speakers: '[NEEDS VERIFICATION — almost certainly absent]'
+    latinx_english_speakers: '[NEEDS VERIFICATION — almost certainly underrepresented]'
+    indigenous_english_speakers: '[NEEDS VERIFICATION — almost certainly absent]'
+    documentation_status: Not documented by original authors; no limitations statement
+      regarding demographic coverage
+  register: Spontaneous spoken conversational telephone register
+  register_mismatch_with_deployment: HIGH — modern counseling chatbots operate in
+    text-based synchronous or asynchronous digital channels; 1992 telephone speech
+    artifacts and spoken register features do not transfer cleanly
+clinical_annotation_validity:
+  original_annotators: Lay transcribers producing orthographic text; no clinical training
+    reported
+  clinical_professional_involvement: None documented
+  inter_annotator_agreement_reported: None for any classification task
+  annotator_demographic_documentation: Not reported
+  cultural_representativeness_of_annotators: '[NEEDS VERIFICATION — not documented
+    in benchmark; almost certainly non-representative of underserved clinical communities]'
+  validity_risk_for_counseling_use: HIGH — absence of clinical expertise in annotation
+    is a significant latent validity risk for any downstream counseling dialogue application
+infrastructure_and_deployment_context:
+  researcher_infrastructure: Standard academic/industry ML compute (GPU clusters,
+    cloud platforms); no access barriers for intended researcher population
+  benchmark_access: '[NEEDS VERIFICATION — distributed historically through LDC; current
+    access pathways and licensing terms should be confirmed]'
+  llm_deployment_stack: LLM-based architectures (transformer models); text input is
+    the operative modality even though benchmark source is audio
+  end_user_chatbot_delivery_channels:
+  - Text-based synchronous chat (web, mobile app)
+  - Text-based asynchronous messaging
+  - Potentially voice-enabled interfaces for accessibility
+  compute_requirements_note: Not a constraint for the researcher population; relevant
+    for downstream deployment to end-user communities on lower-resource devices
+cultural_norms_and_validity_notes: 'The benchmark evaluation layer targets researchers
+  who share a broadly Western academic/industry epistemological framework for dialogue
+  and NLP evaluation. However, the downstream end-user communities — South Asian,
+  African American, Latinx, and Indigenous — bring culturally specific communicative
+  practices that are entirely absent from Switchboard''s speaker pool and annotation
+  layer.
+
+
+  Key validity concerns by community:
+
+  - African American communities: AAVE syntactic and pragmatic features may be systematically
+  miscategorized by models trained on Switchboard-derived representations; indirect
+  speech acts, signifying, and call-and-response patterns may not map onto SWBD-DAMSL
+  categories.
+
+  - South Asian communities: Politeness strategies, face-saving indirectness, and
+  therapy-seeking stigma may shape dialogue acts in ways absent from the taxonomy.
+
+  - Latinx communities: Code-switching with Spanish, familismo-influenced disclosure
+  norms, and culturally specific help-seeking behaviors are not captured.
+
+  - Indigenous communities: Oral tradition, silence as communicative act, and community-oriented
+  disclosure norms differ substantially from individualist CBT assumptions.
+
+
+  The user treats these as future-work concerns rather than invalidating the current
+  benchmark for pre-training and baseline evaluation purposes.'
+domain_specific_notes:
+  clinical_nlp: The benchmark has no clinical content. Its use is as a proxy for spontaneous
+    conversational speech structure, not clinical dialogue semantics. Researchers
+    should be alert to the gap between SWBD-DAMSL's general intent categories and
+    therapy-specific communicative moves. Published clinical NLP benchmarks (AnnoMI,
+    HOPE, IEMOCAP, therapist-annotated corpora) should be investigated as validity
+    comparators.
+  substance_use_counseling: Flagged as a priority downstream use case. Switchboard
+    has no substance use content. Motivational Interviewing (MI) corpora — including
+    AnnoMI and MISC-annotated datasets — are the closest existing resources and should
+    be evaluated for dialogue-act scheme interoperability. [NEEDS VERIFICATION — current
+    state of AnnoMI public availability and annotation scheme compatibility with SWBD-DAMSL]
+  cbt_dialogue_modeling: CBT-style dialogue involves structured therapeutic moves
+    (Socratic questioning, thought challenging, behavioral activation discussion)
+    that do not map onto SWBD-DAMSL categories. Researchers using Switchboard for
+    CBT chatbot evaluation are implicitly assuming that general conversational dialogue-act
+    structure is a sufficient proxy for therapeutic dialogue structure — an assumption
+    that warrants empirical validation.
+  digital_mental_health_regulatory_context: '[NEEDS VERIFICATION — relevant US regulatory
+    frameworks for AI-assisted mental health tools, including FDA guidance on software
+    as a medical device (SaMD), state telehealth regulations, and IRB requirements
+    for clinical NLP research involving vulnerable populations]'
+  ethics_and_data_governance: '[NEEDS VERIFICATION — current IRB and data use agreement
+    requirements for using Switchboard in clinical NLP research; privacy considerations
+    when fine-tuning on clinical dialogue data from underrepresented communities]'
+flagged_gaps_for_web_search:
+- gap_id: 1
+  label: SWBD-DAMSL to counseling taxonomy mapping
+  description: Whether any published taxonomy maps SWBD-DAMSL dialogue acts to counseling-specific
+    acts (MISC, MITI, CAMS-derived) and whether Switchboard is routinely used as a
+    proxy for mental health dialogue or only for pre-training.
+  search_target: SWBD-DAMSL dialogue act Switchboard counseling CBT therapy mapping
+    MISC MITI CAMS clinical NLP
+- gap_id: 2
+  label: Diverse and underrepresented community speech in clinical NLP
+  description: Whether the demographic gap in Switchboard (AAVE, South Asian English,
+    Latinx English, Indigenous English absent) has been documented and whether supplementary
+    clinical NLP corpora exist for these populations.
+  search_target: AAVE South Asian English Latinx speech corpus clinical NLP underrepresented
+    communities dialogue evaluation counseling
+- gap_id: 3
+  label: Substance use counseling benchmark landscape
+  description: Whether AnnoMI, IEMOCAP, HOPE, or other benchmarks cover substance
+    use counseling contexts and whether their dialogue act schemes are interoperable
+    with SWBD-DAMSL.
+  search_target: AnnoMI MISC motivational interviewing dialogue act dataset substance
+    use counseling NLP benchmark annotation interoperability
+- gap_id: 4
+  label: Multi-label dialogue act annotation extensions
+  description: Whether any multi-label extension of SWBD-DAMSL exists or whether adjacent
+    benchmarks provide ranked/multi-label annotations suitable for counseling-style
+    dialogue evaluation.
+  search_target: multi-label dialogue act annotation SWBD-DAMSL Switchboard ranked
+    output counseling NLP evaluation extension
+- gap_id: 5
+  label: Temporal and register mismatch impact on NLP performance
+  description: Evidence on how the 1992 telephone speech to modern text-based chatbot
+    register gap affects NLP model performance when Switchboard is used as training
+    or evaluation corpus.
+  search_target: Switchboard temporal mismatch text chatbot NLP performance degradation
+    register 1992 telephone speech modern dialogue evaluation
+- gap_id: 6
+  label: Clinical annotator expertise benchmarks
+  description: Whether clinical dialogue benchmarks with professional therapist or
+    clinical psychologist annotation exist that could serve as validity comparators
+    for the counseling-chatbot use case.
+  search_target: clinical annotator mental health dialogue act benchmark therapist
+    annotation inter-rater agreement NLP counseling validity
+- gap_id: 7
+  label: Regulatory and ethics requirements for clinical NLP research
+  description: Current US FDA SaMD guidance, state telehealth regulations, and IRB/data
+    governance requirements applicable to AI-assisted mental health tools built using
+    benchmarks like Switchboard.
+  search_target: FDA SaMD AI mental health chatbot regulation IRB clinical NLP research
+    underrepresented communities data governance 2023 2024
+- gap_id: 8
+  label: Switchboard LDC access and licensing
+  description: Current access pathways, licensing terms, and cost for obtaining Switchboard
+    through LDC for academic and industry clinical NLP research.
+  search_target: Switchboard LDC Linguistic Data Consortium access license cost clinical
+    NLP research 2023 2024
+dimension_priority_summary:
+  IO:
+    priority: HIGH
+    rationale: Switchboard has no dialogue-act annotation layer and no clinical content;
+      its 12-category SWBD-DAMSL taxonomy (external) omits all therapy-specific communicative
+      acts.
+  IC:
+    priority: HIGH
+    rationale: 1992 general American English telephone speech is severely mismatched
+      with contemporary counseling language from diverse underrepresented clinical
+      populations.
+  IF:
+    priority: MODERATE
+    rationale: Deployment is text-focused; telephone-era acoustic conditions and transcription
+      artifacts introduce distributional differences from modern chatbot text corpora.
+  OO:
+    priority: HIGH
+    rationale: Single-label output conflicts with multi-intent counseling utterances;
+      single-label accuracy metrics may systematically misrepresent model capability
+      for response generation.
+  OC:
+    priority: MODERATE
+    rationale: Annotator-population mismatch is a latent risk; non-clinical, non-diverse
+      annotators labeled general telephone speech, not mental health dialogue for
+      underrepresented communities.
+  OF:
+    priority: MODERATE
+    rationale: Single categorical label output format limits benchmark signal quality
+      for optimizing multi-intent response generation pipelines.
