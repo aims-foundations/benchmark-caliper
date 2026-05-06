@@ -1,0 +1,401 @@
+{
+  "benchmark": "mentalclouds",
+  "region": "Global South Mental Health Practitioners — India-Anchored OMHC / Peer-Support Deployment",
+  "dimensions": {
+    "input_ontology": {
+      "score": 2,
+      "justification": "The benchmark's three-component taxonomy (symptom and history exploration, patient discovery, reflective utterances) [Q15] is structurally constrained relative to the clinical documentation needs of the target deployment. The authors themselves acknowledge that 'only three aspects (counseling component) of the conversation' were explored [Q69], that models cannot identify psychotherapy types or therapy techniques [Q63], and that 'important negative histories... such as the history of suicide risk or substance use were also not recorded' [Q64]. For the India-anchored deployment, MHCA 2017 Section 115 establishes a duty-of-care around suicide risk [WEB-10, WEB-11], and India's National Suicide Prevention Strategy 2022 [WEB-30] makes suicide-risk capture a national policy priority — yet the benchmark ontology has no category for it. The elicitation explicitly identifies risk flags, family-related suggestions, and spiritual/religious coping as required content (A2), all of which fall outside the three-component frame. The authors also flag that the three components 'frequently overlap, posing clinical and legal problems' [Q62], indicating internal incoherence of the taxonomy itself. Given IO is HIGH priority and multiple critical regional categories are absent, the dimension is significantly misaligned.",
+      "strengths": [
+        "Aspect-based decomposition into distinct counseling components is a meaningful conceptual advance over generic dialogue summarization [Q1, Q19, Q71], and the three components captured do reflect core CBT-aligned clinical reasoning steps that the primary CBT-trained practitioner cohort (A3) would recognize.",
+        "Symptom-and-history and reflective utterances align reasonably with the CBT-anchored structure of the primary practitioner cohort's documentation needs [Q15, A3]."
+      ],
+      "checklist_responses": {
+        "IO-1": "Required categories for the deployment include the three benchmark components plus risk-and-safety flagging (suicidal ideation, self-harm, substance use), family-directed interventions, spiritual/religious coping, and therapy-technique identification — established by elicitation (A2) and reinforced by Indian regulatory context (MHCA 2017 Section 115 [WEB-10]; National Suicide Prevention Strategy [WEB-30]).",
+        "IO-2": "Yes — the taxonomy omits suicide/self-harm risk and substance-use history [Q64], psychotherapy-type and therapy-technique identification [Q63], family-directed interventions (no quote; structural absence confirmed; MHCA 2017 itself critiqued for inadequate family-caregiver framing [WEB-9]), and spiritual/religious coping (American-sourced sessions cannot represent Indian faith-healer integration patterns [WEB-15]).",
+        "IO-3": "No clearly irrelevant categories were identified; the three components are clinically meaningful, though their frequent overlap [Q62] introduces construct-irrelevant variance.",
+        "IO-4": "Documented gaps that harm content validity: (a) absence of risk-flag category despite legal and policy duty in India; (b) absence of family-intervention category for South Asian relational documentation needs; (c) absence of spiritual-coping category given documented faith-healer integration [WEB-15]; (d) absence of therapy-technique identification [Q63]; (e) overlap between the three existing components [Q62]."
+      },
+      "evidence_quotes": [
+        "[Q15] 'Within each conversation, three pivotal counseling components (aspects) emerge – symptom and history exploration, patient discovery, and reflective utterances.' (p.6)",
+        "[Q63] 'The models are also unable to identify psychotherapy types (e.g., cognitive behavior therapy) and therapy techniques, which form an integral part of counseling notes.' (p.15)",
+        "[Q64] 'Important negative histories gathered during the session, such as the history of suicide risk or substance use were also not recorded, and in at least one instance, the presence of suicide risk was not identified.' (p.15)",
+        "[Q62] 'The sections of \"symptoms and history\", \"patient discovery\", and \"reflection\" frequently overlap, posing clinical and legal problems.' (p.15)",
+        "[Q69] 'Finally, this work explored only three aspects (counseling component) of the conversation.' (p.16)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-10] MHCA 2017 Section 115 establishes duty-of-care around suicide risk",
+        "[WEB-30] India National Suicide Prevention Strategy 2022 targets 10% mortality reduction by 2030",
+        "[WEB-15] Indian patients widely seek faith-healers alongside allopathic care; 32.8% of bipolar patients first approached traditional faith healers",
+        "[WEB-9] MHCA 2017 critiqued for not adequately addressing family caregiver roles"
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "IO-1": [
+          "WEB-10",
+          "WEB-30"
+        ],
+        "IO-2": [
+          "Q63",
+          "Q64",
+          "WEB-9",
+          "WEB-15"
+        ],
+        "IO-3": [
+          "Q62"
+        ],
+        "IO-4": [
+          "Q62",
+          "Q63",
+          "Q64",
+          "WEB-15"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether reference summaries informally mention risk or family content even though no scoring component captures them — would require dataset-level inspection."
+      ],
+      "requires_expert_verification": [
+        "Clinical confirmation from Indian OMHC practitioners that risk, family, and spiritual categories are universally required (vs. context-dependent)."
+      ]
+    },
+    "input_content": {
+      "score": 2,
+      "justification": "The benchmark's authors explicitly state that 'the counseling sessions in this work represented a certain demographic region (American) and thus may not apply to therapy counseling for other demographics' [Q70], with sessions sourced from YouTube [Q12, Q60]. The deployment population is mixed — India-anchored with a meaningful share of non-Indian Global South contexts (deployment_context, A1). Although the elicitation notes that CBT protocols 'transfer reasonably' across regions (A1), critical India-specific stressors (caste, dowry, somatization, faith-healer integration [WEB-15]) and Sub-Saharan African conceptualizations (spiritual forces, ancestral relationships [WEB-16]) are structurally absent from American session content. The Lancet Digital Health viewpoint [WEB-29] explicitly identifies cultural and linguistic characteristics of mental-health expression as a key barrier for English-Western-trained LLMs. No compensating Global South counseling-summarization benchmark exists [WEB-27, WEB-28], so transfer cannot be triangulated. The claim of 'heterogeneous demographic spectrum' [Q13] refers to within-American diversity, not cross-cultural diversity. Additionally, the YouTube provenance raises ecological-validity concerns: 'natural conversations are incoherent and grammatically unfluent' [Q61] and likely reflect mock or semi-public exchanges, which may differ from real OMHC clinical transcripts in disclosure depth and risk-content density.",
+      "strengths": [
+        "The benchmark authors explicitly disclose the American demographic limitation [Q70], enabling downstream users to make informed decisions about transfer.",
+        "The English-only standard register matches the deployment's stated dataset (A4), so for the subset of Indian deployment data resembling broadly standard English CBT exchanges, content overlap exists [Q12, Q60].",
+        "The dataset embraces some demographic diversity within its source context [Q13], providing within-source variation across mental health concerns and therapists."
+      ],
+      "checklist_responses": {
+        "IC-1": "Yes — the deployment requires region-specific knowledge (Indian family-system framing, somatization patterns, caste/dowry-related stressors, faith-healer integration [WEB-15]; Sub-Saharan African spiritual/ancestral conceptualizations [WEB-16]) that are not present in American YouTube-sourced sessions [Q70].",
+        "IC-2": "Partial misalignment: CBT-anchored disclosure overlaps (A1, A3), but India-specific and broader Global South cultural disclosure patterns are structurally absent from American session content [Q70, WEB-29].",
+        "IC-3": "American-specific knowledge in the sessions (e.g., American healthcare-system references, US-specific stressors) may introduce construct-irrelevant variance for Global South practitioners — though specific instances could not be verified without dataset inspection.",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — the paper does not document recruitment of regional (Indian or other Global South) annotators to flag culturally sensitive instances at the input-content level; reference annotation creator credentials are also undocumented (annotator_representativeness.reference_annotation_creators flagged as needing verification).",
+        "IC-5": "Documented harms to content validity: explicit American demographic bias [Q70]; YouTube-sourced sessions characterized as 'incoherent and grammatically unfluent' [Q61], suggesting mock/semi-public rather than naturalistic clinical material; absence of South Asian and broader Global South cultural framings; no compensating Global South benchmark exists for triangulation [WEB-27, WEB-28]."
+      },
+      "evidence_quotes": [
+        "[Q70] 'Additionally, the counseling sessions in this work represented a certain demographic region (American) and thus may not apply to therapy counseling for other demographics.' (p.16)",
+        "[Q12] 'Comprising 11.5K utterances extracted from 191 counseling sessions involving therapists and patients, this dataset draws from publicly accessible platforms such as YouTube.' (p.6)",
+        "[Q13] 'Embracing a heterogeneous demographic spectrum with distinctive mental health concerns and diverse therapists, the dataset facilitates the formulation of a comprehensive and inclusive approach for researchers.' (p.6)",
+        "[Q60] 'The counseling dataset was curated from multiple multimedia online sources such as youtube transcripts.' (p.15)",
+        "[Q61] 'Hence, most of these natural conversations are incoherent and grammatically unfluent.' (p.15)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-15] Documented integration of faith-healers alongside psychiatrists in India (32.8% bipolar patients first approached faith healers)",
+        "[WEB-16] Sub-Saharan African mental health frequently attributed to spiritual forces, ancestors, witchcraft",
+        "[WEB-29] Lancet Digital Health 2025: cultural/linguistic characteristics pose major challenges for English/Western-trained LLMs in mental health",
+        "[WEB-27] Africa Health Check covers medical LLM bias but not mental health summarization",
+        "[WEB-28] JMIR systematic review: emerging Global South medical benchmarks (AfriMed-QA, TRINDs) but limited representation"
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "IC-1": [
+          "Q70",
+          "WEB-15",
+          "WEB-16"
+        ],
+        "IC-2": [
+          "Q70",
+          "WEB-29"
+        ],
+        "IC-3": [
+          "Q70"
+        ],
+        "IC-4": [],
+        "IC-5": [
+          "Q70",
+          "Q61",
+          "WEB-27",
+          "WEB-28"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Exact proportional split of India vs. other Global South content in deployment data (deferred in regional YAML).",
+        "MEMO dataset annotator credentials and inter-annotator agreement at reference-summary creation stage."
+      ],
+      "requires_expert_verification": [
+        "Whether YouTube-sourced sessions are mock/scripted vs. naturalistic — needs direct inspection of dataset samples.",
+        "Whether American YouTube content contains incidental cross-cultural representation that partially mitigates the demographic limitation."
+      ]
+    },
+    "input_form": {
+      "score": 4,
+      "justification": "Input form is the lowest-concern dimension. The benchmark uses pre-processed text transcriptions of dyadic patient-therapist dialogue [Q14] in English [Q12, Q60], matching the deployment's text-in/text-out modality and English-only dataset (A4, deployment_context). The grammatical disfluency noted [Q61] is a realistic property of transcribed speech and unlikely to be an external-validity threat at the form level. No audio, image, or multilingual modalities are involved; no script-mismatch concern (Latin alphabet only). The minor caveat is that real-world OMHC transcripts may differ in length, structure, and disfluency profile from YouTube-sourced sessions, but this is a content/ecological concern rather than a form-level signal mismatch. IF was rated LOWER priority in elicitation precisely because the form match is strong.",
+      "strengths": [
+        "English-only text input matches the deployment dataset [Q12, A4].",
+        "Dyadic transcript structure [Q14] matches the OMHC counseling-session format.",
+        "No modality, script, or infrastructure mismatches; both benchmark and deployment are text-in/text-out.",
+        "Disfluency in transcripts [Q61] is a realistic property that may improve transfer to messy real-world transcripts."
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal distributions match: both are English text transcripts of dyadic dialogue [Q12, Q14, A4]. No image-resolution or audio-fidelity concerns apply.",
+        "IF-2": "Yes — text-in/text-out infrastructure is broadly available across India and the wider Global South; internet penetration in India ~65% in 2023 [WEB-7], and credentialed practitioners self-select for digital access.",
+        "IF-3": "Domain-specific form: dyadic counseling transcripts [Q14] match the deployment's session-summarization use case. Disfluency [Q61] is realistic. No code-switching in the current dataset (A4); future deployment expansion to Hindi-English code-mixed sessions would re-open this dimension.",
+        "IF-4": "No significant form mismatches identified for the current deployment configuration."
+      },
+      "evidence_quotes": [
+        "[Q12] 'Comprising 11.5K utterances extracted from 191 counseling sessions involving therapists and patients, this dataset draws from publicly accessible platforms such as YouTube.' (p.6)",
+        "[Q14] 'Utilizing pre-processed transcriptions derived from counseling videos, the constituent dialogues within the dataset exhibit a dyadic structure, exclusively featuring patients and therapists as interlocutors.' (p.6)",
+        "[Q60] 'The counseling dataset was curated from multiple multimedia online sources such as youtube transcripts.' (p.15)",
+        "[Q61] 'Hence, most of these natural conversations are incoherent and grammatically unfluent.' (p.15)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-7] India digital mental health market growing rapidly; telehealth surged 45% 2022–2024"
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "IF-1": [
+          "Q12",
+          "Q14"
+        ],
+        "IF-2": [
+          "WEB-7"
+        ],
+        "IF-3": [
+          "Q14",
+          "Q61"
+        ],
+        "IF-4": []
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Distribution of session length and disfluency density between benchmark and deployment transcripts is not directly compared."
+      ],
+      "requires_expert_verification": []
+    },
+    "output_ontology": {
+      "score": 2,
+      "justification": "The output ontology mirrors the input ontology (three reference summaries per session aligned to the same three counseling components [Q15, Q16]) and inherits its structural gaps — risk-flag content, family-intervention suggestions, and spiritual/religious coping have no scoring representation. The authors confirm models 'are not suitable for clinical use as they stand now' due to poor scores on overall efficacy and opportunity cost [Q51], and note suicide-risk and substance-use content was not recorded [Q64]. The Sekhon et al. clinical acceptability framework [Q44, Q48] adds general dimensions (affective attitude, burden, ethicality, coherence, opportunity costs, perceived effectiveness) and a hallucination dimension [Q46, Q53], but none of these directly score risk-flag recall, family-intervention completeness, or cultural-content fidelity. The structure-separation problem [Q62] also undermines the scoring schema's coherence. Empirical evidence shows LLMs systematically over-rate appropriateness of responses to suicidal content vs. expert suicidologists [WEB-13], compounding the scoring gap. Given OO is HIGH priority and the gap is structural, the dimension is significantly misaligned.",
+      "strengths": [
+        "The dual quantitative-qualitative scoring design [Q5, Q18] is a methodological strength: ROUGE/BERTScore are supplemented by a six-parameter clinical acceptability framework [Q44, Q48] and a hallucination dimension [Q46], providing more multidimensional assessment than typical summarization benchmarks.",
+        "Per-component scoring [Q26, Q31, Q40] enables granular diagnosis of which counseling aspects models handle well, supporting partial fitness diagnosis even with the taxonomy gap.",
+        "Hallucination categorization [Q53, Q54] partially addresses the patient-safety dimension that pure ROUGE would miss."
+      ],
+      "checklist_responses": {
+        "OO-1": "The three counseling-component output categories [Q15] are partially regionally relevant (CBT-anchored, recognized by primary cohort per A3) but omit categories that the deployment requires.",
+        "OO-2": "Missing categories for regional deployment: risk-flag documentation [Q64], family intervention notes (structural absence), spiritual/religious coping (structural absence given American-sourced inputs [Q70, WEB-15]), therapy-technique identification [Q63]. National policy context (MHCA 2017 Section 115 [WEB-10]; NSPS 2022 [WEB-30]) elevates the severity of the risk-flag omission.",
+        "OO-3": "The clinical acceptability framework's six parameters [Q48] are general and not obviously encoding non-regional values, but they were not adapted to scoring South Asian family-systems or faith-coping content; the absence of such adaptation implicitly defaults to a Western/individualist clinical framing.",
+        "OO-4": "Stakeholder-driven taxonomy redesign is warranted: the elicitation explicitly identifies risk, family, and spiritual categories as required (A2), and the benchmark's own authors acknowledge the gap [Q64, Q69].",
+        "OO-5": "Documented harms to structural and content validity: scoring schema provides no signal on safety-critical content [Q64]; structural overlap among the three categories [Q62]; expert-confirmed clinical unfitness 'as they stand now' [Q51]; empirical evidence that LLMs miscalibrate suicidal-content responses [WEB-13]."
+      },
+      "evidence_quotes": [
+        "[Q15] 'Within each conversation, three pivotal counseling components (aspects) emerge – symptom and history exploration, patient discovery, and reflective utterances.' (p.6)",
+        "[Q44] 'The evaluation framework encompasses six crucial parameters — affective attitude, burden, ethicality, coherence, opportunity costs, and perceived effectiveness.' (p.12)",
+        "[Q48] 'The clinical acceptability framework [39] involves six parameters – affective attitude, burden, ethicality, coherence, opportunity costs, and perceived effectiveness.' (p.13)",
+        "[Q51] 'As all three models have poor scores on the more sensitive aspects i.e. the overall efficacy and the opportunity cost, this indicates that these models share the same weakness and are not suitable for clinical use as they stand now.' (p.14)",
+        "[Q62] 'The sections of \"symptoms and history\", \"patient discovery\", and \"reflection\" frequently overlap, posing clinical and legal problems.' (p.15)",
+        "[Q64] 'Important negative histories gathered during the session, such as the history of suicide risk or substance use were also not recorded, and in at least one instance, the presence of suicide risk was not identified.' (p.15)",
+        "[Q53] 'Additionally, the evaluation of hallucination identification is divided into three categories: no hallucination observed, hallucination barely observed, and too much hallucinated in a set of 39 conversations.' (p.14)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-10] MHCA 2017 Section 115 imposes duty-of-care on suicide risk",
+        "[WEB-30] India National Suicide Prevention Strategy 2022",
+        "[WEB-13] LLMs systematically over-rate appropriateness of responses to suicidal ideation vs. expert suicidologists",
+        "[WEB-15] Faith-healer integration documented in Indian mental health practice"
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "OO-1": [
+          "Q15"
+        ],
+        "OO-2": [
+          "Q63",
+          "Q64",
+          "Q70",
+          "WEB-10",
+          "WEB-15",
+          "WEB-30"
+        ],
+        "OO-3": [
+          "Q44",
+          "Q48"
+        ],
+        "OO-4": [
+          "Q64",
+          "Q69"
+        ],
+        "OO-5": [
+          "Q51",
+          "Q62",
+          "Q64",
+          "WEB-13"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether the Sekhon et al. parameter ratings implicitly captured culturally salient content quality (e.g., did 'perceived effectiveness' downgrade summaries that omitted family/spiritual content?) — not documented."
+      ],
+      "requires_expert_verification": [
+        "Indian clinical experts' view on whether the six-parameter framework can be retrofitted with risk/family/spiritual sub-criteria, or whether a redesigned taxonomy is required."
+      ]
+    },
+    "output_content": {
+      "score": 3,
+      "justification": "The benchmark's expert evaluators are five Indian-affiliated healthcare professionals (two clinical psychologists, three psychiatrists/medical practitioners) [Q41, Q42], aged 40–55 with over a decade of experience [Q43], 4:1 male:female. Their institutional affiliations [Q9] (IIT Delhi, IIIT Delhi, AIIMS Rishikesh, AIIMS New Delhi, YourDOST Karnataka) provide partial alignment with the India-anchored deployment population, including one OMHC-affiliated organization (YourDOST). Inter-rater alignment is reported (variance lowest for MentalBART [Q50]; per-rater hallucination frequencies reported [Q52, Q56]; ratings averaged across five experts [Q47]). However, several gaps weaken convergent and external validity: (a) reference-summary creators' credentials and inter-annotator agreement at the data-creation stage are undocumented; (b) the senior-clinician profile (40–55, 10+ years) does not represent peer-support practitioners or younger OMHC counselors who form a meaningful share of the deployment population; (c) no Sub-Saharan African, Southeast Asian, or Latin American clinical practitioners were involved (annotator_representativeness gaps; [WEB-17, WEB-18]); (d) gender imbalance (4:1 male) may introduce blind spots around gendered disclosure patterns; (e) it is undocumented whether evaluators used CBT-specific, family-systems, or culturally adapted rubrics. OC was rated MODERATE, and the partial India alignment with explicit gaps justifies a middle score.",
+      "strengths": [
+        "Five expert raters with explicit reporting of per-rater hallucination frequencies [Q52, Q56] and acknowledgment that 'hallucinations are perceived [differently] among different models' [Q57] — supporting convergent-validity diagnostics.",
+        "Indian institutional affiliation [Q9] including an OMHC platform (YourDOST) provides partial alignment with the India-anchored target population.",
+        "Mix of clinical psychologists and psychiatrists [Q42] provides some disciplinary breadth within the senior-clinician profile."
+      ],
+      "checklist_responses": {
+        "OC-1": "Partial — ground-truth reference summaries' creators are undocumented (reference_annotation_creators flagged); expert acceptability ratings are by Indian senior clinicians [Q42, Q9] but it is unclear whether their judgments reflect peer-support/OMHC quality criteria or only senior-psychiatric standards.",
+        "OC-2": "Likely disagreement on culturally salient content: Indian-context practitioners may rate summaries lower if family-system or spiritual coping content is omitted (A3); peer-support practitioners may apply different quality criteria than AIIMS-affiliated senior psychiatrists; non-Indian Global South practitioners are entirely unrepresented.",
+        "OC-3": "Annotator demographics partially documented: five experts, 2:3 psychologist:psychiatrist split [Q42], 4:1 male:female, ages 40–55, 10+ years experience [Q43], Indian institutional affiliations [Q9]. No formal Datasheet/Data Statement disclosed in the paper. Reference-summary creator demographics undocumented.",
+        "OC-4": "Re-annotation by a regional pool that includes peer-support/OMHC counselors and non-Indian Global South practitioners would meaningfully strengthen convergent validity; not done in source benchmark.",
+        "OC-5": "Aggregation by averaging across five experts [Q47] could erase minority/divergent perspectives; the paper notes inter-rater variance, particularly higher for MentalLlama and Mistral [Q50], and stresses the importance of multiple appraisers [Q57], but does not separately analyze minority dissent.",
+        "OC-6": "Documented harms: undocumented reference-summary creator credentials (potential convergent-validity gap); senior-clinician profile mismatch with peer-support deployment cohort; absence of non-Indian Global South annotators; potential aggregation-driven minority erasure."
+      },
+      "evidence_quotes": [
+        "[Q9] 'Department of Electrical Engineering, Indian Institute of Technology Delhi, India; Department of Computer Science & Engineering, Indraprastha Institute of Information Technology Delhi, India; YourDOST, Karnataka, India; Department of Psychiatry, All India Institute of Medical Sciences, Rishikesh, India; Department of Psychiatry, All India Institute of Medical Sciences, New Delhi, India; Yardi School of Artificial Intelligence, Indian Institute of Technology Delhi, India' (p.1)",
+        "[Q41] 'In order to conduct a comprehensive expert assessment, five healthcare professionals were employed to assess the clinical appropriateness of the summaries produced by the LLMs based on the evaluation framework of Sekhon et al. [39].' (p.12)",
+        "[Q42] 'Among them were two clinical psychologists, with the remaining three comprising psychiatrists and medical practitioners.' (p.12)",
+        "[Q43] 'Of the group, four were male, and one was female, with ages ranging from 40 to 55 years and possessing over a decade of therapeutic experience.' (p.12)",
+        "[Q47] 'Table 6 reports the clinical experts' scores averaged over the ratings given by five experts.' (p.13)",
+        "[Q50] 'Overall, all the raters were more aligned in rating the MentalBART model with lesser variance as compared to the other two LLMs for all the metrics.' (p.13)",
+        "[Q57] 'The data shows fluctuations in how hallucinations are perceived among different models and stresses the importance of reviewing evaluations from numerous appraisers for a complete assessment.' (p.14)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-17] No non-Indian Global South annotator involvement found in published MentalCLOUDS paper",
+        "[WEB-18] No non-Indian Global South annotator involvement found in PMC-archived version"
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "OC-1": [
+          "Q9",
+          "Q42"
+        ],
+        "OC-2": [
+          "Q9",
+          "Q42",
+          "WEB-17"
+        ],
+        "OC-3": [
+          "Q9",
+          "Q42",
+          "Q43"
+        ],
+        "OC-4": [
+          "WEB-17",
+          "WEB-18"
+        ],
+        "OC-5": [
+          "Q47",
+          "Q50",
+          "Q57"
+        ],
+        "OC-6": [
+          "Q42",
+          "Q43",
+          "WEB-17"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Reference-summary creator credentials, cultural backgrounds, and inter-annotator agreement at the data-creation stage.",
+        "Whether evaluators used CBT-specific, family-systems, or culturally adapted rubrics when applying the Sekhon framework.",
+        "Quality-criteria divergence between AIIMS senior clinicians and peer-support OMHC counselors."
+      ],
+      "requires_expert_verification": [
+        "Direct comparison of how Indian peer-support counselors vs. senior psychiatrists rate the same model summaries.",
+        "Inclusion of Sub-Saharan African, Southeast Asian, and Latin American clinical raters."
+      ]
+    },
+    "output_form": {
+      "score": 3,
+      "justification": "The benchmark output form (text-based structured summaries scored via ROUGE-1/2/L and BERTScore F1 [Q20, Q21, Q22, Q24] plus expert-rated clinical-acceptability and hallucination dimensions [Q44, Q46]) matches the deployment's text-summary modality. OF was rated LOWER priority and the modality match is strong. However, the metric form raises validity concerns: ROUGE F1 rewards lexical overlap [Q22, Q23] and is not weighted toward safety-critical content density — suicidal-ideation flags occupying small token spans contribute minimally to aggregate scores, regardless of clinical importance. The qualitative layer partially mitigates this but covers only three models on 39 test conversations [Q49, Q53, Q55], limiting statistical scope. Hallucination rates of 22–25% (i.e., 75–78% no-hallucination [Q55]) at a small evaluation scope represent a meaningful patient-safety signal that the form-level evaluation cannot fully resolve. A 2025 systematic review notes mental health AI benchmarks lack multi-session and safety-consistency evaluation [WEB-26]. The match is good at the modality level but the metric form imperfectly captures deployment-relevant signals.",
+      "strengths": [
+        "Output modality (structured text summaries) is well-matched to the deployment's text-out requirement [Q5, Q20].",
+        "Dual quantitative + qualitative evaluation [Q5, Q18] provides complementary signal: lexical overlap plus expert acceptability and hallucination ratings [Q44, Q46].",
+        "Per-component reporting [Q26, Q31, Q40] preserves granularity rather than collapsing to a single aggregate score."
+      ],
+      "checklist_responses": {
+        "OF-1": "Yes — output modality (text summaries) matches deployment needs (text-in/text-out per deployment_context); both produce structured clinical summaries.",
+        "OF-2": "Not applicable — no speech-based output is required for the deployment.",
+        "OF-3": "Practitioner literacy is not a barrier (credentialed mental health professionals); accessibility requirements at the form level are met by text output.",
+        "OF-4": "Modality match is strong; documented metric-form concern is that ROUGE F1 [Q21] and BERTScore reward lexical overlap rather than clinical-completeness or safety-critical recall — a partial external-validity concern. The qualitative layer is limited to 39 conversations and three models [Q49, Q55]."
+      },
+      "evidence_quotes": [
+        "[Q5] 'The generated summaries are evaluated quantitatively using standard summarization metrics and verified qualitatively by mental health professionals.' (p.1)",
+        "[Q18] 'We undertake a comprehensive evaluation of the generated summaries across various architectures, employing a dual approach of quantitative and qualitative assessments.' (p.9)",
+        "[Q20] 'Given the generative nature of the task, we employ standard summarization evaluation metrics such as Rouge-1 (R-1), Rouge-2 (R-2), Rouge-L (R-L), and BERTScore (BS) along with their corresponding Precision (P), Recall (R) and F1 scores.' (p.9)",
+        "[Q21] 'Since F1 accounts for Precision and Recall, we compare LLM's performance based on F1 unless stated otherwise.' (p.9)",
+        "[Q22] 'ROUGE (Recall-Oriented Understudy for Gisting Evaluation) [58] assesses the overlap of n-grams (sequences of n consecutive words) between the generated summary and reference summaries.' (p.9)",
+        "[Q49] 'We select the three best LLMs (MentalLlama, Mistral and MentalBART) for the expert evaluation based on the automatic result.' (p.13)",
+        "[Q55] 'Out of the 39 test conversations, the majority of cases on average demonstrate no hallucination, with Mistral and MentalBART achieving 75.13% and 76.15% each, while MentalLlama shows a slightly higher value of 77.69%.' (p.14)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-26] 2025 systematic review: mental health AI benchmarks lack multi-session and safety-consistency evaluation"
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "OF-1": [
+          "Q5",
+          "Q20"
+        ],
+        "OF-2": [],
+        "OF-3": [],
+        "OF-4": [
+          "Q21",
+          "Q22",
+          "Q49",
+          "Q55",
+          "WEB-26"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether qualitative ratings included any weighting for safety-critical content recall."
+      ],
+      "requires_expert_verification": []
+    }
+  },
+  "overall_summary": "MentalCLOUDS provides a methodologically thoughtful aspect-based summarization benchmark with a dual quantitative/qualitative evaluation design, English-only text input/output that matches the target deployment modality, and Indian-affiliated expert raters who provide partial alignment with the India-anchored OMHC/peer-support population. However, three HIGH-priority dimensions (Input Ontology, Input Content, Output Ontology) exhibit significant misalignment with the deployment context. The benchmark's three-component taxonomy structurally omits suicide/self-harm risk flagging, family-intervention documentation, and spiritual/religious coping — content categories that elicitation, MHCA 2017 Section 115, and India's National Suicide Prevention Strategy 2022 establish as clinically and legally required. Session content is explicitly American-sourced from YouTube, with no compensating Global South counseling-summarization benchmark to triangulate against. The five expert raters are senior India-based clinicians with no peer-support, younger-cohort, or non-Indian Global South representation. Output form and input form are well-matched at the modality level, though ROUGE F1 underweights safety-critical content. Empirical evidence that LLMs systematically miscalibrate responses to suicidal ideation compounds these structural gaps. The benchmark is informative for evaluating CBT-arc summarization performance but cannot validate deployment-readiness for a system operating under Indian regulatory duty-of-care obligations.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "MentalCLOUDS measures LLM ability to produce aspect-based summaries of CBT-aligned counseling sessions across three components — symptom-and-history exploration, patient discovery, and reflective utterances [Q15, Q19] — using both lexical-overlap metrics (ROUGE/BERTScore) and a clinical-acceptability framework with hallucination identification [Q44, Q46]. For the target deployment, it provides a meaningful signal on the CBT-arc summarization core that the primary practitioner cohort cares about (input_form: 4; partial strengths in output_form: 3 and output_content: 3), and acknowledges its own limitations transparently.",
+    "construct_depth": "The construct of 'clinical-quality counseling summarization' is probed only partially. The three-component decomposition captures CBT-aligned reasoning steps, and the dual quantitative-qualitative evaluation [Q5, Q18] adds methodological depth. But the benchmark does not probe risk-flag recall, family-intervention documentation, spiritual/religious coping coverage, therapy-technique identification [Q63], or cross-cultural fidelity — all of which are required for the deployment's regulatory and clinical context. Expert qualitative evaluation is also limited to three models on 39 conversations [Q49, Q55], constraining statistical depth.",
+    "supplementation_needed": "Supplementation should focus on the three HIGH-priority dimensions: (1) construct a deployment-specific risk-flag recall/precision evaluation set covering suicidal ideation, self-harm, and substance use, anchored to MHCA 2017 Section 115 obligations; (2) build a small India-anchored and broader Global South test corpus capturing family-system framing, spiritual/religious coping, and somatization patterns; (3) recruit a regional annotator pool that includes peer-support/OMHC counselors and non-Indian Global South practitioners to re-annotate a subset of model outputs and test for convergent-validity divergence from senior-clinician ratings; (4) replace or supplement ROUGE F1 with a content-coverage metric weighted toward safety-critical spans."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "No taxonomy categories for suicide/self-harm risk, substance use, family-directed interventions, spiritual/religious coping, or therapy-technique identification.",
+      "recommendation": "Extend the aspect taxonomy with at least three additional components — risk and safety, family/relational interventions, and spiritual/religious coping — and add therapy-technique identification as a sub-task. Tie the risk component explicitly to MHCA 2017 Section 115 documentation obligations."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "Sessions are American-sourced YouTube transcripts; Indian and broader Global South cultural disclosure patterns are structurally absent.",
+      "recommendation": "Curate a supplementary mixed-cultural session corpus drawn from Indian OMHC partners (under appropriate consent and DPDP Act compliance) and at least one Sub-Saharan African or Southeast Asian counseling source, and treat this as a separate evaluation slice rather than a replacement."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "Scoring frame provides no signal on risk-flag recall, family-intervention completeness, or spiritual-coping coverage; existing components frequently overlap.",
+      "recommendation": "Add discrete scoring dimensions for safety-critical content recall, family-intervention completeness, and cultural-coping coverage. Define explicit decision rules to disambiguate overlapping categories before re-scoring."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Expert raters are exclusively senior India-based clinicians; peer-support practitioners and non-Indian Global South clinicians are unrepresented; reference-summary creator credentials undocumented.",
+      "recommendation": "Recruit a mixed annotator pool that adds peer-support/OMHC counselors, younger practitioners, and at least one Sub-Saharan African or Southeast Asian clinical practitioner. Document MEMO/MentalCLOUDS reference-summary creator credentials and inter-annotator agreement, and report minority-rating distributions rather than only averaged scores."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "ROUGE F1 underweights safety-critical content; qualitative layer covers only three models on 39 conversations.",
+      "recommendation": "Introduce a content-coverage recall metric weighted by clinical importance (e.g., span-level risk-flag recall) and expand qualitative evaluation to a larger subset of conversations and models, including specific safety-content rubrics."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "Ecological-validity concern: YouTube-sourced sessions described as 'incoherent and grammatically unfluent' [Q61] and likely mock/semi-public, possibly differing from naturalistic OMHC sessions.",
+      "recommendation": "Conduct a side-by-side comparison study on a small sample of real OMHC transcripts (under IRB/consent) vs. benchmark sessions to quantify ecological-validity drift before relying on benchmark scores for deployment decisions."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_ontology",
+    "input_content",
+    "output_ontology"
+  ],
+  "strongest_dimensions": [
+    "input_form",
+    "output_form"
+  ]
+}

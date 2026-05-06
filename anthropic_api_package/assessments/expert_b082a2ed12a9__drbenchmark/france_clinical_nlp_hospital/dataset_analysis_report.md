@@ -1,530 +1,513 @@
 ## Dataset Analysis Report
 
-**Benchmark:** DrBenchmark: A Large Language Understanding Benchmark for the Biomedical French Language
+**Benchmark:** DrBenchmark: A Large Language Understanding Benchmark for the Biomedical French Domain
 **Datasets analyzed:** 11 datasets — QUAERO, FrenchMedMCQA, DEFT2020, MORFITT, CLISTER, MANTRAGSC, E3C, PxCorpus, DiaMED, DEFT2021, CAS, ESSAI
-**Analysis date:** 2025-07-14
+**Analysis date:** 2025-07-10
 
 ---
 
 ### Per-Dataset Fit Assessment
 
-#### DrBenchmark/QUAERO
-
-- **Task:** Named Entity Recognition (NER), 10 UMLS Semantic Group classes, two configurations: EMEA drug leaflets (`emea`) and MEDLINE titles (`medline`)
-- **Deployment fit:** **Partial** — The `emea` configuration is the single strongest content match in the entire benchmark for this deployment: it draws directly from EMA patient information leaflets and contains authentic regulatory phrasing covering posology, contraindications, adverse events, and excipient lists (QUAERO-D1, QUAERO-D2, QUAERO-D3, QUAERO-D5, QUAERO-D6, QUAERO-D9). However, the UMLS Semantic Group label space collapses INNs, excipients, brand names, and endogenous chemicals under a single CHEM tag (QUAERO-D13, QUAERO-D14), the `medline` configuration contributes substantially off-domain noise (QUAERO-D16, QUAERO-D17, QUAERO-D18), nested entity simplification discards 6.06% of EMEA annotations (QUAERO-D15, QUAERO-D19), and the dataset provides no STS capability.
+#### QUAERO
+- **Task:** Token-classification NER (EMEA drug leaflets + MEDLINE biomedical titles), 10 UMLS Semantic Group labels
+- **Deployment fit:** Partial — QUAERO provides broad clinical entity vocabulary (DISO, ANAT, PROC, CHEM, LIVB) in French biomedical text, directly serving the deployment's NER function. However, the EMEA register is patient-facing regulatory prose rather than hospital documentation, and the dataset contains no temporal entity labels whatsoever.
 - **Key strengths:**
-  - EMEA drug leaflet content directly represents the primary deployment genre (patient information leaflets, safety warnings, posology)
-  - Contraindication, pregnancy/lactation, pediatric restriction phrasing present (QUAERO-D6, QUAERO-D7, QUAERO-D8)
-  - Specific dose figures, administration routes, and titration schedules annotated (QUAERO-D9, QUAERO-D10)
-  - Incidental tropical disease reference in MEDLINE (QUAERO-D11)
+  - Dual-register coverage (drug labels + MEDLINE titles) exercises diverse pharmaceutical and clinical vocabulary relevant to hospital NER (QUAERO-D1, QUAERO-D2, QUAERO-D4, QUAERO-D5)
+  - UMLS Semantic Group ontology covers all major clinical entity types needed for pathology and treatment recognition (QUAERO-D10)
+  - Medline titles span oncology, cardiology, neurology, and infectious disease, partially covering ICD-10 chapter breadth (QUAERO-D6, QUAERO-D8)
+  - Text-only standard French; no modality or script concerns (QUAERO-D9)
 - **Key concerns:**
-  - MAJOR [OO]: CHEM label conflates INN, brand name, excipient, and endogenous chemical — no regulatory sub-distinction (QUAERO-D13, QUAERO-D14)
-  - MAJOR [OO]: No STS task; regulatory equivalence checking cannot be evaluated
-  - MAJOR [IC]: MEDLINE configuration is substantially off-domain (historical, biographical, philosophical titles — QUAERO-D16, QUAERO-D17, QUAERO-D18)
-  - MAJOR [OO, OC]: Nested entity simplification loses annotation precision; EMEA authorization codes outside label space (QUAERO-D15)
-  - MINOR [IC]: Non-French text fragments and document-splitting artifacts in emea config (QUAERO-D19, QUAERO-D20, QUAERO-D21)
-  - MINOR [OC]: No regulatory affairs annotators; UMLS Semantic Group norms may diverge from EMA SmPC annotation guidelines
+  - EMEA register features parenthetical lay-language glosses absent from clinical notes (QUAERO-D11); document-splitting artefacts visible (QUAERO-D12) — register mismatch is CRITICAL for IC validity
+  - Complete absence of temporal entity labels (DATE, DURATION, FREQUENCY, MOMENT) despite temporal expressions appearing in the text (QUAERO-D13, QUAERO-D14) — CRITICAL OO gap
+  - MEDLINE titles are extremely short and telegraphic, testing string-matching rather than contextual clinical reasoning (QUAERO-D15, QUAERO-D16); some entries are biographical/historical (QUAERO-D17, QUAERO-D19, QUAERO-D20)
+  - No ICD-10/PMSI classification signal; annotator expertise for entity boundary decisions undocumented (QUAERO-D18)
 
 ---
 
-#### DrBenchmark/FrenchMedMCQA
-
-- **Task:** Multiple-Choice Question Answering (MCQA), two subtasks: correct answer identification and answer count prediction; sourced from French pharmacy specialization diploma exams
-- **Deployment fit:** **Weak** — Task type (MCQA) is fundamentally misaligned with the deployment's NER and STS requirements. The pharmaceutical vocabulary present in questions (drug names, contraindications, SmPC references) is relevant content but is unannotated as entities and unavailable for NER or STS evaluation. A substantial share of questions covers basic biomedical science irrelevant to compliance workflows.
+#### FrenchMedMCQA
+- **Task:** Multiple-choice QA from French pharmacy specialization diploma exams; single and multi-answer (1–5 correct answers per question)
+- **Deployment fit:** Weak — The dataset tests pharmacological declarative knowledge retrieval, not NER, POS tagging, multi-label pathology classification, or temporal extraction. Domain (pharmacy exam) diverges substantially from hospital clinical note processing; output structure (answer-set selection) is orthogonal to all deployment output functions.
 - **Key strengths:**
-  - French pharmaceutical vocabulary present: drug contraindications with brand names (FRENCHMEDMCQA-D2), SmPC/RCP reference (FRENCHMEDMCQA-D3), pregnancy-period antibiotic contraindications (FRENCHMEDMCQA-D10)
-  - Formal written French register consistent with regulatory document language (FRENCHMEDMCQA-D6)
-  - Drug-specific pharmacokinetic and safety content (FRENCHMEDMCQA-D8, FRENCHMEDMCQA-D9)
+  - Standard medical French throughout; no modality or script concerns (FRENCHMEDMCQA-D1, FRENCHMEDMCQA-D4)
+  - Multi-answer structure exercises some multi-label reasoning logic (FRENCHMEDMCQA-D3, FRENCHMEDMCQA-D5)
+  - Some parasitology and tropical pathology coverage in content (FRENCHMEDMCQA-D65, FRENCHMEDMCQA-D67), providing marginal DOM-TOM signal
+  - Unambiguous fact-check items have high annotation reliability (FRENCHMEDMCQA-D77)
 - **Key concerns:**
-  - CRITICAL [IO, OO, OF]: Task type (MCQA) incompatible with NER and STS evaluation required by deployment (FRENCHMEDMCQA-D11)
-  - CRITICAL [IO, IC]: All inputs from pharmacy education exams, not from SmPCs, PILs, or CTD modules (FRENCHMEDMCQA-D12, FRENCHMEDMCQA-D13)
-  - MAJOR [OO, IC]: No entity-level annotation; drug names present but unannotated (FRENCHMEDMCQA-D14, FRENCHMEDMCQA-D15)
-  - MAJOR [IC]: Majority of questions cover basic science (nuclear physics, spectroscopy, osmolarity) unrelated to compliance workflows (FRENCHMEDMCQA-D17, FRENCHMEDMCQA-D18, FRENCHMEDMCQA-D19)
-  - MAJOR [OC]: Exam answer keys as ground truth; may not reflect current ANSM/EMA normative standards (FRENCHMEDMCQA-D20)
-  - MINOR [IC]: No French overseas territory or tropical pathology content (FRENCHMEDMCQA-D21)
+  - Domain mismatch is CRITICAL: every sampled example is from a pharmacy exam (subject_name="pharmacie"), covering analytical chemistry, electroanalysis, and health economics with no NLP deployment relevance (FRENCHMEDMCQA-D2, FRENCHMEDMCQA-D23, FRENCHMEDMCQA-D45, FRENCHMEDMCQA-D43)
+  - Output ontology mismatch is CRITICAL: discrete answer-set selection from five fixed options has no structural relation to NER spans, POS tags, or ICD-10 code assignment (FRENCHMEDMCQA-D1, FRENCHMEDMCQA-D32)
+  - No confidence calibration, uncertainty flagging, or ranked-candidate quality evaluation possible (FRENCHMEDMCQA-D20)
+  - Some questions reference chemical structure diagrams unavailable in text-only format (FRENCHMEDMCQA-D40)
 
 ---
 
-#### DrBenchmark/DEFT2020
-
-- **Task:** Semantic Textual Similarity (STS), two subtasks: scored sentence-pair similarity (0–5 scale, 5 annotators) and 3-way retrieval; drawn from DEFT 2020 challenge including drug leaflets, clinical texts, and encyclopedic content
-- **Deployment fit:** **Partial** — This is the benchmark's primary STS dataset and the closest approximation to the deployment's compliance-checking function. A meaningful fraction of sentence pairs originate from drug leaflets and include authentic safety warning, contraindication, and posology phrasing (DEFT2020-D1, DEFT2020-D2, DEFT2020-D3, DEFT2020-D5). The multi-annotator score field enables uncertainty quantification (DEFT2020-D12, DEFT2020-D13). However, a large proportion of pairs are encyclopedic/off-domain (DEFT2020-D14, DEFT2020-D15, DEFT2020-D16, DEFT2020-D17), and the 0–5 scale is not calibrated for regulatory-equivalence judgment (DEFT2020-D18, DEFT2020-D19).
+#### DEFT2020
+- **Task:** Semantic textual similarity (Task 1: sentence-pair scoring 0–5; Task 2: three-way sentence selection)
+- **Deployment fit:** Partial (for biomedical subset only) — The pharmaceutical and systematic review sentence pairs provide useful French biomedical STS signal relevant to entity normalization and clinical summary evaluation. However, approximately 30–40% of content is non-biomedical encyclopedic material, and the STS task format does not directly evaluate NER, classification, or ICD-10 mapping.
 - **Key strengths:**
-  - Authentic drug leaflet contraindication and safety warning sentence pairs (DEFT2020-D1, DEFT2020-D2, DEFT2020-D3, DEFT2020-D6)
-  - Retained individual annotator scores enabling uncertainty/calibration analysis (DEFT2020-D12, DEFT2020-D13)
-  - Pharmacovigilance-adjacent language present (DEFT2020-D11)
-  - Pairs that illustrate legally significant paraphrase shifts (DEFT2020-D5: sublingual route addition)
+  - Pharmaceutical drug-leaflet and clinical-trial STS pairs represent authentic biomedical French (DEFT2020-D1, DEFT2020-D2, DEFT2020-D4, DEFT2020-D5)
+  - Multi-annotator scoring preserves inter-annotator disagreement signal relevant to uncertainty handling (DEFT2020-D6, DEFT2020-D7)
+  - Standard written French throughout; no modality concerns (DEFT2020-D8)
 - **Key concerns:**
-  - CRITICAL [IO, IC]: ~30–40% of sentence pairs are entirely off-domain (railway infrastructure, biography, beekeeping, video games — DEFT2020-D14, DEFT2020-D15, DEFT2020-D16, DEFT2020-D17)
-  - CRITICAL [OO, OC]: 0–5 scale treats precautionary qualifiers and dose-threshold differences as high-similarity (DEFT2020-D18, DEFT2020-D2); not calibrated for regulatory-equivalence judgment
-  - MAJOR [IO, IC]: No SmPC or CTD module text; drug-labeling content resembles patient leaflets, not formal regulatory sections (DEFT2020-D22)
-  - MAJOR [OC]: Annotator divergence on drug-label pairs suggests heterogeneous interpretive standards; no regulatory expertise documented (DEFT2020-D23)
-  - MINOR [IC]: No French overseas territory or tropical disease content
-  - MINOR [OF]: License not specified in HF metadata
+  - CRITICAL IC/IO contamination: 30–40% of examples are off-domain encyclopedic content covering railways, sports, history, and video games (DEFT2020-D9, DEFT2020-D10, DEFT2020-D11, DEFT2020-D12); one example contains non-Latin (Japanese) script (DEFT2020-D13). Aggregate benchmark scores conflate clinical and off-domain performance
+  - STS task format (regression/selection) does not measure NER, classification, or ICD-10 mapping (DEFT2020-D14, DEFT2020-D15)
+  - Annotator disagreement averaged away in scoring; no calibration metric reported (DEFT2020-D16)
+  - No clinical case NER or pathology classification signal present (DEFT2020-D17)
 
 ---
 
-#### DrBenchmark/MORFITT
-
-- **Task:** Multi-label medical specialty classification of biomedical abstracts (12 labels: microbiology, pharmacology, virology, etc.)
-- **Deployment fit:** **Weak** — The task (specialty routing of research abstracts) is entirely misaligned with the deployment's NER and STS requirements. The pharmacology label class partially overlaps in subject matter, and one abstract (MORFITT-D17) incidentally covers chikungunya in the Indian Ocean context, relevant to overseas territory priorities. However, regulatory document genres are entirely absent, and veterinary, Canadian, and non-French content dilutes relevance.
+#### MORFITT
+- **Task:** Multi-label medical specialty classification (12 specialty labels) of PMC Open Access biomedical abstracts
+- **Deployment fit:** Partial — MORFITT provides natively multi-label classification directly relevant to the deployment's multi-morbid pathology classification function, and it contains some tropical pathology signal (chikungunya, parasitology). However, the label space (research specialty) diverges from ICD-10/PMSI diagnostic categories, veterinary content is off-domain, and a notable fraction of abstracts originate from non-Metropolitan French settings.
 - **Key strengths:**
-  - One abstract directly covers drug formulation stability (MORFITT-D19)
-  - Chikungunya epidemic in Indian Ocean region present (MORFITT-D17) — incidental tropical disease coverage
-  - Multi-label one-hot encoding compatible with deployment's multi-candidate output design (MORFITT-D4, MORFITT-D21)
-  - Formal French biomedical register consistent with deployment (MORFITT-D1)
+  - Native multi-label structure with one-hot float32 vectors supports multi-label model evaluation (MORFITT-D4, MORFITT-D6)
+  - Some tropical and infectious disease content present, including Chikungunya (MORFITT-D17), parasitology, and MRSA (MORFITT-D8)
+  - Standard biomedical French register (MORFITT-D3)
 - **Key concerns:**
-  - CRITICAL [IO, OO]: Task type (specialty classification) incompatible with NER or STS evaluation
-  - CRITICAL [IO, IC]: No SmPCs, PILs, CTD modules, or ANSM regulatory content
-  - CRITICAL [IO, OC]: 12 specialty labels (domain routing) do not map to regulatory entity vocabulary
-  - MAJOR [IC, OC]: Substantial non-French geographic content (Canada, Jordan, Saudi Arabia, Egypt — MORFITT-D8, MORFITT-D13, MORFITT-D20, MORFITT-D31)
-  - MAJOR [IC, IO]: Veterinary content irrelevant to human pharmaceutical regulatory compliance (MORFITT-D9, MORFITT-D26, MORFITT-D29)
+  - CRITICAL IC: Source is entirely PMC Open Access abstracts — formal experimental prose, not clinical notes (MORFITT-D2, MORFITT-D16); register gap is fundamental
+  - MAJOR OO: 12 specialty labels (microbiology, surgery, pharmacology) do not map to ICD-10/PMSI diagnostic axes; specialty routing ≠ diagnostic classification (MORFITT-D11, MORFITT-D21)
+  - MAJOR IC/OC: Substantial non-Metropolitan French content (Canadian, Jordanian, Saudi, Arabic populations) (MORFITT-D10, MORFITT-D20, MORFITT-D31, MORFITT-D22)
+  - MAJOR IC/IO: Veterinary content (equine, porcine, canine) is entirely off-domain for human hospital deployment (MORFITT-D5, MORFITT-D9, MORFITT-D26, MORFITT-D29)
+  - Annotation provenance undocumented; no IAA statistics; confidence calibration not evaluable
 
 ---
 
-#### DrBenchmark/CLISTER
-
-- **Task:** Semantic Textual Similarity (STS) of French clinical case sentence pairs (1,000 pairs, 0–5 scale, multi-annotator averaged)
-- **Deployment fit:** **Partial** — CLISTER is the benchmark's cleanest STS dataset and the closest to the deployment's compliance-checking function in terms of task structure. Multi-annotator averaged scores span the full 0–5 range and demonstrate sensitivity to semantic distinctions (CLISTER-D3, CLISTER-D13, CLISTER-D14). Some drug and dosage content is present (CLISTER-D6, CLISTER-D7, CLISTER-D8, CLISTER-D9). However, all content derives from clinical case reports, not regulatory documents; the scoring rubric assigns high similarity to numerically distinct clinical values in ways that would be inappropriate for regulatory compliance (CLISTER-D17, CLISTER-D18); and the dataset is saturated with repetitive clinical boilerplate (CLISTER-D21).
+#### CLISTER
+- **Task:** French clinical STS — sentence-pair similarity scoring (0–5 float, averaged multi-annotator)
+- **Deployment fit:** Partial — CLISTER provides the most clinically authentic French text register in the benchmark's STS tasks, sourced from clinical case documents in standard hospital prose. However, STS scoring does not directly evaluate NER, classification, or ICD-10 mapping, and annotator expertise is undocumented.
 - **Key strengths:**
-  - French clinical language consistent with deployment register (CLISTER-D1, CLISTER-D2)
-  - Full 0–5 score range with fractional labels for sensitivity analysis (CLISTER-D3, CLISTER-D4)
-  - Drug name and dosing pairs present (CLISTER-D6, CLISTER-D7, CLISTER-D9)
-  - Synonym/temporal equivalence correctly handled at score=5 (CLISTER-D10, CLISTER-D11, CLISTER-D12)
-  - Mid-range annotation captures clinically meaningful content differences (CLISTER-D13, CLISTER-D14)
+  - Clinical case register closely mirrors hospital documentation: surgical, oncological, nephrology, psychiatric cases in standard French medical prose (CLISTER-D1, CLISTER-D2)
+  - Temporal and medication expressions present and well-represented (CLISTER-D10, CLISTER-D11)
+  - Clinical sub-domain breadth across urology, oncology, gynecology, cardiology, psychiatry, pediatrics (CLISTER-D5, CLISTER-D6, CLISTER-D7)
+  - Continuous label scale captures semantic gradient more informative than binary labels (CLISTER-D8, CLISTER-D9)
 - **Key concerns:**
-  - CRITICAL [IO, IC]: Exclusively clinical case narratives; no SmPCs, PILs, or regulatory document genres (CLISTER-D15, CLISTER-D16)
-  - CRITICAL [OO]: Scoring rubric assigns 4.0 to quantitatively different values (2-year vs. 4.5-year follow-up, 10 vs. 20 mmol/l) — inappropriate for regulatory compliance dose/threshold equivalence (CLISTER-D17, CLISTER-D18)
-  - MAJOR [OC]: Clinical annotators, not regulatory affairs specialists; drug dosage comparisons scored by clinical intuition rather than regulatory standards (CLISTER-D19, CLISTER-D20)
-  - MAJOR [IC]: High repetition of clinical boilerplate saturating score=5 cluster reduces lexical diversity (CLISTER-D21)
-  - MINOR [IC]: Fragmented/truncated items, tabular data, and OCR artifacts present (CLISTER-D22, CLISTER-D23, CLISTER-D24)
-  - MINOR [IC]: No French overseas territory or tropical pathology content
+  - MAJOR OO: STS regression does not measure NER, classification, or ICD-10 mapping functions
+  - MAJOR OC: Annotator profiles undocumented; clinically significant distinctions (e.g., lost to follow-up vs. death) may be systematically underweighted by non-specialist annotators (CLISTER-D12, CLISTER-D13)
+  - MAJOR IC: All source documents are edited published clinical case PDFs, not raw EHR dictation notes (CLISTER-D18)
+  - MINOR IO: Noticeable domain skew toward urology/oncology (CLISTER-D16); some degenerate tabular inputs (CLISTER-D17)
 
 ---
 
-#### DrBenchmark/MANTRAGSC
-
-- **Task:** Named Entity Recognition (NER), multilingual, French configurations: `fr_emea` (EMEA drug leaflets), `fr_medline` (MEDLINE titles), `fr_patents` (pharmaceutical patents); 10-class UMLS Semantic Group scheme
-- **Deployment fit:** **Partial** — The `fr_emea` and `fr_patents` configurations provide authentic regulatory and pharmaceutical text: posology statements with dose thresholds (MANTRAGSC-D2), adverse reaction language from drug labels (MANTRAGSC-D3, MANTRAGSC-D4), and pharmaceutical patent claim text (MANTRAGSC-D5). These represent two of the deployment's priority document genres. However, the French subsets are very small (~100 examples each), the UMLS label scheme does not distinguish INN from excipient or drug class (MANTRAGSC-D11), and `fr_medline` is off-domain (MANTRAGSC-D8, MANTRAGSC-D9, MANTRAGSC-D10).
+#### MANTRAGSC
+- **Task:** Multilingual NER (French, German, English, Spanish, Dutch) across EMEA, Medline, and Patents sub-corpora; 10–11 UMLS Semantic Group labels
+- **Deployment fit:** Weak-to-partial — The French-specific configs (fr_emea, fr_medline, fr_patents) provide valid French biomedical NER signal in the same UMLS Semantic Group label space as QUAERO, but the corpus is critically small (~100 French training examples), the source registers are non-clinical, and 9 of 12 configs are irrelevant non-French languages.
 - **Key strengths:**
-  - `fr_emea` contains authentic EMA drug leaflet text with posology, adverse event, and drug composition sentences (MANTRAGSC-D1, MANTRAGSC-D2, MANTRAGSC-D3, MANTRAGSC-D4)
-  - `fr_patents` covers pharmaceutical patent claim language — a deployment-adjacent genre (MANTRAGSC-D5, MANTRAGSC-D7)
-  - INN identification with salt form present (MANTRAGSC-D6)
-  - Standard written French text, no modality or script mismatch
+  - French biomedical NER in drug regulatory (EMEA), scientific (Medline), and patent text (MANTRAGSC-D1, MANTRAGSC-D2, MANTRAGSC-D5)
+  - UMLS Semantic Groups provide ontologically coherent entity types (DISO, ANAT, PROC, CHEM, LIVB)
+  - Standard formal French in French-specific configs (MANTRAGSC-D4)
 - **Key concerns:**
-  - CRITICAL [OO]: UMLS Semantic Groups collapse INN, drug class, excipient, and chemical compound under CHEM — no regulatory sub-distinction (MANTRAGSC-D11, MANTRAGSC-D12)
-  - CRITICAL [IC, IO]: `fr_medline` configuration is off-domain (traumatology, social medicine, public health titles — MANTRAGSC-D8, MANTRAGSC-D9, MANTRAGSC-D10)
-  - MAJOR [IC]: French configurations are very small (~100 examples each); evaluation representativeness is limited
-  - MAJOR [OC]: No regulatory affairs annotators; UMLS annotation norms diverge from EMA SmPC annotation guidelines
-  - MINOR [IC]: Multilingual contamination risk from non-French configurations in HF dataset (MANTRAGSC-D13)
-  - MINOR [IO, IF]: `fr_patents` uses distinct patent claim register, not directly transferable to patient leaflet language (MANTRAGSC-D14)
+  - CRITICAL IC: Extremely small French corpus (~100 training examples per config); benchmark results have high variance and CamemBERT models produce only 'O' labels in low-resource conditions (MANTRAGSC-D6)
+  - CRITICAL IO: All French examples from regulatory labels, MEDLINE titles, and patent claims — no clinical notes (MANTRAGSC-D7, MANTRAGSC-D8)
+  - MAJOR OO: No temporal entity labels whatsoever (MANTRAGSC-D9); DISO is undifferentiated by disease type (MANTRAGSC-D10)
+  - MAJOR IC: Non-French configs dominate the dataset structure (MANTRAGSC-D11); evaluation signal must be isolated to French configs only
+  - MINOR OC: Annotation authority undocumented; MINOR IO: no tropical pathology coverage (MANTRAGSC-D13)
 
 ---
 
-#### DrBenchmark/E3C
-
-- **Task:** Named Entity Recognition (NER), multilingual clinical cases; French configurations: `French_clinical` (binary: O, CLINENTITY) and `French_temporal` (events, actors, body parts, temporal expressions, factuality markers)
-- **Deployment fit:** **Weak** — The French configurations provide clean clinical prose in standard written French, and the temporal/factuality annotation layer is linguistically sophisticated. However, the CLINENTITY label is a single-class scheme capturing pathologies and symptoms, drug names appear in text but are tagged O (E3C-D2, E3C-D12), and the schema provides no regulatory entity types whatsoever. The majority of the dataset is non-French (8 of 10 configurations), and the French training data is small.
+#### E3C
+- **Task:** Multilingual clinical NER; French_clinical (binary CLINENTITY), French_temporal (EVENT, ACTOR, BODYPART, TIMEX3, RML)
+- **Deployment fit:** Partial — The French_clinical and French_temporal configs provide the most deployment-relevant temporal entity annotation in the benchmark alongside DEFT2021, with authentic clinical case French. However, non-French configs dominate the overall dataset, clinical annotation is coarse and shows evidence of incompleteness, and source material is published case reports rather than raw EHR notes.
 - **Key strengths:**
-  - Standard written French clinical prose consistent with deployment text modality (E3C-D1, E3C-D3)
-  - Temporal/factuality annotation layer provides multi-class structural richness (E3C-D4)
-  - IOB2 evaluation protocol consistent with deployment NER infrastructure (E3C-D5)
+  - French_temporal config directly annotates TIMEX3, EVENT, and clinical entities supporting temporal extraction (E3C-D2, E3C-D3)
+  - French clinical case register with complex multi-symptom narratives (E3C-D1)
+  - Authentic multilingual corpus structure confirms French examples are genuine clinical narratives, not translations
+  - IOB2 annotation compatible with benchmark's SeqEval evaluation protocol (E3C-D5, E3C-D6)
 - **Key concerns:**
-  - CRITICAL [IC, IF]: 8 of 10 configurations are non-French (Basque, English, Italian, Spanish — E3C-D6, E3C-D7, E3C-D8); French subsets are small
-  - CRITICAL [IO, IC]: All French examples are clinical case narratives; no regulatory document genres (E3C-D9, E3C-D10)
-  - CRITICAL [OO, OC]: Drug names present in text but tagged O; schema has no substance, INN, posology, or contraindication entity type (E3C-D2, E3C-D11, E3C-D12)
-  - MAJOR [OC]: Clinical NLP annotators; no regulatory affairs expertise; schema orthogonal to regulatory compliance needs (E3C-D13)
-  - MAJOR [IC]: French training split is small (~1,400 examples); coarse two-class scheme limits fine-tuning utility (E3C-D14)
-  - MAJOR [OO]: No STS component
+  - CRITICAL IC/IO: Non-French configs (Basque, English, Italian, Spanish) dominate sampled data; Basque configs entirely irrelevant (E3C-D7, E3C-D8)
+  - MAJOR IC: Published case report register, not raw EHR — complete sentences, no shorthand (E3C-D9, E3C-D10)
+  - MAJOR OC: Apparent annotation incompleteness in French_clinical — identifiable pathogens and treatments left unlabeled (E3C-D11, E3C-D12)
+  - MAJOR IO: Tropical pathology appears only in English config, absent from French subset (E3C-D4, E3C-D13)
+  - MINOR OO: Coarse two-class clinical annotation (CLINENTITY vs. O) underspecifies the deployment's multi-type NER requirement (E3C-D14)
 
 ---
 
-#### DrBenchmark/PxCorpus
-
-- **Task:** Intent classification (4 classes: medical_prescription, negate, none, replace) and NER over prescription entity types; derived from transcribed drug prescription spoken dialogues
-- **Deployment fit:** **Partial (narrow)** — PxCorpus is the only dataset containing drug names with posology annotations (dose, form, frequency, duration, route — PXCORPUS-D1, PXCORPUS-D2, PXCORPUS-D3) and the only dataset with a correction/negation intent class directly analogous to compliance flagging (PXCORPUS-D8, PXCORPUS-D9). However, the input genre is spoken-language transcription containing disfluencies, code-switching, and artifacts (PXCORPUS-D12, PXCORPUS-D13, PXCORPUS-D14) radically different from formal regulatory documents, the intent schema does not map to regulatory compliance categories (PXCORPUS-D18), and severe class imbalance limits evaluation of the correction classes (PXCORPUS-D21).
+#### PxCorpus
+- **Task:** Spoken drug prescription understanding — 4-class intent classification (medical_prescription, negate, none, replace) + 38-class NER for drug entities and temporal/dosage spans
+- **Deployment fit:** Partial — PxCorpus is the benchmark's closest proxy for noisy non-formal clinical language (transcribed speech with hesitations and truncations), and it provides the richest temporal entity annotation for pharmaceutical contexts. However, it covers only drug prescription dialogues rather than general clinical note processing, contains no pathology/diagnosis labels, and has severe class imbalance undermining minority-class evaluation.
 - **Key strengths:**
-  - Posology entity coverage: drug names, doses, forms, frequencies, durations, routes across diverse patterns (PXCORPUS-D1 through PXCORPUS-D7)
-  - `replace` and `negate` intent classes capture dosage correction and negation speech acts relevant to inconsistency detection (PXCORPUS-D8, PXCORPUS-D9)
-  - `none` class includes form inconsistency meta-commentary directly relevant to compliance concepts (PXCORPUS-D10, PXCORPUS-D11)
+  - Spoken transcription register with hesitation markers, truncations, and ASR artifacts — the closest noise proxy in DrBenchmark to active hospital documentation (PXCORPUS-D1, PXCORPUS-D2, PXCORPUS-D4)
+  - Richest temporal NER in the benchmark: FREQUENCY, DURATION, DOSAGE, TIME-OF-DAY entities densely annotated in authentic prescription utterances (PXCORPUS-D5, PXCORPUS-D6, PXCORPUS-D7)
+  - Intent labels (negate, replace) support prescription error-detection workflows (PXCORPUS-D8, PXCORPUS-D9, PXCORPUS-D10)
+  - Broad pharmaceutical coverage across drug classes and routes (PXCORPUS-D11, PXCORPUS-D12, PXCORPUS-D13)
 - **Key concerns:**
-  - CRITICAL [IO, IC]: Spoken-language transcription genre with disfluencies, code-switching, and artifacts incompatible with regulatory document processing (PXCORPUS-D12, PXCORPUS-D13, PXCORPUS-D14, PXCORPUS-D15, PXCORPUS-D16)
-  - MAJOR [OO]: Intent classes model spoken dialogue speech acts, not regulatory compliance verdicts; no STS component (PXCORPUS-D18)
-  - MAJOR [OO, IC]: NER scheme does not include INN/brand distinction, ATC codes, excipient nomenclature, or contraindication qualifiers; some NER tag indices undecoded (PXCORPUS-D19, PXCORPUS-D20)
-  - MAJOR [OC, OF]: Severe class imbalance — `replace` class has only 3 examples in 500-example buffer (PXCORPUS-D21)
-  - MAJOR [OC]: Annotation norms reflect spoken-language understanding, not regulatory documentation standards (PXCORPUS-D22, PXCORPUS-D23)
+  - CRITICAL OO/OF: Extreme class imbalance (medical_prescription ~89%, replace <1%, negate ~2%) — standard accuracy metrics mask minority-class performance on clinically critical correction intents (PXCORPUS-D14, PXCORPUS-D15)
+  - MAJOR IO/OO: No pathology/diagnosis entities in NER tag scheme; ICD-10 mapping function cannot be evaluated (PXCORPUS-D16, PXCORPUS-D17)
+  - MAJOR OO/OC: The 'none' class is semantically heterogeneous — conflates meta-commentary, system prompts, and filler speech (PXCORPUS-D18, PXCORPUS-D19, PXCORPUS-D20)
+  - MAJOR IC/IF: System interaction prompts embedded in clinical NER training data corrupt register (PXCORPUS-D22, PXCORPUS-D23)
+  - MINOR IC: Degenerate fragment utterances and ASR artifacts present (PXCORPUS-D24, PXCORPUS-D27, PXCORPUS-D28)
 
 ---
 
-#### DrBenchmark/DiaMED
-
-- **Task:** Multi-class classification at ICD-10 chapter level (22 classes); 739 French clinical cases from the Pan African Medical Journal
-- **Deployment fit:** **Weak** — DiaMED is the only dataset purpose-built for DrBenchmark but is doubly misaligned with the deployment: its task (ICD-10 chapter classification) does not evaluate NER or STS, and its content (clinical cases from Sub-Saharan Africa, Morocco, Niger, Burkina Faso) is geographically mismatched with both metropolitan France (primary) and French overseas territories (secondary). Some drug vocabulary is present in case narratives (DIAMED-D1, DIAMED-D8, DIAMED-D12) but unannotated. Inter-annotator agreement is documented, which is a quality signal strength.
+#### DiaMED
+- **Task:** Multi-class classification — 22 ICD-10 chapter-level labels on clinical case narratives from the Pan African Medical Journal
+- **Deployment fit:** Partial — DiaMED is the benchmark's only dataset with direct ICD-10 chapter-level labels and documented IAA with medical expert involvement, making it the strongest single candidate for the deployment's pathology classification function. However, the source is Sub-Saharan and North African clinical cases rather than Metropolitan French hospital documentation, the task is single-label (not multi-label with confidence), and granularity is chapter-level rather than PMSI-code-level.
 - **Key strengths:**
-  - French-language clinical text with ICD-10 chapter-level annotation and documented IAA (Cohen's Kappa, Gwet's AC1)
-  - Broad ICD-10 chapter coverage across all 22 classes
-  - Drug and treatment mentions present in clinical cases (DIAMED-D8, DIAMED-D12)
+  - Only dataset with ICD-10 chapter-level labels directly aligned with deployment's classification ontology (DIAMED-D1, DIAMED-D2)
+  - Rich full-length clinical narratives in standard French with dense clinical entities (DIAMED-D3, DIAMED-D4)
+  - Coverage across all 22 ICD-10 chapters including rare categories (DIAMED-D5, DIAMED-D6)
+  - Only DrBenchmark dataset with documented IAA statistics and explicit medical expert annotator involvement (benchmark Q45, Q46)
 - **Key concerns:**
-  - CRITICAL [IC, IO]: All cases from Sub-Saharan Africa and North Africa, not metropolitan France or French overseas territories (DIAMED-D3, DIAMED-D9, DIAMED-D11)
-  - CRITICAL [IO, OO]: ICD-10 chapter classification does not evaluate NER or STS capability
-  - CRITICAL [OO, OC]: 22 ICD-10 chapter labels reflect clinical disease coding, not regulatory entity vocabulary or safety compliance axes (DIAMED-D4)
-  - MAJOR [IO, IC]: All inputs are clinical case narratives; no regulatory document genres
-  - MAJOR [IC, OC]: Sub-Saharan African disease presentations (HIV/AIDS at CD4=27, Burkina Faso hospital settings) introduce epidemiological patterns mismatched with metropolitan or overseas French regulatory context (DIAMED-D1)
-  - MINOR [OO]: Severe class imbalance across ICD-10 chapters
+  - CRITICAL IC/OC: Cases originate from Burkina Faso, Morocco, Niger, and other African countries — not Metropolitan French hospitals (DIAMED-D7, DIAMED-D8, DIAMED-D9). PMSI coding conventions and disease prevalence patterns differ systematically from the deployment's target population
+  - MAJOR OO/OF: Single-label per case; multi-morbid cases forced into one chapter (DIAMED-D10); no confidence scores or ranked-candidate output
+  - MAJOR OO: Chapter-level granularity is far coarser than operational PMSI codes (DIAMED-D11)
+  - MAJOR IC: Academic published case write-up register rather than active EHR notes (DIAMED-D12)
+  - MINOR OC: Very small dataset (n=739) with severe per-class imbalance for rare ICD-10 chapters
 
 ---
 
-#### DrBenchmark/DEFT2021
-
-- **Task:** Two configurations — `cls` (multi-label classification over 23 MeSH Chapter C axes) and `ner` (fine-grained NER with 13 entity types including SUBSTANCE, DOSAGE, MODE, FREQUENCY); 275 clinical cases, manually annotated
-- **Deployment fit:** **Partial** — DEFT2021 provides the benchmark's richest NER scheme for drug-adjacent entities (SUBSTANCE, DOSAGE, MODE, FREQUENCY annotated in clinical cases — DEFT2021-D3, DEFT2021-D5, DEFT2021-D6). Drug interaction and pharmacovigilance reasoning is present in some cases (DEFT2021-D1, DEFT2021-D2). However, the entity scheme does not include INN/brand distinction, ATC codes, or excipient categories (DEFT2021-D10); all content is from clinical cases, not regulatory documents; and no STS task is present.
+#### DEFT2021
+- **Task:** Multi-label clinical profile classification (23 MeSH Chapter C axes) + 13-type clinical NER (PATHOLOGY, ANATOMY, TREATMENT, DOSAGE, DURATION, FREQUENCY, MOMENT, DATE, SOSY, etc.)
+- **Deployment fit:** Strong (within benchmark) — DEFT2021 provides the most deployment-aligned task structure in DrBenchmark: native multi-label classification with a MeSH ontology partially aligned to ICD-10, AND a rich NER scheme covering all entity types the deployment requires including temporal markers. It is structurally the benchmark's best single-dataset proxy for the deployment's core functions.
 - **Key strengths:**
-  - 13-type NER scheme includes SUBSTANCE, DOSAGE, MODE, FREQUENCY — partially overlapping with posology entity types relevant to deployment (DEFT2021-D3, DEFT2021-D5, DEFT2021-D6)
-  - Manually annotated (gold standard) for both NER and classification
-  - Drug interaction and benefit-risk reasoning cases present (DEFT2021-D1, DEFT2021-D2)
-  - Multi-label classification output compatible with deployment's multi-candidate design (DEFT2021-D4)
+  - Multi-label CLS config with up to 7 concurrent MeSH labels per clinical case directly exercises multi-morbid pathology classification (DEFT2021-D1, DEFT2021-D2)
+  - NER scheme covers PATHOLOGY, TREATMENT, ANATOMY, DATE, DURATION, FREQUENCY, MOMENT — complete alignment with deployment's temporal and clinical entity extraction functions (DEFT2021-D3, DEFT2021-D4, DEFT2021-D5)
+  - Rich authentic clinical case register with complex diagnostic reasoning and dense laboratory values (DEFT2021-D6, DEFT2021-D7)
+  - Breadth of specialties: urology, toxicology, cardiology, nephrology, emergency medicine represented (DEFT2021-D8, DEFT2021-D9)
 - **Key concerns:**
-  - CRITICAL [OO]: No STS task; compliance-equivalence scoring not evaluable
-  - CRITICAL [IO, IC]: All inputs are clinical case reports; no regulatory document genres (DEFT2021-D8, DEFT2021-D9)
-  - CRITICAL [OO, IC]: NER SUBSTANCE tag conflates INN, excipient, and chemical entity without regulatory sub-distinction (DEFT2021-D10); MeSH Chapter C axes reflect disease classification, not regulatory safety signal categories (DEFT2021-D14)
-  - MAJOR [OC]: Clinical/NLP annotators; no regulatory affairs expertise (DEFT2021-D12, DEFT2021-D13)
-  - MINOR [IC]: Some Canadian pharmacy and non-metropolitan-France clinical content present (DEFT2021-D15, DEFT2021-D16)
+  - CRITICAL OO/OF: `specialities_one_hot` is strictly binary 0/1 — no confidence scores, no soft labels, no ranked-candidate quality evaluation possible (DEFT2021-D11)
+  - CRITICAL IO: No tropical/DOM-TOM pathology categories in 23 MeSH axes; parasitic content limited to temperate pathogens (DEFT2021-D12, DEFT2021-D13)
+  - MAJOR IC: Competition corpus (DEFT 2019) — academic edited register, not raw EHR shorthand (DEFT2021-D14, DEFT2021-D15)
+  - MAJOR OC: Annotator PMSI credentials undocumented; MeSH axis choices for complex multi-drug cases may not align with hospital coding specialist conventions (DEFT2021-D16)
+  - MAJOR IO: Very small (275 cases) with high per-label variance; some axes have very few positives (DEFT2021-D17)
+  - MINOR IC: Some Quebec French terminology (DEFT2021-D20)
 
 ---
 
-#### DrBenchmark/CAS
-
-- **Task:** Four configurations — `cls` (negation/speculation sentence classification, 4 classes), `ner_neg` (negation scope NER), `ner_spec` (speculation scope NER), `pos` (POS tagging, 31 classes); silver-standard automatic annotation via Tagex 3 with 98% precision validation
-- **Deployment fit:** **Weak** — CAS provides negation and speculation detection in clinical French prose, which has marginal relevance to safety claim checking. Some clinical cases contain drug names (CAS-D6, CAS-D7). However, the task labels (negation/speculation/neutral) are categorically misaligned with regulatory entity NER, drug names are untagged in NER configs (CAS-D15), POS labels are silver-standard, class imbalance is severe (CAS-D16), and all content is clinical case narrative.
+#### CAS
+- **Task:** French clinical case corpus — negation/speculation classification (4 labels), negation/speculation NER (IOB2), and POS tagging (31 classes, automatic Tagex annotations)
+- **Deployment fit:** Partial — CAS provides the largest French clinical case corpus in the benchmark with authentic clinical register and useful negation/speculation signal for clinical NLP pipelines. However, the classification labels (negation/speculation modality) are orthogonal to ICD-10 pathology categories, and POS tags are silver-standard automatic annotations.
 - **Key strengths:**
-  - French clinical prose register consistent with deployment (CAS-D1, CAS-D2)
-  - Negation and speculation detection has marginal relevance to flagging uncertain safety claims (CAS-D3, CAS-D4, CAS-D5)
-  - Span-level NER for negation/speculation scope (CAS-D8, CAS-D9)
-  - Drug names with dosing occasionally present (CAS-D6)
+  - Largest clinical case corpus; authentic French clinical register with lab values, surgical narratives, and temporal expressions (CAS-D1, CAS-D2, CAS-D3)
+  - Temporal expression content directly relevant to deployment's care timeline extraction (CAS-D4, CAS-D5, CAS-D6)
+  - Negation/speculation annotation supports downstream accurate pathology coding (CAS-D7, CAS-D8, CAS-D9)
+  - Specialty breadth including gastroenterology, obstetrics, cardiology, oncology, infectious disease (CAS-D10, CAS-D11, CAS-D12)
+  - POS tagging directly covers deployment's POS tagging pipeline component (CAS-D13)
 - **Key concerns:**
-  - CRITICAL [IO]: All clinical case content; no regulatory document genres (CAS-D10, CAS-D11)
-  - CRITICAL [OO]: Negation/speculation task labels entirely misaligned with regulatory entity NER requirements (CAS-D12, CAS-D13)
-  - MAJOR [OC]: Silver-standard POS and NER annotation; 2% error floor in labels (CAS-D14)
-  - MAJOR [IC]: Drug names present in text but untagged in NER configurations (CAS-D15)
-  - MAJOR [OO, OF]: Extreme neutral-class dominance (74%) limits evaluation of safety-critical minority classes (CAS-D16)
+  - CRITICAL OC: POS tags are silver-standard automatic (Tagex); no expert clinical annotator involvement documented (CAS-D15)
+  - MAJOR OC: No IAA statistics for negation/speculation labels; annotation rationale opaque for some ambiguous cases (CAS-D16, CAS-D17)
+  - MAJOR OO: Classification labels (negation/speculation) do not align with ICD-10/PMSI mapping; task is a linguistic modality detector, not a pathology classifier (CAS-D19)
+  - MAJOR IO: No tropical/overseas-territory pathologies visible across all sampled examples (CAS-D18)
+  - MINOR IC: Register slightly more formal than raw EHR notes (CAS-D20); severe class imbalance in cls config with neutral dominating at ~74% (CAS-D21)
 
 ---
 
-#### DrBenchmark/ESSAI
-
-- **Task:** Four configurations — `cls` (negation/speculation classification, 4 classes), `ner_neg` (negation scope NER), `ner_spec` (speculation scope NER), `pos` (POS tagging, 41 classes via TreeTagger); drawn from French clinical trial protocol summaries; silver-standard POS annotation
-- **Deployment fit:** **Weak** — ESSAI provides formal French biomedical prose from clinical trial protocols and contains numerous pharmaceutical compound names (ESSAI-D1, ESSAI-D3, ESSAI-D4, ESSAI-D5). However, drug names appear only in classification/negation context and are never annotated as drug entities; the NER scope labels cover only negation/speculation spans (ESSAI-D10, ESSAI-D11); trial protocol investigational language is structurally distinct from approved regulatory document sections; POS labels are silver-standard (ESSAI-D12); and neutral class dominance (76.8%) limits evaluation utility.
+#### ESSAI
+- **Task:** French clinical trial protocol corpus — negation/speculation classification (4 labels), negation/speculation NER, and POS tagging (36 tags, TreeTagger automatic)
+- **Deployment fit:** Weak-to-partial — ESSAI covers an even narrower subdomain than CAS (exclusively oncology clinical trial protocols), provides the same output ontology mismatch (negation/speculation, not ICD-10), and uses automatic POS annotations. Its primary value is as a formal French biomedical prose register, with negation/speculation signal relevant to pipeline preprocessing.
 - **Key strengths:**
-  - Formal French biomedical prose consistent with deployment text modality (ESSAI-D1)
-  - Drug names and posology expressions present in text (ESSAI-D2, ESSAI-D3, ESSAI-D5)
-  - Negation of adverse effect claims has marginal relevance to safety monitoring (ESSAI-D6)
-  - Lemmatization provided, supporting drug name normalization
+  - Formal clinical trial French biomedical register; dense oncological treatment and temporal content (ESSAI-D1, ESSAI-D2, ESSAI-D6, ESSAI-D7, ESSAI-D8)
+  - Negation and speculation detection coverage including temporal dosing structures (ESSAI-D3, ESSAI-D4, ESSAI-D5)
+  - 36-class POS scheme for French biomedical morphology
 - **Key concerns:**
-  - CRITICAL [IO, IC]: Clinical trial protocol genre is structurally distinct from approved regulatory documents (SmPCs, PILs — ESSAI-D8, ESSAI-D9)
-  - CRITICAL [OO, IC]: NER tags annotate only negation/speculation scope; drug names never labeled as drug entities (ESSAI-D10, ESSAI-D11)
-  - MAJOR [OC, OF]: Silver-standard POS annotation via TreeTagger (ESSAI-D12)
-  - MAJOR [OO, OC]: Extreme neutral class dominance (76.8%) limits diagnostic value (no datapoint citation — structural distribution finding)
-  - MAJOR [OC]: Annotation norms reflect clinical NLP epistemic modeling, not regulatory legal standards (ESSAI-D13)
+  - CRITICAL OO: Classification labels (negation/speculation) have zero overlap with ICD-10/PMSI mapping function (ESSAI-D9)
+  - MAJOR IC: Source domain exclusively oncology clinical trial protocols — far narrower than general hospital documentation (ESSAI-D10, ESSAI-D11)
+  - MAJOR OC: TreeTagger automatic POS; NER annotation provenance undocumented; no IAA statistics
+  - MAJOR OC: Extreme class imbalance with neutral at ~77% (ESSAI-D13); NER annotation is extremely sparse (ESSAI-D14)
+  - MINOR IC: No tropical/DOM-TOM pathology content
 
 ---
 
 ### Cross-Cutting Strengths
 
-**1. French biomedical text register is consistent across all datasets** [IC, IF]
-Every dataset provides standard written French biomedical prose: from clinical case narratives (CLISTER-D1, E3C-D1, CAS-D1, DEFT2021-D7, DIAMED-D1) to drug leaflets (QUAERO-D2, MANTRAGSC-D1) to pharmacy exam questions (FRENCHMEDMCQA-D6) to clinical trial protocols (ESSAI-D1). There are no script mismatches, no RTL concerns, and no cross-modality gaps (PxCorpus provides transcribed text, not audio). This uniformly supports the deployment's text-only, metropolitan-French infrastructure assumption.
+**1. Consistent standard written French across all datasets**
+Every dataset in the benchmark is text-only in standard French with Latin-diacritical script. No modality, script, or dialect mismatches are present relative to the deployment's text-only clinical NLP pipeline. This uniform IF coverage means the benchmark's signal is entirely within the correct language and modality space (QUAERO-D9, CLISTER-D1, DEFT2021-D1, CAS-D1, ESSAI-D1).
 
-**2. Drug and pharmaceutical vocabulary present across multiple datasets** [IC]
-Several datasets collectively represent a meaningful range of pharmaceutical vocabulary: EMEA drug leaflet sentences with INNs, dosage forms, and excipient lists (QUAERO-D1, QUAERO-D2, MANTRAGSC-D1, MANTRAGSC-D2); contraindication and adverse event language (QUAERO-D5, QUAERO-D6, MANTRAGSC-D3); drug interaction and benefit-risk reasoning (DEFT2021-D1, DEFT2021-D2); posology expressions across diverse patterns (PXCORPUS-D1 through PXCORPUS-D7); and drug names in clinical context (DEFT2021-D6, CAS-D6, ESSAI-D3). This provides partial NER training signal for pharmaceutical entity detection, even if label granularity is insufficient.
+**2. Multi-label classification structure present in three datasets**
+DEFT2021, MORFITT, and DiaMED all implement multi-label or multi-class classification directly exercising the deployment's central pathology classification function. DEFT2021's 23 MeSH axes with up to 7 co-occurring labels (DEFT2021-D1, DEFT2021-D2), MORFITT's 12 specialty labels with float32 one-hot vectors (MORFITT-D4, MORFITT-D6), and DiaMED's 22 ICD-10 chapter labels (DIAMED-D1) collectively provide meaningful multi-label evaluation signal for a core deployment function.
 
-**3. Multi-annotator label uncertainty is documented and partially recoverable** [OC, OF]
-DEFT2020 retains all five individual annotator scores per pair (DEFT2020-D12, DEFT2020-D13), enabling downstream uncertainty quantification aligned with the deployment's human-in-the-loop design. CLISTER uses averaged multi-annotator scores with full 0–5 range coverage. DiaMED documents IAA via Cohen's Kappa and Gwet's AC1. These three datasets provide a measurable basis for confidence-score calibration, relevant to the deployment's borderline-case flagging design.
+**3. Temporal entity annotation coverage**
+Three datasets contribute temporal entity signal: E3C's French_temporal config annotates TIMEX3, EVENT, ACTOR, BODYPART, RML (E3C-D2, E3C-D3); DEFT2021's NER scheme includes DATE, DURATION, FREQUENCY, MOMENT, and MOMENT labels explicitly (DEFT2021-D3, DEFT2021-D4, DEFT2021-D5); PxCorpus provides the most densely annotated temporal pharmaceutical expressions in the benchmark (PXCORPUS-D5, PXCORPUS-D6, PXCORPUS-D7). This cross-dataset coverage partially addresses the deployment's temporal entity extraction function.
 
-**4. Negation and speculation detection infrastructure present** [IO, OO]
-CAS and ESSAI provide sentence-level classification and span-level NER for negation and speculation scope — an analytically useful capability for identifying when safety-relevant findings are negated or uncertain. This partially maps to a compliance-checking sub-task: detecting when a proposed labeling statement negates or qualifies a safety warning (CAS-D3, CAS-D4, CAS-D5, ESSAI-D6). While not calibrated to regulatory norms, this is an underrecognized partial alignment between benchmark and deployment.
+**4. NER across complementary French biomedical registers**
+QUAERO (drug labels + MEDLINE), MANTRAGSC (EMEA + Medline + Patents), E3C (clinical cases), DEFT2021 (competition clinical cases), CAS (clinical cases), and PxCorpus (drug prescriptions) collectively cover regulatory, scientific, and clinical-case registers for French biomedical NER. The UMLS Semantic Group label space shared between QUAERO and MANTRAGSC provides ontological consistency for entity type coverage (QUAERO-D1, MANTRAGSC-D1, MANTRAGSC-D2).
 
-**5. The benchmark is the first and most comprehensive French biomedical NLP evaluation framework available** [IO]
-For the deployment's French-language context, DrBenchmark represents the most relevant existing benchmark. The absence of a purpose-built French regulatory NLP benchmark (confirmed by web search) means DrBenchmark's 20-task taxonomy — despite its gaps — constitutes the most informative available proxy for French biomedical model selection. This has practical relevance for model shortlisting decisions even where individual task-deployment alignment is imperfect.
+**5. Clinical case register depth in CAS, CLISTER, and DEFT2021**
+CAS (3,790 cases), CLISTER (1,000 sentence pairs from clinical cases), and DEFT2021 (275 cases) all use French clinical case text as source material with realistic clinical prose including quantified lab values, surgical narratives, and diagnostic reasoning (CAS-D2, CLISTER-D2, DEFT2021-D7). While all are edited published cases rather than raw EHR notes, they represent the closest available approximation to the deployment's hospital documentation environment.
 
 ---
 
 ### Cross-Cutting Weaknesses
 
-#### CRITICAL [IO] — No regulatory document genre is the primary evaluation target in any dataset
-Zero of the 11 datasets uses SmPCs, CTD modules, or ANSM submission formats as the primary evaluation genre. QUAERO (`emea`) and MANTRAGSC (`fr_emea`) source from EMA drug leaflets for NER, but neither is used for STS compliance-checking tasks. All other datasets draw from clinical case narratives, research abstracts, pharmacy exam questions, clinical trial protocols, or spoken-language transcriptions. This is the most consequential single gap between benchmark and deployment (confirmed by QUAERO-D16, DEFT2020-D22, CLISTER-D15, E3C-D9, DIAMED-D6, DEFT2021-D8, ESSAI-D8).
+#### CRITICAL — Benchmark-wide absence of confidence calibration and uncertainty flagging evaluation (OO, OF)
+Across all 11 datasets, no evaluation protocol measures confidence calibration, uncertainty flagging, or ranked-candidate list quality. Classification datasets use strictly binary labels (DEFT2021-D11, MORFITT one-hot vectors) and standard F1/accuracy metrics. DiaMED uses single-label forced-choice even for inherently multi-morbid cases (DIAMED-D10). STS datasets (CLISTER, DEFT2020) average annotator scores into a single float value, discarding the disagreement signal that could inform uncertainty evaluation (DEFT2020-D16). The deployment's most architecturally essential behavior — multi-label outputs with calibrated confidence scores and high-uncertainty flagging for clinician adjudication — is structurally unmeasurable across the entire benchmark.
 
-#### CRITICAL [OO] — STS scoring is not calibrated for regulatory equivalence anywhere in the benchmark
-Both STS datasets (DEFT2020 and CLISTER) use general semantic proximity scales that assign high similarity to sentence pairs differing in legally significant ways: precautionary qualifier removal (DEFT2020-D2, DEFT2020-D18), route-of-administration addition (DEFT2020-D5), twofold numerical difference in clinical measurements (CLISTER-D17, CLISTER-D18), and temporal synonym equivalence (CLISTER-D12). The 0–5 scale provides no mechanism to signal that a dose threshold change or population qualifier modification constitutes a regulatory variation type. This gap is fully confirmed by web search findings documenting that even minor text changes in drug labeling require formal variation submissions (Type IA/IB/II), making sub-Likert-scale differences legally operative.
+#### CRITICAL — Systematic register gap: edited published sources vs. active hospital EHR notes (IC)
+Every dataset in the benchmark sources text from one or more of: clinical trial protocols (ESSAI), competition corpora (DEFT2021, DEFT2020), peer-reviewed case reports (CAS, CLISTER, E3C, DiaMED), drug regulatory documents (QUAERO-EMEA, MANTRAGSC), MEDLINE titles (QUAERO-Medline, MANTRAGSC-Medline), or patent claims (MANTRAGSC-Patents). No dataset uses raw hospital EHR discharge notes, dictation recordings (beyond PxCorpus prescription-domain), or institution-specific documentation. The deployment processes moderately noisy notes with common clinical abbreviations and shorthand. Web search confirms no French raw-EHR benchmark exists. Examples of the formality gap: ESSAI-D11, CAS-D20, E3C-D9, DEFT2021-D14, DEFT2021-D15, DIAMED-D12. PxCorpus provides partial noise signal but only in the drug prescription domain (PXCORPUS-D1, PXCORPUS-D2).
 
-#### CRITICAL [OO, IC] — NER label spaces across all datasets fail to distinguish regulatory entity types
-Across all NER datasets, the label schemes use clinical/research ontologies (UMLS Semantic Groups in QUAERO and MANTRAGSC; CLINENTITY in E3C; SUBSTANCE/DOSAGE in DEFT2021; negation/speculation scope in CAS and ESSAI) that do not capture the regulatory entity types the deployment requires. The CHEM label in QUAERO and MANTRAGSC conflates INN, excipient, brand name, and endogenous chemical (QUAERO-D13, QUAERO-D14, MANTRAGSC-D11). Drug names appear in text but are tagged O in E3C (E3C-D12) and CAS (CAS-D15). No dataset labels ATC codes, excipient names as distinct from active ingredients, or EMA posology template components (population, dose, route, frequency as separately typed fields). This is confirmed by web search establishing that no published crosswalk between DrBenchmark NER schemas and EMA/ANSM regulatory annotation guidelines exists.
+#### CRITICAL — Absence of PMSI coder or hospital coding specialist annotation authority (OC)
+Across all 11 datasets, no annotation was performed by practicing PMSI coders or hospital coding specialists. DiaMED is the sole dataset with documented medical expert involvement (one expert annotator), and that expert's PMSI coding credentials are unspecified (benchmark Q45). DEFT2021's multi-label MeSH annotations — the most deployment-relevant classification labels — were produced by academic NLP competition participants with no documented clinical coding credentials (DEFT2021-D16). CAS POS tags are automatic (CAS-D15). This annotation authority gap is confirmed absent benchmark-wide, not merely undocumented.
 
-#### CRITICAL [OC] — No annotation authority from regulatory affairs expertise across any dataset
-Across all 11 datasets, annotators are clinical professionals, NLP researchers, pharmacy educators (exam keys), or spoken-language annotators. No regulatory affairs specialist, pharmacovigilance officer, EMA reviewer, ANSM officer, or pharmaceutical legal expert is identified in any annotation team. CAS and ESSAI POS labels are silver-standard (automatic + validation). Ground-truth labels throughout the benchmark reflect clinical and research annotation norms that may systematically diverge from regulatory-legal compliance standards. This is confirmed for every dataset reviewed (QUAERO-D19 [MINOR OC], DEFT2020-D23, CLISTER-D19, MANTRAGSC [MAJOR OC], E3C-D13, DIAMED-D4, DEFT2021-D12, CAS-D14, ESSAI-D12).
+#### MAJOR — Non-Metropolitan French clinical content misrepresented as deployment-relevant (IC, OC)
+DiaMED's 739 clinical cases originate from the Pan African Medical Journal, with examples from Burkina Faso, Morocco, and Niger (DIAMED-D7, DIAMED-D8, DIAMED-D9) — explicitly not Metropolitan French hospital populations. MORFITT contains substantial content from Canadian, Jordanian, Saudi, and Arabic research contexts (MORFITT-D10, MORFITT-D20, MORFITT-D22, MORFITT-D31). These datasets introduce geographic and epidemiological heterogeneity that does not correspond to the Metropolitan French deployment target, potentially distorting performance estimates for the deployment's actual patient documentation.
 
-#### MAJOR [IO] — Task type misalignment: classification tasks dominate while NER and STS are underrepresented relative to deployment needs
-The deployment requires NER and STS. Of the 11 datasets: MORFITT, DiaMED, and FrenchMedMCQA contribute only classification tasks entirely incompatible with NER or STS evaluation (FRENCHMEDMCQA-D11, MORFITT-D2, DIAMED [all examples]). CAS and ESSAI contribute negation/speculation-scope NER unrelated to regulatory entity NER. PxCorpus contributes intent classification and posology-scope NER from spoken transcription. Only QUAERO, MANTRAGSC, DEFT2021-ner, and E3C contribute token-level NER with partial pharmaceutical relevance; only DEFT2020 and CLISTER contribute STS. This distribution means the benchmark underweights the two highest-priority deployment task types.
+#### MAJOR — Tropical and overseas-territory pathology coverage absent across all French-language subsets (IO)
+No dataset provides French-language clinical text or annotation covering pathologies prevalent in French overseas territories (dengue, chikungunya, Zika, malaria at population scale, leptospirosis, sickle-cell crisis presentations). The only tropical pathology signals appear in non-French dataset subsets: schistosomiasis in E3C's English config (E3C-D4), malaria in FrenchMedMCQA pharmacy questions (FRENCHMEDMCQA-D67), and Chikungunya in a MORFITT abstract (MORFITT-D17). DiaMED's Pan African Medical Journal source introduces some tropical disease proximity via ICD-10 infectious disease chapters, but its cases are not Metropolitan French and the specific DOM-TOM pathology coverage is undocumented. The French-language clinical NER and classification datasets are entirely metropolitan in pathology profile.
 
-#### MAJOR [IC] — Substantial off-domain content across multiple datasets
-Off-domain or peripherally relevant content dilutes regulatory signal across several datasets: ~30–40% encyclopedic/general content in DEFT2020 (DEFT2020-D14, DEFT2020-D15, DEFT2020-D16, DEFT2020-D17); MEDLINE titles including historical, biographical, and philosophical content in QUAERO (QUAERO-D16, QUAERO-D17, QUAERO-D18); veterinary and non-French-population content in MORFITT (MORFITT-D9, MORFITT-D26, MORFITT-D29, MORFITT-D8); and Sub-Saharan African clinical cases in DiaMED (DIAMED-D9, DIAMED-D11).
+#### MAJOR — Output ontology misalignment for multiple datasets (OO)
+Four datasets — CAS, ESSAI, FrenchMedMCQA, and DEFT2020 (partially) — have output ontologies entirely orthogonal to the deployment's ICD-10/PMSI classification function. CAS and ESSAI measure negation/speculation modality (CAS-D19, ESSAI-D9). FrenchMedMCQA measures pharmacy exam answer-set selection (FRENCHMEDMCQA-D1). DEFT2020 measures sentence-pair similarity (DEFT2020-D14, DEFT2020-D15). MANTRAGSC and QUAERO measure UMLS Semantic Group NER with no ICD-10 subcategory distinction (MANTRAGSC-D10, QUAERO — no ICD-10 signal). Only DEFT2021, DiaMED, and MORFITT provide classification labels with any ICD-10 or specialty-level alignment.
 
-#### MAJOR [IC] — No French overseas territory or tropical disease vocabulary in any dataset
-The deployment identifies French overseas territories (Martinique, Guadeloupe, French Guiana, Réunion, Mayotte) as the highest secondary adaptation priority, with distinct tropical disease patterns (dengue, chikungunya, paludisme, Zika, leptospirose). No dataset systematically covers this vocabulary. QUAERO-D11 (drug-resistant malaria in France in a MEDLINE title) and MORFITT-D17 (Chikungunya epidemic in the Indian Ocean) provide incidental references, but neither is a deliberate coverage target. This gap is fully confirmed by web search.
+#### MAJOR — Temporal entity annotation concentrated in few datasets, absent in most (IO, OO)
+The majority of DrBenchmark datasets provide no temporal entity labels: QUAERO has no temporal labels despite temporal expressions in text (QUAERO-D13, QUAERO-D14); MANTRAGSC has no temporal labels (MANTRAGSC-D9); MORFITT, CLISTER, CAS (cls), and ESSAI (cls) have no temporal NER. Temporal coverage is limited to E3C French_temporal, DEFT2021 NER, and PxCorpus — a narrow subset of the benchmark's 20 tasks. Given the deployment's explicit requirement for temporal entity extraction for care prioritization, this concentration is a systemic coverage gap.
 
-#### MINOR [OC] — Silver-standard annotation in CAS and ESSAI POS tasks propagates label error
-Automatic POS tagging via Tagex 3 (CAS) and TreeTagger (ESSAI) with only 98% precision validation means both POS corpora contain a systematic error floor. For deployment fine-tuning on safety-critical tasks, this label quality concern compounds annotation authority concerns (CAS-D14, ESSAI-D12).
+#### MINOR — Severe class imbalance across multiple classification datasets (OF, OO)
+CAS cls neutral class ~74% (CAS-D21); ESSAI cls neutral ~77% (ESSAI-D13); PxCorpus medical_prescription ~89% (PXCORPUS-D15). In all three cases, majority-class baselines achieve high accuracy while being clinically uninformative, and evaluation of the minority classes most relevant to the deployment (negation, speculation, prescription correction, intent replacement) is unreliable.
 
 ---
 
 ### Content Coverage Summary
 
-**Well-covered domains:** French biomedical clinical narrative (clinical cases, examination findings, diagnostic reasoning); French clinical trial protocol language; EMEA drug leaflet sentence-level text for NER in limited quantities; French pharmacy specialization knowledge (MCQA format only); drug and posology vocabulary in spoken prescription dialogues; epistemic modality (negation/speculation) in clinical and trial contexts.
-
-**Partially covered domains:** EMA drug leaflet NER (QUAERO-emea, MANTRAGSC-fr_emea) — useful for entity detection but with label granularity gaps; STS over clinical and mixed-domain text pairs (DEFT2020, CLISTER) — structurally relevant but not calibrated for regulatory equivalence; pharmacological and pharmaceutical specialty content (DEFT2021, FrenchMedMCQA, MORFITT) — subject-matter overlap without task-level alignment.
+**Well-covered domains and registers:**
+- Standard written French biomedical prose across regulatory (EMEA drug labels), scientific (MEDLINE, PMC abstracts), clinical case (CAS, CLISTER, E3C, DEFT2021, DiaMED), pharmaceutical patent, and spoken prescription (PxCorpus) registers
+- Clinical entity types: pathology, anatomy, procedure, chemical substance, living being — covered by QUAERO, MANTRAGSC, E3C, DEFT2021
+- Temporal entity types: DATE, DURATION, FREQUENCY, MOMENT — covered by DEFT2021 NER, E3C French_temporal, PxCorpus
+- Negation and speculation detection: CAS, ESSAI
+- Multi-label classification: DEFT2021 (23 MeSH axes), MORFITT (12 specialties), DiaMED (22 ICD-10 chapters)
+- POS tagging: CAS (31 tags), ESSAI (36 tags)
+- Model comparison: 8 state-of-the-art French and French-biomedical MLMs evaluated under unified protocol
 
 **Gaps relative to deployment needs:**
-- SmPC sections (Section 4.3 contraindications, 4.4 special warnings, 4.8 adverse reactions, 5.1 pharmacodynamics): **Not covered**
-- Patient information leaflet compliance structure: **Covered incidentally** (QUAERO-emea, DEFT2020 drug pairs) but not as a compliance-checking task
-- CTD module text: **Not covered**
-- ANSM submission templates (Feuille de style, blue-box elements): **Not covered**
-- Regulatory entity vocabulary (INNs distinguished from brand names, ATC codes, excipient nomenclature, MedDRA preferred terms): **Not covered** in any dataset's label space
-- STS calibrated for regulatory variation type (IA/IB/II distinctions): **Not covered**
-- Annotation by regulatory affairs or legal experts: **Not present** in any dataset
-- French overseas territory content (tropical pathology, DOM-specific terminology): **Not covered** as a deliberate target
-- Versioned document compliance (detecting unauthorized changes between SmPC versions): **Not covered**
+- Raw EHR discharge notes and dictation-sourced text: absent from the entire benchmark; no French raw-EHR clinical NLP benchmark exists
+- Confidence calibration and uncertainty flagging evaluation: structurally absent across all 20 tasks
+- PMSI-granular code classification (beyond chapter level): absent; DiaMED is the coarsest available proxy
+- Hospital coding specialist annotation authority: absent benchmark-wide
+- Metropolitan French hospital population pathology profiles: partially represented through metropolitan clinical case corpora (CAS, CLISTER, ESSAI, DEFT2021), but contaminated by non-metropolitan content in DiaMED and MORFITT
+- DOM-TOM tropical pathology coverage: absent from all French-language clinical subsets
+- Multi-label classification at PMSI code level: absent; MeSH and ICD-10 chapter labels provide coarse alignment only
+- Ranked-candidate output evaluation: absent across all classification tasks
 
 ---
 
 ### Limitations
 
-1. **Sample-based analysis only:** Each per-dataset analysis was conducted on a sample of examples (typically 100–500 per dataset). Rare entity types, infrequent regulatory phrasings, or edge-case annotation norms may not be visible in the sampled data. QUAERO's full EMEA subset may contain proportionally more high-value regulatory text than the sample indicates.
-
-2. **NER tag decoding incomplete for PxCorpus:** Several NER tag indices in PxCorpus (e.g., tags 46, 49) could not be decoded against a label list in the HF metadata, preventing full assessment of the NER ontology scope (PXCORPUS-D19, PXCORPUS-D20).
-
-3. **DiaMED IAA numerical values not surfaced:** Specific Cohen's Kappa and Gwet's AC1 values from Table 4 of the benchmark paper were not retrievable from indexed web sources. The overall quality signal is positive but the magnitude of agreement is unknown without accessing the full PDF.
-
-4. **DEFT2020 domain mix not precisely quantifiable:** The estimate of ~30–40% off-domain content in DEFT2020 is based on the sampled 74 task_1 examples; the full dataset proportion may differ.
-
-5. **STS compliance calibration not assessable without regulatory ground truth:** Whether the benchmark's STS scoring would misclassify legally significant text changes at the relevant regulatory threshold (IA/IB/II variation types) cannot be determined from the benchmark alone — it would require a purpose-built regulatory equivalence test set with ground truth from regulatory affairs specialists.
-
-6. **Multilingual contamination in MANTRAGSC:** The HF dataset contains 12 configurations; analysis confirmed German-language example presence (MANTRAGSC-D13). Users pulling from the full dataset without configuration-level filtering may inadvertently include non-French examples.
-
-7. **License status unresolved for DEFT2020:** The HF metadata reports "license: not specified," which may create deployment barriers that cannot be resolved from public information alone.
+1. **Sample-based analysis only**: Each per-dataset report analyzed a sample of examples (50–200 per dataset); rare label classes, corner cases, and dataset tails may be underrepresented in the evidence base. Per-class performance statistics were not computed.
+2. **Non-French configs not inspectable for deployment purposes**: MANTRAGSC (9/12 configs), E3C (8/10 configs non-French), and MORFITT (non-Metropolitan French abstracts) contain substantial irrelevant content that was identified but not exhaustively characterized.
+3. **Internal test set contents unknown**: The benchmark reports held-out test set performance; the per-dataset analyses inspected training/validation examples. Label distribution and content of test sets may differ from training splits.
+4. **Annotation provenance beyond the paper**: The per-dataset reports and benchmark YAML provide the primary evidence for annotation authority claims. No independent access to DEFT competition annotation guidelines, CLISTER annotator demographic data, or CAS/ESSAI TreeTagger/Tagex validation methodology was available for direct inspection.
+5. **DiaMED full geographic distribution unverified**: The Sub-Saharan and North African clinical origin of DiaMED cases is confirmed from sampled examples, but the full geographic distribution across all 739 cases was not enumerated.
+6. **MORFITT annotation protocol**: No HuggingFace card or paper excerpt documenting the specialty annotation process for MORFITT was inspected; annotation authority and IAA are unverifiable beyond the dataset overview.
+7. **PxCorpus register contamination extent**: The proportion of system-interaction-contaminated examples relative to total examples could not be quantified from the sample alone.
 
 ---
 
 ### Cited Evidence
 
-- **QUAERO-D1**: QUAERO/emea | 1 | CHEM/O | "Phosphate de sodium , monobasique , monohydraté Phosphate de sodium , dibasique , heptahydraté Chlorure de sodium Polysorbate 80 ( E433 ) Eau pour préparation injectable" | Excipient nomenclature list with E-numbers from drug leaflet | IC, OO
-- **QUAERO-D2**: QUAERO/emea | 55 | CHEM/DEVI/PROC | "TYSABRI 300 mg solution à diluer pour perfusion natalizumab Chaque flacon de 15 ml de concentré contient 300 mg de natalizumab ( 20 mg / ml )" | Brand name, INN, dosage, form, concentration co-occurring in regulatory sentence | IC
-- **QUAERO-D3**: QUAERO/emea | 51 | CHEM/O | "EMEA / H / C / 122 REFLUDAN ... Son principe actif est la lépirudine ." | EMEA authorization number, brand name, INN in drug leaflet header | IC
-- **QUAERO-D4**: QUAERO/emea | 57 | CHEM | "La lépirudine bloque spécifiquement l' une des substances impliquées dans le processus de coagulation , la thrombine ." | INN and endogenous protein tagged CHEM; mechanism-of-action phrasing from SmPC Section 5 | IC, OO
-- **QUAERO-D5**: QUAERO/emea | 6 | DISO/CHEM | "Des épisodes de troubles psychiatriques aigus , tels que hallucinations , réactions paranoïdes , hostilité , délire , psychose et réactions maniaques ont été rapportés chez des patients traités par le ziconotide ." | Safety warning listing adverse psychiatric events; drug name tagged CHEM | IC, OC
-- **QUAERO-D6**: QUAERO/emea | 43 | CHEM/LIVB | "Par conséquent , Refludan ne doit pas être administré à la femme enceinte ou qui allaite ." | Standard contraindication phrasing for pregnancy/lactation in regulatory text | IC
-- **QUAERO-D7**: QUAERO/emea | 23 | CHEM/LIVB | "Prialt ne doit pas être utilisé chez l' enfant ." | Pediatric contraindication standard phrasing | IC
-- **QUAERO-D8**: QUAERO/emea | 64 | CHEM/DISO/ANAT | "N' utilisez jamais TYSABRI ... Si vous êtes allergique ( hydpersensible ) au natalizumab ou à l' un des autres composants contenus dans TYSABRI" | Allergy/hypersensitivity contraindication in patient-facing PIL language | IC
-- **QUAERO-D9**: QUAERO/emea | 32 | CHEM/PROC | "la dose maximale prévue de ziconotide administré par voie intrarachidienne était de 912 µg / jour après une augmentation posologique sur 7 jours ." | Specific dose, route, titration schedule — core posology regulatory text | IC
-- **QUAERO-D10**: QUAERO/emea | 11 | CHEM/PROC/DISO | "La dose peut être augmentée par intervalles de 1 à 2 jours , voire plus , pour obtenir le meilleur équilibre entre le soulagement de la douleur et les effets indésirables éventuels ." | Titration instruction balancing efficacy and adverse events | IC
-- **QUAERO-D11**: QUAERO/medline | 98 | DISO/GEOG | "Le paludisme chimiorésistant en France ." | Drug-resistant malaria in France; incidental tropical disease relevance | IC
-- **QUAERO-D12**: QUAERO/medline | 132 | PROC/CHEM | "Adaptation posologique des traitements par aminoglycosides ." | Posology adjustment term; drug class (aminoglycosides) tagged CHEM | IC
-- **QUAERO-D13**: QUAERO/emea | 50 | CHEM/O | "Refludan 50 mg en poudre pour solution injectable ... Lepirudine Les autres composants sont le mannitol ( E 421 ) et l' hydroxyde de sodium" | Brand name, INN, excipients all share CHEM label — regulatory distinction collapsed | OO
-- **QUAERO-D14**: QUAERO/emea | 1 | CHEM/O | "Phosphate de sodium , monobasique ... Polysorbate 80 ( E433 ) ... Eau pour préparation injectable" | Excipients tagged identically to active ingredients under CHEM | OO
-- **QUAERO-D15**: QUAERO/emea | 36 | CHEM/PHYS | "EMEA / H / C / 122 Recommandations standard Comme la lépirudine est excrétée et métabolisée en quasi-totalité par le rein" | EMEA authorization code untagged; regulatory administrative entity outside label space | OO, OC
-- **QUAERO-D16**: QUAERO/medline | 16 | O | "L' apport des inventaires a la connaissance de la demographie parisienne ancienne : le regne de Francois Ier" | Historical demography article title; entirely off-domain, all O tags | IC, IO
-- **QUAERO-D17**: QUAERO/medline | 78 | O | "De la médecine factuelle ( evidence-based medicine ) au ' libre arbitre '." | Philosophical/methodological title; no biomedical entity, all O | IC
-- **QUAERO-D18**: QUAERO/medline | 61 | O | "LÉON GRIMBERT 1860 - 1931 ." | Biographical citation; zero regulatory relevance, all O tags | IC
-- **QUAERO-D19**: QUAERO/emea | 4 | CHEM/PROC/PHYS | "Aucune étude clinique spécifique sur les interactions médicamenteuses n Toutefois , en raison des faibles concentrations plasmatiques du ziconotide" | Sentence truncated at "n" — document-splitting artifact affecting annotation integrity | OC
-- **QUAERO-D20**: QUAERO/emea | 15 | O | "Č eská republika Biogen Idec ( Czech Republic ) s ." | Czech-language text fragment in EMEA distributor section; noise for French-only system | IC
-- **QUAERO-D21**: QUAERO/emea | 41 | O | "o ." | Single-character artifact from document splitting | IC
-- **FRENCHMEDMCQA-D1**: FrenchMedMCQA | 6 | simple | "Parmi les substances suivantes, une seule ne traverse pas la barrière placentaire. Laquelle? Dicoumarine / Héparine / Tétracycline..." | Drug placental crossing pharmacokinetics question | IC, IO
-- **FRENCHMEDMCQA-D2**: FrenchMedMCQA | 70 | multiple | "Les anti-vitamines K (AVK) sont formellement contre-indiquées avec : Le miconazole (DAKTARIN®) / Les salicylés à fortes doses..." | Drug contraindications with brand names, relevant to labeling | IC
-- **FRENCHMEDMCQA-D3**: FrenchMedMCQA | 105 | simple | "Le mésusage est défini comme : Une utilisation de médicament non conforme aux recommandations du résumé des caractéristiques du produit" | References SmPC (résumé des caractéristiques du produit) concept | IC, IO
-- **FRENCHMEDMCQA-D4**: FrenchMedMCQA | 50 | multiple | "Parmi les verres suivants, indiquez ceux qui peuvent être utilisés comme conditionnement réutilisable des préparations pour usage parentéral" | Pharmaceutical packaging for parenteral preparations | IC
-- **FRENCHMEDMCQA-D5**: FrenchMedMCQA | 100 | multiple | "Parmi les formes solides orales suivantes, indiquer celle(s) qui libère(nt) le principe actif de façon continue : Matrice hydrophile / Comprimé à enrobage par film insoluble..." | Dosage form terminology relevant to regulatory submissions | IC
-- **FRENCHMEDMCQA-D6**: FrenchMedMCQA | 23 | multiple | "En électrophorèse capillaire haute performance, le sens de migration de l'analyse dépend : De la nature de la charge de l'analyte / Du flux d'électroendosmose..." | Formal technical French, matching regulatory document register | IF
-- **FRENCHMEDMCQA-D7**: FrenchMedMCQA | 44 | multiple | "Parmi les propositions concernant le cotrimoxazole, quelle(s) est (sont) celle(s) qui est (sont) exacte(s)? ... Le triméthoprime est un inhibiteur de la dihydrofolate synthétase..." | Multi-answer discrimination over drug properties | IO, OO
-- **FRENCHMEDMCQA-D8**: FrenchMedMCQA | 48 | multiple | "La distribution tissulaire des médicaments... Détermine le volume apparent de distribution / Est influencée par la liaison du médicament aux protéines plasmatiques..." | Drug distribution pharmacokinetics | IC
-- **FRENCHMEDMCQA-D9**: FrenchMedMCQA | 104 | multiple | "Une intoxication aiguë par les opiacés présente généralement les manifestations cliniques suivantes: Dépression du système nerveux central / Dépression respiratoire / Myosis..." | Drug toxicology and adverse effects | IC
-- **FRENCHMEDMCQA-D10**: FrenchMedMCQA | 34 | multiple | "Cocher le ou les antibiotique(s) dont l'utilisation est autorisée en fin de grossesse : Ampicilline / Cotrimoxazole / Tétracyclines / Erythromycine / Péfloxacine..." | Pregnancy contraindication for antibiotics | IC
-- **FRENCHMEDMCQA-D11**: FrenchMedMCQA | 1 | simple | "Au cours de la leucémie lymphoïde chronique, le myélogramme montre: Une population de lymphocytes>30%..." | MCQA format; no NER labels or STS scores present | IO, OO, OF
-- **FRENCHMEDMCQA-D12**: FrenchMedMCQA | 61 | simple | "La certification des établissements de santé: Ne concerne que les établissements de santé publics... Concerne tous les établissements de santé" | Healthcare administration, not from regulatory submission documents | IO, IC
-- **FRENCHMEDMCQA-D13**: FrenchMedMCQA | 43 | multiple | "L'économie médicale est une économie : De service de santé / Régie par la loi de l'offre et de la demande..." | Health economics exam question, absent from regulatory workflows | IO, IC
-- **FRENCHMEDMCQA-D14**: FrenchMedMCQA | 72 | multiple | "Parmi les propositions suivantes concernant la ceftriaxone (ROCEPHINE®)..." | Drug INN and brand name appear but are unannotated as NER entities | OO, IC
-- **FRENCHMEDMCQA-D15**: FrenchMedMCQA | 112 | multiple | "Parmi les propositions suivantes concernant le ganciclovir (CYMEVAN®)..." | Drug name appears without NER label | OO, IC
-- **FRENCHMEDMCQA-D16**: FrenchMedMCQA | 8 | multiple | "La trinitrine: Est le trinitrate d'isosorbide / Est un médicament anti-angoreux..." | Binary correct/incorrect output, no similarity score | OO, OF
-- **FRENCHMEDMCQA-D17**: FrenchMedMCQA | 10 | multiple | "Cocher la (les) proposition(s) exacte(s) concernant l'osmolarité et l'osmolalité ? L'osmolarité est le nombre d'osmoles par litre de solution..." | Pure physicochemistry, irrelevant to labeling compliance | IC
-- **FRENCHMEDMCQA-D18**: FrenchMedMCQA | 37 | simple | "Les 3 nucléides de l'hydrogène, H(A=1,Z=1), H(A=2,Z=1) et H(A=3,Z=1) sont: Des isotones / Des isotopes..." | Nuclear physics question, irrelevant to deployment | IC
-- **FRENCHMEDMCQA-D19**: FrenchMedMCQA | 88 | multiple | "Un spectre de bandes : Peut être un spectre d'émission / Peut être un spectre d'absorption..." | Analytical spectroscopy, not a regulatory topic | IC
-- **FRENCHMEDMCQA-D20**: FrenchMedMCQA | 94 | multiple | "La vaccination contre l'hépatite B: Est obligatoire pour tout le personnel de santé / Est recommandée pour tous les sujets à risque..." | Regulatory obligation status; exam ground truth may lag ANSM updates | OC
-- **FRENCHMEDMCQA-D21**: FrenchMedMCQA | 67 | multiple | "Quelle est (sont) la (les) parasitose(s) qui présente(nt) un stade hépatique? Giardiase / Paludisme / Fasciolose..." | Paludisme appears as generic exam topic, not overseas-territory terminology | IC
-- **DEFT2020-D1**: DEFT2020 task_1 | Ex. 18 | moy=4.6 | "En raison de la présence de lactose, ce médicament est contre-indiqué en cas de galactosémie congénitale, de syndrome de malabsorption du glucose et du galactose ou de déficit en lactase." | Drug leaflet contraindication for lactose-containing medication | IC
-- **DEFT2020-D2**: DEFT2020 task_1 | Ex. 4 | moy=4.0 | "En conséquence, par mesure de précaution, il convient d'éviter d'allaiter pendant la durée du traitement." | Breastfeeding contraindication with precautionary qualifier; cible drops qualifier | OO
-- **DEFT2020-D3**: DEFT2020 task_1 | Ex. 16 | moy=4.0 | "Ce produit peut provoquer un syndrome de sevrage opiacé s'il est administré à un toxicomane moins de 4 heures après la dernière prise de stupéfiant." | Opioid withdrawal warning with specific time threshold | IC
-- **DEFT2020-D4**: DEFT2020 task_1 | Ex. 13 | moy=3.6 | "Chez les patients insuffisamment équilibrés par glimepiride arrow à la dose maximale, un traitement par l'insuline peut être associé si nécessaire." | Drug name + posology language from drug leaflet | IC
-- **DEFT2020-D5**: DEFT2020 task_1 | Ex. 52 | moy=4.4 | "Comprimé rond, blanc, biconvexe, gravé 6 sur une face, une flèche étant gravée sur l'autre face." | Pharmaceutical form description; cible adds "sublingual" route — regulatory-significant difference | OO
-- **DEFT2020-D6**: DEFT2020 task_1 | Ex. 70 | moy=4.3 | "Prévenir les patients que la voie sublinguale constitue la seule voie efficace et bien tolérée pour l'administration de ce produit." | Route-of-administration patient instruction from drug insert | IC
-- **DEFT2020-D7**: DEFT2020 task_1 | Ex. 65 | moy=4.3 | "Ne pas utiliser chez les personnes présentant des difficultés de déglutition en raison du risque d'inhalation bronchique et de pneumopathie lipoïde." | Contraindication paraphrase; cible substitutes synonyms; rated high-similarity | OC
-- **DEFT2020-D8**: DEFT2020 task_1 | Ex. 54 | moy=5.0 | "Troubles de l'hémostase à type de maladie de Willebrand (se traduisant par un allongement du TCA, du temps de saignement et une diminution des taux du complexe VIIIC/VWF)." | Identical sentences; upper-anchor calibration point | OO
-- **DEFT2020-D9**: DEFT2020 task_2 | Ex. 22 | correct_cible=0 | "l'utilisation à forte dose d'huile de paraffine expose au risque de suintement anal et parfois d'irritation périanale" | Side-effect retrieval task using drug leaflet language | IC
-- **DEFT2020-D10**: DEFT2020 task_1 | Ex. 26 | moy=3.4 | "Pour la comparaison entre blocs neuraxiaux et anesthésie générale, nous avons évalué la qualité des preuves comme très faible pour la mortalité..." | Cochrane-style evidence-graded clinical language | IF
-- **DEFT2020-D11**: DEFT2020 task_1 | Ex. 38 | moy=4.2 | "Cependant, dans certaines études épidémiologiques cas-témoins, une augmentation de la survenue de fentes labio-palatines a été observée avec les benzodiazépines." | Pharmacovigilance-adjacent drug adverse event language | IC
-- **DEFT2020-D12**: DEFT2020 task_1 | Ex. 46 | moy=2.2, vote=5.0 | scores=[5.0, 2.0, 0.0, 3.0, 1.0] | High inter-annotator disagreement; signals annotation uncertainty | OC
-- **DEFT2020-D13**: DEFT2020 task_1 | Ex. 36 | moy=1.5 | scores=[2.0, 4.5, 0.0, 1.0, 0.0] | Extreme annotator divergence on low-similarity pair | OC
-- **DEFT2020-D14**: DEFT2020 task_1 | Ex. 1 | moy=0.5 | "Entre Perpignan et Villefranche, il subsiste de très nombreux poteaux caténaires datant des premiers essais en 12 KV 16 2/3 Hz..." | Railway infrastructure; entirely off-domain | IO
-- **DEFT2020-D15**: DEFT2020 task_1 | Ex. 3 | moy=2.1 | "Boris Fiodorovitch Godounov, en russe : Бори́с Фёдорович Годуно́в (v.1551–Moscou, 13 avril 1605), gouverne la Russie..." | Russian historical biography; off-domain | IO
-- **DEFT2020-D16**: DEFT2020 task_1 | Ex. 6 | moy=0.4 | "Certains apiculteurs sélectionnent leurs reines afin de favoriser au mieux la production." | Beekeeping content; off-domain | IO
-- **DEFT2020-D17**: DEFT2020 task_2 | Ex. 37 | correct_cible=0 | "Lancement du célèbre MMORPG : World of Warcraft." | Video game; entirely irrelevant to pharmaceutical domain | IO
-- **DEFT2020-D18**: DEFT2020 task_1 | Ex. 4 | moy=4.0 | scores=[5.0, 2.0, 4.0, 4.0, 5.0] | Precautionary qualifier dropped in cible; rated 4.0 — legally significant difference not captured | OO
-- **DEFT2020-D19**: DEFT2020 task_2 | Ex. 27 | correct_cible=2 | "ce médicament est contre-indiqué dans les cas suivants" vs. "n'utilisez jamais diclofenac eg 1%, gel dans les cas suivants" | General vs. brand-specific prohibition; general STS would conflate | OO
-- **DEFT2020-D20**: DEFT2020 task_1 | Ex. 17 | moy=1.3 | "Les personnes infectées par le virus de l'immunodéficience humaine présentent un risque augmenté de développer une tuberculose (TB) active." | HIV/TB risk statement vs. treatment statement; scored 1.3 by general proximity | OO
-- **DEFT2020-D21**: DEFT2020 task_1 | Ex. 13 | moy=3.6 | "glimepiride arrow" appears unannotated in "Chez les patients insuffisamment équilibrés par glimepiride arrow à la dose maximale..." | INN+brand and posology expression present as free text, no NER labels | IC
-- **DEFT2020-D22**: DEFT2020 task_1 | Ex. 19 | moy=1.3 | "Ketoderm 2%, gel en récipient unidose peut donc être utilisé au cours de la grossesse." / "Qu'est-ce que ketoderm 2%, gel en récipient unidose et dans quel cas est-il utilisé." | Patient leaflet format, not SmPC Section 4.6 format | IO
-- **DEFT2020-D23**: DEFT2020 task_1 | Ex. 4 | moy=4.0 | scores=[5.0, 2.0, 4.0, 4.0, 5.0] | Annotator scoring 2.0 may reflect regulatory-aware reading of precautionary qualifier; others score 4–5 | OC
-- **MORFITT-D1**: MORFITT | 1 | 9 (surgery) | "La mise en place par cathétérisme d'une valve aortique (TAVI) destinée à traiter les malades ayant un rétrécissement aortique a été une des plus importantes innovations médicales de notre siècle." | TAVI cardiac innovation abstract — formal biomedical French register | IC, IF
-- **MORFITT-D2**: MORFITT | 2 | 10 (pharmacology) | "Nous avons récemment publié les conclusions d'un nouveau test préclinique portant sur le dépistage analgésique rapide basé sur l'injection intraplantaire (i.pl.) d'une solution saline hypertonique à 10 % (HS) chez des souris femelles croisées (CD-1)." | Preclinical analgesic screening — pharmacology label but no NER/STS annotation | IO, OO
-- **MORFITT-D4**: MORFITT | 4 | 8, 4 (veterinary, parasitology) | "Les échanges internationaux sont responsables de la résurgence de nombreuses maladies affectant le bétail." | Livestock disease / international trade — multi-label veterinary context | OO
-- **MORFITT-D8**: MORFITT | 8 | 0 (microbiology) | "La région du Nord-Ouest de l'Ontario présente un taux élevé et documenté d'infections de la peau et des tissus mous causées par une souche de Staphylococcus aureus méthycillinorésistante d'origine communautaire (SARM-C)." | Canadian setting — geographic mismatch with metropolitan France regulatory context | IC, OC
-- **MORFITT-D9**: MORFITT | 9 | 6, 0, 8 | "L'otite externe est une maladie multifactorielle fréquente chez le chien." | Canine ear disease — veterinary content irrelevant to human regulatory compliance | IC, IO
-- **MORFITT-D13**: MORFITT | 13 | 3 | "En 2007 et 2008, 4 423 adultes de Calgary ont répondu à des entrevues au téléphone fixe portant sur l'activité physique" | Calgary-based physical activity study — non-French, non-pharmaceutical content | IC
-- **MORFITT-D17**: MORFITT | 17 | 2 (virology) | "l'étude de l'épidémie de Chikungunya, un alphavirus transmis par Aedes aegypti et Aedes albopictus, survenue dans l'océan Indien en 2004-2007." | Chikungunya epidemic in Indian Ocean — relevant to overseas territory disease vocabulary | IC
-- **MORFITT-D19**: MORFITT | 19 | 7 (pharmacology) | "Déterminer la stabilité physicochimique et microbiologique de suspensions de sulfadiazine (100 mg/mL) dans des formulations de sirop simple (A) et de sorbitol (B) préparées à partir de comprimés disponibles dans le commerce." | Drug formulation stability study — closest to pharmaceutical regulatory content; drug name present but unannotated as INN | IC, OC
-- **MORFITT-D20**: MORFITT | 20 | 1 | "79 patients au total ont été recrutés à Amman (Jordanie) en 2015." | Jordanian oncology study — non-French geographic context | IC
-- **MORFITT-D21**: MORFITT | 21 | 1, 3, 4 | "Bloquer le complément, notamment l'axe C5a-C5aR1, par des thérapies spécifiques représente un espoir thérapeutique dans les formes les plus sévères de la maladie." | COVID-19 complement pathway — three-label multi-label assignment | OO, OF
-- **MORFITT-D26**: MORFITT | 26 | 6, 8, 5 | "74 % (34/46) des échantillons de tissus examinés provenant de chevaux contenaient des sarcocystes" | Equine parasitology study — veterinary, not human pharmaceutical | IC, IO
-- **MORFITT-D29**: MORFITT | 29 | 8 (veterinary) | "La cyclosporine est de plus en plus utilisée en dermatologie des petits animaux." | Veterinary dermatology — cyclosporine in small animal context; not human regulatory use | IC
-- **MORFITT-D31**: MORFITT | 31 | 11 | "des médecins internes en formation en Arabie saoudite" | Saudi Arabian medical intern study — non-metropolitan France context | IC
-- **MORFITT-D34**: MORFITT | 34 | 9 (surgery) | "Bien que la vertébroplastie percutanée soit utilisée depuis presque 30 ans, ce n'est qu'en 2007 que le premier essai randomisé a été publié." | Vertebroplasty RCT review — clinical research abstract, not regulatory document | IO
-- **CLISTER-D1**: CLISTER | 10 | 5.0 | "Une mastectomie était réalisée avec curage axillaire." / "Une mastectomie avec curage axillaire ont été réalisés." | Near-paraphrase in standard French clinical language | IC, IF
-- **CLISTER-D2**: CLISTER | 11 | 4.0 | "La tomodensitométrie abdominale montre des images gazeuses dans la paroi abdominale postérieure, dans l'espace périnéphrétique droit, et dans le rein droit (Figure 1)." / "La tomodensitométrie abdominale avait montré des images gazeuses dans la paroi abdominale postérieure, dans l'espace péri néphrétique droit et au sein du parenchyme." | Clinical imaging paraphrase with minor lexical variation | IC
-- **CLISTER-D3**: CLISTER | 5 | 2.75 | "Le reste de l'examen échographique ne trouvait aucune autre anomalie." / "Le reste de l'examen somatique était sans anomalie." | Mid-range score for partial clinical exam overlap | OO
-- **CLISTER-D4**: CLISTER | 54 | 3.75 | "B.A., âgé de 20 ans a été admis au service d'accueil des urgences pour anurie associée à des lombalgies gauches." / "B.O., 35 ans a été admis au service d'urologie pour des lombalgies gauches avec une insuffisance rénale à 510 mol/l de créatininémie" | Fractional label for partial scenario overlap | OO
-- **CLISTER-D5**: CLISTER | 149 | 0.5 | "Lithium 300 mg x x x x x x x x x x x x x x x x" / "300 mg IV aux 24 h x x x x x x x x x x x x x x x x" | Near-zero score for minimally similar dosing notations | OO
-- **CLISTER-D6**: CLISTER | 41 | 2.0 | "Métoprolol 50 mg deux fois par jour;" / "Metformine 500 mg, 1 comprimé deux fois par jour" | Dosage format comparison between named drugs | IC
-- **CLISTER-D7**: CLISTER | 98 | 2.0 | "Acide folinique 15 mg une fois par jour" / "Aspirine 80 mg, 1 comprimé une fois par jour" | Drug-dose formatting STS comparison | IC
-- **CLISTER-D8**: CLISTER | 116 | 1.0 | "10 à 25 mg une fois par jour" / "Propranolol 40 mg, 1 comprimé deux fois par jour" | Posology expression comparison | IC
-- **CLISTER-D9**: CLISTER | 78 | 4.0 | "2 Maintien : épidurale (bupivicaïne, fentanyl, épimorphine), rémifentanyl et sévoflurane" / "3 Épidurale : bupivicaïne, fentanyl et épimorphine" | Drug-list overlap in clinical anesthesia context | IC
-- **CLISTER-D10**: CLISTER | 21 | 5.0 | "Les limites d'exérèse étaient saines." / "Les limites de l'exérèse étaient saines." | Near-identical sentence with article difference; score=5 | OC
-- **CLISTER-D11**: CLISTER | 37 | 5.0 | "Les limites d'exérèse étaient saines." / "Les marges chirurgicales étaient saines." | Synonym-based paraphrase correctly scored maximum | OC
-- **CLISTER-D12**: CLISTER | 112 | 5.0 | "L'évolution était favorable avec un recul d'une année." / "L'évolution était favorable avec un recul de 12 mois." | Temporal synonym ("un an" vs "12 mois") correctly assessed as equivalent | OC
-- **CLISTER-D13**: CLISTER | 36 | 3.0 | "L'examen cytobactériologique des urines a permis d'isoler un colibacille." / "L'examen cytobactériologique des urines était négatif." | Same exam, opposite findings; mid-range score | OO
-- **CLISTER-D14**: CLISTER | 90 | 3.0 | "Le taux de PSA était de 218 ng/ml (normale ≤ 4ng/ml)." / "Le dosage de PSA était de 13327 ng/ml (normal : < 4 ng/ml)." | Same test, dramatically different values; scored 3.0 | OO
-- **CLISTER-D15**: CLISTER | 7 | 4.0 | "La patiente a été opérée et lors de l'exploration on découvrit qu'il s'agissait d'une tumeur de la veine cave inférieure sus-rénale." | Surgical case narrative, not regulatory document genre | IO, IC
-- **CLISTER-D16**: CLISTER | 6 | 0.0 | "Dans le cadre de la Matériovigilance et d'éventuelles investigations supplémentaires concernant le matériel impliqué, ce cas a été notifié aux autorités sanitaires concernées." | Only incidental regulatory-adjacent language (materiovigilance) in entire sample | IO
-- **CLISTER-D17**: CLISTER | 125 | 4.0 | "Le recul est de 2 ans." / "Le suivie est de 4 ans et demi." | Different follow-up durations scored 4.0; same rubric would conflate regulatory dose differences | OO
-- **CLISTER-D18**: CLISTER | 188 | 4.0 | "L'AHG urinaire est à 10 mmol/l." / "L'AHG urinaire est à 20 mmol/l." | Twofold quantitative difference scored 4.0; regulatory dose doubling requires near-0 | OO
-- **CLISTER-D19**: CLISTER | 146 | 0.0 | "Cette patiente, suivie en psychiatrie pour des troubles de l'humeur bipolaires, avait arrêté son traitement au lithium (Teralithe LP® 400 mg, deux comprimés par jour) un mois avant cette ingestion massive." | Named drug with dose in clinical case; regulatory annotator might weight differently | OC
-- **CLISTER-D20**: CLISTER | 69 | 1.0 | "Hépatique (P) T1/2 = 96 h (P) –" / "Hépatique, rénal T1/2 = 15 – 40 jours" | Pharmacokinetic comparison; score reflects clinical rather than regulatory judgment | OC
-- **CLISTER-D21**: CLISTER | 12 | 5.0 | "Les suites postopératoires furent simples." / "Les suites postopératoires étaient simple." | Highly repeated clinical boilerplate formula saturating score=5 cluster | IC
-- **CLISTER-D22**: CLISTER | 8 | 1.0 | "Jour 45 - - - - - - - - - 25 μg 0,4 mg" / "Jour 53 15,13 12,0 1,58 - - - - - - 25 μg 0,4 mg" | Tabular medication tracking data; non-standard sentence structure | IC
-- **CLISTER-D23**: CLISTER | 191 | 2.0 | "5 mg PO Q 4H PRN X" / "10 mg PO Q 4H PRN X X" | Abbreviation-heavy clinical shorthand; non-standard register | IC
-- **CLISTER-D24**: CLISTER | 163 | 5.0 | "Sheldon).\n\nLe patient subissait une chi miothérapie par Méthotrexate - Vinblastine - Endoxan -Cisplatine par voie" | Fragment with apparent OCR word break ("chi miothérapie"); source document processing artifact | IC
-- **MANTRAGSC-D1**: fr_emea | 5 | CHEM | `"Chaque comprimé contient 500 mg de ranolazine."` | Standard drug labeling INN+dosage sentence | IC
-- **MANTRAGSC-D2**: fr_emea | 7 | CHEM | `"la posologie recommandée d' Agenerase solution buvable est de 17 mg (1,1 ml)/ kg trois fois par jour, sans excéder la dose maximale de 2800 mg par jour"` | Posology statement with dose thresholds from drug leaflet | IC, IO
-- **MANTRAGSC-D3**: fr_emea | 6 | DISO | `"Des symptômes potentiellement liés à l' histamine tels que éruption cutanée étendue, gonflement du visage et/ ou des lèvres, démangeaisons, sensation de chaleur ou difficulté à respirer, ont été rapportés."` | Adverse reaction / safety warning from drug label | IC
-- **MANTRAGSC-D4**: fr_emea | 11 | DISO | `"Les effets indésirables, en dehors des cas isolés, sont repris ci-dessous: ils sont classés par organe et par ordre de fréquence"` | SmPC/leaflet adverse effects section header | IC, IO
-- **MANTRAGSC-D5**: fr_patents | 5 | CHEM | `"Forme posologique orale selon la revendication 1, dans laquelle ledit antagoniste opioïde libérable est la naltrexone et ledit opioïde libérable est la codéine, dans laquelle le rapport de la naltrexone sur la codéine libérable est de 0,005 : 1 à 0,044 : 1."` | Pharmaceutical patent claim with drug ratio | IC, IO
-- **MANTRAGSC-D6**: fr_emea | 9 | CHEM | `"1 ml de solution contient 40 microgrammes de travoprost et 5 mg de timolol (sous forme de maléate de timolol)"` | INN with salt form in drug composition statement | OO
-- **MANTRAGSC-D7**: fr_patents | 3 | CHEM | `"le laxatif osmotique est du glycol de polyéthylène 3350"` | Excipient-level chemical naming annotated as CHEM | IC, OO
-- **MANTRAGSC-D8**: fr_medline | 1 | DISO | `"Luxation antérieure ouverte post-traumatique de la hanche chez l'enfant."` | Traumatology research title; not regulatory text | IC, IO
-- **MANTRAGSC-D9**: fr_medline | 3 | DISO | `"Paraparésie fébrile chez une Tunisienne: spondylite à cryptocoque avec atteinte médullaire."` | Clinical case title with non-Metropolitan geographic context | IC
-- **MANTRAGSC-D10**: fr_medline | 10 | PROC | `"Le problème de la régulation des naissances: aspects médico-légaux et médico-sociaux."` | Public health/social medicine framing; outside regulatory domain | IO
-- **MANTRAGSC-D11**: fr_emea | 7 | CHEM | `"antirétroviraux"` (tag=2, CHEM) | Drug class labeled same as INN; no regulatory sub-distinction | OO
-- **MANTRAGSC-D12**: fr_patents | 2 | CHEM | `"Composition pharmaceutique selon la revendication 9, dans laquelle la mort cellulaire induite est la mort cellulaire d' une cellule B ou d' une cellule T."` | Pharmaceutical composition claim; no regulatory claim-structure annotation | OO
-- **MANTRAGSC-D13**: de_emea | 7 | CHEM | `"Die empfohlene Dosis für Agenerase Lösung beträgt 17 mg... Amprenavir/kg Körpergewicht"` | German-language example; not relevant to French deployment | IC
-- **MANTRAGSC-D14**: fr_patents | 1 | CHEM | `"Composé selon l'une quelconque des revendications 3 à 8, dans lequel R106 est choisi parmi un hydrogène, un alkyle substitué ou insubstitué en C1-C8 linéaire ou ramifié"` | Chemical patent claim language; distinct from patient leaflet register | IO, IF
-- **E3C-D1**: French_clinical | 195 | 0 | "Le bilan biologique montrait une cholestase (bilirubine totale a ` 140 mmol/L, bilirubine conjugue à 80 mmol/L, phosphatases alcalines à 700 UI/L) et une cytolyse" | Formal clinical French with lab value reporting; register-aligned but not regulatory genre | IC, IF
-- **E3C-D2**: French_clinical | 478 | 0 | "Le patient a été mis sous traitement par ciclosporine avec une évolution rapide vers une leucémie aigue myéloblastique" | Drug name present (ciclosporine) but tagged O; schema cannot capture INN entities | IC, OO
-- **E3C-D3**: French_temporal | 107 | mixed | "Il s'agit d'une patiente de 44 ans, sans antécédent médico-chirurgical, qui a présenté depuis un an des céphalées, compliquées 08 mois après de crises d'épilepsies partielles" | Complex clinical narrative with temporal markers; demonstrates French clinical genre | IC, IF
-- **E3C-D4**: French_temporal | 304 | mixed | "L'examen physique a mis en évidence une volumineuse tuméfaction dorsolombaire gauche ovalaire mesurant 24cm de grand axe et 12cm de petit axe" | Multi-class temporal/factuality annotation; BODYPART and measurement spans tagged | OO
-- **E3C-D5**: French_clinical | 54 | 1,2 | "Cet aspect évoquait une tumeur solide du péritoine" | B-I IOB2 entity span for CLINENTITY; confirms IOB2 encoding format | OF
-- **E3C-D6**: Basque_clinical | 180 | 0 | "Azken hilabeteetan Ikernek kodeina + ibuprofenoa hartu ditu, baina ez du hobekuntza handirik nabaritu" | Basque text; irrelevant to French deployment | IC, IF
-- **E3C-D7**: English_clinical | 188 | 0 | "A chest radiograph showed right upper lobe consolidation with volume loss, right para-tracheal and left hilar adenopathy" | English clinical text; irrelevant to French regulatory deployment | IC, IF
-- **E3C-D8**: Italian_clinical | 446 | mixed | "Trattata con nutrizione parenterale(NP), volume iniziale di 240 ml/die(166 kcal)" | Italian clinical text; irrelevant to French regulatory deployment | IC, IF
-- **E3C-D9**: French_clinical | 439 | 0 | "La culture a isolé le germe Nocardia asteroides" | Bacteriological clinical finding; clinical case genre, not regulatory document | IO, IC
-- **E3C-D10**: French_clinical | 253 | 0 | "La fonction hépatique s'est améliorée avec un TP à 82% à l'arrêt du traitement" | Clinical outcome reporting; typical case genre, not regulatory submission text | IO, IC
-- **E3C-D11**: French_clinical | 195 | 0 | "une cholestase (bilirubine totale a ` 140 mmol/L...phosphatases alcalines à 700 UI/L)" | Lab measurement tagged O; no dosage/substance/reference-value entity class available | OO
-- **E3C-D12**: French_clinical | 478 | 0 | "mis sous traitement par ciclosporine" | Drug name tagged O; schema lacks INN/substance entity type required for regulatory NER | OO, OC
-- **E3C-D13**: French_clinical | 64 | 1,2 | "La patiente a déjà mené une première grossesse à terme" | "Première grossesse" tagged CLINENTITY; obstetric clinical annotation norm, not regulatory contraindication logic | OC
-- **E3C-D14**: French_clinical | 91 | 0 | "Un prélèvement systématique a été réalisé" | Short decontextualized sentence; illustrates limited training data depth | IC
-- **PXCORPUS-D1**: PxCorpus | 5 | medical_prescription | "primperan 10 milligrammes comprimés 1 comprimé en cas de nausée toutes les 8 heures pendant 14 jours" | Brand drug with dose, form, indication, frequency, duration — deployment-relevant posology structure | IC
-- **PXCORPUS-D2**: PxCorpus | 166 | medical_prescription | "alprazolam 0,25 milligrammes 1 comprimé en cas d'anxiété pendant 1 mois" | INN drug with dose, conditional indication, duration | IC
-- **PXCORPUS-D3**: PxCorpus | 212 | medical_prescription | "triclabendazole comprimés à 250 milligrammes 10 milligrammes par kilogrammes en prise unique pendant 1 mois" | Weight-based dosing expression | IC
-- **PXCORPUS-D4**: PxCorpus | 121 | medical_prescription | "cordarone 100 milligrammes 1 comprimé 1 jour sur 2 pendant 1 mois" | Alternating-day schedule — posology variety | IC
-- **PXCORPUS-D5**: PxCorpus | 146 | medical_prescription | "toviaz 4 milligrammes comprimés à libération prolongée 1 comprimé le matin quantité suffisante pour 1 mois à renouveler pendant 2 fois" | Modified-release form with renewal instruction | IC
-- **PXCORPUS-D6**: PxCorpus | 71 | medical_prescription | "orgazuline injectable 1 injection sous-cutanée matin et soir pendant 7 jours" | Subcutaneous injection route | IC
-- **PXCORPUS-D7**: PxCorpus | 150 | medical_prescription | "discotrine 10 milligrammes patch 1 patch le matin au réveil retirer le patch le soir pendant 1 mois" | Transdermal patch with timed application/removal | IC
-- **PXCORPUS-D8**: PxCorpus | 4 | replace | "attention il s'agit de 20 milligrammes et pas 10 milligrammes" | Explicit dosage correction speech act | IO, OC
-- **PXCORPUS-D9**: PxCorpus | 8 | replace | "remplacer 1 comprimé tous les jours par 1 comprimé en cas d'anxiété" | Regimen replacement: daily → conditional | IO, OC
-- **PXCORPUS-D10**: PxCorpus | 76 | none | "euh la spécialité est incohérente avec la posologie car la spécialité est en gélules et la posologie en comprimés…" | Form inconsistency meta-commentary | OC
-- **PXCORPUS-D11**: PxCorpus | 92 | none | "ajouter un commentaire pour aciclovir comprimés et ne propose pas les différentes formes galéniques du produit…" | Galenic form selection failure description | OC
-- **PXCORPUS-D12**: PxCorpus | 3 | none | "/chet" | Single-token transcription artifact; no pharmaceutical content | IO, IC
-- **PXCORPUS-D13**: PxCorpus | 88 | none | "i'll agree come on say avec successes merde je vais roulé faut lui faire un et mettre la rame en mode français…" | Code-switched colloquial fragment from dialogue session | IO, IC, IF
-- **PXCORPUS-D14**: PxCorpus | 10 | negate | "ne pas tenir compte à midi tous les jours merd/" | Spoken correction with truncation artifact | IC, IF
-- **PXCORPUS-D15**: PxCorpus | 75 | medical_prescription | "euh 2 le matin 2 le midi et 2 le soir" | Spoken filler with no drug name; no regulatory document parallel | IC, IF
-- **PXCORPUS-D16**: PxCorpus | 169 | medical_prescription | "lamotrigine 25 milligrammes euh p/ combien" | Incomplete, disfluent, truncated utterance | IC, IF
-- **PXCORPUS-D17**: PxCorpus | 207 | medical_prescription | "teralithe 250 milligrammes / le serveur de dialogue met beaucoup de temps à comprendre votre énoncé veuillez reformuler différemment…" | System error message embedded in prescription utterance | IC, IF
-- **PXCORPUS-D18**: PxCorpus | schema | — | `["medical_prescription", "negate", "none", "replace"]` | Intent classes model spoken dialogue, not regulatory compliance verdicts | OO
-- **PXCORPUS-D19**: PxCorpus | 103 | medical_prescription | "trémétadisine trémétasidine à 20 milligrammes à 3 comprimés par jour pendant 3 semaines" | Tag 49 on "trémétasidine" — undecoded salt qualifier; no regulatory entity taxonomy | OO, IC
-- **PXCORPUS-D20**: PxCorpus | 145 | medical_prescription | "lévothyroxine sodique 50 microgrammes 1 comprimé à prendre le matin à jeun pendant 6 semaines" | "sodique" tagged 49 — INN-salt distinction not mapped to ATC or regulatory standard | OO, IC
-- **PXCORPUS-D21**: PxCorpus | buffer | — | medical_prescription: 447, negate: 11, replace: 3, none: 39 | Severe class imbalance; `replace` (correction) class underrepresented | OC, OF
-- **PXCORPUS-D22**: PxCorpus | 50 | none | "erreur sur le nom du médicament ondonsétron erreur sur la posologie" | System recognition error description — not a regulatory document category | OC
-- **PXCORPUS-D23**: PxCorpus | 90 | none | "prononcé 15 milligrammes transcrit 3 milligrammes" | Speech-to-text discrepancy report; no analog in regulatory labeling annotation | OC
-- **DIAMED-D1**: DiaMED | 1 | A00-B99 | "Le test rapide VIH était positif, confirmé par la sérologie VIH avec un taux de CD4 à 27/mm3. Les sérologies à cytomégalovirus, toxoplasmose, aspergillaire, hépatite B, hépatite C et syphilitique étaient négatives." | HIV/AIDS case with low CD4 count; Sub-Saharan African disease presentation, not metropolitan French | IC, IO
-- **DIAMED-D2**: DiaMED | 2 | C00-D49 | "La sérotonine et la chromogranine plasmatique étaient élevées à respectivement 2320 µg/l et 5820 ng/l." | Carcinoid tumor; oncology chapter confirmed; drug mentions include 5-Fluoro-uracile | IC, IO
-- **DIAMED-D3**: DiaMED | 3 | D50-D89 | "keywords: ['Rate', 'abdomen aigu', 'scanner abdominal', 'chirurgie', 'Maroc']" | Moroccan clinical context; geographic mismatch with metropolitan France | IC
-- **DIAMED-D4**: DiaMED | 4 | E00-E89 | "Il s'agit d'un enfant de 5ans... ayant consulté aux urgences pour asthénie chronique avec pâleur. L'examen clinique a retrouvé un enfant en bon état général avec des tâches achromiques diffuses" | Piebaldism case assigned to endocrine chapter; illustrates coarse ICD-10 labeling | OO, OC
-- **DIAMED-D5**: DiaMED | 5 | F01-F99 | "le diagnostic de pathomimie a été évoqué et retenu. Devant le contexte de dépression, la patiente a été adressée en psychiatrie où ce diagnostic a été confirmé" | Factitious disorder/depression case; confirms mental health chapter coverage | IO
-- **DIAMED-D6**: DiaMED | 6 | G00-G99 | "Monsieur Y. O. âgé de 19 ans a été hospitalisé le 03 février 2012 pour une paraplégie évoluant depuis un mois." | Clinical case narrative genre — not regulatory document genre | IO, IC
-- **DIAMED-D7**: DiaMED | 7 | H00-H59 | "Il s'agit d'une jeune fille âgée de 17 ans, sans antecedants particuliers, ayant constatée d'elle même une anisocorie sans signes accompagnateurs." | Adie pupil case; confirms ophthalmology chapter | IO
-- **DIAMED-D8**: DiaMED | 8 | H60-H95 | "Le diagnostic d'otite externe maligne avait été posé et une antibiothérapie injectable empirique instaurée à base de céphalosporines de troisième génération et de ciprofloxacine" | Drug names with administration routes in clinical context; closest to pharmaceutical vocabulary | IC
-- **DIAMED-D9**: DiaMED | 9 | I00-I99 | "Communication interventriculaire ischémique... dans le service de cardiologie du CHU-Yalgado Ouedraogo de Ouagadougou (Burkina Faso)" | Explicitly Burkinabé hospital setting — not metropolitan France | IC, OC
-- **DIAMED-D10**: DiaMED | 10 | J00-J99 | "En collaboration avec les confrères ORL, la patiente a été mise sous antibiothérapie par voie générale associée à une corticothérapie par voie orale pendant 7 jours" | Generic antibiotic/corticosteroid mention without INN; clinical case genre | IC
-- **DIAMED-D11**: DiaMED | 11 | K00-K95 | "Ces douleurs étaient consécutives à une alimentation importante suite à la rupture du jeûn durant le mois de ramadan." | Ramadan context confirms African/North African origin; cultural/geographic mismatch | IC
-- **DIAMED-D12**: DiaMED | 12 | L00-L99 | "Elle a reçu une prescription de 200mg de Phénobarbital à prendre en une prise vespérale... Un traitement antipsychotique (Halopéridol 20 mg et Chlorpromazine 400 mg en deux prises par jour)" | Named drugs with dosages in clinical case; keywords include 'Niamey' (Niger) | IC, IO
-- **DIAMED-D13**: DiaMED | 13 | M00-M99 | "L'ostéochondrite disséquante du capitellum chez l'adolescent: à propos d'un cas et revue de la littérature" | Clinical case + literature review genre; no regulatory text features | IO, IF
-- **DIAMED-D14**: DiaMED | 14 | N00-N99 | "La micro-biopsie a révélé un aspect histologique pouvant évoquer une fibromatose desmoïde sans être exclusif, nous avons complété par une étude immuno-histo-chimique en faveur d'une fibromatose desmoïde." | Clinical case report genre; histopathology language, not regulatory | IC, IO
-- **DEFT2021-D1**: DEFT2021/cls | 3 (train) | [6,14,13,19,4] | "Mme J.K. est traitée pour une fibrillation auriculaire depuis deux ans avec le sulfate de quinidine 200 mg trois fois par jour... La prescription de clarithromycine nous semblerait, dans ce cas précis, d'un rapport bénéfice/risque très bas et potentiellement torsadogénique" | Drug interaction case with benefit-risk reasoning; partial overlap with pharmacovigilance language | IC
-- **DEFT2021-D2**: DEFT2021/cls | 8 (train) | [20,17,22,13,0,4,19] | "la perfusion de rituximab (375 mg dans 187,5 ml NaCl 0,9 %) débute à une vitesse de 15 mg/heure... le patient se plaint de difficultés respiratoires" | Precise pharmaceutical dosing and adverse reaction documentation | IC
-- **DEFT2021-D3**: DEFT2021/ner | 80 (train) | SUBSTANCE | "La patiente était mise sous traitement anti-bacillaire à base de rifampicine – isoniazide – pyrazinamide pendant 6 mois" | Drug names tagged as SUBSTANCE with DURATION; posology annotation | OO
-- **DEFT2021-D4**: DEFT2021/cls | 5 (train) | [12,3,20,4,7,5] | (six specialty labels for complex multi-system hepatotoxicity case) | Demonstrates multi-label output consistent with deployment's multi-candidate design | OO, OF
-- **DEFT2021-D5**: DEFT2021/ner | 55 (train) | SUBSTANCE/DOSAGE/MODE/FREQ | "Hydrocortisone 300 mg IV immédiatement ; Traitement Hydroxyzine 25 mg par voie orale toutes les 6 heures" | Posology-adjacent annotation of drug, dose, route, frequency | OO
-- **DEFT2021-D6**: DEFT2021/ner | 7 (train) | SUBSTANCE/DURATION | "sorti au 5ème jour sous cotrimoxazole pour 10 jours" | Drug name + duration annotated; basic posology entity coverage | IC
-- **DEFT2021-D7**: DEFT2021/cls | 1 (train) | [18,4] | "Femme de 73 ans n'ayant eu qu'un seul enfant par césarienne… insuffisance rénale obstructive avec une urée sanguine à 10 mmol/l de sérum" | Standard clinical French prose; confirms register and language match | IF
-- **DEFT2021-D8**: DEFT2021/cls | 6 (train) | [12,17,4] | "La néphrostomie a été posée la veille de l'intervention… Au 5ème jour, le malade a fait un choc hémorragique" | Narrative clinical case; no regulatory document structure present | IO, IC
-- **DEFT2021-D9**: DEFT2021/cls | 10 (train) | [3] | "Des prélèvements de sérum et d'urine sont réalisés aux fins de «recherche d'alcoolémie»… Du GHB est retrouvé dans l'urine au taux de 4 ug/ml" | Forensic toxicology case; no regulatory labeling context | IO
-- **DEFT2021-D10**: DEFT2021/ner | 3 (train) | SUBSTANCE (21/22) | "diphenhydramine et de méthylprednisolone" | Drug names tagged SUBSTANCE with no INN/ATC/excipient distinction | OO
-- **DEFT2021-D11**: DEFT2021/ner | 28 (train) | PATHOLOGY | "un carcinome vésical droit, de 3 cm de diamètre, infiltrant (grade II, pT2)" | Clinical pathology staging; no regulatory safety signal mapping | IC
-- **DEFT2021-D12**: DEFT2021/cls | 4 (train) | [15,4,3] | "Le patient dira avoir ingéré au moins 20 comprimés de Séresta 50 mg… Il parle également d'injection intraveineuse de poudre «NRG»" | Hearsay drug exposure in clinical narrative; annotation by clinical not regulatory expert | OC
-- **DEFT2021-D13**: DEFT2021/cls | 5 (train) | [12,3,20,4,7,5] | (six co-occurring MeSH labels for multi-system hepatotoxicity) | Multi-label clinical annotation; no regulatory-legal ground truth | OC
-- **DEFT2021-D14**: DEFT2021/cls | 2 (train) | [4,9,18] | "L'histologie découvrait un oncocytome rénal et l'évolution était favorable avec un recul de 5 ans" | Oncology case; MeSH labels reflect disease classification, not regulatory safety axes | OO
-- **DEFT2021-D15**: DEFT2021/cls | 3 (train) | [6,14,13,19,4] | "le pharmacien hésite à lui remettre la prescription… Tableau I : Interactions médicamenteuses dans le cas clinique" | Canadian pharmacy clinical case; register and institutional context differ from metropolitan French regulatory documentation | IC
-- **DEFT2021-D16**: DEFT2021/cls | 8 (train) | [20,17,22,13,0,4,19] | "acétaminophène 300 mg par voie orale" | Canadian drug name convention ('acétaminophène' vs French 'paracétamol'); cross-regional register variation | IC
-- **CAS-D1**: CAS/cls | 3 | neutral | "l'examen clinique montre un état général conservé." | Standard French clinical examination sentence — confirms register alignment | IF, IC
-- **CAS-D2**: CAS/cls | 13 | neutral | "depuis hier soir, je suis essouflé, j'ai des frissons, j'ai mal à la poitrine" | Patient-reported symptom language in French clinical case — confirms clinical register | IF, IC
-- **CAS-D3**: CAS/cls | 1 | negation_speculation | "le diagnostic d'ulcère solitaire du rectum était évoqué à tort et une rééducation recto-sphinctérienne réalisée sans succès." | Combined negation + speculation in clinical narrative — demonstrates label complexity | IO, OO
-- **CAS-D4**: CAS/cls | 5 | negation_speculation | "il est donc possible que le même résultat clinique aurait été observé chez ce patient sans ajout de la nac." | Speculative treatment outcome claim — relevant to pharmacovigilance reasoning | IO, OO
-- **CAS-D5**: CAS/cls | 33 | speculation | "puisque le traitement par la warfarine semble plus problématique, un naco est envisagé." | Drug treatment uncertainty phrasing — closest to regulatory safety language | IC, IO
-- **CAS-D6**: CAS/cls | 8 | speculation | "une origine médicamenteuse étant envisagée (avec éventuellement une imputabilité du paracétamol), il était décidé d'arrêter les différents traitements et de remplacer les lavements de pentasa® par du proctocort® (hydrocortisone acétate 90 mg : 1 lavement tous les soirs)." | Contains drug names with dosing — limited regulatory vocabulary present | IC
-- **CAS-D7**: CAS/cls | 47 | neutral | "après mise en condition en unité de soins intensifs et administration d'une ampoule de digoxine en intraveineuse" | Drug name with route of administration in clinical narrative | IC
-- **CAS-D8**: CAS/ner_neg | 5 | — | tokens: "sans antécédent familial de maladie colique" ner_tags: [0,1,2,2,2,2,...] | Span-level negation scope annotation — BIO tagging of negated content | OO
-- **CAS-D9**: CAS/ner_neg | 21 | — | "ne montrait aucune lésion focale" ner_tags: [0,1,0,2,2,0] | Distributed negation scope correctly marked at token level | OO
-- **CAS-D10**: CAS/cls | 26 | neutral | "les constantes hémodynamiques étaient stables mais le bilan biologique mettait en évidence une anémie à 5,7 g/100ml d'hb" | Lab-value clinical prose — not representative of SmPC or leaflet structure | IO, IC
-- **CAS-D11**: CAS/cls | 44 | neutral | "la masse respectait le plan osseux sacro-coccygien, refoulait la vessie, le rectum et le canal anal qui présentait une infiltration circonférentielle." | Pathology/imaging prose from clinical case — absent in regulatory labeling genres | IO, IC
-- **CAS-D12**: CAS/cls | 3 | neutral | "l'examen clinique montre un état général conservé." | Neutral label for factual clinical statement — irrelevant to regulatory entity NER | OO
-- **CAS-D13**: CAS/ner_spec | 16 | — | "le diagnostic d'ulcère solitaire du rectum était évoqué à tort" ner_tags: [1,2,2,2,2,2,2,2,...] | Speculation scope marks diagnostic phrase — no counterpart in regulatory NER schema | OO
-- **CAS-D14**: CAS/pos | 10 | — | tokens: ['le', 'scanner', 'réalisé', ...] pos_tags: [12, 24, 25, ...] | Automatic POS assignment without full human adjudication — silver-standard risk | OC
-- **CAS-D15**: CAS/ner_neg | 22 | — | "administration d'une ampoule de digoxine en intraveineuse" ner_tags: [0,...,0] all zeros | Drug name entirely untagged; NER only captures negation scope, not pharmacological entities | IC, OO
-- **CAS-D16**: CAS/cls | buffer | — | negation_speculation: 6, negation: 100, neutral: 368, speculation: 26 | Extreme neutral class dominance — minority safety-critical classes underrepresented | OO, OF
-- **CAS-D17**: CAS/cls | 13 | neutral | "depuis hier soir, je suis essouflé, j'ai des frissons, j'ai mal à la poitrine" | Metropolitan France general medicine symptom vocabulary — no tropical disease content | IC
-- **ESSAI-D1**: ESSAI/cls | train/1 | negation_speculation | "Evaluer l' hypothèse selon laquelle une chimiothérapie à hautes doses avec une combinaison de Busulfan et de Melphalan (BU-MEL) permettra d' obtenir une survie sans événement à 3 ans supérieure à une consolidation par une association de Carboplatine VP16 et Melphalan chez des patients porteurs d' un neuroblastome à haut risque." | Formal French biomedical prose with drug names in clinical trial objective format | IC, IF
-- **ESSAI-D2**: ESSAI/cls | train/12 | speculation | "Cette étude si elle est positive permettra de valider, pour la première fois dans les tumeurs neuroendocrines carcinoïdes bronchiques évoluées, le bénéfice dans le contrôle de la progression tumorale de la prescription du Lanréotide 120 mg par mois." | Includes posology expression (120 mg per month) relevant to drug labeling | IC
-- **ESSAI-D3**: ESSAI/ner_neg | train/9 | O (all) | "L' acétate d' abiratérone ou l' enzalutamide sont des traitements assez récents et ainsi appelés « hormonothérapies de nouvelle génération »." | INN-level drug names present but not labeled as drug entities | IC, OO
-- **ESSAI-D4**: ESSAI/ner_neg | train/1 | O (all) | "avec la combinaison gemcitabine + abraxane, chez des patients avec un cancer du pancréas." | Drug names appear without entity-type annotation | IC, OO
-- **ESSAI-D5**: ESSAI/ner_spec | train/3 | O (all) | "Lorsque la chimiothérapie à base de platine est associée au Caelyx, les perfusions ont lieu tous les quinze jours pendant 6 mois (cycles de 28 jours) puis une maintenance est ensuite instaurée avec le Bevacizumab et l' Atezolizumab ou placebo perfusés toutes les 3 semaines." | Drug names and dosing schedule present but unlabeled as entities | IC
-- **ESSAI-D6**: ESSAI/cls | train/2 | negation | "Des traitements de radiothérapie plus courts sur 3 semaines pour des cancers du sein sans atteinte ganglionnaire se sont montrés tout aussi efficace et ne présentent pas plus d' effets secondaires dans différents essais cliniques sur plusieurs milliers de patientes." | Negation of adverse effects — partially relevant to safety claim checking | OO
-- **ESSAI-D7**: ESSAI/cls | train/10 | negation | "l' objectif de cette étude de recherche clinique est d' évaluer la sécurité d' emploi et l' efficacité de l' avelumab (MSB0010718C) associé aux meilleurs soins palliatifs chez des patients atteints d' un adénocarcinome de l' estomac ou de la jonction gastroœsophagienne non résécable, récidivant ou métastatique." | Negation of resectability in complex oncology context | IC
-- **ESSAI-D8**: ESSAI/cls | train/5 | negation_speculation | "Dans ce contexte, l' étude ESMART a pour objectif d' explorer des nouveaux médicaments, seul ou en association, de chercher quelle est la meilleure dose chez l' enfant, adolescent et jeune adulte, et si des anomalies retrouvées ou non dans la tumeur mènent à un avantage thérapeutique chez ces patients." | Investigational framing absent from approved regulatory document language | IO
-- **ESSAI-D9**: ESSAI/ner_spec | train/4 | O (all) | "Cet essai thérapeutique de phase III, multicentrique, randomisé à 3 bras, s' adresse à des patientes atteintes d' un cancer de haut grade de type séreux de l' ovaire, des trompes de Fallope ou du péritoine résistant ou réfractaire au platine." | Trial eligibility criteria, not SmPC/PIL regulatory document structure | IO
-- **ESSAI-D10**: ESSAI/ner_neg | train/11 | 0,0,...,2,3,... | "radiothérapie hypofractionnée qui est devenue un standard pour les cancers du sein en l' absence d' atteinte ganglionnaire chez les femmes ménopausées" (atteinte ganglionnaire tagged B/I-NEG) | Only negated clinical finding span tagged; no drug entity labels | OO
-- **ESSAI-D11**: ESSAI/ner_spec | train/10 | 0,0,...,2,3,... | "Cette étude vise à déterminer si le traitement par un inhibiteur de PARP, le talazoparib, peut être plus efficace et mieux toléré de la chimiothérapie de référence chez les patients atteints de un cancer du sein métastatique" | Speculated treatment span tagged; drug name (talazoparib) not categorized as drug entity | OO, IC
-- **ESSAI-D12**: ESSAI/pos | train/2 | pos_tags=[3,7,...] | "Le MEDI9197 est injecté en intra-tumoral tous les 28j (4 semaines)." | Drug identifier MEDI9197 tagged as NAM (tag 7) by automatic TreeTagger — silver standard | OC, OF
-- **ESSAI-D13**: ESSAI/cls | train/9 | negation_speculation | "Ne pas prendre part à un autre projet de recherche sans l' accord de votre médecin, ceci pour vous protéger de tout accident possible pouvant résulter par exemple d' incompatibilités possibles ou d' autres dangers." | Instruction-format negation in patient consent language, not regulatory safety warning | OC
+- **QUAERO-D1**: QUAERO/emea | 38 | DISO/PROC | "TYSABRI est utilisé pour traiter la sclérose en plaques (SEP)… troubles de la marche, engourdissement du visage" | Disease/symptom enumeration in EMEA drug label; strong DISO entity density | IO, IC
+- **QUAERO-D2**: QUAERO/emea | 46 | DISO/PROC | "les effets indésirables les plus couramment observés sous Tysabri… rhinopharyngite… urticaire… arthralgie… pyrexie (fièvre)" | Multi-entity adverse-event list; confirms NER coverage of pathology vocabulary | IC
+- **QUAERO-D3**: QUAERO/medline | 3 | DISO | "Alcool et cancer." | Very short MEDLINE title; confirms text register range in dataset | IC
+- **QUAERO-D4**: QUAERO/emea | 1 | CHEM | "Phosphate de sodium, monobasique, monohydraté… Polysorbate 80 (E433)… Eau pour préparation injectable." | Chemical excipient list; confirms pharmaceutical CHEM annotation | IC
+- **QUAERO-D5**: QUAERO/emea | 55 | CHEM/DEVI | "TYSABRI 300 mg solution à diluer pour perfusion… chaque flacon de 15 ml de concentré contient 300 mg de natalizumab" | Dosage/container/drug vocabulary; confirms DEVI and CHEM annotation | IC
+- **QUAERO-D6**: QUAERO/medline | 98 | DISO/GEOG | "Le paludisme chimiorésistant en France." | Malaria + geographic tag; infectious disease domain coverage | IO, IC
+- **QUAERO-D7**: QUAERO/medline | 106 | DISO/LIVB | "Encéphalopathie toxique par ingestion de carambole (Averrhoa carambola)." | Tropical plant toxicity; exotic etiology in MEDLINE corpus | IC
+- **QUAERO-D8**: QUAERO/medline | 45 | DISO | "Le syndrome de Noonan et sa dysplasie cardio-vasculaire." | Rare genetic/cardiovascular disorder; confirms ontological breadth | IO
+- **QUAERO-D9**: QUAERO/emea | 2 | DISO/PHYS | "Une cirrhose du foie peut également affecter l'excrétion rénale de la lépirudine." | Standard written French medical prose; confirms script/register alignment | IF
+- **QUAERO-D10**: QUAERO/emea | 6 | DISO | "Des épisodes de troubles psychiatriques aigus, tels que hallucinations, réactions paranoïdes… psychose et réactions maniaques" | Psychiatric DISO enumeration; tests fine-grained entity boundary detection | OO
+- **QUAERO-D11**: QUAERO/emea | 46 | DISO | "rhinopharyngite (inflammation du nez et de la gorge), urticaire (éruption cutanée)" | Patient-leaflet gloss structure absent from clinical notes; register mismatch | IC
+- **QUAERO-D12**: QUAERO/emea | 4 | O | "Aucune étude clinique spécifique sur les interactions médicamenteuses n Toutefois…" | Sentence truncation artefact from EMEA document splitting; preprocessing noise | IC
+- **QUAERO-D13**: QUAERO/emea | 26 | O | "La durée du traitement est allée d'une heure de perfusion en bolus à une utilisation continue de plus de 6 ans." | Temporal expressions present but unlabeled; confirms absence of temporal NER | OO
+- **QUAERO-D14**: QUAERO/emea | 11 | O | "La dose peut être augmentée par intervalles de 1 à 2 jours, voire plus…" | Another unlabeled temporal phrase; reinforces temporal NER gap | OO
+- **QUAERO-D15**: QUAERO/medline | 27 | PHYS | "Anoïkis." | Single-token title; zero context, tests only string-matching NER | IC
+- **QUAERO-D16**: QUAERO/medline | 3 | DISO | "Alcool et cancer." | Three-token title; minimal clinical context for entity recognition | IC
+- **QUAERO-D17**: QUAERO/medline | 61 | O | "LÉON GRIMBERT 1860 - 1931." | Biographical entry; no clinical entities; irrelevant to clinical NLP | IC
+- **QUAERO-D18**: QUAERO/emea | 64 | DISO/ANAT | "Si vous avez des perturbations graves du système immunitaire (dues à une maladie, telle que leucémie ou infection à VIH…" | Entity boundary ambiguity; annotation by NLP researchers may differ from clinician judgment | OC
+- **QUAERO-D19**: QUAERO/medline | 16 | O | "L'apport des inventaires a la connaissance de la demographie parisienne ancienne: le regne de Francois Ier" | Historical demography; not clinically relevant | IC
+- **QUAERO-D20**: QUAERO/medline | 34 | O | "La santé du duc d'Enghien durant ses primes années d'après le journal de son médecin." | Historical biographical text; off-domain for clinical NLP | IC
+- **QUAERO-D21**: QUAERO/medline | 137 | DISO/LIVB | "Sensibilité à la pénicilline G des pneumocoques isolés des méningites et implication thérapeutique au CHU de Treichville-Abidjan." | Sub-Saharan institution; non-metropolitan French clinical context in MEDLINE | IC
+- **FRENCHMEDMCQA-D1**: FrenchMedMCQA | 1 | 1 | "Au cours de la leucémie lymphoïde chronique, le myélogramme montre: Une population de lymphocytes>30%" | Clinical hematology question in formal medical French | IC, IF
+- **FRENCHMEDMCQA-D2**: FrenchMedMCQA | 2 | 2 | "La loi de Beer-Lambert: S'applique aux dosages spectrophotométriques... Est une loi additive" | Analytical chemistry question irrelevant to clinical NLP | IO, OC
+- **FRENCHMEDMCQA-D3**: FrenchMedMCQA | 3 | 3 | "Parmi les propriétés suivantes du monoxyde de carbone... correct_answers: [0, 3, 4]" | Multi-label MCQA structure covering CO properties | IO
+- **FRENCHMEDMCQA-D4**: FrenchMedMCQA | 4 | 4 | "L'acétylcholine est libérée par: Les neurones sympathiques préganglionnaires" | Pharmacological terminology in standard medical French | IC, IF
+- **FRENCHMEDMCQA-D5**: FrenchMedMCQA | 5 | 5 | "Les marqueurs suivants sont présents dans les lymphocytes B matures... correct_answers: [0, 1, 2, 3, 4]" | All-five-correct multi-label answer, showing full label cardinality | IO
+- **FRENCHMEDMCQA-D9**: FrenchMedMCQA | 9 | 4 | "L'oeuf d'Enterobius vermicularis: Est incolore, Est asymétrique..." | Parasitology content with partial tropical relevance | IO
+- **FRENCHMEDMCQA-D13**: FrenchMedMCQA | 13 | 3 | "Quel est (sont) le(s) diurétique(s) qui provoque(nt) une baisse du potassium sanguin? Chlortalidone, Hydrochlorothiazide, Furosémide" | Drug class knowledge relevant to clinical pharmacology | IC
+- **FRENCHMEDMCQA-D14**: FrenchMedMCQA | 14 | 4 | "intoxication par les salicylés... L'administration intraveineuse de bicarbonate de sodium permet de corriger l'acidose métabolique" | Clinical toxicology management scenario | IC
+- **FRENCHMEDMCQA-D20**: FrenchMedMCQA | 20 | 5 | "Dans quel(s) cas peut-on parler d'hypertension artérielle selon les critères de l'OMS? correct_answers: [0, 1, 2, 3, 4]" | All-correct answer; no confidence signal available | OO, OF
+- **FRENCHMEDMCQA-D23**: FrenchMedMCQA | 23 | 3 | "En électrophorèse capillaire haute performance, le sens de migration de l'analyse dépend: De la nature de la charge de l'analyte" | Analytical chemistry instrumentation; not relevant to clinical NLP | IO
+- **FRENCHMEDMCQA-D24**: FrenchMedMCQA | 24 | 4 | "Chez un patient atteint de SIDA... Lymphopénie, Diminution des lymphocytes T4, Adénopathies, Thrombopénie" | AIDS hematological profile; relevant to pathology classification | IC
+- **FRENCHMEDMCQA-D32**: FrenchMedMCQA | 32 | 4 | "correct_answers: [0, 1, 3, 4]" | Four-of-five selection; binary gold label, no confidence ranking | OO, OF
+- **FRENCHMEDMCQA-D37**: FrenchMedMCQA | 37 | 1 | "Les 3 nucléides de l'hydrogène, H(A=1,Z=1), H(A=2,Z=1) et H(A=3,Z=1) sont: Des isotopes" | Nuclear physics in pharmacy exam; clean French text, no abbreviations | IF
+- **FRENCHMEDMCQA-D40**: FrenchMedMCQA | 40 | 4 | "le composé suivant: Est utilisé comme antibactérien... Augmente l'ototoxicité des aminosides" | References implied chemical structure diagram; text-only representation incomplete | IC
+- **FRENCHMEDMCQA-D43**: FrenchMedMCQA | 43 | 3 | "L'économie médicale est une économie... Caractérisée par le libre choix des médecins par le malade" | Health economics question; low clinical NLP relevance | IO
+- **FRENCHMEDMCQA-D45**: FrenchMedMCQA | 45 | 1 | "Parmi les techniques voltampérométriques, on trouve: La polarographie" | Electroanalytical chemistry; irrelevant to hospital clinical NLP | IO
+- **FRENCHMEDMCQA-D61**: FrenchMedMCQA | 61 | 1 | "La certification des établissements de santé: Concerne tous les établissements de santé" | Health system regulation; marginal clinical NLP relevance | IO
+- **FRENCHMEDMCQA-D65**: FrenchMedMCQA | 65 | 1 | "le mode habituel de contamination de l'homme dans la bilharziose urinaire: Pénétration trans-cutanée" | Tropical parasitosis; partial DOM-TOM pathology coverage | IO, IC
+- **FRENCHMEDMCQA-D67**: FrenchMedMCQA | 67 | 3 | "Quelle est (sont) la (les) parasitose(s) qui présente(nt) un stade hépatique? Giardiase, Paludisme, Fasciolose; correct: [1, 2, 3]" | Malaria and other tropical parasitoses included | IO, IC
+- **FRENCHMEDMCQA-D77**: FrenchMedMCQA | 77 | 1 | "Quelle est la base qui n'existe pas dans une molécule d'ADN? Uracile" | Unambiguous factual label, high annotation reliability | OC
+- **FRENCHMEDMCQA-D99**: FrenchMedMCQA | 99 | 3 | "Les modifications de structure permettant le passage du composé 1 au composé 2 entraînent: Un élargissement du spectre vers les cocci Gram+" | Structure-comparison question requiring figure; no extractable entities | IO
+- **FRENCHMEDMCQA-D117**: FrenchMedMCQA | 117 | 1 | "Un patient de 20 ans est traité par héparine de bas poids moléculaire pour une thrombose iliaque... Activité anti Xa = 2,00 UI/mL" | Clean clinical vignette; structured exam format, not raw clinical note | IC
+- **DEFT2020-D1**: DEFT2020/task_1 | Ex.16 | moy=4.0 | "Ce produit peut provoquer un syndrome de sevrage opiacé s'il est administré à un toxicomane moins de 4 heures après la dernière prise de stupéfiant." | Pharmaceutical drug leaflet sentence about opioid withdrawal; matches clinical register | IC
+- **DEFT2020-D2**: DEFT2020/task_1 | Ex.18 | moy=4.6 | "En raison de la présence de lactose, ce médicament est contre-indiqué en cas de galactosémie congénitale, de syndrome de malabsorption du glucose et du galactose ou de déficit en lactase." | Drug contraindication notice; standard French pharmaceutical register | IC
+- **DEFT2020-D3**: DEFT2020/task_2 | T2 Ex.22 | correct_cible=0 | "l'utilisation à forte dose d'huile de paraffine expose au risque de suintement anal et parfois d'irritation périanale" | Medical side-effect phrasing; evaluates clinical paraphrase equivalence | IC, OO
+- **DEFT2020-D4**: DEFT2020/task_1 | Ex.26 | moy=3.4 | "Pour la comparaison entre blocs neuraxiaux et anesthésie générale, nous avons évalué la qualité des preuves comme très faible pour la mortalité..." | Systematic review evidence-appraisal language; clinical summary register | IC
+- **DEFT2020-D5**: DEFT2020/task_1 | Ex.31 | moy=2.7 | "Déterminer l'effet d'une alimentation trophique précoce comparée à un jeûne entéral sur la tolérance à l'alimentation, la croissance et le développement..." | Neonatal intensive care research objective; relevant to temporal entity extraction | IC
+- **DEFT2020-D6**: DEFT2020/task_1 | Ex.4 | moy=4.0, scores=[5,2,4,4,5] | "En conséquence, par mesure de précaution, il convient d'éviter d'allaiter pendant la durée du traitement." | High inter-annotator variance on near-paraphrase; illustrates uncertainty in clinical STS | OC
+- **DEFT2020-D7**: DEFT2020/task_1 | Ex.36 | moy=1.5, scores=[2,4.5,0,1,0] | "Après inspection, elles ont toutes été exclues." | Extreme annotator disagreement (4.5 vs. 0.0); relevant to uncertainty flagging deployment behavior | OC, OF
+- **DEFT2020-D8**: DEFT2020/task_1 | Ex.54 | moy=5.0 | "Troubles de l'hémostase à type de maladie de Willebrand (se traduisant par un allongement du TCA, du temps de saignement et une diminution des taux du complexe VIIIC/VWF)." | Specialized hematological terminology; clean standard French; no modality issues | IF, IC
+- **DEFT2020-D9**: DEFT2020/task_1 | Ex.1 | moy=0.5 | "Entre Perpignan et Villefranche, il subsiste de très nombreux poteaux caténaires datant des premiers essais en 12 KV 16 2/3 Hz..." | Railway infrastructure content; entirely off-domain for clinical NLP deployment | IC, IO
+- **DEFT2020-D10**: DEFT2020/task_1 | Ex.3 | moy=2.1 | "Boris Fiodorovitch Godounov, en russe : Бори́с Фёдорович Годуно́в (v.1551–Moscou, 13 avril 1605)..." | Russian historical figure biography; off-domain and contains Cyrillic script | IC, IO
+- **DEFT2020-D11**: DEFT2020/task_1 | Ex.60 | mow=0.8 | "Les Canadiens de Montréal sont une franchise de hockey sur glace professionnel située à Montréal dans la province de Québec au Canada." | Professional hockey franchise; irrelevant to hospital deployment | IC, IO
+- **DEFT2020-D12**: DEFT2020/task_2 | T2 Ex.37 | correct_cible=0 | "Lancement du célèbre MMORPG : World of Warcraft." | Video game launch event; entirely off-domain | IC, IO
+- **DEFT2020-D13**: DEFT2020/task_2 | T2 Ex.51 | correct_cible=2 | "42 Jeux indémodables ( だれでもアソビ大全 , Daredemo Asobi Taizen au Japon...)" | Japanese script embedded in French text; video game content; off-domain | IC, IO, IF
+- **DEFT2020-D14**: DEFT2020/task_1 | schema | — | Fields: id, moy, vote, scores, source, cible | Continuous similarity scoring schema; no entity labels, no ICD-10 classification outputs | OO, OF
+- **DEFT2020-D15**: DEFT2020/task_2 | schema | — | Field: correct_cible (0/1/2) | Sentence selection index; not a pathology classification or ICD-10 label | OO, OF
+- **DEFT2020-D16**: DEFT2020/task_1 | Ex.36 | moy=1.5, scores=[2,4.5,0,1,0] | "Après inspection, elles ont toutes été exclues." | Annotator disagreement averaged away in scoring; calibration signal lost | OO, OF
+- **DEFT2020-D17**: DEFT2020/task_1 | Ex.17 | moy=1.7 | "Les personnes infectées par le virus de l'immunodéficience humaine présentent un risque augmenté de développer une tuberculose (TB) active." | HIV/TB clinical content present as STS pair only; no ICD-10 label, no NER annotation | IO, OC
+- **DEFT2020-D18**: DEFT2020/task_1 | Ex.6,7,9,11,12 | moy≈0 | "Certains apiculteurs sélectionnent leurs reines afin de favoriser au mieux la production." | Beekeeping encyclopedia cluster; repeated off-domain topic; no clinical relevance | IC, IO
+- **MORFITT-D2**: MORFITT | 2 | [10] | "Dans le cadre d'expériences animales in vivo en aveugle randomisées contrôlées, nous avons étudié les réponses nociceptives induites par une i.pl. de HS chez des souris C57BL/6 (vs CD-1) des deux sexes (n = 240)..." | Structured experimental abstract; not clinical note format — register gap from deployment | IC
+- **MORFITT-D3**: MORFITT | 3 | [1] | "Les taux d'AST ( p < 0,001), d'ALT ( p < 0,01), d'amylase ( p < 0,001), de LDH ( p < 0,01), de TNF-α ( p < 0,01), d'IL-1β ( p < 0,001) et d'IL-6 ( p < 0,001)..." | Dense biomedical lab terminology confirming standard French biomedical register | IC
+- **MORFITT-D4**: MORFITT | 4 | [8,4] | "La croissance du commerce international a apporté des bénéfices significatifs à l'humanité tout en générant certains coûts. Parmi ceux-ci figure la propagation accrue de parasites et d'agents pathogènes à l'échelle planétaire." | Dual-label (veterinary + genetics) abstract; shows multi-label capability | IO, OO
+- **MORFITT-D5**: MORFITT | 5 | [6,8] | "seules des données limitées sont disponibles sur le surfactant chez le cheval... notre objectif était de mener une étude immunocytochimique au microscope optique et électronique sur les poumons normaux du cheval." | Equine veterinary immunology study; off-domain for human hospital deployment | IC, IO
+- **MORFITT-D6**: MORFITT | 6 | [6,8,2] | "Le syndrome dysgénésique et respiratoire du porc (SDRP) a un impact énorme sur l'industrie du porc en l'Amérique du Nord." | Porcine veterinary virology abstract; three-label co-occurrence but off-domain | IO, IC
+- **MORFITT-D8**: MORFITT | 8 | [0] | "La région du Nord-Ouest de l'Ontario présente un taux élevé et documenté d'infections de la peau et des tissus mous causées par une souche de Staphylococcus aureus méthycillinorésistante d'origine communautaire (SARM-C)." | Canadian infectious disease study (MRSA); relevant microbiology label but non-French geography | IC, OC
+- **MORFITT-D9**: MORFITT | 9 | [6,0,8] | "L'otite externe est une maladie multifactorielle fréquente chez le chien... Décrire le microbiote bactérien auriculaire des chiens avec otite externe comparé aux chiens sains." | Canine ear microbiome study; veterinary content off-domain for hospital NLP | IC, IO
+- **MORFITT-D10**: MORFITT | 10 | [3] | "L'objectif de cette étude était de documenter les pratiques actuelles de gestion des maladies dans les exploitations apicoles situées au sud-ouest du Québec, Canada." | Canadian beekeeping disease management study; non-Metropolitan French origin | IC, OC
+- **MORFITT-D11**: MORFITT | 11 | [1,9] | "Nous rapportons le cas d'une patiente de 71 ans ayant développé un pseudomyxome péritonéal secondaire à un adénocarcinome appendiculaire." | Clinical case abstract with surgery+etiology labels; labels do not map to ICD-10 codes | OO
+- **MORFITT-D16**: MORFITT | 16 | [3] | "Nous avons étudié 451 diabétiques et 451 non-diabétiques sans MAC manifeste et avec une perfusion myocardique normale. Le débit sanguin myocardique (DSM) a été calculé sur bases des images TEP/TDM de repos et de stress." | Clinical cardiology study abstract format; not clinical note | IC
+- **MORFITT-D17**: MORFITT | 17 | [2] | "L'émergence d'une épidémie d'arbovirose est le plus souvent liée à la convergence d'un ensemble de facteurs... à travers l'étude de l'épidémie de Chikungunya, un alphavirus transmis par Aedes aegypti et Aedes albopictus, survenue dans l'océan Indien en 2004-2007." | Chikungunya virology abstract — tropical pathology relevant to DOM-TOM gap | IO, IC
+- **MORFITT-D20**: MORFITT | 20 | [1] | "79 patients au total ont été recrutés à Amman (Jordanie) en 2015." | Jordanian patient population; non-Metropolitan French clinical context | IC, OC
+- **MORFITT-D21**: MORFITT | 21 | [1,3,4] | "Bloquer le complément, notamment l'axe C5a-C5aR1, par des thérapies spécifiques représente un espoir thérapeutique dans les formes les plus sévères de la maladie." | COVID-19 immunology; three specialty labels that don't resolve to ICD-10 output | OO
+- **MORFITT-D22**: MORFITT | 22 | [11] | "le questionnaire YFAS 2.0-A... peut être utilisée comme équivalent du questionnaire anglais YFAS 2.0 pour étudier l'addiction à la nourriture dans les populations arabophones." | Arabic-population food addiction validation study; non-French population | IC, OC
+- **MORFITT-D26**: MORFITT | 26 | [6,8,5] | "Prévalence et caractéristiques morphologiques et moléculaires de Sarcocystis bertrami chez les chevaux en Chine." | Horse parasitology study from China; off-domain for human hospital deployment | IC, IO
+- **MORFITT-D29**: MORFITT | 29 | [8] | "La cyclosporine est de plus en plus utilisée en dermatologie des petits animaux." | Small animal dermatology; veterinary content irrelevant to hospital clinical NLP | IC, IO
+- **MORFITT-D31**: MORFITT | 31 | [11] | "Un autoquestionnaire envoyé par courrier électronique a été rempli par 191 médecins internes sur 207 travaillant dans différentes spécialités et régions de Riyad." | Saudi Arabian intern survey; non-Metropolitan French context | IC, OC
+- **CLISTER-D1**: CLISTER | 7 | 4.0 | "La patiente a été opérée et lors de l'exploration on découvrit qu'il s'agissait d'une tumeur de la veine cave inférieure sus-rénale." | Surgical/oncological clinical case language matching hospital documentation register | IC, IF
+- **CLISTER-D2**: CLISTER | 85 | 4.0 | "Le bilan rénal a objectivé une insuffisance rénale avec une créatininémie à 1440 μmol/l, soit une clairance de la créatinine à 6,7 ml/mn/m2, urémie à 2,07 g/l." | Quantified biological workup with clinical abbreviations; representative of standard hospital documentation | IC
+- **CLISTER-D3**: CLISTER | 10 | 5.0 | "Une mastectomie était réalisée avec curage axillaire." vs. "Une mastectomie avec curage axillaire ont été réalisés." | Near-identical surgical procedure sentences; tests paraphrase detection for entity normalization | IC
+- **CLISTER-D4**: CLISTER | 37 | 5.0 | "Les limites d'exérèse étaient saines." vs. "Les marges chirurgicales étaient saines." | Synonym pair for surgical margin; relevant for clinical entity normalization | IC
+- **CLISTER-D5**: CLISTER | 58 | 0.0 | "Concernant la biographie familiale, nous sommes frappés par le nombre de décès par suicides violents (pendaison, noyade, ingestions médicamenteuses)..." | Psychiatric/social history context; shows breadth beyond urology/oncology | IC
+- **CLISTER-D6**: CLISTER | 146 | 0.0 | "Cette patiente, suivie en psychiatrie pour des troubles de l'humeur bipolaires, avait arrêté son traitement au lithium (Teralithe LP® 400 mg, deux comprimés par jour)..." | Psychopharmacology context; psychiatric sub-domain coverage | IC
+- **CLISTER-D7**: CLISTER | 176 | 0.0 | "Une glande thyroïde hypoplasique a été rapportée à l'échographie cervicale associée à la présence de deux masses..." | Endocrine/imaging case; illustrates specialty breadth | IC
+- **CLISTER-D8**: CLISTER | 5 | 2.75 | "Le reste de l'examen échographique ne trouvait aucune autre anomalie." vs. "Le reste de l'examen somatique était sans anomalie." | Intermediate similarity; different exam modality with shared negative finding structure | OO
+- **CLISTER-D9**: CLISTER | 75 | 1.25 | "La patiente a bénéficié d'une chimiothérapie adjuvante à base de six cures de paclitaxel et cisplatine." vs. "La patiente avait bénéficié d'une sclérothérapie lors de deux séances..." | Low similarity despite surface parallels; discriminates treatment type | OO
+- **CLISTER-D10**: CLISTER | 8 | 1.0 | "Jour 45 - - - - - - - - - 25 μg 0,4 mg" vs. "Jour 53 15,13 12,0 1,58 - - - - - - 25 μg 0,4 mg" | Tabular medication dosing; temporal marker present but content is structured data not free text | IC
+- **CLISTER-D11**: CLISTER | 41 | 2.0 | "Métoprolol 50 mg deux fois par jour;" vs. "Metformine 500 mg, 1 comprimé deux fois par jour" | Drug name, dosage, frequency; directly relevant to temporal medication extraction | IC
+- **CLISTER-D12**: CLISTER | 93 | 1.0 | "Le patient a été perdu de vue." vs. "Le patient décède à J13." | Outcome divergence (lost to follow-up vs. death on day 13); clinically significant difference potentially underweighted by non-specialist annotators | OC
+- **CLISTER-D13**: CLISTER | 126 | 4.0 | "Un patient de 42 ans, a été hospitalisé pour un UB de la main droite." | Clinical abbreviation "UB" (likely Buruli ulcer); domain expertise needed for reliable similarity annotation | OC
+- **CLISTER-D14**: CLISTER | 169 | 4.0 | "Craquement douleur oedème + déviation du pénis" vs. "Craquement douleur oedème du pénis et des bourses" | Note-style shorthand, one of few examples resembling informal clinical notation | IC
+- **CLISTER-D15**: CLISTER | 191 | 2.0 | "5 mg PO Q 4H PRN X" vs. "10 mg PO Q 4H PRN X X" | Pharmacy shorthand notation (PO=oral, PRN=as needed); structured rather than narrative free text | IC
+- **CLISTER-D16**: CLISTER | 9, 29, 55, etc. | various | "lombalgies," "contact lombaire," "PSA," "hématurie," "rein," "uretère" (repeated across many pairs) | High frequency of urological terminology suggesting domain skew toward urology/oncology | IO
+- **CLISTER-D17**: CLISTER | 8 | 1.0 | "Jour 45 - - - - - - - - - 25 μg 0,4 mg" | Table row, not a clinical sentence; degenerate STS input | IC
+- **CLISTER-D18**: CLISTER | 163 | 5.0 | "Sheldon).\n\nLe patient subissait une chi miothérapie par Méthotrexate - Vinblastine - Endoxan -Cisplatine par voie" | Line-break mid-word artifact ("chi miothérapie"); OCR/PDF extraction noise in source material | IC
+- **CLISTER-D19**: CLISTER | 75 | 1.25 | label=1.25 (float) | Non-integer label suggests variable annotator count or averaging artifact; potential label noise at boundary values | OO
+- **MANTRAGSC-D1**: fr_emea | d42.u383 | 5 (DISO) | "Même s' il ne permettra pas de guérir la SEP, le traitement par Avonex peut contribuer à éviter que votre état ne s' aggrave." | French EMEA drug label tagging MS (SEP) as disease and Avonex as drug; confirms French biomedical NER coverage | IO, IC
+- **MANTRAGSC-D2**: fr_medline | d800967.u1 | 5–6 (DISO), 1 (ANAT) | "Les manifestations oculo-palpébrales du syndrome de Lyell et du syndrome de Stevens-Johnson." | French Medline title labeling eponymous syndromes as DISO; confirms disorder entity coverage | IC, OO
+- **MANTRAGSC-D3**: fr_medline | d20337124.u1 | 5 (DISO), 1 (ANAT) | "Paraparésie fébrile chez une Tunisienne : spondylite à cryptocoque avec atteinte médullaire." | French Medline title with disorder/anatomy labeling; mentions North African patient context | IC
+- **MANTRAGSC-D4**: fr_emea | d61.u583 | 5–6 (DISO) | "Des symptômes potentiellement liés à l' histamine tels que éruption cutanée étendue, gonflement du visage et/ ou des lèvres, démangeaisons, sensation de chaleur ou difficulté à respirer, ont été rapportés." | Well-formed regulatory French with dense symptom NER; confirms formal register alignment | IF
+- **MANTRAGSC-D5**: fr_patents | dEP-2114147-B1.u0020 | 5 (DISO) | "Composition pharmaceutique destinée à être utilisée selon la revendication 18 ou la revendication 19, dans laquelle la maladie ou l' état pathologique est la douleur." | French patent claim tagging disease entity; DISO label on "maladie" and "douleur" | OO
+- **MANTRAGSC-D6**: fr_patents | dEP-1835922-B1.u0012 | 2 (CHEM) | "Combinaison selon l' une quelconque des revendications 1 à 7, dans laquelle ladite combinaison comprend 0,25 mg/kg d' agent (a) et 1 mg/kg d' agent (b)." | French patent text with sparse annotation; illustrates critically small training corpus | IC
+- **MANTRAGSC-D7**: fr_medline | d5310889.u1 | 5–6 (DISO), 7 (LIVB) | "Accouchement d' une femme atteinte d' une maladie de Willebrand." | Published journal title; highly formal, no clinical shorthand; highlights register gap | IC, IO
+- **MANTRAGSC-D8**: fr_emea | d16.u650 | 2 (CHEM), 7 (LIVB) | "Patients de 4 ans et plus dans l' incapacité d' avaler les capsules: la posologie recommandée d' Agenerase solution buvable est de 17 mg (1,1 ml)/ kg trois fois par jour..." | EMEA regulatory language; structured, formal, far from hospital EHR notes | IC
+- **MANTRAGSC-D9**: fr_emea | d84.u182 | 13–14 (PROC) | "Traitement En cas d' ingestion récente, l' éventualité de provoquer un vomissement et d' effectuer un lavage gastrique devra être considérée." | Temporal word "récente" present but no temporal NER label exists in Mantra-GSC scheme | OO
+- **MANTRAGSC-D10**: fr_medline | d15609920.u1 | 5–6 (DISO) | "Nouveautés dans la dysplasie ventriculaire droite arythmogène." | Single DISO class applied to cardiovascular disorder; no ICD-10 subcategory distinction | OO, OC
+- **MANTRAGSC-D11**: de_emea | d42.u384 | 2 (CHEM), 5 (DISO) | "Die Behandlung mit Avonex kann helfen, eine Verschlechterung von MS zu verhindern, jedoch wird die Krankheit nicht geheilt." | German drug label; not relevant to French deployment; illustrates non-French config dominance | IC
+- **MANTRAGSC-D12**: fr_medline | d303783.u1 | 1 (ANAT), 11 (PHYS) | "Rôle d' une fraction thymique insoluble dans la différenciation des lymphocytes T." | Anatomical entity labeled without clinical coding authority; illustrates annotation provenance concern | OC
+- **MANTRAGSC-D13**: fr_medline | d7569194.u1 | 5–6 (DISO), 7 (LIVB) | "Luxation antérieure ouverte post-traumatique de la hanche chez l'enfant. A propos d'un cas et revue de la littérature." | Metropolitan French orthopedic case; no tropical/overseas pathology signal | IO
+- **E3C-D1**: French_clinical | 195 | mixed NER | "Le bilan biologique montrait une cholestase (bilirubine totale a ` 140 mmol/L, bilirubine conjugue à 80 mmol/L, phosphatases alcalines à 700 UI/L) et une cytolyse..." | Dense clinical French with lab values — confirms register alignment with hospital documentation | IC
+- **E3C-D2**: French_temporal | 107 | mixed NER | "Il s'agit d'une patiente de 44 ans, sans antécédent médico-chirurgical, qui a présenté depuis un an des céphalées, compliquées 08 mois après de crises d'épilepsies partielles..." | Multi-symptom temporally structured French narrative — confirms temporal extraction alignment | IC, OO
+- **E3C-D3**: French_temporal | 107 | TIMEX3 tags | "depuis un an des céphalées, compliquées 08 mois après" (tokens tagged with TIMEX3-type labels) | Temporal duration expressions annotated — supports deployment's temporal entity extraction | OO
+- **E3C-D4**: English_clinical | 81 | CLINENTITY | "The presence of terminal spine confirmed Schistosoma haematobium and a diagnosis of schistosomiasis was made." | Tropical parasitic pathology in English config — confirms tropical content structurally absent from French subset | IO, IC
+- **E3C-D5**: French_clinical | 54 | B/I CLINENTITY | "Cet aspect évoquait une tumeur solide du péritoine." tokens tagged [0,0,0,0,1,2,0,0,0] | Multi-token pathology span ("tumeur solide") tagged in IOB2 — confirms NER output form alignment | OF, OO
+- **E3C-D6**: English_clinical | 4 | B/I CLINENTITY | "As she suffered from acute respiratory distress syndrome and required mechanical ventilation..." tags [0,0,0,0,1,2,2,2,...] | Multi-token disease span annotation in B/I scheme — confirms annotation consistency | OF
+- **E3C-D7**: Basque_clinical | 1 | O | "Azken hilabeteetan Ikernek kodeina + ibuprofenoa hartu ditu, baina ez du hobekuntza handirik nabaritu." | Basque language — entirely irrelevant to French deployment context | IO, IC
+- **E3C-D8**: Basque_clinical | 13 | O | "Aurrekariak: - Krisi epileptikoa 12 urte zituenean, bere herrialdean tratatua: BOLIBIA." | Basque text referencing Bolivia — not relevant to French metropolitan hospital NLP | IC
+- **E3C-D9**: French_clinical | 195 | mixed | "Le bilan biologique montrait une cholestase (bilirubine totale a ` 140 mmol/L..." | Well-formed published case report prose — contrasts with noisy active-hospital EHR shorthand | IC
+- **E3C-D10**: French_clinical | 14 (id=253) | all O | "La fonction hépatique s'est améliorée avec un TP à 82% à l'arrêt du traitement." | Standard case report prose — no abbreviations or dictation noise; register mismatch with active EHR | IC
+- **E3C-D11**: French_clinical | 2 (id=439) | all O | "La culture a isolé le germe Nocardia asteroides." all tags [0,0,0,0,0,0,0,0,0] | "Nocardia asteroides" (pathogen) not tagged as CLINENTITY — suggests annotation incompleteness | OC
+- **E3C-D12**: French_clinical | 12 (id=478) | all O | "Le patient a été mis sous traitement par ciclosporine avec une évolution rapide vers une leucémie aigue myéloblastique." all tags [0,...,0] | Clear pathology and treatment entities untagged — annotation completeness concern | OC
+- **E3C-D13**: English_clinical | 6 (id=81) | CLINENTITY | "a diagnosis of schistosomiasis was made" | Tropical disease in English config only; absent from French subset — confirms DOM-TOM pathology gap | IO
+- **E3C-D14**: English_clinical | 4 (id=179) | B/I CLINENTITY | "acute respiratory distress syndrome" tagged as single CLINENTITY span, no sub-type | Coarse two-class annotation lacks pathology/anatomy/treatment distinction needed by deployment | OO
+- **E3C-D15**: Basque_clinical | 6 (id=80) | O | "." tokens=['.'] ner_tags=[0] | Single-punctuation example — tokenization artifact, quality concern | IC, IF
+- **E3C-D16**: Basque_clinical | 9 (id=82) | O | "." tokens=['.'] ner_tags=[0] | Second single-punctuation example — repeated artifact | IC, IF
+- **PXCORPUS-D1**: PxCorpus | 75 | medical_prescription | "euh 2 le matin 2 le midi et 2 le soir" | Spoken filler in prescription; illustrates non-formal register | IC, IF
+- **PXCORPUS-D2**: PxCorpus | 169 | medical_prescription | "lamotrigine 25 milligrammes euh p/ combien" | Incomplete utterance with filler and truncated word; spoken transcription noise | IC, IF
+- **PXCORPUS-D3**: PxCorpus | 3 | none | "/chet" | Single garbled transcription artifact labeled 'none' | IC, IF
+- **PXCORPUS-D4**: PxCorpus | 10 | negate | "ne pas tenir compte à midi tous les jours merd/" | Truncated word at end; raw transcription behavior | IC
+- **PXCORPUS-D5**: PxCorpus | 5 | medical_prescription | "primperan 10 milligrammes comprimés 1 comprimé en cas de nausée toutes les 8 heures pendant 14 jours" | Dense temporal + drug NER: frequency and duration annotated | IO, OO
+- **PXCORPUS-D6**: PxCorpus | 93 | medical_prescription | "becotide 250 milligrammes 2 bouffées à 7 heures 2 bouffées à 11 heures 2 bouffées à 15 heures 2 bouffées à 18 heures pendant 6 mois" | Four specific time-of-day administrations + duration; complex temporal NER | IO, OO
+- **PXCORPUS-D7**: PxCorpus | 174 | medical_prescription | "cordarone 3 comprimés par jour pendant 10 jours puis 1 comprimé tous les 2 jours pendant 4 semaines" | Multi-phase temporal prescription with sequential frequency change | IO, OO
+- **PXCORPUS-D8**: PxCorpus | 4 | replace | "attention il s'agit de 20 milligrammes et pas 10 milligrammes" | Prescription correction intent; clinically relevant for error detection | IO, OC
+- **PXCORPUS-D9**: PxCorpus | 8 | replace | "remplacer 1 comprimé tous les jours par 1 comprimé en cas d'anxiété" | Substitution intent with condition-triggered dosing | IO, OC
+- **PXCORPUS-D10**: PxCorpus | 6 | negate | "supprimer à midi tous les jours" | Negation/removal directive for dosing slot | IO, OC
+- **PXCORPUS-D11**: PxCorpus | 97 | medical_prescription | "morphine 10 milligrammes toutes les 4 heures pendant 2 mois" | Opioid pain management prescription; broad drug class coverage | IC
+- **PXCORPUS-D12**: PxCorpus | 173 | medical_prescription | "aranesp 30 microgrammes 1 injection par semaine en sous-cutanée pendant 4 semaines" | Subcutaneous injectable prescription; route diversity | IC
+- **PXCORPUS-D13**: PxCorpus | 190 | medical_prescription | "loxapac ampoules 50 milligrammes 3 ampoules intramusculaire 2 fois par jour pendant 3 jours" | Intramuscular antipsychotic; confirms route coverage | IC
+- **PXCORPUS-D14**: PxCorpus | 2 | negate | "c'est 2 pourcent le collyre" | Surface reads like prescription; labeled negate — ambiguity in minority class | OO, OF
+- **PXCORPUS-D15**: PxCorpus | buffer | — | negate=11, replace=3 in 500 sampled | Severe class imbalance; majority-class baseline masks minority-class performance | OO, OF
+- **PXCORPUS-D16**: PxCorpus | 5 | medical_prescription | NER tags: dose, form, frequency, duration, symptom only | No PATHOLOGY/DIAGNOSIS entity in tag scheme; ICD-10 mapping untestable | IO, OO
+- **PXCORPUS-D17**: PxCorpus | 104 | medical_prescription | "en cas d'anxiété" | Anxiety as unlabeled trigger, not classified to ICD-10 axis | IO, OO
+- **PXCORPUS-D18**: PxCorpus | 18 | none | "la partie euh posologie est sur 6 ou 8 semaines là il n'est écrit que 8 semaines par contre le qsp 6 semaines a été rajouté en remarque pharmaceutique" | Pharmacist meta-commentary labeled 'none'; heterogeneous class content | OO, OC
+- **PXCORPUS-D19**: PxCorpus | 88 | none | "i'll agree come on say avec successes merde je vais roulé faut lui faire un et mettre la rame en mode français" | Mixed French/English system setup dialogue labeled 'none' | OO, IC
+- **PXCORPUS-D20**: PxCorpus | 54 | none | "ouah" | Single exclamation labeled 'none'; degenerate example | OO
+- **PXCORPUS-D21**: PxCorpus | 33 | none | "perfusion" | Isolated clinical term labeled 'none'; ambiguous classification | OO
+- **PXCORPUS-D22**: PxCorpus | 207 | medical_prescription | "teralithe 250 milligrammes / le serveur de dialogue met beaucoup de temps à comprendre votre énoncé veuillez reformuler différemment teralithe 250 milligrammes 2 comprimés matin et soir pendant 1 mois" | System prompt embedded in prescription utterance; corrupts register | IC, IF
+- **PXCORPUS-D23**: PxCorpus | 62 | none | "le médicament mais pas le bon le système ne m'a pas compris le bon médicament et le 10 antalvic en gélules" | User commentary about ASR failure; non-clinical register | IC, IF
+- **PXCORPUS-D24**: PxCorpus | 34 | medical_prescription | "3 mois" | Duration fragment only; degenerate prescription example | IC
+- **PXCORPUS-D25**: PxCorpus | 53 | medical_prescription | "roxithromycine" | Drug name only; no context for full NER | IC
+- **PXCORPUS-D26**: PxCorpus | 59 | medical_prescription | "30 jours" | Duration fragment only | IC
+- **PXCORPUS-D27**: PxCorpus | 119 | medical_prescription | "tropatepine chloridrate 1o milligrammes 1 comprimé le midi" | "1o" instead of "10" — ASR/OCR artifact in dose quantity | IC
+- **PXCORPUS-D28**: PxCorpus | 103 | medical_prescription | "trémétadisine trémétasidine à 20 milligrammes à 3 comprimés par jour pendant 3 semaines" | Probable ASR duplication of drug name | IC
+- **DIAMED-D1**: DiaMED | 1 | A00-B99 | "Le test rapide VIH était positif, confirmé par la sérologie VIH avec un taux de CD4 à 27/mm3" | Confirmed HIV infection with CD4 count — supports infectious disease label | OO, IC
+- **DIAMED-D2**: DiaMED | 2 | C00-D49 | "L'examen anatomopathologique de la pièce opératoire montrait une prolifération tumorale faite de travées, de cordons" | Histopathological finding of tumoral proliferation — confirms neoplasm label | OO, IC
+- **DIAMED-D3**: DiaMED | 9 | I00-I99 | "La troponine I était élevée à quatre fois la normale et les ASAT à 5 fois la normale. La glycémie, l'ionogramme sanguin, l'hémogramme et la créatininémie étaient normaux." | Rich laboratory entities with quantitative values in standard French medical register | IC, IF
+- **DIAMED-D4**: DiaMED | 11 | K00-K95 | "L'ionogramme sanguin avait révélé une hypokaliémie à 2,8 mmol/l et une hyponatrémie à 128 mmol/l." | Quantified electrolyte findings — confirms clinical entity density and standard terminology | IC
+- **DIAMED-D5**: DiaMED | 8 | H60-H95 | "Le diagnostic d'otite externe maligne avait été posé et une antibiothérapie injectable empirique instaurée" | Ear disease case confirming H60-H95 class representation | IO
+- **DIAMED-D6**: DiaMED | 5 | F01-F99 | "Devant le contexte de dépression, la patiente a été adressée en psychiatrie où ce diagnostic a été confirmé" | Psychiatric case confirming mental/behavioral disorder class | IO
+- **DIAMED-D7**: DiaMED | 9 | I00-I99 | "Communication interventriculaire ischémique: à propos d'un cas observé dans le service de cardiologie du CHU-Yalgado Ouedraogo de Ouagadougou (Burkina Faso)" | Explicitly Burkinabe hospital origin — non-metropolitan French clinical setting | IC, OC
+- **DIAMED-D8**: DiaMED | 12 | L00-L99 | "À propos d'un cas clinique … keywords: ['Niamey']" | Niger-based case — sub-Saharan African clinical context, not metropolitan France | IC, OC
+- **DIAMED-D9**: DiaMED | 3 | D50-D89 | "keywords: ['Rate', 'abdomen aigu', 'scanner abdominal', 'chirurgie', 'Maroc']" | Moroccan clinical case — North African origin rather than French metropolitan | IC, OC
+- **DIAMED-D10**: DiaMED | 11 | K00-K95 | "Le traitement était constitué d'énoxaparine d'antiagrégant plaquettaire, de diurétique de l'anse, de dérivés morphiniques et d'oxygène" | Multi-system case forced into single digestive label — masks multi-morbidity | OO, OF
+- **DIAMED-D11**: DiaMED | 1 | A00-B99 | "Maladie de Kaposi à localisation broncho-pulmonaire révélant une infection VIH" | Chapter-level label only; PMSI granular codes (e.g., B21.x) not evaluated | OO
+- **DIAMED-D12**: DiaMED | 6 | G00-G99 | "L'examen clinique révélait une paralysie flasque aréflexique avec amyotrophie importante des membres inférieurs. On notait la présence de quelques trépidations épileptoïdes du pied gauche." | Polished academic prose — formal register unlike noisy active-hospital EHR notes | IC
+- **DEFT2021-D1**: DEFT2021/cls | 5 (train) | specialities=[12,3,20,4,7,5] | "Un homme de 42 ans était hospitalisé en urgence le 10 décembre 2003 dans le service de gastro-entérologie pour un tableau d'hépatite aiguë" | Multi-morbid hepatology/toxicology/psychiatry case with 6 concurrent MeSH labels | IO, OO
+- **DEFT2021-D2**: DEFT2021/cls | 8 (train) | specialities=[20,17,22,13,0,4,19] | "Nous rapportons le cas d'un garçon de huit ans [...] microangiopathie thrombotique secondaire à un syndrome hémolytique urémique (SHU) atypique" | 7-label pediatric multi-morbid case illustrating complex label overlap | IO, OO
+- **DEFT2021-D3**: DEFT2021/ner | 7 (train) | TREATMENT+DURATION | "cotrimoxazole pour 10 jours" | Treatment drug with duration span annotated — confirms temporal treatment labeling | IO, OO
+- **DEFT2021-D4**: DEFT2021/ner | 55 (train) | TREATMENT+DOSAGE+MODE+FREQUENCY | "Hydrocortisone 300 mg IV immédiatement ; Traitement Hydroxyzine 25 mg par voie orale toutes les 6 heures" | Multiple entity types co-occurring in a single sentence, confirming NER scheme coverage | IO, OO
+- **DEFT2021-D5**: DEFT2021/ner | 63 (train) | DATE | "Au jour 42 , une deuxième désensibilisation a eu lieu" | Temporal anchor (relative day) labeled, confirming temporal entity extraction alignment | IO, OO
+- **DEFT2021-D6**: DEFT2021/cls | 3 (train) | specialities=[6,14,13,19,4] | "La proarythmie cardiaque constitue l'un des effets indésirables les plus dangereux résultant d'interactions médicamenteuses délétères" | Complex pharmacotherapy reasoning case with rich clinical terminology | IC
+- **DEFT2021-D7**: DEFT2021/cls | 5 (train) | specialities=[12,3,20,4,7,5] | "bilan biologique d'entrée révélait une macrocytose avec une thrombopénie, un cytolyse majeure avec des ALAT et des ASAT respectivement à 60 à 450 fois la normale" | Dense laboratory values with quantified severity signals | IC
+- **DEFT2021-D8**: DEFT2021/cls | 7 (train) | specialities=[17,4,6] | "B.A., âgé de 20 ans a été admis [...] tuberculose uro-génitale" | Infectious disease + urology multi-specialty case | IO
+- **DEFT2021-D9**: DEFT2021/cls | 4 (train) | specialities=[15,4,3] | "un coma inexpliqué, avec un score de Glasgow (GS) à 3/15 [...] injection intraveineuse de poudre 'NRG'" | Emergency medicine + toxicology case | IO
+- **DEFT2021-D10**: DEFT2021/ner | 28 (train) | PATHOLOGY (multi-span) | "carcinome urothélial multiple [...] carcinome vésical droit [...] carcinome urétéral multifocal" | Complex oncological case with multiple distinct pathology spans annotated | OO, IF
+- **DEFT2021-D11**: DEFT2021/cls | 8 (train) | specialities_one_hot | "[1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]" | Strictly binary 0/1 label vector — no confidence or soft-label dimension present | OO, OF
+- **DEFT2021-D12**: DEFT2021/ner | 56 (train) | PATHOLOGY | "hydatidose" | Parasitic disease labeled, but temperate/Mediterranean — not DOM-TOM tropical pathology | IO, OC
+- **DEFT2021-D13**: DEFT2021/cls | 7 (train) | specialities=[17,4,6] | "tuberculose uro-génitale" | Tuberculosis in metropolitan urology context — no DOM-TOM tropical disease specificity | IO
+- **DEFT2021-D14**: DEFT2021/ner | 17 (train) | O | "L' ECBU était stérile ." | Standard abbreviation in complete sentence — published case report register, not raw EHR shorthand | IC
+- **DEFT2021-D15**: DEFT2021/cls | 9 (train) | specialities=[18,4,13] | "Il s'agit d'une jeune patiente âgée de 18 ans, longiligne et sans antécédents notables admise pour insuffisance rénale chronique terminale secondaire à une néphropathie tubulointerstitielle chronique" | Fully formed syntactic sentence — register cleaner than active hospital notes | IC
+- **DEFT2021-D16**: DEFT2021/cls | 3 (train) | specialities=[6,14,13,19,4] | (see D6 excerpt) | Multi-drug cardiac case; annotator PMSI credential unknown — label authority concern | OC
+- **DEFT2021-D17**: DEFT2021/cls | 10 (train) | specialities=[3] | "Une femme de 29 ans est victime d'agression sexuelle. Des prélèvements de sérum et d'urine sont réalisés aux fins de 'recherche d'alcoolémie'" | Single-label toxicology case — with 23 axes over 275 cases, some axes have very few positives | IO, OC
+- **DEFT2021-D18**: DEFT2021/ner | 23 (train) | O | "Mr ." | Single-token patient initial fragment — no annotatable entity content | IC
+- **DEFT2021-D19**: DEFT2021/ner | 31 (train) | O | "O ." | Single-character fragment — degenerate NER example | IC
+- **DEFT2021-D20**: DEFT2021/cls | 8 (train) | specialities=[20,17,22,13,0,4,19] | "Au jour 0, le jeune patient reçoit de l'acétaminophène 300 mg par voie orale" | "Acétaminophène" (Quebec French) vs. "paracétamol" (metropolitan French) — minor regional lexical divergence | IC, IF
+- **CAS-D1**: CAS/cls | Ex. 3 | neutral | `"l' examen clinique montre un état général conservé ."` | Standard French clinical examination notation | IC, IF
+- **CAS-D2**: CAS/cls | Ex. 26 | neutral | `"les constantes hémodynamiques étaient stables mais le bilan biologique mettait en évidence une anémie à 5 , 7 g / 100ml d' hb , une hyponatrémie à 128 meq / l , une acidose métabolique..."` | Dense lab-value notation typical of deployment's severity signal extraction | IC
+- **CAS-D3**: CAS/pos | Ex. 7 | — | `"ce patient a présenté de façon brutale , une douleur thoracique aigue à type de constriction associée à une cyanose des extrémités et une hémoptysie de moyenne abondance évoluant vers une syncope ."` | Acute onset clinical narrative with temporal qualifier | IC, IO
+- **CAS-D4**: CAS/ner_neg | Ex. 11 | — | `"la dernière prise remontait à sept jours ."` | Relative temporal reference to last medication intake | IC
+- **CAS-D5**: CAS/cls | Ex. 29 | neutral | `"le scanner réalisé 1 , 5 mois après , devant la persistance de douleurs abdominales , détectait une image kystique liquidienne de 10 × 7cm accolée à la queue du pancréas"` | Temporal sequencing in imaging diagnosis narrative | IC
+- **CAS-D6**: CAS/cls | Ex. 35 | neutral | `"quinze mois après cette cytolyse spontanément résolutive , le bilan hépatique est normal ."` | Follow-up temporal anchor in clinical timeline | IC
+- **CAS-D7**: CAS/cls | Ex. 10 | negation | `"les ovaires ne montraient pas d' anomalie ."` | Canonical negation pattern for absent clinical finding | IO, OO
+- **CAS-D8**: CAS/cls | Ex. 17 | negation_speculation | `"Les caractères morphologiques et le profil immunohistochimique ne permettaient pas de trancher entre l' hypothèse d' une dissémination péritonéale..."` | Complex combined negation+speculation in oncological differential diagnosis | IO, OC
+- **CAS-D9**: CAS/ner_neg | Ex. 14 | tags [0,0,0,1,0,2,2,0] | `"les ovaires ne montraient pas d' anomalie ."` | NER annotation marking negation trigger and scope in IOB2 | OO
+- **CAS-D10**: CAS/cls | Ex. 45 | speculation | `"l' atteinte marquée de l' état général , la température à 40 ° c évoquent d' emblée une shigellose ."` | Infectious disease differential (metropolitan pathogen) | IC, IO
+- **CAS-D11**: CAS/cls | Ex. 51 | speculation | `"son score chads2 ( insuffisance cardiaque congestive , hypertension , âge ≥ 75 ans , diabète et avc ou accident ischémique transitoire ) est de 3 ."` | Multi-morbidity cardiology risk scoring | IC
+- **CAS-D12**: CAS/cls | Ex. 36 | speculation | `"La présence de ces calcosphérites faisait suspecter une carcinomatose péritonéale d' origine ovarienne ."` | Oncological diagnostic reasoning with epistemic hedge | IC
+- **CAS-D13**: CAS/pos | Ex. 15 | — | `"Il s' agit d' une patiente âgée de 54 ans ayant des facteurs de risque de transmissions virales hépatiques..."` (full long sequence with pos_tags) | Complex clinical case sentence with full 82-token POS annotation sequence | IO, OF
+- **CAS-D14**: CAS/cls | Ex. 38 | neutral | `"depuis hier soir , je suis essouflé , j' ai des frissons , j' ai mal à la poitrine , là en bas à gauche , surtout quand j' inspire à fond ."` | First-person patient narrative with minor spelling error ("essouflé") | IC
+- **CAS-D15**: YAML Q42 | — | — | "annotated for POS tagging with 31 classes using automatic annotations through Tagex 3...yielded 98% precision" | Silver-standard label provenance for POS config | OC
+- **CAS-D16**: CAS/cls | Ex. 9 | negation_speculation | `"il avait été retrouvé dans la rue , mais il se donne successivement plusieurs professions , semblant ne pas se souvenir de celle qu' il a citée quelques instants avant ."` | Ambiguous negation+speculation requiring expert judgment; no IAA documented | OC
+- **CAS-D17**: CAS/cls | Ex. 12 | speculation | `"Cholstat ® 0.1 ."` | Drug name/dosage fragment labeled as speculation with no apparent epistemic marker; annotation rationale opaque | OC, OO
+- **CAS-D18**: CAS/ner_neg | Ex. 25 | all-O | `"la coproculture avec ensemencement de milieux sélectifs pour salmonella , shigella et campylobacter spp ."` | Metropolitan enteric pathogen workup; no tropical disease vocabulary present | IO
+- **CAS-D19**: HF Metadata | — | — | label_names: ["negation_speculation", "negation", "neutral", "speculation"] | Classification labels measure linguistic modality, not ICD-10 pathology categories | OO
+- **CAS-D20**: CAS/cls | Ex. 34 | negation | `"vous êtes appelés au secours d' une infirmière de nuit pour confusion chez un patient bronchopathe chronique , tabagique non sevré à 70 paquets-années ."` | Narrative clinical description; more formal than raw EHR shorthand | IC
+- **CAS-D21**: HF Metadata | — | — | buffer: negation_speculation:6, negation:100, neutral:368, speculation:26 | Heavy class imbalance; neutral dominates at ~74% | OO
+- **ESSAI-D1**: ESSAI/cls | 1 | negation_speculation | "chimiothérapie à hautes doses avec une combinaison de Busulfan et de Melphalan (BU-MEL) permettra d'obtenir une survie sans événement à 3 ans" | Formal clinical trial protocol language matching deployment register | IC/IF
+- **ESSAI-D2**: ESSAI/cls | 10 | negation | "l'objectif de cette étude de recherche clinique est d'évaluer la sécurité d'emploi et l'efficacité de l'avelumab (MSB0010718C) associé aux meilleurs soins palliatifs chez des patients atteints d'un adénocarcinome de l'estomac" | Structured formal French biomedical prose with drug and pathology terms | IC/IF
+- **ESSAI-D3**: ESSAI/cls | 6 | negation | "ne présentent pas plus d'effets secondaires dans différents essais cliniques" | Explicit negation of side effects — relevant to safety signal extraction | IO
+- **ESSAI-D4**: ESSAI/cls | 36 | speculation | "l'addition de la radiothérapie à la chirurgie semble améliorer le contrôle local des sarcomes rétropéritonéaux" | Speculation marker "semble" on treatment benefit — relevant to claim credibility | IO
+- **ESSAI-D5**: ESSAI/cls | 32 | speculation | "le bénéfice de l'association lénalidomide + R-CHOP au rapport au R-CHOP reste à démontrer" | Speculation framing of unproven treatment benefit | IO
+- **ESSAI-D6**: ESSAI/ner_neg | 6 | (O-sequence) | "ce traitement qui sera administré toutes les deux semaines sous forme de perfusion d'une heure" | Temporal dosing expression relevant to treatment timeline extraction | IC
+- **ESSAI-D7**: ESSAI/ner_spec | 14 | (O-sequence) | "On prévoit de réaliser 6 cycles maximum" | Treatment cycle quantification — temporal entity content | IC
+- **ESSAI-D8**: ESSAI/ner_spec | 17 | (O-sequence) | "Des scanners d'évaluation seront réalisés toutes les 8 semaines" | Follow-up scheduling temporal expression | IC
+- **ESSAI-D9**: ESSAI/cls | 3 | neutral | "Essai clinique d'immunothérapie évaluant l'association du galunisertib (un facteur de croissance transformant β), avec l'anticorps anti-PD-L1 durvalumab (MEDI4736), dans le cancer du pancréas métastatique" | Rich pathology content labeled only for negation/speculation, not ICD-10 — output ontology mismatch | OO
+- **ESSAI-D10**: ESSAI/ner_spec | 10 | (sparse NER) | "traitement par un inhibiteur de PARP, le talazoparib, peut être plus efficace... chez les patients atteints de un cancer du sein métastatique, porteurs de une mutation de BRCA1" | Highly specialized oncogenomics — narrow subdomain not representative of general hospital notes | IC
+- **ESSAI-D11**: ESSAI/cls | 20 | speculation | "utilisation de l'oxygène à haut débit humidifié chez les patients immunodéprimés avec un problème respiratoire nécessitant de l'oxygène admis en réanimation" | Clinical trial framing even for ICU content — not raw hospital note register | IC
+- **ESSAI-D12**: ESSAI/ner_neg | 11 | NER (sparse) | "en l'absence d'atteinte ganglionnaire chez les femmes ménopausées" (tags: [0,...,2,3,...]) | Only "atteinte ganglionnaire" tagged; annotation completeness and expert authority undocumented | OC
+- **ESSAI-D13**: ESSAI/cls | 19 | neutral | "Chaque cycle dure 28 jours" | Trivially neutral sentence — inflates neutral class count, contributing to severe label imbalance | OC
+- **ESSAI-D14**: ESSAI/ner_neg | 1–10 | all O | "avec la combinaison gemcitabine + abraxane, chez des patients avec un cancer du pancréas" (and 9 similar) | Consecutive all-zero NER sequences despite clinically relevant content — sparse annotation density | OO

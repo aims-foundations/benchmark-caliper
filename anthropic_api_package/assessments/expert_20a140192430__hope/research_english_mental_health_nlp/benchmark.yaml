@@ -1,0 +1,905 @@
+name: hope_dac
+full_name: 'HOPE: A Dataset for Dialogue-Act Classification in Counselling Conversations'
+source_url: https://github.com/LCS2-IIITD/HOPE
+paper_url: https://arxiv.org/abs/2204.09361
+year: 2022
+domain: Dialogue-act classification in mental health counseling
+porting_strategy: ground_up
+languages:
+- en
+primary_region: United States
+description: 'HOPE is a manually annotated dataset of ~12.9K utterances drawn from 212 publicly
+
+  available mental health counseling session videos on YouTube. It defines 12
+
+  domain-specific dialogue-act (DAC) labels designed for counseling conversations,
+
+  hierarchically organized into speaker-initiative, speaker-responsive, and general
+
+  categories. The benchmark is paired with SPARTA, a transformer-based architecture
+
+  incorporating speaker- and time-aware contextual learning. The dataset is intended
+
+  to support development of AI-assistive chatbots for mental health applications,
+
+  though its sessions are explicitly US-clinical in origin.
+
+  '
+documentation_excerpts: '## Key characteristics relevant to validity analysis:
+
+
+  ### Input Ontology
+
+  HOPE''s task taxonomy covers dialogue-act classification (DAC) in dyadic counseling
+
+  conversations, explicitly distinguished from both goal-oriented and chit-chat
+
+  dialogue paradigms [Q7, Q8, Q9]. The primary classification objective is assigning
+
+  one of 12 domain-specific labels to each utterance within a two-party session
+
+  [Q22, Q58]. The benchmark''s scope is restricted to individual counseling modalities
+
+  — no group therapy, crisis intervention, or substance-use-specific sub-corpora are
+
+  disaggregated. SPARTA is evaluated against six baseline architectures organized into
+
+  three modelling categories based on contextual signals incorporated [Q79, Q80], and
+
+  ablation variants test the contribution of local context, global context, and
+
+  speaker-awareness [Q115]. Local context is identified as structurally important
+
+  for counseling DAC [Q118], and speaker role is foregrounded as a primary structural
+
+  signal [Q125]. The benchmark does not define sub-task categories for culturally
+
+  adapted therapeutic modalities (e.g., spiritually grounded counseling, collectivist
+
+  distress-framing sessions), which is an acknowledged gap deferred to future
+
+  dataset expansion.
+
+
+  ### Input Content
+
+  The HOPE dataset is constructed from ~12.9K utterances across 212 publicly available
+
+  mental health counseling session videos sourced from YouTube [Q3, Q13, Q23].
+
+  Data scarcity due to the sensitive nature of counseling content was acknowledged
+
+  as the primary collection challenge [Q23]. Critically, the paper explicitly states
+
+  that "the majority of the sessions in HOPE belong to the mental health professionals
+
+  and patients based in United States" [Q98], constraining cultural and demographic
+
+  representativeness to a US clinical context. Sessions are dyadic only [Q26],
+
+  and utterances are notably lengthy relative to other conversational datasets —
+
+  averaging ~103 words per patient utterance and ~124 words per therapist utterance
+
+  [Q56, Q57]. Dialogue-act label distributions vary by speaker role [Q60], and
+
+  synthetic names were assigned to protect participant identity [Q24]. The content
+
+  grounding in US clinical practice creates meaningful construct-irrelevant variance
+
+  risk when downstream chatbots target South Asian, African American, or Latin American
+
+  populations whose communicative norms differ from those captured in these sessions.
+
+
+  ### Input Form
+
+  The dataset is English-language text derived from speech: transcripts were
+
+  generated automatically via OTTER (an ASR system) and then hand-corrected for
+
+  spelling and grammatical errors [Q25]. The authors acknowledge that "the automatic
+
+  transfer of utterance from the speech modality to the text causes some information
+
+  loss, though we tried our best to recover them through manual intervention" [Q94].
+
+  Patient and therapist names were systematically masked prior to release [Q97].
+
+  Utterance representations are extracted using pre-trained RoBERTa [Q61], and
+
+  the dataset is split 70:20:10 for train/test/validation [Q31, Q55]. The text-only,
+
+  English-language format closely matches the intended deployment modality for
+
+  AI-assistive chatbots, presenting no script or primary modality mismatch. The
+
+  lengthy utterance distribution [Q56, Q57] may not reflect shorter, text-based
+
+  real-world chatbot interaction patterns, though this is NOT DOCUMENTED as a
+
+  formal limitation in the paper.
+
+
+  ### Output Ontology
+
+  The benchmark defines 12 dialogue-act labels specifically designed for counseling
+
+  conversations, developed in consultation with therapist and counseling experts
+
+  [Q27]. These labels are organized hierarchically: three speaker-initiative labels
+
+  (IRQ, YNQ, CRQ), three speaker-responsive labels (ORQ, CD, ID — with some
+
+  ambiguity in assignment; see below), and four general labels (PA, NA, OD, GT,
+
+  ACK, GC form the full 12) [Q29, Q32]. The full label set covers Information
+
+  Request [Q33], Yes/No Question [Q34], Clarification Request [Q35], Opinion Request
+
+  [Q36], Clarification Delivery [Q37], Information Delivery [Q38], Positive Answer
+
+  [Q39], Negative Answer [Q40], Opinion Delivery [Q41], Greeting [Q42],
+
+  Acknowledgment [Q43], and General Chit-Chat [Q44]. The taxonomy is explicitly
+
+  distinguished from general-purpose schemes (e.g., Switchboard) on domain
+
+  specificity grounds [Q27]. However, the paper acknowledges that the label
+
+  definitions for speaker-initiative and speaker-responsive pairs (IRQ & ID;
+
+  ORQ & OD; CRQ & CD) "seem complementary in nature" [Q51], and error analysis
+
+  confirms systematic confusion among these pairs [Q91, Q92]. The single-label
+
+  design is acknowledged to be a simplification — "sometimes, an utterance can have
+
+  multiple dialog-acts" [Q30] — and multi-label extension is deferred as future work.
+
+  The taxonomy is grounded in US clinical practice by construction [Q98] and does not
+
+  capture culturally specific communicative acts (e.g., indirect disclosure,
+
+  spiritually framed coping) that may be prevalent in underrepresented communities.
+
+
+  ### Output Content
+
+  Three expert linguists served as annotators [Q45], operating from a novel
+
+  hierarchical annotation scheme developed specifically for counseling [Q16].
+
+  Annotators were aged 25–35 with 2–10 years of professional experience [Q50],
+
+  and the process included a calibration phase [Q46] followed by group discussion
+
+  moderated by an expert therapist [Q47]. Mental health professionals and linguists
+
+  were consulted during guideline preparation [Q95]. The aggregate Cohen''s Kappa
+
+  inter-annotator agreement is 0.7234 ("substantial") [Q48, Q49], but no
+
+  label-stratified IAA scores are reported, masking potential variation on labels
+
+  most susceptible to cultural communicative norms. The paper explicitly acknowledges
+
+  that "the annotator''s bias cannot be ruled out completely" [Q96]. Critically, no
+
+  information is provided on annotator cultural backgrounds, native languages, or
+
+  exposure to non-US or minority-community clinical populations — a significant gap
+
+  given that downstream deployment targets South Asian, African American, and
+
+  Latin American communities. Ground-truth labels assigned from a US clinical
+
+  vantage point risk systematic misalignment with how therapeutic dialogue functions
+
+  in those communities (indirect disclosure, collectivist distress framing, spiritual
+
+  coping language).
+
+
+  ### Output Form
+
+  Performance is measured using macro-F1, weighted-F1, and accuracy [Q63].
+
+  SPARTA-TAA achieves state-of-the-art scores of 60.29 macro-F1, 64.53 weighted-F1,
+
+  and 64.75% accuracy [Q73, Q85], with improvements over the best baseline (CASA)
+
+  statistically significant at >95% confidence [Q88]. Label-wise F1 scores are
+
+  reported [Q76], revealing particular weakness on Acknowledgment (ACK, F1=47.86%)
+
+  [Q77]. Three-fold cross-validation results are consistent with the primary split
+
+  [Q87], and optimization uses categorical cross-entropy with Adam, dropout of 0.15,
+
+  and early stopping over 50 epochs [Q110]. The evaluation is framed entirely as
+
+  single-label classification; no multi-label or ranked-output metric is employed.
+
+  This constitutes a systematic form mismatch with the downstream chatbot use case,
+
+  where utterances frequently carry multiple simultaneous communicative intents [Q30]
+
+  and where ranked or probabilistic outputs would yield more contextually appropriate
+
+  downstream responses. The emotion annotation experiment [Q126, Q127, Q128] was
+
+  abandoned due to class imbalance [Q129], and no alternative affective scoring
+
+  dimension is incorporated in the final output form.
+
+  '
+verbatim_quotes:
+- id: Q1
+  page: 1
+  dimension: input_ontology
+  text: We develop a novel dataset, named HOPE, to provide a platform for the dialogue-act classification in counselling conversations.
+- id: Q2
+  page: 1
+  dimension: output_ontology
+  text: We identify the requirement of such conversation and propose twelve domain-specific dialogue-act (DAC) labels.
+- id: Q3
+  page: 1
+  dimension: input_content
+  text: We collect ∼ 12.9𝐾 utterances from publicly-available counselling session videos on YouTube, extract their transcripts,
+    clean, and annotate them with DAC labels.
+- id: Q4
+  page: 1
+  dimension: input_ontology
+  text: Further, we propose SPARTA, a transformer-based architecture with a novel speaker- and time-aware contextual learning
+    for the dialogue-act classification.
+- id: Q5
+  page: 1
+  dimension: output_form
+  text: Our evaluation shows convincing performance over several baselines, achieving state-of-the-art on HOPE.
+- id: Q6
+  page: 1
+  dimension: output_form
+  text: We also supplement our experiments with extensive empirical and qualitative analyses of SPARTA.
+- id: Q7
+  page: 1
+  dimension: input_ontology
+  text: Unlike general goal-oriented dialogues, a conversation between a patient and a therapist is considerably implicit,
+    though the objective of the conversation is quite apparent.
+- id: Q8
+  page: 1
+  dimension: input_ontology
+  text: The nature of conversations in a social counselling setting is particularly distinct as compared to a conventional
+    chit-chat or goal-oriented conversations.
+- id: Q9
+  page: 1
+  dimension: input_ontology
+  text: It follows a pattern which is different from both goal-oriented and general chit-chat based conversations.
+- id: Q10
+  page: 1
+  dimension: input_ontology
+  text: Usually these conversations begin with greetings followed by the therapist inquiring for problems faced by the patient.
+- id: Q11
+  page: 1
+  dimension: output_content
+  text: Ganeshan Malhotra, Abdul Waheed, Aseem Srivastava, Md Shad Akhtar, Tanmoy Chakraborty.
+- id: Q12
+  page: 1
+  dimension: output_content
+  text: 1BITS Pilani, Goa, India, 2Maharaja Agrasen Institute of Technology, New Delhi, India, 3IIIT-Delhi, India.
+- id: Q13
+  page: 2
+  dimension: input_content
+  text: The HOPE dataset contains ∼ 12.9K utterances across 212 mental-health counseling sessions.
+- id: Q14
+  page: 2
+  dimension: output_ontology
+  text: Each utterance in the dataset is tagged with one of the 12 counseling-aligned dialogue-act labels (c.f. Section 3).
+- id: Q15
+  page: 2
+  dimension: input_content
+  text: We present HOPE, a novel and large-scale manually annotated, counselling-based conversation data for dialogue-act
+    classification.
+- id: Q16
+  page: 2
+  dimension: output_content
+  text: To cater to the requirements of counseling conversations, we define a novel hierarchical annotation scheme for the
+    dialogue-act annotation.
+- id: Q17
+  page: 2
+  dimension: output_ontology
+  text: We propose twelve dialogue-act labels that are aligned with mental-health counseling session.
+- id: Q18
+  page: 2
+  dimension: input_ontology
+  text: We propose SPARTA, a novel dialogue-act classification system that combines speaker-dynamics and local context through
+    a time-aware attention mechanism, along with long-term global context.
+- id: Q19
+  page: 2
+  dimension: output_form
+  text: We perform extensive ablation study to establish the efficacy of each module of SPARTA.
+- id: Q20
+  page: 2
+  dimension: input_content
+  text: We have made the code and (a subset of) the dataset available at github.
+- id: Q21
+  page: 2
+  dimension: input_ontology
+  text: The current work is connected to the existing literature in at least two dimensions – first, the dialogue-act classification,
+    and second, text processing for mental-health counseling.
+- id: Q22
+  page: 3
+  dimension: input_ontology
+  text: In this section, we present our dialogue-act classification dataset, called HOPE. In total, we annotated ∼ 12.9𝐾 utterances
+    with 12 dialogue-act labels carefully designed to cater to the requirements of a counseling session.
+- id: Q23
+  page: 3
+  dimension: input_content
+  text: One of major hurdles we faced in the process of data collection was the unavailability of public counseling sessions,
+    mainly due to the fact that they usually contain sensitive personal information. To curate this data, we carefully explored
+    the web and collected publicly-available pre-recorded counselling videos on YouTube.
+- id: Q24
+  page: 3
+  dimension: input_content
+  text: To ensure confidentiality, we randomly assign synthetic names to all patients and therapists in all examples.
+- id: Q25
+  page: 3
+  dimension: input_form
+  text: In the next step, we extract the transcriptions of each video using OTTER (https://www.otter.ai/), an automatic speech
+    recognition tool. Subsequently, we correct transcription errors to remove any noise (i.e., spelling or grammatical mistakes).
+- id: Q26
+  page: 3
+  dimension: input_content
+  text: The data collection process provides us 12.9𝐾 utterances from 212 counseling therapy sessions – all of them are dyadic
+    conversations only.
+- id: Q27
+  page: 3
+  dimension: output_ontology
+  text: Since the counseling conversations have inherent differences with the standard conversations (such as SwitchBoard
+    dataset conversation), it demands a carefully designed set of dialogue-act labels capable of catering the requirements
+    of counselling conversations. Hence, we, in consultation with therapist and counselling experts, design a set of 12 dialog-act
+    labels that are arranged in a hierarchy.
+- id: Q28
+  page: 3
+  dimension: output_ontology
+  text: These labels are designed to capture the intents of both the patient and therapist, and also be easily comprehensible
+    to assist in the development of a conversational dialogue system.
+- id: Q29
+  page: 3
+  dimension: output_ontology
+  text: Each utterance in the dialogue belongs to one of the three categories – speaker initiative, speaker responsive, and
+    general.
+- id: Q30
+  page: 3
+  dimension: output_ontology
+  text: Sometimes, an utterance can have multiple dialog-acts; however, they are rare in the annotated dataset. Hence, for
+    simplicity, we consider only one (primary) label for each utterance.
+- id: Q31
+  page: 4
+  dimension: input_form
+  text: The train, test, and validation splits are 70:20:10
+- id: Q32
+  page: 4
+  dimension: output_ontology
+  text: Our annotation scheme assigns three distinct dialogue-act labels to the first two categories, while the remaining
+    four labels belong to the general category.
+- id: Q33
+  page: 4
+  dimension: output_ontology
+  text: 'Information Request (IRQ): This label is used as a request for some information, e.g., ''Tell me your name.'''
+- id: Q34
+  page: 4
+  dimension: output_ontology
+  text: 'Yes/No Question (YNQ): The YNQ label is similar to IRQ; however, the expected response is a trivial yes or no answer.'
+- id: Q35
+  page: 4
+  dimension: output_ontology
+  text: 'Clarification Request (CRQ): This label is assigned to those utterances in which a speaker usually asks the therapist
+    for further clarification about topic that is being currently discussed.'
+- id: Q36
+  page: 4
+  dimension: output_ontology
+  text: 'Opinion Request (ORQ): The ORQ label is used when the speaker seeks opinions of the listener.'
+- id: Q37
+  page: 4
+  dimension: output_ontology
+  text: 'Clarification Delivery (CD): This label is used when the speaker provides further clarifications about a topic/entity
+    under discussion.'
+- id: Q38
+  page: 4
+  dimension: output_ontology
+  text: 'Information Delivery (ID): When the speaker provides some factual objective information about herself.'
+- id: Q39
+  page: 4
+  dimension: output_ontology
+  text: 'Positive Answer (PA): These labels are used when the utterance is an answer in the form of a simple yes to a question
+    that was previously uttered.'
+- id: Q40
+  page: 4
+  dimension: output_ontology
+  text: 'Negative Answer(NA): It is used when the utterance is an answer of the form of a simple No to a question asked earlier.'
+- id: Q41
+  page: 4
+  dimension: output_ontology
+  text: 'Opinion Delivery (OD): When the speaker explicitly lists out her/his opinions.'
+- id: Q42
+  page: 4
+  dimension: output_ontology
+  text: 'Greeting (GT): Each session usually starts with greeting by one speaker and an appropriate response from the other.'
+- id: Q43
+  page: 4
+  dimension: output_ontology
+  text: 'Acknowledgment (ACK): In normal conversation, very often, we utter (e.g., ''Yeah! You are right.'') to acknowledge
+    the other speaker or to show our agreement without an explicit information request, question, or command.'
+- id: Q44
+  page: 4
+  dimension: output_ontology
+  text: 'General Chit-Chat (GC): Other utterances that do not belong to any of the above labels are tagged as GC, possibly
+    because of the vagueness and the lack of sense in the context of the conversation.'
+- id: Q45
+  page: 4
+  dimension: output_content
+  text: We employed three annotators who are experts in linguistics.
+- id: Q46
+  page: 4
+  dimension: output_content
+  text: To ensure the understanding of the tasks and annotation scheme, we took a sample of the dataset and asked each annotator
+    to annotate them as per the prepared set of guidelines.
+- id: Q47
+  page: 4
+  dimension: output_content
+  text: Following this, every annotation was discussed in the presence of the annotators and an expert therapist as moderator
+    to ensure consistency.
+- id: Q48
+  page: 4
+  dimension: output_content
+  text: After the annotation process, we compute Cohen's Kappa score [7] to measure the agreement among annotators.
+- id: Q49
+  page: 4
+  dimension: output_content
+  text: We obtain the inter-rater agreement score of 0.7234 – which falls under the 'substantial' [7] category.
+- id: Q50
+  page: 4
+  dimension: output_content
+  text: Annotators are in the age group of 25-35, with 2-10 years of professional experience.
+- id: Q51
+  page: 4
+  dimension: output_ontology
+  text: The broad definitions of speaker-initiative and speaker-responsive dialogue-act label pairs, IRQ & ID; ORQ & OD, and
+    CRQ & CD, seem complementary in nature.
+- id: Q52
+  page: 4
+  dimension: output_ontology
+  text: However, the dataset does not support the above view entirely.
+- id: Q53
+  page: 5
+  dimension: input_content
+  text: In total, HOPE has transcripts for 12.9𝑘 utterances which are annotated with 12 dialogue-act labels.
+- id: Q54
+  page: 5
+  dimension: input_content
+  text: These utterances are evenly distributed between the patients and therapists with 6.38𝐾 and 6.47𝐾 utterances, respectively.
+- id: Q55
+  page: 5
+  dimension: input_form
+  text: We split the dataset into 70:20:10 ratio as the train, test, and validation sets, respectively.
+- id: Q56
+  page: 5
+  dimension: input_content
+  text: In contrast to the regular patient-doctor conversations (e.g., SOAP), the dialogue sessions in HOPE are usually lengthy
+    (∼ 59 utterances per session).
+- id: Q57
+  page: 5
+  dimension: input_content
+  text: Moreover, the utterances in these sessions are themselves significantly longer as compared to other conversational
+    datasets, with the average length of utterance of a patient being 103 words, whereas for therapist, it is ∼ 124 words.
+- id: Q58
+  page: 5
+  dimension: input_ontology
+  text: The objective of SPARTA is to assign a correct dialogue-act label 𝑦𝑡 to every utterance 𝑈𝑡in the dialogue.
+- id: Q59
+  page: 5
+  dimension: input_ontology
+  text: SPARTA is a transformer-based architecture that incorporates the speaker-aware contextual information for the dialogue-act
+    classification.
+- id: Q60
+  page: 5
+  dimension: input_content
+  text: In our analysis of the HOPE dataset, we observed that a few of the dialogue-act labels are majorly associated with
+    the patient, while a few others are related to the therapist.
+- id: Q61
+  page: 5
+  dimension: input_form
+  text: For each utterance 𝑈𝑡 in a conversation dialogue, we extract the semantic representation through pre-trained RoBERTa
+    model [25], which is subsequently utilized to leverage the local (𝐿𝑡) and global (𝐺𝑡) contextual information within the
+    dialogue.
+- id: Q62
+  page: 6
+  dimension: input_form
+  text: 'For the experiments, we randomly split the HOPE dataset into 70 : 20 : 10 ratio for the train, test, and validation
+    sets.'
+- id: Q63
+  page: 6
+  dimension: output_form
+  text: To measure the performances of SPARTA and other baseline systems, we compute macro-F1, weighted-F1, and accuracy scores.
+- id: Q64
+  page: 6
+  dimension: input_form
+  text: We implemented our system in PyTorch [32] and utilized the pre-trained models from Huggingface Transformers library.
+- id: Q65
+  page: 6
+  dimension: input_form
+  text: The hyperparameters are listed in Table 6.
+- id: Q66
+  page: 6
+  dimension: input_ontology
+  text: 'CASA [35]: It is a context-aware attention-based system for the dialogue-act classification.'
+- id: Q67
+  page: 6
+  dimension: input_ontology
+  text: 'SA-CRF [41]: This recent baseline incorporates a CRF layer for the classification.'
+- id: Q68
+  page: 6
+  dimension: input_ontology
+  text: 'DRNN [44]: It is a novel Disconnected RNNs architecture which incorporates the position-invariant features for modelling.'
+- id: Q69
+  page: 6
+  dimension: input_ontology
+  text: 'ProSeqo [16]: It was proposed to efficiently handle the short and long texts using dynamic recurrent projections
+    and locality-sensitive projections [37].'
+- id: Q70
+  page: 6
+  dimension: input_ontology
+  text: 'TextVDCNN [9]: This is a deep convolutional network with residual connections for text classification.'
+- id: Q71
+  page: 6
+  dimension: input_ontology
+  text: 'TextRNN [24]: This was the first work to integrate RNNs into the multi-task learning framework.'
+- id: Q72
+  page: 6
+  dimension: input_ontology
+  text: 'RoBERTa [25]: We use RoBERTa as a baseline in this work due to its superioirity on various benchamarks.'
+- id: Q73
+  page: 6
+  dimension: output_form
+  text: Since SPARTA incorporates three major components – local context, global context, and speaker-aware modules. The SPARTA-TAA
+    system obtains the best scores of 60.29 macro-F1, 64.53 weighted-F1,
+- id: Q74
+  page: 7
+  dimension: output_form
+  text: 'Table 3: Table showcasing the performance of baseline models as compared with our SPARTA model. 𝑈𝑡 represents the
+    use of Utterance representation, GC represents Global Context, LC represents Local Context and SA means the presence of
+    Speaker Aware representations.'
+- id: Q75
+  page: 7
+  dimension: output_form
+  text: The dagger symbol (†) represents statistically significant results compared to the best baseline, CASA.
+- id: Q76
+  page: 7
+  dimension: output_form
+  text: We also present the label-wise performance of SPARTA in Table 4.
+- id: Q77
+  page: 7
+  dimension: output_form
+  text: We can observe that SPARTA consistently yields good scores for the majority of the dialogue-acts, except for the Acknowledgement
+    (ACK) where it records F1-score of merely 47.86%.
+- id: Q78
+  page: 7
+  dimension: output_form
+  text: Even for the under-represented labels (ORQ,NA and PA) in HOPE, SPARTA reports good F1-scores of 59.09%, 64.38% and
+    55.84%, respectively for these three labels.
+- id: Q79
+  page: 7
+  dimension: input_ontology
+  text: Based on the type of modelling, we categorize the baselines into three groups – utterance-driven (𝑈𝑡), utterance+global
+    context driven (𝑈𝑡 + GC), and utterance + global context + speaker-aware driven (𝑈𝑡 + GC + SA).
+- id: Q80
+  page: 7
+  dimension: input_ontology
+  text: Comparatively, SPARTA incorporates local context in addition to utterance, global context, and speaker dynamics (𝑈𝑡
+    + LC + GC + SA).
+- id: Q81
+  page: 7
+  dimension: output_form
+  text: In the first category, the standard RoBERTa model attains the best macro-F1, weighted-F1 and accuracy of 43.97, 49.13,
+    and 52.97%, respectively.
+- id: Q82
+  page: 7
+  dimension: output_form
+  text: In comparison, CASA [35] yields the improved weighted-F1 and accuracy scores at 55.95% (+6.82%) and 58.46% (+5.49%),
+    respectively, with the global context as an additional information.
+- id: Q83
+  page: 7
+  dimension: output_form
+  text: Finally, we experiment with SA-CRF [41] which also includes the speaker-dynamics for the dialogue-act classification;
+    however, its performance on HOPE is not at par with CASA [35].
+- id: Q84
+  page: 7
+  dimension: output_form
+  text: It reports 35.97, 24.20, and 45.07% macro-F1, weighted-F1, and accuracy, respectively.
+- id: Q85
+  page: 7
+  dimension: output_form
+  text: In comparison, SPARTA-TAA obtains significant improvements over all baselines. It reports improvements of +8.64%,
+    +8.58%, and +6.29% in macro-F1 (60.29), weighted-F1 (64.53), and accuracy (64.75%), respectively, as compared to CASA
+    suggesting the incorporation of local context extremely effective.
+- id: Q86
+  page: 7
+  dimension: output_form
+  text: Note that ProSeqo [16] and CASA [35] are currently the state-of-the-art on switchboard dialogue-act corpus benchmark;
+    yet they report inferior scores on HOPE compared to SPARTA.
+- id: Q87
+  page: 7
+  dimension: output_form
+  text: Moreover, we also report the mean of the 3-fold cross-validation results for both SPARTA-MHA and SPARTA-TAA, and the
+    results are consistent with the train-val-test split case.
+- id: Q88
+  page: 7
+  dimension: output_form
+  text: We also perform statistical significance T-test comparing SPARTA-TAA and the best performing baseline (CASA). We observe
+    that our results are significant with > 95% confidence across macro-F1 (p-value= 0.009), weighted-F1 (p-value= 0.014),
+    and accuracy (p-value= 0.048) values.
+- id: Q89
+  page: 7
+  dimension: output_form
+  text: 'Error Analysis: In this section, we present two-way error analyses of SPARTA in terms of quantitative and qualitative
+    evaluations.'
+- id: Q90
+  page: 7
+  dimension: output_form
+  text: 'Quantitative analysis: We report the confusion matrix for SPARTA-TAA in Figure 4.'
+- id: Q91
+  page: 7
+  dimension: output_ontology
+  text: We observe three pairs with significant error-rates (≥ 25%) – YNQ:IRQ (26%), OD:ID (43%), ID:ACK (28%).
+- id: Q92
+  page: 7
+  dimension: output_ontology
+  text: For the prediction of information delivery (ID), SPARTA is confused most of the time with other classes – 19% with
+    PA, 20% with NA, 43% with OD.
+- id: Q93
+  page: 8
+  dimension: input_content
+  text: We aim to tackle a very sensitive and a pervasive public-health crisis. We transcribe the data from publicly available
+    counselling videos.
+- id: Q94
+  page: 8
+  dimension: input_form
+  text: The automatic transfer of utterance from the speech modality to the text causes some information loss, though we tried
+    our best to recover them through manual intervention.
+- id: Q95
+  page: 8
+  dimension: output_content
+  text: Moreover, we consulted with mental-health professionals and linguists in preparing the annotation guideline.
+- id: Q96
+  page: 8
+  dimension: output_content
+  text: However, the annotator's bias cannot be ruled out completely.
+- id: Q97
+  page: 8
+  dimension: input_form
+  text: The names of the patients and therapists involved in these sessions have been systematically masked.
+- id: Q98
+  page: 8
+  dimension: input_content
+  text: Another important aspect of the current work is that the majority of the sessions in HOPE belong to the mental health
+    professionals and patients based in United States.
+- id: Q99
+  page: 8
+  dimension: input_content
+  text: Hence, the effectiveness of SPARTA on data from other geographical or demographical regions may vary.
+- id: Q100
+  page: 8
+  dimension: output_content
+  text: We understand that the building computational models in mental-health avenues has high-stakes associated with it and
+    ethical considerations, therefore, become necessary.
+- id: Q101
+  page: 8
+  dimension: output_content
+  text: No technology will work perfectly in solving the problems related to mental health.
+- id: Q102
+  page: 8
+  dimension: output_content
+  text: It is important to note that we do not make any diagnostic claims.
+- id: Q103
+  page: 8
+  dimension: output_content
+  text: Further, the deployment of any such technology will be done keeping in mind the safety-risks and mitigating any sources
+    of bias that may arise.
+- id: Q104
+  page: 8
+  dimension: output_ontology
+  text: We defined twelve dialogue-act labels to cater to the requirement of counselling sessions.
+- id: Q105
+  page: 8
+  dimension: input_content
+  text: In total, we annotated ∼ 12.9𝑘 utterances across 212 sessions.
+- id: Q106
+  page: 8
+  dimension: output_content
+  text: The authors acknowledge the support of the Ramanujan Fellowship, ihub-Anubhuti-iiitd Foundation set up under the NM-ICPS
+    scheme of the DST, and CAI at IIIT-Delhi.
+- id: Q107
+  page: 10
+  dimension: input_form
+  text: We use PyTorch 11 and Pytorch Lightning 12 frameworks for all our experiments. We extensively used Hugging Face Library
+    for implementation of transformer based NLP models.
+- id: Q108
+  page: 10
+  dimension: input_form
+  text: 'The complete model training was done on a linux machine with following specifications: GPU: TeslaV100, Memory: 32GB,
+    Linux 64 Bit: Ubuntu 18.04 LTS'
+- id: Q109
+  page: 10
+  dimension: output_form
+  text: We use WandB13 library to log all our results.
+- id: Q110
+  page: 10
+  dimension: output_form
+  text: The categorical cross-entropy loss is optimized using the Adam optimizer. We use dropout= 0.15 and train the models
+    for 50 epochs in a batch of 8 samples. We use EarlyStopping to prevent our model from overfiting.
+- id: Q111
+  page: 10
+  dimension: input_form
+  text: We use pretrained RoBERTa available from the Hugginface14 transformers for speaker aware as well as speaker invariant
+    utterance representations.
+- id: Q112
+  page: 10
+  dimension: input_form
+  text: For the GRU, we use input size and hidden dimension of 768 with 1 layer. For the classifier sub-module, we use a dropout
+    of 0.1 a linear layer of 768 neurons and LeakyReLU as the activation.
+- id: Q113
+  page: 10
+  dimension: input_form
+  text: Our attention blocks comprise of 3 Linear Layers for keys,queries and values and one linear layer to project the keys,
+    queries and values.
+- id: Q114
+  page: 11
+  dimension: output_form
+  text: To verify the effectiveness of the time-aware attention to compute the local context, we also report the results with
+    standard multi-head attention (MHA) mechanism.
+- id: Q115
+  page: 11
+  dimension: input_ontology
+  text: The first set of results (i.e., SPARTA-BS or the baseline version of SPARTA) in Table 7 represents the absence of
+    local context in SPARTA.
+- id: Q116
+  page: 11
+  dimension: output_form
+  text: It yields macro and weighted F1-scores of 51.83 and 54.98 respectively with global context only.
+- id: Q117
+  page: 11
+  dimension: output_form
+  text: We obtain 57.70% accuracy for the same setup.
+- id: Q118
+  page: 11
+  dimension: input_ontology
+  text: Dialogue-act labels in a counseling based conversation not only depend on the abstract information of the dialogue
+    but also on the utterances in the immediate vicinity of the current utterance.
+- id: Q119
+  page: 11
+  dimension: output_form
+  text: As can be observed from Table 7, the presence of both the global and local contextual information plays an importance
+    role in SPARTA.
+- id: Q120
+  page: 11
+  dimension: output_form
+  text: Moreover, the absence of either of the component degrades the overall performance.
+- id: Q121
+  page: 11
+  dimension: output_form
+  text: This corroborates that they carry distinct and diverse contextual information.
+- id: Q122
+  page: 11
+  dimension: output_form
+  text: The comparison between the standard multi-head attention and the novel time-aware attention highlights the importance
+    of attending over the relative positions of utterances.
+- id: Q123
+  page: 11
+  dimension: output_form
+  text: As stated earlier, extensive experimental results show that TAA yields better performance compare to MHA for all possible
+    configurations.
+- id: Q124
+  page: 11
+  dimension: output_form
+  text: For all combinations, we observe performance drop of [3 − 4]% without the speaker information.
+- id: Q125
+  page: 11
+  dimension: input_ontology
+  text: This is particularly apparent as a majority portion of the counseling conversation is driven by the therapist, thus
+    the speaker-initiative dialogue-acts have higher relevance with the therapist utterances.
+- id: Q126
+  page: 11
+  dimension: output_ontology
+  text: In earlier phases of experiments, we also considered the role of emotion in dialogue act classification.
+- id: Q127
+  page: 11
+  dimension: output_ontology
+  text: We annotated a subset of our dataset with three emotion classes consisting of 'positive', 'negative' and 'neutral'.
+- id: Q128
+  page: 11
+  dimension: input_content
+  text: We found that around ∼ 70% of utterances by the patients belonged to 'negative' class whereas ∼ 90% of therapists'
+    utterances belonged to 'neutral' class.
+- id: Q129
+  page: 11
+  dimension: output_ontology
+  text: Due to such imbalance, this data was not used in the final version of our proposed architecture.
+coverage_strengths:
+- user_priority: Individual counseling-style conversations (CBT-compatible modalities)
+  benchmark_coverage: All 212 sessions in HOPE are dyadic individual counseling conversations, explicitly distinguished from
+    goal-oriented and chit-chat paradigms [Q7, Q8, Q9]. Sessions are lengthy and naturalistic, with ~59 utterances per session
+    [Q56], providing rich coverage of the individual counseling interaction structure the user's chatbots emulate.
+  dimension: input_ontology
+- user_priority: Transformer-based dialogue systems (e.g., SPARTA) for clinical NLP evaluation
+  benchmark_coverage: SPARTA is evaluated against six baseline architectures across three modelling categories [Q79, Q80],
+    with ablations isolating local context, global context, and speaker-awareness [Q115]. Results are statistically significant
+    at >95% confidence [Q88] and consistent across 3-fold cross-validation [Q87], providing a rigorous evaluation protocol
+    for transformer-based dialogue systems.
+  dimension: output_form
+- user_priority: 12 domain-specific dialogue-act labels for counseling NLP
+  benchmark_coverage: The 12 DAC labels were co-designed with therapists and counseling experts [Q27] and are explicitly distinguished
+    from general-purpose schemes (Switchboard) on domain-specificity grounds. Labels cover the full speaker-initiative/speaker-responsive/general
+    hierarchy [Q29, Q32] and are documented at per-label granularity [Q33–Q44], making the output ontology directly usable
+    for chatbot dialogue trajectory design.
+  dimension: output_ontology
+- user_priority: Speaker role as a structurally significant signal for chatbot deployment
+  benchmark_coverage: Speaker role is foregrounded as a primary structural signal [Q125], with ablations showing 3–4% performance
+    degradation when speaker information is removed [Q124]. Label distributions are documented by speaker role [Q60], providing
+    direct evidence relevant to chatbot architectures that must handle asymmetric therapist/patient conversational dynamics.
+  dimension: input_ontology
+coverage_gap_analysis:
+- user_priority: Cultural adaptation of dialogue acts for underrepresented communities (South Asian, African American, Latin
+    American)
+  benchmark_coverage: The paper explicitly states that the majority of sessions 'belong to the mental health professionals
+    and patients based in United States' [Q98] and that 'the effectiveness of SPARTA on data from other geographical or demographical
+    regions may vary' [Q99]. No culturally adapted label definitions, no minority-community sessions, and no annotator cultural
+    diversity documentation exist in the benchmark.
+  gap_type: full
+  web_search_target: culturally adapted dialogue-act taxonomy counseling NLP South Asian African American Latin American mental
+    health chatbot evaluation
+- user_priority: Annotator demographics and inter-annotator reliability for culturally loaded utterances
+  benchmark_coverage: Only aggregate Cohen's Kappa (0.7234) is reported [Q48, Q49]; no label-stratified IAA, no annotator
+    cultural background information, no analysis of disagreement patterns on utterances from minority-community clients. Annotator
+    bias is flagged as unresolvable [Q96] but not further characterized.
+  gap_type: full
+  web_search_target: HOPE dataset counseling dialogue-act inter-annotator agreement label-stratified annotator demographics
+    cultural bias audit
+- user_priority: Multi-label or ranked dialogue-act outputs for downstream chatbot pipelines
+  benchmark_coverage: The benchmark is strictly single-label per utterance [Q14, Q104], with multi-intent acknowledged as
+    'rare' and deferred as 'simplicity' [Q30]. No multi-label or ranked-output evaluation metric is employed anywhere in the
+    paper. The emotion annotation experiment [Q126, Q127] was abandoned due to imbalance [Q129], leaving the single-label
+    output form unchallenged.
+  gap_type: full
+  web_search_target: multi-label dialogue-act classification counseling NLP motivational interviewing crisis intervention
+    ranked output mental health benchmark
+- user_priority: Substance use counseling and crisis intervention sub-corpus coverage
+  benchmark_coverage: HOPE does not disaggregate sessions by therapy type, client demographic, or clinical modality. No performance
+    breakdown by therapy sub-type (CBT, child, family, substance use) is reported. The paper describes data collection as
+    covering publicly available YouTube sessions without specifying sub-corpus composition [Q3, Q23, Q26].
+  gap_type: partial
+  web_search_target: HOPE counseling dataset therapy type breakdown substance use crisis intervention session composition
+    performance disaggregation
+- user_priority: Non-US English clinical NLP deployment contexts
+  benchmark_coverage: The dataset's US-clinical origin is explicitly acknowledged as a geographic limitation [Q98, Q99]. No
+    adaptation, validation, or performance reporting for non-US English-speaking clinical contexts (e.g., South Asian English,
+    African diaspora communities) is included in the paper.
+  gap_type: full
+  web_search_target: HOPE counseling dialogue-act benchmark non-US deployment South Asian English clinical NLP performance
+    degradation adaptation
+- user_priority: Input content representativeness for downstream communities (HIGH priority)
+  benchmark_coverage: All source sessions are US-clinical [Q98]; utterance length distribution (~103–124 words per turn [Q56,
+    Q57]) reflects structured therapeutic sessions rather than text-based chatbot interaction. Synthetic name masking [Q24]
+    protects identity but does not address cultural content gaps. No demographic metadata about session participants (race,
+    ethnicity, socioeconomic status) is documented.
+  gap_type: partial
+  web_search_target: mental health counseling NLP dataset demographic diversity ethnicity race clinical NLP benchmark underrepresented
+    communities
+- user_priority: Output content validity for underrepresented communities (HIGH priority)
+  benchmark_coverage: Annotators are described only by age range (25–35) and professional experience (2–10 years) [Q50], with
+    no cultural, linguistic, or clinical-exposure background documented. Expert therapist moderation [Q47] and mental health
+    professional consultation [Q95] are noted, but no evidence these consultants represented minority community clinical perspectives.
+    The paper's own ethical statement acknowledges bias mitigation as future deployment responsibility [Q103].
+  gap_type: partial
+  web_search_target: counseling dialogue annotation cultural validity minority community communicative norms annotator diversity
+    mental health NLP label bias

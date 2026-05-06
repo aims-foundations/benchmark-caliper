@@ -5,7 +5,7 @@
     "question": "The benchmark covers counseling sessions likely grounded in Indian clinical and cultural contexts. For your target users in South Asia and MENA, should the evaluation framework cover counseling components that reflect region-specific concerns — for example, family honor and izzat in South Asian contexts, religious or fatalistic framing of distress in MENA settings, stigma around formal mental health help-seeking, or intergenerational conflict norms? Or is your primary concern whether the benchmark covers generic clinical components that transfer across cultures?"
   },
   {
-    "id": "IC",
+    "id": "Q2",
     "dimension": "IC",
     "question": "The counseling dialogues in the benchmark likely reflect Indian therapeutic communication norms — client-counselor register, indirect expression of distress, and culturally specific metaphors for psychological suffering. For your MENA-focused users building or evaluating tools in Arabic, Urdu, Farsi, or Dari, would summaries generated from these dialogues be representative of the discourse patterns and help-seeking language their end users actually produce, or would the mismatch in communication norms make the evaluation less meaningful?"
   },

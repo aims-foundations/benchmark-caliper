@@ -1,0 +1,523 @@
+name: English-Speaking NLP/AI Researchers — Counseling Chatbot Dialogue-Act Evaluation
+  (Switchboard 1992)
+abbreviation: US-NLP-COUNSELING-DA
+scope_note: 'This document describes the specific deployment population identified
+  in the elicitation summary: English-speaking NLP/AI researchers (primarily U.S.-based)
+  evaluating LLM dialogue-understanding components for AI-assistive counseling chatbots,
+  using the Switchboard corpus and its SWBD-DAMSL-derived dialogue-act taxonomy as
+  the benchmark. The downstream systems target underrepresented U.S. communities (Black,
+  Latino, South Asian, Indigenous). This is NOT a broad regional document; it is scoped
+  to this research cohort and its immediate deployment context.'
+primary_country: United States
+comparable_environments:
+- United Kingdom
+- Canada
+- Australia
+- Other Anglophone academic NLP research environments
+population_description: PhD students, postdoctoral researchers, and industry practitioners
+  working in NLP/AI research, specifically those building or evaluating dialogue-understanding
+  components for AI-assistive mental health and counseling chatbots. They work primarily
+  with English-language data, standard NLP evaluation pipelines, and published corpora.
+  Their immediate task is benchmarking LLM systems against Switchboard dialogue-act
+  annotations; their downstream goal is deploying chatbot systems into counseling-adjacent
+  contexts, including individual CBT-style therapy and substance-use counseling, intended
+  to serve underrepresented U.S. communities.
+researcher_cohort:
+  roles:
+  - PhD students (NLP, computational linguistics, clinical NLP, AI/ML)
+  - Postdoctoral researchers
+  - Industry NLP/AI practitioners (e.g., at health-tech companies, AI labs)
+  primary_language_of_work: English
+  primary_evaluation_language: English
+  institutional_contexts:
+  - U.S. research universities with NLP or clinical NLP groups
+  - Industry research labs with health AI focus
+  - Comparable Anglophone academic environments
+  relevant_subdisciplines:
+  - Dialogue systems and conversational AI
+  - Clinical NLP
+  - Mental health informatics
+  - Computational pragmatics
+  - Fairness, accountability, and transparency in NLP
+downstream_service_population:
+  description: The chatbot systems being evaluated are intended to serve underrepresented
+    U.S. communities in counseling contexts. The benchmark evaluation is conducted
+    by the researcher cohort above, but validity concerns propagate to these end-user
+    populations.
+  target_communities:
+  - African American / Black communities
+  - Latino / Hispanic communities
+  - South Asian communities
+  - Indigenous / Native American communities
+  clinical_modalities_in_scope:
+  - Individual CBT-style counseling
+  - Substance-use counseling (multi-ethnic populations)
+  clinical_modalities_out_of_scope:
+  - Group therapy
+  - Crisis intervention
+  cultural_adaptation_status: Acknowledged as a gap; deferred to future dataset-expansion
+    work. Not a current evaluation priority per elicitation.
+languages:
+  benchmark_language: English (American English, 1992 telephone corpus)
+  researcher_working_language: English
+  downstream_service_language: English (with potential code-switching for Latino and
+    South Asian communities — see cultural notes)
+  dialect_coverage_in_benchmark: LDC catalog confirms Switchboard collected ~2,400
+    conversations among 543 speakers (302 male, 241 female) from all areas of the
+    United States (LDC catalog LDC97S62 — [|https://catalog.ldc.upenn.edu/LDC97S62|]).
+    Dialect region of upbringing was logged as a demographic variable. No racial/ethnic
+    breakdown of speaker composition is documented, and no audit of proportional representation
+    of African American English, Chicano/Latino English, South Asian English, or Indigenous
+    community speech has been published. The 'every major dialect of American English'
+    framing in corpus documentation refers to regional geographic dialects, not ethnolinguistic
+    varieties.
+  language_gap_note: The corpus reflects 1992 U.S. telephone-recruited American English.
+    Dialect and register variation relevant to African American English (AAE), Chicano/Latino
+    English, South Asian English, and Indigenous community speech is not documented
+    as having been proportionally represented. No published demographic audit exists
+    that resolves this gap (see gap_id 3 below).
+benchmark_corpus_characteristics:
+  name: Switchboard (1992) with SWBD-DAMSL dialogue-act annotations
+  original_design_purpose: Speaker authentication and large-vocabulary speech recognition
+    (DARPA/SPAWAR sponsored)
+  corpus_size_note: 'LDC catalog (LDC97S62) confirms approximately 260 hours of speech,
+    ~2,400 conversations, 543 speakers. Source: LDC — [|https://catalog.ldc.upenn.edu/LDC97S62|]'
+  dialogue_act_taxonomy:
+    source: 'SWBD-DAMSL, developed by Jurafsky, Shriberg & Biasca (1997) at the Johns
+      Hopkins LVSCR Workshop-97 as an augmentation to the DAMSL framework. The full
+      tagset had approximately 50 basic tags combinable with diacritics, yielding
+      ~220 unique combinations used by coders; these were collapsed to 42 mutually
+      exclusive categories for modeling purposes. The ''12 categories'' figure cited
+      in the elicitation likely reflects a further-reduced implementation used in
+      specific downstream applications. Source: Jurafsky et al. 1997 Coder''s Manual
+      (Stanford) — [|https://web.stanford.edu/~jurafsky/ws97/CL-dialog.pdf|]; SWBD-DAMSL
+      Coder''s Manual — [|https://web.stanford.edu/~jurafsky/ws97/manual.august1.html|]'
+    number_of_categories: 42 (canonical SWBD-DAMSL collapsed set; ~220 unique tag
+      combinations in full set; '12' cited in elicitation reflects a further-reduced
+      downstream variant)
+    designed_for_counseling: false
+    coverage_of_therapeutic_moves: 'No coverage of empathic reflection, psychoeducation,
+      motivational interviewing techniques, or other counseling-specific communicative
+      moves in original taxonomy. The Switchboard domain was explicitly described
+      as ''task-free,'' and SWBD-DAMSL was designed to enable computational DA modeling
+      for conversational speech recognition improvement, not clinical discourse. Source:
+      Jurafsky et al. 2000 Computational Linguistics — [|https://dl.acm.org/doi/10.1162/089120100561737|]'
+  collection_year: 1992
+  speaker_count_approx: 543
+  total_speech_hours_approx: 260
+  total_words_approx: 3 million
+  collection_medium: Telephone (computer-driven robot operator system; T1 lines; all-digital
+    4-wire format)
+  transcription_type: Time-aligned word-level, produced via supervised phone-based
+    recognition
+  demographic_metadata_collected:
+  - age
+  - sex
+  - education level
+  - dialect region of upbringing
+  race_ethnicity_metadata_collected: false
+  demographic_representativeness_audit: '[NOT FOUND — searched LDC catalog, OLAC record,
+    and published NLP literature; no published demographic audit of Switchboard speaker
+    composition for race/ethnicity/SES was identified. The corpus documents 543 speakers
+    (302 male, 241 female) with dialect region logged, but racial/ethnic composition
+    is not documented. This is a confirmed gap, not a search failure. Source checked:
+    LDC97S62 catalog — [|https://catalog.ldc.upenn.edu/LDC97S62|]; OLAC record — [|http://olac.ldc.upenn.edu/item/oai:www.ldc.upenn.edu:LDC97S62|]]'
+  annotation_pipeline: 'SWBD-DAMSL annotated by the Discourse Language Modeling research
+    group at the 1997 Johns Hopkins LVSCR Workshop, including Becky Bates, Noah Coccaro,
+    Thomas Crystal, Carol van Ess-Dykema, Dan Jurafsky, Rachel Martin, Marie Meteer,
+    Klaus Ries, Liz Shriberg, Andreas Stolcke, and Paul Taylor — all computational
+    linguists and speech researchers with no documented clinical or cross-cultural
+    counseling expertise. Annotators labeled from transcripts alone (without listening
+    to audio), approximately 30 minutes per conversation. Source: SWBD-DAMSL Coder''s
+    Manual — [|https://web.stanford.edu/~jurafsky/ws97/manual.august1.html|]'
+  inter_annotator_agreement_swbd_damsl: 'Stolcke et al. (2000) report human accuracy
+    of 84% on the 42-tag SWBD-DAMSL scheme (compared to 65% for automated ASR-based
+    classification and 71% for transcript-based classification). No kappa statistic
+    is reported in the primary SWBD-DAMSL documentation; the 84% human accuracy figure
+    is the standard citation for annotation quality. Source: Stolcke et al. 2000,
+    Computational Linguistics 26(3) — [|https://dl.acm.org/doi/10.1162/089120100561737|];
+    Cornerstone MNSU repository — [|https://cornerstone.lib.mnsu.edu/ie-fac-pubs/33/|]'
+evaluation_protocol_notes:
+  label_scheme: Single-label categorical dialogue-act classification per utterance
+  multi_label_support: false
+  user_acknowledged_limitation: Counseling utterances often carry multiple simultaneous
+    communicative intents; single-label scoring is a known oversimplification acknowledged
+    by the researcher cohort
+  multi_label_extension_status: Deferred to future work
+  primary_metric_type: Single-label accuracy (exact match against SWBD-DAMSL ground
+    truth)
+  metric_completeness_for_use_case: Incomplete and potentially misleading signal for
+    downstream counseling chatbot generation pipeline given multi-intent nature of
+    therapeutic utterances
+  existing_multi_label_clinical_alternatives: 'Several counseling-specific DA corpora
+    now exist as alternatives or complements:
+
+    (1) HOPE dataset (Malhotra et al., WSDM 2022): 12.9K utterances from 212 counseling
+    session videos annotated with 12 domain-specific, counseling-adapted DA labels
+    in a hierarchical scheme designed with therapist and counseling expert input.
+    Available on request. Source: ACM DL — [|https://dl.acm.org/doi/10.1145/3488560.3498509|];
+    GitHub — [|https://github.com/LCS2-IIITD/SPARTA_WSDM2022|]
+
+    (2) AnnoMI (Wu et al., ICASSP 2022; extended 2023): 133 professionally transcribed
+    and expert-annotated motivational interviewing conversations annotated for key
+    MI attributes (reflection, question, input subtypes) by 10 experienced MI practitioners.
+    First publicly available expert-annotated therapy dialogue dataset. Source: MDPI
+    Future Internet — [|https://www.mdpi.com/1999-5903/15/3/110|]; GitHub — [|https://github.com/uccollab/AnnoMI|]
+
+    (3) DAIC-WOZ (Gratch et al. 2014): Distress Analysis Interview Corpus with human
+    and computer interview data; not strictly counseling DA but relevant to clinical
+    NLP.
+
+    Neither HOPE nor AnnoMI documents demographic composition of clients or cultural
+    representation, leaving the cultural validity gap for underrepresented U.S. communities
+    unaddressed even in these purpose-built alternatives.'
+domain_specific_notes:
+  counseling_and_mental_health:
+    primary_modality: Individual CBT-style counseling sessions
+    substance_use_counseling: 'AnnoMI includes some substance-use counseling demonstrations
+      (e.g., methamphetamine cessation cases visible in sample transcripts). HOPE
+      covers a range of counseling topics from YouTube-sourced sessions. Neither dataset
+      documents multi-ethnic population coverage or validates annotations against
+      culturally specific counseling norms for Black, Latino, South Asian, or Indigenous
+      clients. Source: AnnoMI HuggingFace — [|https://huggingface.co/datasets/to-be/annomi-motivational-interviewing-therapy-conversations|];
+      AnnoMI MDPI — [|https://www.mdpi.com/1999-5903/15/3/110|]'
+    counseling_taxonomy_gap: 'SWBD-DAMSL was designed for task-free casual telephone
+      conversations to improve speech recognition, not for therapeutic discourse.
+      The HOPE dataset (Malhotra et al. 2022) provides a counseling-specific 12-category
+      DA taxonomy developed with therapist input, representing the closest published
+      alternative. AnnoMI uses MI-specific behavioral categories (reflection, question,
+      input) aligned with MISC coding. These taxonomies are structurally incompatible
+      with SWBD-DAMSL''s general-conversation categories. Source: HOPE — [|https://dl.acm.org/doi/10.1145/3488560.3498509|];
+      AnnoMI — [|https://www.mdpi.com/1999-5903/15/3/110|]'
+    relevant_external_taxonomies:
+    - MISC — Motivational Interviewing Skill Code
+    - MITI — Motivational Interviewing Treatment Integrity (Moyers et al. 2003, 2014)
+    - DAIC therapeutic act annotation scheme
+    - LIWC-coded empathy markers
+    - AnnoMI annotation framework (reflection, question, input subtypes)
+    - HOPE 12-label counseling DA hierarchy
+    crisis_intervention_in_scope: false
+    group_therapy_in_scope: false
+    net_new_counseling_da_benchmark_landscape: 'As of 2025, the counseling NLP DA
+      benchmark space includes: HOPE (212 sessions, 12.9K utterances, 12 counseling
+      DA labels; request-access), AnnoMI (133 MI sessions, expert-annotated; public),
+      and emerging resources like OnCoCo (60-category taxonomy integrating multiple
+      counseling paradigms — cited in 2025 arXiv). None of these document demographic
+      diversity of client populations. Source: HOPE arXiv — [|https://arxiv.org/abs/2111.06647|];
+      OnCoCo — [|https://arxiv.org/html/2604.18539v1|]'
+  cultural_adaptation:
+    validation_status_for_target_communities: Not validated against communicative
+      norms of Black, Latino, South Asian, or Indigenous communities
+    known_communicative_norm_gaps:
+    - Indirect disclosure patterns
+    - Spiritually framed coping language
+    - Collectivist framing of distress
+    - Code-switching (e.g., Spanish-English, South Asian English features)
+    evidence_of_standard_DA_scheme_validation_in_target_communities: '[NOT FOUND —
+      searched for studies validating English dialogue-act annotation schemes against
+      AAE/AAVE, Chicano English, South Asian English, or Indigenous community speech
+      norms in counseling or clinical NLP contexts. No published studies were found.
+      The broader culturally aware NLP literature (e.g., Deas et al. 2023 on AAE bias
+      in NLG; survey in Transactions of ACL 2024) confirms that cultural validation
+      of DA schemes for underrepresented U.S. communities is an open research gap.
+      Source: Culturally Aware NLP survey, TACL — [|https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00760/131587/Culturally-Aware-and-Adapted-NLP-A-Taxonomy-and-a|];
+      PMC AAVE clinical NLP study — [|https://pmc.ncbi.nlm.nih.gov/articles/PMC12037967/|]]'
+    annotator_diversity_in_swbd_damsl: 'Annotator team documented as computational
+      linguists and speech researchers from Stanford, Colorado, and JHU (see annotation_pipeline
+      above). No demographic information on annotator race/ethnicity is reported in
+      the coder''s manual. No clinical or cross-cultural counseling expertise is documented
+      for any annotator. Source: SWBD-DAMSL Coder''s Manual — [|https://web.stanford.edu/~jurafsky/ws97/manual.august1.html|]'
+    aave_clinical_nlp_context: 'A 2025 PMC study on LLMs and AAVE in clinical dialogue
+      contexts found that demographic prompting (e.g., specifying ''African American'')
+      influences LLM output but risks stereotyping, and recommends annotators with
+      cultural expertise for catching subtle cues. This reinforces the risk of applying
+      SWBD-DAMSL ground truth — annotated without cultural expertise — to counseling
+      utterances from Black clients. Source: PMC — [|https://pmc.ncbi.nlm.nih.gov/articles/PMC12037967/|]'
+infrastructure_and_pipeline_notes:
+  researcher_compute_environment: Standard U.S. academic/industry NLP infrastructure;
+    GPU clusters, cloud compute, standard LLM APIs
+  primary_input_signal_for_deployment: Text (not audio); telephone-quality audio signal
+    mismatch partially mitigated for text-based chatbot pipelines
+  transcription_convention_mismatch:
+    description: 1992 Switchboard transcription conventions (disfluency marking, turn
+      segmentation for speech recognition) may not align with modern LLM preprocessing
+      conventions or chatbot text distributions
+    empirical_evidence_of_mismatch: '[NEEDS VERIFICATION — deferred: below search
+      budget. A 2025 paper on next dialogue act prediction (OnCoCo/HOPE benchmark)
+      does note that Switchboard has ''highly skewed transition distributions'' relative
+      to counseling benchmarks, consistent with the distributional mismatch concern,
+      but no study explicitly comparing Switchboard transcription artifacts to contemporary
+      LLM chatbot text preprocessing was found. Source: arXiv 2604.18539 — [|https://arxiv.org/html/2604.18539v1|]]'
+  chatbot_deployment_medium: Text-based AI-assistive chatbot interfaces (specific
+    platforms not specified in elicitation)
+  accessibility_for_downstream_users: Not directly assessed for underrepresented community
+    end-users in this benchmark context
+validity_dimension_priorities:
+  IO_input_ontology:
+    priority: HIGH
+    summary: Switchboard taxonomy designed for speaker authentication, not counseling.
+      No therapeutic communicative move categories exist in original design. SWBD-DAMSL
+      external annotations not validated against counseling discourse. Counseling-specific
+      alternatives (HOPE 12-label hierarchy, AnnoMI MI behavioral scheme) exist but
+      are structurally incompatible with SWBD-DAMSL.
+  IC_input_content:
+    priority: HIGH
+    summary: 1992 casual telephone conversations between strangers on ~50 prompted
+      topics; no clinical content; no documented representation of target downstream
+      communities (Black, Latino, South Asian, Indigenous); no race/ethnicity metadata
+      collected; no community validation. LDC catalog confirms 543 speakers (302M/241F)
+      but no ethnolinguistic breakdown.
+  IF_input_form:
+    priority: MODERATE
+    summary: Telephone-era audio and transcription conventions vs. modern text-based
+      chatbot pipeline; partially mitigated because deployment signal is text. Recent
+      counseling DA work (HOPE, AnnoMI) uses YouTube-sourced transcripts as modern
+      alternative.
+  OO_output_ontology:
+    priority: HIGH
+    summary: 42-category taxonomy (collapsed from ~220) designed for general casual
+      telephone speech; single-label structure structurally misrepresents multi-intent
+      counseling utterances acknowledged by researcher cohort. HOPE and AnnoMI provide
+      domain-specific counseling DA taxonomies as validated alternatives.
+  OC_output_content:
+    priority: MODERATE
+    summary: SWBD-DAMSL annotated by computational linguists with no documented clinical
+      or cross-cultural counseling expertise; human accuracy 84% on 42-tag scheme
+      (Stolcke et al. 2000). No kappa statistic published. No cultural diversity in
+      annotator pool documented. Risk of ground-truth miscategorization for underrepresented
+      community utterances is not mitigated by taxonomy generality.
+  OF_output_form:
+    priority: MODERATE
+    summary: Single categorical label output; multi-label or ranked output needed
+      for counseling but deferred; single-label accuracy is incomplete signal for
+      downstream generation. HOPE and AnnoMI use single-label schemes but at least
+      domain-appropriate categories.
+flagged_gaps_requiring_web_search:
+- gap_id: 1
+  label: Counseling-specific dialogue-act coverage
+  description: Whether SWBD-DAMSL 12 categories map to recognized counseling microskill
+    taxonomies (MISC, LIWC-coded empathy, DAIC schemes) and where coverage gaps lie
+  search_target: counseling dialogue-act taxonomy motivational interviewing MISC SWBD-DAMSL
+    comparison therapeutic NLP benchmark
+  resolution_status: RESOLVED
+  resolution: 'SWBD-DAMSL was explicitly designed for task-free casual telephone speech
+    to improve speech recognition, not therapeutic discourse. Counseling-specific
+    DA taxonomies that do not overlap with SWBD-DAMSL include: (1) HOPE (12-label
+    counseling hierarchy with therapist input; Malhotra et al. WSDM 2022); (2) AnnoMI
+    (MI behavioral scheme: reflection, question, input subtypes aligned with MISC;
+    Wu et al. ICASSP 2022/Future Internet 2023); (3) MITI (Motivational Interviewing
+    Treatment Integrity coding). None of these taxonomies map cleanly onto SWBD-DAMSL
+    general-conversation categories. Source: HOPE — [|https://dl.acm.org/doi/10.1145/3488560.3498509|];
+    AnnoMI — [|https://www.mdpi.com/1999-5903/15/3/110|]; SWBD-DAMSL design rationale
+    — [|https://web.stanford.edu/~jurafsky/ws97/CL-dialog.pdf|]'
+- gap_id: 2
+  label: Cultural adaptation of dialogue acts for underrepresented communities
+  description: Evidence on whether standard English dialogue-act schemes have been
+    validated against communicative norms of Black, Latino, South Asian, and Indigenous
+    communities; indirect disclosure, spiritual framing, collectivist framing, code-switching
+    patterns
+  search_target: dialogue act annotation cultural adaptation African American Latino
+    Indigenous communicative norms NLP counseling
+  resolution_status: SEARCHED, NOT FOUND
+  resolution: '[NOT FOUND — searched culturally aware NLP literature, clinical NLP,
+    and AAVE NLP literature. No published studies were identified that validate SWBD-DAMSL
+    or any standard English DA scheme against communicative norms of Black/AAE, Latino/Chicano
+    English, South Asian English, or Indigenous community speech in counseling or
+    clinical contexts. The broader NLP literature confirms annotator demographic diversity
+    affects label quality (Sap et al. 2022; Santy et al. 2023 cited in TACL survey),
+    and AAVE-specific clinical LLM research recommends cultural expert annotation,
+    but no DA-specific validation study for these communities exists. This represents
+    a confirmed research gap, not a search limitation. Source: TACL Culturally Aware
+    NLP survey — [|https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00760/131587/Culturally-Aware-and-Adapted-NLP-A-Taxonomy-and-a|]]'
+- gap_id: 3
+  label: Demographic audit of Switchboard corpus
+  description: Published critiques or audits of Switchboard speaker composition for
+    race/ethnicity/SES representativeness relative to underrepresented U.S. communities
+  search_target: Switchboard corpus demographic audit racial composition 1992 telephone
+    speech representativeness critique
+  resolution_status: SEARCHED, NOT FOUND
+  resolution: '[NOT FOUND — searched LDC catalog, OLAC record, and published NLP/speech
+    literature. No published demographic audit of Switchboard speaker composition
+    for race/ethnicity or SES was identified. The LDC catalog (LDC97S62) confirms
+    543 speakers (302 male, 241 female) with dialect region of upbringing logged,
+    but no racial/ethnic breakdown is documented in any public source. The absence
+    of such an audit is itself a validity-relevant finding. Source: LDC catalog —
+    [|https://catalog.ldc.upenn.edu/LDC97S62|]; OLAC record — [|http://olac.ldc.upenn.edu/item/oai:www.ldc.upenn.edu:LDC97S62|]]'
+- gap_id: 4
+  label: Multi-label dialogue-act annotation resources for clinical NLP
+  description: Existing multi-label or ranked dialogue-act datasets in clinical NLP
+    (IEMOCAP, AnnoMI, DAIC-WOZ, counseling-adapted corpora) as complementary or replacement
+    benchmarks
+  search_target: multi-label dialogue act annotation counseling NLP IEMOCAP AnnoMI
+    DAIC-WOZ ranked intent classification
+  resolution_status: RESOLVED
+  resolution: 'AnnoMI (133 MI conversations; Wu et al. 2022/2023) includes multi-attribute
+    per-utterance annotations (reflection type, question type, input type) that support
+    more nuanced behavioral coding than single-label DA schemes, though the simplified
+    version uses single-label main behavior categories. HOPE uses single-label hierarchical
+    DA. ICSI-MRDA (Meeting Recorder DA corpus) reintroduced multi-label assignment
+    capability that SWBD-DAMSL eliminated. For counseling, the closest multi-attribute
+    resource is AnnoMI-full with 10 annotators'' labels preserved per utterance. Source:
+    AnnoMI GitHub — [|https://github.com/uccollab/AnnoMI|]; MRDA multi-label discussion
+    cited in Artstein & Poesio survey — [|https://www.researchgate.net/publication/2904172_The_ICSI_meeting_recorder_dialogue_act_MRDA_corpus|]'
+- gap_id: 5
+  label: Substance-use counseling dialogue coverage
+  description: Whether Switchboard-derived dialogue-act schemes have been applied
+    or validated in substance-use counseling corpora; MISC-coded motivational interviewing
+    dataset coverage for multi-ethnic populations
+  search_target: substance use counseling dialogue corpus motivational interviewing
+    multi-ethnic NLP dataset DAIC AnnoMI MISC
+  resolution_status: RESOLVED
+  resolution: 'AnnoMI includes some substance-use counseling demonstrations (meth
+    cessation, alcohol reduction). However, AnnoMI was sourced from YouTube/Vimeo
+    MI demonstration videos, and no demographic documentation of client ethnicity
+    or cultural background is provided. No MISC-coded or multi-ethnic-specific counseling
+    DA corpus for substance-use populations was found. SWBD-DAMSL has not been validated
+    in substance-use counseling contexts in the published literature. Source: AnnoMI
+    HuggingFace sample transcripts — [|https://huggingface.co/datasets/to-be/annomi-motivational-interviewing-therapy-conversations|];
+    AnnoMI MDPI — [|https://www.mdpi.com/1999-5903/15/3/110|]'
+- gap_id: 6
+  label: Validity of 1992 transcription conventions for modern LLM evaluation
+  description: Studies comparing Switchboard disfluency marking and turn-segmentation
+    conventions to contemporary chatbot text distributions and LLM preprocessing expectations
+  search_target: Switchboard transcription disfluency conventions distributional mismatch
+    modern LLM chatbot text preprocessing
+  resolution_status: SEARCHED, NOT FOUND
+  resolution: '[NOT FOUND — no studies directly comparing Switchboard 1992 transcription
+    artifacts to contemporary LLM chatbot text distributions were identified. A 2025
+    paper on counseling DA benchmarks notes that Switchboard (SWDA) has ''highly skewed
+    transition distributions'' relative to counseling-specific corpora, consistent
+    with the distributional mismatch concern, but this is not a transcription-convention
+    study. The Dysfluency Annotation Stylebook for Switchboard exists as a separate
+    document. Source: arXiv 2604.18539 on NDAP benchmarking — [|https://arxiv.org/html/2604.18539v1|];
+    Dysfluency Stylebook URL — [|https://staff.fnwi.uva.nl/r.fernandezrovira/teaching/DM-materials/DFL-book.pdf|]]'
+- gap_id: 7
+  label: SWBD-DAMSL annotator demographics and inter-annotator agreement
+  description: 'Published documentation on SWBD-DAMSL annotation pipeline: annotator
+    demographics, clinical or cross-cultural expertise, inter-annotator agreement
+    statistics'
+  search_target: SWBD-DAMSL dialogue act annotation annotator demographics inter-annotator
+    agreement clinical NLP quality
+  resolution_status: RESOLVED
+  resolution: 'Annotator team identified from Coder''s Manual: computational linguists
+    and speech researchers (Bates, Coccaro, Crystal, van Ess-Dykema, Jurafsky, Martin,
+    Meteer, Ries, Shriberg, Stolcke, Taylor) from Stanford, Colorado, and JHU. No
+    clinical or cross-cultural expertise documented. Annotators labeled from transcripts
+    alone (~30 min/conversation) without listening to audio. IAA: Stolcke et al. (2000)
+    report human accuracy of 84% on the 42-tag collapsed scheme (no kappa statistic
+    published in primary documentation). The 84% figure is achieved on the collapsed
+    42-tag set after merging categories specifically to improve interlabeler agreement.
+    Source: SWBD-DAMSL Coder''s Manual — [|https://web.stanford.edu/~jurafsky/ws97/manual.august1.html|];
+    Stolcke et al. 2000 — [|https://cornerstone.lib.mnsu.edu/ie-fac-pubs/33/|]'
+cultural_norms_notes: 'The researcher cohort operates within mainstream U.S. academic
+  NLP culture: English-language publication norms, established corpus licensing practices
+  (LDC), peer-review conventions, and standard evaluation reporting (accuracy, F1,
+  kappa). The downstream end-user communities (Black, Latino, South Asian, Indigenous)
+  have distinct communicative norms that are underrepresented in the benchmark data:
+
+  - African American English (AAE): distinct phonological, syntactic, and pragmatic
+  features; indirect disclosure styles; spiritual/religious framing of distress. 2025
+  clinical NLP research on AAVE confirms LLMs risk stereotyping when demographic prompting
+  is used without cultural expert annotation oversight.
+
+  - Latino/Chicano English: code-switching with Spanish; familismo and collectivist
+  framing; cultural scripts around help-seeking
+
+  - South Asian English: code-switching with South Asian languages; family-mediated
+  help-seeking norms; stigma around mental health disclosure
+
+  - Indigenous communities: oral tradition; community/relational framing of wellbeing;
+  significant variation across nations and regions
+
+  None of these communicative norms are represented in the 1992 Switchboard source
+  material or validated in the SWBD-DAMSL annotation process. No published study validates
+  any standard English DA scheme against these communities'' communicative norms in
+  counseling contexts (confirmed gap, not search failure).'
+applicable_regulations_and_standards:
+  u_s_data_privacy: 'HIPAA applicability to AI counseling chatbots is contingent on
+    whether the chatbot developer/vendor qualifies as a HIPAA-covered entity or business
+    associate. Most stand-alone AI chatbot developers do not meet this threshold,
+    leaving the data outside HIPAA protection unless integrated with a covered health
+    system. When HIPAA does not apply, FTC jurisdiction over unfair or deceptive data
+    practices applies (FTC action against BetterHelp in 2023 for sharing mental health
+    data with advertisers is the leading enforcement precedent). Source: PMC HIPAA/AI
+    chatbot analysis — [|https://pmc.ncbi.nlm.nih.gov/articles/PMC10937180/|]; ACHI
+    summary — [|https://achi.net/newsroom/ai-therapy-chatbots-raise-privacy-safety-concerns/|];
+    42 CFR Part 2 applies additionally to substance-use treatment records handled
+    by covered programs.'
+  ai_healthcare_guidance: 'FDA convened its Digital Health Advisory Committee in November
+    2024 specifically to examine generative AI-enabled digital mental health medical
+    devices, including chatbot therapists. Most current AI therapy chatbots are positioned
+    as general wellness products rather than medical devices, avoiding SaMD classification;
+    FDA oversight is triggered when a product claims to diagnose, treat, or mitigate
+    a psychiatric condition. The Committee recommended clearer labeling, training
+    transparency, and pre/post-market safety evidence. State-level regulation is accelerating:
+    California prohibits AI chatbots from implying licensure for therapy; Illinois
+    requires user disclosures for AI chatbots. Source: FDA Digital Health Advisory
+    Committee materials — [|https://www.fda.gov/media/189391/download|]; Orrick legal
+    alert on FDA DHAC — [|https://www.orrick.com/en/Insights/2025/11/FDAs-Digital-Health-Advisory-Committee-Considers-Generative-AI-Therapy-Chatbots-for-Depression|];
+    Manatt Health AI Policy Tracker — [|https://www.manatt.com/insights/newsletters/health-highlights/manatt-health-health-ai-policy-tracker|]'
+  irb_and_research_ethics: 'IRB oversight expected for clinical NLP research involving
+    patient or counseling session data; specific institutional requirements vary.
+    AnnoMI obtained explicit consent from video owners for dataset creation; HOPE
+    used publicly available YouTube videos with synthetic name anonymization. These
+    practices reflect the field norm for sourcing therapy data without direct patient
+    consent but do not resolve IRB requirements for researchers using these datasets
+    in clinical deployment research. Source: AnnoMI consent documentation — [|https://www.mdpi.com/1999-5903/15/3/110|]'
+  corpus_licensing: 'LDC97S62 (Switchboard-1 Release 2) is distributed by LDC under
+    standard LDC licensing terms: not-for-profit members, government members, and
+    nonmembers may use for noncommercial linguistic research and education only. For-profit
+    organizations with LDC for-profit membership may use for commercial technology
+    development. Health-tech companies building commercial counseling chatbots using
+    Switchboard as non-LDC-for-profit-members cannot use the corpus for commercial
+    purposes. Source: LDC licensing page — [|https://www.ldc.upenn.edu/data-management/using/licensing|];
+    LDC catalog entry — [|https://catalog.ldc.upenn.edu/LDC97S62|]'
+net_new_fields:
+  counseling_da_benchmark_ecosystem_2024_2025:
+    description: 'The counseling NLP DA benchmark landscape has grown substantially
+      since Switchboard''s original use. Key public resources for researchers: (1)
+      HOPE (Malhotra et al. WSDM 2022): 12.9K utterances, 212 dyadic counseling sessions
+      from YouTube, 12 domain-specific DA labels, request-access. (2) AnnoMI (Wu et
+      al. ICASSP 2022 / Future Internet 2023): 133 MI conversations, expert-annotated
+      by 10 MI practitioners, publicly available, includes substance-use cases. (3)
+      MentalChat16K (2025): 16K QA pairs combining synthetic CBT conversations and
+      real behavioral health coach-caregiver transcripts. None of these document demographic
+      diversity of client populations for underrepresented U.S. communities. Sources:
+      HOPE — [|https://arxiv.org/abs/2111.06647|]; AnnoMI — [|https://github.com/uccollab/AnnoMI|];
+      MentalChat16K — [|https://arxiv.org/html/2503.13509v1|]'
+    relevance_to_assessment: These benchmarks represent more valid IO/OO starting
+      points than Switchboard for counseling chatbot evaluation, but all share the
+      cultural coverage gap for the target downstream communities (Black, Latino,
+      South Asian, Indigenous). Researchers should treat adoption of HOPE or AnnoMI
+      as a necessary but not sufficient improvement over Switchboard for the deployment
+      use case.
+  switchboard_actual_speaker_count_correction:
+    description: 'LDC catalog (LDC97S62) and OLAC record confirm 543 speakers (302
+      male, 241 female), not ~500 as stated in the original 1992 paper (which was
+      written before corpus completion). The corpus also has approximately 2,400 conversations
+      (not 2,500), collected 1990–1991 (not only 1992). Source: LDC catalog — [|https://catalog.ldc.upenn.edu/LDC97S62|];
+      OLAC — [|http://olac.ldc.upenn.edu/item/oai:www.ldc.upenn.edu:LDC97S62|]'
+    relevance_to_assessment: Minor correction to corpus metadata; does not change
+      validity assessment direction.
+  swbd_damsl_task_free_domain_design_implication:
+    description: 'The SWBD-DAMSL coder''s manual explicitly notes that ''the Switchboard
+      domain itself is essentially task-free, thus giving few external constraints
+      on the definition of DA categories.'' This design choice means categories were
+      chosen for linguistic interest and computational tractability, not for coverage
+      of any specific discourse domain — making the taxonomy especially ill-suited
+      to the highly structured domain of therapeutic counseling. Source: Jurafsky
+      et al. 2000 Computational Linguistics — [|https://web.stanford.edu/~jurafsky/ws97/CL-dialog.pdf|]'
+    relevance_to_assessment: 'Directly confirms the IO gap: SWBD-DAMSL category boundaries
+      were defined without external domain constraints, meaning they cannot be assumed
+      to carve counseling discourse at its natural joints.'
+  ftc_mental_health_app_enforcement_precedent:
+    description: 'FTC filed a complaint against BetterHelp in 2023 for sharing mental
+      health data with Facebook, Snapchat, and other advertisers despite privacy representations
+      to users. This is the leading enforcement precedent for AI-assistive mental
+      health apps outside HIPAA coverage. Researchers deploying chatbots that collect
+      counseling session data should treat FTC deceptive practices jurisdiction as
+      the primary regulatory floor when HIPAA does not apply. Source: PMC HIPAA/AI
+      chatbot analysis — [|https://pmc.ncbi.nlm.nih.gov/articles/PMC10937180/|]'
+    relevance_to_assessment: Relevant to deployment context for downstream systems
+      targeting underrepresented communities; does not affect benchmark validity scoring
+      directly, but is a deployment ethics consideration for the research cohort.

@@ -1,0 +1,435 @@
+{
+  "benchmark": "samsum",
+  "region": "South Asia and MENA — Clinical NLP Researchers and AI Practitioners",
+  "dimensions": {
+    "input_ontology": {
+      "score": 1,
+      "justification": "SAMSum's input ontology is explicitly scoped to informal messenger chitchat — chit-chats, gossip, meeting arrangements, political discussion, and university assignment consultation [Q20] — positioned against news/scientific summarization [Q7], not clinical counseling. The benchmark contains no task category for CBT-structured counseling components, symptom elicitation, risk assessment, or culturally specific counseling acts (religious reframing, family-mediated resolution, izzat/namus-mediated indirect disclosure). Empirical sampling confirms zero clinical instances across 76 examples; the closest analogues are peer emotional support (DATASET-D4) and interpersonal relationship advice (DATASET-D5), neither of which involve therapeutic technique. Given the HIGH priority weight on IO for this deployment and the user's confirmation that both generic CBT structure and region-specific counseling components matter, the ontology fails on both axes.",
+      "strengths": [
+        "Multi-party dialogue structure (~25% of conversations involve 3+ interlocutors) exercises speaker-tracking abilities that have structural analogues to group counseling and multi-party clinical encounters (DATASET-D9, DATASET-D15)."
+      ],
+      "checklist_responses": {
+        "IO-1": "Required categories for SA-MENA clinical deployment include CBT-structured counseling (symptom elicitation, psychoeducation, cognitive restructuring), clinical safety content (risk assessment, suicidality), region-specific counseling acts (religious reframing per tawakkul/qadar, family-mediated resolution, stigma-sensitive omission), and somatic distress presentation common in South Asian and MENA contexts.",
+        "IO-2": "All required clinical categories are omitted. The benchmark's stated topic taxonomy [Q20] is explicitly informal messenger genres; no clinical or counseling component is named. Empirical sampling confirms zero clinical instances (DATASET-D1, DATASET-D13, DATASET-D15) with the closest analogue being peer support (DATASET-D4).",
+        "IO-3": "The benchmark includes substantial categories irrelevant to clinical deployment — gossip (DATASET-D7), trivia (DATASET-D15), workplace coordination (DATASET-D14, DATASET-D17), consumer transactions, and Western leisure planning — which introduce construct-irrelevant variance for clinical evaluation use.",
+        "IO-4": "Content validity is severely harmed: the construct (clinical counseling dialogue summarization) is entirely underrepresented, while the represented constructs (informal social chitchat) do not transfer. The authors themselves note 'no obvious baseline for the task of dialogues summarization' [Q38], underscoring that the ontology was not constructed with clinical reference."
+      },
+      "evidence_quotes": [
+        "[Q7] 'Major research efforts have focused so far on summarization of single-speaker documents like news (e.g., Nallapati et al. (2016)) or scientific publications (e.g., Nikolov et al. (2018)).' (p.1)",
+        "[Q20] 'It includes chit-chats, gossiping about friends, arranging meetings, discussing politics, consulting university assignments with colleagues, etc.' (p.2)",
+        "[Q12] 'With the growing popularity of online conversations via applications like Messenger, WhatsApp and WeChat, summarization of chats between a few participants is a new interesting direction of summarization research.' (p.1)",
+        "[Q38] 'There is no obvious baseline for the task of dialogues summarization.' (p.3)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-15] MentalCLOUDS demonstrates the existence of clinical counseling summarization ontology categories (symptom/history, patient discovery, reflection) that SAMSum lacks",
+        "[WEB-12] Arabic mental health NLP has advanced for detection but no Arabic clinical dialogue summarization benchmark exists"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: Paradigmatic chitchat summary 'Vicky will call Sonia to entertain her as she's bored' — no clinical content",
+        "DATASET-D4: Closest near-clinical analogue (peer emotional support) — still not professional counseling",
+        "DATASET-D9: Suicide discussed as casual trivia in entertainment register — no clinical safety framing",
+        "DATASET-D15: Trivia exchange exemplifying ontology distance from clinical task"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "WEB-15"
+        ],
+        "IO-2": [
+          "Q7",
+          "Q20",
+          "DATASET-D1",
+          "DATASET-D4",
+          "DATASET-D13",
+          "DATASET-D15"
+        ],
+        "IO-3": [
+          "Q20",
+          "DATASET-D7",
+          "DATASET-D15"
+        ],
+        "IO-4": [
+          "Q38",
+          "WEB-12"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether validation/test splits contain any clinical-adjacent content not seen in the 76-example train sample"
+      ],
+      "requires_expert_verification": [
+        "Magnitude of taxonomy gap for specific sub-regional counseling traditions (e.g., Sufi-influenced counseling in Pakistan, Ayurvedic-adjacent mental health framing in India)"
+      ]
+    },
+    "input_content": {
+      "score": 1,
+      "justification": "Concrete dialogue instances were synthetically authored by linguists fluent in English at Samsung R&D Institute Poland [Q17, Q19], reflecting their daily messenger conversation patterns. Empirical sampling confirms uniform European/North American cultural content: UK geography (DATASET-D29), US political content (DATASET-D11), US country music (DATASET-D35), Western consumer brands (DATASET-D28), Western dating norms (DATASET-D25), and a single 'Moroccan' reference framed orientalizingly by a European speaker (DATASET-D8). No Arabic, Urdu, Hindi code-switching, izzat/namus framing, religious distress framing (tawakkul, qadar), or stigma-mediated indirect disclosure is present. Combined with the user's HIGH priority weight on IC and confirmation that linguistic mismatch is the primary concern for MENA tooling, this constitutes a severe content validity failure.",
+      "strengths": [
+        "Informal register diversity — emoticons, abbreviations, typos, kaomoji (DATASET-D18, DATASET-D27) — partially overlaps with realistic messaging registers used in some digital mental health platform contexts."
+      ],
+      "checklist_responses": {
+        "IC-1": "Inputs require extensive Western cultural knowledge (US politics, UK geography, US music, Western consumer brands, Western social norms around dating and alcohol) that does not transfer to SA-MENA deployment context (DATASET-D11, DATASET-D29, DATASET-D35, DATASET-D2).",
+        "IC-2": "Culturally sensitive content is misaligned: alcohol normalization (DATASET-D23) conflicts with majority-Muslim deployment contexts; Western individualist conflict resolution norms (DATASET-D26) conflict with family-mediated norms documented in regional context YAML; secular framing throughout conflicts with religious frameworks central to MENA distress expression.",
+        "IC-3": "Multiple inputs require Western-specific knowledge: 'went Dutch' idiom (DATASET-D2), Trump parody register (DATASET-D11), Taylor Swift/Tim McGraw recognition (DATASET-D35), UK coastal place names (DATASET-D29). This introduces construct-irrelevant variance into summarization scoring for SA-MENA practitioners.",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — no regional annotator review of input cultural sensitivity has been conducted. Would require recruiting South Asian and MENA reviewers to systematically tag culturally distractor content.",
+        "IC-5": "Content validity is severely harmed: the synthetic Polish-linguist origin [Q17] combined with empirical confirmation of monocultural Western content (DATASET-D11, DATASET-D16, DATASET-D29) means there is no representative input signal for the target deployment populations' actual discourse."
+      },
+      "evidence_quotes": [
+        "[Q17] 'Our dialogue summarization dataset contains natural messenger-like conversations created and written down by linguists fluent in English.' (p.2)",
+        "[Q19] 'We asked linguists to create conversations similar to those they write on a daily basis, reflecting the proportion of topics of their real-life messenger conversations.' (p.2)",
+        "[Q21] 'Therefore, this dataset does not contain any sensitive data or fragments of other corpora.' (p.2)",
+        "[Q22] 'Each dialogue was created by one person.' (p.2)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-2] Severe gender digital access disparities in Afghanistan (~84.4% male users), Pakistan, Bangladesh — populations whose discourse SAMSum does not represent",
+        "[WEB-12] Arabic NLP for mental health faces unique challenges including morphological richness, dialectal variation, diacritics — none addressed by SAMSum content"
+      ],
+      "evidence_dataset": [
+        "DATASET-D8: 'Moroccan casserole' described from external European perspective — only MENA reference is orientalizing",
+        "DATASET-D11: US political parody content requires Western cultural knowledge",
+        "DATASET-D29: UK coastal geography distractor",
+        "DATASET-D25: Online dating normalized without family/stigma awareness — Western individualist assumption",
+        "DATASET-D23: Alcohol intoxication treated with levity — culturally incongruent with majority-Muslim deployment contexts",
+        "DATASET-D22: Paternal naming decision presented matter-of-factly without stigma framing"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "Q17",
+          "DATASET-D11",
+          "DATASET-D29",
+          "DATASET-D35",
+          "DATASET-D2"
+        ],
+        "IC-2": [
+          "DATASET-D23",
+          "DATASET-D26",
+          "DATASET-D25"
+        ],
+        "IC-3": [
+          "DATASET-D2",
+          "DATASET-D11",
+          "DATASET-D35",
+          "DATASET-D29"
+        ],
+        "IC-4": [],
+        "IC-5": [
+          "Q17",
+          "Q19",
+          "DATASET-D11",
+          "DATASET-D16",
+          "DATASET-D29",
+          "WEB-12"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Exact distribution of cultural distractor density across the full 14,731 training instances",
+        "Whether any examples in dev/test splits contain code-switching or non-Latin script content"
+      ],
+      "requires_expert_verification": [
+        "Magnitude of construct-irrelevant variance attributable to Western cultural distractors when SA-MENA-trained models are evaluated"
+      ]
+    },
+    "input_form": {
+      "score": 2,
+      "justification": "The plain-text turn-by-turn speaker-attributed format [Q29, Q33] is structurally compatible with clinical NLP pipelines and is empirically clean and consistent (DATASET-D17, DATASET-D19). Speaker attribution and utterance separators have been shown to benefit models [Q65, Q66]. However, all formatting decisions, tokenization, and length calibrations [Q42] assume English plain text exclusively. There is no provision for Arabic RTL rendering, Urdu Nastaliq, Devanagari, morphologically rich tokenization, or cross-script code-switching common in South Asian clinical contexts. Empirical sampling confirms 100% English Latin-script content with no non-Latin or RTL examples (DATASET-D17, DATASET-D19). The MODERATE priority weight reflects partial transferability of structural conventions with substantive multilingual mismatches.",
+      "strengths": [
+        "Consistent plain-text format compatible with standard NLP preprocessing pipelines (DATASET-D17, DATASET-D19)",
+        "Multi-party dialogue structure with named speaker attribution exercises clinically relevant speaker-tracking (DATASET-D15)",
+        "Format tolerates emoticons, kaomoji, and informal register variation without structural disruption (DATASET-D18)"
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal distribution is text-only English Latin script. Target deployment requires Arabic RTL, Urdu Nastaliq, Devanagari, Bengali, and code-switched content per regional context YAML; none are present.",
+        "IF-2": "Regional infrastructure supports text-based pipelines, but Arabic NLP for mental health faces unique challenges (morphological richness, dialectal variation, diacritics) per WEB-12, none of which the benchmark form addresses. Token truncation at 400 [Q42] was calibrated for English and may interact poorly with morphologically agglutinative target languages.",
+        "IF-3": "Domain-specific form gaps include: no provision for code-switching markers (Urdu-English, Hindi-English clinical contexts noted in regional YAML), no script-direction handling, no diacritic preservation conventions for Arabic clinical text.",
+        "IF-4": "External validity is harmed for multilingual deployment: the benchmark's input form provides no signal for non-English clinical inputs, while structural conventions (speaker attribution, turn separators) do partially transfer."
+      },
+      "evidence_quotes": [
+        "[Q29] 'Beforehand, we specified a format for written dialogues with summaries: a colon should separate an author of utterance from its content, each utterance is expected to be in a separate line.' (p.2)",
+        "[Q33] 'Each utterance contains the name of the speaker.' (p.3)",
+        "[Q42] 'In all our experiments, news and dialogues are truncated to 400 tokens, and summaries – to 100 tokens.' (p.4)",
+        "[Q65] 'On the other hand, dialogues are divided into utterances, and for each utterance its author is assigned.' (p.7)",
+        "[Q66] 'We demonstrate in experiments that the models benefit from the introduction of separators, which mark utterances for each person.' (p.7)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-12] Arabic NLP challenges include morphological richness, dialectal variation, and diacritics — unaddressed by SAMSum form"
+      ],
+      "evidence_dataset": [
+        "DATASET-D17: Consistent format with semi-formal register and repeated-speaker turns",
+        "DATASET-D19: Clean three-party speaker-colon-utterance format",
+        "DATASET-D18: Format tolerates Unicode kaomoji without disruption"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q29",
+          "Q33",
+          "DATASET-D17",
+          "DATASET-D19"
+        ],
+        "IF-2": [
+          "Q42",
+          "WEB-12"
+        ],
+        "IF-3": [
+          "Q29"
+        ],
+        "IF-4": [
+          "Q65",
+          "Q66",
+          "WEB-12"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Token length distribution interactions with Arabic/Urdu morphology",
+        "Whether placeholder tokens for media (DATASET-D18) align with clinical platform conventions"
+      ],
+      "requires_expert_verification": [
+        "Impact of English-calibrated truncation thresholds on cross-lingual fine-tuning"
+      ]
+    },
+    "output_ontology": {
+      "score": 1,
+      "justification": "Each dialogue receives exactly one reference summary [Q24] under a four-point style guide (short, information-extractive, interlocutor-naming, third-person) [Q23]. There are no clinical sub-categories — no symptom identification, risk indicators, therapeutic intervention markers, or empathy/alliance categories — and no representation of region-specific counseling outputs (religious reframing, family-mediated resolution plans, stigma-sensitive omissions). Empirical sampling reveals concrete failure modes: suicide discussed as social reassurance trivia (DATASET-D10), abuse-victim self-derogation reproduced as factual summary content (DATASET-D6), peer distress reduced to social transaction (DATASET-D33). The single-reference design forecloses representation of regional practitioner norm divergence. Given HIGH priority weight on OO and user confirmation that region-specific salience matters, this is a severe structural validity violation.",
+      "strengths": [
+        "The benchmark's style guide [Q23] does enforce interlocutor-naming, which transfers to clinical summarization where speaker attribution of symptoms and statements is clinically important (DATASET-D20)."
+      ],
+      "checklist_responses": {
+        "OO-1": "Output label categories are limited to a single free-form summary per dialogue with implicit salience rules (action items, attribution, factual outcomes). No clinical or regionally relevant categories exist.",
+        "OO-2": "Missing clinical categories include: symptom disclosure markers, risk/safety flags, therapeutic intervention type, alliance markers, family-mediated resolution annotations, religious reframing markers, and stigma-sensitive framing tags. Empirical evidence: suicide content received no risk annotation (DATASET-D10), distress disclosure received no clinical marker (DATASET-D33).",
+        "OO-3": "Embedded values include: action/outcome salience over emotional content, individual rather than family-mediated framing, secular rather than religious framing, direct disclosure rather than face-saving omission. These conflict with documented MENA fatalism/tawakkul framing and South Asian izzat-mediated indirect communication norms.",
+        "OO-4": "Stakeholder-driven taxonomy redesign would be required for valid SA-MENA clinical deployment. WEB-15 (MentalCLOUDS) provides one English-language template with three clinical components (symptom/history, patient discovery, reflection) but is itself American-demographic-limited (WEB-18).",
+        "OO-5": "Structural validity is severely harmed: the construct's structure (clinical summarization) is misrepresented as social transaction logging. Content validity is severely harmed: clinical and regional categories are entirely absent. External validity is harmed: scoring against this ontology will not generalize to clinical practitioner judgments."
+      },
+      "evidence_quotes": [
+        "[Q23] 'we asked language experts to annotate them with summaries, assuming that they should (1) be rather short, (2) extract important pieces of information, (3) include names of interlocutors, (4) be written in the third person.' (p.2)",
+        "[Q24] 'Each dialogue contains only one reference summary.' (p.2)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-15] MentalCLOUDS provides clinical counseling summarization ontology with three psychotherapy components — categories absent from SAMSum",
+        "[WEB-18] MentalCLOUDS itself notes American demographic limitation — even closest English clinical analogue carries cultural caveats",
+        "[WEB-13] AraHealthQA 2025 found automatic metrics 'failed to fully measure appropriateness or trustworthiness' for Arabic mental health — reinforces that ontology must encode clinical appropriateness explicitly"
+      ],
+      "evidence_dataset": [
+        "DATASET-D6: Stigmatizing self-description 'Pearl is fat and ugly' reproduced as factual summary — no clinical reframing category",
+        "DATASET-D10: Suicide statistics summarized as social reassurance — no risk/safety category",
+        "DATASET-D33: Peer emotional support reduced to social transaction — no distress/intervention category",
+        "DATASET-D20: Medical content reduced to action item — emotional stakes ('It's not a cancer?') omitted, illustrating action-bias salience norm"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q23",
+          "Q24"
+        ],
+        "OO-2": [
+          "DATASET-D10",
+          "DATASET-D33",
+          "WEB-15"
+        ],
+        "OO-3": [
+          "Q23",
+          "DATASET-D6",
+          "DATASET-D20"
+        ],
+        "OO-4": [
+          "WEB-15",
+          "WEB-18"
+        ],
+        "OO-5": [
+          "Q24",
+          "DATASET-D6",
+          "DATASET-D10",
+          "DATASET-D33",
+          "WEB-13"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether regional practitioners would converge on a single replacement taxonomy or require sub-regional variants"
+      ],
+      "requires_expert_verification": [
+        "Specific clinical and regional categories that SA-MENA practitioners would prioritize in a redesigned ontology"
+      ]
+    },
+    "output_content": {
+      "score": 1,
+      "justification": "Reference summaries were authored by the same linguists who created the dialogues [Q23], creating data-label circularity, with a 50-conversation double-annotation validation showing 94% agreement [Q26] but limited generalization. Annotator demographics are not reported; acknowledged contributors have Polish-consistent names [Q75]. The user elicitation explicitly confirms annotators were 'general mental health experts from mixed backgrounds (including India and the USA)' but 'were not specifically briefed on regional context when validating summaries' and that 'their salience judgments likely reflect generic CBT protocols rather than consciously incorporating regional norms.' Empirical evidence reveals concrete content failures: a stigmatizing self-description reproduced as factual content (DATASET-D6), a speaker attribution error in a simple two-turn exchange (DATASET-D21), peer distress treated as social transaction (DATASET-D33). HIGH priority weight on OC and confirmed norm-divergence risk produce a severe convergent validity failure.",
+      "strengths": [
+        "Documented validation procedure: double-annotation of 50 conversations with 94% pass rate [Q25, Q26]",
+        "Conflict resolution mechanism for opposing −1/+1 ratings via third annotator [Q49]",
+        "Reasonable inter-annotator agreement on dialogues (Cohen's kappa 0.506) [Q51]"
+      ],
+      "checklist_responses": {
+        "OC-1": "Ground truth labels do not reflect regional stakeholder perspectives. Annotators were not briefed on SA-MENA clinical context per elicitation; salience judgments reflect generic CBT/Western messenger norms. Empirical evidence: DATASET-D6 reproduces stigmatizing self-description without clinical reframing.",
+        "OC-2": "Disagreement between original annotators and SA-MENA mental health practitioners is highly likely. MENA practitioners would likely flag missing religious/fatalistic framing in distress summaries; South Asian practitioners would flag missing family-mediated resolution and izzat-sensitive framing. WEB-13 corroborates that even Arabic mental health evaluation requires human-in-the-loop validation absent from SAMSum.",
+        "OC-3": "Annotator demographics are not reported in the paper [Q75 contributors have Polish-consistent names; otherwise undisclosed]. No Datasheet or Data Statement is referenced. The elicitation supplied partial information (mixed Indian/US backgrounds, no regional briefing) but no formal demographic breakdown.",
+        "OC-4": "Re-annotation by an SA-MENA-stratified clinical practitioner pool is required. WEB-15 demonstrates feasibility (5 clinical health professionals validated MentalCLOUDS) but no analogous SA-MENA effort exists per WEB-13, WEB-17.",
+        "OC-5": "Aggregation uses a single reference summary per dialogue [Q24] with no multi-reference design, structurally erasing minority/regional perspectives. Conflicts are resolved by a third annotator [Q49] rather than preserved as legitimate variation.",
+        "OC-6": "Convergent validity is severely harmed: labels do not correlate with regional practitioner salience norms. External validity is severely harmed: original judgments will not generalize. The DATASET-D21 attribution error additionally undermines the 94% quality-check ceiling."
+      },
+      "evidence_quotes": [
+        "[Q23] 'we asked language experts to annotate them with summaries' (p.2)",
+        "[Q25] 'We asked two linguists to doubly annotate 50 conversations in order to verify whether the dialogues could appear in a messenger app and could be summarized' (p.2)",
+        "[Q26] '94% of examined dialogues were classified by both annotators as good' (p.2)",
+        "[Q49] 'we noticed a few annotations (7 for news and 4 for dialogues) with opposite marks ... and decided to have them annotated once again by another annotator' (p.5)",
+        "[Q51] 'For news examples, we obtained agreement on the level of 0.371 and for dialogues – 0.506.' (p.5)",
+        "[Q75] 'sincere thanks to Tunia Błachno, Oliwia Ebebenge, Monika Jędras and Małgorzata Krawentek' (p.9)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-13] AraHealthQA 2025 explicitly required human-in-the-loop evaluation for Arabic mental health — corroborates that single-reference automated labels are insufficient",
+        "[WEB-15] MentalCLOUDS validated by 5 clinical health professionals — demonstrates the kind of clinical annotation infrastructure SAMSum lacks",
+        "[WEB-17] ACM survey confirms no LLM-grade contextualized models for low-resourced South Asian languages in mental health"
+      ],
+      "evidence_dataset": [
+        "DATASET-D6: Stigmatizing self-description reproduced as factual summary content — concrete annotator norm divergence",
+        "DATASET-D21: Speaker attribution error (Miranda vs. Danny) — undermines 94% quality ceiling",
+        "DATASET-D31: Summary focuses on tangential detail (Cohen waking up) over more salient content (Kelly feeling bad) — annotator salience drift",
+        "DATASET-D33: Distress disclosure summarized as social transaction — anti-clinical norm embedded in label"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q23",
+          "DATASET-D6"
+        ],
+        "OC-2": [
+          "DATASET-D6",
+          "DATASET-D33",
+          "WEB-13"
+        ],
+        "OC-3": [
+          "Q75"
+        ],
+        "OC-4": [
+          "WEB-15",
+          "WEB-17"
+        ],
+        "OC-5": [
+          "Q24",
+          "Q49"
+        ],
+        "OC-6": [
+          "Q26",
+          "Q51",
+          "DATASET-D21",
+          "DATASET-D33"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Exact regional breakdown of the 'mixed backgrounds (including India and the USA)' annotator pool described in elicitation",
+        "Whether any annotators had clinical mental health training"
+      ],
+      "requires_expert_verification": [
+        "Magnitude of label-level disagreement between SA-MENA clinical practitioners and existing reference summaries on sampled distress-relevant examples"
+      ]
+    },
+    "output_form": {
+      "score": 1,
+      "justification": "Primary evaluation uses ROUGE F1 (R-1, R-2, R-L) [Q47] supplemented by a −1/0/1 human rating scale [Q48]. The benchmark itself documents that ROUGE is misleading for dialogue summarization — high ROUGE corresponds with low human ratings [Q3, Q54, Q67, Q68] — and explicitly calls for new metrics [Q69, Q74] without providing them. For SA-MENA deployment, this dialogue-summarization unreliability is compounded by complete inapplicability to non-English outputs: ROUGE/BERTScore against English references provide no valid signal for Arabic, Hindi, Urdu, Farsi, or Dari per the regional YAML and user elicitation. WEB-13 (AraHealthQA 2025) directly corroborates that BERTScore fails to capture clinical appropriateness for Arabic mental health tasks. Empirical sampling confirms 100% English content (DATASET-D19, DATASET-D17), with no multilingual signal whatsoever. HIGH priority weight on OF and complete cross-lingual misalignment yield a severe external validity failure.",
+      "strengths": [
+        "The benchmark explicitly documents ROUGE's unreliability for dialogue summarization [Q3, Q67, Q68], providing authored justification for users to supplement or replace the metric",
+        "Manual human rating procedure with conflict resolution [Q48, Q49] establishes a precedent for human-in-the-loop evaluation that aligns with WEB-13's recommendations for Arabic mental health"
+      ],
+      "checklist_responses": {
+        "OF-1": "Expected output modality is English-language plain text scored by ROUGE against single English reference. Regional deployment requires Arabic, Hindi, Urdu, Farsi, Dari, Bengali, Pashto outputs — none supported.",
+        "OF-2": "Not directly applicable (text-to-text task), but downstream clinical deployment may require speech inputs/outputs; the benchmark provides no signal here.",
+        "OF-3": "Literacy and accessibility considerations: regional context notes ~1 in 4 women in Pakistan/Bangladesh cite literacy as a mobile-connectivity barrier (WEB-2); the benchmark's text-only English form does not engage with this constraint.",
+        "OF-4": "External validity is severely harmed: ROUGE is unreliable even for the English dialogue task by the authors' own admission [Q67], and provides zero signal for non-English clinical outputs. Users would need entirely separate multilingual evaluation infrastructure (regional YAML, user elicitation), which the benchmark does not provide."
+      },
+      "evidence_quotes": [
+        "[Q3] 'We show that model-generated summaries of dialogues achieve higher ROUGE scores than the model-generated summaries of news – in contrast with human evaluators' judgement.' (p.1)",
+        "[Q4] 'a challenging task of abstractive dialogue summarization requires dedicated models and non-standard quality measures.' (p.1)",
+        "[Q47] 'We evaluate models with the standard ROUGE metric (Lin, 2004), reporting the F1 scores (with stemming) for ROUGE-1, ROUGE-2 and ROUGE-L' (p.4)",
+        "[Q67] 'We show that the most popular summarization metric ROUGE does not reflect the quality of a summary.' (p.8)",
+        "[Q69] 'a new metric should be designed to measure the quality of abstractive dialogue summaries.' (p.8)",
+        "[Q74] 'In order to perform well, it may require designing dedicated tools, but also new, non-standard measures' (p.9)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-13] AraHealthQA 2025 found BERTScore 'failed to fully measure appropriateness or trustworthiness' for Arabic mental health QA — direct corroboration that automated metrics are insufficient",
+        "[WEB-15] MentalCLOUDS supplements ROUGE/BERTScore with expert evaluation across six clinical parameters — shows the form of evaluation SAMSum lacks",
+        "[WEB-2] Literacy barriers affecting mental health access in Pakistan/Bangladesh — accessibility considerations not addressed by benchmark"
+      ],
+      "evidence_dataset": [
+        "DATASET-D19: Entirely English content representative of 100% monolingual character",
+        "DATASET-D17: No code-switching or non-Latin script across 76 sampled examples",
+        "DATASET-D33: Paraphrastic summary with minimal n-gram overlap to source — illustrates ROUGE inadequacy concretely",
+        "DATASET-D30: Extremely compressed paraphrastic summary makes ROUGE-1 recall inherently low regardless of quality"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q47",
+          "DATASET-D19",
+          "DATASET-D17"
+        ],
+        "OF-2": [],
+        "OF-3": [
+          "WEB-2"
+        ],
+        "OF-4": [
+          "Q3",
+          "Q67",
+          "Q69",
+          "WEB-13",
+          "WEB-15",
+          "DATASET-D33",
+          "DATASET-D30"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether any cross-lingual BERTScore variant has been validated specifically for clinical dialogue summarization in any target language (regional YAML notes this is unestablished)"
+      ],
+      "requires_expert_verification": [
+        "Which specific human evaluation rubric dimensions SA-MENA practitioners would prioritize when supplementing ROUGE"
+      ]
+    }
+  },
+  "overall_summary": "SAMSum is a well-constructed informal English messenger-dialogue summarization benchmark that, by design and verifiable empirical sampling, contains no clinical content, no SA-MENA cultural content, no non-English language data, no clinical or regional output ontology, and uses metrics the authors themselves document as unreliable for dialogues — let alone for cross-lingual clinical evaluation. Five of six dimensions (IO, IC, OO, OC, OF) score 1; IF scores 2 because plain-text speaker-attributed structure provides limited transferable infrastructure. The benchmark is being applied as a proxy for clinical counseling dialogue summarization quality assessment in SA-MENA contexts, which is a substantial domain, cultural, linguistic, and methodological mismatch on every priority-HIGH dimension identified in the elicitation. The empirical dataset analysis directly confirms claims made in the regional YAML and adds concrete evidence of anti-clinical annotator norms (DATASET-D6, DATASET-D10, DATASET-D33) that go beyond mere absence into active misalignment.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "SAMSum measures abstractive summarization of informal English messenger chitchat — meeting arrangements, gossip, social planning, workplace coordination — by Western linguists, scored against a single English reference summary using primarily ROUGE. Its strongest dimensions are Input Form (plain-text speaker-attributed multi-party structure that partially transfers to clinical pipelines) and the documented metacognitive finding that ROUGE is unreliable for dialogue summarization [Q3, Q67]. It does not measure clinical counseling capability, cross-lingual capability, or culturally sensitive communication.",
+    "construct_depth": "The benchmark probes general English dialogue summarization with moderate depth (16,369 dialogues, multi-party variation, register diversity). For the deployment construct of interest — SA-MENA clinical counseling summarization — it provides essentially zero direct evidence. The structural multi-speaker tracking and informal-register robustness evidence transfers partially, but no input contains clinical structure, no label encodes clinical salience, and no metric is valid cross-lingually. The AraHealthQA 2025 finding (WEB-13) and MentalCLOUDS American-demographic caveat (WEB-18) jointly suggest that even the best English clinical analogues require regional adaptation that SAMSum cannot supply.",
+    "supplementation_needed": "For valid SA-MENA clinical deployment evaluation, practitioners need: (a) a clinical counseling dialogue corpus — MentalCLOUDS (WEB-15) or MEMO/HOPE provide the closest English-language starting points but require regional adaptation; (b) target-language reference summaries in Arabic, Hindi, Urdu, Farsi, Dari, Bengali — none exist per regional YAML; (c) a clinical output ontology covering symptom disclosure, risk, alliance, and region-specific categories (religious reframing, family-mediated resolution, stigma-sensitive omission); (d) regional clinical-practitioner annotators stratified by sub-region; (e) human-in-the-loop evaluation rubrics validated for the target population (per WEB-13's explicit call for Arabic mental health). SAMSum can at best contribute structural format-handling signal; all other dimensions require external supplementation."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "No clinical or regional counseling categories represented in the benchmark's task taxonomy.",
+      "recommendation": "Substitute or supplement SAMSum with MentalCLOUDS (WEB-15) for English clinical structure, then commission a SA-MENA practitioner-led category extension covering religious reframing, family-mediated resolution, stigma-sensitive omission, and somatic distress presentations. Use SAMSum only as a structural-format pretraining signal, not as a clinical evaluation."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "Dialogue instances are monolingual English with European/North American cultural content; no SA-MENA discourse, code-switching, or help-seeking norms are represented.",
+      "recommendation": "Build a complementary corpus of de-identified clinical or simulated counseling dialogues authored or transcribed by regionally representative speakers in target languages (Arabic dialects, Urdu, Hindi, Farsi/Dari, Bengali), with explicit annotation of culturally specific framings (izzat, namus, tawakkul, qadar). MentalQA (WEB-16) is a starting point for Arabic but is QA-format and small; new dialogue-format collection is needed."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "Single-reference summary design with messenger-chitchat salience norms; no clinical or regional categories.",
+      "recommendation": "Adopt or adapt MentalCLOUDS' three-component schema (symptom/history, patient discovery, reflection) per WEB-15 as a baseline, then add region-specific categories (religious reframing markers, family-mediated resolution, stigma-sensitive omission flags). Move from single-reference to multi-reference design to capture legitimate practitioner variation."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Annotator demographics not regionally stratified; salience norms reflect generic CBT/Western messenger conventions and have produced concrete anti-clinical labels (e.g., DATASET-D6 reproducing stigmatizing self-description as fact).",
+      "recommendation": "Re-annotate any clinical-adjacent examples (or build new annotation infrastructure on a clinical corpus) using SA-MENA-stratified clinical practitioner panels with explicit briefing on regional context. Disclose demographics formally via a Datasheet/Data Statement. Preserve practitioner disagreement as legitimate variation rather than resolving via third-annotator override."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "ROUGE/BERTScore against English references provide no valid signal for non-English outputs and are documented as unreliable even for English dialogues by the authors themselves.",
+      "recommendation": "Replace ROUGE-only evaluation with a multi-tier framework: (i) target-language reference corpora with cross-lingual metrics (e.g., AraBERT-based BERTScore, IndicBERT) where validated; (ii) human-in-the-loop expert clinical evaluation per WEB-13 and WEB-15 across rubric dimensions including clinical appropriateness, cultural fit, risk preservation, and stigma-sensitive framing; (iii) error-typology audits for safety-critical content (suicide, abuse, self-harm) given DATASET-D6, DATASET-D10 demonstrate concrete failure modes."
+    },
+    {
+      "dimension": "input_form",
+      "gap": "Format conventions and tokenization are calibrated for English Latin script with no provision for RTL Arabic, Urdu Nastaliq, Devanagari, or code-switching.",
+      "recommendation": "Establish multilingual preprocessing pipelines (RTL-aware rendering, morphology-aware tokenization for Arabic and Urdu, code-switching markers) before any cross-lingual application of SAMSum-derived models. Recalibrate length thresholds for morphologically richer target languages."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_ontology",
+    "input_content",
+    "output_ontology",
+    "output_content",
+    "output_form"
+  ],
+  "strongest_dimensions": [
+    "input_form"
+  ]
+}

@@ -1,303 +1,245 @@
 name: drbenchmark
-full_name: 'DrBenchmark: A Large Language Understanding Benchmark for the Biomedical French Language'
+full_name: 'DrBenchmark: A Large Language Understanding Benchmark for the Biomedical French Domain'
 year: 2024
 domain: French biomedical NLP evaluation
 porting_strategy: ground_up
 languages:
 - fr
 primary_region: Metropolitan France
-description: 'DrBenchmark is the first large French biomedical language understanding benchmark,
+description: 'DrBenchmark is the first large language understanding benchmark tailored for the
 
-  comprising 20 diverse downstream tasks spanning NER, POS tagging, multi-class and
+  French biomedical domain. It aggregates 20 downstream tasks spanning POS tagging,
 
-  multi-label classification, intent classification, multiple-choice question answering,
+  NER, multi-class and multi-label classification, intent classification, multiple-choice
 
-  and semantic textual similarity. Data is drawn from scientific literature, clinical
+  question answering (MCQA), and semantic textual similarity (STS). Eight state-of-the-art
 
-  cases, clinical trial protocols, drug leaflets, and speech transcriptions. Eight
+  masked language models (MLMs) are evaluated under a unified fine-tuning protocol.
 
-  state-of-the-art masked language models are evaluated using a consistent fine-tuning
+  Data sources include scientific literature, clinical trials, clinical cases, and speech
 
-  protocol. One dataset (DiaMed) was created specifically for the benchmark; all others
+  transcriptions, all drawn from prior French biomedical corpora. One dataset (DiaMed)
 
-  are existing French biomedical NLP resources assembled and normalized into a single
+  was created specifically for the benchmark, sourcing clinical cases from the Pan African
 
-  evaluation framework.
+  Medical Journal and mapping them to ICD-10 chapter-level categories.
 
   '
 documentation_excerpts: '## Key characteristics relevant to validity analysis:
 
 
-  ### 1. Input Ontology
+  ### Input Ontology
 
-  DrBenchmark defines a 20-task taxonomy spanning POS tagging, NER, multi-class
+  DrBenchmark covers 20 downstream tasks spanning POS tagging, NER, multi-class
 
-  classification (MCC), multi-label classification (MLC), intent classification,
+  classification, multi-label classification, intent classification, MCQA, and STS [Q1, Q4, Q18].
 
-  multiple-choice question answering (MCQA), and semantic textual similarity (STS)
+  The benchmark explicitly includes both classical tasks (NER, POS tagging) and more
 
-  [Q1, Q4, Q18]. The benchmark explicitly aims to combine classical tasks (NER, POS)
+  challenging tasks (MCQA, multi-label classification) [Q20], and aggregated performance
 
-  with more challenging ones (MCQA, multi-label classification) [Q20]. Aggregate
+  is reported across five designated categories: POS, NER, MCQA, MCC, MLC, and STS [Q81].
 
-  reporting is organized across five designated categories: POS, NER, MCQA, MCC,
+  Comparative framing against BLURB (13 tasks) [Q13], BLUE (10 tasks) [Q14], and CBLUE
 
-  MLC, and STS [Q81]. Individual datasets contribute varied subtasks: DEFT-2020
+  (8 tasks) [Q15] establishes the breadth of the taxonomy. Individual tasks map to distinct
 
-  provides both sentence-pair similarity scoring and retrieval-based sentence selection
+  clinical functions: FrenchMedMCQA addresses pharmacy exam QA [Q39], PxCorpus covers
 
-  [Q21, Q22, Q23]; FrenchMedMCQA contributes two MCQA subtasks framed around French
+  intent classification and NER for drug prescription transcripts [Q44], and DEFT-2021
 
-  pharmacy specialization diploma examinations [Q39]; and PxCorpus contributes spoken
+  provides multi-label clinical profile classification [Q26]. However, the benchmark is
 
-  intent classification and fine-grained NER from drug prescription transcripts [Q44].
+  designed around metropolitan French academic and clinical sources; the paper does not
 
+  document any task category or subcategory targeting tropical or overseas-territory
 
-  From a regulatory deployment standpoint, the taxonomy presents a significant input
+  pathologies. The DiaMed dataset draws from the Pan African Medical Journal [Q45], but
 
-  ontology gap. None of the 20 tasks are explicitly designed around EU regulatory
+  its tropical pathology scope and relevance to French DOM-TOM pathology profiles is
 
-  submission document genres — SmPCs, patient information leaflets, CTD modules, or
+  not articulated. The absence of documentation on this gap is the primary ontological
 
-  ANSM-specific submission formats. The closest approximations are QUAERO (sourced in
+  concern, rather than confirmed misalignment within Metropolitan France.
 
-  part from EMEA drug leaflets [Q34]) and Mantra-GSC (which includes a drug label
 
-  subset [Q40]), but these are used only for NER, not for STS tasks calibrated to
+  ### Input Content
 
-  regulatory equivalence. The benchmark does not document whether its task taxonomy
+  Data origins are explicitly diverse: scientific literature, clinical trials, clinical cases,
 
-  was designed to cover regulatory compliance workflows, and no task explicitly
+  and speech transcriptions [Q19]. Individual datasets are sourced from well-characterized
 
-  addresses the legally constrained, formulaic language of EU regulatory submissions.
+  corpora: QUAERO draws from EMEA drug leaflets and MEDLINE biomedical titles [Q33, Q34];
 
+  E3C provides multilingual clinical cases with the French subset retained [Q29, Q31];
 
-  ### 2. Input Content
+  CAS provides 3,790 clinical cases [Q42]; ESSAI contains clinical trial protocols [Q43];
 
-  Data sources are diverse across clinical and research genres: scientific literature,
+  MorFITT draws from PMC Open Access biomedical abstracts [Q38]; Mantra-GSC covers
 
-  clinical trials, clinical cases, and speech transcriptions [Q19]. Specific datasets
+  biomedical abstracts, drug labels, and patents [Q40]; DEFT-2021 draws from a French
 
-  include QUAERO (EMEA drug leaflets and MEDLINE biomedical titles, 103,056 words)
+  text mining competition corpus [Q24]; and PxCorpus provides spoken drug prescription
 
-  [Q33, Q34]; E3C (multilingual clinical cases, French subset only) [Q29, Q31];
+  recordings [Q44]. All sources appear to originate from metropolitan French academic,
 
-  DEFT-2021 (275 clinical cases) [Q24]; MorFITT (3,624 PMC Open Access biomedical
+  clinical, or regulatory settings. The one newly created dataset, DiaMed, was collected
 
-  abstracts) [Q38]; Mantra-GSC (biomedical abstracts, drug labels, and patents, French
+  from the Pan African Medical Journal [Q45], introducing some non-metropolitan signal,
 
-  subset only) [Q40]; ESSAI (7,247 clinical trial protocols) [Q43]; CAS (3,790
+  but its scope relative to French overseas-territory pathology profiles is undocumented.
 
-  clinical cases) [Q42]; and DiaMed (739 clinical cases from the Pan African Medical
+  Critically, the benchmark''s clinical case sources are published or edited write-ups and
 
-  Journal, created specifically for this benchmark) [Q45]. DrBenchmark does not
+  competition corpora rather than raw active-hospital EHR notes. The paper acknowledges
 
-  redistribute datasets and leaves original licensing unchanged [Q96].
+  the presence of clinical shorthand in PxCorpus transcripts [Q44] but does not address
 
+  the register gap between edited academic case write-ups and the moderately noisy,
 
-  From a regulatory vocabulary standpoint, the data instances reflect clinical and
+  shorthand-laden hospital documentation the deployment processes [Q43, Q19]. Licensing
 
-  research annotation norms. None of the described sources explicitly cover INNs,
+  for all constituent datasets remains unchanged from original sources [Q96], and vocabulary
 
-  ATC codes, excipient nomenclature, or EMA posology template phrasing as primary
+  differences across evaluated models reflect the variation in pre-training data [Q76],
 
-  content targets. QUAERO''s EMEA drug leaflet subset [Q34] provides the closest
+  indirectly confirming that no single unified corpus underlies the benchmark.
 
-  proxy, but the nested entity simplification (losing 6.06% of EMEA annotations and
 
-  8.90% of MEDLINE annotations) and sentence-splitting of long EMEA documents for
+  ### Input Form
 
-  model input length constraints [Q37] further reduce the fidelity of the regulatory
+  DrBenchmark is exclusively text-based in standard written French [Q31, Q48], implemented
 
-  content representation. The DiaMed dataset, while purpose-built, draws from the Pan
+  via HuggingFace Datasets, Transformers, and PyTorch [Q48]. The Latin alphabet with
 
-  African Medical Journal and targets ICD-10 chapter-level disease classification [Q45],
+  diacritics aligns natively with all target language variants. Tokenization behavior
 
-  not regulatory compliance entity types. No data source is described as originating
+  is investigated through average sub-token counts per word across eight MLMs [Q75, Q89, Q90],
 
-  from French overseas territories; the tropical pathology angle of DiaMed is
+  and data-efficiency experiments vary training proportions to probe robustness [Q68].
 
-  incidental to its open-access journal origin rather than a deliberate regional
+  For QUAERO documents exceeding standard model sequence length limits, documents were
 
-  sampling decision.
+  split at the sentence boundary [Q37]. The exclusively text-based, standard-French
 
+  written register of the benchmark is well matched to the deployment''s text-only clinical
 
-  ### 3. Input Form
+  NLP pipeline. No modality mismatch or script incompatibility concerns apply. The register
 
-  DrBenchmark is exclusively text-based, with all inputs consisting of French
+  mismatch between edited clinical case write-ups and active-hospital notes is addressed
 
-  biomedical prose [Q31, Q48]. The toolkit is implemented with HuggingFace Datasets,
+  under Input Content rather than Input Form, as it reflects data source selection rather
 
-  Transformers, and PyTorch, providing normalized data loaders and predefined splits
+  than signal encoding.
 
-  [Q48]. Tokenization behavior across models is explicitly analyzed: the average
 
-  number of sub-tokens per word ranges from 1.43 (FlauBERT) to 1.90 (DrBERT-CP) [Q78],
+  ### Output Ontology
 
-  and the SeqEval evaluation with IOB2 format is configured to predict labels on
+  Label ontologies across DrBenchmark''s tasks are rich and domain-specific. POS tagging
 
-  the first sub-token only, providing tokenizer-agnostic evaluation [Q52, Q53].
+  uses 31 tags for CAS [Q101] and 36 tags for ESSAI [Q102]. NER label sets include
 
-  Datasets lacking predefined splits received a consistent 70/10/20 random split
+  QUAERO''s 10 UMLS Semantic Group categories [Q103], E3C''s clinical entity and temporal
 
-  [Q32, Q40, Q42, Q43]. Data efficiency experiments varied training subset sizes at
+  labels [Q104], Mantra-GSC''s Medline (11 classes) and EMEA/Patents (10 classes) schemes
 
-  25%, 50%, 75%, and 100% [Q68].
+  [Q106], and DEFT-2021''s 14 entity types covering anatomy, pathology, temporal markers,
 
+  treatment, and dosage [Q108]. Multi-label classification in DEFT-2021 uses 23 MeSH axes
 
-  The input form is well-matched to the deployment context: both benchmark and
+  from Chapter C [Q27], and DiaMed maps to 22 ICD-10 chapter-level categories [Q45, Q107].
 
-  deployment are text-only in standard written French, with no cross-modality or
+  MorFITT covers 12 medical specialty labels [Q105]. The ICD-10 chapter-level granularity
 
-  script mismatch. The Latin alphabet, high French literacy rates, and metropolitan
+  of DiaMed and the MeSH-axis structure of DEFT-2021 provide ontological alignment with
 
-  French text infrastructure assumptions are consistent across benchmark and deployment.
+  the deployment''s ICD-10/PMSI mapping function, but at a coarser level than granular
 
-  The PxCorpus dataset provides an exception — it originates from spoken-language
+  PMSI codes. Crucially, scoring across classification tasks uses majority-class baselines
 
-  transcriptions of drug prescription dialogues [Q44] — but the benchmark inputs
+  and standard classification metrics [Q56], and the benchmark does not document any
 
-  are the transcribed text, not audio, so no signal-level mismatch arises.
+  output taxonomy entry for confidence-scored candidate lists, ranked-label outputs, or
 
+  uncertainty flagging — the multi-label-with-confidence behavior that is structurally
 
-  ### 4. Output Ontology
+  central to the deployment [Q82, Q87]. The finding that even specialized models perform
 
-  Label spaces across tasks are extensive. POS tagsets are fine-grained: CAS uses
+  poorly on MLC and STS tasks [Q82, Q86] directly implicates the deployment''s multi-label
 
-  31 POS classes [Q101] and ESSAI uses 41 POS tags [Q102]. NER label sets include
+  pathology classification function but does not resolve the structural mismatch in output
 
-  QUAERO''s 10 UMLS Semantic Group categories [Q35, Q103]; E3C''s clinical entity
+  decision rules.
 
-  and temporal/factuality annotation layers [Q30, Q104]; Mantra-GSC''s Medline scheme
 
-  (11 classes) and EMEA/Patents scheme (10 classes) [Q106]; and DEFT-2021''s 13
+  ### Output Content
 
-  fine-grained entity types [Q28, Q108]. Multi-label classification in DiaMed uses
+  Annotation practices vary substantially across the 20 constituent datasets. DEFT-2021
 
-  22 ICD-10 chapter-level classes [Q107]; DEFT-2021 MLC uses 23 MeSH Chapter C axes
+  is manually annotated for both multi-label classification and NER [Q25], but annotator
 
-  [Q27]; and MorFITT uses 12 medical specialty labels [Q105]. STS tasks use
+  identity and clinical expertise are not described. CLISTER was annotated by multiple
 
-  continuous similarity scores from 0 to 5 [Q22, Q41], and performance is reported
+  annotators who assigned similarity scores averaged into a floating-point value [Q41].
 
-  with Spearman correlation and EDRM metrics [Q54].
+  The CAS corpus uses automatic POS annotations via Tagex, validated against manual
 
+  annotations at 98% precision [Q42] — meaning at least one benchmark task rests on
 
-  For the regulatory compliance deployment, the STS scoring rubric is the most
+  automatic rather than expert-human labels. DiaMed is the only dataset for which explicit
 
-  critical output ontology concern. The 0–5 coarse similarity scale [Q22] reflects
+  inter-annotator agreement statistics and clinical expert involvement are documented: it
 
-  general semantic proximity and does not distinguish legally significant small-magnitude
+  was annotated by several annotators including one medical expert, with Cohen''s Kappa
 
-  differences — altered dose thresholds, contraindicated population qualifiers, or
+  and Gwet''s AC1 computed across two sessions of 15 clinical cases each [Q45, Q46].
 
-  modified safety warning phrasing — from semantically proximate but legally equivalent
+  The deployer explicitly frames the system as a "Silver Standard" tool whose ICD-10
 
-  variants. EMA/ANSM regulatory equivalence judgments require sensitivity to precisely
+  mappings may not align with specific hospital coding conventions, and identifies the
 
-  such fine-grained distinctions, and the benchmark provides no evidence that its
+  gap between academic NLP annotators and practicing hospital coding specialists as a
 
-  scoring rubric is calibrated for this stricter interpretive standard. For NER, the
+  primary concern. No DrBenchmark dataset documents annotator involvement from PMSI
 
-  entity categories (UMLS Semantic Groups, ICD-10 chapters, MeSH axes) reflect
+  coders, hospital clinicians, or medical coders — only a single medical expert is
 
-  clinical and research ontologies rather than the regulatory labeling ontologies
+  mentioned for DiaMed [Q45]. The heterogeneity of annotation authority across 20 source
 
-  (INNs, ATC codes, EMA posology templates, contraindication qualifiers) required
+  datasets means that label validity varies considerably, and for the majority of tasks
 
-  for compliance-checking tasks. No leading model excels on both STS and MLC tasks
+  the annotation provenance does not reflect hospital coding specialist judgment.
 
-  simultaneously [Q82], further underscoring that the benchmark''s output structure
 
-  does not converge toward a single regulatory-compliance-relevant decision schema.
+  ### Output Form
 
+  All 20 tasks are scored under a strict unified fine-tuning protocol with results averaged
 
-  ### 5. Output Content
+  over four runs and statistical significance assessed via Student''s t-test [Q51].
 
-  Annotation practices vary considerably across the 20 constituent datasets. DEFT-2021
+  Sequence labeling tasks use SeqEval with IOB2 format, with labels predicted only on the
 
-  was manually annotated for both MLC and NER tasks [Q25]. CLISTER''s 1,000 sentence
+  first token of each word — a tokenizer-agnostic approach [Q52, Q53]. STS tasks report
 
-  pairs were manually annotated by multiple annotators assigning 0–5 scores,
+  Spearman correlation and EDRM [Q54]. Classification tasks use majority-class baselines [Q56].
 
-  subsequently averaged into a single floating-point reference score [Q41]. DiaMed
+  Hyperparameters are documented in an appendix for reproducibility [Q49, Q99, Q100], and
 
-  was annotated by several annotators including one medical expert, applying 22
+  data-efficiency experiments report per-configuration results over four runs [Q69, Q70].
 
-  ICD-10 chapter-level labels to 739 clinical cases; inter-annotator agreement was
+  The benchmark''s evaluation protocol does not include confidence calibration metrics,
 
-  computed across two annotation sessions using Cohen''s Kappa and Gwet''s AC1 [Q45,
+  uncertainty flagging, or ranked-candidate list quality assessment. The deployment''s
 
-  Q46]. CAS POS annotations were produced automatically via Tagex 3 and validated
+  multi-label-with-confidence behavior — where high-uncertainty entities are flagged for
 
-  against manual annotations at 98% precision [Q42] — a silver-standard rather than
+  manual review — is not directly measurable within the benchmark''s current scoring
 
-  gold-standard process.
+  framework [Q82, Q87]. The output form is otherwise well matched to the deployment:
 
+  text classification and sequence labeling outputs are the natural evaluation targets
 
-  The annotation workforce across DrBenchmark consists of clinical professionals,
-
-  NLP researchers, and in one case a medical expert [Q45], but no annotator with
-
-  regulatory affairs expertise — familiarity with EMA SmPC guidelines, ANSM
-
-  circulars, or CTD documentation standards — is identified in any described
-
-  dataset. Ground-truth labels therefore reflect clinical and research annotation
-
-  norms that may systematically diverge from the regulatory-legal standards
-
-  constituting authoritative ground truth in the pharmaceutical compliance deployment.
-
-  The silver-standard POS labels in CAS [Q42] compound this concern. The benchmark
-
-  is presented as a first-of-its-kind resource addressing a documented gap in French
-
-  biomedical NLP [Q5, Q9, Q16], but the annotation authority gap relative to
-
-  regulatory deployment standards is not flagged as a limitation by the authors.
-
-
-  ### 6. Output Form
-
-  All evaluated models are pre-trained masked language models fine-tuned under a
-
-  consistent hyperparameter protocol, with results averaged over four runs and
-
-  statistical significance reported via Student''s t-test [Q51]. Sequence labeling
-
-  tasks (NER, POS) are scored with SeqEval in IOB2 format [Q52]; STS tasks with
-
-  Spearman correlation and EDRM [Q54]; classification tasks against a majority-class
-
-  baseline [Q56]. The best model is saved based on validation metric performance
-
-  [Q100], and hyperparameter details are documented for reproducibility [Q49, Q99].
-
-  Domain- and language-specialized biomedical models lead on up to 75% of tasks [Q62],
-
-  with DrBERT-FS achieving top performance on 8 tasks [Q61].
-
-
-  The benchmark''s discrete-label and continuous-score output forms are broadly
-
-  compatible with the deployment system''s multi-candidate confidence-score design
-
-  and human-in-the-loop adjudication structure. However, the benchmark does not
-
-  evaluate or document confidence calibration, uncertainty quantification, or
-
-  the threshold at which a borderline score triggers mandatory human review [Q82].
-
-  These are operationally critical parameters for the pharmaceutical compliance
-
-  workflow — where a borderline STS score between two posology variants may determine
-
-  whether a document is auto-approved or escalated — and their absence constitutes a
-
-  moderate output form validity gap relative to the deployment''s granularity
-
-  requirements.
+  for the deployment''s NER, POS, and ICD-10 mapping functions.
 
   '
 verbatim_quotes:
@@ -313,7 +255,7 @@ verbatim_quotes:
     as well as English specific MLMs to assess their cross-lingual capabilities.
 - id: Q3
   page: 1
-  dimension: output_form
+  dimension: output_ontology
   text: Our experiments reveal that no single model excels across all tasks, while generalist models are sometimes still competitive.
 - id: Q4
   page: 1
@@ -331,12 +273,12 @@ verbatim_quotes:
   text: We also perform a quantitative study of 8 pre-trained state-of-the-art masked language models
 - id: Q7
   page: 1
-  dimension: input_content
+  dimension: output_content
   text: Yanis Labrak, Adrien Bazoge, Oumaima El Khettari, Mickael Rouvier, Pacôme Constant dit Beaufils, Natalia Grabar, Béatrice
     Daille, Solen Quiniou, Emmanuel Morin, Pierre-Antoine Gourraud and Richard Dufour
 - id: Q8
   page: 1
-  dimension: input_content
+  dimension: output_content
   text: LIA, Avignon Université, Zenidoc, Nantes Université, CHU Nantes, Clinique des données, INSERM, CIC 1413, École Centrale
     Nantes, CNRS, LS2N, UMR 6004, Service de Neuroradiologie diagnostique et interventionnelle, l'institut du thorax, UMR
     8163 – STL CNRS, Université de Lille
@@ -413,7 +355,7 @@ verbatim_quotes:
     5 (the most similar).
 - id: Q23
   page: 3
-  dimension: input_ontology
+  dimension: output_ontology
   text: The second task consists in identifying, for a given sentence, the most similar sentence among three sentences provided.
 - id: Q24
   page: 3
@@ -434,7 +376,7 @@ verbatim_quotes:
   text: The dataset is annotated with 23 axes from Chapter C of the Medical Subject Headings (MeSH).
 - id: Q28
   page: 3
-  dimension: output_ontology
+  dimension: input_ontology
   text: The second task involves fine-grained information extraction for 13 types of entities (more detail in Appendix B.7).
 - id: Q29
   page: 3
@@ -471,11 +413,11 @@ verbatim_quotes:
     in Appendix B.3).
 - id: Q36
   page: 3
-  dimension: output_content
+  dimension: output_ontology
   text: In total, 26,409 entity annotations were mapped to 5,797 unique UMLS concepts.
 - id: Q37
   page: 3
-  dimension: input_content
+  dimension: input_form
   text: Due to the presence of nested entities in annotations, we simplified the evaluation process by retaining only annotations
     at the higher granularity level from the BigBio (Fries et al., 2022) implementation, following the approach described
     in Touchent et al. (2023), which translates into an average loss of 6.06% of the annotations on EMEA and 8.90% on MEDLINE.
@@ -591,7 +533,7 @@ verbatim_quotes:
     al., 2020).'
 - id: Q55
   page: 6
-  dimension: output_ontology
+  dimension: output_form
   text: In Section 5.1, we compare the results obtained by each model within DrBenchmark, which permits to position a wide
     range of state-of-the-art models in the biomedical field across various NLP tasks.
 - id: Q56
@@ -601,12 +543,12 @@ verbatim_quotes:
     class for all predictions.
 - id: Q57
   page: 6
-  dimension: output_form
+  dimension: output_ontology
   text: Overall, although we might anticipate certain models to excel in all tasks, we discovered that no single model outperforms
     the rest in all application scenarios.
 - id: Q58
   page: 6
-  dimension: output_form
+  dimension: output_ontology
   text: Interestingly, most of the models examined manage to secure the top position in at least one of the French biomedical
     downstream tasks studied.
 - id: Q59
@@ -616,7 +558,7 @@ verbatim_quotes:
     position on several tasks.
 - id: Q60
   page: 6
-  dimension: output_form
+  dimension: output_content
   text: French biomedical language models (DrBERT-FS, DrBERT-CP, CamemBERT-bio), presumed to be the most aligned with the
     nature of the data of the benchmark, exhibit indeed superior performance across many tasks.
 - id: Q61
@@ -631,7 +573,7 @@ verbatim_quotes:
     downstream tasks.
 - id: Q63
   page: 6
-  dimension: output_form
+  dimension: output_ontology
   text: Generalist models (CamemBERT, CamemBERTa, FlauBERT and XLM-RoBERTa) are more suitable for tasks that require extensive
     linguistic knowledge but may not perform as well as specialized models nor even reach their level of performance.
 - id: Q64
@@ -641,16 +583,16 @@ verbatim_quotes:
     on most tasks.
 - id: Q65
   page: 6
-  dimension: output_form
+  dimension: input_content
   text: Furthermore, our experiments with DrBERT-FS indicate that biomedical models may require less pre-training data compared
     to generalist ones.
 - id: Q66
   page: 6
-  dimension: output_form
+  dimension: input_content
   text: However, it is important to note that this observation requires further confirmation.
 - id: Q67
   page: 6
-  dimension: output_form
+  dimension: input_content
   text: In some tasks, biomedical models that undergo continual pre-training from a generalist model, such as CamemBERT-bio,
     can prove to be the most effective, underscoring the value of pre-training on generalist data.
 - id: Q68
@@ -738,12 +680,12 @@ verbatim_quotes:
     encompassing 20 diverse downstream tasks.
 - id: Q85
   page: 9
-  dimension: output_form
+  dimension: output_ontology
   text: Our findings illuminate the limitations of generalist models in tackling complex biomedical tasks, emphasizing the
     importance of employing domain-specific models to achieve peak performance.
 - id: Q86
   page: 9
-  dimension: output_form
+  dimension: output_ontology
   text: We have observed that several biomedical tasks in DrBenchmark exhibit relatively poor performance, even when utilizing
     specialized biomedical models.
 - id: Q87
@@ -786,7 +728,7 @@ verbatim_quotes:
     cost study conducted on Jean Zay (Luccioni et al., 2022).
 - id: Q95
   page: 9
-  dimension: input_content
+  dimension: output_form
   text: All code for DrBenchmark is released under the MIT License.
 - id: Q96
   page: 9
@@ -795,12 +737,12 @@ verbatim_quotes:
     these datasets.
 - id: Q97
   page: 9
-  dimension: input_content
+  dimension: output_form
   text: This work was performed using HPC resources from GENCI-IDRIS (Grant 2022-AD011013061R1 and 2022-AD011013715) and from
     CCIPL (Centre de Calcul Intensif des Pays de la Loire).
 - id: Q98
   page: 9
-  dimension: input_content
+  dimension: output_form
   text: This work was financially supported by ANR MALADES (ANR-23-IAS1-0005), ANR AIBy4 (ANR-20-THIA-0011) and Zenidoc.
 - id: Q99
   page: 13
@@ -855,78 +797,93 @@ verbatim_quotes:
   text: 'Named-entity recognition: O, ANATOMY, DATE, DOSAGE, DURATION, MEDICAL EXAM, FREQUENCY, MODE, MOMENT, PATHOLOGY, SOSY,
     SUBSTANCE, TREATMENT and VALUE'
 coverage_strengths:
-- user_priority: French biomedical NER and STS tasks
-  benchmark_coverage: 20 tasks including NER, STS, and classification across clinical cases, scientific literature, and clinical
-    trial protocols — the first large benchmark specifically for French biomedical NLP [Q1, Q83]
+- user_priority: French biomedical NLP — POS tagging, NER, multi-label classification, temporal entity extraction
+  benchmark_coverage: 'DrBenchmark provides 20 tasks explicitly spanning POS tagging, NER, multi-label classification, intent
+    classification, MCQA, and STS [Q1, Q4, Q18], all in French biomedical text. Temporal entity labels (DATE, DURATION, FREQUENCY,
+    MOMENT) and clinical entity labels (ANATOMY, PATHOLOGY, TREATMENT) are documented in DEFT-2021''s NER scheme [Q108], directly
+    covering the deployment''s temporal extraction and entity recognition functions.
+
+    '
   dimension: input_ontology
-- user_priority: 'Drug labeling text (partial): EMEA drug leaflets and regulatory sources'
-  benchmark_coverage: QUAERO corpus includes 103,056 words sourced from EMEA drug leaflets (alongside MEDLINE biomedical titles),
-    annotated for NER [Q33, Q34]; Mantra-GSC includes a French drug label subset evaluated separately [Q40]
+- user_priority: ICD-10/PMSI mapping for clinical profile generation
+  benchmark_coverage: 'DiaMed maps clinical cases to 22 ICD-10 chapter-level categories [Q107], and DEFT-2021''s multi-label
+    classification uses 23 MeSH axes from Chapter C [Q27]. These provide partial ontological alignment with the deployment''s
+    ICD-10/PMSI mapping function, albeit at chapter rather than granular PMSI code level.
+
+    '
+  dimension: output_ontology
+- user_priority: Diverse French biomedical source types covering clinical, regulatory, and scientific register
+  benchmark_coverage: 'Source types span scientific literature, clinical trials, clinical cases, and speech transcriptions
+    [Q19], including QUAERO (EMEA drug leaflets and MEDLINE titles) [Q33, Q34], ESSAI (clinical trial protocols) [Q43], CAS
+    (clinical cases) [Q42], and PxCorpus (spoken drug prescription transcripts) [Q44]. This breadth partially addresses the
+    deployment''s need for coverage across hospital documentation registers.
+
+    '
   dimension: input_content
-- user_priority: Metropolitan France primary scope
-  benchmark_coverage: All 11 authors are affiliated with French academic and clinical institutions; the benchmark is explicitly
-    designed for the French biomedical domain [Q7, Q8, Q83]
-  dimension: input_content
-- user_priority: Multi-candidate confidence scoring with human-in-the-loop adjudication
-  benchmark_coverage: Evaluation protocol averages results over four runs with statistical significance testing [Q51]; the
-    best model is saved on validation metrics to mitigate overfitting [Q100]; inter-annotator agreement for DiaMed computed
-    with Kappa and Gwet's AC1 [Q46], providing a reference baseline for label uncertainty
+- user_priority: Domain- and language-specialized French biomedical models
+  benchmark_coverage: 'The benchmark evaluates 8 MLMs including French biomedical models (DrBERT, CamemBERT-bio) and French
+    generalist models (CamemBERT, FlauBERT), finding that domain-specialized models achieve best performance on up to 75%
+    of tasks [Q62]. This directly informs model selection for the deployment''s clinical NLP pipeline.
+
+    '
+  dimension: output_form
+- user_priority: Inter-annotator agreement and annotation quality evidence
+  benchmark_coverage: 'DiaMed is the one dataset with documented IAA statistics (Cohen''s Kappa and Gwet''s AC1 across two
+    sessions) and explicit involvement of a medical expert annotator [Q45, Q46], providing the strongest annotation quality
+    signal available within the benchmark for the deployment''s ICD-10 classification task.
+
+    '
   dimension: output_content
-- user_priority: Domain-specialized French biomedical language models
-  benchmark_coverage: Domain- and language-specialized biomedical models (DrBERT-FS, DrBERT-CP, CamemBERT-bio) lead on up
-    to 75% of tasks; DrBERT-FS achieves top performance on 8 tasks [Q61, Q62], demonstrating benchmark sensitivity to domain
-    specialization
-  dimension: output_form
-- user_priority: Semantic textual similarity evaluation for compliance checking
-  benchmark_coverage: STS tasks evaluated with both Spearman correlation and EDRM (mean relative solution distance accuracy)
-    metrics as defined by DEFT-2020 authors [Q54]; CLISTER provides 1,000 manually annotated French clinical sentence pairs
-    [Q41]
-  dimension: output_form
 coverage_gap_analysis:
-- user_priority: EU regulatory submission document genres (SmPCs, PILs, CTD modules)
-  benchmark_coverage: No task explicitly covers EU regulatory submission genres. QUAERO includes EMEA drug leaflets for NER
-    [Q34] and Mantra-GSC includes drug labels [Q40], but no STS or compliance-checking task is framed around legally constrained
-    regulatory document types. Clinical cases and research abstracts dominate the corpus [Q19].
+- user_priority: Tropical and overseas-territory pathology coverage (French DOM-TOM)
+  benchmark_coverage: 'All documented source corpora originate from metropolitan French academic, clinical, or regulatory
+    institutions [Q8, Q19, Q43]. DiaMed draws from the Pan African Medical Journal [Q45], introducing some non-metropolitan
+    signal, but the paper does not articulate its relevance to French overseas-territory pathology profiles (e.g., dengue,
+    chikungunya, malaria) or DOM-TOM clinical populations. No task category documents tropical medicine coverage.
+
+    '
+  gap_type: full
+  web_search_target: French overseas territories DOM-TOM biomedical NLP clinical NER tropical pathology benchmark corpus
+- user_priority: Hospital coding specialist vs. academic annotator authority for ICD-10/PMSI labels
+  benchmark_coverage: 'DEFT-2021 is manually annotated for multi-label classification and NER [Q25] but does not document
+    annotator clinical expertise or PMSI coding credentials. Only DiaMed documents any medical expert involvement [Q45]. No
+    dataset mentions PMSI coders, hospital clinicians, or coding specialists in its annotation description. The exclusively
+    metropolitan French academic institutional base [Q8] reinforces that hospital coding specialist validation was not a design
+    consideration.
+
+    '
+  gap_type: full
+  web_search_target: DrBenchmark DEFT-2021 annotation protocol clinical coder PMSI ICD-10 annotator expertise French biomedical
+- user_priority: Multi-label confidence calibration and uncertainty flagging scoring
+  benchmark_coverage: 'Classification tasks are scored against majority-class baselines with standard metrics [Q56], and results
+    are averaged over four runs with Student''s t-test for significance [Q51]. The paper acknowledges poor performance on
+    MLC tasks even for specialized models [Q82, Q86, Q87] but does not document any confidence calibration metric, uncertainty
+    flagging protocol, or ranked-candidate list quality assessment. The deployment''s multi-label-with-confidence behavior
+    is structurally absent from the benchmark''s scoring framework.
+
+    '
+  gap_type: full
+  web_search_target: DrBenchmark multi-label classification confidence calibration scoring uncertainty flagging French biomedical
+    NLP
+- user_priority: Noise robustness and register match for active-hospital EHR notes
+  benchmark_coverage: 'The benchmark''s clinical case sources are competition corpora, academic write-ups, and clinical trial
+    protocols [Q19, Q24, Q43] — edited, published sources rather than raw active-hospital EHR discharge summaries or dictation
+    notes. CAS provides 3,790 clinical cases [Q42] and PxCorpus provides transcribed drug prescription dialogues [Q44], but
+    neither is characterized as noisy raw hospital documentation. The paper does not assess model robustness to abbreviation-heavy
+    or institution-specific shorthand, and QUAERO document splitting for sequence length [Q37] addresses infrastructure rather
+    than register noise.
+
+    '
   gap_type: partial
-  web_search_target: French biomedical NLP benchmark SmPC patient information leaflet regulatory text NER STS EMA ANSM
-- user_priority: Regulatory entity vocabulary (INNs, ATC codes, excipient nomenclature, EMA posology templates)
-  benchmark_coverage: NER label sets use UMLS Semantic Groups [Q35, Q103], ICD-10 chapter labels [Q107], and MeSH axes [Q27]
-    — clinical/research ontologies that do not map to regulatory labeling entity types. No dataset explicitly targets INNs,
-    ATC codes, or EMA posology expression patterns.
+  web_search_target: French clinical NLP benchmark raw EHR discharge notes noise robustness abbreviation shorthand hospital
+    documentation
+- user_priority: Silver standard label provenance and adjudication methodology
+  benchmark_coverage: 'CAS uses automatic POS annotations validated at 98% precision [Q42], meaning at least one task rests
+    on non-expert labels. CLISTER uses averaged multi-annotator scores [Q41]. DiaMed is the sole dataset with documented IAA
+    and expert involvement [Q45, Q46]. For the majority of the 20 tasks, annotation provenance is undocumented in the registry.
+    The deployer''s concern about silver-standard label propagation is only partially addressable from the paper''s documentation.
+
+    '
   gap_type: partial
-  web_search_target: NER benchmark INN ATC code excipient EMA regulatory entity annotation French pharmaceutical labeling
-- user_priority: STS scoring calibrated for regulatory equivalence (legally significant small-magnitude differences)
-  benchmark_coverage: STS tasks use a coarse 0–5 Likert-style scale representing general semantic proximity [Q22, Q41, Q54].
-    No evidence that the scoring rubric distinguishes legally significant lexical differences (dose thresholds, contraindicated
-    population qualifiers) from semantically proximate but legally equivalent phrasings.
-  gap_type: full
-  web_search_target: semantic textual similarity fine-grained regulatory equivalence drug labeling scoring rubric EMA ANSM
-    compliance French NLP
-- user_priority: Annotation authority aligned with EMA/ANSM regulatory standards
-  benchmark_coverage: Annotators are clinical professionals, NLP researchers, and one medical expert [Q45]. No regulatory
-    affairs specialists, pharmacovigilance officers, or legal experts are identified in any annotation team. CAS POS labels
-    are silver-standard (automatic + 98% precision validation) [Q42], not gold-standard adjudicated labels.
-  gap_type: full
-  web_search_target: regulatory affairs annotation ground truth EMA SmPC ANSM NLP benchmark pharmacovigilance expert annotator
-    French
-- user_priority: French overseas territories and tropical disease vocabulary
-  benchmark_coverage: DiaMed is drawn from the Pan African Medical Journal [Q45] and may incidentally include tropical pathology
-    cases, but no data source is described as specifically targeting French overseas territories (Martinique, Guadeloupe,
-    French Guiana, Réunion, Mayotte) or tropical disease terminology. This dimension is entirely undocumented.
-  gap_type: full
-  web_search_target: French overseas territories biomedical NLP tropical pathology dengue paludisme chikungunya NER benchmark
-    Martinique Réunion
-- user_priority: Confidence calibration and uncertainty thresholds for human review triggering
-  benchmark_coverage: The benchmark evaluates classification performance against a majority-class baseline [Q56] and STS performance
-    with Spearman/EDRM [Q54], but does not document confidence calibration, probability estimation quality, or score thresholds
-    that would trigger mandatory human review. The leading model fails to excel on both MLC and STS simultaneously [Q82],
-    underscoring that no single model meets the output granularity required for automated compliance routing.
-  gap_type: partial
-  web_search_target: confidence calibration uncertainty quantification biomedical NLP regulatory compliance human-in-the-loop
-    French NER STS threshold
-- user_priority: ANSM vs. EMA normative divergence in safety warning standards
-  benchmark_coverage: NOT DOCUMENTED — no dataset, task, or annotation guideline references ANSM national circulars or the
-    distinction between ANSM national procedure and EMA centralized procedure compliance standards.
-  gap_type: full
-  web_search_target: ANSM EMA divergence safety warning SmPC labeling standards France national vs centralized procedure regulatory
-    compliance
+  web_search_target: DrBenchmark annotation methodology silver standard expert adjudication DEFT NER multi-label French biomedical
+    NLP
