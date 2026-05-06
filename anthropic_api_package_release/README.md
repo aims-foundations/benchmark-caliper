@@ -76,7 +76,7 @@ Each expert assessment lives under `assessments/<expert_id>__<benchmark>/<deploy
 
 Re-run any assessment to verify the pipeline produces structurally similar results. Two modes:
 
-### Re-run scoring only (one Opus call, ~$0.50)
+### Re-run scoring only (one Opus call, ~$1.00)
 
 Keeps all upstream outputs; only the Opus scoring, report, and review PDF are regenerated:
 
