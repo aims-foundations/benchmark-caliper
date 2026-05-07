@@ -35,7 +35,7 @@ sudo apt-get install qpdf   # alternative
 
 ## 1. Inspect Experiment Results
 
-All pipeline outputs are included as artifacts. No API key needed.
+All pipeline outputs are included as artifacts. No API key needed. The main output artifact for each assessment is **`pdfs/review.pdf`** -- a self-contained 7-section PDF covering a summary and all 6 validity dimensions. Start there for a quick overview of any assessment.
 
 ### Assessment outputs
 
@@ -53,14 +53,14 @@ Each expert assessment lives under `assessments/<expert_id>__<benchmark>/<deploy
 | `composed_prompt.md` | The full evaluation prompt sent to Opus |
 | `scoring.json` | Opus's structured validity scores across 6 dimensions |
 | `report.md` | Human-readable formatted report |
-| `pdfs/review.pdf` | Concatenated 7-section PDF (summary + 6 dimensions) |
+| **`pdfs/review.pdf`** | **Concatenated 7-section PDF (summary + 6 dimensions) -- main output artifact** |
 | `traces/` | Raw API call traces for every pipeline step |
 
 ### Suggested reading order for one assessment
 
-1. `deployment_description.txt` -- what deployment is being evaluated
-2. `elicitation_questions.json` + `elicitation_answers.json` -- the expert dialogue
-3. `pdfs/review.pdf` -- the final validity report (start here for a quick overview)
+1. `pdfs/review.pdf` -- the final validity report (start here)
+2. `deployment_description.txt` -- what deployment is being evaluated
+3. `elicitation_questions.json` + `elicitation_answers.json` -- the expert dialogue
 4. `scoring.json` -- raw scores if you want to inspect dimensions programmatically
 5. `composed_prompt.md` -- the full prompt sent to Opus (to understand what the model saw)
 

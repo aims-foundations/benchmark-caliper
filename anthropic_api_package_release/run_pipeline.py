@@ -2125,6 +2125,11 @@ def step_9_review_pdf(scoring_path: Path) -> None:
 
     with open(review_path, "wb") as f:
         writer.write(f)
+    # Clean up intermediate section PDFs
+    for name in REVIEW_DIMENSION_ORDER:
+        section_pdf = pdf_dir / f"{name}.pdf"
+        if section_pdf.exists():
+            section_pdf.unlink()
     print(f"[9] Review PDF written to {review_path}")
 
 
