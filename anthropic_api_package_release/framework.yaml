@@ -1,6 +1,5 @@
 # Validity Analysis Framework for Benchmark Porting
 # Source: "Validity Analysis when Porting Benchmarks Across Cultures and Regions"
-# Authors: Corona, Truong, Trager
 #
 # 6 dimensions organized as 2x3: (Input/Output) x (Ontology/Content/Form)
 # Each dimension has: definition, theoretical importance, checklist items, validity types
