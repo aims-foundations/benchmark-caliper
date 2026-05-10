@@ -1,0 +1,38 @@
+# gitleaks config — catches Anthropic API keys + extends with built-in rules.
+#
+# Verify by: try to `git commit` a file containing the literal
+# `sk-ant-api03-xxxxxxxxxxxxxx` — pre-commit must block.
+
+[extend]
+# Inherit gitleaks' default ruleset (AWS, GitHub, Stripe, etc).
+useDefault = true
+
+[[rules]]
+id = "anthropic-api-key"
+description = "Anthropic API key (sk-ant-... format)"
+regex = '''sk-ant-[A-Za-z0-9_-]{20,}'''
+keywords = ["sk-ant-"]
+tags = ["key", "anthropic"]
+
+[allowlist]
+# Test fixtures intentionally include non-real keys with literal `sk-ant-`
+# prefixes so unit tests can prove redaction works. They are never real
+# credentials and must be excluded from the scan.
+paths = [
+  '''(?i)tests?/.*\.(py|ts|tsx)$''',
+  '''.*test_.*\.(py|ts|tsx)$''',
+  '''SECURITY\.md$''',
+]
+# Also allow any obvious placeholder/test-flavored substring.
+regexes = [
+  '''sk-ant-FAKE''',
+  '''sk-ant-test''',
+  '''sk-ant-noop''',
+  '''sk-ant-EXTRACT_LEAK''',
+  '''sk-ant-REGION_LEAK''',
+  '''sk-ant-SCORE_LEAK''',
+  '''sk-ant-LEAK''',
+  '''sk-ant-PROBE''',
+  '''sk-ant-E2E''',
+  '''sk-ant-FAKE_TEST_KEY''',
+]

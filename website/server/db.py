@@ -1,0 +1,96 @@
+"""SQLite storage for pipeline runs (tier 1 + tier 2 + aggregates).
+
+Tier 3 (full content) is stored as filesystem blobs by the redaction gate.
+This module knows nothing about tier 3 contents — only about pointers (`blob_key`).
+
+See website/DESIGN.md section 5 for the four-tier model.
+"""
+
+from __future__ import annotations
+
+import sqlite3
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Iterator
+
+_DATA_DIR = Path(__file__).resolve().parent / "data"
+DEFAULT_DB_PATH = _DATA_DIR / "runs.db"
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS runs (
+  run_id              TEXT PRIMARY KEY,
+  started_at          TEXT NOT NULL,
+  ended_at            TEXT,
+  status              TEXT NOT NULL,
+  total_input_tokens  INTEGER NOT NULL DEFAULT 0,
+  total_output_tokens INTEGER NOT NULL DEFAULT 0,
+  total_cost_usd      REAL    NOT NULL DEFAULT 0.0,
+  pipeline_version    TEXT,
+  -- Default 0 (opt-OUT) matches project policy decided 2026-05-04. Code
+  -- in logging_gate.start_run always sets this explicitly, so the default
+  -- only kicks in for hand-written INSERTs.
+  user_opted_in_full  INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS steps (
+  run_id        TEXT    NOT NULL REFERENCES runs(run_id) ON DELETE CASCADE,
+  step_name     TEXT    NOT NULL,
+  model         TEXT,
+  started_at    TEXT    NOT NULL,
+  latency_ms    INTEGER,
+  input_tokens  INTEGER NOT NULL DEFAULT 0,
+  output_tokens INTEGER NOT NULL DEFAULT 0,
+  cost_usd      REAL    NOT NULL DEFAULT 0.0,
+  status        TEXT    NOT NULL,
+  error_class   TEXT,
+  input_hash    TEXT,
+  output_hash   TEXT,
+  blob_key      TEXT,
+  PRIMARY KEY (run_id, step_name, started_at)
+);
+
+CREATE INDEX IF NOT EXISTS idx_steps_run_id     ON steps(run_id);
+CREATE INDEX IF NOT EXISTS idx_steps_started_at ON steps(started_at);
+CREATE INDEX IF NOT EXISTS idx_runs_started_at  ON runs(started_at);
+
+CREATE TABLE IF NOT EXISTS daily_aggregates (
+  date           TEXT    NOT NULL,
+  model          TEXT    NOT NULL,
+  step_name      TEXT    NOT NULL,
+  run_count      INTEGER NOT NULL DEFAULT 0,
+  total_tokens   INTEGER NOT NULL DEFAULT 0,
+  total_cost_usd REAL    NOT NULL DEFAULT 0.0,
+  error_count    INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (date, model, step_name)
+);
+"""
+
+
+def init_db(path: Path | None = None) -> None:
+    """Create the schema if it does not already exist. Idempotent."""
+    p = path if path is not None else DEFAULT_DB_PATH
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(p) as conn:
+        conn.execute("PRAGMA foreign_keys = ON")
+        conn.executescript(SCHEMA)
+
+
+@contextmanager
+def connect(path: Path | None = None) -> Iterator[sqlite3.Connection]:
+    """Yield a connection that commits on clean exit and rolls back on error.
+
+    Resolves the default path at call time so monkeypatching `DEFAULT_DB_PATH`
+    in tests propagates to callers that omit the argument.
+    """
+    p = path if path is not None else DEFAULT_DB_PATH
+    conn = sqlite3.connect(p)
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.row_factory = sqlite3.Row
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
