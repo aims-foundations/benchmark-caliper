@@ -233,7 +233,9 @@ CREATE TABLE runs (
   total_output_tokens INTEGER,
   total_cost_usd      REAL,
   pipeline_version    TEXT,
-  user_opted_in_full  BOOLEAN
+  -- INTEGER (0/1) since SQLite has no native BOOLEAN. Default 0 enforces
+  -- the opt-out policy; logging_gate.start_run always sets it explicitly.
+  user_opted_in_full  INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE steps (
@@ -360,7 +362,7 @@ Every 90 days the team reviews `SECURITY.md` end-to-end, confirms each item is s
 - SQLite + local filesystem.
 - FastAPI backend + Vite/React frontend.
 - The redaction gate, the four-tier schema, the 90-day cron.
-- The `SECURITY.md` checklist green.
+- The codebase items in `SECURITY.md` are green; deploy-dependent items (custom domain, hosting accounts, edge rate limiting, monitoring) remain pending until a public host is chosen.
 - Deployed behind HTTPS on a single hosting provider.
 
 ### v1 — observability and growth
