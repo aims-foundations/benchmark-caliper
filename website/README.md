@@ -31,7 +31,7 @@ The final output is a 6-dimension validity report with per-dimension scores, rea
 Requirements: Docker Desktop. From the repository root:
 
 ```bash
-cd "iberbench_pipeline_package (1)/website"
+cd website
 docker compose up --build
 ```
 
@@ -43,12 +43,12 @@ Requirements: Python 3.10+, Node 20+, an Anthropic API key.
 
 ```bash
 # Terminal 1 — backend
-cd "iberbench_pipeline_package (1)/website/server"
+cd website/server
 pip install -r requirements.txt
 python3 -m uvicorn app:app --reload --port 8000
 
 # Terminal 2 — frontend
-cd "iberbench_pipeline_package (1)/website/client"
+cd website/client
 npm install
 npm run dev
 ```
@@ -77,16 +77,15 @@ A typical end-to-end run for a 20-page paper costs roughly $1.50–$2.50 of Anth
 ### Run the test suite
 
 ```bash
-# backend
-cd "iberbench_pipeline_package (1)"
+# backend (run from the repository root)
 python3 -m pytest website/server/tests/
 
 # frontend
-cd "iberbench_pipeline_package (1)/website/client"
+cd website/client
 npm test
 ```
 
-149 tests should pass.
+All tests should pass (101 backend + 51 frontend = 152 total).
 
 ---
 
