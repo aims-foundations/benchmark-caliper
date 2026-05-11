@@ -73,7 +73,7 @@ primary_region = "fra"          # Frankfurt; pick the one closest to your users
 ### 2. Launch from the repo root
 
 ```bash
-cd "iberbench_pipeline_package (1)"
+# from the repository root
 flyctl launch --config fly.backend.toml --no-deploy
 flyctl volumes create backend_data --region fra --size 1 --config fly.backend.toml
 flyctl deploy --config fly.backend.toml
@@ -139,7 +139,7 @@ flyctl deploy --config fly.frontend.toml
 Set it to whatever Fly assigned to the frontend:
 
 ```bash
-cd "iberbench_pipeline_package (1)"
+# from the repository root
 flyctl secrets set WEBSITE_ALLOWED_ORIGINS="https://validity-frontend.fly.dev" --config fly.backend.toml
 ```
 
