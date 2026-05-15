@@ -102,15 +102,20 @@ async def call_text_async(
     if tools:
         kwargs["tools"] = tools
 
+    # Stream every call: the SDK refuses non-streaming requests whose
+    # worst-case completion time exceeds 10 minutes (Opus + large prompts
+    # + high max_tokens trips this). Streaming is also what the CLI
+    # pipeline uses, so behaviour stays aligned.
     started = time.monotonic()
-    resp = await client.messages.create(**kwargs)
+    async with client.messages.stream(**kwargs) as stream_resp:
+        final = await stream_resp.get_final_message()
     latency_ms = int((time.monotonic() - started) * 1000)
 
     return CallResult(
-        text=_extract_text(resp),
+        text=_extract_text(final),
         model=model_id,
-        input_tokens=resp.usage.input_tokens,
-        output_tokens=resp.usage.output_tokens,
+        input_tokens=final.usage.input_tokens,
+        output_tokens=final.usage.output_tokens,
         latency_ms=latency_ms,
     )
 

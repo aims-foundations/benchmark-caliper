@@ -1026,7 +1026,13 @@ async def post_score(
                 run_id=run_id,
                 opted_in_full=opted_in_full,
                 input_text=composed,
-                max_tokens=8192,
+                # Matches anthropic_api_package/run_pipeline.py:7_score.
+                # 8192 was too small: the 6-dimension schema (per-dim
+                # score + justification + strengths + 4 evidence lists +
+                # checklist + evidence_map + gaps, plus overall_summary
+                # + practical_guidance + remediation_suggestions) is
+                # routinely larger and gets truncated mid-JSON.
+                max_tokens=32768,
             )
             scoring = _parse_scoring_json(result.text)
             yield format_event(
