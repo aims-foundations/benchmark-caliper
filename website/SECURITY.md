@@ -36,7 +36,10 @@ This file is paired with [DESIGN.md](DESIGN.md), which describes how the website
   - Verify by: trace the validation endpoint — confirm only operational metadata (status, latency) is written, no input/output bodies.
 
 - [ ] **No global mutable state stores keys across requests.**
-  - Verify by: code review — the Anthropic client is constructed per-request inside the handler scope. No module-level dicts keyed by user or key.
+  - Verify by: code review — the Anthropic client is constructed per-request inside the handler scope. No module-level dicts keyed by user or key. The one exception is `active_runs.store`, which holds the BYOK key in memory for the duration of a single run so auto-mode tasks can outlive the request that started them; that entry is dropped on run completion and never touches disk (covered by item 1.8).
+
+- [ ] **The in-memory `active_runs` entry is dropped on every run-completion path and a sweeper culls stale entries.**
+  - Verify by: trigger an auto-run, observe the entry exists during the run, observe it is gone after `run-complete` or `error`. Force-stale a test entry (backdate `created_at`) and confirm `store.sweep()` drops it. Tests in `test_active_runs.py` pin this behaviour.
 
 ## 2. Transport security
 
@@ -143,6 +146,12 @@ This file is paired with [DESIGN.md](DESIGN.md), which describes how the website
 
 - [ ] **No third-party analytics, advertising, or tracking SDKs anywhere on the site.**
   - Verify by: network tab on every page — only requests to our own origin and the Anthropic API. Re-check after every dependency update.
+
+- [ ] **The user's email address (when provided for the report-ready notification) is stored only on the run's row and is removed by delete-my-data.**
+  - Verify by: schema review — `runs.email` and `runs.email_sent_at` are the only columns for it; no `email` column on `steps`. End-to-end test: provide an email, run a pipeline, verify the row contains the address, then call delete-my-data and confirm the row is gone. Grep tier-3 blobs for the address — must return zero matches (the redaction gate's `EMAIL_PATTERN` strips email patterns from blob writes).
+
+- [ ] **Email delivery uses a transactional-only provider; the recipient address is sent to Resend and nowhere else.**
+  - Verify by: code review — only `email_notify.send_report_ready` sends mail; it only calls Resend; no other module references `runs.email`. If `RESEND_API_KEY` is unset, the dry-run fallback logs to stderr instead of contacting a third party.
 
 ## 7. Supply chain and dependencies
 

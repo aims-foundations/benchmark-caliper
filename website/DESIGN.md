@@ -105,13 +105,17 @@ USER                     FRONTEND                  BACKEND                 ANTHR
 
 4. **Steps 0–2 run on the server.** The server proxies three pipeline calls to Anthropic: derive a slug, extract metadata from pages 1–2, and generate elicitation questions. Roughly 30 seconds. Progress streams to the browser via SSE.
 
-5. **User answers elicitation questions.** Generated questions are rendered as a form. User types answers; the client posts them back. This is the user-interaction point.
+5. **User answers elicitation questions.** Generated questions are rendered as a form. User types answers; the client posts them back. The server runs Step 2-summary and shows the result.
 
-6. **Steps 3–7 run on the server.** PDF fan-out across pages (Haiku), consolidation (Sonnet), benchmark YAML synthesis, region YAML synthesis, optional web search, prompt assembly, and Opus scoring. Roughly 3–7 minutes total. Each step emits an SSE progress event.
+6. **User enters email + chooses run mode.** Below the summary, the user provides an email address and decides whether to (a) run the rest of the pipeline automatically and be notified by email when scoring finishes (default) or (b) walk through each step interactively (checkbox). The email is persisted on the run row via `POST /api/runs/{id}/email`; it is never combined with cross-run data and is removed by delete-my-data.
 
-7. **Result delivery.** The scoring JSON and a rendered markdown report stream to the browser. The user can download both. Their browser is the canonical copy; we keep a server-side copy under the retention policy in section 5.
+7. **Steps 3–7 run on the server.** PDF fan-out across pages (Haiku), consolidation (Sonnet), benchmark YAML synthesis, region YAML synthesis, optional web search, prompt assembly, and Opus scoring. Roughly 3–7 minutes total.
+   - **Auto mode (default):** A `POST /api/runs/{id}/auto-run` enqueues a background task that drives every phase using the API key + PDF bytes already stashed in the per-run in-memory store. Progress events flow into a ring buffer that the browser can tail via SSE (`GET /api/runs/{id}/events`) — *or* the user can close the tab. When scoring finishes, the report-ready email goes out with the scoring JSON and a Markdown rendering attached.
+   - **Step-by-step mode:** Same per-phase SSE endpoints as before (`/extract`, `/region`, `/score`), but the user is not asked to re-upload the PDF — the server reuses the bytes from step 3. The email, if provided, is still sent when scoring completes.
 
-8. **Cleanup.** The per-request temp directory holding the uploaded PDF is deleted as soon as the run finishes (success or failure).
+8. **Result delivery.** The scoring JSON and a rendered markdown report are available three ways: (a) inline on the browser session, (b) downloadable from the scoring view, (c) attached to the report-ready email. The email also contains a link to `/run/{run_id}`, a landing page that fetches the same data from `GET /api/runs/{id}/report`. The run_id (a UUIDv4) is the only credential — same posture as `/export`.
+
+9. **Cleanup.** The in-memory entry holding the API key + PDF bytes is dropped the moment the run ends (success or failure). A safety-net sweeper drops any entry older than one hour so an abandoned auto-run can't leak memory. The 90-day retention cron continues to govern tier-3 blob storage as before.
 
 ---
 
@@ -135,11 +139,13 @@ We do not currently defend against:
 
 ### How we keep API keys safe
 
-The principle: **the server never sees, stores, or remembers the key. It is a transparent proxy for credentials.**
+The principle: **the server never writes the key to disk, ever, and only holds it in memory while it is actively needed for a run.**
 
 - The key lives in the user's browser only (`sessionStorage` by default, `localStorage` opt-in).
-- The key is sent in an `X-Anthropic-Key` header on each request and discarded server-side as soon as the call completes.
-- Server-side, an Anthropic client is instantiated per-request inside the handler scope. No global state, no caches, no in-memory dicts holding keys.
+- The key is sent in an `X-Anthropic-Key` header on each request.
+- For step-by-step mode the key is captured in the request handler's closure and goes out of scope when the SSE response completes — same posture as v0.2.
+- For auto mode the key is additionally placed in a per-run in-memory entry (`active_runs.store`) so a background task can keep making Anthropic calls after the user's tab closes. The entry is keyed by run_id, holds the key + PDF bytes only, and is dropped on run completion (success or failure) by the orchestrator. A safety-net sweeper drops any stale entries older than one hour.
+- The active-runs store is process-local memory only — nothing it holds is written to the database, the blob store, or any log. The redaction gate remains the only path to disk; grep for `log_step` / `start_run` / `end_run` to audit.
 - Logging is configured to redact the `X-Anthropic-Key` header. Pipeline traces strip it before any persistence.
 - The key is never put in a URL, a cookie, an analytics payload, or any other channel.
 - Strict CSP prevents third-party scripts from reading `localStorage`.
@@ -280,7 +286,8 @@ The cron's correctness is a checklist item in `SECURITY.md` (test by inserting a
 
 ### What we collect, plainly
 
-- **Always:** which steps ran, when, on which model, with how many tokens, at what cost, and whether they succeeded. Hashed fingerprints of your inputs (so we can tell two runs are on the same paper without storing the paper). No name, no email, no IP-tied identity.
+- **Always:** which steps ran, when, on which model, with how many tokens, at what cost, and whether they succeeded. Hashed fingerprints of your inputs (so we can tell two runs are on the same paper without storing the paper). No name, no IP-tied identity.
+- **When you ask us to email the report:** the email address you typed, plus a timestamp of when delivery happened. Stored on the run's row, removed when you delete the run. Used once, to send that one message, never reused for anything else.
 - **Only if you explicitly opt in (per run):** the full text of your deployment description, elicitation answers, and the LLM prompts and responses for that run. Stored for 90 days then automatically deleted. Default is **off**.
 - **Never:** your Anthropic API key. Your authentication credentials.
 

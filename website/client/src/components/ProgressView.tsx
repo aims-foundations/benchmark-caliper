@@ -89,3 +89,10 @@ export const REGION_STEPS: StepLabel[] = [
 export const SCORE_STEPS: StepLabel[] = [
   { step: '7-score', label: 'Scoring with Opus across the 6 dimensions' },
 ]
+
+// Steps shown in auto-mode, where one running view spans the whole chain.
+export const AUTO_STEPS: StepLabel[] = [
+  ...EXTRACT_STEPS,
+  ...REGION_STEPS,
+  ...SCORE_STEPS,
+]

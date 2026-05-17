@@ -9,13 +9,14 @@ import {
   EXTRACT_STEPS,
   REGION_STEPS,
   SCORE_STEPS,
+  AUTO_STEPS,
 } from './components/ProgressView'
 import { AnswerForm } from './components/AnswerForm'
 import { SummaryView } from './components/SummaryView'
-import { ExtractForm } from './components/ExtractForm'
 import { ExtractedView } from './components/ExtractedView'
 import { RegionView } from './components/RegionView'
 import { ScoringView } from './components/ScoringView'
+import { ReportView } from './components/ReportView'
 import { ConsentGate } from './components/ConsentGate'
 import { hasKey, getKey, clearKey } from './keyStorage'
 import { hasConsent } from './consentStorage'
@@ -25,6 +26,9 @@ import {
   extractPaper,
   generateRegion,
   scoreValidity,
+  setRunEmail,
+  startAutoRun,
+  subscribeRunEvents,
   ApiError,
   type PipelineEvent,
   type Question,
@@ -103,22 +107,30 @@ interface ScoredState {
   slug: string
   scoring: Record<string, unknown>
   rawText: string
+  emailStatus?: {
+    requested: boolean
+    sent?: boolean
+    fallback?: boolean
+    error?: string | null
+  }
+}
+
+interface AutoRunningState {
+  runId: string
+  slug: string
+  events: PipelineEvent[]
 }
 
 type Phase =
   | { name: 'consent' }
   | { name: 'enter-key' }
   | { name: 'idle' }
+  | { name: 'viewing-report'; runId: string }
   | { name: 'running'; state: RunningState }
   | { name: 'answering'; state: AnsweringState }
   | { name: 'submitting'; state: SubmittingState }
   | { name: 'summary'; state: SummaryState }
-  | {
-      name: 'extract-prompt'
-      runId: string
-      slug: string
-      elicitationSummary: string
-    }
+  | { name: 'auto-running'; state: AutoRunningState }
   | { name: 'extracting'; state: ExtractingState }
   | { name: 'extracted'; state: ExtractedState }
   | { name: 'regioning'; state: RegioningState }
@@ -128,8 +140,23 @@ type Phase =
   | { name: 'deleted' }
   | { name: 'error'; message: string }
 
+/**
+ * If the page was loaded at /run/<uuid> (from the report-ready email link),
+ * return that run_id so the app boots into the report view. Returns null
+ * for anything else, including ill-formed paths.
+ */
+function initialReportRunId(): string | null {
+  if (typeof window === 'undefined') return null
+  const match = window.location.pathname.match(
+    /^\/run\/([0-9a-fA-F-]{8,64})\/?$/,
+  )
+  return match ? match[1] : null
+}
+
 export function App() {
   const [phase, setPhase] = useState<Phase>(() => {
+    const reportRun = initialReportRunId()
+    if (reportRun) return { name: 'viewing-report', runId: reportRun }
     if (!hasConsent()) return { name: 'consent' }
     return hasKey() ? { name: 'idle' } : { name: 'enter-key' }
   })
@@ -149,6 +176,12 @@ export function App() {
   }
 
   function handleStartOver(): void {
+    if (
+      typeof window !== 'undefined' &&
+      window.location.pathname.startsWith('/run/')
+    ) {
+      window.history.replaceState(null, '', '/')
+    }
     setPhase({ name: 'idle' })
   }
 
@@ -240,14 +273,145 @@ export function App() {
     })
   }
 
-  async function handleExtract(pdfFile: File): Promise<void> {
-    if (phase.name !== 'extract-prompt') return
+  async function handleStart(args: {
+    runId: string
+    slug: string
+    elicitationSummary: string
+    email: string
+    stepByStep: boolean
+  }): Promise<void> {
+    // The Anthropic key has to be available for both paths: auto-mode
+    // needs the server to have already stashed it (it did on /api/runs),
+    // and step-by-step still posts it as a header on each phase call.
+    if (!getKey()) {
+      setPhase({ name: 'enter-key' })
+      return
+    }
+    try {
+      await setRunEmail(args.runId, args.email)
+    } catch (e) {
+      const message =
+        e instanceof ApiError
+          ? `Could not save email (${e.status}). Try again.`
+          : 'Could not save email. Try again.'
+      setPhase({ name: 'error', message })
+      return
+    }
+
+    if (args.stepByStep) {
+      void handleExtract({
+        runId: args.runId,
+        slug: args.slug,
+        elicitationSummary: args.elicitationSummary,
+      })
+      return
+    }
+
+    void handleAutoRun({
+      runId: args.runId,
+      slug: args.slug,
+    })
+  }
+
+  async function handleAutoRun(args: {
+    runId: string
+    slug: string
+  }): Promise<void> {
+    const events: PipelineEvent[] = []
+    setPhase({
+      name: 'auto-running',
+      state: { runId: args.runId, slug: args.slug, events },
+    })
+    try {
+      await startAutoRun(args.runId)
+    } catch (e) {
+      setPhase({
+        name: 'error',
+        message:
+          e instanceof ApiError
+            ? `Could not start the pipeline (${e.status}).`
+            : 'Could not start the pipeline.',
+      })
+      return
+    }
+
+    let scoring: Record<string, unknown> = {}
+    let rawText = ''
+    let emailStatus: ScoredState['emailStatus']
+    let errored: PipelineEvent | null = null
+
+    try {
+      for await (const event of subscribeRunEvents(args.runId)) {
+        events.push(event)
+        setPhase({
+          name: 'auto-running',
+          state: {
+            runId: args.runId,
+            slug: args.slug,
+            events: [...events],
+          },
+        })
+
+        if (event.type === 'step-completed' && event.step === '7-score') {
+          const out = event.output ?? {}
+          if (out.scoring && typeof out.scoring === 'object') {
+            scoring = out.scoring as Record<string, unknown>
+          }
+          if (typeof out.raw === 'string') rawText = out.raw
+        } else if (event.type === 'run-complete') {
+          emailStatus = event.email
+        } else if (event.type === 'error') {
+          errored = event
+        }
+      }
+    } catch (e) {
+      setPhase({
+        name: 'error',
+        message:
+          e instanceof ApiError
+            ? `Lost connection to the pipeline (${e.status}).`
+            : 'Lost connection to the pipeline.',
+      })
+      return
+    }
+
+    if (errored) {
+      setPhase({
+        name: 'error',
+        message: `Pipeline failed: ${
+          errored.type === 'error' ? errored.errorClass : 'unknown'
+        }`,
+      })
+      return
+    }
+    if (!rawText) {
+      setPhase({ name: 'error', message: 'Pipeline returned no scoring.' })
+      return
+    }
+
+    setPhase({
+      name: 'scored',
+      state: {
+        runId: args.runId,
+        slug: args.slug,
+        scoring,
+        rawText,
+        emailStatus,
+      },
+    })
+  }
+
+  async function handleExtract(args: {
+    runId: string
+    slug: string
+    elicitationSummary: string
+  }): Promise<void> {
     const apiKey = getKey()
     if (!apiKey) {
       setPhase({ name: 'enter-key' })
       return
     }
-    const { runId, slug, elicitationSummary } = phase
+    const { runId, slug, elicitationSummary } = args
     const events: PipelineEvent[] = []
     setPhase({
       name: 'extracting',
@@ -264,7 +428,6 @@ export function App() {
       for await (const event of extractPaper({
         apiKey,
         runId,
-        pdfFile,
         elicitationSummary,
       })) {
         events.push(event)
@@ -605,6 +768,14 @@ export function App() {
         </p>
       </header>
 
+      {phase.name === 'viewing-report' && (
+        <ReportView
+          runId={phase.runId}
+          onStartOver={handleStartOver}
+          onChangeKey={handleChangeKey}
+        />
+      )}
+
       {phase.name === 'consent' && <ConsentGate onAccept={handleConsent} />}
 
       {phase.name === 'enter-key' && <KeyForm onSaved={handleKeySaved} />}
@@ -641,22 +812,24 @@ export function App() {
           onStartOver={handleStartOver}
           onChangeKey={handleChangeKey}
           onDeleted={() => setPhase({ name: 'deleted' })}
-          onExtract={() =>
-            setPhase({
-              name: 'extract-prompt',
+          onStart={(input) => {
+            if (phase.name !== 'summary') return
+            void handleStart({
               runId: phase.state.runId,
               slug: phase.state.slug,
               elicitationSummary: phase.state.summary,
+              email: input.email,
+              stepByStep: input.stepByStep,
             })
-          }
+          }}
         />
       )}
 
-      {phase.name === 'extract-prompt' && (
-        <ExtractForm
-          onSubmit={handleExtract}
-          onSkip={handleStartOver}
-          onChangeKey={handleChangeKey}
+      {phase.name === 'auto-running' && (
+        <ProgressView
+          events={phase.state.events}
+          steps={AUTO_STEPS}
+          heading="Running the full pipeline — you can close this tab"
         />
       )}
 

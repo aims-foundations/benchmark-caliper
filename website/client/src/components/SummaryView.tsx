@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { exportRun, deleteRun, ApiError } from '../api'
 
 interface Props {
@@ -8,8 +8,11 @@ interface Props {
   onStartOver: () => void
   onChangeKey: () => void
   onDeleted: () => void
-  onExtract: () => void
+  /** Called when the user submits the email-and-mode form. */
+  onStart: (input: { email: string; stepByStep: boolean }) => void
 }
+
+const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
 
 /**
  * Renders the elicitation summary as preformatted markdown text.
@@ -26,10 +29,24 @@ export function SummaryView({
   onStartOver,
   onChangeKey,
   onDeleted,
-  onExtract,
+  onStart,
 }: Props) {
   const [busy, setBusy] = useState<null | 'export' | 'delete'>(null)
   const [error, setError] = useState<string | null>(null)
+  const [email, setEmail] = useState('')
+  const [stepByStep, setStepByStep] = useState(false)
+  const [touchedEmail, setTouchedEmail] = useState(false)
+
+  const trimmedEmail = email.trim()
+  const emailValid = EMAIL_RE.test(trimmedEmail)
+  const showEmailError = touchedEmail && !emailValid
+
+  function handleStart(e: FormEvent<HTMLFormElement>): void {
+    e.preventDefault()
+    setTouchedEmail(true)
+    if (!emailValid) return
+    onStart({ email: trimmedEmail, stepByStep })
+  }
 
   function downloadBlob(content: string, filename: string, type: string): void {
     const blob = new Blob([content], { type })
@@ -120,40 +137,82 @@ export function SummaryView({
         </p>
       )}
 
-      <div className="actions">
-        <button type="button" className="link" onClick={onChangeKey}>
-          Change key
-        </button>
-        <button type="button" className="link" onClick={handleDownloadMd}>
-          Download .md
-        </button>
-        <button
-          type="button"
-          className="link"
-          onClick={handleExport}
-          disabled={busy !== null}
-        >
-          {busy === 'export' ? 'Exporting…' : 'Download all data'}
-        </button>
-        <button
-          type="button"
-          className="link danger"
-          onClick={handleDelete}
-          disabled={busy !== null}
-        >
-          {busy === 'delete' ? 'Deleting…' : 'Delete from server'}
-        </button>
-        <button type="button" onClick={onStartOver} disabled={busy !== null}>
-          Run another
-        </button>
-        <button
-          type="button"
-          onClick={onExtract}
-          disabled={busy !== null}
-        >
-          Extract paper →
-        </button>
-      </div>
+      <form onSubmit={handleStart} className="email-form">
+        <h3>Where should we send your report?</h3>
+        <p className="help">
+          Scoring takes about 3–7 minutes on your Anthropic key. You can
+          close this tab — we'll email you a link to the finished report
+          plus a Markdown and JSON copy. Your email is kept only on this
+          run's row and is removed when you delete the run.
+        </p>
+
+        <label className="email-field">
+          <span>Email address</span>
+          <input
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onBlur={() => setTouchedEmail(true)}
+            aria-invalid={showEmailError}
+            aria-describedby={showEmailError ? 'email-error' : undefined}
+            maxLength={320}
+          />
+        </label>
+        {showEmailError && (
+          <p id="email-error" role="alert" className="inline-error">
+            That doesn't look like a valid email address.
+          </p>
+        )}
+
+        <label className="step-by-step">
+          <input
+            type="checkbox"
+            checked={stepByStep}
+            onChange={(e) => setStepByStep(e.target.checked)}
+          />
+          <span>
+            Walk me through each step instead — I'd rather review the
+            extracted paper and regional context before scoring.
+          </span>
+        </label>
+
+        <div className="actions">
+          <button type="button" className="link" onClick={onChangeKey}>
+            Change key
+          </button>
+          <button type="button" className="link" onClick={handleDownloadMd}>
+            Download .md
+          </button>
+          <button
+            type="button"
+            className="link"
+            onClick={handleExport}
+            disabled={busy !== null}
+          >
+            {busy === 'export' ? 'Exporting…' : 'Download all data'}
+          </button>
+          <button
+            type="button"
+            className="link danger"
+            onClick={handleDelete}
+            disabled={busy !== null}
+          >
+            {busy === 'delete' ? 'Deleting…' : 'Delete from server'}
+          </button>
+          <button
+            type="button"
+            onClick={onStartOver}
+            disabled={busy !== null}
+          >
+            Run another
+          </button>
+          <button type="submit" disabled={busy !== null}>
+            {stepByStep ? 'Start step-by-step →' : 'Start scoring →'}
+          </button>
+        </div>
+      </form>
     </section>
   )
 }

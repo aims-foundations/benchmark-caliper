@@ -29,7 +29,12 @@ CREATE TABLE IF NOT EXISTS runs (
   -- Default 0 (opt-OUT) matches project policy decided 2026-05-04. Code
   -- in logging_gate.start_run always sets this explicitly, so the default
   -- only kicks in for hand-written INSERTs.
-  user_opted_in_full  INTEGER NOT NULL DEFAULT 0
+  user_opted_in_full  INTEGER NOT NULL DEFAULT 0,
+  -- Recipient for the "report ready" email, set when the user submits the
+  -- email form after answering elicitation questions. NULL when the user
+  -- did not provide one. Cleared by delete-my-data along with the row.
+  email               TEXT,
+  email_sent_at       TEXT
 );
 
 CREATE TABLE IF NOT EXISTS steps (
@@ -67,12 +72,27 @@ CREATE TABLE IF NOT EXISTS daily_aggregates (
 
 
 def init_db(path: Path | None = None) -> None:
-    """Create the schema if it does not already exist. Idempotent."""
+    """Create the schema if it does not already exist. Idempotent.
+
+    Also runs lightweight ADD COLUMN migrations for columns introduced after
+    the initial schema (CREATE TABLE IF NOT EXISTS is a no-op on existing
+    tables, so we patch new columns in here).
+    """
     p = path if path is not None else DEFAULT_DB_PATH
     p.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(p) as conn:
         conn.execute("PRAGMA foreign_keys = ON")
         conn.executescript(SCHEMA)
+        _ensure_column(conn, "runs", "email", "TEXT")
+        _ensure_column(conn, "runs", "email_sent_at", "TEXT")
+
+
+def _ensure_column(
+    conn: sqlite3.Connection, table: str, column: str, decl: str
+) -> None:
+    cols = {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
+    if column not in cols:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
 
 
 @contextmanager

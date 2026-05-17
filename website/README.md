@@ -15,10 +15,12 @@ A user pastes their Anthropic API key, uploads a benchmark paper PDF, and descri
 3. **Elicitation questions** — generate 3–5 deployment-context questions (Sonnet)
 4. **User answers** the questions in the browser
 5. **Elicitation summary** — synthesize a structured summary (Sonnet)
-6. **Paper extraction** — per-page parallel Haiku fan-out + Sonnet consolidation
-7. **Benchmark YAML** — Haiku picks ICL examples, Sonnet writes a per-paper YAML
-8. **Region YAML** — Haiku picks templates, Sonnet writes a regional scaffold, Sonnet+web search enriches it
-9. **Validity scoring** — single Opus call across the 6 dimensions
+6. **Email + mode** — user provides an email address and chooses auto (default) or step-by-step. By default the rest of the pipeline runs unattended and the user is emailed when the report is ready.
+7. **Paper extraction** — per-page parallel Haiku fan-out + Sonnet consolidation
+8. **Benchmark YAML** — Haiku picks ICL examples, Sonnet writes a per-paper YAML
+9. **Region YAML** — Haiku picks templates, Sonnet writes a regional scaffold, Sonnet+web search enriches it
+10. **Validity scoring** — single Opus call across the 6 dimensions
+11. **Email delivery** — Resend sends the user a link to `/run/{run_id}` with the rendered Markdown report and raw JSON attached.
 
 The final output is a 6-dimension validity report with per-dimension scores, reasoning, and evidence.
 
@@ -96,6 +98,8 @@ Most useful first reads:
 - [DESIGN.md](DESIGN.md) — narrative architecture, security posture, four-tier logging model, roadmap
 - [SECURITY.md](SECURITY.md) — verifiable checklist for everything we claim
 - [server/app.py](server/app.py) — every endpoint
+- [server/active_runs.py](server/active_runs.py) — the process-local store that holds the BYOK key + PDF for an auto-run; the only place key bytes live server-side
+- [server/email_notify.py](server/email_notify.py) — Resend wrapper used for the report-ready email, with a dry-run fallback when `RESEND_API_KEY` is unset
 - [server/logging_gate.py](server/logging_gate.py) — the single chokepoint to disk; everything privacy-related funnels through it
 - [client/src/App.tsx](client/src/App.tsx) — the state machine for the whole user flow
 

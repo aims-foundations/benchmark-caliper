@@ -32,7 +32,17 @@ export type PipelineEvent =
       selectedTemplates: string[]
       webSearchUsed: boolean
     }
-  | { type: 'run-complete'; runId: string; slug?: string }
+  | {
+      type: 'run-complete'
+      runId: string
+      slug?: string
+      email?: {
+        requested: boolean
+        sent?: boolean
+        fallback?: boolean
+        error?: string | null
+      }
+    }
   | { type: 'error'; errorClass: string; runId?: string }
 
 export interface AnswerInput {
@@ -43,6 +53,10 @@ export interface AnswerInput {
   questions: Question[]
   answers: Array<{ id: string; answer: string }>
   optedInFull: boolean
+  /** If set, the report-ready email is sent to this address at run end. */
+  email?: string | null
+  /** Hint that the caller intends to POST /auto-run next. Server is symmetric on this flag today. */
+  autoRun?: boolean
 }
 
 export class ApiError extends Error {
@@ -116,7 +130,8 @@ export async function* runPipeline(
 export interface ExtractInput {
   apiKey: string
   runId: string
-  pdfFile: File
+  /** Optional. If omitted the server reuses the PDF stashed on /api/runs. */
+  pdfFile?: File
   /** Optional. If provided, the synthesis step uses it for priority hints. */
   elicitationSummary?: string
 }
@@ -130,7 +145,9 @@ export async function* extractPaper(
   signal?: AbortSignal,
 ): AsyncGenerator<PipelineEvent> {
   const formData = new FormData()
-  formData.append('pdf', input.pdfFile)
+  if (input.pdfFile) {
+    formData.append('pdf', input.pdfFile)
+  }
   if (input.elicitationSummary) {
     formData.append('elicitation_summary', input.elicitationSummary)
   }
@@ -291,6 +308,122 @@ export async function* generateRegion(
 }
 
 /**
+ * POST /api/runs/{runId}/email → store the report-ready email address.
+ *
+ * Called by the UI after the user fills in the email + mode form.
+ * Pass null to clear an existing address.
+ */
+export async function setRunEmail(
+  runId: string,
+  email: string | null,
+): Promise<void> {
+  const r = await fetch(
+    `/api/runs/${encodeURIComponent(runId)}/email`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    },
+  )
+  if (!r.ok && r.status !== 204) {
+    const text = await r.text().catch(() => '')
+    throw new ApiError(r.status, text || r.statusText)
+  }
+}
+
+/**
+ * POST /api/runs/{runId}/auto-run → kick off the auto-pipeline as a
+ * background task. The server already has the API key + PDF + email
+ * from earlier calls, so this needs no body and no headers. Returns
+ * once the task is enqueued; observe progress via subscribeRunEvents
+ * and the final report via fetchReport (or wait for the email).
+ */
+export async function startAutoRun(runId: string): Promise<void> {
+  const r = await fetch(
+    `/api/runs/${encodeURIComponent(runId)}/auto-run`,
+    { method: 'POST' },
+  )
+  if (!r.ok && r.status !== 202) {
+    const text = await r.text().catch(() => '')
+    throw new ApiError(r.status, text || r.statusText)
+  }
+}
+
+/**
+ * GET /api/runs/{runId}/events (SSE) → tail an in-flight auto-run.
+ *
+ * We use plain fetch + ReadableStream (not EventSource) so that the
+ * stream uses the same connection management as the rest of the API
+ * client. The endpoint emits ids; if the caller passes `lastEventId`,
+ * the server replays buffered events after that id before tailing live.
+ */
+export async function* subscribeRunEvents(
+  runId: string,
+  opts: { lastEventId?: string; signal?: AbortSignal } = {},
+): AsyncGenerator<PipelineEvent> {
+  const headers: Record<string, string> = { Accept: 'text/event-stream' }
+  if (opts.lastEventId) headers['Last-Event-ID'] = opts.lastEventId
+
+  const response = await fetch(
+    `/api/runs/${encodeURIComponent(runId)}/events`,
+    { method: 'GET', headers, signal: opts.signal },
+  )
+  if (!response.ok) {
+    const text = await response.text().catch(() => '')
+    throw new ApiError(response.status, text || response.statusText)
+  }
+  if (!response.body) {
+    throw new ApiError(0, 'no response body')
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  while (true) {
+    const { value, done } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    let sep = buffer.indexOf('\n\n')
+    while (sep !== -1) {
+      const chunk = buffer.slice(0, sep)
+      buffer = buffer.slice(sep + 2)
+      const event = parseEvent(chunk)
+      if (event) yield event
+      sep = buffer.indexOf('\n\n')
+    }
+  }
+}
+
+export interface ReportResponse {
+  runId: string
+  slug: string
+  scoring: Record<string, unknown>
+  raw: string
+}
+
+/**
+ * GET /api/runs/{runId}/report → the final scoring + slug for the
+ * landing page reached from the email link.
+ */
+export async function fetchReport(runId: string): Promise<ReportResponse> {
+  const r = await fetch(`/api/runs/${encodeURIComponent(runId)}/report`)
+  if (!r.ok) {
+    const text = await r.text().catch(() => '')
+    throw new ApiError(r.status, text || r.statusText)
+  }
+  const data = await r.json()
+  return {
+    runId: String(data.run_id ?? runId),
+    slug: String(data.slug ?? ''),
+    scoring:
+      data.scoring && typeof data.scoring === 'object'
+        ? (data.scoring as Record<string, unknown>)
+        : {},
+    raw: typeof data.raw === 'string' ? data.raw : '',
+  }
+}
+
+/**
  * GET /api/runs/{runId}/export → the full record we have for this run.
  *
  * The endpoint takes no auth beyond the runId itself; if you can hold a
@@ -340,6 +473,8 @@ export async function* submitAnswers(
       questions: input.questions,
       answers: input.answers,
       opted_in_full: input.optedInFull,
+      email: input.email ?? null,
+      auto_run: input.autoRun ?? false,
     }),
     signal,
   })
@@ -431,12 +566,25 @@ function parseEvent(chunk: string): PipelineEvent | null {
         runId: String(payload.run_id),
         slug: String(payload.slug),
       }
-    case 'run-complete':
+    case 'run-complete': {
+      const rawEmail = (payload as { email?: unknown }).email
+      let email: { requested: boolean; sent?: boolean; fallback?: boolean; error?: string | null } | undefined
+      if (rawEmail && typeof rawEmail === 'object') {
+        const e = rawEmail as Record<string, unknown>
+        email = {
+          requested: Boolean(e.requested),
+          sent: typeof e.sent === 'boolean' ? e.sent : undefined,
+          fallback: typeof e.fallback === 'boolean' ? e.fallback : undefined,
+          error: typeof e.error === 'string' ? e.error : null,
+        }
+      }
       return {
         type: 'run-complete',
         runId: String(payload.run_id),
         slug: payload.slug !== undefined ? String(payload.slug) : undefined,
+        email,
       }
+    }
     case 'error':
       return {
         type: 'error',

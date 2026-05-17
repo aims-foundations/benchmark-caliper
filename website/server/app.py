@@ -26,7 +26,7 @@ import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Annotated, AsyncIterator
+from typing import Annotated, AsyncIterator, Awaitable, Callable, Optional
 
 from fastapi import (
     FastAPI,
@@ -42,7 +42,15 @@ from pydantic import BaseModel, Field, field_validator
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response, StreamingResponse
 
-from . import db, logging_gate, pdf_utils, pipeline_assets, quote_registry
+from . import (
+    active_runs,
+    db,
+    email_notify,
+    logging_gate,
+    pdf_utils,
+    pipeline_assets,
+    quote_registry,
+)
 from .anthropic_client import WEB_SEARCH_TOOL, call_text_async
 from .elicitation import ALLOWED_DIMENSIONS, ParseError, parse as parse_questions
 from .sse import format_event
@@ -186,6 +194,17 @@ async def create_run(
     api_key = x_anthropic_key
     run_id = str(uuid.uuid4())
 
+    # Stash the PDF bytes + key in the per-run in-memory store so subsequent
+    # phases (whether driven step-by-step by the client or in auto-mode by a
+    # background task) can read them without re-upload. Cleared on run
+    # completion in `_finalize_active_run`. Never written to disk.
+    active_runs.store.start(
+        run_id=run_id,
+        api_key=api_key,
+        pdf_bytes=pdf_bytes,
+        opted_in_full=opted_in_full,
+    )
+
     async def stream() -> AsyncIterator[str]:
         run_started = datetime.now(timezone.utc)
         logging_gate.start_run(
@@ -210,6 +229,9 @@ async def create_run(
                 max_tokens=64,
             )
             slug = slug_result.text.strip()
+            _active = active_runs.store.get(run_id)
+            if _active is not None:
+                _active.slug = slug
             yield format_event(
                 "step-completed",
                 {"step": "0-slug", "output": {"slug": slug}},
@@ -327,12 +349,38 @@ class _AnswerItem(BaseModel):
     answer: str = Field(min_length=1, max_length=5000)
 
 
+_EMAIL_RE = re.compile(
+    r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
+)
+
+
 class PostAnswersRequest(BaseModel):
     deployment_description: str = Field(min_length=1, max_length=10_000)
     metadata: str = Field(min_length=1, max_length=10_000)
     questions: list[_QuestionItem] = Field(min_length=1, max_length=10)
     answers: list[_AnswerItem] = Field(min_length=1, max_length=10)
     opted_in_full: bool = False
+    # When set, the report-ready email is sent to this address at the end
+    # of the pipeline (regardless of auto vs step-by-step mode). The
+    # address is persisted on the runs row only; never written to tier-3
+    # blobs.
+    email: Optional[str] = Field(default=None, max_length=320)
+    # When `auto_run` is true the client will not drive subsequent phases;
+    # the caller should POST /auto-run after this endpoint returns. We do
+    # not act on the flag here other than for symmetry / future use.
+    auto_run: bool = False
+
+    @field_validator("email")
+    @classmethod
+    def _check_email(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        v = v.strip()
+        if not v:
+            return None
+        if not _EMAIL_RE.match(v):
+            raise ValueError("email is not a valid address")
+        return v
 
 
 @app.post("/api/runs/{run_id}/answers")
@@ -378,6 +426,14 @@ async def post_answers(
     # Honour the run's original tier-3 opt-in regardless of what the
     # client passes for this leg — preserves consistency across steps.
     opted_in_full = bool(row["user_opted_in_full"])
+
+    # Persist the email both on the durable run row (so subsequent phases
+    # can pick it up) and on the in-memory active_runs entry (so an
+    # auto-run background task can grab it without an extra SQL round
+    # trip). NULL/empty addresses are no-ops.
+    if body.email:
+        logging_gate.set_email(run_id, body.email)
+        active_runs.store.set_email(run_id, body.email)
 
     api_key = x_anthropic_key
 
@@ -471,7 +527,7 @@ EXTRACT_CONCURRENCY = 8
 @app.post("/api/runs/{run_id}/extract")
 async def post_extract(
     run_id: str,
-    pdf: Annotated[UploadFile, File()],
+    pdf: Annotated[Optional[UploadFile], File()] = None,
     elicitation_summary: Annotated[str, Form()] = "",
     x_anthropic_key: Annotated[
         str | None, Header(alias="X-Anthropic-Key")
@@ -479,10 +535,11 @@ async def post_extract(
 ) -> StreamingResponse:
     """Run Step 3a: parallel per-page Haiku extraction + Sonnet consolidation.
 
-    The user re-uploads their PDF (we don't keep it from the elicitation
-    leg). We split it into single-page PDFs, fan out Haiku across pages
-    with a small concurrency cap, then assemble a Quote Registry and
-    hand it to Sonnet for consolidation.
+    The PDF is sourced in priority order: (1) a fresh upload on this
+    request, (2) the bytes still in `active_runs.store` from the initial
+    `/api/runs` upload. Step-by-step clients omit the upload and let the
+    server reuse what it already has; legacy clients that re-upload still
+    work.
 
     Streams `step-progress` events as each page completes so the UI can
     show "page X / N".
@@ -504,7 +561,17 @@ async def post_extract(
         )
     opted_in_full = bool(run["user_opted_in_full"])
 
-    pdf_bytes = await pdf.read()
+    pdf_bytes: bytes
+    if pdf is not None:
+        pdf_bytes = await pdf.read()
+    else:
+        active = active_runs.store.get(run_id)
+        if active is None or not active.pdf_bytes:
+            raise HTTPException(
+                400,
+                "pdf not provided and no stored copy found for this run",
+            )
+        pdf_bytes = active.pdf_bytes
     if len(pdf_bytes) == 0:
         raise HTTPException(400, "pdf is empty")
     if len(pdf_bytes) > MAX_PDF_BYTES:
@@ -1051,13 +1118,28 @@ async def post_score(
                 status="success",
                 ended_at=datetime.now(timezone.utc),
             )
-            yield format_event("run-complete", {"run_id": run_id})
+            # Fire-and-forget the report-ready email if the user provided
+            # one upstream. Email failures must not fail the run — the
+            # report is still available via /report.
+            slug_for_email = _lookup_slug(run_id) or ""
+            email_status = await _maybe_send_report_email(
+                run_id=run_id,
+                slug=slug_for_email,
+                scoring=scoring,
+                raw_text=result.text,
+            )
+            active_runs.store.end(run_id)
+            yield format_event(
+                "run-complete",
+                {"run_id": run_id, "email": email_status},
+            )
         except Exception as e:
             logging_gate.end_run(
                 run_id=run_id,
                 status="failed",
                 ended_at=datetime.now(timezone.utc),
             )
+            active_runs.store.end(run_id)
             yield format_event(
                 "error",
                 {"error_class": type(e).__name__, "run_id": run_id},
@@ -1071,6 +1153,57 @@ async def post_score(
             "X-Accel-Buffering": "no",
         },
     )
+
+
+def _lookup_slug(run_id: str) -> Optional[str]:
+    """Pull the run's slug from the first '0-slug' step's output blob, if any.
+
+    The slug is also held on the active_runs entry while the run is in
+    flight, but for completeness we fall back to the SQLite step row.
+    Returns None if the slug can't be recovered (e.g. tier-3 blobs were
+    not written because the user opted out).
+    """
+    active = active_runs.store.get(run_id)
+    if active is not None and getattr(active, "slug", None):
+        return active.slug  # type: ignore[attr-defined]
+    return None
+
+
+async def _maybe_send_report_email(
+    *,
+    run_id: str,
+    slug: str,
+    scoring: dict,
+    raw_text: str,
+) -> dict:
+    """Look up the email on the runs row and send if present. Returns a
+    small status dict surfaced to the client in `run-complete`.
+    """
+    with db.connect() as conn:
+        row = conn.execute(
+            "SELECT email FROM runs WHERE run_id = ?", (run_id,)
+        ).fetchone()
+    email = row["email"] if row is not None else None
+    if not email:
+        return {"requested": False}
+    # Resend's Python SDK is synchronous. Run it off the event loop so we
+    # don't block streaming responses if the network is slow.
+    result = await asyncio.to_thread(
+        email_notify.send_report_ready,
+        to=email,
+        run_id=run_id,
+        slug=slug,
+        scoring=scoring,
+        raw_text=raw_text,
+    )
+    if result.sent:
+        logging_gate.mark_email_sent(run_id, datetime.now(timezone.utc))
+    return {
+        "requested": True,
+        "sent": result.sent,
+        "fallback": result.fallback,
+        "error": result.error,
+    }
 
 
 def _compose_score_prompt(
@@ -1204,7 +1337,686 @@ def delete_run(run_id: str) -> Response:
     if run_dir.exists():
         shutil.rmtree(run_dir, ignore_errors=True)
 
+    # Drop the in-memory entry too — key + PDF bytes go out of scope here.
+    active_runs.store.end(run_id)
+
     return Response(status_code=204)
+
+
+# ---------- auto-run, events, report (new in v0.3) ----------
+
+
+class SetEmailRequest(BaseModel):
+    email: Optional[str] = Field(default=None, max_length=320)
+
+    @field_validator("email")
+    @classmethod
+    def _check_email(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        v = v.strip()
+        if not v:
+            return None
+        if not _EMAIL_RE.match(v):
+            raise ValueError("email is not a valid address")
+        return v
+
+
+@app.post("/api/runs/{run_id}/email", status_code=204)
+def post_email(run_id: str, body: SetEmailRequest) -> Response:
+    """Store (or clear) the recipient address for the report-ready email.
+
+    Called by the UI after the user fills in the email-and-mode form
+    that follows the elicitation summary. Storing the address is a
+    separate step from kicking off the run so the same endpoint serves
+    both auto-mode (followed by /auto-run) and step-by-step mode
+    (followed by /extract etc.).
+    """
+    with db.connect() as conn:
+        row = conn.execute(
+            "SELECT 1 FROM runs WHERE run_id = ?", (run_id,)
+        ).fetchone()
+    if row is None:
+        raise HTTPException(404, "run not found")
+    logging_gate.set_email(run_id, body.email)
+    active_runs.store.set_email(run_id, body.email)
+    return Response(status_code=204)
+
+
+@app.post("/api/runs/{run_id}/auto-run", status_code=202)
+async def post_auto_run(run_id: str) -> dict[str, str]:
+    """Kick off the pipeline (steps 3a → 7) as a background task.
+
+    The active_runs store holds the BYOK key + PDF bytes, so no header or
+    body is needed here — auth is implicit in the unguessable run_id.
+    Returns 202 immediately. Progress is observable via `/events`; the
+    final report is available via `/report` once the task completes. If
+    an email was stored on the runs row, it is sent at the end (success
+    only).
+    """
+    active = active_runs.store.get(run_id)
+    if active is None:
+        raise HTTPException(404, "no active run with this id")
+
+    with db.connect() as conn:
+        row = conn.execute(
+            "SELECT status FROM runs WHERE run_id = ?", (run_id,)
+        ).fetchone()
+    if row is None:
+        raise HTTPException(404, "run not found")
+    if row["status"] != "success":
+        # The run must have completed Step 2-summary first (status=success
+        # in the existing schema means "elicitation summary done"). The
+        # auto-run picks up from there.
+        raise HTTPException(
+            409,
+            f"run is in status {row['status']}, expected success",
+        )
+
+    # Background task survives the response returning. The orchestrator
+    # is responsible for marking the run finished and clearing
+    # active_runs in all paths.
+    asyncio.create_task(_orchestrate_auto_run(run_id))
+    return {"status": "started", "run_id": run_id}
+
+
+@app.get("/api/runs/{run_id}/events")
+async def get_events(
+    run_id: str,
+    last_event_id: Annotated[
+        Optional[str], Header(alias="Last-Event-ID")
+    ] = None,
+) -> StreamingResponse:
+    """SSE tail of an in-flight (or just-finished) auto-run.
+
+    Honours the `Last-Event-ID` reconnection header: a client that lost
+    its connection mid-stream can resume from the next event after the
+    id it last saw, as long as the event is still in the in-memory ring
+    buffer. If the run has already finished, the buffered events are
+    replayed and the stream closes — `run-complete` / `error` will be
+    among them.
+    """
+    active = active_runs.store.get(run_id)
+    if active is None:
+        raise HTTPException(404, "no active run with this id")
+
+    last_seq: Optional[int] = None
+    if last_event_id is not None:
+        try:
+            last_seq = int(last_event_id)
+        except ValueError:
+            last_seq = None
+
+    async def stream() -> AsyncIterator[str]:
+        async for ev in active_runs.store.subscribe(run_id, last_seq=last_seq):
+            yield format_event(ev.name, ev.payload, event_id=str(ev.seq))
+
+    return StreamingResponse(
+        stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@app.get("/api/runs/{run_id}/report")
+def get_report(run_id: str) -> dict:
+    """Return the final scoring + slug for the report-landing page.
+
+    Auth: holding the run_id is the only credential, same posture as
+    /export. The endpoint reads from the most-recent `7-score` blob if
+    it's still on disk (tier-3 opt-in users), or — if the run is still
+    in active_runs — from the in-memory artifacts dict (auto-run path).
+    Returns 404 if neither source has the score.
+    """
+    with db.connect() as conn:
+        row = conn.execute(
+            "SELECT status FROM runs WHERE run_id = ?", (run_id,)
+        ).fetchone()
+        if row is None:
+            raise HTTPException(404, "run not found")
+
+    # Prefer in-memory artifacts (always populated by the auto-run
+    # orchestrator; truthful even when tier-3 logging is opted out).
+    active = active_runs.store.get(run_id)
+    if active is not None and "scoring" in active.artifacts:
+        return {
+            "run_id": run_id,
+            "slug": active.slug or "",
+            "scoring": active.artifacts.get("scoring") or {},
+            "raw": active.artifacts.get("raw_text") or "",
+        }
+
+    # Otherwise try to recover from the 7-score blob if tier-3 is on.
+    blob_root = logging_gate.DEFAULT_BLOB_ROOT
+    with db.connect() as conn:
+        srow = conn.execute(
+            "SELECT blob_key FROM steps "
+            "WHERE run_id = ? AND step_name = '7-score' AND status = 'success' "
+            "ORDER BY started_at DESC LIMIT 1",
+            (run_id,),
+        ).fetchone()
+    if srow is None or not srow["blob_key"]:
+        raise HTTPException(404, "no scored output available for this run")
+    try:
+        blob = json.loads((blob_root / srow["blob_key"]).read_text())
+    except (OSError, json.JSONDecodeError) as e:
+        raise HTTPException(404, "scored output not readable") from e
+    raw = blob.get("output_text") or ""
+    return {
+        "run_id": run_id,
+        "slug": "",
+        "scoring": _parse_scoring_json(raw),
+        "raw": raw,
+    }
+
+
+# ---------- auto-run orchestrator ----------
+
+
+# Number of in-memory pipeline assets we read upfront so the orchestrator
+# doesn't re-hit the filesystem between phases. Cheap, dozens of KB.
+async def _orchestrate_auto_run(run_id: str) -> None:
+    """Drive steps 3a → 7 in sequence, emitting events to active_runs.
+
+    Mirrors what `/extract`, `/region`, and `/score` do when driven by the
+    client; the difference is the events flow into the in-memory queue
+    instead of being yielded out of an SSE response, so the client can
+    close its tab and reconnect later (or just wait for the email).
+    """
+    active = active_runs.store.get(run_id)
+    if active is None:
+        return
+
+    async def emit(name: str, payload: dict) -> None:
+        active.append(name, payload)
+
+    api_key = active.api_key
+    pdf_bytes = active.pdf_bytes
+    opted_in_full = active.opted_in_full
+    elicitation_summary = active.artifacts.get("elicitation_summary", "")
+    if not elicitation_summary:
+        # Pull from the last 2-summary blob if available (tier-3 only).
+        # Otherwise downstream YAML synthesis loses priority hints but
+        # still runs.
+        elicitation_summary = _load_recent_step_output(
+            run_id, "2-summary"
+        ) or ""
+
+    try:
+        extract_result = await _run_extract_phase(
+            emit=emit,
+            api_key=api_key,
+            run_id=run_id,
+            pdf_bytes=pdf_bytes,
+            elicitation_summary=elicitation_summary,
+            opted_in_full=opted_in_full,
+        )
+        active.artifacts.update(extract_result)
+        region_result = await _run_region_phase(
+            emit=emit,
+            api_key=api_key,
+            run_id=run_id,
+            elicitation_summary=elicitation_summary,
+            benchmark_yaml=extract_result["benchmark_yaml"],
+            opted_in_full=opted_in_full,
+            skip_web_search=False,
+        )
+        active.artifacts.update(region_result)
+        score_result = await _run_score_phase(
+            emit=emit,
+            api_key=api_key,
+            run_id=run_id,
+            paper_summary=extract_result["paper_summary"],
+            benchmark_yaml=extract_result["benchmark_yaml"],
+            region_yaml=region_result["region_yaml"],
+            elicitation_summary=elicitation_summary,
+            opted_in_full=opted_in_full,
+        )
+        active.artifacts.update(score_result)
+        logging_gate.end_run(
+            run_id=run_id,
+            status="success",
+            ended_at=datetime.now(timezone.utc),
+        )
+        email_status = await _maybe_send_report_email(
+            run_id=run_id,
+            slug=active.slug or "",
+            scoring=score_result["scoring"],
+            raw_text=score_result["raw_text"],
+        )
+        await emit(
+            "run-complete",
+            {"run_id": run_id, "email": email_status},
+        )
+    except Exception as e:
+        logging_gate.end_run(
+            run_id=run_id,
+            status="failed",
+            ended_at=datetime.now(timezone.utc),
+        )
+        await emit(
+            "error",
+            {"error_class": type(e).__name__, "run_id": run_id},
+        )
+    finally:
+        # The in-memory entry can go now — events queued before this call
+        # are still drainable by subscribers because `end` puts a sentinel
+        # (None) onto each subscriber queue rather than dropping events
+        # already in flight.
+        active_runs.store.end(run_id)
+
+
+def _load_recent_step_output(run_id: str, step_name: str) -> Optional[str]:
+    """Best-effort: read the most-recent success blob for a step name.
+
+    Returns None if tier-3 logging is off or the file is missing.
+    """
+    blob_root = logging_gate.DEFAULT_BLOB_ROOT
+    with db.connect() as conn:
+        srow = conn.execute(
+            "SELECT blob_key FROM steps "
+            "WHERE run_id = ? AND step_name = ? AND status = 'success' "
+            "ORDER BY started_at DESC LIMIT 1",
+            (run_id, step_name),
+        ).fetchone()
+    if srow is None or not srow["blob_key"]:
+        return None
+    try:
+        blob = json.loads((blob_root / srow["blob_key"]).read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
+    out = blob.get("output_text")
+    return out if isinstance(out, str) else None
+
+
+async def _run_extract_phase(
+    *,
+    emit: Callable[[str, dict], Awaitable[None]],
+    api_key: str,
+    run_id: str,
+    pdf_bytes: bytes,
+    elicitation_summary: str,
+    opted_in_full: bool,
+) -> dict:
+    """Run the four extract sub-steps (3a-extract, 3a-consolidate, 3b-select,
+    3b-synthesize). Mirrors the body of `/extract` minus the SSE plumbing.
+    """
+    logging_gate.set_run_status(run_id, "extracting")
+    try:
+        page_pdfs = pdf_utils.split_pages(pdf_bytes)
+    except ValueError as e:
+        raise RuntimeError(f"pdf rejected: {e}") from e
+    if not page_pdfs:
+        raise RuntimeError("pdf has no pages")
+
+    extract_prompt_template = _load_prompt("pdf_extract_page.md")
+    consolidate_prompt = _load_prompt("pdf_extract_consolidate.md")
+    select_prompt = _load_prompt("benchmark_example_selection.md")
+    synthesis_prompt = _load_prompt("benchmark_synthesis.md")
+    pdf_hash = hashlib.sha256(pdf_bytes).hexdigest()
+    available_examples = pipeline_assets.list_benchmark_examples()
+    examples_manifest = pipeline_assets.benchmark_manifest()
+
+    await emit(
+        "step-started",
+        {"step": "3a-extract", "total": len(page_pdfs)},
+    )
+
+    sem = asyncio.Semaphore(EXTRACT_CONCURRENCY)
+    page_extracts: list[quote_registry.PageExtract | None] = [None] * len(page_pdfs)
+
+    async def extract_one(idx: int, page_bytes: bytes) -> tuple[int, str]:
+        async with sem:
+            page_num = idx + 1
+            system_prompt = extract_prompt_template.replace(
+                "{page_num}", str(page_num)
+            )
+            page_hash = hashlib.sha256(page_bytes).hexdigest()
+            started = datetime.now(timezone.utc)
+            try:
+                result = await call_text_async(
+                    api_key=api_key,
+                    family="haiku",
+                    system=system_prompt,
+                    user="Extract from the attached single-page PDF.",
+                    pdf_bytes=page_bytes,
+                    max_tokens=2048,
+                )
+            except Exception as e:
+                logging_gate.log_step(
+                    run_id=run_id,
+                    step_name=f"3a-extract-page-{page_num}",
+                    model="haiku",
+                    status="failed",
+                    started_at=started,
+                    latency_ms=0,
+                    error_class=type(e).__name__,
+                    input_text=f"[per-page PDF: sha256={page_hash}]",
+                    input_hash_override=page_hash,
+                    opted_in_full=opted_in_full,
+                )
+                raise
+            logging_gate.log_step(
+                run_id=run_id,
+                step_name=f"3a-extract-page-{page_num}",
+                model=result.model,
+                status="success",
+                started_at=started,
+                latency_ms=result.latency_ms,
+                input_tokens=result.input_tokens,
+                output_tokens=result.output_tokens,
+                input_text=f"[per-page PDF: sha256={page_hash}]",
+                output_text=result.text,
+                input_hash_override=page_hash,
+                opted_in_full=opted_in_full,
+            )
+            return idx, result.text
+
+    tasks = [
+        asyncio.create_task(extract_one(i, p))
+        for i, p in enumerate(page_pdfs)
+    ]
+    completed = 0
+    try:
+        for coro in asyncio.as_completed(tasks):
+            idx, raw = await coro
+            page_extracts[idx] = quote_registry.parse_page_json(
+                raw, page=idx + 1
+            )
+            completed += 1
+            await emit(
+                "step-progress",
+                {
+                    "step": "3a-extract",
+                    "completed": completed,
+                    "total": len(page_pdfs),
+                },
+            )
+    except Exception:
+        for t in tasks:
+            if not t.done():
+                t.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+        raise
+
+    await emit("step-completed", {"step": "3a-extract"})
+
+    registry = quote_registry.assemble(
+        [e for e in page_extracts if e is not None]
+    )
+
+    await emit("step-started", {"step": "3a-consolidate"})
+    consolidate_user = f"## Pre-assembled Quote Registry\n\n{registry}"
+    consolidated = await _call_and_log(
+        step="3a-consolidate",
+        family="sonnet",
+        api_key=api_key,
+        system=consolidate_prompt,
+        user=consolidate_user,
+        run_id=run_id,
+        opted_in_full=opted_in_full,
+        input_text=consolidate_user,
+        input_hash_override=pdf_hash,
+        max_tokens=8192,
+    )
+    paper_summary = consolidated.text
+    await emit(
+        "step-completed",
+        {"step": "3a-consolidate", "output": {"paper_summary": paper_summary}},
+    )
+
+    await emit("step-started", {"step": "3b-select"})
+    select_user = (
+        "## Available manifest\n"
+        f"{examples_manifest}\n\n"
+        "## Paper summary\n"
+        f"{paper_summary}\n"
+    )
+    select_result = await _call_and_log(
+        step="3b-select",
+        family="haiku",
+        api_key=api_key,
+        system=select_prompt,
+        user=select_user,
+        run_id=run_id,
+        opted_in_full=opted_in_full,
+        input_text=select_user,
+        max_tokens=128,
+    )
+    picked = _parse_example_selection(select_result.text, available_examples)
+    await emit(
+        "step-completed",
+        {"step": "3b-select", "output": {"selected": picked}},
+    )
+
+    await emit("step-started", {"step": "3b-synthesize"})
+    example_blocks: list[str] = []
+    for name in picked:
+        try:
+            body_text = pipeline_assets.load_benchmark_example(name)
+        except FileNotFoundError:
+            continue
+        example_blocks.append(
+            f"### Reference example: {name}\n\n```yaml\n{body_text}\n```"
+        )
+    synth_user_parts = ["## Paper summary\n", paper_summary, "\n"]
+    if example_blocks:
+        synth_user_parts.append("\n## Reference examples\n\n")
+        synth_user_parts.append("\n\n".join(example_blocks))
+        synth_user_parts.append("\n")
+    if elicitation_summary:
+        synth_user_parts.append("\n## Elicitation summary\n\n")
+        synth_user_parts.append(elicitation_summary)
+        synth_user_parts.append("\n")
+    synth_user = "".join(synth_user_parts)
+    synth_result = await _call_and_log(
+        step="3b-synthesize",
+        family="sonnet",
+        api_key=api_key,
+        system=synthesis_prompt,
+        user=synth_user,
+        run_id=run_id,
+        opted_in_full=opted_in_full,
+        input_text=synth_user,
+        max_tokens=8192,
+    )
+    benchmark_yaml = synth_result.text
+    await emit(
+        "step-completed",
+        {"step": "3b-synthesize", "output": {"benchmark_yaml": benchmark_yaml}},
+    )
+
+    logging_gate.set_run_status(run_id, "synthesized")
+    await emit(
+        "extract-complete",
+        {
+            "run_id": run_id,
+            "page_count": len(page_pdfs),
+            "selected_examples": picked,
+        },
+    )
+    return {
+        "paper_summary": paper_summary,
+        "benchmark_yaml": benchmark_yaml,
+        "page_count": len(page_pdfs),
+        "selected_examples": picked,
+    }
+
+
+async def _run_region_phase(
+    *,
+    emit: Callable[[str, dict], Awaitable[None]],
+    api_key: str,
+    run_id: str,
+    elicitation_summary: str,
+    benchmark_yaml: str,
+    opted_in_full: bool,
+    skip_web_search: bool,
+) -> dict:
+    """Run Steps 4a, 4b, and (optionally) 5. Mirrors the body of `/region`."""
+    logging_gate.set_run_status(run_id, "regioning")
+    template_select_prompt = _load_prompt("region_template_selection.md")
+    region_synth_prompt = _load_prompt("region_synthesis.md")
+    web_search_prompt = _load_prompt("web_search_guide.md")
+    available_templates = pipeline_assets.list_region_templates()
+    templates_manifest = pipeline_assets.region_manifest()
+
+    await emit("step-started", {"step": "4a-template"})
+    select_user = (
+        "## Available templates\n"
+        f"{templates_manifest}\n\n"
+        "## Elicitation summary (target population fields)\n"
+        f"{elicitation_summary}\n"
+    )
+    select_result = await _call_and_log(
+        step="4a-template",
+        family="haiku",
+        api_key=api_key,
+        system=template_select_prompt,
+        user=select_user,
+        run_id=run_id,
+        opted_in_full=opted_in_full,
+        input_text=select_user,
+        max_tokens=128,
+    )
+    picked = _parse_example_selection(select_result.text, available_templates)
+    await emit(
+        "step-completed",
+        {"step": "4a-template", "output": {"selected": picked}},
+    )
+
+    await emit("step-started", {"step": "4b-synthesize"})
+    template_blocks: list[str] = []
+    for name in picked:
+        try:
+            body_text = pipeline_assets.load_region_template(name)
+        except FileNotFoundError:
+            continue
+        template_blocks.append(
+            f"### Template: {name}\n\n```yaml\n{body_text}\n```"
+        )
+    synth_parts: list[str] = []
+    if template_blocks:
+        synth_parts.append("## Selected templates\n\n")
+        synth_parts.append("\n\n".join(template_blocks))
+        synth_parts.append("\n\n")
+    synth_parts.append(
+        f"## Elicitation summary\n\n{elicitation_summary}\n\n"
+        f"## Benchmark YAML\n\n```yaml\n{benchmark_yaml}\n```\n"
+    )
+    synth_user = "".join(synth_parts)
+    synth_result = await _call_and_log(
+        step="4b-synthesize",
+        family="sonnet",
+        api_key=api_key,
+        system=region_synth_prompt,
+        user=synth_user,
+        run_id=run_id,
+        opted_in_full=opted_in_full,
+        input_text=synth_user,
+        max_tokens=8192,
+    )
+    scaffold_yaml = synth_result.text
+    await emit(
+        "step-completed",
+        {"step": "4b-synthesize", "output": {"region_scaffold": scaffold_yaml}},
+    )
+
+    if skip_web_search:
+        await emit(
+            "step-completed",
+            {
+                "step": "5-web-search",
+                "output": {"region_yaml": scaffold_yaml, "skipped": True},
+            },
+        )
+        final_yaml = scaffold_yaml
+    else:
+        await emit("step-started", {"step": "5-web-search"})
+        enrich_user = (
+            "## Region YAML scaffold (from Step 4b)\n\n"
+            f"```yaml\n{scaffold_yaml}\n```\n\n"
+            "## Elicitation summary (for context)\n\n"
+            f"{elicitation_summary}\n"
+        )
+        enrich_result = await _call_and_log(
+            step="5-web-search",
+            family="sonnet",
+            api_key=api_key,
+            system=web_search_prompt,
+            user=enrich_user,
+            run_id=run_id,
+            opted_in_full=opted_in_full,
+            input_text=enrich_user,
+            tools=[WEB_SEARCH_TOOL],
+            max_tokens=8192,
+        )
+        final_yaml = enrich_result.text
+        await emit(
+            "step-completed",
+            {"step": "5-web-search", "output": {"region_yaml": final_yaml}},
+        )
+
+    logging_gate.set_run_status(run_id, "regioned")
+    await emit(
+        "region-complete",
+        {
+            "run_id": run_id,
+            "selected_templates": picked,
+            "web_search_used": not skip_web_search,
+        },
+    )
+    return {
+        "region_yaml": final_yaml,
+        "scaffold_yaml": scaffold_yaml,
+        "selected_templates": picked,
+        "web_search_used": not skip_web_search,
+    }
+
+
+async def _run_score_phase(
+    *,
+    emit: Callable[[str, dict], Awaitable[None]],
+    api_key: str,
+    run_id: str,
+    paper_summary: str,
+    benchmark_yaml: str,
+    region_yaml: str,
+    elicitation_summary: str,
+    opted_in_full: bool,
+) -> dict:
+    """Run Step 7 (the lone Opus call). Mirrors the body of `/score`."""
+    logging_gate.set_run_status(run_id, "scoring")
+    framework_yaml = pipeline_assets.load_framework()
+    scoring_system = _load_prompt("opus_scoring_framing.md")
+    composed = _compose_score_prompt(
+        framework_yaml=framework_yaml,
+        benchmark_yaml=benchmark_yaml,
+        region_yaml=region_yaml,
+        elicitation_summary=elicitation_summary,
+        paper_summary=paper_summary,
+    )
+    await emit("step-started", {"step": "7-score"})
+    result = await _call_and_log(
+        step="7-score",
+        family="opus",
+        api_key=api_key,
+        system=scoring_system,
+        user=composed,
+        run_id=run_id,
+        opted_in_full=opted_in_full,
+        input_text=composed,
+        max_tokens=32768,
+    )
+    scoring = _parse_scoring_json(result.text)
+    await emit(
+        "step-completed",
+        {"step": "7-score", "output": {"scoring": scoring, "raw": result.text}},
+    )
+    return {"scoring": scoring, "raw_text": result.text}
 
 
 # ---------- helpers ----------

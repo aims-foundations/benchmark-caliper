@@ -101,6 +101,43 @@ def set_run_status(
         )
 
 
+def set_email(
+    run_id: str,
+    email: Optional[str],
+    db_path: Optional[Path] = None,
+) -> None:
+    """Record the recipient address for the report-ready email.
+
+    The email is stored on the runs row (tier 1 metadata) because we need
+    the cleartext to send the message and to honour delete-my-data
+    requests against the row. It is never written to any tier-3 blob and
+    is stripped from prompts/responses by the tier-3 PII filter
+    (`EMAIL_PATTERN`) before persistence.
+    """
+    with db.connect(db_path) as conn:
+        conn.execute(
+            "UPDATE runs SET email = ? WHERE run_id = ?",
+            (email, run_id),
+        )
+
+
+def mark_email_sent(
+    run_id: str,
+    when: datetime,
+    db_path: Optional[Path] = None,
+) -> None:
+    """Record that the report-ready email was dispatched.
+
+    Stored as ISO-8601 in `runs.email_sent_at`. Idempotent — calling this
+    twice just overwrites the timestamp.
+    """
+    with db.connect(db_path) as conn:
+        conn.execute(
+            "UPDATE runs SET email_sent_at = ? WHERE run_id = ?",
+            (when.isoformat(), run_id),
+        )
+
+
 def end_run(
     run_id: str,
     status: str,

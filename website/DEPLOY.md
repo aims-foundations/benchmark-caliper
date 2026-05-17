@@ -50,6 +50,9 @@ primary_region = "fra"          # Frankfurt; pick the one closest to your users
 
 [env]
   WEBSITE_ALLOWED_ORIGINS = "https://validity-frontend.fly.dev"  # update with your real frontend URL
+  WEBSITE_PUBLIC_URL = "https://validity.example.org"  # used to build the link in the report-ready email
+  RESEND_FROM = "Validity Analyzer <reports@validity.example.org>"  # must be on a Resend-verified domain
+  # RESEND_API_KEY is a SECRET; set it with `flyctl secrets set RESEND_API_KEY=...`, never in this file.
 
 [http_service]
   internal_port = 8000
@@ -134,14 +137,24 @@ flyctl launch --config fly.frontend.toml --no-deploy
 flyctl deploy --config fly.frontend.toml
 ```
 
-### 4. Update the backend's `WEBSITE_ALLOWED_ORIGINS`
+### 4. Update the backend's `WEBSITE_ALLOWED_ORIGINS` + email secrets
 
-Set it to whatever Fly assigned to the frontend:
+Set the allowed origins and Resend credentials:
 
 ```bash
 # from the repository root
-flyctl secrets set WEBSITE_ALLOWED_ORIGINS="https://validity-frontend.fly.dev" --config fly.backend.toml
+flyctl secrets set \
+  WEBSITE_ALLOWED_ORIGINS="https://validity-frontend.fly.dev" \
+  WEBSITE_PUBLIC_URL="https://validity-frontend.fly.dev" \
+  RESEND_API_KEY="re_…your-key…" \
+  RESEND_FROM="Validity Analyzer <reports@your-verified-domain>" \
+  --config fly.backend.toml
 ```
+
+Notes on email setup:
+- `RESEND_API_KEY` is a secret — set it via `flyctl secrets`, never in `fly.backend.toml`.
+- Resend requires a verified sending domain in production. Until then `onboarding@resend.dev` works for development.
+- If `RESEND_API_KEY` is unset, the backend silently degrades to logging the email payload to stderr — useful for local Docker, broken for production. The pre-launch checklist in SECURITY.md ensures we don't ship with the fallback on.
 
 ---
 

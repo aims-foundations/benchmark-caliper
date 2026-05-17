@@ -24,8 +24,11 @@ export function PrivacyNotice({ onClose }: Props) {
         <li>Stored on your device only (your browser's session/local storage).</li>
         <li>
           Sent to our backend in an <code>X-Anthropic-Key</code> HTTP header
-          on each request, used to call Anthropic on your behalf, then
-          discarded from server memory when the request finishes.
+          on each request. For step-by-step mode it is discarded from
+          server memory the moment the request finishes; for auto mode
+          (where the pipeline keeps running after you close the tab) it is
+          held in process memory for the run's duration, typically 3–7
+          minutes, and dropped when the run ends.
         </li>
         <li>
           Never written to any log, database, or filesystem on our servers.
@@ -41,6 +44,28 @@ export function PrivacyNotice({ onClose }: Props) {
             console.anthropic.com
           </a>
           .
+        </li>
+      </ul>
+
+      <h3>Your email address (auto mode)</h3>
+      <ul>
+        <li>
+          Collected only when you ask us to email the report at the end of
+          a run. You can leave the field blank to skip this.
+        </li>
+        <li>
+          Stored on the run's row in our database (operational metadata),
+          alongside a timestamp of when the email was sent.
+        </li>
+        <li>
+          Used once: to send a single "your report is ready" message via
+          our transactional-email provider (Resend). We never use it for
+          marketing, never share it, and never combine it with data from
+          other runs.
+        </li>
+        <li>
+          Removed permanently when you delete the run via the Delete
+          button on the report page.
         </li>
       </ul>
 
