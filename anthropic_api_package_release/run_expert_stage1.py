@@ -364,7 +364,7 @@ def write_deployment_description(t: dict) -> Path:
 
 def _paper_stem(expert_id: str, bench_slug: str) -> str:
     # Double-underscore keeps the split unambiguous even when expert_id
-    # itself contains single underscores (e.g., rcorona_berkeley_edu).
+    # itself contains single underscores (e.g., jane_doe_university).
     return f"{expert_id}__{bench_slug}"
 
 

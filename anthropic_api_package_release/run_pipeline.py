@@ -2097,7 +2097,7 @@ REVIEW_DIMENSION_ORDER = ["summary", "io", "ic", "if", "oo", "oc", "of"]
 def step_9_review_pdf(scoring_path: Path) -> None:
     """Generate per-dimension PDFs and concatenate into a single review PDF.
 
-    Uses generate_expert_pdfs.process_tuple() for the 7 individual PDFs,
+    Uses generate_report_pdfs.process_tuple() for the 7 individual PDFs,
     then pypdf to merge them into review.pdf.
     """
     tuple_dir = scoring_path.parent
@@ -2106,7 +2106,7 @@ def step_9_review_pdf(scoring_path: Path) -> None:
         print(f"[9] Review PDF already exists: {review_path}")
         return
 
-    from scripts.stage3.generate_expert_pdfs import (
+    from scripts.generate_report_pdfs import (
         _register_fonts, _build_styles, process_tuple,
     )
     _register_fonts()
