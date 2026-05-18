@@ -51,6 +51,8 @@ class ActiveRun:
     pdf_bytes: bytes
     opted_in_full: bool
     deployment_description: str = ""
+    hf_dataset_id: Optional[str] = None
+    hf_config: Optional[str] = None
     created_at: float = field(default_factory=time.monotonic)
     email: Optional[str] = None
     slug: Optional[str] = None
@@ -97,6 +99,8 @@ class ActiveRunStore:
         pdf_bytes: bytes,
         opted_in_full: bool,
         deployment_description: str = "",
+        hf_dataset_id: Optional[str] = None,
+        hf_config: Optional[str] = None,
     ) -> ActiveRun:
         run = ActiveRun(
             run_id=run_id,
@@ -104,6 +108,8 @@ class ActiveRunStore:
             pdf_bytes=pdf_bytes,
             opted_in_full=opted_in_full,
             deployment_description=deployment_description,
+            hf_dataset_id=hf_dataset_id,
+            hf_config=hf_config,
         )
         self._runs[run_id] = run
         return run

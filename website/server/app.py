@@ -44,6 +44,7 @@ from starlette.responses import Response, StreamingResponse
 
 from . import (
     active_runs,
+    dataset_analysis,
     db,
     email_notify,
     logging_gate,
@@ -152,6 +153,8 @@ async def create_run(
     pdf: Annotated[UploadFile, File()],
     deployment_description: Annotated[str, Form()],
     opted_in_full: Annotated[bool, Form()] = False,
+    hf_dataset_id: Annotated[Optional[str], Form()] = None,
+    hf_config: Annotated[Optional[str], Form()] = None,
     x_anthropic_key: Annotated[
         str | None, Header(alias="X-Anthropic-Key")
     ] = None,
@@ -205,6 +208,8 @@ async def create_run(
         pdf_bytes=pdf_bytes,
         opted_in_full=opted_in_full,
         deployment_description=description,
+        hf_dataset_id=(hf_dataset_id or None),
+        hf_config=(hf_config or None),
     )
 
     async def stream() -> AsyncIterator[str]:
@@ -1030,6 +1035,152 @@ async def post_region(
     )
 
 
+# ---------- dataset-analysis endpoint (Step 5b) ----------
+
+
+class DatasetAnalysisRequest(BaseModel):
+    benchmark_yaml: str = Field(min_length=1, max_length=40_000)
+    elicitation_summary: str = Field(default="", max_length=20_000)
+    web_search_text: str = Field(default="", max_length=80_000)
+    # Optional explicit overrides. If unset, we look up the benchmark
+    # name in `anthropic_api_package_release/benchmarks/hf_links.json`.
+    hf_dataset_id: Optional[str] = Field(default=None, max_length=200)
+    hf_config: Optional[str] = Field(default=None, max_length=100)
+    benchmark_name: Optional[str] = Field(default=None, max_length=200)
+
+
+@app.post("/api/runs/{run_id}/dataset-analysis")
+async def post_dataset_analysis(
+    run_id: str,
+    body: DatasetAnalysisRequest,
+    x_anthropic_key: Annotated[
+        str | None, Header(alias="X-Anthropic-Key")
+    ] = None,
+) -> StreamingResponse:
+    """Run Step 5b: HuggingFace dataset analysis (deterministic profiling
+    + Sonnet interpretation).
+
+    Sits between Step 5 (web search) and Step 7 (scoring). The returned
+    `dataset_analysis_text` is passed to `/score` as
+    `dataset_analysis_text`, which the composer pastes into the Opus
+    prompt under `## Dataset Analysis Findings`.
+
+    Resolution order matches the CLI's `_resolve_hf_info`: explicit
+    `hf_dataset_id` first, then a lookup of `benchmark_name` in
+    `hf_links.json`. If nothing resolves we emit a `da-skipped` event
+    and return — the client should proceed to `/score` without DA.
+
+    This step can take 3-10 minutes (HF download + sampling +
+    Sonnet interpretation). Run timeouts on nginx and uvicorn must
+    accommodate that.
+    """
+    if not x_anthropic_key:
+        raise HTTPException(401, "missing X-Anthropic-Key header")
+    api_key = x_anthropic_key
+
+    with db.connect() as conn:
+        run = conn.execute(
+            "SELECT status FROM runs WHERE run_id = ?", (run_id,)
+        ).fetchone()
+    if run is None:
+        raise HTTPException(404, "run not found")
+    # The endpoint is callable from `regioned` (post Step 5) through any
+    # later status, so we don't gate on status here — the client can
+    # rerun DA after scoring if they want.
+
+    async def stream() -> AsyncIterator[str]:
+        try:
+            yield format_event("step-started", {"step": "5b-resolve"})
+            target = await asyncio.to_thread(
+                dataset_analysis.resolve_target,
+                hf_dataset_id=body.hf_dataset_id,
+                hf_config=body.hf_config,
+                benchmark_name=body.benchmark_name,
+            )
+            if target is None:
+                yield format_event(
+                    "da-skipped",
+                    {
+                        "run_id": run_id,
+                        "reason": (
+                            "no hf_dataset_id supplied and benchmark_name "
+                            "not in hf_links.json (or dataset requires "
+                            "remote code)"
+                        ),
+                    },
+                )
+                return
+            yield format_event(
+                "step-completed",
+                {"step": "5b-resolve", "output": {"target": target}},
+            )
+
+            # Bridge dataset_analysis's emit callback into this SSE
+            # generator via a queue, same pattern used by rerun-scoring.
+            queue: asyncio.Queue = asyncio.Queue()
+
+            async def forward(name: str, payload: dict) -> None:
+                await queue.put((name, payload))
+
+            async def drive() -> str:
+                try:
+                    if target["mode"] == "single":
+                        text = await dataset_analysis.run_single(
+                            api_key=api_key,
+                            hf_dataset_id=target["hf_dataset_id"],
+                            hf_config=target.get("hf_config"),
+                            benchmark_yaml=body.benchmark_yaml,
+                            elicitation_summary=body.elicitation_summary,
+                            web_search_text=body.web_search_text,
+                            emit=forward,
+                        )
+                    else:
+                        text = await dataset_analysis.run_org(
+                            api_key=api_key,
+                            hf_org=target["hf_org"],
+                            benchmark_yaml=body.benchmark_yaml,
+                            elicitation_summary=body.elicitation_summary,
+                            web_search_text=body.web_search_text,
+                            emit=forward,
+                        )
+                    await queue.put(("__done__", text))
+                except Exception as exc:
+                    await queue.put(("__error__", exc))
+
+            task = asyncio.create_task(drive())
+            da_text: str = ""
+            while True:
+                item = await queue.get()
+                tag = item[0]
+                if tag == "__done__":
+                    da_text = item[1]
+                    break
+                if tag == "__error__":
+                    raise item[1]
+                name, payload = item
+                yield format_event(name, payload)
+            await task
+
+            yield format_event(
+                "da-complete",
+                {"run_id": run_id, "dataset_analysis_text": da_text},
+            )
+        except Exception as e:
+            yield format_event(
+                "error",
+                {"error_class": type(e).__name__, "run_id": run_id},
+            )
+
+    return StreamingResponse(
+        stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
 # ---------- score endpoint (Steps 6 + 7) ----------
 
 
@@ -1038,6 +1189,7 @@ class ScoreRequest(BaseModel):
     benchmark_yaml: str = Field(min_length=1, max_length=40_000)
     region_yaml: str = Field(min_length=1, max_length=40_000)
     elicitation_summary: str = Field(min_length=1, max_length=20_000)
+    dataset_analysis_text: str = Field(default="", max_length=200_000)
 
 
 @app.post("/api/runs/{run_id}/score")
@@ -1080,6 +1232,7 @@ async def post_score(
         region_yaml=body.region_yaml,
         elicitation_summary=body.elicitation_summary,
         paper_summary=body.paper_summary,
+        dataset_analysis_text=body.dataset_analysis_text,
     )
 
     async def stream() -> AsyncIterator[str]:
@@ -1251,6 +1404,7 @@ def _compose_score_prompt(
     region_yaml: str,
     elicitation_summary: str,
     paper_summary: str,
+    dataset_analysis_text: str = "",
 ) -> str:
     """Step 6: deterministic assembly of the Opus user message.
 
@@ -1259,29 +1413,34 @@ def _compose_score_prompt(
     artifact as a labelled section and lets Opus parse the markdown. Same
     inputs, slightly less structure — we can refine to match the CLI
     output exactly in a follow-up slice if scoring quality drifts.
+
+    If `dataset_analysis_text` is non-empty, it is appended as a
+    `## Dataset Analysis Findings` section, matching the CLI wrapper at
+    anthropic_api_package_release/run_pipeline.py:1981.
     """
-    return (
+    parts: list[str] = [
         "I need you to perform a validity analysis of an AI benchmark "
-        "for a specific deployment context.\n\n"
-        "## Validity framework\n\n"
-        "```yaml\n"
-        f"{framework_yaml}\n"
-        "```\n\n"
-        "## Benchmark YAML\n\n"
-        "```yaml\n"
-        f"{benchmark_yaml}\n"
-        "```\n\n"
-        "## Regional context YAML\n\n"
-        "```yaml\n"
-        f"{region_yaml}\n"
-        "```\n\n"
-        "## Deployment context (elicitation summary)\n\n"
-        f"{elicitation_summary}\n\n"
-        "## Paper summary (interpretive narrative + verbatim quote registry)\n\n"
-        f"{paper_summary}\n\n"
+        "for a specific deployment context.\n\n",
+        "## Validity framework\n\n```yaml\n",
+        f"{framework_yaml}\n",
+        "```\n\n",
+        "## Benchmark YAML\n\n```yaml\n",
+        f"{benchmark_yaml}\n",
+        "```\n\n",
+        "## Regional context YAML\n\n```yaml\n",
+        f"{region_yaml}\n",
+        "```\n\n",
+        f"## Deployment context (elicitation summary)\n\n{elicitation_summary}\n\n",
+        "## Paper summary (interpretive narrative + verbatim quote registry)\n\n",
+        f"{paper_summary}\n\n",
+    ]
+    if dataset_analysis_text.strip():
+        parts.append(f"## Dataset Analysis Findings\n\n{dataset_analysis_text}\n\n")
+    parts.append(
         "Return the scoring as a single valid JSON document, per the rules "
         "in your system prompt. No prose, no fences."
     )
+    return "".join(parts)
 
 
 def _parse_scoring_json(raw: str) -> dict:
@@ -1645,6 +1804,7 @@ async def rerun_scoring(
                         region_yaml=body.region_yaml,
                         elicitation_summary=body.elicitation_summary,
                         deployment_description=deployment_description,
+                        dataset_analysis_text=body.dataset_analysis_text,
                         opted_in_full=opted_in_full,
                     )
                     await queue.put(None)
@@ -1769,6 +1929,17 @@ async def _orchestrate_auto_run(run_id: str) -> None:
             skip_web_search=False,
         )
         active.artifacts.update(region_result)
+        da_result = await _run_dataset_analysis_phase(
+            emit=emit,
+            api_key=api_key,
+            run_id=run_id,
+            benchmark_yaml=extract_result["benchmark_yaml"],
+            elicitation_summary=elicitation_summary,
+            web_search_text=region_result.get("region_yaml", ""),
+            hf_dataset_id=active.hf_dataset_id,
+            hf_config=active.hf_config,
+        )
+        active.artifacts.update(da_result)
         score_result = await _run_score_phase(
             emit=emit,
             api_key=api_key,
@@ -1778,6 +1949,7 @@ async def _orchestrate_auto_run(run_id: str) -> None:
             region_yaml=region_result["region_yaml"],
             elicitation_summary=elicitation_summary,
             deployment_description=active.deployment_description,
+            dataset_analysis_text=da_result.get("dataset_analysis_text", ""),
             opted_in_full=opted_in_full,
         )
         active.artifacts.update(score_result)
@@ -2182,6 +2354,86 @@ async def _run_region_phase(
     }
 
 
+async def _run_dataset_analysis_phase(
+    *,
+    emit: Callable[[str, dict], Awaitable[None]],
+    api_key: str,
+    run_id: str,
+    benchmark_yaml: str,
+    elicitation_summary: str,
+    web_search_text: str,
+    hf_dataset_id: Optional[str],
+    hf_config: Optional[str],
+) -> dict:
+    """Run Step 5b (HF dataset analysis) for the auto-run orchestrator.
+
+    Skips silently if no HF target resolves — auto-mode without an HF
+    dataset behaves exactly as before this feature landed. Returns a
+    dict containing `dataset_analysis_text` (empty string when skipped)
+    that `_run_score_phase` pastes into the Opus prompt.
+    """
+    benchmark_name: Optional[str] = None
+    # Best-effort extract of `name:` from the synthesized benchmark YAML
+    # so we can look it up in hf_links.json. The YAML is small enough
+    # that a regex is fine here.
+    match = re.search(r"^name:\s*(\S+)", benchmark_yaml, flags=re.MULTILINE)
+    if match:
+        benchmark_name = match.group(1).strip('"').strip("'")
+
+    target = await asyncio.to_thread(
+        dataset_analysis.resolve_target,
+        hf_dataset_id=hf_dataset_id,
+        hf_config=hf_config,
+        benchmark_name=benchmark_name,
+    )
+    if target is None:
+        await emit(
+            "da-skipped",
+            {"run_id": run_id, "reason": "no hf target resolved"},
+        )
+        return {"dataset_analysis_text": ""}
+
+    await emit(
+        "step-started",
+        {"step": "5b-resolve", "output": {"target": target}},
+    )
+    try:
+        if target["mode"] == "single":
+            text = await dataset_analysis.run_single(
+                api_key=api_key,
+                hf_dataset_id=target["hf_dataset_id"],
+                hf_config=target.get("hf_config"),
+                benchmark_yaml=benchmark_yaml,
+                elicitation_summary=elicitation_summary,
+                web_search_text=web_search_text,
+                emit=emit,
+            )
+        else:
+            text = await dataset_analysis.run_org(
+                api_key=api_key,
+                hf_org=target["hf_org"],
+                benchmark_yaml=benchmark_yaml,
+                elicitation_summary=elicitation_summary,
+                web_search_text=web_search_text,
+                emit=emit,
+            )
+    except Exception as e:
+        # DA failures should not abort the whole run — score with what we
+        # have. Surface the failure as an event so the client can show
+        # "DA skipped (error)" in the UI without losing the rest.
+        await emit(
+            "da-failed",
+            {"run_id": run_id, "error_class": type(e).__name__},
+        )
+        return {"dataset_analysis_text": ""}
+
+    await emit(
+        "da-complete",
+        {"run_id": run_id, "dataset_analysis_text": text},
+    )
+    return {"dataset_analysis_text": text}
+
+
 async def _run_score_phase(
     *,
     emit: Callable[[str, dict], Awaitable[None]],
@@ -2192,13 +2444,15 @@ async def _run_score_phase(
     region_yaml: str,
     elicitation_summary: str,
     deployment_description: str,
+    dataset_analysis_text: str,
     opted_in_full: bool,
 ) -> dict:
     """Run Steps 7 (Opus scoring), 8 (report.md), and 9 (review.pdf).
 
     Mirrors the tail of `/score`. Step 7 is the lone Opus call; Steps 8
     and 9 are deterministic Python (no API) imported from the release
-    package via `pipeline_runner`.
+    package via `pipeline_runner`. Step 5b's `dataset_analysis_text`, if
+    present, is pasted into the Opus prompt as the CLI does.
     """
     logging_gate.set_run_status(run_id, "scoring")
     framework_yaml = pipeline_assets.load_framework()
@@ -2209,6 +2463,7 @@ async def _run_score_phase(
         region_yaml=region_yaml,
         elicitation_summary=elicitation_summary,
         paper_summary=paper_summary,
+        dataset_analysis_text=dataset_analysis_text,
     )
     await emit("step-started", {"step": "7-score"})
     result = await _call_and_log(
