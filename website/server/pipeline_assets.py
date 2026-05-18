@@ -11,7 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 
 _PACKAGE_ROOT = (
-    Path(__file__).resolve().parent.parent.parent / "anthropic_api_package"
+    Path(__file__).resolve().parent.parent.parent / "anthropic_api_package_release"
 )
 BENCHMARK_EXAMPLES_DIR = _PACKAGE_ROOT / "benchmarks" / "examples"
 REGION_TEMPLATES_DIR = _PACKAGE_ROOT / "regions" / "base"

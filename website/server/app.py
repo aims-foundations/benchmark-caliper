@@ -72,7 +72,7 @@ MAX_DESCRIPTION_LEN = 10_000
 
 PROMPTS_DIR = (
     Path(__file__).resolve().parent.parent.parent
-    / "anthropic_api_package"
+    / "anthropic_api_package_release"
     / "prompts"
 )
 
