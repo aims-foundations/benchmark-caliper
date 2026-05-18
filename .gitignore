@@ -1,2 +1,23 @@
 results/
 vault
+
+# Python bytecode (anywhere — Python writes these wherever it imports from)
+__pycache__/
+*.pyc
+*.pyo
+
+# Test / type-check / lint caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# macOS / editor junk
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local env files (never commit secrets)
+.env
+.env.local
+.env.*.local

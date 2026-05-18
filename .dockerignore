@@ -1,0 +1,39 @@
+# Build context lives at the repo root for the backend image (so it can
+# copy `anthropic_api_package/`). This file keeps the context small.
+
+# Version control
+.git/
+.gitignore
+
+# Editor / OS junk
+.DS_Store
+.idea/
+.vscode/
+
+# Frontend
+website/client/node_modules/
+website/client/dist/
+website/client/.vite/
+
+# Backend dev artefacts (local SQLite + tier-3 blobs from running it)
+website/server/data/
+website/server/__pycache__/
+website/server/**/__pycache__/
+website/server/.pytest_cache/
+
+# Pipeline scratch directories — large and not used by the website backend
+anthropic_api_package/assessments/
+anthropic_api_package/page_caches/
+anthropic_api_package/papers/
+anthropic_api_package/results/
+anthropic_api_package/__pycache__/
+anthropic_api_package/**/__pycache__/
+
+# Python tooling
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Docs we don't need in the image
+*.pdf

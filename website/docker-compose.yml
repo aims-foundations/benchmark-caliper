@@ -1,0 +1,43 @@
+# One-command local stack for the validity-analyzer website.
+#
+# Run from the `website/` directory:
+#   docker compose up --build
+# Then open http://localhost:5173.
+#
+# The frontend (nginx) listens on 5173 and proxies /api/* + /healthz to the
+# backend (uvicorn) on port 8000. The backend's data dir is mounted as a
+# volume so SQLite + blob storage survives container restarts.
+
+services:
+  backend:
+    build:
+      # Build context is the repo root so the Dockerfile can copy
+      # anthropic_api_package/ as well as website/.
+      context: ..
+      dockerfile: website/server/Dockerfile
+    expose:
+      - "8000"
+    volumes:
+      # Persist the SQLite DB + tier-3 blob store across restarts.
+      - backend-data:/app/website/server/data
+    environment:
+      # Frontend runs on http://localhost:5173 (the host port nginx is
+      # mapped to). Override via .env if you change the port.
+      WEBSITE_ALLOWED_ORIGINS: http://localhost:5173
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz').read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./client
+    ports:
+      - "5173:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  backend-data:

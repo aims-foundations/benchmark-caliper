@@ -1,0 +1,10 @@
+anthropic==0.101.0
+fastapi==0.136.1
+uvicorn[standard]==0.46.0
+python-multipart==0.0.28
+pydantic==2.13.4
+pypdf==5.7.0
+reportlab>=4.0
+resend==2.4.0
+datasets>=2.14
+requests>=2.31

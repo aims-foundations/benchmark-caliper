@@ -1,0 +1,55 @@
+# Dependabot configuration.
+#
+# Opens pull requests when dependencies have security or version updates.
+# Nothing is auto-merged — every PR is reviewed by a human. This satisfies
+# SECURITY.md item 7.2.
+#
+# Three ecosystems to watch:
+#   - npm (frontend deps under website/client/)
+#   - pip (backend deps under website/server/)
+#   - github-actions (any workflows under .github/workflows/)
+
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/website/client"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "deps"
+      - "frontend"
+    # Group routine non-security minor/patch updates into one PR per week
+    # so reviewers aren't drowning in noise. Security updates always get
+    # their own PR.
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "pip"
+    directory: "/website/server"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "deps"
+      - "backend"
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "deps"
+      - "ci"
