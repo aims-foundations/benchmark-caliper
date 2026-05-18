@@ -1,6 +1,6 @@
 """Read-only access to pipeline ICL assets.
 
-The website reuses the existing `anthropic_api_package/benchmarks/examples`
+The website reuses the existing `anthropic_api_package_release/benchmarks/examples`
 and `regions/base` directories as in-context-learning seeds for synthesis
 steps. We never modify these files — they are the same versioned references
 the CLI pipeline uses.

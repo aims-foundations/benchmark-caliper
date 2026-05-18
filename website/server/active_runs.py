@@ -50,6 +50,7 @@ class ActiveRun:
     api_key: str
     pdf_bytes: bytes
     opted_in_full: bool
+    deployment_description: str = ""
     created_at: float = field(default_factory=time.monotonic)
     email: Optional[str] = None
     slug: Optional[str] = None
@@ -95,12 +96,14 @@ class ActiveRunStore:
         api_key: str,
         pdf_bytes: bytes,
         opted_in_full: bool,
+        deployment_description: str = "",
     ) -> ActiveRun:
         run = ActiveRun(
             run_id=run_id,
             api_key=api_key,
             pdf_bytes=pdf_bytes,
             opted_in_full=opted_in_full,
+            deployment_description=deployment_description,
         )
         self._runs[run_id] = run
         return run

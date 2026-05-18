@@ -1,6 +1,6 @@
 """Per-request Anthropic client for the website backend.
 
-This is intentionally separate from `anthropic_api_package/client.py`, which
+This is intentionally separate from `anthropic_api_package_release/client.py`, which
 reads keys from the environment, holds a module-level singleton, and writes
 trace files to disk. None of those behaviours are safe for a multi-user
 backend running BYOK — so this module:
@@ -23,7 +23,7 @@ from typing import Optional
 
 import anthropic
 
-# Mirrors anthropic_api_package/client.py:MODELS so the website and the
+# Mirrors anthropic_api_package_release/client.py:MODELS so the website and the
 # pipeline call the same models. Update both together.
 MODELS: dict[str, str] = {
     "haiku":  "claude-haiku-4-5-20251001",

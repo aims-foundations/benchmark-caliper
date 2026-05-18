@@ -1,6 +1,6 @@
 """Parsing for the elicitation-questions step output.
 
-Mirrors anthropic_api_package/scripts/parse_elicitation_questions.py: strip
+Mirrors anthropic_api_package_release/scripts/parse_elicitation_questions.py: strip
 optional code fences, then validate the JSON shape and dimension tags so
 upstream prompt drift surfaces loudly here instead of silently downstream.
 """

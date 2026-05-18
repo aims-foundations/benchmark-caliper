@@ -49,6 +49,7 @@ from . import (
     logging_gate,
     pdf_utils,
     pipeline_assets,
+    pipeline_runner,
     quote_registry,
 )
 from .anthropic_client import WEB_SEARCH_TOOL, call_text_async
@@ -203,6 +204,7 @@ async def create_run(
         api_key=api_key,
         pdf_bytes=pdf_bytes,
         opted_in_full=opted_in_full,
+        deployment_description=description,
     )
 
     async def stream() -> AsyncIterator[str]:
@@ -1093,7 +1095,7 @@ async def post_score(
                 run_id=run_id,
                 opted_in_full=opted_in_full,
                 input_text=composed,
-                # Matches anthropic_api_package/run_pipeline.py:7_score.
+                # Matches anthropic_api_package_release/run_pipeline.py:7_score.
                 # 8192 was too small: the 6-dimension schema (per-dim
                 # score + justification + strengths + 4 evidence lists +
                 # checklist + evidence_map + gaps, plus overall_summary
@@ -1109,6 +1111,42 @@ async def post_score(
                     "output": {
                         "scoring": scoring,
                         "raw": result.text,
+                    },
+                },
+            )
+
+            # ---------- Steps 8 + 9: report.md + review.pdf ----------
+            active = active_runs.store.get(run_id)
+            deployment_description = (
+                active.deployment_description if active is not None else ""
+            )
+            pipeline_runner.write_tuple_inputs(
+                run_id,
+                scoring=scoring,
+                composed_prompt=composed,
+                deployment_description=deployment_description,
+            )
+
+            yield format_event("step-started", {"step": "8-report"})
+            report_md = await asyncio.to_thread(
+                pipeline_runner.build_report, run_id, scoring
+            )
+            yield format_event(
+                "step-completed",
+                {"step": "8-report", "output": {"report_md": report_md}},
+            )
+
+            yield format_event("step-started", {"step": "9-review-pdf"})
+            review_path = await asyncio.to_thread(
+                pipeline_runner.build_review_pdf, run_id
+            )
+            yield format_event(
+                "step-completed",
+                {
+                    "step": "9-review-pdf",
+                    "output": {
+                        "review_pdf_url": f"/api/runs/{run_id}/review.pdf",
+                        "bytes": review_path.stat().st_size,
                     },
                 },
             )
@@ -1336,6 +1374,8 @@ def delete_run(run_id: str) -> Response:
     run_dir = blob_root / run_id
     if run_dir.exists():
         shutil.rmtree(run_dir, ignore_errors=True)
+    # Step 8/9 workspace lives outside the tier-3 blob root.
+    pipeline_runner.reset(run_id, scoring_only=False)
 
     # Drop the in-memory entry too — key + PDF bytes go out of scope here.
     active_runs.store.end(run_id)
@@ -1513,6 +1553,170 @@ def get_report(run_id: str) -> dict:
     }
 
 
+# ---------- Step 8 / Step 9 artifact downloads ----------
+
+
+@app.get("/api/runs/{run_id}/report.md")
+def get_report_markdown(run_id: str) -> Response:
+    """Return Step 8 report.md (text/markdown)."""
+    path = pipeline_runner.report_path(run_id)
+    if not path.exists():
+        raise HTTPException(404, "report not yet generated")
+    return Response(
+        content=path.read_bytes(),
+        media_type="text/markdown; charset=utf-8",
+        headers={
+            "Content-Disposition": f'inline; filename="report-{run_id}.md"',
+        },
+    )
+
+
+@app.get("/api/runs/{run_id}/review.pdf")
+def get_review_pdf(run_id: str) -> Response:
+    """Return Step 9 review.pdf (application/pdf)."""
+    path = pipeline_runner.review_pdf_path(run_id)
+    if not path.exists():
+        raise HTTPException(404, "review.pdf not yet generated")
+    return Response(
+        content=path.read_bytes(),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'inline; filename="review-{run_id}.pdf"',
+        },
+    )
+
+
+# ---------- rerun endpoints (mirror --rerun-scoring / --rerun-all) ----------
+
+
+@app.post("/api/runs/{run_id}/rerun-scoring")
+async def rerun_scoring(
+    run_id: str,
+    body: ScoreRequest,
+    x_anthropic_key: Annotated[
+        str | None, Header(alias="X-Anthropic-Key")
+    ] = None,
+) -> StreamingResponse:
+    """Equivalent of `--rerun-scoring`: wipe scoring.json/report.md/pdfs/
+    and re-run Steps 7+8+9 with the same upstream artifacts.
+
+    The client sends the same body as `/score`; the run's status is moved
+    back to `regioned` so the scoring stream can run again.
+    """
+    if not x_anthropic_key:
+        raise HTTPException(401, "missing X-Anthropic-Key header")
+
+    with db.connect() as conn:
+        run = conn.execute(
+            "SELECT status, user_opted_in_full FROM runs WHERE run_id = ?",
+            (run_id,),
+        ).fetchone()
+    if run is None:
+        raise HTTPException(404, "run not found")
+    opted_in_full = bool(run["user_opted_in_full"])
+
+    pipeline_runner.reset(run_id, scoring_only=True)
+    logging_gate.set_run_status(run_id, "regioned")
+
+    api_key = x_anthropic_key
+    active = active_runs.store.get(run_id)
+    deployment_description = (
+        active.deployment_description if active is not None else ""
+    )
+
+    async def stream() -> AsyncIterator[str]:
+        # _run_score_phase emits via an async callback (designed for the
+        # auto-run orchestrator). Bridge those callbacks into our SSE
+        # generator via a queue so we can yield them as they happen.
+        try:
+            queue: asyncio.Queue = asyncio.Queue()
+
+            async def forward(name: str, payload: dict) -> None:
+                await queue.put((name, payload))
+
+            async def drive() -> None:
+                try:
+                    await _run_score_phase(
+                        emit=forward,
+                        api_key=api_key,
+                        run_id=run_id,
+                        paper_summary=body.paper_summary,
+                        benchmark_yaml=body.benchmark_yaml,
+                        region_yaml=body.region_yaml,
+                        elicitation_summary=body.elicitation_summary,
+                        deployment_description=deployment_description,
+                        opted_in_full=opted_in_full,
+                    )
+                    await queue.put(None)
+                except Exception as exc:
+                    await queue.put(("__error__", exc))
+
+            task = asyncio.create_task(drive())
+            while True:
+                item = await queue.get()
+                if item is None:
+                    break
+                if isinstance(item, tuple) and item[0] == "__error__":
+                    raise item[1]
+                name, payload = item
+                yield format_event(name, payload)
+            await task
+
+            logging_gate.end_run(
+                run_id=run_id,
+                status="success",
+                ended_at=datetime.now(timezone.utc),
+            )
+            yield format_event("run-complete", {"run_id": run_id, "rerun": True})
+        except Exception as e:
+            logging_gate.end_run(
+                run_id=run_id,
+                status="failed",
+                ended_at=datetime.now(timezone.utc),
+            )
+            yield format_event(
+                "error",
+                {"error_class": type(e).__name__, "run_id": run_id},
+            )
+
+    return StreamingResponse(
+        stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@app.post("/api/runs/{run_id}/rerun-all", status_code=204)
+def rerun_all(run_id: str) -> Response:
+    """Equivalent of `--rerun-all`: destructively wipe everything for this
+    run.
+
+    Mirrors the CLI's behaviour of clearing the assessment directory
+    while preserving the run_id itself. The client should treat this as a
+    "start over" and re-POST to `/api/runs` (or the step-by-step
+    endpoints) to drive a fresh run. DB rows for this run_id are removed
+    along with the on-disk workspace.
+    """
+    blob_root = logging_gate.DEFAULT_BLOB_ROOT
+    with db.connect() as conn:
+        existed = conn.execute(
+            "SELECT 1 FROM runs WHERE run_id = ?", (run_id,)
+        ).fetchone()
+        if existed is None:
+            raise HTTPException(404, "run not found")
+        conn.execute("DELETE FROM runs WHERE run_id = ?", (run_id,))
+
+    run_dir = blob_root / run_id
+    if run_dir.exists():
+        shutil.rmtree(run_dir, ignore_errors=True)
+    pipeline_runner.reset(run_id, scoring_only=False)
+    active_runs.store.end(run_id)
+    return Response(status_code=204)
+
+
 # ---------- auto-run orchestrator ----------
 
 
@@ -1573,6 +1777,7 @@ async def _orchestrate_auto_run(run_id: str) -> None:
             benchmark_yaml=extract_result["benchmark_yaml"],
             region_yaml=region_result["region_yaml"],
             elicitation_summary=elicitation_summary,
+            deployment_description=active.deployment_description,
             opted_in_full=opted_in_full,
         )
         active.artifacts.update(score_result)
@@ -1986,9 +2191,15 @@ async def _run_score_phase(
     benchmark_yaml: str,
     region_yaml: str,
     elicitation_summary: str,
+    deployment_description: str,
     opted_in_full: bool,
 ) -> dict:
-    """Run Step 7 (the lone Opus call). Mirrors the body of `/score`."""
+    """Run Steps 7 (Opus scoring), 8 (report.md), and 9 (review.pdf).
+
+    Mirrors the tail of `/score`. Step 7 is the lone Opus call; Steps 8
+    and 9 are deterministic Python (no API) imported from the release
+    package via `pipeline_runner`.
+    """
     logging_gate.set_run_status(run_id, "scoring")
     framework_yaml = pipeline_assets.load_framework()
     scoring_system = _load_prompt("opus_scoring_framing.md")
@@ -2016,7 +2227,44 @@ async def _run_score_phase(
         "step-completed",
         {"step": "7-score", "output": {"scoring": scoring, "raw": result.text}},
     )
-    return {"scoring": scoring, "raw_text": result.text}
+
+    # ---------- Steps 8 + 9 ----------
+    pipeline_runner.write_tuple_inputs(
+        run_id,
+        scoring=scoring,
+        composed_prompt=composed,
+        deployment_description=deployment_description,
+    )
+
+    await emit("step-started", {"step": "8-report"})
+    report_md = await asyncio.to_thread(
+        pipeline_runner.build_report, run_id, scoring
+    )
+    await emit(
+        "step-completed",
+        {"step": "8-report", "output": {"report_md": report_md}},
+    )
+
+    await emit("step-started", {"step": "9-review-pdf"})
+    review_path = await asyncio.to_thread(
+        pipeline_runner.build_review_pdf, run_id
+    )
+    await emit(
+        "step-completed",
+        {
+            "step": "9-review-pdf",
+            "output": {
+                "review_pdf_url": f"/api/runs/{run_id}/review.pdf",
+                "bytes": review_path.stat().st_size,
+            },
+        },
+    )
+
+    return {
+        "scoring": scoring,
+        "raw_text": result.text,
+        "report_md": report_md,
+    }
 
 
 # ---------- helpers ----------
