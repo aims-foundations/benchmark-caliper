@@ -28,24 +28,12 @@ The final output is a 6-dimension validity report with per-dimension scores, rea
 
 ## How to run it
 
-### Option A: Docker (recommended for review)
-
-Requirements: Docker Desktop. From the repository root:
-
-```bash
-cd website
-docker compose up --build
-```
-
-Then open <http://localhost:5173>.
-
-### Option B: Run each side directly
-
 Requirements: Python 3.10+, Node 20+, an Anthropic API key.
 
 ```bash
 # Terminal 1 — backend
 cd website/server
+python3 -m venv ../../.venv && source ../../.venv/bin/activate
 pip install -r requirements.txt
 python3 -m uvicorn app:app --reload --port 8000
 
@@ -110,7 +98,7 @@ For a faster skim, the slice-by-slice journey is in `MEMORY.md` and the project 
 ## Known gaps for v0
 
 - **Web search cost** isn't modeled in the cost ledger ($10 per 1k searches Anthropic charges separately).
-- **No deploy target chosen yet.** Dockerized but not yet on Fly/Render/Vercel.
+- **No deploy target chosen yet.** Local dev only — no host (Fly/Render/Vercel) wired up.
 - **Privacy policy and ToS** copy still needs writing — the policy is described in DESIGN.md section 6 but the user-facing page doesn't exist yet.
 - **Pre-launch security checklist** in SECURITY.md hasn't been ticked off; do not point a public domain at this until it has.
 
@@ -123,7 +111,6 @@ website/
 ├── DESIGN.md              # Narrative spec
 ├── SECURITY.md            # Verifiable checklist
 ├── README.md              # This file
-├── docker-compose.yml     # One-command local run
 ├── server/                # FastAPI backend
 │   ├── app.py             # All HTTP endpoints
 │   ├── logging_gate.py    # The privacy chokepoint
@@ -136,7 +123,6 @@ website/
 │   ├── prices.py
 │   ├── sse.py
 │   ├── db.py
-│   ├── Dockerfile
 │   ├── requirements.txt
 │   └── tests/             # 101 backend tests
 └── client/                # Vite + React + TypeScript
@@ -146,7 +132,6 @@ website/
     │   ├── consentStorage.ts
     │   ├── keyStorage.ts
     │   └── components/    # Per-phase views
-    ├── Dockerfile
     └── (vitest tests, 48 of them)
 ```
 

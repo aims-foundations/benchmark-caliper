@@ -1,4 +1,9 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
+import {
+  submitFeedback,
+  ApiError,
+  type FeedbackCategory,
+} from '../api'
 
 interface DimensionScore {
   score?: number
@@ -42,6 +47,16 @@ type Tab = 'table' | 'raw'
  * score table; "raw" tab shows the JSON for transparency. Both
  * downloadable.
  */
+const FEEDBACK_CATEGORIES: Array<{ value: FeedbackCategory; label: string }> = [
+  { value: 'incorrect_score', label: 'A score seems incorrect' },
+  { value: 'hallucination', label: 'Output contains hallucinated content' },
+  {
+    value: 'evidence_mismatch',
+    label: "Evidence/quotes don't match the paper",
+  },
+  { value: 'other', label: 'Other issue' },
+]
+
 export function ScoringView({
   scoring,
   rawText,
@@ -51,6 +66,43 @@ export function ScoringView({
   onChangeKey,
 }: Props) {
   const [tab, setTab] = useState<Tab>('table')
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [feedbackCategory, setFeedbackCategory] =
+    useState<FeedbackCategory>('incorrect_score')
+  const [feedbackMessage, setFeedbackMessage] = useState('')
+  const [feedbackEmail, setFeedbackEmail] = useState('')
+  const [feedbackStatus, setFeedbackStatus] = useState<
+    'idle' | 'sending' | 'sent' | 'error'
+  >('idle')
+  const [feedbackError, setFeedbackError] = useState('')
+
+  async function handleFeedbackSubmit(
+    e: FormEvent<HTMLFormElement>,
+  ): Promise<void> {
+    e.preventDefault()
+    const message = feedbackMessage.trim()
+    if (!message) return
+    setFeedbackStatus('sending')
+    setFeedbackError('')
+    try {
+      await submitFeedback({
+        runId,
+        category: feedbackCategory,
+        message,
+        contactEmail: feedbackEmail.trim() || null,
+      })
+      setFeedbackStatus('sent')
+      setFeedbackMessage('')
+      setFeedbackEmail('')
+    } catch (err) {
+      setFeedbackStatus('error')
+      setFeedbackError(
+        err instanceof ApiError
+          ? `Could not submit (${err.status}). Please try again.`
+          : 'Could not submit feedback. Please try again.',
+      )
+    }
+  }
 
   function downloadAs(content: string, filename: string, type: string): void {
     const blob = new Blob([content], { type })
@@ -176,10 +228,98 @@ export function ScoringView({
         <button type="button" className="link" onClick={handleDownload}>
           Download {tab === 'table' ? '.json' : '.txt'}
         </button>
+        <a
+          className="link"
+          href={`/api/runs/${runId}/review.pdf`}
+          download={`validity_report_${slug || runId}.pdf`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Download report PDF
+        </a>
         <button type="button" onClick={onStartOver}>
           Run another
         </button>
       </div>
+
+      <details
+        className="feedback-section"
+        open={feedbackOpen}
+        onToggle={(e) =>
+          setFeedbackOpen((e.target as HTMLDetailsElement).open)
+        }
+      >
+        <summary>Report an issue with this assessment</summary>
+        <p className="help">
+          Spotted a wrong score, a hallucinated claim, or a quote that
+          doesn't match the paper? Let us know. We use feedback to improve
+          the pipeline. Your run ID is attached automatically.
+        </p>
+        {feedbackStatus === 'sent' ? (
+          <p className="success-message">
+            Thanks — we received your report.{' '}
+            <button
+              type="button"
+              className="link"
+              onClick={() => setFeedbackStatus('idle')}
+            >
+              Send another
+            </button>
+          </p>
+        ) : (
+          <form onSubmit={handleFeedbackSubmit} className="feedback-form">
+            <label>
+              What's the issue?
+              <select
+                value={feedbackCategory}
+                onChange={(e) =>
+                  setFeedbackCategory(e.target.value as FeedbackCategory)
+                }
+                disabled={feedbackStatus === 'sending'}
+              >
+                {FEEDBACK_CATEGORIES.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Details
+              <textarea
+                value={feedbackMessage}
+                onChange={(e) => setFeedbackMessage(e.target.value)}
+                rows={5}
+                maxLength={5000}
+                required
+                placeholder="Which dimension or claim looks wrong? What were you expecting instead?"
+                disabled={feedbackStatus === 'sending'}
+              />
+            </label>
+            <label>
+              Email (optional, so we can follow up)
+              <input
+                type="email"
+                value={feedbackEmail}
+                onChange={(e) => setFeedbackEmail(e.target.value)}
+                placeholder="you@example.com"
+                disabled={feedbackStatus === 'sending'}
+              />
+            </label>
+            {feedbackStatus === 'error' && (
+              <p className="inline-error">{feedbackError}</p>
+            )}
+            <button
+              type="submit"
+              disabled={
+                feedbackStatus === 'sending' || !feedbackMessage.trim()
+              }
+            >
+              {feedbackStatus === 'sending' ? 'Sending…' : 'Send report'}
+            </button>
+          </form>
+        )}
+      </details>
     </section>
   )
 }

@@ -21,3 +21,8 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+
+# Python virtualenvs
+.venv/
+venv/
+env/

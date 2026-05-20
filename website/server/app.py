@@ -72,11 +72,18 @@ MAX_BODY_BYTES = 50 * 1024 * 1024  # 50 MB hard cap (SECURITY.md)
 MAX_PDF_BYTES = 32 * 1024 * 1024  # Anthropic's per-document limit
 MAX_DESCRIPTION_LEN = 10_000
 
-PROMPTS_DIR = (
+_PACKAGE_ROOT = (
     Path(__file__).resolve().parent.parent.parent
     / "anthropic_api_package_release"
-    / "prompts"
 )
+PROMPTS_DIR = _PACKAGE_ROOT / "prompts"
+
+# Put the release package on sys.path so `scripts.repair_scoring_json` (used
+# by `_parse_scoring_json` as a structural-repair fallback) is importable
+# without each helper having to do its own sys.path dance.
+import sys as _sys  # noqa: E402
+if str(_PACKAGE_ROOT) not in _sys.path:
+    _sys.path.insert(0, str(_PACKAGE_ROOT))
 
 
 # ---------- security headers ----------
@@ -1071,8 +1078,8 @@ async def post_dataset_analysis(
     and return — the client should proceed to `/score` without DA.
 
     This step can take 3-10 minutes (HF download + sampling +
-    Sonnet interpretation). Run timeouts on nginx and uvicorn must
-    accommodate that.
+    Sonnet interpretation). Uvicorn (and any reverse proxy in front
+    of it) must allow request timeouts long enough for that.
     """
     if not x_anthropic_key:
         raise HTTPException(401, "missing X-Anthropic-Key header")
@@ -1444,19 +1451,129 @@ def _compose_score_prompt(
 
 
 def _parse_scoring_json(raw: str) -> dict:
-    """Best-effort JSON parse of Opus output. Falls back to {} if the
-    model returned something we can't parse — the raw text is also
-    returned in the SSE event so the frontend can show it."""
-    fence = re.search(r"```(?:json)?\s*\n(.*?)\n```", raw, re.DOTALL)
-    body = fence.group(1).strip() if fence else raw.strip()
-    start, end = body.find("{"), body.rfind("}")
-    if start < 0 or end < start:
+    """Best-effort JSON parse of Opus output, matching the CLI's two-stage cleanup.
+
+    The 6-dimension scoring schema is ~14k tokens of nested objects, and
+    Opus drifts from strict JSON in two predictable ways on a response
+    that size: (1) raw newlines/tabs inside long justification strings,
+    which `json.loads` rejects unless `strict=False`, and (2) trailing
+    commas before `}` / `]`. Strict strategies handle those.
+
+    For deeper malformations (missing closing braces, dangling commas in
+    awkward spots), this function falls back to `json_repair.repair_json`
+    — the same library `parse_llm_output.py` uses in the CLI pipeline.
+    `repair_json` silently re-nests subsequent keys inside the last open
+    object when it patches a missing brace, which produces valid JSON
+    with the wrong tree structure (e.g. `output_form` ends up inside
+    `output_content`). `repair_scoring_json.repair_scoring` is invoked
+    on every parsed result to undo that re-nesting — it's a no-op on
+    well-formed inputs, so calling it unconditionally is safe.
+
+    Falls back to `{}` only after every strategy fails. The raw text is
+    also returned in the SSE event so the frontend can show it for
+    manual recovery; the validity report email always includes the raw
+    text as a fallback when parsing fails.
+    """
+    if not raw:
         return {}
+
+    parsed = _strict_parse_scoring(raw)
+    if parsed is None:
+        parsed = _json_repair_parse_scoring(raw)
+    if parsed is None:
+        return {}
+    return _structural_repair_scoring(parsed)
+
+
+def _strict_parse_scoring(raw: str) -> Optional[dict]:
+    """Cheap strict-ish parsers. Returns dict on success, None on total failure."""
+    candidates: list[str] = []
+    # Strategy 1: every fenced code block, ```json or bare ```.
+    for fence in re.finditer(r"```(?:json)?\s*\n?(.*?)\n?```", raw, re.DOTALL):
+        candidates.append(fence.group(1))
+    # Strategy 2: the whole text (handles "no prose, no fences" — what we ask for).
+    candidates.append(raw)
+
+    decoder = json.JSONDecoder(strict=False)
+
+    for body in candidates:
+        body = body.strip()
+        if not body:
+            continue
+        start = body.find("{")
+        if start < 0:
+            continue
+        # Strategy a: raw_decode finds the first complete JSON object
+        # from `start`, ignoring anything after. Handles prose suffixes.
+        try:
+            parsed, _ = decoder.raw_decode(body[start:])
+            if isinstance(parsed, dict):
+                return parsed
+        except json.JSONDecodeError:
+            pass
+        # Strategy b: substring from first '{' to last '}', strict=False.
+        end = body.rfind("}")
+        if end > start:
+            substring = body[start : end + 1]
+            try:
+                parsed = json.loads(substring, strict=False)
+                if isinstance(parsed, dict):
+                    return parsed
+            except json.JSONDecodeError:
+                pass
+            # Strategy c: also strip trailing commas before } or ].
+            sanitized = re.sub(r",(\s*[}\]])", r"\1", substring)
+            try:
+                parsed = json.loads(sanitized, strict=False)
+                if isinstance(parsed, dict):
+                    return parsed
+            except json.JSONDecodeError:
+                pass
+    return None
+
+
+def _json_repair_parse_scoring(raw: str) -> Optional[dict]:
+    """Last-resort fallback: coerce malformed JSON via `json_repair`.
+
+    Mirrors the fallback in the CLI's parse_llm_output.py. The caller is
+    expected to follow this with _structural_repair_scoring, because
+    repair_json patches missing braces by silently re-nesting subsequent
+    keys — well-formed JSON, wrong tree.
+    """
     try:
-        parsed = json.loads(body[start : end + 1])
-    except json.JSONDecodeError:
-        return {}
-    return parsed if isinstance(parsed, dict) else {}
+        from json_repair import repair_json
+    except ImportError:
+        return None
+
+    fence = re.search(r"```(?:json)?\s*\n(.*?)\n```", raw, re.DOTALL)
+    body = (fence.group(1) if fence else raw).strip()
+    start = body.find("{")
+    if start < 0:
+        return None
+    body = body[start:]
+    body = re.sub(r",(\s*[}\]])", r"\1", body)
+    try:
+        parsed = repair_json(body, return_objects=True)
+    except Exception:
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
+def _structural_repair_scoring(parsed: dict) -> dict:
+    """Schema-aware unwinding of json_repair's silent re-nesting.
+
+    Wraps `anthropic_api_package_release/scripts/repair_scoring_json.repair_scoring`.
+    No-op on clean inputs (idempotent), so safe to call after every successful
+    parse.
+    """
+    try:
+        from scripts.repair_scoring_json import detect_corruption, repair_scoring
+    except ImportError:
+        return parsed
+    if not detect_corruption(parsed):
+        return parsed
+    repaired, _log = repair_scoring(parsed)
+    return repaired
 
 
 # ---------- export and delete (data-subject rights) ----------
@@ -1580,6 +1697,87 @@ def post_email(run_id: str, body: SetEmailRequest) -> Response:
     logging_gate.set_email(run_id, body.email)
     active_runs.store.set_email(run_id, body.email)
     return Response(status_code=204)
+
+
+_FEEDBACK_CATEGORIES = {
+    "incorrect_score",
+    "hallucination",
+    "evidence_mismatch",
+    "other",
+}
+
+
+class FeedbackRequest(BaseModel):
+    category: str = Field(min_length=1, max_length=64)
+    message: str = Field(min_length=1, max_length=5000)
+    contact_email: Optional[str] = Field(default=None, max_length=320)
+
+    @field_validator("category")
+    @classmethod
+    def _check_category(cls, v: str) -> str:
+        v = v.strip()
+        if v not in _FEEDBACK_CATEGORIES:
+            raise ValueError(
+                f"category must be one of: {sorted(_FEEDBACK_CATEGORIES)}"
+            )
+        return v
+
+    @field_validator("contact_email")
+    @classmethod
+    def _check_contact(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        v = v.strip()
+        if not v:
+            return None
+        if not _EMAIL_RE.match(v):
+            raise ValueError("contact_email is not a valid address")
+        return v
+
+
+@app.post("/api/runs/{run_id}/feedback", status_code=201)
+async def post_feedback(run_id: str, body: FeedbackRequest) -> dict[str, object]:
+    """Record user feedback about an assessment and notify the team.
+
+    The user clicks "Report an issue" after viewing the scoring report. We
+    persist the message in the `feedback` table (tier-1 metadata only — no
+    paper/PDF contents) and fire an email to FEEDBACK_TO via Resend. Email
+    failures are not fatal: the row is committed regardless so feedback is
+    never lost to a flaky provider.
+    """
+    with db.connect() as conn:
+        row = conn.execute(
+            "SELECT 1 FROM runs WHERE run_id = ?", (run_id,)
+        ).fetchone()
+        if row is None:
+            raise HTTPException(404, "run not found")
+        submitted_at = datetime.now(timezone.utc).isoformat()
+        cur = conn.execute(
+            "INSERT INTO feedback "
+            "(run_id, category, message, contact_email, submitted_at) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (
+                run_id,
+                body.category,
+                body.message,
+                body.contact_email,
+                submitted_at,
+            ),
+        )
+        feedback_id = cur.lastrowid
+
+    result = await asyncio.to_thread(
+        email_notify.send_feedback_notification,
+        run_id=run_id,
+        category=body.category,
+        message=body.message,
+        contact_email=body.contact_email,
+    )
+    return {
+        "feedback_id": feedback_id,
+        "notified": result.sent,
+        "fallback": result.fallback,
+    }
 
 
 @app.post("/api/runs/{run_id}/auto-run", status_code=202)

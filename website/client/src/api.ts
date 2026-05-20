@@ -331,6 +331,62 @@ export async function setRunEmail(
   }
 }
 
+export type FeedbackCategory =
+  | 'incorrect_score'
+  | 'hallucination'
+  | 'evidence_mismatch'
+  | 'other'
+
+export interface FeedbackInput {
+  runId: string
+  category: FeedbackCategory
+  message: string
+  contactEmail?: string | null
+}
+
+export interface FeedbackResponse {
+  feedbackId: number
+  notified: boolean
+  fallback: boolean
+}
+
+/**
+ * POST /api/runs/{runId}/feedback → record a user-reported issue with the
+ * scoring output and notify the team. The server persists the message and
+ * emails FEEDBACK_TO; in dev/CI with no provider configured the email path
+ * degrades to a stderr log but the DB row is always written.
+ */
+export async function submitFeedback(
+  input: FeedbackInput,
+): Promise<FeedbackResponse> {
+  const r = await fetch(
+    `/api/runs/${encodeURIComponent(input.runId)}/feedback`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        category: input.category,
+        message: input.message,
+        contact_email: input.contactEmail ?? null,
+      }),
+    },
+  )
+  if (!r.ok) {
+    const text = await r.text().catch(() => '')
+    throw new ApiError(r.status, text || r.statusText)
+  }
+  const data = (await r.json()) as {
+    feedback_id: number
+    notified: boolean
+    fallback: boolean
+  }
+  return {
+    feedbackId: data.feedback_id,
+    notified: data.notified,
+    fallback: data.fallback,
+  }
+}
+
 /**
  * POST /api/runs/{runId}/auto-run → kick off the auto-pipeline as a
  * background task. The server already has the API key + PDF + email

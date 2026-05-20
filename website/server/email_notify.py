@@ -17,7 +17,7 @@ Configuration:
                           test sender Resend allows without verification).
   - WEBSITE_PUBLIC_URL    the public origin used to build the report link
                           in the email body. Default: http://localhost:5173
-                          which matches docker-compose.yml.
+                          which matches the Vite dev server.
 """
 
 from __future__ import annotations
@@ -40,6 +40,7 @@ def _env_default() -> dict[str, str]:
         "site_url": os.environ.get(
             "WEBSITE_PUBLIC_URL", "http://localhost:5173"
         ).rstrip("/"),
+        "feedback_to": os.environ.get("FEEDBACK_TO", "").strip(),
     }
 
 
@@ -137,6 +138,114 @@ def send_report_ready(
     if isinstance(resp, dict):
         provider_id = resp.get("id") or resp.get("data", {}).get("id")
     return SendResult(sent=True, provider_id=provider_id, fallback=False)
+
+
+def send_feedback_notification(
+    *,
+    run_id: Optional[str],
+    category: str,
+    message: str,
+    contact_email: Optional[str],
+) -> SendResult:
+    """Email the team about user-submitted feedback on an assessment.
+
+    Recipient is `FEEDBACK_TO`. If it's unset, falls back to a stderr log
+    so dev/CI flows work without provisioning. Never raises.
+    """
+    env = _env_default()
+    to = env["feedback_to"]
+    subject = f"[validity-analyzer] feedback: {category}"
+    link = f"{env['site_url']}/run/{run_id}" if run_id else ""
+    body_text = _feedback_plain_body(
+        run_id=run_id, category=category, message=message,
+        contact_email=contact_email, link=link,
+    )
+    body_html = _feedback_html_body(
+        run_id=run_id, category=category, message=message,
+        contact_email=contact_email, link=link,
+    )
+
+    if not to or not env["api_key"]:
+        print(
+            "[email_notify] feedback DRY RUN "
+            f"(FEEDBACK_TO={'set' if to else 'unset'}, "
+            f"RESEND_API_KEY={'set' if env['api_key'] else 'unset'}):\n"
+            f"  subject: {subject}\n"
+            f"  body:\n{body_text}",
+            file=sys.stderr,
+        )
+        return SendResult(sent=True, provider_id=None, fallback=True)
+
+    try:
+        import resend  # type: ignore
+    except ImportError as e:
+        return SendResult(
+            sent=False, provider_id=None, fallback=False,
+            error=f"resend SDK not installed: {e}",
+        )
+
+    resend.api_key = env["api_key"]
+    try:
+        resp = resend.Emails.send(
+            {
+                "from": env["from_addr"],
+                "to": [to],
+                "subject": subject,
+                "text": body_text,
+                "html": body_html,
+                **(
+                    {"reply_to": [contact_email]}
+                    if contact_email else {}
+                ),
+            }
+        )
+    except Exception as e:
+        return SendResult(
+            sent=False, provider_id=None, fallback=False,
+            error=f"{type(e).__name__}: {e}",
+        )
+
+    provider_id = None
+    if isinstance(resp, dict):
+        provider_id = resp.get("id") or resp.get("data", {}).get("id")
+    return SendResult(sent=True, provider_id=provider_id, fallback=False)
+
+
+def _feedback_plain_body(
+    *, run_id: Optional[str], category: str, message: str,
+    contact_email: Optional[str], link: str,
+) -> str:
+    return (
+        f"Category: {category}\n"
+        f"Run ID: {run_id or '(not provided)'}\n"
+        f"Contact: {contact_email or '(none)'}\n"
+        f"Link: {link or '(no run id)'}\n\n"
+        "Message:\n"
+        f"{message}\n"
+    )
+
+
+def _feedback_html_body(
+    *, run_id: Optional[str], category: str, message: str,
+    contact_email: Optional[str], link: str,
+) -> str:
+    safe_msg = html.escape(message)
+    safe_cat = html.escape(category)
+    safe_run = html.escape(run_id or "(not provided)")
+    safe_contact = html.escape(contact_email or "(none)")
+    safe_link = html.escape(link, quote=True) if link else ""
+    link_html = (
+        f'<p><a href="{safe_link}">Open run</a></p>' if safe_link else ""
+    )
+    return (
+        f"<p><strong>Category:</strong> {safe_cat}</p>"
+        f"<p><strong>Run ID:</strong> <code>{safe_run}</code></p>"
+        f"<p><strong>Contact:</strong> {safe_contact}</p>"
+        f"{link_html}"
+        '<pre style="white-space:pre-wrap;font-family:inherit;'
+        'background:#f5f5f5;padding:8px;border-radius:4px">'
+        f"{safe_msg}</pre>"
+    )
 
 
 def _log_fallback(

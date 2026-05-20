@@ -68,6 +68,17 @@ CREATE TABLE IF NOT EXISTS daily_aggregates (
   error_count    INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (date, model, step_name)
 );
+
+CREATE TABLE IF NOT EXISTS feedback (
+  feedback_id   INTEGER PRIMARY KEY AUTOINCREMENT,
+  run_id        TEXT REFERENCES runs(run_id) ON DELETE CASCADE,
+  category      TEXT NOT NULL,
+  message       TEXT NOT NULL,
+  contact_email TEXT,
+  submitted_at  TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_feedback_run_id ON feedback(run_id);
 """
 
 
