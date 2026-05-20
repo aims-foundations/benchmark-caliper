@@ -313,3 +313,93 @@ def test_run_retention_end_to_end(fresh_db: tuple[Path, Path]) -> None:
             "SELECT blob_key FROM steps WHERE run_id = 'y'"
         ).fetchone()
     assert y_row["blob_key"] is not None
+
+
+# ---------- prune_workspaces ----------
+
+
+def _seed_workspace(workspace_root: Path, run_id: str, *, days_ago: int) -> Path:
+    """Create a per-run workspace with paper.pdf + scoring.json and backdate
+    every file's mtime to `days_ago`."""
+    d = workspace_root / run_id
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "scoring.json").write_text("{}")
+    (d / "paper.pdf").write_bytes(b"%PDF-fake")
+    (d / "report.md").write_text("# report")
+    for f in d.rglob("*"):
+        if f.is_file():
+            _set_mtime(f, days_ago=days_ago)
+    return d
+
+
+def test_prune_workspaces_keeps_recent(tmp_path: Path) -> None:
+    root = tmp_path / "tuples"
+    _seed_workspace(root, "recent", days_ago=10)
+
+    n = retention.prune_workspaces(workspace_root=root, retention_days=90)
+    assert n == 0
+    assert (root / "recent" / "paper.pdf").exists()
+
+
+def test_prune_workspaces_removes_old(tmp_path: Path) -> None:
+    root = tmp_path / "tuples"
+    _seed_workspace(root, "old", days_ago=120)
+    _seed_workspace(root, "recent", days_ago=10)
+
+    n = retention.prune_workspaces(workspace_root=root, retention_days=90)
+    assert n == 1
+    assert not (root / "old").exists()
+    assert (root / "recent" / "paper.pdf").exists()
+
+
+def test_prune_workspaces_uses_newest_file_mtime(tmp_path: Path) -> None:
+    """A workspace with one old + one recent file should be kept — represents a
+    re-score where some inputs are old but the run is still active."""
+    root = tmp_path / "tuples"
+    d = root / "mixed"
+    d.mkdir(parents=True)
+    old_file = d / "composed_prompt.md"
+    old_file.write_text("old")
+    _set_mtime(old_file, days_ago=120)
+    recent_file = d / "scoring.json"
+    recent_file.write_text("{}")
+    _set_mtime(recent_file, days_ago=5)
+
+    n = retention.prune_workspaces(workspace_root=root, retention_days=90)
+    assert n == 0
+    assert d.exists()
+
+
+def test_prune_workspaces_removes_empty_dirs(tmp_path: Path) -> None:
+    """An aborted run that left an empty workspace dir should be cleaned up."""
+    root = tmp_path / "tuples"
+    (root / "empty").mkdir(parents=True)
+
+    n = retention.prune_workspaces(workspace_root=root, retention_days=90)
+    assert n == 1
+    assert not (root / "empty").exists()
+
+
+def test_prune_workspaces_no_root(tmp_path: Path) -> None:
+    n = retention.prune_workspaces(
+        workspace_root=tmp_path / "does-not-exist", retention_days=90
+    )
+    assert n == 0
+
+
+def test_run_retention_prunes_workspaces(fresh_db: tuple[Path, Path]) -> None:
+    """End-to-end: run_retention also sweeps the tuples workspace root."""
+    db_path, blob_root = fresh_db
+    workspace_root = blob_root.parent / "tuples"
+    _seed_workspace(workspace_root, "old", days_ago=120)
+    _seed_workspace(workspace_root, "fresh", days_ago=5)
+
+    result = retention.run_retention(
+        db_path=db_path,
+        blob_root=blob_root,
+        workspace_root=workspace_root,
+        retention_days=90,
+    )
+    assert result["workspaces_pruned"] == 1
+    assert not (workspace_root / "old").exists()
+    assert (workspace_root / "fresh" / "paper.pdf").exists()

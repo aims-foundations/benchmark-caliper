@@ -1285,6 +1285,10 @@ async def post_score(
                 scoring=scoring,
                 composed_prompt=composed,
                 deployment_description=deployment_description,
+                benchmark_yaml=body.benchmark_yaml,
+                region_yaml=body.region_yaml,
+                dataset_analysis_text=body.dataset_analysis_text,
+                pdf_bytes=active.pdf_bytes if active is not None else None,
             )
 
             yield format_event("step-started", {"step": "8-report"})
@@ -1567,12 +1571,14 @@ def _structural_repair_scoring(parsed: dict) -> dict:
     parse.
     """
     try:
-        from scripts.repair_scoring_json import detect_corruption, repair_scoring
-    except ImportError:
+        rsj = pipeline_runner._load_release_module(
+            "scripts.repair_scoring_json", "scripts/repair_scoring_json.py"
+        )
+    except (ImportError, FileNotFoundError):
         return parsed
-    if not detect_corruption(parsed):
+    if not rsj.detect_corruption(parsed):
         return parsed
-    repaired, _log = repair_scoring(parsed)
+    repaired, _log = rsj.repair_scoring(parsed)
     return repaired
 
 
@@ -1657,6 +1663,68 @@ def delete_run(run_id: str) -> Response:
     active_runs.store.end(run_id)
 
     return Response(status_code=204)
+
+
+# ---------- admin: post-hoc evidence verification ----------
+
+
+def _require_admin_token(x_admin_token: Optional[str]) -> None:
+    """Gate admin endpoints behind a shared-secret header.
+
+    The token lives in the `WEBSITE_ADMIN_TOKEN` env var. If unset, the
+    endpoint returns 503 so a forgotten config doesn't accidentally leave
+    admin routes wide open. `secrets.compare_digest` avoids leaking timing
+    information about partial matches.
+    """
+    import secrets
+
+    expected = os.environ.get("WEBSITE_ADMIN_TOKEN", "").strip()
+    if not expected:
+        raise HTTPException(503, "admin endpoints disabled (WEBSITE_ADMIN_TOKEN unset)")
+    if not x_admin_token or not secrets.compare_digest(x_admin_token, expected):
+        raise HTTPException(401, "invalid admin token")
+
+
+@app.post("/api/runs/{run_id}/verify")
+async def post_verify_evidence(
+    run_id: str,
+    skip_web: bool = False,
+    skip_hf: bool = False,
+    x_admin_token: Annotated[Optional[str], Header(alias="X-Admin-Token")] = None,
+) -> dict:
+    """Run the release package's evidence verifier on a completed run.
+
+    Wraps `scripts.verify_evidence` from anthropic_api_package_release. Reads
+    the per-run workspace at `data/tuples/<run_id>/` (populated by Step 7)
+    and runs structural + L1/L2 checks on quotes, web sources, and dataset
+    citations. PDF-dependent checks are always skipped because the website
+    does not retain the source PDF after extraction.
+
+    Query params:
+        skip_web — skip HTTP liveness checks (L2 for web sources)
+        skip_hf  — skip HuggingFace re-sampling (L2 for dataset citations)
+
+    Auth: `X-Admin-Token` header must match the `WEBSITE_ADMIN_TOKEN` env var.
+    """
+    _require_admin_token(x_admin_token)
+
+    workspace = pipeline_runner.workspace_dir(run_id)
+    if not (workspace / "scoring.json").exists():
+        raise HTTPException(
+            404, f"no scoring.json in workspace for run {run_id} (run not completed)"
+        )
+
+    try:
+        result = await asyncio.to_thread(
+            pipeline_runner.verify_evidence,
+            run_id,
+            skip_web=skip_web,
+            skip_hf=skip_hf,
+        )
+    except Exception as exc:
+        raise HTTPException(500, f"verifier crashed: {exc}") from exc
+
+    return result
 
 
 # ---------- auto-run, events, report (new in v0.3) ----------
@@ -2682,11 +2750,16 @@ async def _run_score_phase(
     )
 
     # ---------- Steps 8 + 9 ----------
+    _auto_active = active_runs.store.get(run_id)
     pipeline_runner.write_tuple_inputs(
         run_id,
         scoring=scoring,
         composed_prompt=composed,
         deployment_description=deployment_description,
+        benchmark_yaml=benchmark_yaml,
+        region_yaml=region_yaml,
+        dataset_analysis_text=dataset_analysis_text,
+        pdf_bytes=_auto_active.pdf_bytes if _auto_active is not None else None,
     )
 
     await emit("step-started", {"step": "8-report"})

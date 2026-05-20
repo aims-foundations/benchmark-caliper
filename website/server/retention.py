@@ -1,6 +1,6 @@
 """Retention and aggregation cron.
 
-Runs daily. Three responsibilities, each idempotent:
+Runs daily. Four responsibilities, each idempotent:
 
   1. Roll up the previous day's `steps` rows into `daily_aggregates`. The
      aggregates table is small and we keep it forever — it is the basis for
@@ -14,11 +14,15 @@ Runs daily. Three responsibilities, each idempotent:
   3. Reconcile `steps.blob_key` so it does not point to deleted files. This
      is what makes "the blob_key column means the blob exists" hold.
 
+  4. Prune per-run workspaces under `data/tuples/<run_id>/` older than
+     `retention_days`. These hold the source PDF, scoring.json, report.md,
+     and review.pdf — the same data subject to the 90-day retention promise.
+
 Invoke from a cron job:
 
     python -m website.server.retention
 
-See website/SECURITY.md item 5 ("Tier 3 retained 90 days, then auto-
+See website/SECURITY.md section 4 ("Tier 3 retained 90 days, then auto-
 deleted") for the verifiable claims this enforces.
 """
 
@@ -30,7 +34,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
-from . import db, logging_gate
+from . import db, logging_gate, pipeline_runner
 
 DEFAULT_RETENTION_DAYS = 90
 
@@ -149,10 +153,58 @@ def reconcile_blob_keys(
     return nulled
 
 
+def prune_workspaces(
+    *,
+    workspace_root: Optional[Path] = None,
+    retention_days: int = DEFAULT_RETENTION_DAYS,
+    now: Optional[datetime] = None,
+) -> int:
+    """Delete per-run workspace directories whose newest file is older than
+    `retention_days`. Removes the source PDF along with everything else.
+
+    A workspace is pruned only if EVERY file inside is older than the cutoff —
+    using the most recent mtime means a workspace that was touched recently
+    (e.g. a re-score) does not get prematurely wiped just because some
+    artifact inside is old.
+
+    Returns the count of workspace directories removed.
+    """
+    import shutil
+
+    effective_root = (
+        workspace_root
+        if workspace_root is not None
+        else pipeline_runner._WORKSPACE_ROOT
+    )
+    if not effective_root.exists():
+        return 0
+
+    cutoff_ts = (
+        (now or datetime.now(timezone.utc)) - timedelta(days=retention_days)
+    ).timestamp()
+
+    removed = 0
+    for ws in effective_root.iterdir():
+        if not ws.is_dir():
+            continue
+        mtimes = [p.stat().st_mtime for p in ws.rglob("*") if p.is_file()]
+        if not mtimes:
+            # Empty workspace dir from an aborted run — drop it.
+            ws.rmdir()
+            removed += 1
+            continue
+        if max(mtimes) < cutoff_ts:
+            shutil.rmtree(ws, ignore_errors=True)
+            removed += 1
+
+    return removed
+
+
 def run_retention(
     *,
     db_path: Optional[Path] = None,
     blob_root: Optional[Path] = None,
+    workspace_root: Optional[Path] = None,
     retention_days: int = DEFAULT_RETENTION_DAYS,
     now: Optional[datetime] = None,
 ) -> dict[str, int]:
@@ -164,6 +216,11 @@ def run_retention(
         ),
         "blob_keys_nulled": reconcile_blob_keys(
             db_path=db_path, blob_root=blob_root
+        ),
+        "workspaces_pruned": prune_workspaces(
+            workspace_root=workspace_root,
+            retention_days=retention_days,
+            now=now,
         ),
     }
 

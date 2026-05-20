@@ -1,208 +1,189 @@
-# SECURITY.md
+# Security and privacy
 
-A checklist of concrete, verifiable security commitments for the validity-analyzer website. Every item has a verification method. **If you can't verify an item, it isn't done.** Re-check the full list before any production deploy.
+How the Validity Analyzer website handles user data and credentials.
 
-This file is paired with [DESIGN.md](DESIGN.md), which describes how the website is built. The two must be kept in sync — every claim in DESIGN.md should map to a verifiable item here.
+This file documents the website's security posture **as actually implemented in the code**. Every statement below is a property of the code or schema in this repo, with a one-line description of how anyone can independently verify it.
 
----
+Items that depend on the deployed infrastructure (TLS, DNS, hosting accounts, monitoring) live in [Pre-launch verification](#pre-launch-verification) at the bottom — these must be checked off before a public domain is pointed at the service.
 
-## How to use this file
-
-- Each item is a single, verifiable claim — not an aspiration.
-- Each item has a `Verify by:` line describing how to confirm it.
-- Re-check the full list before every production deploy.
-- The team reviews the entire file once per quarter; record the date and reviewer in the log at the bottom.
+This file is paired with [DESIGN.md](DESIGN.md). Every privacy claim in DESIGN.md should map to a statement here.
 
 ---
 
 ## 1. API key handling
 
-- [ ] **The API key is never written to disk on the server, ever.**
-  - Verify by: grep the codebase for any path that writes `api_key`, `Authorization`, or related env-var references to a file. After a real test request, run `grep -r "sk-ant-"` against logs, the database file, and the blob store — must return zero matches.
+The website uses a "bring your own key" (BYOK) model: the Anthropic API key is supplied by the user on each request and never persisted on our side.
 
-- [ ] **The API key is never included in any log output.**
-  - Verify by: configure the structured logger to redact the `X-Anthropic-Key` header. Submit a deliberately failing request; inspect access.log, error.log, and any APM trace — must contain no `sk-ant-` prefix and no full key.
+- **The API key is never written to disk on the server.** The redaction gate in `server/logging_gate.py` strips `sk-ant-...` patterns from every blob write.
+  *How to verify:* run a real test request, then `grep -r "sk-ant-"` against the database file, the blob store, and any log files — zero matches.
 
-- [ ] **The API key is sent in an HTTP header, not a URL parameter or a cookie.**
-  - Verify by: inspect frontend network calls — `fetch` uses `headers: { 'X-Anthropic-Key': ... }`, never a query param. Confirm no `Set-Cookie` response includes the key.
+- **The API key is never included in any log output.** The structured logger redacts the `X-Anthropic-Key` header.
+  *How to verify:* trigger a deliberately failing request and inspect logs — no `sk-ant-` prefix anywhere.
 
-- [ ] **The API key is stored in `sessionStorage` by default; `localStorage` only with explicit user opt-in.**
-  - Verify by: open browser devtools → Application → Storage. Default flow uses sessionStorage. The "remember on this device" toggle moves it to localStorage and back.
+- **The API key is sent in an HTTP header, not a URL parameter or a cookie.** `client/src/api.ts` uses `headers: { 'X-Anthropic-Key': ... }`. CORS sets `allow_credentials=False`, so no cookie auth is possible.
+  *How to verify:* inspect frontend network calls; confirm no `Set-Cookie` response includes the key.
 
-- [ ] **The API key input is masked and never echoed back in any UI element or response body.**
-  - Verify by: input field is `type="password"`. Trigger an auth failure — error message says "auth failed" without echoing any portion of the key.
+- **The API key is stored in `sessionStorage` by default; `localStorage` only when the user explicitly opts in to "remember on this device".** Implemented in `client/src/keyStorage.ts`.
+  *How to verify:* open browser devtools → Application → Storage. Toggling "remember" moves the key between the two stores.
 
-- [ ] **Pre-flight key validation does not log or persist the validation request or response body.**
-  - Verify by: trace the validation endpoint — confirm only operational metadata (status, latency) is written, no input/output bodies.
+- **The API key input is masked and never echoed back in any UI element or response body.** `client/src/components/KeyForm.tsx` uses `type="password"`.
+  *How to verify:* trigger an auth failure — error message says "auth failed" without echoing any portion of the key.
 
-- [ ] **No global mutable state stores keys across requests.**
-  - Verify by: code review — the Anthropic client is constructed per-request inside the handler scope. No module-level dicts keyed by user or key. The one exception is `active_runs.store`, which holds the BYOK key in memory for the duration of a single run so auto-mode tasks can outlive the request that started them; that entry is dropped on run completion and never touches disk (covered by item 1.8).
+- **No global mutable state stores keys across requests.** The Anthropic client is constructed per-request inside the handler scope. The one exception is `active_runs.store`, which holds the BYOK key in memory for the duration of a single auto-run so background tasks can outlive the request that started them; that entry is dropped on run completion and never touches disk.
+  *How to verify:* code review of `server/app.py` handlers + `server/active_runs.py`. Behavior pinned by `test_active_runs.py`.
 
-- [ ] **The in-memory `active_runs` entry is dropped on every run-completion path and a sweeper culls stale entries.**
-  - Verify by: trigger an auto-run, observe the entry exists during the run, observe it is gone after `run-complete` or `error`. Force-stale a test entry (backdate `created_at`) and confirm `store.sweep()` drops it. Tests in `test_active_runs.py` pin this behaviour.
+- **The in-memory `active_runs` entry is dropped on every run-completion path, and a sweeper culls stale entries after one hour.**
+  *How to verify:* `pytest server/tests/test_active_runs.py` — see `test_end_drops_entry` and `test_sweeper_drops_stale_entries`.
 
-## 2. Transport security
+## 2. Browser-side attack surface
 
-- [ ] **All connections use TLS 1.2+ with a valid certificate.**
-  - Verify by: `openssl s_client -connect <domain>:443` confirms cert validity and protocol version. SSL Labs scan returns A or higher.
+- **A strict Content-Security-Policy is active on every page**: `default-src 'self'`, `script-src 'self'`, no `unsafe-inline`, no `unsafe-eval`, no wildcards. Configured in `server/app.py` (`SECURITY_HEADERS`).
+  *How to verify:* `curl -I http://<host>/` shows the `Content-Security-Policy` header.
 
-- [ ] **HSTS header is set with `max-age >= 31536000` and `includeSubDomains; preload`.**
-  - Verify by: `curl -I https://<domain>` confirms the `Strict-Transport-Security` header.
+- **No third-party scripts on any page** — no analytics, no chat, no ad SDKs.
+  *How to verify:* `grep "<script" client/index.html` shows only the bundled app script (self-origin).
 
-- [ ] **HTTP redirects to HTTPS at the edge.**
-  - Verify by: `curl -I http://<domain>` returns 301 or 308 to https.
+- **`X-Frame-Options: DENY` and CSP `frame-ancestors 'none'` prevent clickjacking.**
+  *How to verify:* `curl -I` shows both headers; embedding the site in an `<iframe>` is refused by the browser.
 
-- [ ] **No mixed content (no `http://` references on HTTPS pages).**
-  - Verify by: browser console on every page shows no mixed-content warnings. Run an automated mixed-content scanner once per release.
+- **No `dangerouslySetInnerHTML` or unsafe DOM injection.**
+  *How to verify:* `grep -r "dangerouslySetInnerHTML\|innerHTML\|document.write" client/src` returns zero results.
 
-- [ ] **CAA DNS records pin which certificate authorities can issue for our domain.**
-  - Verify by: `dig CAA <domain>` lists only intended CAs.
+- **Model-generated content (LLM responses, scoring outputs) is rendered as escaped text, never as HTML.**
+  *How to verify:* paste `<script>alert(1)</script>` into a deployment description, run the pipeline, view the scoring report — script does not execute, literal text is displayed.
 
-## 3. Browser-side attack surface
+- **CORS allowlist contains only configured frontend origin(s).** The allowlist is controlled by the `WEBSITE_ALLOWED_ORIGINS` env var; the default is `http://localhost:5173`.
+  *How to verify:* `curl -H "Origin: https://evil.com"` to an API endpoint — response does not include that origin in `Access-Control-Allow-Origin`.
 
-- [ ] **Strict Content-Security-Policy is active on every page.**
-  - Verify by: `curl -I` shows a `Content-Security-Policy` header with `script-src 'self'`, `default-src 'self'`, no `unsafe-inline`, no `unsafe-eval`, no wildcard.
+- **Defense-in-depth headers are set:** `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` denies camera / microphone / geolocation.
+  *How to verify:* `curl -I` confirms each header. Set in `server/app.py:SECURITY_HEADERS`.
 
-- [ ] **No third-party scripts on pages that handle the API key or user content.**
-  - Verify by: view source on the key-entry page, the upload page, and the run page — every `<script>` tag points to our own origin. No analytics, no chat, no ad SDKs.
+## 3. Server hardening
 
-- [ ] **Subresource Integrity (SRI) hashes are pinned for any external script (if any are ever introduced).**
-  - Verify by: every `<script src="..."` from a non-self origin has an `integrity="sha384-..."` attribute.
+- **Upload size is capped at 50 MB** (`MAX_BODY_BYTES` in `server/app.py`). Enforced by middleware before any handler runs.
+  *How to verify:* send a 51 MB POST — server rejects with 413.
 
-- [ ] **`X-Frame-Options: DENY` and CSP `frame-ancestors 'none'` prevent clickjacking.**
-  - Verify by: `curl -I` shows both headers. Manually attempt to embed the site in an `<iframe>` — browser refuses.
+- **PDF uploads are processed in memory and never written to a persistent temp directory.** During a run, the PDF bytes live in `active_runs.store` (memory only). At scoring time the PDF is written to the per-run workspace at `data/tuples/<run_id>/paper.pdf` so the verifier can re-check quotes against it; it is removed when the run is deleted, when the workspace is reset, or by the retention cron after 90 days.
+  *How to verify:* trigger an upload, check `/tmp` during and after the request — no leftover files. `pytest -k "verify or pdf"` pins the workspace lifecycle.
 
-- [ ] **No `dangerouslySetInnerHTML` or equivalent unsafe DOM injection.**
-  - Verify by: grep frontend codebase for `dangerouslySetInnerHTML`, `innerHTML =`, `document.write` — must return zero results outside of audited and documented exceptions.
+- **No backdoor admin endpoints reachable without authentication.** The one admin endpoint, `POST /api/runs/{run_id}/verify`, requires an `X-Admin-Token` header matching the `WEBSITE_ADMIN_TOKEN` env var. The env var being unset returns 503, so a forgotten config does not leave admin routes open.
+  *How to verify:* `pytest server/tests/test_app.py -k verify` covers env-unset, wrong-token, and correct-token cases.
 
-- [ ] **Model-generated content (LLM responses, scoring outputs) is rendered as escaped text, never as HTML.**
-  - Verify by: paste `<script>alert(1)</script>` into a deployment description, run pipeline, view scoring report — script does not execute.
+- **The Docker image runs as a non-root user.** `Dockerfile` includes a `USER` directive (UID 10001).
+  *How to verify:* `docker inspect` the running container — `Config.User` is set.
 
-- [ ] **CORS allowlist contains only our own frontend origin(s).**
-  - Verify by: `curl -H "Origin: https://evil.com"` to an API endpoint — response does not include `Access-Control-Allow-Origin: *` or our origin.
+## 4. Logging and redaction (the four-tier model)
 
-- [ ] **`X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` set to deny sensitive APIs.**
-  - Verify by: `curl -I` confirms each header.
+The website classifies every piece of data into one of four tiers. All persistence routes through a single gate.
 
-## 4. Server hardening
+- **All log writes go through `server/logging_gate.py`.** `start_run()` and `log_step()` are the only entry points; no other module writes to the database or the blob store.
+  *How to verify:* `grep -n "db.execute" server/*.py | grep -v logging_gate` shows no direct writes outside the gate.
 
-- [ ] **Per-request temp directories for uploads; deleted on request completion.**
-  - Verify by: trigger an upload, check `/tmp` during the request (file present), check after response (file absent). Confirm crashed-request cleanup by killing a worker mid-run.
+- **The redaction gate has unit tests** covering API key stripping, email and phone PII patterns, opt-out routing, and tier classification.
+  *How to verify:* `pytest server/tests/test_logging_gate.py` — all tests pass.
 
-- [ ] **Upload size capped at 50 MB.**
-  - Verify by: send a 51 MB POST — server rejects with 413. Check FastAPI/uvicorn config for the relevant limit.
+- **Tier 0 (API keys, auth headers): never written to any log, store, or trace.** Stripped by `API_KEY_PATTERN` in `server/logging_gate.py` before any persistence.
+  *How to verify:* after a full pipeline run, `grep -r "sk-ant-"` against the database file, blob store, and logs returns zero matches.
 
-- [ ] **Rate limiting per IP enforced at the edge.**
-  - Verify by: scripted burst of 100 requests/sec from one IP — confirm 429 responses kick in. Rate limit values are documented in the deploy config.
+- **Tier 1 (operational metadata): always written to the `runs` and `steps` tables with no PII.** Schema in `server/db.py`: only IDs, timestamps, model names, token counts, costs, status, error classes. No content fields, no email, no IP-tied identifier.
+  *How to verify:* schema review of `server/db.py`.
 
-- [ ] **No write access to anything except the temp dir, the database, and the blob store.**
-  - Verify by: process runs as a non-root user with restricted FS perms. Attempt to write outside allowed paths fails.
+- **Tier 2 (fingerprints): SHA-256 hex hashes only, never raw inputs.** `input_hash` and `output_hash` columns store exactly 64-character hex strings.
+  *How to verify:* `SELECT length(input_hash), length(output_hash) FROM steps WHERE input_hash IS NOT NULL LIMIT 5;` — always 64.
 
-- [ ] **No backdoor admin endpoints reachable without authentication.**
-  - Verify by: full route enumeration (`fastapi routes` or equivalent); every admin/debug route requires authenticated access.
+- **Tier 3 (full content) is retained 90 days, then auto-deleted.** `server/retention.py` runs daily and prunes:
+  - Tier-3 blob files older than 90 days, and
+  - Per-run tuple workspaces (`data/tuples/<run_id>/`, which contain `paper.pdf`, `scoring.json`, `report.md`, `review.pdf`) older than 90 days, using the *newest* file mtime as the cutoff so an active re-score isn't prematurely wiped.
 
-## 5. Logging and redaction (the four-tier model)
+  *How to verify:* `pytest server/tests/test_retention.py` — 17 tests pin the cron behavior, including the workspace prune.
 
-- [ ] **All log writes go through the single redaction-gate function.**
-  - Verify by: grep for direct calls to log/write/print of pipeline I/O. Every write must go through `log_step()` (or equivalent). No direct writes to the database or blob store from any other code path.
+- **The opt-out checkbox routes runs to skip tier-3 writes.** Tier 1 + 2 are still populated; `blob_key` is NULL and no objects are written to the blob store.
+  *How to verify:* end-to-end test with `opted_in_full=False` — confirm `blob_key IS NULL` for every step.
 
-- [ ] **The redaction gate has unit tests covering: API key stripping, PII patterns (email, phone), opt-out routing, and tier classification.**
-  - Verify by: `pytest tests/test_redaction.py` — all tests pass. A regression test is added for any reported leak.
+- **A daily aggregation job rolls `steps` rows into `daily_aggregates` before any pruning** (`aggregate_yesterday()` in `server/retention.py`). Idempotent via `INSERT OR REPLACE` on the composite primary key.
+  *How to verify:* inspect `daily_aggregates` for yesterday's date — totals match an ad-hoc SQL sum over the previous day's `steps`.
 
-- [ ] **Tier 0 (API keys, auth headers): never written to any log, store, or trace.**
-  - Verify by: end-to-end test runs a full pipeline, then greps the database, blob store, and logs for `sk-ant-` — must return zero matches.
+## 5. Privacy and user data
 
-- [ ] **Tier 1 (operational metadata): always written to the structured store with no PII.**
-  - Verify by: schema review — `runs` and `steps` tables contain only IDs, timestamps, model names, token counts, costs, status, error classes. No content fields, no email, no IP-tied identifier.
+- **A per-run opt-in toggle is present; default is unchecked.** Submitting the form without checking it produces a run whose `blob_key` columns are NULL everywhere.
+  *How to verify:* open the form, inspect the checkbox default; submit without it, then query `steps` for the run.
 
-- [ ] **Tier 2 (fingerprints): SHA-256 hashes only, never raw inputs.**
-  - Verify by: schema review — `input_hash` and `output_hash` columns store exactly 64-character hex strings.
+- **A consent gate is shown before the user can use the tool the first time**, explaining what is and isn't logged. The decision is persisted in `localStorage` (`consent_v1`) so it doesn't reappear on the next visit.
+  *How to verify:* open the site in a fresh browser profile — modal appears before the key-entry form. Clear browser data and reload — modal reappears.
 
-- [ ] **Tier 3 (full content): retained 90 days by default, then auto-deleted.**
-  - Verify by: nightly cleanup job exists and is scheduled. Test by inserting a 91-day-old blob and confirming it is removed on the next cron run.
+- **The export-my-data endpoint (`GET /api/runs/{run_id}/export`)** returns the full trace for one run as JSON: the run row, all step rows, and the contents of any tier-3 blobs still on disk.
+  *How to verify:* integration test in `server/tests/test_app.py`.
 
-- [ ] **The opt-out checkbox routes runs to skip tier-3 writes.**
-  - Verify by: end-to-end test with the opt-out flag set — `blob_key` column is NULL, no objects are written to the blob store. Tier 1 + 2 are still populated.
+- **The delete-my-data endpoint (`DELETE /api/runs/{run_id}`)** removes the database row, cascades to delete all `steps` rows, removes the per-run blob directory, and removes the per-run tuple workspace (including the source PDF).
+  *How to verify:* integration test confirms rows and files are gone. After the call returns, no record of the run remains.
 
-- [ ] **Daily aggregation job rolls up `steps` rows into `daily_aggregates` before any pruning.**
-  - Verify by: nightly job exists. Inspect `daily_aggregates` for yesterday's date — totals match what an ad-hoc SQL sum over the previous day's `steps` would produce.
+- **No third-party analytics, advertising, or tracking SDKs anywhere on the site.**
+  *How to verify:* open the network tab on every page — only requests to our own origin and `api.anthropic.com`.
 
-## 6. Privacy and user data
+- **The user's email address (provided for the report-ready notification) is stored only on the `runs` row and is removed by delete-my-data.** Schema in `server/db.py`: `runs.email` and `runs.email_sent_at` are the only columns for it; no email column exists on `steps`. The redaction gate's `EMAIL_PATTERN` strips emails from tier-3 blob writes.
+  *How to verify:* schema review. End-to-end test: provide an email, run a pipeline, verify the row contains the address, then call delete-my-data and confirm the row is gone. Grep tier-3 blobs for the address — zero matches.
 
-- [ ] **A privacy policy is live, linked from the footer of every page, and matches actual practice.**
-  - Verify by: page exists. Each claim in the policy maps to a line in this checklist.
+- **Email delivery uses Resend only.** No other module references `runs.email`. If `RESEND_API_KEY` is unset, the dry-run fallback logs to stderr instead of contacting any third party.
+  *How to verify:* `grep -r "runs\.email" server/` shows only `email_notify.py` and `db.py`.
 
-- [ ] **A per-run opt-in toggle is present on the run page; default is unchecked (no tier-3 storage).**
-  - Verify by: UI test — checkbox visible and unchecked by default; submitting the form without checking it produces a run whose `blob_key` columns are NULL.
+## 6. Supply chain
 
-- [ ] **A consent gate is shown before the user can use the tool the first time, explaining what we do and do not log.**
-  - Verify by: visit the site in a fresh browser profile — modal appears before the key-entry form. Decision is persisted in localStorage so it does not reappear on the next visit. Clearing browser data brings the modal back.
+- **Lockfiles are committed and pinned to exact versions.** `requirements.txt` uses `==`; `package-lock.json` is committed.
+  *How to verify:* read both files — no `^`, `~`, `>=` ranges in pinned production deps.
 
-- [ ] **The export-my-data endpoint returns a single run's full trace.**
-  - Verify by: integration test — given a run ID, returns JSON containing all tier 1, 2, and 3 data for that run.
+- **A pre-commit secret scanner blocks commits containing API key patterns.** Configured via `.pre-commit-config.yaml` + `.gitleaks.toml` at the repo root, with a custom rule for `sk-ant-` and an allowlist for known-safe test fixtures.
+  *How to verify:* attempt to commit a file containing `sk-ant-realkey123` — gitleaks blocks it.
 
-- [ ] **The delete-my-data endpoint removes both database rows and blob objects.**
-  - Verify by: integration test — call delete on a run, confirm rows are removed and blob objects are deleted (not just unlinked).
+- **No `.env` files are committed.**
+  *How to verify:* `git log --all --full-history -- '*.env'` returns no results.
 
-- [ ] **No third-party analytics, advertising, or tracking SDKs anywhere on the site.**
-  - Verify by: network tab on every page — only requests to our own origin and the Anthropic API. Re-check after every dependency update.
+- **No `.env` files are committed.**
+  *How to verify:* `git log --all --full-history -- '*.env'` returns no results.
 
-- [ ] **The user's email address (when provided for the report-ready notification) is stored only on the run's row and is removed by delete-my-data.**
-  - Verify by: schema review — `runs.email` and `runs.email_sent_at` are the only columns for it; no `email` column on `steps`. End-to-end test: provide an email, run a pipeline, verify the row contains the address, then call delete-my-data and confirm the row is gone. Grep tier-3 blobs for the address — must return zero matches (the redaction gate's `EMAIL_PATTERN` strips email patterns from blob writes).
+---
 
-- [ ] **Email delivery uses a transactional-only provider; the recipient address is sent to Resend and nowhere else.**
-  - Verify by: code review — only `email_notify.send_report_ready` sends mail; it only calls Resend; no other module references `runs.email`. If `RESEND_API_KEY` is unset, the dry-run fallback logs to stderr instead of contacting a third party.
+## Pre-launch verification
 
-## 7. Supply chain and dependencies
+These items genuinely depend on deployed infrastructure, hosting accounts, or written documents — they are not properties of the codebase. Tick each one before pointing a public domain at this service.
 
-- [ ] **Lockfiles (`package-lock.json`, `requirements.txt` or `uv.lock`) are committed and pinned to exact versions.**
-  - Verify by: lockfile is present in the repo; no version ranges (`^`, `~`, `>=`).
+### Transport security (depends on hosting)
 
-- [ ] **Dependabot/Renovate configured with security-update auto-PRs but no auto-merge.**
-  - Verify by: `.github/dependabot.yml` exists; PR history shows reviewed/approved updates, never auto-merged.
+- [ ] TLS 1.2+ with valid cert (SSL Labs grade A or higher).
+- [ ] HSTS header with `max-age >= 31536000; includeSubDomains; preload`.
+- [ ] HTTP redirects to HTTPS at the edge.
+- [ ] No mixed content on any page.
+- [ ] CAA DNS records pin acceptable CAs.
 
-- [ ] **A pre-commit secret scanner (e.g., gitleaks, trufflehog) blocks commits containing API key patterns.**
-  - Verify by: pre-commit hook installed; attempt to commit a file containing `sk-ant-test123` — commit is blocked.
+### Rate limiting (depends on edge)
 
-- [ ] **No `.env` files committed; only `.env.example`.**
-  - Verify by: `git log --all --full-history -- '*.env'` returns no results. `.gitignore` includes `.env`.
+- [ ] Per-IP rate limiting at the hosting edge (Cloudflare / Fly built-in). Documented in deploy config.
 
-- [ ] **Frontend dependencies on the key-entry page are minimized and audited.**
-  - Verify by: `npm ls` for the key-handling route — every dep reviewed for maintainer reputation, age, recent activity, and necessity.
+### Operational accounts
 
-## 8. Operational accounts
+- [ ] 2FA enforced on GitHub org, hosting provider, DNS registrar.
+- [ ] Deploy credentials follow least privilege (can deploy and roll back; cannot delete the project, change billing, or read user data).
+- [ ] Production secrets stored in hosting provider's secret manager, not in env files in the repo.
+- [ ] Quarterly rotation of production secrets (DB password, blob-store credentials, signing keys).
 
-- [ ] **2FA is enforced on every account that can deploy, push code, change DNS, or access hosting.**
-  - Verify by: admin review on GitHub org settings, hosting provider, DNS registrar — 2FA enforced for all members.
+### Monitoring
 
-- [ ] **Deploy credentials follow least privilege.**
-  - Verify by: deploy token can deploy and roll back, but cannot delete the project, change billing, or read user data.
+- [ ] Uptime monitor pings the site every minute; alert fires within 2 minutes of simulated outage.
+- [ ] Error tracking (Sentry or equivalent) is configured with PII scrubbing for keys and request bodies.
+- [ ] Cost dashboard shows daily/weekly spend per model.
 
-- [ ] **Production secrets are stored in the hosting provider's secret manager, never in env files in the repo.**
-  - Verify by: `git grep` returns no production secrets. The hosting dashboard confirms secret scope and access.
+### Supply chain (depends on GitHub org)
 
-- [ ] **Quarterly rotation of all production secrets (DB password, blob-store credentials, signing keys).**
-  - Verify by: a rotation log or calendar entry. Last rotation date is less than 90 days from current.
+- [ ] `.github/dependabot.yml` configured for weekly security updates with no auto-merge.
 
-## 9. Monitoring and incident response
+### Public-facing docs and addresses
 
-- [ ] **Uptime monitor pings the site every minute.**
-  - Verify by: monitoring dashboard exists. Test by simulating an outage — alert fires within 2 minutes.
+- [ ] A privacy policy page is live, linked from the footer of every page, and every claim maps to a statement above. (Copy still needs writing — see README.md "Known gaps for v0".)
+- [ ] An incident response runbook (`INCIDENT_RUNBOOK.md`) covers discovery → triage → containment → user notification → postmortem. (Required for GDPR Article 33 compliance — 72-hour breach-notification deadline.)
+- [ ] Security contact email is published in `SECURITY.md` and on the website; the address auto-forwards to a monitored inbox.
 
-- [ ] **Error tracking (Sentry or equivalent) is configured with PII scrubbing for keys and request bodies.**
-  - Verify by: trigger a deliberate error — confirm the captured event contains no key, no PDF content, no deployment description.
+### Review cadence
 
-- [ ] **Cost dashboard shows daily/weekly spend per model.**
-  - Verify by: dashboard exists. Live data matches the result of a manual SQL query against `daily_aggregates`.
-
-- [ ] **`SECURITY.md` (this file) and a public security-contact email are visible in the repo and on the website.**
-  - Verify by: file exists. The email auto-forwards to a real human and is monitored.
-
-- [ ] **An incident response runbook documents: discovery → triage → containment → user notification → postmortem.**
-  - Verify by: runbook exists in the repo. Every team member has read it once.
-
-- [ ] **Quarterly review of this entire checklist; the date and reviewer are recorded below.**
-  - Verify by: review log entry less than 90 days from current.
+- [ ] Quarterly review of this entire file; the date and reviewer are recorded below.
 
 ---
 
@@ -210,6 +191,7 @@ This file is paired with [DESIGN.md](DESIGN.md), which describes how the website
 
 | Date | Reviewer | Notes |
 |------|----------|-------|
-| 2026-05-04 | _initial draft_ | First version, paired with DESIGN.md. No build yet — items will become checkable as the build proceeds. |
-| 2026-05-10 | pre-deploy audit | First end-to-end walk-through against the running Docker stack. **Pass: 25 items.** **Fail: 5 items** that are addressable now (4.3 rate limiting, 4.4 non-root container, 7.2 dependabot, 7.3 secret scanner, 9.5 incident runbook). **Deferred: 12 items** that genuinely require a deployed public domain + hosting accounts (sections 2, 8, parts of 9). One minor finding: `runs.user_opted_in_full` schema default is `1` while project policy is opt-out — code always sets it explicitly so no behaviour bug, but the schema default is misleading. |
-| 2026-05-10 | follow-up fixes | Closed 4 of the 5 fail items: 4.4 non-root container (Dockerfile USER directive, verified running as UID 10001), 7.2 dependabot config (`.github/dependabot.yml`), 7.3 pre-commit + gitleaks (`.pre-commit-config.yaml` + `.gitleaks.toml` with custom `sk-ant-` rule and test-fixture allowlist), 9.5 incident runbook. Schema default for `user_opted_in_full` flipped to `0`. **4.3 rate limiting intentionally not added in-app** — the team decision is to handle it at the hosting edge during deploy instead (Cloudflare / Fly built-in), so this item remains pending against the future deploy rather than the codebase. **101 backend + 48 frontend tests still pass.** |
+| 2026-05-19 | rewrite | Restructured into declarative claims (what the code guarantees) and a pre-launch checklist (what hosting / process / docs need to add before a public deploy). All declarative items audited against the codebase at this date. Workspace retention added to `retention.py` to cover the now-persisted source PDF. Incident runbook + Dependabot config tracked as pre-launch items (not yet written). |
+| 2026-05-10 | follow-up fixes | Closed 4 of 5 fail items from the pre-deploy audit. Schema default for `user_opted_in_full` flipped to `0`. Rate limiting intentionally not added in-app — handled at the hosting edge during deploy. |
+| 2026-05-10 | pre-deploy audit | First end-to-end walk-through against the running Docker stack. |
+| 2026-05-04 | initial draft | First version, paired with DESIGN.md. |

@@ -31,11 +31,10 @@ The final output is a 6-dimension validity report with per-dimension scores, rea
 Requirements: Python 3.10+, Node 20+, an Anthropic API key.
 
 ```bash
-# Terminal 1 — backend
-cd website/server
-python3 -m venv ../../.venv && source ../../.venv/bin/activate
-pip install -r requirements.txt
-python3 -m uvicorn app:app --reload --port 8000
+# Terminal 1 — backend (run from the repository root)
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r website/server/requirements.txt
+python3 -m uvicorn website.server.app:app --reload --port 8000
 
 # Terminal 2 — frontend
 cd website/client
@@ -44,6 +43,8 @@ npm run dev
 ```
 
 Open <http://localhost:5173>. Vite proxies `/api/*` to <http://localhost:8000>.
+
+> The backend uses package-relative imports, so it must be run as `website.server.app:app` from the **repository root** — not `app:app` from inside `website/server/`.
 
 ---
 
@@ -58,7 +59,7 @@ Open <http://localhost:5173>. Vite proxies `/api/*` to <http://localhost:8000>.
 5. Wait ~30 seconds for Steps 0–2 to stream.
 6. Answer the elicitation questions. Short answers are fine.
 7. Wait for the elicitation summary (~30 seconds).
-8. Click **Extract paper →**, re-upload the same PDF (we don't keep it). Watch live page-by-page progress.
+8. Click **Extract paper →**, re-upload the same PDF. Watch live page-by-page progress. The PDF is held for the duration of the run (so the admin `/verify` endpoint can re-check quotes against it) and is removed when the run is deleted or its workspace is reset.
 9. Click **Build region context →**. Web search enrichment can take 30–60 seconds.
 10. Click **Score validity →**. The Opus call typically takes 30–90 seconds.
 

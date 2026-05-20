@@ -1395,7 +1395,17 @@ def test_score_emits_expected_steps_and_completes_run(
     assert r.status_code == 200
     events = parse_sse(r.text)
     names = [n for n, _ in events]
-    assert names == ["step-started", "step-completed", "run-complete"]
+    assert names == [
+        "step-started", "step-completed",
+        "step-started", "step-completed",
+        "step-started", "step-completed",
+        "run-complete",
+    ]
+    assert [n for n, _ in events if n == "step-started"] == [
+        "step-started", "step-started", "step-started",
+    ]
+    steps_seen = [p["step"] for n, p in events if n == "step-started"]
+    assert steps_seen == ["7-score", "8-report", "9-review-pdf"]
 
     completed = events[1][1]
     assert completed["step"] == "7-score"
@@ -1726,3 +1736,162 @@ def test_opt_out_skips_blobs_but_keeps_metadata(
         assert s["blob_key"] is None
         assert s["input_hash"] is not None
         assert s["input_tokens"] > 0
+
+
+# ---------- admin: /api/runs/{run_id}/verify ----------
+
+
+def _seed_verify_workspace(workspace_root: Path, run_id: str) -> Path:
+    """Write the minimum viable artifacts the verifier expects."""
+    from website.server import pipeline_runner
+
+    d = workspace_root / run_id
+    d.mkdir(parents=True, exist_ok=True)
+
+    # Schema-clean scoring.json. The verifier's structural check tolerates
+    # missing per-dim keys; the goal here is just to exercise the pipe.
+    scoring = {
+        "benchmark": "test-bench",
+        "dimensions": {
+            dim: {
+                "score": 3,
+                "justification": "ok",
+                "evidence_quotes": [],
+                "evidence_web_sources": [],
+                "evidence_dataset": [],
+                "evidence_map": {},
+            }
+            for dim in [
+                "input_ontology",
+                "input_content",
+                "input_form",
+                "output_ontology",
+                "output_content",
+                "output_form",
+            ]
+        },
+        "overall_summary": "test",
+        "risk_assessment": "low",
+        "practical_guidance": "n/a",
+        "remediation_suggestions": [],
+        "highest_concern_dimensions": [],
+        "strongest_dimensions": [],
+    }
+    (d / "scoring.json").write_text(json.dumps(scoring), encoding="utf-8")
+    return d
+
+
+def test_verify_requires_admin_token_env(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("WEBSITE_ADMIN_TOKEN", raising=False)
+    r = client.post(
+        "/api/runs/some-run/verify",
+        headers={"X-Admin-Token": "anything"},
+    )
+    assert r.status_code == 503
+    assert "WEBSITE_ADMIN_TOKEN" in r.json()["detail"]
+
+
+def test_verify_rejects_wrong_token(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("WEBSITE_ADMIN_TOKEN", "correct-token")
+    r = client.post(
+        "/api/runs/some-run/verify",
+        headers={"X-Admin-Token": "wrong-token"},
+    )
+    assert r.status_code == 401
+
+
+def test_verify_404_when_no_workspace(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from website.server import pipeline_runner
+
+    monkeypatch.setattr(pipeline_runner, "_WORKSPACE_ROOT", tmp_path / "tuples")
+    monkeypatch.setenv("WEBSITE_ADMIN_TOKEN", "secret")
+    r = client.post(
+        "/api/runs/missing-run/verify",
+        headers={"X-Admin-Token": "secret"},
+    )
+    assert r.status_code == 404
+
+
+def test_verify_happy_path_returns_summary(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from website.server import pipeline_runner
+
+    workspace_root = tmp_path / "tuples"
+    monkeypatch.setattr(pipeline_runner, "_WORKSPACE_ROOT", workspace_root)
+    monkeypatch.setenv("WEBSITE_ADMIN_TOKEN", "secret")
+
+    run_id = "test-verify-run"
+    _seed_verify_workspace(workspace_root, run_id)
+
+    r = client.post(
+        f"/api/runs/{run_id}/verify?skip_web=true&skip_hf=true",
+        headers={"X-Admin-Token": "secret"},
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["assessment"] == f"tuples/{run_id}"
+    assert body["benchmark"] == "test-bench"
+    assert "structural" in body
+    assert "quotes" in body
+    assert "web_sources" in body
+    assert "dataset" in body
+    assert "summary" in body
+    # No benchmark.yaml / region.yaml / DA report seeded → those checks should
+    # be empty lists, not failures.
+    assert body["quotes"]["level1_vs_yaml"] == []
+    assert body["web_sources"]["level1_vs_registry"] == []
+    # Structural check ran and the seeded scoring is clean.
+    assert body["summary"]["structural_fails"] == 0
+
+
+def test_write_tuple_inputs_persists_pdf(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fake_pdf: bytes
+) -> None:
+    """`pdf_bytes`, when supplied, is written as paper.pdf inside the workspace."""
+    from website.server import pipeline_runner
+
+    monkeypatch.setattr(pipeline_runner, "_WORKSPACE_ROOT", tmp_path / "tuples")
+
+    d = pipeline_runner.write_tuple_inputs(
+        "pdf-persist-run",
+        scoring={"dimensions": {}, "overall_summary": ""},
+        composed_prompt="composed",
+        deployment_description="desc",
+        pdf_bytes=fake_pdf,
+    )
+    pdf_path = d / "paper.pdf"
+    assert pdf_path.exists()
+    assert pdf_path.read_bytes() == fake_pdf
+
+
+def test_reset_wipes_persisted_pdf(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fake_pdf: bytes
+) -> None:
+    """`reset(scoring_only=False)` removes the workspace including paper.pdf —
+    so PDF retention is bounded by the workspace lifecycle, not orphaned."""
+    from website.server import pipeline_runner
+
+    monkeypatch.setattr(pipeline_runner, "_WORKSPACE_ROOT", tmp_path / "tuples")
+    run_id = "pdf-reset-run"
+    pipeline_runner.write_tuple_inputs(
+        run_id,
+        scoring={"dimensions": {}, "overall_summary": ""},
+        composed_prompt="composed",
+        deployment_description="desc",
+        pdf_bytes=fake_pdf,
+    )
+    assert (tmp_path / "tuples" / run_id / "paper.pdf").exists()
+
+    pipeline_runner.reset(run_id, scoring_only=False)
+    assert not (tmp_path / "tuples" / run_id).exists()

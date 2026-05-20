@@ -164,21 +164,30 @@ class ActiveRunStore:
         run = self._runs.get(run_id)
         if run is None:
             return
-        # Replay buffered events the caller hasn't seen.
-        replay_from = -1 if last_seq is None else last_seq
-        for ev in list(run.events):
-            if ev.seq > replay_from:
-                yield ev
-        if run.finished:
-            return
+        # Register the queue FIRST. If we register after the replay loop,
+        # any `run.append(...)` that the caller triggers from inside a
+        # yield (the common "drain backlog then continue live" pattern)
+        # would be lost — the event lands in `run.events` but no
+        # subscriber queue is attached yet. Registering first means live
+        # appends during replay land in our queue, and we de-dupe against
+        # the replay by tracking the last seq we already yielded.
         q: asyncio.Queue = asyncio.Queue(maxsize=128)
         run.subscribers.append(q)
         try:
+            last_yielded = -1 if last_seq is None else last_seq
+            for ev in list(run.events):
+                if ev.seq > last_yielded:
+                    yield ev
+                    last_yielded = ev.seq
+            if run.finished:
+                return
             while True:
                 item = await q.get()
                 if item is None:
                     return
-                yield item
+                if item.seq > last_yielded:
+                    yield item
+                    last_yielded = item.seq
         finally:
             try:
                 run.subscribers.remove(q)
