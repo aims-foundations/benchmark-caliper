@@ -30,6 +30,7 @@ anthropic_api_package/__pycache__/
 anthropic_api_package/**/__pycache__/
 
 # Python tooling
+.venv/
 *.pyc
 .pytest_cache/
 .ruff_cache/
@@ -37,3 +38,4 @@ anthropic_api_package/**/__pycache__/
 
 # Docs we don't need in the image
 *.pdf
+package.zip
