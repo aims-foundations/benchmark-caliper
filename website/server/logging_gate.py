@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 from datetime import datetime
 from pathlib import Path
@@ -25,7 +26,8 @@ from typing import Optional
 from . import db
 from .prices import cost_usd
 
-_DATA_DIR = Path(__file__).resolve().parent / "data"
+_DEFAULT_DATA_DIR = Path(__file__).resolve().parent / "data"
+_DATA_DIR = Path(os.environ.get("WEBSITE_DATA_DIR", str(_DEFAULT_DATA_DIR)))
 DEFAULT_BLOB_ROOT = _DATA_DIR / "assessments"
 
 # Tier 0: patterns that must never reach disk.

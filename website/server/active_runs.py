@@ -164,20 +164,26 @@ class ActiveRunStore:
         run = self._runs.get(run_id)
         if run is None:
             return
-        # Replay buffered events the caller hasn't seen.
-        replay_from = -1 if last_seq is None else last_seq
-        for ev in list(run.events):
-            if ev.seq > replay_from:
-                yield ev
-        if run.finished:
-            return
         q: asyncio.Queue = asyncio.Queue(maxsize=128)
         run.subscribers.append(q)
+
+        # Replay buffered events the caller hasn't seen. The queue is attached
+        # before replay starts so events appended during replay are not lost.
+        replay_from = -1 if last_seq is None else last_seq
+        last_replayed = replay_from
         try:
+            for ev in list(run.events):
+                if ev.seq > replay_from:
+                    last_replayed = max(last_replayed, ev.seq)
+                    yield ev
+            if run.finished:
+                return
             while True:
                 item = await q.get()
                 if item is None:
                     return
+                if item.seq <= last_replayed:
+                    continue
                 yield item
         finally:
             try:

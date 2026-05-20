@@ -33,6 +33,7 @@ import {
   type PipelineEvent,
   type Question,
 } from './api'
+import { appPath, stripBasePath } from './paths'
 
 interface RunningState {
   events: PipelineEvent[]
@@ -147,7 +148,7 @@ type Phase =
  */
 function initialReportRunId(): string | null {
   if (typeof window === 'undefined') return null
-  const match = window.location.pathname.match(
+  const match = stripBasePath(window.location.pathname).match(
     /^\/run\/([0-9a-fA-F-]{8,64})\/?$/,
   )
   return match ? match[1] : null
@@ -178,9 +179,9 @@ export function App() {
   function handleStartOver(): void {
     if (
       typeof window !== 'undefined' &&
-      window.location.pathname.startsWith('/run/')
+      stripBasePath(window.location.pathname).startsWith('/run/')
     ) {
-      window.history.replaceState(null, '', '/')
+      window.history.replaceState(null, '', appPath('/'))
     }
     setPhase({ name: 'idle' })
   }

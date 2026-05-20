@@ -98,7 +98,7 @@ For a faster skim, the slice-by-slice journey is in `MEMORY.md` and the project 
 ## Known gaps for v0
 
 - **Web search cost** isn't modeled in the cost ledger ($10 per 1k searches Anthropic charges separately).
-- **No deploy target chosen yet.** Local dev only — no host (Fly/Render/Vercel) wired up.
+- **MVP deploy target is Render.** See [DEPLOYMENT.md](DEPLOYMENT.md) for the one-service Docker setup and the AIMS Vercel proxy.
 - **Privacy policy and ToS** copy still needs writing — the policy is described in DESIGN.md section 6 but the user-facing page doesn't exist yet.
 - **Pre-launch security checklist** in SECURITY.md hasn't been ticked off; do not point a public domain at this until it has.
 
@@ -139,4 +139,4 @@ website/
 
 ## License
 
-TBD. 
+TBD.
