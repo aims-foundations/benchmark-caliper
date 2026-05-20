@@ -1387,9 +1387,19 @@ def test_score_emits_expected_steps_and_completes_run(
 ) -> None:
     db_path, _ = isolated_storage
     run_id = _drive_to_regioned(client, fake_pdf)
+    review_pdf = db_path.parent / "review.pdf"
+    review_pdf.write_bytes(b"%PDF-1.4\n")
 
     with patch.object(
         app_module, "call_text_async", return_value=_opus_scoring_result()
+    ), patch.object(
+        app_module.pipeline_runner,
+        "build_report",
+        return_value="# Report\n",
+    ), patch.object(
+        app_module.pipeline_runner,
+        "build_review_pdf",
+        return_value=review_pdf,
     ):
         r = _post_score(client, run_id)
     assert r.status_code == 200
@@ -1412,6 +1422,11 @@ def test_score_emits_expected_steps_and_completes_run(
     scoring = completed["output"]["scoring"]
     assert scoring["input_ontology"]["score"] == 3
     assert scoring["output_form"]["reasoning"].startswith("MCQ")
+
+    assert events[3][1]["step"] == "8-report"
+    assert events[3][1]["output"]["report_md"] == "# Report\n"
+    assert events[5][1]["step"] == "9-review-pdf"
+    assert events[5][1]["output"]["bytes"] == review_pdf.stat().st_size
 
     # Run is fully complete now.
     with db.connect(db_path) as conn:

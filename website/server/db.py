@@ -9,11 +9,13 @@ See website/DESIGN.md section 5 for the four-tier model.
 from __future__ import annotations
 
 import sqlite3
+import os
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator
 
-_DATA_DIR = Path(__file__).resolve().parent / "data"
+_DEFAULT_DATA_DIR = Path(__file__).resolve().parent / "data"
+_DATA_DIR = Path(os.environ.get("WEBSITE_DATA_DIR", str(_DEFAULT_DATA_DIR)))
 DEFAULT_DB_PATH = _DATA_DIR / "runs.db"
 
 SCHEMA = """

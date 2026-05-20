@@ -9,6 +9,8 @@
  * See website/SECURITY.md item 1 for the verifiable claims this enforces.
  */
 
+import { appPath } from './paths'
+
 export interface Question {
   id: string
   dimension: string
@@ -96,7 +98,7 @@ export async function* runPipeline(
   if (input.hfDatasetId) formData.append('hf_dataset_id', input.hfDatasetId)
   if (input.hfConfig) formData.append('hf_config', input.hfConfig)
 
-  const response = await fetch('/api/runs', {
+  const response = await fetch(appPath('/api/runs'), {
     method: 'POST',
     headers: { 'X-Anthropic-Key': input.apiKey },
     body: formData,
@@ -159,7 +161,7 @@ export async function* extractPaper(
   }
 
   const response = await fetch(
-    `/api/runs/${encodeURIComponent(input.runId)}/extract`,
+    appPath(`/api/runs/${encodeURIComponent(input.runId)}/extract`),
     {
       method: 'POST',
       headers: { 'X-Anthropic-Key': input.apiKey },
@@ -220,7 +222,7 @@ export async function composePrompt(
   input: ComposePromptInput,
 ): Promise<{ composed_prompt: string; run_id: string }> {
   const response = await fetch(
-    `/api/runs/${encodeURIComponent(input.runId)}/compose-prompt`,
+    appPath(`/api/runs/${encodeURIComponent(input.runId)}/compose-prompt`),
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -246,7 +248,7 @@ export async function* scoreValidity(
   signal?: AbortSignal,
 ): AsyncGenerator<PipelineEvent> {
   const response = await fetch(
-    `/api/runs/${encodeURIComponent(input.runId)}/score`,
+    appPath(`/api/runs/${encodeURIComponent(input.runId)}/score`),
     {
       method: 'POST',
       headers: {
@@ -306,7 +308,7 @@ export async function* generateRegion(
   signal?: AbortSignal,
 ): AsyncGenerator<PipelineEvent> {
   const response = await fetch(
-    `/api/runs/${encodeURIComponent(input.runId)}/region`,
+    appPath(`/api/runs/${encodeURIComponent(input.runId)}/region`),
     {
       method: 'POST',
       headers: {
@@ -359,7 +361,7 @@ export async function setRunEmail(
   email: string | null,
 ): Promise<void> {
   const r = await fetch(
-    `/api/runs/${encodeURIComponent(runId)}/email`,
+    appPath(`/api/runs/${encodeURIComponent(runId)}/email`),
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -401,7 +403,7 @@ export async function submitFeedback(
   input: FeedbackInput,
 ): Promise<FeedbackResponse> {
   const r = await fetch(
-    `/api/runs/${encodeURIComponent(input.runId)}/feedback`,
+    appPath(`/api/runs/${encodeURIComponent(input.runId)}/feedback`),
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -437,7 +439,7 @@ export async function submitFeedback(
  */
 export async function startAutoRun(runId: string): Promise<void> {
   const r = await fetch(
-    `/api/runs/${encodeURIComponent(runId)}/auto-run`,
+    appPath(`/api/runs/${encodeURIComponent(runId)}/auto-run`),
     { method: 'POST' },
   )
   if (!r.ok && r.status !== 202) {
@@ -462,7 +464,7 @@ export async function* subscribeRunEvents(
   if (opts.lastEventId) headers['Last-Event-ID'] = opts.lastEventId
 
   const response = await fetch(
-    `/api/runs/${encodeURIComponent(runId)}/events`,
+    appPath(`/api/runs/${encodeURIComponent(runId)}/events`),
     { method: 'GET', headers, signal: opts.signal },
   )
   if (!response.ok) {
@@ -514,7 +516,7 @@ export interface GalleryReport extends GalleryEntry {
  * GET /api/gallery → all curated expert assessments for the sidebar.
  */
 export async function fetchGallery(): Promise<GalleryEntry[]> {
-  const r = await fetch('/api/gallery')
+  const r = await fetch(appPath('/api/gallery'))
   if (!r.ok) {
     throw new ApiError(r.status, r.statusText)
   }
@@ -534,7 +536,7 @@ export async function fetchGallery(): Promise<GalleryEntry[]> {
  * GET /api/gallery/{id} → one curated benchmark's scoring + raw output.
  */
 export async function fetchGalleryReport(id: string): Promise<GalleryReport> {
-  const r = await fetch(`/api/gallery/${encodeURIComponent(id)}`)
+  const r = await fetch(appPath(`/api/gallery/${encodeURIComponent(id)}`))
   if (!r.ok) {
     const text = await r.text().catch(() => '')
     throw new ApiError(r.status, text || r.statusText)
@@ -558,7 +560,7 @@ export async function fetchGalleryReport(id: string): Promise<GalleryReport> {
  * landing page reached from the email link.
  */
 export async function fetchReport(runId: string): Promise<ReportResponse> {
-  const r = await fetch(`/api/runs/${encodeURIComponent(runId)}/report`)
+  const r = await fetch(appPath(`/api/runs/${encodeURIComponent(runId)}/report`))
   if (!r.ok) {
     const text = await r.text().catch(() => '')
     throw new ApiError(r.status, text || r.statusText)
@@ -582,7 +584,7 @@ export async function fetchReport(runId: string): Promise<ReportResponse> {
  * valid runId you can fetch its data. UUID4 makes the id unguessable.
  */
 export async function exportRun(runId: string): Promise<unknown> {
-  const r = await fetch(`/api/runs/${encodeURIComponent(runId)}/export`)
+  const r = await fetch(appPath(`/api/runs/${encodeURIComponent(runId)}/export`))
   if (!r.ok) {
     const text = await r.text().catch(() => '')
     throw new ApiError(r.status, text || r.statusText)
@@ -594,7 +596,7 @@ export async function exportRun(runId: string): Promise<unknown> {
  * DELETE /api/runs/{runId} → hard-delete rows + blobs.
  */
 export async function deleteRun(runId: string): Promise<void> {
-  const r = await fetch(`/api/runs/${encodeURIComponent(runId)}`, {
+  const r = await fetch(appPath(`/api/runs/${encodeURIComponent(runId)}`), {
     method: 'DELETE',
   })
   if (!r.ok && r.status !== 204) {
@@ -613,7 +615,7 @@ export async function* submitAnswers(
   input: AnswerInput,
   signal?: AbortSignal,
 ): AsyncGenerator<PipelineEvent> {
-  const response = await fetch(`/api/runs/${encodeURIComponent(input.runId)}/answers`, {
+  const response = await fetch(appPath(`/api/runs/${encodeURIComponent(input.runId)}/answers`), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

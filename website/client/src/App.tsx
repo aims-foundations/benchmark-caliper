@@ -40,6 +40,7 @@ import {
   type GalleryEntry,
   type GalleryReport,
 } from './api'
+import { appPath, stripBasePath } from './paths'
 
 interface RunningState {
   events: PipelineEvent[]
@@ -178,7 +179,7 @@ const GALLERY_ENABLED_PHASES = new Set([
  */
 function initialReportRunId(): string | null {
   if (typeof window === 'undefined') return null
-  const match = window.location.pathname.match(
+  const match = stripBasePath(window.location.pathname).match(
     /^\/run\/([0-9a-fA-F-]{8,64})\/?$/,
   )
   return match ? match[1] : null
@@ -252,9 +253,9 @@ export function App() {
   function handleStartOver(): void {
     if (
       typeof window !== 'undefined' &&
-      window.location.pathname.startsWith('/run/')
+      stripBasePath(window.location.pathname).startsWith('/run/')
     ) {
-      window.history.replaceState(null, '', '/')
+      window.history.replaceState(null, '', appPath('/'))
     }
     setPhase({ name: 'idle' })
   }
@@ -1044,9 +1045,11 @@ export function App() {
           rawText={phase.state.report.raw}
           runId={phase.state.report.id}
           slug={phase.state.report.slug}
-          pdfUrl={`/api/gallery/${encodeURIComponent(
-            phase.state.report.id,
-          )}/review.pdf`}
+          pdfUrl={appPath(
+            `/api/gallery/${encodeURIComponent(
+              phase.state.report.id,
+            )}/review.pdf`,
+          )}
           readOnly
           onStartOver={handleStartOver}
           onChangeKey={handleChangeKey}

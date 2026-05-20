@@ -4,6 +4,7 @@ import {
   ApiError,
   type FeedbackCategory,
 } from '../api'
+import { appPath } from '../paths'
 
 interface DimensionScore {
   score?: number
@@ -260,7 +261,7 @@ export function ScoringView({
         </button>
         <a
           className="link"
-          href={pdfUrl ?? `/api/runs/${runId}/review.pdf`}
+          href={pdfUrl ?? appPath(`/api/runs/${runId}/review.pdf`)}
           download={`validity_report_${slug || runId}.pdf`}
           target="_blank"
           rel="noreferrer"

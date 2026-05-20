@@ -372,20 +372,13 @@ describe('App', () => {
       ).toBeInTheDocument(),
     )
 
-    // 2. Click "Extract paper →" → see ExtractForm
+    // 2. Choose step-by-step mode. The server already has the PDF from
+    // /api/runs, so extraction starts without asking for another upload.
+    await user.type(screen.getByLabelText(/email address/i), 'test@example.org')
+    await user.click(screen.getByLabelText(/walk me through each step/i))
     await user.click(
-      screen.getByRole('button', { name: /extract paper/i }),
+      screen.getByRole('button', { name: /start step-by-step/i }),
     )
-    expect(
-      screen.getByRole('heading', { name: /extract the full paper/i }),
-    ).toBeInTheDocument()
-
-    // 3. Re-upload PDF → click Extract → ExtractedView appears
-    await user.upload(
-      screen.getByLabelText(/benchmark paper/i) as HTMLInputElement,
-      makePdfFile(),
-    )
-    await user.click(screen.getByRole('button', { name: /^extract$/i }))
 
     await waitFor(() =>
       expect(
@@ -473,15 +466,12 @@ describe('App', () => {
       ).toBeInTheDocument(),
     )
 
-    // Click Extract paper, re-upload, wait for ExtractedView
+    // Choose step-by-step mode; extraction starts with the stashed PDF.
+    await user.type(screen.getByLabelText(/email address/i), 'test@example.org')
+    await user.click(screen.getByLabelText(/walk me through each step/i))
     await user.click(
-      screen.getByRole('button', { name: /extract paper/i }),
+      screen.getByRole('button', { name: /start step-by-step/i }),
     )
-    await user.upload(
-      screen.getByLabelText(/benchmark paper/i) as HTMLInputElement,
-      makePdfFile(),
-    )
-    await user.click(screen.getByRole('button', { name: /^extract$/i }))
     await waitFor(() =>
       expect(
         screen.getByRole('heading', { name: /paper analyzed/i }),
@@ -536,6 +526,12 @@ describe('App', () => {
         headers: (i.headers ?? {}) as Record<string, string>,
         body: i.body,
       })
+      if (u.endsWith('/compose-prompt')) {
+        return new Response(
+          JSON.stringify({ composed_prompt: 'COMPOSED PROMPT', run_id: 'run-x' }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        )
+      }
       if (u.endsWith('/score')) return makeStreamingResponse(SCORE_STREAM)
       if (u.endsWith('/region')) return makeStreamingResponse(REGION_STREAM)
       if (u.endsWith('/extract')) return makeStreamingResponse(EXTRACT_STREAM)
@@ -571,14 +567,11 @@ describe('App', () => {
         screen.getByRole('heading', { name: /elicitation summary/i }),
       ).toBeInTheDocument(),
     )
+    await user.type(screen.getByLabelText(/email address/i), 'test@example.org')
+    await user.click(screen.getByLabelText(/walk me through each step/i))
     await user.click(
-      screen.getByRole('button', { name: /extract paper/i }),
+      screen.getByRole('button', { name: /start step-by-step/i }),
     )
-    await user.upload(
-      screen.getByLabelText(/benchmark paper/i) as HTMLInputElement,
-      makePdfFile(),
-    )
-    await user.click(screen.getByRole('button', { name: /^extract$/i }))
     await waitFor(() =>
       expect(
         screen.getByRole('heading', { name: /paper analyzed/i }),
@@ -593,9 +586,17 @@ describe('App', () => {
       ).toBeInTheDocument(),
     )
 
-    // Score validity →
+    // Preview the composed scoring prompt, then authorize the Opus call.
     await user.click(
-      screen.getByRole('button', { name: /score validity/i }),
+      screen.getByRole('button', { name: /preview scoring prompt/i }),
+    )
+    await waitFor(() =>
+      expect(
+        screen.getByRole('heading', { name: /review the scoring prompt/i }),
+      ).toBeInTheDocument(),
+    )
+    await user.click(
+      screen.getByRole('button', { name: /send to opus/i }),
     )
 
     await waitFor(() =>
