@@ -1,4 +1,6 @@
-FROM node:20-bookworm-slim AS client-build
+# node:24 ships npm 11, which correctly skips esbuild's foreign-platform
+# optional packages during `npm ci`. npm 10 (node:20) raises EBADPLATFORM.
+FROM node:24-bookworm-slim AS client-build
 
 WORKDIR /app/website/client
 COPY website/client/package*.json ./
