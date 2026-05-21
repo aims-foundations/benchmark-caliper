@@ -5,8 +5,6 @@ services:
   - type: web
     name: benchmark-caliper
     runtime: docker
-    repo: https://github.com/aims-foundations/validity-global-south
-    branch: master
     dockerfilePath: ./Dockerfile
     dockerContext: .
     plan: starter
