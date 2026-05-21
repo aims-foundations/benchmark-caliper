@@ -1,0 +1,35 @@
+# Render Blueprint — single Docker web service for the Benchmark Caliper website.
+# Create it in Render with: New > Blueprint > pick this repo.
+# See website/DEPLOYMENT.md for the surrounding setup (AIMS Vercel proxy, etc.).
+services:
+  - type: web
+    name: benchmark-caliper
+    runtime: docker
+    repo: https://github.com/aims-foundations/validity-global-south
+    branch: master
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    numInstances: 1
+    healthCheckPath: /healthz
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: WEBSITE_BASE_PATH
+        value: /benchmark-caliper
+      - key: WEBSITE_DATA_DIR
+        value: /data
+      - key: WEBSITE_PUBLIC_URL
+        value: https://aimslab.stanford.edu/benchmark-caliper
+      - key: WEBSITE_ALLOWED_ORIGINS
+        value: https://aimslab.stanford.edu,https://benchmark-caliper.onrender.com
+      # Email delivery — set the values in the Render dashboard (sync: false
+      # keeps secrets out of this file). The app runs without them (dry-run).
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM
+        sync: false
+      - key: FEEDBACK_TO
+        sync: false

@@ -23,6 +23,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
       build-essential \
       fonts-freefont-ttf \
+      gosu \
     && rm -rf /var/lib/apt/lists/*
 
 COPY website/server/requirements.txt /tmp/server-requirements.txt
@@ -36,9 +37,12 @@ COPY --from=client-build /app/website/client/dist /app/website/client/dist
 
 RUN useradd --create-home --uid 10001 appuser \
     && mkdir -p /data \
-    && chown -R appuser:appuser /app /data
+    && chown -R appuser:appuser /app /data \
+    && chmod +x /app/entrypoint.sh
 
-USER appuser
+# The container starts as root so the entrypoint can chown the runtime-mounted
+# data disk, then drops to appuser (uid 10001) via gosu before running uvicorn.
 EXPOSE 8000
 
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["sh", "-c", "uvicorn website.server.app:app --host 0.0.0.0 --port ${PORT:-8000}"]

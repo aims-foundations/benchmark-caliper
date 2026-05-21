@@ -6,18 +6,22 @@ service for the MVP.
 
 ## Render
 
-Use a **Web Service** backed by the root `Dockerfile`.
+The repo root ships a `render.yaml` Blueprint that captures the whole service
+(Docker, persistent disk, health check, env vars). The easy path:
 
-- Branch: `master`
-- Root Directory: leave blank
-- Runtime: Docker
-- Instance type: Starter for MVP
-- Instance count: 1
-- Persistent disk: enabled
-- Disk mount path: `/data`
-- Disk size: 1 GB to start
+1. In Render: **New > Blueprint**, pick the `validity-global-south` repo.
+2. Render reads `render.yaml` and proposes the `benchmark-caliper` web service.
+3. Fill in the three email values it asks for (left blank in the Blueprint):
+   `RESEND_API_KEY`, `RESEND_FROM`, `FEEDBACK_TO`. The app runs without them
+   (email falls back to a dry-run), so they can be added later.
+4. Apply. Render builds the `Dockerfile` and deploys.
 
-Environment variables:
+The Blueprint already sets these, so you do **not** type them by hand:
+
+- Branch `master`, Runtime Docker, Starter plan, 1 instance
+- Persistent disk `data` mounted at `/data`, 1 GB
+- Health check path `/healthz`
+- Env vars:
 
 ```bash
 WEBSITE_BASE_PATH=/benchmark-caliper
@@ -26,13 +30,18 @@ WEBSITE_PUBLIC_URL=https://aimslab.stanford.edu/benchmark-caliper
 WEBSITE_ALLOWED_ORIGINS=https://aimslab.stanford.edu,https://benchmark-caliper.onrender.com
 ```
 
-Optional email variables:
+### Manual setup (if not using the Blueprint)
 
-```bash
-RESEND_API_KEY=
-RESEND_FROM=
-FEEDBACK_TO=
-```
+Create a **Web Service** backed by the root `Dockerfile` with the same
+settings listed above, and set the same env vars (plus the optional email
+ones). Be sure to set the **Health Check Path** to `/healthz`.
+
+### Data disk permissions
+
+The container starts as root, lets `entrypoint.sh` `chown` the runtime-mounted
+`/data` disk, then drops to the unprivileged `appuser`. This is why the first
+run can write `runs.db` to the persistent disk even though the app itself is
+non-root — no manual permission step is needed.
 
 If using Render's Python runtime instead of Docker, the service must still
 build the frontend before starting FastAPI:
