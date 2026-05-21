@@ -139,6 +139,15 @@ The website classifies every piece of data into one of four tiers. All persisten
 
 ---
 
+## Security contact
+
+Report a vulnerability or request data deletion outside the in-app flow by
+email to **koyejolab@gmail.com**. We aim to confirm receipt within a few
+business days. The same address is published on the website in the privacy
+notice's Contact section.
+
+---
+
 ## Pre-launch verification
 
 These items genuinely depend on deployed infrastructure, hosting accounts, or written documents — they are not properties of the codebase. Tick each one before pointing a public domain at this service.
@@ -151,25 +160,16 @@ These items genuinely depend on deployed infrastructure, hosting accounts, or wr
 - [ ] No mixed content on any page.
 - [ ] CAA DNS records pin acceptable CAs.
 
-### Rate limiting (depends on edge)
-
-- [ ] Per-IP rate limiting at the hosting edge (Cloudflare / Fly built-in). Documented in deploy config.
-
 ### Operational accounts
 
 - [ ] 2FA enforced on GitHub org, hosting provider, DNS registrar.
 - [ ] Deploy credentials follow least privilege (can deploy and roll back; cannot delete the project, change billing, or read user data).
 - [ ] Production secrets stored in hosting provider's secret manager, not in env files in the repo.
 
-### Monitoring
-
-- [ ] Uptime monitor pings the site every minute; alert fires within 2 minutes of simulated outage.
-- [ ] Error tracking (Sentry or equivalent) is configured with PII scrubbing for keys and request bodies.
-
 ### Public-facing docs and addresses
 
-- [ ] A privacy policy page is live, linked from the footer of every page, and every claim maps to a statement above. (Copy still needs writing — see README.md "Known gaps for v0".)
-- [ ] Security contact email is published in `SECURITY.md` and on the website; the address auto-forwards to a monitored inbox.
+- [x] A privacy policy page is live, linked from the footer of every page, and every claim maps to a statement above. (`client/src/components/PrivacyNotice.tsx`, reachable via the footer "Privacy notice" link.)
+- [x] Security contact email is published in `SECURITY.md` (see [Security contact](#security-contact)) and on the website (the privacy notice's Contact section).
 
 ### Review cadence
 
@@ -181,7 +181,8 @@ These items genuinely depend on deployed infrastructure, hosting accounts, or wr
 
 | Date | Reviewer | Notes |
 |------|----------|-------|
-| 2026-05-21 | trim | Dropped four pre-launch items judged non-essential for v0: Dependabot config, incident runbook, quarterly secret rotation, cost dashboard. GDPR Art. 33 breach-notification duty still applies to EU users independent of the removed runbook line. Also removed a duplicated "no `.env` committed" claim in §6. |
+| 2026-05-21 | docs | Published security contact (koyejolab@gmail.com) in a new "Security contact" section and in the website privacy notice; checked off the privacy-policy and security-contact pre-launch items (the privacy page was already live via `PrivacyNotice.tsx`). Removed a stale incident-response 72-hour commitment from the privacy notice's Contact section, since the incident runbook was dropped. |
+| 2026-05-21 | trim | Dropped pre-launch items judged non-essential for v0: Dependabot config, incident runbook, quarterly secret rotation, cost dashboard, per-IP edge rate limiting, and the Monitoring section (uptime monitor + error tracking). Rate limiting was removed because runs come from the internal team (BYOK shifts API cost to the caller); abuse protection still rests on the in-app body-size cap and fan-out concurrency bound. Monitoring was removed because the operating model is a small internal team that debugs via Render's live logs and relies on Render's `/healthz` auto-restart. GDPR Art. 33 breach-notification duty still applies to EU users independent of the removed runbook line. Also removed a duplicated "no `.env` committed" claim in §6. |
 | 2026-05-19 | rewrite | Restructured into declarative claims (what the code guarantees) and a pre-launch checklist (what hosting / process / docs need to add before a public deploy). All declarative items audited against the codebase at this date. Workspace retention added to `retention.py` to cover the now-persisted source PDF. Incident runbook + Dependabot config tracked as pre-launch items (not yet written). |
 | 2026-05-10 | follow-up fixes | Closed 4 of 5 fail items from the pre-deploy audit. Schema default for `user_opted_in_full` flipped to `0`. Rate limiting intentionally not added in-app — handled at the hosting edge during deploy. |
 | 2026-05-10 | pre-deploy audit | First end-to-end walk-through against the running Docker stack. |

@@ -110,7 +110,7 @@ For a faster skim, the slice-by-slice journey is in `MEMORY.md` and the project 
 
 - **Web search cost** isn't modeled in the cost ledger ($10 per 1k searches Anthropic charges separately).
 - **MVP deploy target is Render.** See [DEPLOYMENT.md](DEPLOYMENT.md) for the one-service Docker setup and the AIMS Vercel proxy.
-- **Privacy policy and ToS** copy still needs writing — the policy is described in DESIGN.md section 6 but the user-facing page doesn't exist yet.
+- **Terms of Service** copy still needs writing. The privacy policy page is live (`client/src/components/PrivacyNotice.tsx`, linked from the footer) and matches DESIGN.md section 6.
 - **Pre-launch security checklist** in SECURITY.md hasn't been ticked off; do not point a public domain at this until it has.
 
 ---

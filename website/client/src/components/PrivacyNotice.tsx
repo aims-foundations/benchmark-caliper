@@ -135,11 +135,9 @@ export function PrivacyNotice({ onClose }: Props) {
 
       <h3>Contact</h3>
       <p>
-        Email <code>security@</code> at the project's hosting domain to
-        report a vulnerability or request data deletion outside the in-app
-        flow. Our incident-response policy commits to confirming receipt
-        within one business day and notifying affected users within 72
-        hours of confirmed user-data breaches.
+        Email <code>koyejolab@gmail.com</code> to report a vulnerability or
+        request data deletion outside the in-app flow. We aim to confirm
+        receipt within a few business days.
       </p>
 
       <div className="actions">

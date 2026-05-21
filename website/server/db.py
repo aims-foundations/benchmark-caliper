@@ -95,6 +95,10 @@ def init_db(path: Path | None = None) -> None:
     p.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(p) as conn:
         conn.execute("PRAGMA foreign_keys = ON")
+        # WAL persists in the db file header once set, so this one-time write
+        # at init is enough — readers and writers no longer block each other.
+        conn.execute("PRAGMA journal_mode = WAL")
+        conn.execute("PRAGMA busy_timeout = 5000")
         conn.executescript(SCHEMA)
         _ensure_column(conn, "runs", "email", "TEXT")
         _ensure_column(conn, "runs", "email_sent_at", "TEXT")
@@ -118,6 +122,10 @@ def connect(path: Path | None = None) -> Iterator[sqlite3.Connection]:
     p = path if path is not None else DEFAULT_DB_PATH
     conn = sqlite3.connect(p)
     conn.execute("PRAGMA foreign_keys = ON")
+    # busy_timeout is per-connection, so it must be set on every connect():
+    # a writer waits up to 5s for a competing writer instead of failing
+    # immediately with "database is locked" under concurrent runs.
+    conn.execute("PRAGMA busy_timeout = 5000")
     conn.row_factory = sqlite3.Row
     try:
         yield conn
