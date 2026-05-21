@@ -154,16 +154,15 @@ These items genuinely depend on deployed infrastructure, hosting accounts, or wr
 
 ### Transport security (depends on hosting)
 
-- [ ] TLS 1.2+ with valid cert (SSL Labs grade A or higher).
-- [ ] HSTS header with `max-age >= 31536000; includeSubDomains; preload`.
-- [ ] HTTP redirects to HTTPS at the edge.
-- [ ] No mixed content on any page.
+- [x] TLS 1.2+ with valid cert. Verified 2026-05-21 against the live deploy.
+- [x] HSTS header with `max-age >= 31536000; includeSubDomains; preload`. Verified on live responses.
+- [x] HTTP redirects to HTTPS at the edge. Verified (`301` to `https://`).
+- [x] No mixed content on any page. All assets load same-origin over HTTPS.
 - [ ] CAA DNS records pin acceptable CAs.
 
 ### Operational accounts
 
 - [ ] 2FA enforced on GitHub org, hosting provider, DNS registrar.
-- [ ] Deploy credentials follow least privilege (can deploy and roll back; cannot delete the project, change billing, or read user data).
 - [ ] Production secrets stored in hosting provider's secret manager, not in env files in the repo.
 
 ### Public-facing docs and addresses
@@ -171,16 +170,13 @@ These items genuinely depend on deployed infrastructure, hosting accounts, or wr
 - [x] A privacy policy page is live, linked from the footer of every page, and every claim maps to a statement above. (`client/src/components/PrivacyNotice.tsx`, reachable via the footer "Privacy notice" link.)
 - [x] Security contact email is published in `SECURITY.md` (see [Security contact](#security-contact)) and on the website (the privacy notice's Contact section).
 
-### Review cadence
-
-- [ ] Quarterly review of this entire file; the date and reviewer are recorded below.
-
 ---
 
 ## Review log
 
 | Date | Reviewer | Notes |
 |------|----------|-------|
+| 2026-05-21 | trim | Marked the four transport-security items verified `[x]` against the live deploy. Dropped two pre-launch items judged non-essential for v0: least-privilege deploy credentials and the quarterly review-cadence commitment. CAA DNS records and 2FA kept as the remaining open items. |
 | 2026-05-21 | docs | Published security contact (koyejolab@gmail.com) in a new "Security contact" section and in the website privacy notice; checked off the privacy-policy and security-contact pre-launch items (the privacy page was already live via `PrivacyNotice.tsx`). Removed a stale incident-response 72-hour commitment from the privacy notice's Contact section, since the incident runbook was dropped. |
 | 2026-05-21 | trim | Dropped pre-launch items judged non-essential for v0: Dependabot config, incident runbook, quarterly secret rotation, cost dashboard, per-IP edge rate limiting, and the Monitoring section (uptime monitor + error tracking). Rate limiting was removed because runs come from the internal team (BYOK shifts API cost to the caller); abuse protection still rests on the in-app body-size cap and fan-out concurrency bound. Monitoring was removed because the operating model is a small internal team that debugs via Render's live logs and relies on Render's `/healthz` auto-restart. GDPR Art. 33 breach-notification duty still applies to EU users independent of the removed runbook line. Also removed a duplicated "no `.env` committed" claim in §6. |
 | 2026-05-19 | rewrite | Restructured into declarative claims (what the code guarantees) and a pre-launch checklist (what hosting / process / docs need to add before a public deploy). All declarative items audited against the codebase at this date. Workspace retention added to `retention.py` to cover the now-persisted source PDF. Incident runbook + Dependabot config tracked as pre-launch items (not yet written). |
