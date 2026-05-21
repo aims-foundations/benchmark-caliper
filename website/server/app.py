@@ -23,6 +23,8 @@ import os
 import re
 import shutil
 import uuid
+
+import yaml
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -48,6 +50,7 @@ from . import (
     db,
     email_notify,
     logging_gate,
+    mock_anthropic,
     pdf_utils,
     pipeline_assets,
     pipeline_runner,
@@ -130,6 +133,14 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    # Refuses to boot if MOCK_ANTHROPIC=1 collides with prod signals.
+    mock_anthropic.assert_safe_to_enable()
+    if mock_anthropic.is_mock_enabled():
+        print(
+            "⚠️  MOCK_ANTHROPIC=1 — using fixtures, no real Anthropic calls. "
+            f"Fixture dir: {mock_anthropic.fixture_dir()}",
+            flush=True,
+        )
     db.init_db()
     yield
 
@@ -1188,6 +1199,50 @@ async def post_dataset_analysis(
     )
 
 
+# ---------- compose-prompt endpoint (Step 6, preview only) ----------
+
+
+class ComposePromptRequest(BaseModel):
+    benchmark_yaml: str = Field(min_length=1, max_length=40_000)
+    region_yaml: str = Field(min_length=1, max_length=40_000)
+    elicitation_summary: str = Field(min_length=1, max_length=20_000)
+    dataset_analysis_text: str = Field(default="", max_length=200_000)
+
+
+@app.post("/api/runs/{run_id}/compose-prompt")
+async def post_compose_prompt(
+    run_id: str,
+    body: ComposePromptRequest,
+) -> dict:
+    """Step 6: deterministic Opus-prompt assembly for inspection.
+
+    Step-by-step UI calls this between Step 5 and Step 7 so the user can
+    review the full composed prompt before authorizing the Opus call
+    (which costs them $1–1.50). No LLM, no Anthropic key required;
+    bearer-style auth via the run_id.
+    """
+    with db.connect() as conn:
+        run = conn.execute(
+            "SELECT status FROM runs WHERE run_id = ?", (run_id,)
+        ).fetchone()
+    if run is None:
+        raise HTTPException(404, "run not found")
+    if run["status"] != "regioned":
+        raise HTTPException(
+            409,
+            f"run is in status {run['status']}, expected regioned",
+        )
+    framework_yaml = pipeline_assets.load_framework()
+    composed = _compose_score_prompt(
+        framework_yaml=framework_yaml,
+        benchmark_yaml=body.benchmark_yaml,
+        region_yaml=body.region_yaml,
+        elicitation_summary=body.elicitation_summary,
+        dataset_analysis_text=body.dataset_analysis_text,
+    )
+    return {"composed_prompt": composed, "run_id": run_id}
+
+
 # ---------- score endpoint (Steps 6 + 7) ----------
 
 
@@ -1238,7 +1293,6 @@ async def post_score(
         benchmark_yaml=body.benchmark_yaml,
         region_yaml=body.region_yaml,
         elicitation_summary=body.elicitation_summary,
-        paper_summary=body.paper_summary,
         dataset_analysis_text=body.dataset_analysis_text,
     )
 
@@ -1414,44 +1468,50 @@ def _compose_score_prompt(
     benchmark_yaml: str,
     region_yaml: str,
     elicitation_summary: str,
-    paper_summary: str,
     dataset_analysis_text: str = "",
 ) -> str:
-    """Step 6: deterministic assembly of the Opus user message.
+    """Step 6: assemble the Opus user message via the CLI's compose_prompt.
 
-    The existing CLI pipeline's `compose_prompt.py` builds a richer
-    structure with separated quote tables; this v0 version pastes each
-    artifact as a labelled section and lets Opus parse the markdown. Same
-    inputs, slightly less structure — we can refine to match the CLI
-    output exactly in a follow-up slice if scoring quality drifts.
+    Delegates to `scripts/compose_prompt.compose_prompt` from the release
+    package so the website's Opus input is byte-equivalent to the CLI's:
+    same instructions header, same scoring-rubric formatting, same web
+    source registry extraction from the region dict, same separated quote
+    tables. Earlier the website pasted each YAML as a fenced blob, which
+    fed Opus the same data in a less structured form.
 
-    If `dataset_analysis_text` is non-empty, it is appended as a
-    `## Dataset Analysis Findings` section, matching the CLI wrapper at
-    anthropic_api_package_release/run_pipeline.py:1981.
+    Paper-summary content is *not* a separate input here: Step 3b
+    (benchmark_synthesis) embeds it into the benchmark YAML as the
+    `documentation_excerpts` and `verbatim_quotes` fields, which is what
+    the CLI composer reads.
     """
-    parts: list[str] = [
-        "I need you to perform a validity analysis of an AI benchmark "
-        "for a specific deployment context.\n\n",
-        "## Validity framework\n\n```yaml\n",
-        f"{framework_yaml}\n",
-        "```\n\n",
-        "## Benchmark YAML\n\n```yaml\n",
-        f"{benchmark_yaml}\n",
-        "```\n\n",
-        "## Regional context YAML\n\n```yaml\n",
-        f"{region_yaml}\n",
-        "```\n\n",
-        f"## Deployment context (elicitation summary)\n\n{elicitation_summary}\n\n",
-        "## Paper summary (interpretive narrative + verbatim quote registry)\n\n",
-        f"{paper_summary}\n\n",
-    ]
-    if dataset_analysis_text.strip():
-        parts.append(f"## Dataset Analysis Findings\n\n{dataset_analysis_text}\n\n")
-    parts.append(
-        "Return the scoring as a single valid JSON document, per the rules "
-        "in your system prompt. No prose, no fences."
+    composer = pipeline_runner._load_release_module(
+        "scripts.compose_prompt", "scripts/compose_prompt.py"
     )
-    return "".join(parts)
+
+    return composer.compose_prompt(
+        _parse_yaml_blob(benchmark_yaml),
+        _parse_yaml_blob(region_yaml),
+        _parse_yaml_blob(framework_yaml),
+        elicitation_text=elicitation_summary,
+        dataset_analysis_text=dataset_analysis_text,
+    )
+
+
+def _parse_yaml_blob(blob: str) -> dict:
+    """Strip an optional ```yaml fence and parse into a dict.
+
+    Sonnet's YAML synthesis steps often wrap the output in code fences;
+    `yaml.safe_load` would treat the backticks as a literal string. JSON
+    is a valid subset of YAML, so a JSON-formatted region body also
+    parses correctly.
+    """
+    fence = re.search(r"```(?:yaml|json)?\s*\n?(.*?)\n?```", blob, re.DOTALL)
+    body = (fence.group(1) if fence else blob).strip()
+    try:
+        parsed = yaml.safe_load(body)
+    except yaml.YAMLError:
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
 
 
 def _parse_scoring_json(raw: str) -> dict:
@@ -2728,7 +2788,6 @@ async def _run_score_phase(
         benchmark_yaml=benchmark_yaml,
         region_yaml=region_yaml,
         elicitation_summary=elicitation_summary,
-        paper_summary=paper_summary,
         dataset_analysis_text=dataset_analysis_text,
     )
     await emit("step-started", {"step": "7-score"})

@@ -1442,9 +1442,16 @@ def test_score_uses_opus_family(
 def test_score_composed_prompt_includes_all_artifacts(
     client: TestClient, fake_pdf: bytes
 ) -> None:
-    """The user message Opus receives must contain the framework YAML,
-    benchmark YAML, region YAML, elicitation summary, and paper
-    summary — all distinguishable as separate sections."""
+    """The user message Opus receives must include the benchmark, region,
+    and elicitation content, plus the framework's scoring rubric.
+
+    After the switch to the CLI's `compose_prompt`, the website parses
+    benchmark/region as dicts and pulls fields out of them — so we send
+    realistic YAML with markers in known fields and assert those markers
+    appear in the rendered prompt. `paper_summary` is no longer a separate
+    input: Step 3b embeds its content into benchmark.yaml's
+    `documentation_excerpts` and `verbatim_quotes` fields.
+    """
     run_id = _drive_to_regioned(client, fake_pdf)
     captured_user: list[str] = []
 
@@ -1452,24 +1459,33 @@ def test_score_composed_prompt_includes_all_artifacts(
         captured_user.append(user)
         return _opus_scoring_result()
 
+    benchmark_yaml = (
+        "name: UNIQUE_BENCHMARK_MARKER_xyz\n"
+        "full_name: UNIQUE_BENCHMARK_MARKER_xyz\n"
+        "porting_strategy: none\n"
+        "languages: [English]\n"
+    )
+    region_yaml = (
+        "name: UNIQUE_REGION_MARKER_xyz\n"
+        "deployment_context: {}\n"
+    )
     with patch.object(
         app_module, "call_text_async", side_effect=capture
     ):
         _post_score(
             client,
             run_id,
-            paper_summary="UNIQUE_PAPER_MARKER_xyz",
-            benchmark_yaml="UNIQUE_BENCHMARK_MARKER_xyz",
-            region_yaml="UNIQUE_REGION_MARKER_xyz",
+            paper_summary="ignored",
+            benchmark_yaml=benchmark_yaml,
+            region_yaml=region_yaml,
             elicitation_summary="UNIQUE_ELICIT_MARKER_xyz",
         )
     msg = captured_user[0]
-    assert "UNIQUE_PAPER_MARKER" in msg
     assert "UNIQUE_BENCHMARK_MARKER" in msg
     assert "UNIQUE_REGION_MARKER" in msg
     assert "UNIQUE_ELICIT_MARKER" in msg
-    # Framework YAML is loaded from disk and embedded.
-    assert "scoring_rubric" in msg
+    # Framework YAML is loaded from disk and its rubric formatted into the prompt.
+    assert "Scoring Rubric" in msg
 
 
 def test_score_handles_unparseable_opus_output_gracefully(
