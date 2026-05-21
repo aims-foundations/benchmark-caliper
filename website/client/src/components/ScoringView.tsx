@@ -264,6 +264,17 @@ export function ScoringView({
         </button>
       </div>
 
+      <aside className="score-disclaimer">
+        <strong>A note on these scores.</strong> This pipeline is still a
+        work in progress, and we're improving it as we learn. Each score
+        reflects Claude Opus's reading of the documents you shared. It's
+        a careful, structured opinion, but not the final word - the model can
+        miss context or weigh things differently than you would. Please
+        treat this report as a useful starting point for thinking through
+        your benchmark's fit. If something looks off, we'd love to hear about it 
+        through the form below - that's how we make the next version better.
+      </aside>
+
       <details
         className="feedback-section"
         open={feedbackOpen}

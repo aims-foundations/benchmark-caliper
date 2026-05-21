@@ -28,6 +28,17 @@ export function ConsentGate({ onAccept }: Props) {
         API. Read this once, then you won't see it again on this device.
       </p>
 
+      <h3>About the scores you'll see</h3>
+      <p>
+        The pipeline is still a work in progress, and we're improving it as
+        we learn. Each validity score reflects Claude Opus's reading of the
+        documents you share - a careful, structured opinion rather than the
+        final word. Please treat the report as a useful starting point for
+        thinking through your benchmark's fit, not a verdict. We'll share a
+        fuller note alongside the scores themselves, and there's a feedback
+        form on every report - that's how we make the next version better.
+      </p>
+
       <h3>Your API key</h3>
       <ul>
         <li>Stays in your browser only.</li>
@@ -38,7 +49,7 @@ export function ConsentGate({ onAccept }: Props) {
         <li>You can revoke it at any time from your Anthropic console.</li>
       </ul>
 
-      <h3>What we always log</h3>
+      <h3>What we logs (for future improvement) </h3>
       <ul>
         <li>Which pipeline steps ran, when, on which model.</li>
         <li>Token counts, costs, and step latency.</li>
@@ -46,32 +57,17 @@ export function ConsentGate({ onAccept }: Props) {
         <li>Whether each step succeeded or failed.</li>
       </ul>
 
-      <h3>What we do NOT log by default</h3>
-      <ul>
-        <li>Your PDF, your deployment description, your elicitation answers.</li>
-        <li>The prompts we send to the model or the responses it returns.</li>
-        <li>Your IP address, beyond standard short-lived access logs.</li>
-      </ul>
-      <p className="help">
-        For each run, you can opt in to also store the full prompts and
-        responses for 90 days — used only for debugging and pipeline
-        improvement. The default for that toggle is off.
-      </p>
-
       <h3>Your rights</h3>
       <ul>
         <li>
           Export every record we have about a run with one click in the
           summary view.
         </li>
-        <li>
-          Delete every record about a run permanently with one click.
-        </li>
       </ul>
 
       <div className="actions">
         <button type="button" onClick={handleAccept}>
-          I understand — let me use the tool
+          I understand - let me use the tool
         </button>
       </div>
     </section>
