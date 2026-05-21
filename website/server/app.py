@@ -162,11 +162,11 @@ class BasePathMiddleware:
             if path == self.base_path:
                 scope = {**scope, "path": "/"}
             elif path.startswith(f"{self.base_path}/"):
-                scope = {
-                    **scope,
-                    "path": path[len(self.base_path) :] or "/",
-                    "root_path": f"{scope.get('root_path', '')}{self.base_path}",
-                }
+                # Rewrite only `path`; do NOT also set `root_path`. Starlette's
+                # Mount appends its own prefix to root_path, so setting both
+                # double-counts the base path and StaticFiles looks for assets
+                # one directory too deep (a /benchmark-caliper/assets/* 404).
+                scope = {**scope, "path": path[len(self.base_path) :] or "/"}
         await self.app(scope, receive, send)
 
 
