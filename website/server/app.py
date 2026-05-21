@@ -40,9 +40,10 @@ from fastapi import (
     UploadFile,
 )
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response, StreamingResponse
+from starlette.responses import FileResponse, Response, StreamingResponse
 
 from . import (
     active_runs,
@@ -71,6 +72,20 @@ ALLOWED_ORIGINS = [
     ).split(",")
     if o.strip()
 ]
+
+
+def _normalize_base_path(raw: str | None) -> str:
+    if not raw:
+        return ""
+    stripped = raw.strip().strip("/")
+    return f"/{stripped}" if stripped else ""
+
+
+BASE_PATH = _normalize_base_path(os.environ.get("WEBSITE_BASE_PATH"))
+_DEFAULT_CLIENT_DIST = Path(__file__).resolve().parent.parent / "client" / "dist"
+CLIENT_DIST = Path(
+    os.environ.get("WEBSITE_CLIENT_DIST", str(_DEFAULT_CLIENT_DIST))
+)
 
 MAX_BODY_BYTES = 50 * 1024 * 1024  # 50 MB hard cap (SECURITY.md)
 MAX_PDF_BYTES = 32 * 1024 * 1024  # Anthropic's per-document limit
@@ -129,6 +144,32 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
+class BasePathMiddleware:
+    """Let the service answer both /api and /benchmark-caliper/api.
+
+    Vercel will normally strip /benchmark-caliper before proxying to Render.
+    Accepting the prefixed path as well makes the raw Render URL easier to
+    test and keeps direct links working during setup.
+    """
+
+    def __init__(self, app, base_path: str) -> None:
+        self.app = app
+        self.base_path = base_path
+
+    async def __call__(self, scope, receive, send) -> None:
+        if scope.get("type") == "http" and self.base_path:
+            path = scope.get("path", "")
+            if path == self.base_path:
+                scope = {**scope, "path": "/"}
+            elif path.startswith(f"{self.base_path}/"):
+                scope = {
+                    **scope,
+                    "path": path[len(self.base_path) :] or "/",
+                    "root_path": f"{scope.get('root_path', '')}{self.base_path}",
+                }
+        await self.app(scope, receive, send)
+
+
 # ---------- app ----------
 
 
@@ -148,6 +189,8 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(title="Validity Analyzer", version="0.1.0", lifespan=lifespan)
 
+if BASE_PATH:
+    app.add_middleware(BasePathMiddleware, base_path=BASE_PATH)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(BodySizeLimitMiddleware)
 app.add_middleware(
@@ -2884,6 +2927,29 @@ async def _run_score_phase(
         "raw_text": result.text,
         "report_md": report_md,
     }
+
+
+# ---------- built frontend ----------
+
+
+if CLIENT_DIST.exists():
+    assets_dir = CLIENT_DIST / "assets"
+    if assets_dir.exists():
+        app.mount(
+            "/assets",
+            StaticFiles(directory=assets_dir),
+            name="assets",
+        )
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def serve_client(path: str) -> FileResponse:
+        """Serve the Vite SPA for non-API routes in the production image."""
+        if path == "healthz" or path.startswith("api/"):
+            raise HTTPException(404, "not found")
+        index_path = CLIENT_DIST / "index.html"
+        if not index_path.exists():
+            raise HTTPException(404, "client build not found")
+        return FileResponse(index_path)
 
 
 # ---------- helpers ----------

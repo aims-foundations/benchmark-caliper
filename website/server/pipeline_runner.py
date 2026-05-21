@@ -18,6 +18,7 @@ per-dimension PDFs, then merge them with pypdf into review.pdf.
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -66,7 +67,9 @@ def _load_release_module(qualname: str, rel_path: str):
     return mod
 
 
-_WORKSPACE_ROOT = Path(__file__).resolve().parent / "data" / "tuples"
+_DEFAULT_DATA_DIR = Path(__file__).resolve().parent / "data"
+_DATA_DIR = Path(os.environ.get("WEBSITE_DATA_DIR", str(_DEFAULT_DATA_DIR)))
+_WORKSPACE_ROOT = _DATA_DIR / "tuples"
 
 # Matches anthropic_api_package_release/run_pipeline.py:REVIEW_DIMENSION_ORDER
 REVIEW_DIMENSION_ORDER = ["summary", "io", "ic", "if", "oo", "oc", "of"]
