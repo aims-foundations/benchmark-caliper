@@ -7,9 +7,13 @@ import {
 
 interface DimensionScore {
   score?: number
+  // Opus's schema (opus_scoring_framing.md) uses `justification`; some
+  // older test fixtures use `reasoning`. Accept both.
+  justification?: string
   reasoning?: string
   evidence_quotes?: string[]
   evidence_region_sources?: unknown[]
+  strengths?: string[]
   [key: string]: unknown
 }
 
@@ -123,7 +127,13 @@ export function ScoringView({
     }
   }
 
-  const dimensions = DIMENSION_ORDER.filter((k) => scoring[k] !== undefined)
+  // Opus's schema nests dimensions under `dimensions`; older test fixtures
+  // put them at the top level. Prefer nested, fall back to flat.
+  const dimBag: Record<string, unknown> =
+    scoring.dimensions && typeof scoring.dimensions === 'object'
+      ? (scoring.dimensions as Record<string, unknown>)
+      : scoring
+  const dimensions = DIMENSION_ORDER.filter((k) => dimBag[k] !== undefined)
   const empty = dimensions.length === 0
 
   return (
@@ -166,7 +176,8 @@ export function ScoringView({
           ) : (
             <ol className="score-list">
               {dimensions.map((key) => {
-                const dim = scoring[key] as DimensionScore
+                const dim = dimBag[key] as DimensionScore
+                const reasoning = dim.justification ?? dim.reasoning
                 return (
                   <li key={key} className="score-row">
                     <details>
@@ -181,9 +192,20 @@ export function ScoringView({
                           {dim.score ?? '?'} / 5
                         </span>
                       </summary>
-                      {dim.reasoning && (
-                        <p className="score-reasoning">{dim.reasoning}</p>
+                      {reasoning && (
+                        <p className="score-reasoning">{reasoning}</p>
                       )}
+                      {Array.isArray(dim.strengths) &&
+                        dim.strengths.length > 0 && (
+                          <>
+                            <h4>Strengths</h4>
+                            <ul className="score-evidence">
+                              {dim.strengths.map((s, i) => (
+                                <li key={i}>{String(s)}</li>
+                              ))}
+                            </ul>
+                          </>
+                        )}
                       {Array.isArray(dim.evidence_quotes) &&
                         dim.evidence_quotes.length > 0 && (
                           <>
