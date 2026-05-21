@@ -23,6 +23,8 @@ from typing import Optional
 
 import anthropic
 
+from . import mock_anthropic
+
 # Mirrors anthropic_api_package_release/client.py:MODELS so the website and the
 # pipeline call the same models. Update both together.
 MODELS: dict[str, str] = {
@@ -75,6 +77,17 @@ async def call_text_async(
     """
     if family not in MODELS:
         raise ValueError(f"unknown model family: {family!r}")
+
+    # DEV-ONLY: short-circuit to fixtures when MOCK_ANTHROPIC=1. The app's
+    # lifespan guard ensures this is never active in production.
+    if mock_anthropic.is_mock_enabled():
+        return CallResult(
+            text=mock_anthropic.replay(family=family, system=system),
+            model=MODELS[family],
+            input_tokens=0,
+            output_tokens=0,
+            latency_ms=50,
+        )
 
     client = anthropic.AsyncAnthropic(api_key=api_key)
     model_id = MODELS[family]

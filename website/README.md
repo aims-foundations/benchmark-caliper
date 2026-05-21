@@ -46,6 +46,16 @@ Open <http://localhost:5173>. Vite proxies `/api/*` to <http://localhost:8000>.
 
 > The backend uses package-relative imports, so it must be run as `website.server.app:app` from the **repository root** — not `app:app` from inside `website/server/`.
 
+### Free local dev (no Anthropic spend)
+
+For UI work and click-through testing without paying for API calls, set `MOCK_ANTHROPIC=1`. Every `call_text_async()` short-circuits to canned fixtures pulled from one already-paid assessment under `anthropic_api_package_release/assessments/`. Paste any string (e.g. `sk-ant-FAKE`) into the API-key field — the value is ignored.
+
+```bash
+MOCK_ANTHROPIC=1 python3 -m uvicorn website.server.app:app --reload --port 8000
+```
+
+The server prints a loud `⚠️  MOCK_ANTHROPIC=1` banner on startup and refuses to boot if any production signal is set (`ENV=production`, non-localhost `WEBSITE_ALLOWED_ORIGINS`). Override the fixture source with `MOCK_ANTHROPIC_FIXTURE=/abs/path/to/<expert>__<benchmark>/<slug>`. **Never set `MOCK_ANTHROPIC` in production** — leaving the variable unset (the default) is real mode. See [server/mock_anthropic.py](server/mock_anthropic.py).
+
 ---
 
 ## How to test it 
