@@ -1911,3 +1911,47 @@ def test_reset_wipes_persisted_pdf(
 
     pipeline_runner.reset(run_id, scoring_only=False)
     assert not (tmp_path / "tuples" / run_id).exists()
+
+
+# ---------- curated benchmark gallery ----------
+
+
+def test_gallery_lists_curated_benchmarks(client: TestClient) -> None:
+    r = client.get("/api/gallery")
+    assert r.status_code == 200
+    benchmarks = r.json()["benchmarks"]
+    assert len(benchmarks) > 0
+    first = benchmarks[0]
+    assert {"id", "benchmark_name", "slug", "deployment_description"} <= first.keys()
+    # Sorted by display name.
+    names = [b["benchmark_name"].lower() for b in benchmarks]
+    assert names == sorted(names)
+
+
+def test_gallery_report_has_scoring_and_raw(client: TestClient) -> None:
+    entry_id = client.get("/api/gallery").json()["benchmarks"][0]["id"]
+    r = client.get(f"/api/gallery/{entry_id}")
+    assert r.status_code == 200
+    body = r.json()
+    assert isinstance(body["scoring"], dict)
+    assert "dimensions" in body["scoring"]
+    assert isinstance(body["raw"], str) and body["raw"]
+
+
+def test_gallery_review_pdf_served(client: TestClient) -> None:
+    entry_id = client.get("/api/gallery").json()["benchmarks"][0]["id"]
+    r = client.get(f"/api/gallery/{entry_id}/review.pdf")
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "application/pdf"
+    assert r.content[:4] == b"%PDF"
+
+
+def test_gallery_rejects_unknown_id(client: TestClient) -> None:
+    assert client.get("/api/gallery/expert_fake__nope").status_code == 404
+    assert client.get("/api/gallery/expert_fake__nope/review.pdf").status_code == 404
+
+
+def test_gallery_rejects_path_traversal(client: TestClient) -> None:
+    # A traversal attempt is not in the directory whitelist → 404, no escape.
+    r = client.get("/api/gallery/..%2f..%2f..%2fetc%2fpasswd")
+    assert r.status_code == 404

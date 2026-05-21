@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { PrivacyNotice } from './components/PrivacyNotice'
+import { GallerySidebar } from './components/GallerySidebar'
 import { KeyForm } from './components/KeyForm'
 import { RunForm } from './components/RunForm'
 import {
@@ -31,9 +32,13 @@ import {
   setRunEmail,
   startAutoRun,
   subscribeRunEvents,
+  fetchGallery,
+  fetchGalleryReport,
   ApiError,
   type PipelineEvent,
   type Question,
+  type GalleryEntry,
+  type GalleryReport,
 } from './api'
 
 interface RunningState {
@@ -148,8 +153,23 @@ type Phase =
   | { name: 'composed'; state: ComposedState }
   | { name: 'scoring'; state: ScoringState; from: RegionedState }
   | { name: 'scored'; state: ScoredState }
+  | { name: 'viewing-gallery'; state: { report: GalleryReport } }
   | { name: 'deleted' }
   | { name: 'error'; message: string }
+
+// Phases where the gallery sidebar is navigable. During an active run
+// (and its step-by-step pause points) the gallery is locked so the user
+// can't navigate away and lose in-progress work.
+const GALLERY_ENABLED_PHASES = new Set([
+  'consent',
+  'enter-key',
+  'idle',
+  'scored',
+  'viewing-gallery',
+  'viewing-report',
+  'deleted',
+  'error',
+])
 
 /**
  * If the page was loaded at /run/<uuid> (from the report-ready email link),
@@ -172,9 +192,52 @@ export function App() {
     return hasKey() ? { name: 'idle' } : { name: 'enter-key' }
   })
   const [showPrivacy, setShowPrivacy] = useState(false)
+  const [galleryEntries, setGalleryEntries] = useState<GalleryEntry[]>([])
+  // The user's own finished run, kept for this session so they can
+  // switch back to it from the sidebar. Cleared on restart / "Run another".
+  const [sessionBenchmark, setSessionBenchmark] = useState<ScoredState | null>(
+    null,
+  )
+
+  // Load the curated gallery once on mount.
+  useEffect(() => {
+    fetchGallery()
+      .then(setGalleryEntries)
+      .catch(() => setGalleryEntries([]))
+  }, [])
+
+  /** Enter the scored view and remember the run as this session's benchmark. */
+  function enterScored(state: ScoredState): void {
+    setSessionBenchmark(state)
+    setPhase({ name: 'scored', state })
+  }
 
   function handleConsent(): void {
     setPhase(hasKey() ? { name: 'idle' } : { name: 'enter-key' })
+  }
+
+  async function handleSelectCurated(id: string): Promise<void> {
+    try {
+      const report = await fetchGalleryReport(id)
+      setPhase({ name: 'viewing-gallery', state: { report } })
+    } catch {
+      setPhase({ name: 'error', message: 'Could not load that benchmark.' })
+    }
+  }
+
+  function handleSelectSession(): void {
+    if (sessionBenchmark) {
+      setPhase({ name: 'scored', state: sessionBenchmark })
+    }
+  }
+
+  function handleAddBenchmark(): void {
+    setPhase(hasKey() ? { name: 'idle' } : { name: 'enter-key' })
+  }
+
+  function handleRestartSession(): void {
+    setSessionBenchmark(null)
+    handleStartOver()
   }
 
   function handleKeySaved(): void {
@@ -404,15 +467,12 @@ export function App() {
       return
     }
 
-    setPhase({
-      name: 'scored',
-      state: {
-        runId: args.runId,
-        slug: args.slug,
-        scoring,
-        rawText,
-        emailStatus,
-      },
+    enterScored({
+      runId: args.runId,
+      slug: args.slug,
+      scoring,
+      rawText,
+      emailStatus,
     })
   }
 
@@ -722,14 +782,11 @@ export function App() {
       return
     }
 
-    setPhase({
-      name: 'scored',
-      state: {
-        runId: base.runId,
-        slug: base.slug,
-        scoring,
-        rawText,
-      },
+    enterScored({
+      runId: base.runId,
+      slug: base.slug,
+      scoring,
+      rawText,
     })
   }
 
@@ -804,8 +861,34 @@ export function App() {
     })
   }
 
+  const sessionEntry = sessionBenchmark
+    ? {
+        benchmarkName:
+          typeof sessionBenchmark.scoring.benchmark === 'string'
+            ? sessionBenchmark.scoring.benchmark
+            : '',
+        slug: sessionBenchmark.slug,
+      }
+    : null
+  const galleryActiveId =
+    phase.name === 'viewing-gallery'
+      ? phase.state.report.id
+      : phase.name === 'scored'
+        ? 'session'
+        : null
+
   return (
-    <main className="app">
+    <div className="app-shell">
+      <GallerySidebar
+        entries={galleryEntries}
+        sessionEntry={sessionEntry}
+        activeId={galleryActiveId}
+        enabled={GALLERY_ENABLED_PHASES.has(phase.name)}
+        onSelectCurated={(id) => void handleSelectCurated(id)}
+        onSelectSession={handleSelectSession}
+        onAddBenchmark={handleAddBenchmark}
+      />
+      <main className="app">
       <header>
         <h1>Validity Analyzer</h1>
         <p className="tagline">
@@ -955,6 +1038,21 @@ export function App() {
         />
       )}
 
+      {phase.name === 'viewing-gallery' && (
+        <ScoringView
+          scoring={phase.state.report.scoring}
+          rawText={phase.state.report.raw}
+          runId={phase.state.report.id}
+          slug={phase.state.report.slug}
+          pdfUrl={`/api/gallery/${encodeURIComponent(
+            phase.state.report.id,
+          )}/review.pdf`}
+          readOnly
+          onStartOver={handleStartOver}
+          onChangeKey={handleChangeKey}
+        />
+      )}
+
       {phase.name === 'deleted' && (
         <section className="result" role="status">
           <h2>Run deleted</h2>
@@ -1004,6 +1102,18 @@ export function App() {
           </div>
         </div>
       )}
-    </main>
+
+      {phase.name !== 'consent' && phase.name !== 'enter-key' && (
+        <button
+          type="button"
+          className="restart-session"
+          onClick={handleRestartSession}
+          title="Clear this session and start fresh"
+        >
+          Restart session ↻
+        </button>
+      )}
+      </main>
+    </div>
   )
 }

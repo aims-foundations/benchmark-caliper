@@ -498,6 +498,61 @@ export interface ReportResponse {
   raw: string
 }
 
+export interface GalleryEntry {
+  id: string
+  benchmarkName: string
+  slug: string
+  deploymentDescription: string
+}
+
+export interface GalleryReport extends GalleryEntry {
+  scoring: Record<string, unknown>
+  raw: string
+}
+
+/**
+ * GET /api/gallery → all curated expert assessments for the sidebar.
+ */
+export async function fetchGallery(): Promise<GalleryEntry[]> {
+  const r = await fetch('/api/gallery')
+  if (!r.ok) {
+    throw new ApiError(r.status, r.statusText)
+  }
+  const data = await r.json()
+  const list = Array.isArray(data.benchmarks) ? data.benchmarks : []
+  return list.map(
+    (b: Record<string, unknown>): GalleryEntry => ({
+      id: String(b.id ?? ''),
+      benchmarkName: String(b.benchmark_name ?? ''),
+      slug: String(b.slug ?? ''),
+      deploymentDescription: String(b.deployment_description ?? ''),
+    }),
+  )
+}
+
+/**
+ * GET /api/gallery/{id} → one curated benchmark's scoring + raw output.
+ */
+export async function fetchGalleryReport(id: string): Promise<GalleryReport> {
+  const r = await fetch(`/api/gallery/${encodeURIComponent(id)}`)
+  if (!r.ok) {
+    const text = await r.text().catch(() => '')
+    throw new ApiError(r.status, text || r.statusText)
+  }
+  const data = await r.json()
+  return {
+    id: String(data.id ?? id),
+    benchmarkName: String(data.benchmark_name ?? ''),
+    slug: String(data.slug ?? ''),
+    deploymentDescription: String(data.deployment_description ?? ''),
+    scoring:
+      data.scoring && typeof data.scoring === 'object'
+        ? (data.scoring as Record<string, unknown>)
+        : {},
+    raw: typeof data.raw === 'string' ? data.raw : '',
+  }
+}
+
 /**
  * GET /api/runs/{runId}/report → the final scoring + slug for the
  * landing page reached from the email link.

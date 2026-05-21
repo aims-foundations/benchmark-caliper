@@ -25,10 +25,192 @@ body {
   box-sizing: border-box;
 }
 
+.app-shell {
+  display: flex;
+  align-items: flex-start;
+  min-height: 100vh;
+}
+
 .app {
+  flex: 1;
+  min-width: 0;
   max-width: 640px;
   margin: 2rem auto;
   padding: 0 1rem;
+  position: relative;
+}
+
+/* ---------- gallery sidebar ---------- */
+
+.gallery-sidebar {
+  flex: 0 0 16rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 0.85rem;
+  border-right: 1px solid #ddd;
+  background: rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+}
+
+@media (prefers-color-scheme: dark) {
+  .gallery-sidebar {
+    border-right-color: #333;
+    background: rgba(255, 255, 255, 0.02);
+  }
+}
+
+.gallery-title {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.gallery-hint {
+  margin: 0 0 0.85rem;
+  font-size: 0.78rem;
+  color: #777;
+  line-height: 1.4;
+}
+
+.gallery-list {
+  list-style: none;
+  margin: 0 0 0.85rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* "Your benchmark" — pinned below the scrollable list, always visible. */
+.gallery-session-pinned {
+  padding-top: 0.6rem;
+  margin-bottom: 0.6rem;
+  border-top: 1px solid #ddd;
+}
+
+@media (prefers-color-scheme: dark) {
+  .gallery-session-pinned {
+    border-top-color: #333;
+  }
+}
+
+.gallery-item {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  text-align: left;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.gallery-item:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.gallery-item:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.gallery-item.selected {
+  border-color: #4663ff;
+  background: rgba(70, 99, 255, 0.08);
+}
+
+.gallery-item-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.gallery-item-context {
+  font-size: 0.72rem;
+  color: #777;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.gallery-item.session .gallery-item-name::before {
+  content: '★ ';
+  color: #c8911a;
+}
+
+@media (prefers-color-scheme: dark) {
+  .gallery-item:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.07);
+  }
+  .gallery-item-context,
+  .gallery-hint {
+    color: #999;
+  }
+}
+
+.gallery-add {
+  flex-shrink: 0;
+  padding: 0.5rem;
+  font: inherit;
+  font-size: 0.83rem;
+  font-weight: 600;
+  border: 1px dashed #999;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.gallery-add:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.gallery-add:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.restart-session {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  padding: 0.5rem 0.85rem;
+  font: inherit;
+  font-size: 0.8rem;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+.restart-session:hover:not(:disabled) {
+  background: #f0f0f0;
+  color: #333;
+  border-color: #999;
+}
+
+@media (prefers-color-scheme: dark) {
+  .restart-session {
+    background: #2a2a2a;
+    color: #eee;
+    border-color: #555;
+  }
+  .restart-session:hover:not(:disabled) {
+    background: #383838;
+    color: #eee;
+    border-color: #777;
+  }
 }
 
 header h1 {

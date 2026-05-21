@@ -24,6 +24,10 @@ interface Props {
   slug: string
   onStartOver: () => void
   onChangeKey: () => void
+  /** Override the review.pdf URL (curated gallery entries live elsewhere). */
+  pdfUrl?: string
+  /** Curated/read-only view: hides the feedback form and key controls. */
+  readOnly?: boolean
 }
 
 const DIMENSION_LABELS: Record<string, string> = {
@@ -68,6 +72,8 @@ export function ScoringView({
   slug,
   onStartOver,
   onChangeKey,
+  pdfUrl,
+  readOnly = false,
 }: Props) {
   const [tab, setTab] = useState<Tab>('table')
   const [feedbackOpen, setFeedbackOpen] = useState(false)
@@ -244,15 +250,17 @@ export function ScoringView({
       </dl>
 
       <div className="actions">
-        <button type="button" className="link" onClick={onChangeKey}>
-          Change key
-        </button>
+        {!readOnly && (
+          <button type="button" className="link" onClick={onChangeKey}>
+            Change key
+          </button>
+        )}
         <button type="button" className="link" onClick={handleDownload}>
           Download {tab === 'table' ? '.json' : '.txt'}
         </button>
         <a
           className="link"
-          href={`/api/runs/${runId}/review.pdf`}
+          href={pdfUrl ?? `/api/runs/${runId}/review.pdf`}
           download={`validity_report_${slug || runId}.pdf`}
           target="_blank"
           rel="noreferrer"
@@ -267,14 +275,16 @@ export function ScoringView({
       <aside className="score-disclaimer">
         <strong>A note on these scores.</strong> This pipeline is still a
         work in progress, and we're improving it as we learn. Each score
-        reflects Claude Opus's reading of the documents you shared. It's
+        reflects Claude Opus's reading of the documents shared. It's
         a careful, structured opinion, but not the final word - the model can
         miss context or weigh things differently than you would. Please
         treat this report as a useful starting point for thinking through
-        your benchmark's fit. If something looks off, we'd love to hear about it 
-        through the form below - that's how we make the next version better.
+        the benchmark's fit.
+        {!readOnly &&
+          " If something looks off, we'd love to hear about it through the form below - that's how we make the next version better."}
       </aside>
 
+      {!readOnly && (
       <details
         className="feedback-section"
         open={feedbackOpen}
@@ -353,6 +363,7 @@ export function ScoringView({
           </form>
         )}
       </details>
+      )}
     </section>
   )
 }

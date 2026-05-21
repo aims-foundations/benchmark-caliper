@@ -49,6 +49,7 @@ from . import (
     dataset_analysis,
     db,
     email_notify,
+    gallery,
     logging_gate,
     mock_anthropic,
     pdf_utils,
@@ -2067,6 +2068,39 @@ def get_review_pdf(run_id: str) -> Response:
         media_type="application/pdf",
         headers={
             "Content-Disposition": f'inline; filename="review-{run_id}.pdf"',
+        },
+    )
+
+
+# ---------- curated benchmark gallery (public, read-only) ----------
+
+
+@app.get("/api/gallery")
+def get_gallery() -> dict:
+    """List all curated expert assessments for the sidebar gallery."""
+    return {"benchmarks": gallery.list_entries()}
+
+
+@app.get("/api/gallery/{entry_id}")
+def get_gallery_report(entry_id: str) -> dict:
+    """Scoring data + raw Opus output for one curated benchmark."""
+    report = gallery.get_report(entry_id)
+    if report is None:
+        raise HTTPException(404, "benchmark not found")
+    return report
+
+
+@app.get("/api/gallery/{entry_id}/review.pdf")
+def get_gallery_review_pdf(entry_id: str) -> Response:
+    """Return a curated benchmark's review.pdf (application/pdf)."""
+    path = gallery.review_pdf_path(entry_id)
+    if path is None:
+        raise HTTPException(404, "review.pdf not found")
+    return Response(
+        content=path.read_bytes(),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'inline; filename="review-{entry_id}.pdf"',
         },
     )
 
