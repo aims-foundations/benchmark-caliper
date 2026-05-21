@@ -137,9 +137,6 @@ The website classifies every piece of data into one of four tiers. All persisten
 - **No `.env` files are committed.**
   *How to verify:* `git log --all --full-history -- '*.env'` returns no results.
 
-- **No `.env` files are committed.**
-  *How to verify:* `git log --all --full-history -- '*.env'` returns no results.
-
 ---
 
 ## Pre-launch verification
@@ -163,22 +160,15 @@ These items genuinely depend on deployed infrastructure, hosting accounts, or wr
 - [ ] 2FA enforced on GitHub org, hosting provider, DNS registrar.
 - [ ] Deploy credentials follow least privilege (can deploy and roll back; cannot delete the project, change billing, or read user data).
 - [ ] Production secrets stored in hosting provider's secret manager, not in env files in the repo.
-- [ ] Quarterly rotation of production secrets (DB password, blob-store credentials, signing keys).
 
 ### Monitoring
 
 - [ ] Uptime monitor pings the site every minute; alert fires within 2 minutes of simulated outage.
 - [ ] Error tracking (Sentry or equivalent) is configured with PII scrubbing for keys and request bodies.
-- [ ] Cost dashboard shows daily/weekly spend per model.
-
-### Supply chain (depends on GitHub org)
-
-- [ ] `.github/dependabot.yml` configured for weekly security updates with no auto-merge.
 
 ### Public-facing docs and addresses
 
 - [ ] A privacy policy page is live, linked from the footer of every page, and every claim maps to a statement above. (Copy still needs writing — see README.md "Known gaps for v0".)
-- [ ] An incident response runbook (`INCIDENT_RUNBOOK.md`) covers discovery → triage → containment → user notification → postmortem. (Required for GDPR Article 33 compliance — 72-hour breach-notification deadline.)
 - [ ] Security contact email is published in `SECURITY.md` and on the website; the address auto-forwards to a monitored inbox.
 
 ### Review cadence
@@ -191,6 +181,7 @@ These items genuinely depend on deployed infrastructure, hosting accounts, or wr
 
 | Date | Reviewer | Notes |
 |------|----------|-------|
+| 2026-05-21 | trim | Dropped four pre-launch items judged non-essential for v0: Dependabot config, incident runbook, quarterly secret rotation, cost dashboard. GDPR Art. 33 breach-notification duty still applies to EU users independent of the removed runbook line. Also removed a duplicated "no `.env` committed" claim in §6. |
 | 2026-05-19 | rewrite | Restructured into declarative claims (what the code guarantees) and a pre-launch checklist (what hosting / process / docs need to add before a public deploy). All declarative items audited against the codebase at this date. Workspace retention added to `retention.py` to cover the now-persisted source PDF. Incident runbook + Dependabot config tracked as pre-launch items (not yet written). |
 | 2026-05-10 | follow-up fixes | Closed 4 of 5 fail items from the pre-deploy audit. Schema default for `user_opted_in_full` flipped to `0`. Rate limiting intentionally not added in-app — handled at the hosting edge during deploy. |
 | 2026-05-10 | pre-deploy audit | First end-to-end walk-through against the running Docker stack. |
