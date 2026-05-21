@@ -113,9 +113,7 @@ export function SummaryView({
       <h2>Elicitation summary</h2>
       <p className="help">
         Step 2-summary's output. Downstream steps (region YAML, web search,
-        Opus scoring) will consume this. We hold prompts and responses for
-        at most 90 days, then auto-delete; you can export or delete sooner
-        below.
+        Opus scoring) will consume this.
       </p>
 
       <pre className="summary-text">{summary}</pre>
@@ -140,10 +138,10 @@ export function SummaryView({
       <form onSubmit={handleStart} className="email-form">
         <h3>Where should we send your report?</h3>
         <p className="help">
-          Scoring takes about 3–7 minutes on your Anthropic key. You can
-          close this tab — we'll email you a link to the finished report
-          plus a Markdown and JSON copy. Your email is kept only on this
-          run's row and is removed when you delete the run.
+          Scoring takes about 3–7 minutes on your Anthropic key. After the
+          scoring step finishes, we'll email you a link to the finished
+          report plus a Markdown and JSON copy. Your email is kept only on
+          this session.
         </p>
 
         <label className="email-field">
@@ -173,7 +171,7 @@ export function SummaryView({
             onChange={(e) => setStepByStep(e.target.checked)}
           />
           <span>
-            Walk me through each step instead — I'd rather review the
+            Walk me through each step instead. I'd rather review the
             extracted paper and regional context before scoring.
           </span>
         </label>
@@ -192,14 +190,6 @@ export function SummaryView({
             disabled={busy !== null}
           >
             {busy === 'export' ? 'Exporting…' : 'Download all data'}
-          </button>
-          <button
-            type="button"
-            className="link danger"
-            onClick={handleDelete}
-            disabled={busy !== null}
-          >
-            {busy === 'delete' ? 'Deleting…' : 'Delete from server'}
           </button>
           <button
             type="button"

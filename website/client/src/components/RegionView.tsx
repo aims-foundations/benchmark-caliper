@@ -120,7 +120,7 @@ export function RegionView({
           Run another
         </button>
         <button type="button" onClick={onScore}>
-          Score validity →
+          Preview scoring prompt →
         </button>
       </div>
     </section>
