@@ -7,6 +7,41 @@ interface Props {
   onChangeKey: () => void
 }
 
+// Mirrors the 6 validity dimensions in framework.yaml. The 2-letter codes
+// (IO/IC/IF/OO/OC/OF) come from the model; we expand them here for the UI.
+const DIMENSION_INFO: Record<string, { name: string; blurb: string }> = {
+  IO: {
+    name: 'Input Ontology',
+    blurb:
+      "Do the benchmark's input categories match the kinds of inputs your deployment will actually see?",
+  },
+  IC: {
+    name: 'Input Content',
+    blurb:
+      'Are the actual examples — language, scenarios, cultural references — representative of your deployment context?',
+  },
+  IF: {
+    name: 'Input Form',
+    blurb:
+      'Does the format and modality of inputs (length, structure, dialogue turns) match what your system will receive?',
+  },
+  OO: {
+    name: 'Output Ontology',
+    blurb:
+      "Do the benchmark's output categories (labels, scoring axes) cover what your deployment actually cares about?",
+  },
+  OC: {
+    name: 'Output Content',
+    blurb:
+      'Are the ground-truth answers what your users would consider correct in their context?',
+  },
+  OF: {
+    name: 'Output Form',
+    blurb:
+      'Does the expected output format (length, structure, register) match what your deployment needs to produce?',
+  },
+}
+
 export function AnswerForm({ questions, onSubmit, onChangeKey }: Props) {
   const [answers, setAnswers] = useState<Record<string, string>>({})
 
@@ -34,28 +69,34 @@ export function AnswerForm({ questions, onSubmit, onChangeKey }: Props) {
       <h2>Answer the elicitation questions</h2>
       <p className="help">
         These questions close the gap between what the benchmark documents and
-        what your deployment actually requires. A short answer is fine — it's
-        the structure that matters, not the length.
+        what your deployment actually requires.
       </p>
 
       <ol className="question-list">
-        {questions.map((q) => (
-          <li key={q.id}>
-            <label>
-              <span className="question-header">
-                <span className="dim-tag">{q.dimension}</span>
+        {questions.map((q) => {
+          const info = DIMENSION_INFO[q.dimension]
+          return (
+            <li key={q.id}>
+              <label>
+                <span className="question-header">
+                  <span className="dim-tag">{q.dimension}</span>
+                  <span className="dim-name-full">
+                    {info?.name ?? q.dimension}
+                  </span>
+                </span>
+                {info && <p className="dim-blurb">{info.blurb}</p>}
                 <span className="question-text">{q.question}</span>
-              </span>
-              <textarea
-                rows={3}
-                maxLength={5000}
-                value={answers[q.id] ?? ''}
-                onChange={(e) => handleChange(q.id, e.target.value)}
-                required
-              />
-            </label>
-          </li>
-        ))}
+                <textarea
+                  rows={3}
+                  maxLength={5000}
+                  value={answers[q.id] ?? ''}
+                  onChange={(e) => handleChange(q.id, e.target.value)}
+                  required
+                />
+              </label>
+            </li>
+          )
+        })}
       </ol>
 
       <div className="actions">

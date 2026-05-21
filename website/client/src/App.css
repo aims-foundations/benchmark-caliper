@@ -414,6 +414,72 @@ input[type='file'] {
   font-size: 0.95rem;
 }
 
+.dim-name-full {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.hf-details {
+  margin: 0.5rem 0 1rem 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+@media (prefers-color-scheme: dark) {
+  .hf-details {
+    border-color: #444;
+    background: rgba(255, 255, 255, 0.03);
+  }
+}
+
+.hf-details legend {
+  padding: 0 0.4rem;
+  font-size: 0.9rem;
+}
+
+.hf-details .help {
+  margin-top: 0.25rem;
+}
+
+.hf-details label {
+  display: block;
+  margin-top: 0.5rem;
+}
+
+.hf-details input[type="text"] {
+  width: 100%;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 0.9rem;
+}
+
+.composed-prompt {
+  max-height: 60vh;
+  overflow-y: auto;
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.dim-blurb {
+  margin: 0.25rem 0 0.5rem 0;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: #555;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+  line-height: 1.4;
+}
+
+@media (prefers-color-scheme: dark) {
+  .dim-blurb {
+    color: #bbb;
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
 .score-list {
   list-style: none;
   padding: 0;
