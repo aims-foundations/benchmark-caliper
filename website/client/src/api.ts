@@ -74,6 +74,10 @@ export interface RunInput {
   pdfFile: File
   deploymentDescription: string
   optedInFull: boolean
+  // Optional. When set, Step 5b (HF dataset analysis) runs against this
+  // dataset and its findings are folded into the Opus scoring prompt.
+  hfDatasetId?: string | null
+  hfConfig?: string | null
 }
 
 /**
@@ -89,6 +93,8 @@ export async function* runPipeline(
   formData.append('pdf', input.pdfFile)
   formData.append('deployment_description', input.deploymentDescription)
   formData.append('opted_in_full', String(input.optedInFull))
+  if (input.hfDatasetId) formData.append('hf_dataset_id', input.hfDatasetId)
+  if (input.hfConfig) formData.append('hf_config', input.hfConfig)
 
   const response = await fetch('/api/runs', {
     method: 'POST',
@@ -195,6 +201,41 @@ export interface ScoreInput {
   benchmarkYaml: string
   regionYaml: string
   elicitationSummary: string
+}
+
+export interface ComposePromptInput {
+  runId: string
+  benchmarkYaml: string
+  regionYaml: string
+  elicitationSummary: string
+}
+
+/**
+ * POST /api/runs/{runId}/compose-prompt. Step 6 — deterministic
+ * assembly of the Opus user message. Returns synchronously; no key
+ * required (no Anthropic call). Used by the step-by-step UI to let
+ * the user review the prompt before authorizing the Opus call.
+ */
+export async function composePrompt(
+  input: ComposePromptInput,
+): Promise<{ composed_prompt: string; run_id: string }> {
+  const response = await fetch(
+    `/api/runs/${encodeURIComponent(input.runId)}/compose-prompt`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        benchmark_yaml: input.benchmarkYaml,
+        region_yaml: input.regionYaml,
+        elicitation_summary: input.elicitationSummary,
+      }),
+    },
+  )
+  if (!response.ok) {
+    const text = await response.text().catch(() => '')
+    throw new ApiError(response.status, text || response.statusText)
+  }
+  return (await response.json()) as { composed_prompt: string; run_id: string }
 }
 
 /**

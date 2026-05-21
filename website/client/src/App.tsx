@@ -15,6 +15,7 @@ import { AnswerForm } from './components/AnswerForm'
 import { SummaryView } from './components/SummaryView'
 import { ExtractedView } from './components/ExtractedView'
 import { RegionView } from './components/RegionView'
+import { ComposedPromptView } from './components/ComposedPromptView'
 import { ScoringView } from './components/ScoringView'
 import { ReportView } from './components/ReportView'
 import { ConsentGate } from './components/ConsentGate'
@@ -25,6 +26,7 @@ import {
   submitAnswers,
   extractPaper,
   generateRegion,
+  composePrompt,
   scoreValidity,
   setRunEmail,
   startAutoRun,
@@ -96,6 +98,14 @@ interface RegionedState {
   elicitationSummary: string
 }
 
+interface ComposedState {
+  runId: string
+  slug: string
+  composedPrompt: string
+  // Carried forward so "Send to Opus" can kick off scoring.
+  regioned: RegionedState
+}
+
 interface ScoringState {
   runId: string
   slug: string
@@ -135,6 +145,7 @@ type Phase =
   | { name: 'extracted'; state: ExtractedState }
   | { name: 'regioning'; state: RegioningState }
   | { name: 'regioned'; state: RegionedState }
+  | { name: 'composed'; state: ComposedState }
   | { name: 'scoring'; state: ScoringState; from: RegionedState }
   | { name: 'scored'; state: ScoredState }
   | { name: 'deleted' }
@@ -189,6 +200,8 @@ export function App() {
     pdfFile: File,
     description: string,
     optedInFull: boolean,
+    hfDatasetId: string | null,
+    hfConfig: string | null,
   ): Promise<void> {
     const apiKey = getKey()
     if (!apiKey) {
@@ -214,6 +227,8 @@ export function App() {
         pdfFile,
         deploymentDescription: description,
         optedInFull,
+        hfDatasetId,
+        hfConfig,
       })) {
         events.push(event)
         setPhase({
@@ -601,14 +616,45 @@ export function App() {
     })
   }
 
-  async function handleScore(): Promise<void> {
+  async function handleCompose(): Promise<void> {
     if (phase.name !== 'regioned') return
+    const base = phase.state
+    try {
+      const res = await composePrompt({
+        runId: base.runId,
+        benchmarkYaml: base.benchmarkYaml,
+        regionYaml: base.regionYaml,
+        elicitationSummary: base.elicitationSummary,
+      })
+      setPhase({
+        name: 'composed',
+        state: {
+          runId: base.runId,
+          slug: base.slug,
+          composedPrompt: res.composed_prompt,
+          regioned: base,
+        },
+      })
+    } catch (e) {
+      const message =
+        e instanceof ApiError
+          ? `Could not compose prompt (${e.status})`
+          : 'Could not compose prompt'
+      setPhase({ name: 'error', message })
+    }
+  }
+
+  async function handleScore(fromState?: RegionedState): Promise<void> {
+    const base =
+      fromState ??
+      (phase.name === 'regioned' ? phase.state : undefined) ??
+      (phase.name === 'composed' ? phase.state.regioned : undefined)
+    if (!base) return
     const apiKey = getKey()
     if (!apiKey) {
       setPhase({ name: 'enter-key' })
       return
     }
-    const base = phase.state
     const events: PipelineEvent[] = []
     setPhase({
       name: 'scoring',
@@ -873,7 +919,20 @@ export function App() {
           slug={phase.state.slug}
           onStartOver={handleStartOver}
           onChangeKey={handleChangeKey}
-          onScore={handleScore}
+          onScore={handleCompose}
+        />
+      )}
+
+      {phase.name === 'composed' && (
+        <ComposedPromptView
+          composedPrompt={phase.state.composedPrompt}
+          runId={phase.state.runId}
+          slug={phase.state.slug}
+          onBack={() =>
+            setPhase({ name: 'regioned', state: phase.state.regioned })
+          }
+          onScore={() => handleScore(phase.state.regioned)}
+          onChangeKey={handleChangeKey}
         />
       )}
 
