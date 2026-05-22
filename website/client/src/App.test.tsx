@@ -379,7 +379,6 @@ describe('App', () => {
 
     // 2. Choose step-by-step mode. The server already has the PDF from
     // /api/runs, so extraction starts without asking for another upload.
-    await user.type(screen.getByLabelText(/email address/i), 'test@example.org')
     await user.click(screen.getByLabelText(/walk me through each step/i))
     await user.click(
       screen.getByRole('button', { name: /start step-by-step/i }),
@@ -474,7 +473,6 @@ describe('App', () => {
     )
 
     // Choose step-by-step mode; extraction starts with the stashed PDF.
-    await user.type(screen.getByLabelText(/email address/i), 'test@example.org')
     await user.click(screen.getByLabelText(/walk me through each step/i))
     await user.click(
       screen.getByRole('button', { name: /start step-by-step/i }),
@@ -576,7 +574,6 @@ describe('App', () => {
         screen.getByRole('heading', { name: /elicitation summary/i }),
       ).toBeInTheDocument(),
     )
-    await user.type(screen.getByLabelText(/email address/i), 'test@example.org')
     await user.click(screen.getByLabelText(/walk me through each step/i))
     await user.click(
       screen.getByRole('button', { name: /start step-by-step/i }),

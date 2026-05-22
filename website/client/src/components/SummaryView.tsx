@@ -8,11 +8,9 @@ interface Props {
   onStartOver: () => void
   onChangeKey: () => void
   onDeleted: () => void
-  /** Called when the user submits the email-and-mode form. */
-  onStart: (input: { email: string; stepByStep: boolean }) => void
+  /** Called when the user picks a mode and starts the rest of the run. */
+  onStart: (input: { stepByStep: boolean }) => void
 }
-
-const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
 
 /**
  * Renders the elicitation summary as preformatted markdown text.
@@ -21,6 +19,10 @@ const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
  * output is treated as untrusted text per SECURITY.md. The user sees the
  * raw markdown; pretty rendering is a future-slice enhancement that
  * would require a vetted, sandboxed renderer.
+ *
+ * NOTE: the report-ready email collection is temporarily disabled — it
+ * needs a configured Resend account (RESEND_API_KEY). Until that's set
+ * up, the report is shown on-screen and downloadable instead.
  */
 export function SummaryView({
   summary,
@@ -33,19 +35,11 @@ export function SummaryView({
 }: Props) {
   const [busy, setBusy] = useState<null | 'export' | 'delete'>(null)
   const [error, setError] = useState<string | null>(null)
-  const [email, setEmail] = useState('')
   const [stepByStep, setStepByStep] = useState(false)
-  const [touchedEmail, setTouchedEmail] = useState(false)
-
-  const trimmedEmail = email.trim()
-  const emailValid = EMAIL_RE.test(trimmedEmail)
-  const showEmailError = touchedEmail && !emailValid
 
   function handleStart(e: FormEvent<HTMLFormElement>): void {
     e.preventDefault()
-    setTouchedEmail(true)
-    if (!emailValid) return
-    onStart({ email: trimmedEmail, stepByStep })
+    onStart({ stepByStep })
   }
 
   function downloadBlob(content: string, filename: string, type: string): void {
@@ -141,33 +135,12 @@ export function SummaryView({
       )}
 
       <form onSubmit={handleStart} className="email-form">
-        <h3>Where should we send your report?</h3>
+        <h3>Run the validity scoring</h3>
         <p className="help">
-          Scoring takes about 3–7 minutes on your Anthropic key. After the
-          scoring step finishes, we'll email you a link to the finished
-          report plus a Markdown and JSON copy. Your email is kept only on
-          this session.
+          Scoring takes about 3–7 minutes on your Anthropic key. The
+          finished report appears here when it's done, and you can download
+          it as Markdown and JSON.
         </p>
-
-        <label className="email-field">
-          <span>Email address</span>
-          <input
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            onBlur={() => setTouchedEmail(true)}
-            aria-invalid={showEmailError}
-            aria-describedby={showEmailError ? 'email-error' : undefined}
-            maxLength={320}
-          />
-        </label>
-        {showEmailError && (
-          <p id="email-error" role="alert" className="inline-error">
-            That doesn't look like a valid email address.
-          </p>
-        )}
 
         <label className="step-by-step">
           <input

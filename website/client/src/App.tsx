@@ -33,7 +33,6 @@ import {
   analyzeDataset,
   composePrompt,
   scoreValidity,
-  setRunEmail,
   startAutoRun,
   subscribeRunEvents,
   fetchGallery,
@@ -369,7 +368,6 @@ export function App() {
     runId: string
     slug: string
     elicitationSummary: string
-    email: string
     stepByStep: boolean
   }): Promise<void> {
     // The Anthropic key has to be available for both paths: auto-mode
@@ -377,16 +375,6 @@ export function App() {
     // and step-by-step still posts it as a header on each phase call.
     if (!getKey()) {
       setPhase({ name: 'enter-key' })
-      return
-    }
-    try {
-      await setRunEmail(args.runId, args.email)
-    } catch (e) {
-      const message =
-        e instanceof ApiError
-          ? `Could not save email (${e.status}). Try again.`
-          : 'Could not save email. Try again.'
-      setPhase({ name: 'error', message })
       return
     }
 
@@ -1008,7 +996,6 @@ export function App() {
               runId: phase.state.runId,
               slug: phase.state.slug,
               elicitationSummary: phase.state.summary,
-              email: input.email,
               stepByStep: input.stepByStep,
             })
           }}
