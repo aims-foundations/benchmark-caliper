@@ -22,6 +22,7 @@ import { ReportView } from './components/ReportView'
 import { ConsentGate } from './components/ConsentGate'
 import { MatrixBackdrop } from './components/MatrixBackdrop'
 import { SiteHeader } from './components/SiteHeader'
+import { SiteFooter } from './components/SiteFooter'
 import { hasKey, getKey, clearKey } from './keyStorage'
 import { hasConsent } from './consentStorage'
 import {
@@ -1147,20 +1148,6 @@ export function App() {
         </div>
       )}
 
-      <footer>
-        <p>
-          Your API key stays on this device. We never store it on our servers.
-          {' '}
-          <button
-            type="button"
-            className="link"
-            onClick={() => setShowPrivacy(true)}
-          >
-            Privacy notice
-          </button>
-        </p>
-      </footer>
-
       {showPrivacy && (
         <div className="modal-overlay" role="dialog" aria-modal="true">
           <div className="modal-body">
@@ -1181,6 +1168,7 @@ export function App() {
       )}
       </main>
       </div>
+      <SiteFooter onPrivacyClick={() => setShowPrivacy(true)} />
     </>
   )
 }
