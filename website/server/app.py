@@ -1150,14 +1150,38 @@ async def post_dataset_analysis(
     # later status, so we don't gate on status here — the client can
     # rerun DA after scoring if they want.
 
+    # Resolve the HF target. Explicit body fields win; otherwise fall back
+    # to the hf_dataset_id the user typed on the initial /api/runs form
+    # (still held in active_runs), then to a benchmark_name pulled from the
+    # YAML for an hf_links.json lookup. This mirrors the auto-run
+    # orchestrator's _run_dataset_analysis_phase so the step-by-step and
+    # auto paths resolve a dataset identically — Step 5b is no longer
+    # silently skipped in step-by-step mode just because the client did
+    # not re-send the dataset id.
+    hf_dataset_id = body.hf_dataset_id
+    hf_config = body.hf_config
+    if not hf_dataset_id:
+        _active = active_runs.store.get(run_id)
+        if _active is not None:
+            hf_dataset_id = _active.hf_dataset_id
+            if not hf_config:
+                hf_config = _active.hf_config
+    benchmark_name = body.benchmark_name
+    if not benchmark_name:
+        _m = re.search(
+            r"^name:\s*(\S+)", body.benchmark_yaml, flags=re.MULTILINE
+        )
+        if _m:
+            benchmark_name = _m.group(1).strip('"').strip("'")
+
     async def stream() -> AsyncIterator[str]:
         try:
             yield format_event("step-started", {"step": "5b-resolve"})
             target = await asyncio.to_thread(
                 dataset_analysis.resolve_target,
-                hf_dataset_id=body.hf_dataset_id,
-                hf_config=body.hf_config,
-                benchmark_name=body.benchmark_name,
+                hf_dataset_id=hf_dataset_id,
+                hf_config=hf_config,
+                benchmark_name=benchmark_name,
             )
             if target is None:
                 yield format_event(
@@ -1241,6 +1265,35 @@ async def post_dataset_analysis(
             "X-Accel-Buffering": "no",
         },
     )
+
+
+# ---------- HuggingFace dataset config probe ----------
+
+
+@app.get("/api/hf/dataset-configs")
+async def get_hf_dataset_configs(dataset_id: str) -> dict:
+    """List the config names for a HuggingFace dataset repo.
+
+    The run form calls this when the user supplies a dataset id but no
+    config: a repo with more than one config would otherwise have Step 5b
+    silently profile only its default config. Best-effort — returns an
+    empty list (never an error status) when the configs can't be
+    enumerated, so the form can fall back to submitting as-is.
+    """
+    ds_id = dataset_id.strip()
+    if not re.fullmatch(r"[A-Za-z0-9._-]+/[A-Za-z0-9._-]+", ds_id):
+        raise HTTPException(400, "dataset_id must look like 'org/dataset'")
+
+    def _list_configs() -> list[str]:
+        from datasets import get_dataset_config_names
+
+        return list(get_dataset_config_names(ds_id))
+
+    try:
+        configs = await asyncio.to_thread(_list_configs)
+    except Exception as e:  # network, missing dep, remote-code, 404, …
+        return {"dataset_id": ds_id, "configs": [], "error": type(e).__name__}
+    return {"dataset_id": ds_id, "configs": configs}
 
 
 # ---------- compose-prompt endpoint (Step 6, preview only) ----------

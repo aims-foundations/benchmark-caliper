@@ -28,6 +28,7 @@ import {
   submitAnswers,
   extractPaper,
   generateRegion,
+  analyzeDataset,
   composePrompt,
   scoreValidity,
   setRunEmail,
@@ -103,6 +104,14 @@ interface RegionedState {
   paperSummary: string
   benchmarkYaml: string
   elicitationSummary: string
+  // Step 5b output. Empty string when DA was skipped (no HF dataset
+  // resolved) or failed; non-empty findings are folded into Step 6/7.
+  datasetAnalysisText: string
+}
+
+interface AnalyzingDatasetState {
+  runId: string
+  slug: string
 }
 
 interface ComposedState {
@@ -151,6 +160,7 @@ type Phase =
   | { name: 'extracting'; state: ExtractingState }
   | { name: 'extracted'; state: ExtractedState }
   | { name: 'regioning'; state: RegioningState }
+  | { name: 'analyzing-dataset'; state: AnalyzingDatasetState }
   | { name: 'regioned'; state: RegionedState }
   | { name: 'composed'; state: ComposedState }
   | { name: 'scoring'; state: ScoringState; from: RegionedState }
@@ -661,6 +671,34 @@ export function App() {
       return
     }
 
+    // ---------- Step 5b: HuggingFace dataset analysis ----------
+    // Always attempt DA — it already runs in auto mode via the
+    // orchestrator, and step-by-step must not silently skip it. The
+    // backend resolves the HF dataset the user typed on the first form;
+    // if none resolves it emits da-skipped and we proceed with empty
+    // findings. A DA failure is never fatal — scoring still runs.
+    setPhase({
+      name: 'analyzing-dataset',
+      state: { runId: base.runId, slug: base.slug },
+    })
+    let datasetAnalysisText = ''
+    try {
+      for await (const event of analyzeDataset({
+        apiKey,
+        runId: base.runId,
+        benchmarkYaml: base.benchmarkYaml,
+        elicitationSummary: base.elicitationSummary,
+        webSearchText: regionYaml,
+      })) {
+        if (event.type === 'da-complete') {
+          datasetAnalysisText = event.datasetAnalysisText
+        }
+      }
+    } catch {
+      // Best-effort: a DA transport failure must not block scoring.
+      datasetAnalysisText = ''
+    }
+
     setPhase({
       name: 'regioned',
       state: {
@@ -674,6 +712,7 @@ export function App() {
         paperSummary: base.paperSummary,
         benchmarkYaml: base.benchmarkYaml,
         elicitationSummary: base.elicitationSummary,
+        datasetAnalysisText,
       },
     })
   }
@@ -687,6 +726,7 @@ export function App() {
         benchmarkYaml: base.benchmarkYaml,
         regionYaml: base.regionYaml,
         elicitationSummary: base.elicitationSummary,
+        datasetAnalysisText: base.datasetAnalysisText,
       })
       setPhase({
         name: 'composed',
@@ -736,6 +776,7 @@ export function App() {
         benchmarkYaml: base.benchmarkYaml,
         regionYaml: base.regionYaml,
         elicitationSummary: base.elicitationSummary,
+        datasetAnalysisText: base.datasetAnalysisText,
       })) {
         events.push(event)
         setPhase({
@@ -1006,6 +1047,19 @@ export function App() {
           steps={REGION_STEPS}
           heading="Building region context"
         />
+      )}
+
+      {phase.name === 'analyzing-dataset' && (
+        <section className="status" role="status" aria-live="polite">
+          <h2>Analyzing the benchmark dataset</h2>
+          <p className="help">
+            Step 5b — profiling the benchmark's HuggingFace dataset and
+            interpreting it against your deployment context. The findings
+            are folded into the validity scoring. This can take several
+            minutes; it is skipped automatically if the benchmark has no
+            resolvable HuggingFace dataset.
+          </p>
+        </section>
       )}
 
       {phase.name === 'regioned' && (

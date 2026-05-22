@@ -744,6 +744,37 @@ code {
   font-size: 0.88rem;
 }
 
+.hf-config-picker {
+  margin-top: 0.6rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid rgba(177, 4, 14, 0.3);
+  border-left: 3px solid var(--digital-red);
+  border-radius: var(--radius-md);
+  background: #fdf3f3;
+}
+
+.hf-config-picker .inline-error {
+  margin-bottom: 0.5rem;
+}
+
+.hf-config-select {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--black-30);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  background: var(--white);
+  color: var(--ink);
+}
+
+.hf-config-select:focus {
+  outline: none;
+  border-color: var(--digital-blue);
+  box-shadow: 0 0 0 3px rgba(0, 108, 184, 0.12);
+}
+
 /* ---------- composed prompt ---------- */
 
 .composed-prompt {

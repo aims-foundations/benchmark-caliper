@@ -45,6 +45,8 @@ export type PipelineEvent =
         error?: string | null
       }
     }
+  | { type: 'da-complete'; runId: string; datasetAnalysisText: string }
+  | { type: 'da-skipped'; runId: string; reason: string }
   | { type: 'error'; errorClass: string; runId?: string }
 
 export interface AnswerInput {
@@ -203,6 +205,8 @@ export interface ScoreInput {
   benchmarkYaml: string
   regionYaml: string
   elicitationSummary: string
+  /** Step 5b findings, folded into the Opus prompt. Empty when DA skipped. */
+  datasetAnalysisText?: string
 }
 
 export interface ComposePromptInput {
@@ -210,6 +214,8 @@ export interface ComposePromptInput {
   benchmarkYaml: string
   regionYaml: string
   elicitationSummary: string
+  /** Step 5b findings, folded into the composed prompt. Empty when skipped. */
+  datasetAnalysisText?: string
 }
 
 /**
@@ -230,6 +236,7 @@ export async function composePrompt(
         benchmark_yaml: input.benchmarkYaml,
         region_yaml: input.regionYaml,
         elicitation_summary: input.elicitationSummary,
+        dataset_analysis_text: input.datasetAnalysisText ?? '',
       }),
     },
   )
@@ -260,6 +267,7 @@ export async function* scoreValidity(
         benchmark_yaml: input.benchmarkYaml,
         region_yaml: input.regionYaml,
         elicitation_summary: input.elicitationSummary,
+        dataset_analysis_text: input.datasetAnalysisText ?? '',
       }),
       signal,
     },
@@ -347,6 +355,108 @@ export async function* generateRegion(
       if (event) yield event
       sep = buffer.indexOf('\n\n')
     }
+  }
+}
+
+export interface DatasetAnalysisInput {
+  apiKey: string
+  runId: string
+  benchmarkYaml: string
+  elicitationSummary: string
+  /** The Step 5 region YAML, passed through as context for the analysis. */
+  webSearchText: string
+}
+
+/**
+ * POST /api/runs/{runId}/dataset-analysis. Streams Step 5b (HuggingFace
+ * dataset profiling + Sonnet interpretation).
+ *
+ * The HF dataset id is resolved server-side: the backend falls back to
+ * the id the user typed on the initial form (held in active_runs), so the
+ * client does not need to re-send it. Emits `da-complete` with the
+ * findings, or `da-skipped` when no dataset resolves.
+ */
+export async function* analyzeDataset(
+  input: DatasetAnalysisInput,
+  signal?: AbortSignal,
+): AsyncGenerator<PipelineEvent> {
+  const response = await fetch(
+    appPath(
+      `/api/runs/${encodeURIComponent(input.runId)}/dataset-analysis`,
+    ),
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Anthropic-Key': input.apiKey,
+      },
+      body: JSON.stringify({
+        benchmark_yaml: input.benchmarkYaml,
+        elicitation_summary: input.elicitationSummary,
+        web_search_text: input.webSearchText,
+      }),
+      signal,
+    },
+  )
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => '')
+    throw new ApiError(response.status, text || response.statusText)
+  }
+  if (!response.body) {
+    throw new ApiError(0, 'no response body')
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  while (true) {
+    const { value, done } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    let sep = buffer.indexOf('\n\n')
+    while (sep !== -1) {
+      const chunk = buffer.slice(0, sep)
+      buffer = buffer.slice(sep + 2)
+      const event = parseEvent(chunk)
+      if (event) yield event
+      sep = buffer.indexOf('\n\n')
+    }
+  }
+}
+
+export interface DatasetConfigsResult {
+  datasetId: string
+  configs: string[]
+  /** Set when the configs could not be enumerated (treated as "unknown"). */
+  error?: string
+}
+
+/**
+ * GET /api/hf/dataset-configs → the config names for a HuggingFace dataset.
+ *
+ * Used by the run form to catch a multi-config dataset given without a
+ * config selected — Step 5b would otherwise silently profile only the
+ * default config. On any backend trouble the server returns an empty
+ * list, so callers should treat that as "could not determine".
+ */
+export async function fetchDatasetConfigs(
+  datasetId: string,
+): Promise<DatasetConfigsResult> {
+  const r = await fetch(
+    appPath(
+      `/api/hf/dataset-configs?dataset_id=${encodeURIComponent(datasetId)}`,
+    ),
+  )
+  if (!r.ok) {
+    const text = await r.text().catch(() => '')
+    throw new ApiError(r.status, text || r.statusText)
+  }
+  const data = await r.json()
+  return {
+    datasetId: String(data.dataset_id ?? datasetId),
+    configs: Array.isArray(data.configs) ? data.configs.map(String) : [],
+    error: typeof data.error === 'string' ? data.error : undefined,
   }
 }
 
@@ -739,6 +849,26 @@ function parseEvent(chunk: string): PipelineEvent | null {
         email,
       }
     }
+    case 'da-complete':
+      return {
+        type: 'da-complete',
+        runId: String(payload.run_id),
+        datasetAnalysisText: String(payload.dataset_analysis_text ?? ''),
+      }
+    case 'da-skipped':
+      return {
+        type: 'da-skipped',
+        runId: String(payload.run_id),
+        reason: String(payload.reason ?? ''),
+      }
+    case 'da-failed':
+      // Auto-run orchestrator's non-fatal DA failure. Treat as skipped:
+      // scoring proceeds without dataset findings.
+      return {
+        type: 'da-skipped',
+        runId: String(payload.run_id),
+        reason: `analysis failed (${String(payload.error_class ?? 'Unknown')})`,
+      }
     case 'error':
       return {
         type: 'error',
