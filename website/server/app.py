@@ -1359,11 +1359,14 @@ async def post_score(
         str | None, Header(alias="X-Anthropic-Key")
     ] = None,
 ) -> StreamingResponse:
-    """Run Step 7: the single Opus scoring call.
+    """Run Step 7 (the single Opus scoring call) plus Steps 8-9.
 
-    Step 6 (deterministic prompt assembly) is inlined here as a Python
-    string-build — no LLM. Step 7 is the lone Opus call in the entire
-    pipeline; everything else is Haiku/Sonnet.
+    The scoring work runs as a *detached background task*, not inside
+    this request. The SSE response only tails the events that task emits
+    into active_runs. So if the client connection drops, the background
+    task keeps running: the (paid) Opus call completes, the report is
+    written, and the run is marked finished regardless. The result is
+    still recoverable via /events (reconnect) or /report.
     """
     if not x_anthropic_key:
         raise HTTPException(401, "missing X-Anthropic-Key header")
@@ -1380,123 +1383,43 @@ async def post_score(
             409,
             f"run is in status {run['status']}, expected regioned",
         )
+    active = active_runs.store.get(run_id)
+    if active is None:
+        # The background task emits its events into active_runs and the
+        # report build reads the in-memory artifacts; without the entry
+        # there is nothing to drive.
+        raise HTTPException(409, "run state has expired — restart the run")
     opted_in_full = bool(run["user_opted_in_full"])
-
     api_key = x_anthropic_key
-    framework_yaml = pipeline_assets.load_framework()
-    scoring_system = _load_prompt("opus_scoring_framing.md")
-    composed = _compose_score_prompt(
-        framework_yaml=framework_yaml,
-        benchmark_yaml=body.benchmark_yaml,
-        region_yaml=body.region_yaml,
-        elicitation_summary=body.elicitation_summary,
-        dataset_analysis_text=body.dataset_analysis_text,
-    )
 
     async def stream() -> AsyncIterator[str]:
-        logging_gate.set_run_status(run_id, "scoring")
+        # Register the subscriber queue synchronously BEFORE starting the
+        # background task, so no emitted event can be missed. The task is
+        # detached: a client disconnect cancels this generator but never
+        # the task, so the run still finishes server-side.
+        q: asyncio.Queue = asyncio.Queue(maxsize=256)
+        active.subscribers.append(q)
         try:
-            yield format_event("step-started", {"step": "7-score"})
-            result = await _call_and_log(
-                step="7-score",
-                family="opus",
-                api_key=api_key,
-                system=scoring_system,
-                user=composed,
-                run_id=run_id,
-                opted_in_full=opted_in_full,
-                input_text=composed,
-                # Matches anthropic_api_package_release/run_pipeline.py:7_score.
-                # 8192 was too small: the 6-dimension schema (per-dim
-                # score + justification + strengths + 4 evidence lists +
-                # checklist + evidence_map + gaps, plus overall_summary
-                # + practical_guidance + remediation_suggestions) is
-                # routinely larger and gets truncated mid-JSON.
-                max_tokens=32768,
+            asyncio.create_task(
+                _run_score_background(
+                    run_id=run_id,
+                    api_key=api_key,
+                    body=body,
+                    opted_in_full=opted_in_full,
+                )
             )
-            scoring = _parse_scoring_json(result.text)
-            yield format_event(
-                "step-completed",
-                {
-                    "step": "7-score",
-                    "output": {
-                        "scoring": scoring,
-                        "raw": result.text,
-                    },
-                },
-            )
-
-            # ---------- Steps 8 + 9: report.md + review.pdf ----------
-            active = active_runs.store.get(run_id)
-            deployment_description = (
-                active.deployment_description if active is not None else ""
-            )
-            pipeline_runner.write_tuple_inputs(
-                run_id,
-                scoring=scoring,
-                composed_prompt=composed,
-                deployment_description=deployment_description,
-                benchmark_yaml=body.benchmark_yaml,
-                region_yaml=body.region_yaml,
-                dataset_analysis_text=body.dataset_analysis_text,
-                pdf_bytes=active.pdf_bytes if active is not None else None,
-            )
-
-            yield format_event("step-started", {"step": "8-report"})
-            report_md = await asyncio.to_thread(
-                pipeline_runner.build_report, run_id, scoring
-            )
-            yield format_event(
-                "step-completed",
-                {"step": "8-report", "output": {"report_md": report_md}},
-            )
-
-            yield format_event("step-started", {"step": "9-review-pdf"})
-            review_path = await asyncio.to_thread(
-                pipeline_runner.build_review_pdf, run_id
-            )
-            yield format_event(
-                "step-completed",
-                {
-                    "step": "9-review-pdf",
-                    "output": {
-                        "review_pdf_url": f"/api/runs/{run_id}/review.pdf",
-                        "bytes": review_path.stat().st_size,
-                    },
-                },
-            )
-
-            logging_gate.end_run(
-                run_id=run_id,
-                status="success",
-                ended_at=datetime.now(timezone.utc),
-            )
-            # Fire-and-forget the report-ready email if the user provided
-            # one upstream. Email failures must not fail the run — the
-            # report is still available via /report.
-            slug_for_email = _lookup_slug(run_id) or ""
-            email_status = await _maybe_send_report_email(
-                run_id=run_id,
-                slug=slug_for_email,
-                scoring=scoring,
-                raw_text=result.text,
-            )
-            active_runs.store.end(run_id)
-            yield format_event(
-                "run-complete",
-                {"run_id": run_id, "email": email_status},
-            )
-        except Exception as e:
-            logging_gate.end_run(
-                run_id=run_id,
-                status="failed",
-                ended_at=datetime.now(timezone.utc),
-            )
-            active_runs.store.end(run_id)
-            yield format_event(
-                "error",
-                {"error_class": type(e).__name__, "run_id": run_id},
-            )
+            while True:
+                item = await q.get()
+                if item is None:  # sentinel from active_runs.store.end()
+                    return
+                yield format_event(
+                    item.name, item.payload, event_id=str(item.seq)
+                )
+        finally:
+            try:
+                active.subscribers.remove(q)
+            except ValueError:
+                pass
 
     return StreamingResponse(
         with_keepalive(stream()),
@@ -2439,6 +2362,66 @@ async def _orchestrate_auto_run(run_id: str) -> None:
         # are still drainable by subscribers because `end` puts a sentinel
         # (None) onto each subscriber queue rather than dropping events
         # already in flight.
+        active_runs.store.end(run_id)
+
+
+async def _run_score_background(
+    *,
+    run_id: str,
+    api_key: str,
+    body: ScoreRequest,
+    opted_in_full: bool,
+) -> None:
+    """Run Steps 7-9 as a detached background task for `/score`.
+
+    Mirrors the score-phase tail of `_orchestrate_auto_run`: events flow
+    into `active_runs` for SSE subscribers, and the run is marked
+    finished here in every path. Being a background task is the point —
+    a dropped client connection cannot cancel the (paid) Opus call.
+    """
+    active = active_runs.store.get(run_id)
+    if active is None:
+        return
+
+    async def emit(name: str, payload: dict) -> None:
+        active.append(name, payload)
+
+    try:
+        score_result = await _run_score_phase(
+            emit=emit,
+            api_key=api_key,
+            run_id=run_id,
+            paper_summary=body.paper_summary,
+            benchmark_yaml=body.benchmark_yaml,
+            region_yaml=body.region_yaml,
+            elicitation_summary=body.elicitation_summary,
+            deployment_description=active.deployment_description,
+            dataset_analysis_text=body.dataset_analysis_text,
+            opted_in_full=opted_in_full,
+        )
+        active.artifacts.update(score_result)
+        logging_gate.end_run(
+            run_id=run_id,
+            status="success",
+            ended_at=datetime.now(timezone.utc),
+        )
+        email_status = await _maybe_send_report_email(
+            run_id=run_id,
+            slug=active.slug or "",
+            scoring=score_result["scoring"],
+            raw_text=score_result["raw_text"],
+        )
+        await emit("run-complete", {"run_id": run_id, "email": email_status})
+    except Exception as e:
+        logging_gate.end_run(
+            run_id=run_id,
+            status="failed",
+            ended_at=datetime.now(timezone.utc),
+        )
+        await emit(
+            "error", {"error_class": type(e).__name__, "run_id": run_id}
+        )
+    finally:
         active_runs.store.end(run_id)
 
 
