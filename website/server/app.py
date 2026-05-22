@@ -60,7 +60,7 @@ from . import (
 )
 from .anthropic_client import WEB_SEARCH_TOOL, call_text_async
 from .elicitation import ALLOWED_DIMENSIONS, ParseError, parse as parse_questions
-from .sse import format_event
+from .sse import format_event, with_keepalive
 
 
 # ---------- configuration ----------
@@ -386,7 +386,7 @@ async def create_run(
             )
 
     return StreamingResponse(
-        stream(),
+        with_keepalive(stream()),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -550,7 +550,7 @@ async def post_answers(
             )
 
     return StreamingResponse(
-        stream(),
+        with_keepalive(stream()),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -893,7 +893,7 @@ async def post_extract(
             )
 
     return StreamingResponse(
-        stream(),
+        with_keepalive(stream()),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -1088,7 +1088,7 @@ async def post_region(
             )
 
     return StreamingResponse(
-        stream(),
+        with_keepalive(stream()),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -1258,7 +1258,7 @@ async def post_dataset_analysis(
             )
 
     return StreamingResponse(
-        stream(),
+        with_keepalive(stream()),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -1499,7 +1499,7 @@ async def post_score(
             )
 
     return StreamingResponse(
-        stream(),
+        with_keepalive(stream()),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -2074,7 +2074,7 @@ async def get_events(
             yield format_event(ev.name, ev.payload, event_id=str(ev.seq))
 
     return StreamingResponse(
-        stream(),
+        with_keepalive(stream()),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -2296,7 +2296,7 @@ async def rerun_scoring(
             )
 
     return StreamingResponse(
-        stream(),
+        with_keepalive(stream()),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
