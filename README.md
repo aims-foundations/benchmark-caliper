@@ -22,6 +22,37 @@ The analysis runs on the Anthropic API with cost-routed model selection — ligh
 | [`anthropic_api_package_release/`](anthropic_api_package_release/) | The validity-analysis pipeline. Run it from the command line to inspect the assessments from the paper, reproduce one, or analyze your own benchmark. See its [README](anthropic_api_package_release/README.md). |
 | [`website/`](website/) | A web interface to the pipeline: upload a paper, describe a deployment, and receive a validity report. See its [README](website/README.md). |
 
+## Repository structure
+
+```
+benchmark-caliper/
+├── anthropic_api_package_release/   # Validity-analysis pipeline
+│   ├── run_pipeline.py              # CLI entry point and orchestrator
+│   ├── run_expert_stage1.py         # Batch runner for expert assessments
+│   ├── run_comparative.py           # Comparative (regional vs. reference) runs
+│   ├── client.py                    # Anthropic API wrapper with cost routing
+│   ├── framework.yaml               # Validity dimensions, checklists, scoring rubric
+│   ├── prompt_template.md           # Evaluation prompt template
+│   ├── prompts/                     # LLM prompt per pipeline step
+│   ├── scripts/                     # Deterministic helpers (PDF, parsing, reports)
+│   ├── benchmarks/                  # Benchmark example YAMLs (ICL references)
+│   ├── regions/                     # Region template YAMLs (ICL references)
+│   ├── templates/                   # Input templates for new assessments
+│   ├── assessments/                 # Pipeline outputs for the paper's assessments
+│   ├── papers/                      # Benchmark papers and extracted summaries
+│   ├── tests/                       # Pipeline test suite
+│   └── README.md                    # Pipeline setup and usage
+├── website/                         # Web interface to the pipeline
+│   ├── server/                      # FastAPI backend
+│   ├── client/                      # Vite + React + TypeScript frontend
+│   ├── DESIGN.md                    # Architecture and security posture
+│   ├── DEPLOYMENT.md                # Hosted setup
+│   └── README.md                    # Local setup and usage
+├── Dockerfile                       # Builds the website + pipeline image
+├── render.yaml                      # Render deployment blueprint
+└── entrypoint.sh                    # Container entrypoint
+```
+
 ## Getting started
 
 - **To analyze a benchmark through the web interface:** see [`website/README.md`](website/README.md).
