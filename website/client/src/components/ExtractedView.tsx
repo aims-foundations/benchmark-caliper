@@ -92,9 +92,16 @@ export function ExtractedView({
         </button>
       </div>
 
-      <pre className="summary-text" role="tabpanel">
-        {tab === 'summary' ? paperSummary : benchmarkYaml}
-      </pre>
+      <div className="output-doc" role="tabpanel">
+        <div className="output-doc-bar">
+          <span className="output-doc-name">
+            {tab === 'summary' ? 'paper_summary.md' : 'benchmark.yaml'}
+          </span>
+        </div>
+        <pre className="summary-text">
+          {tab === 'summary' ? paperSummary : benchmarkYaml}
+        </pre>
+      </div>
 
       <dl className="run-meta">
         <dt>Slug</dt>

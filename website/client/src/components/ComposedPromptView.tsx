@@ -61,9 +61,12 @@ export function ComposedPromptView({
         </dd>
       </dl>
 
-      <pre className="summary-text composed-prompt" role="region">
-        {composedPrompt}
-      </pre>
+      <div className="output-doc" role="region">
+        <div className="output-doc-bar">
+          <span className="output-doc-name">scoring_prompt.txt</span>
+        </div>
+        <pre className="summary-text composed-prompt">{composedPrompt}</pre>
+      </div>
 
       <div className="actions">
         <button type="button" className="link" onClick={onChangeKey}>

@@ -88,9 +88,18 @@ export function RegionView({
         </div>
       )}
 
-      <pre className="summary-text" role="tabpanel">
-        {tab === 'final' || !webSearchUsed ? regionYaml : scaffoldYaml}
-      </pre>
+      <div className="output-doc" role="tabpanel">
+        <div className="output-doc-bar">
+          <span className="output-doc-name">
+            {tab === 'final' || !webSearchUsed
+              ? 'region.yaml'
+              : 'region_scaffold.yaml'}
+          </span>
+        </div>
+        <pre className="summary-text">
+          {tab === 'final' || !webSearchUsed ? regionYaml : scaffoldYaml}
+        </pre>
+      </div>
 
       <dl className="run-meta">
         <dt>Slug</dt>

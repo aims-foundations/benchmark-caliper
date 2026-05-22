@@ -20,6 +20,7 @@ import { ComposedPromptView } from './components/ComposedPromptView'
 import { ScoringView } from './components/ScoringView'
 import { ReportView } from './components/ReportView'
 import { ConsentGate } from './components/ConsentGate'
+import { MatrixBackdrop } from './components/MatrixBackdrop'
 import { hasKey, getKey, clearKey } from './keyStorage'
 import { hasConsent } from './consentStorage'
 import {
@@ -890,13 +891,27 @@ export function App() {
         onAddBenchmark={handleAddBenchmark}
       />
       <main className="app">
-      <header>
-        <h1>Validity Analyzer</h1>
-        <p className="tagline">
-          Assess whether an AI benchmark applies to a different deployment
-          context.
-        </p>
-      </header>
+      <div className="hero">
+        <MatrixBackdrop />
+        <header>
+          <a
+            className="brand"
+            href="https://aimslab.stanford.edu"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            <span className="brand-mark">AIMS</span>
+            <span className="brand-tick" aria-hidden="true" />
+            <span className="brand-label">AI Measurement Science</span>
+          </a>
+          <p className="eyebrow">Benchmark Caliper</p>
+          <h1>Validity Analyzer</h1>
+          <p className="tagline">
+            Assess whether an AI benchmark applies to a different deployment
+            context.
+          </p>
+        </header>
+      </div>
 
       {phase.name === 'viewing-report' && (
         <ReportView

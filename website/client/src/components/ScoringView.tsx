@@ -234,9 +234,12 @@ export function ScoringView({
       )}
 
       {tab === 'raw' && (
-        <pre className="summary-text" role="tabpanel">
-          {rawText}
-        </pre>
+        <div className="output-doc" role="tabpanel">
+          <div className="output-doc-bar">
+            <span className="output-doc-name">scoring_raw_output.txt</span>
+          </div>
+          <pre className="summary-text">{rawText}</pre>
+        </div>
       )}
 
       <dl className="run-meta">

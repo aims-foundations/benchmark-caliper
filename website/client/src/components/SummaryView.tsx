@@ -116,7 +116,12 @@ export function SummaryView({
         Opus scoring) will consume this.
       </p>
 
-      <pre className="summary-text">{summary}</pre>
+      <div className="output-doc">
+        <div className="output-doc-bar">
+          <span className="output-doc-name">elicitation_summary.md</span>
+        </div>
+        <pre className="summary-text">{summary}</pre>
+      </div>
 
       <dl className="run-meta">
         <dt>Slug</dt>
