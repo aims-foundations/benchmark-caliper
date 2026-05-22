@@ -187,7 +187,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     yield
 
 
-app = FastAPI(title="Validity Analyzer", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Benchmark Caliper", version="0.1.0", lifespan=lifespan)
 
 if BASE_PATH:
     app.add_middleware(BasePathMiddleware, base_path=BASE_PATH)
