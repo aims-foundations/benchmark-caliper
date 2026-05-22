@@ -126,7 +126,7 @@ website/
 │   ├── app.py             # All HTTP endpoints
 │   ├── logging_gate.py    # The privacy chokepoint
 │   ├── retention.py       # 90-day cron
-│   ├── pipeline_assets.py # Reads ICL YAMLs from anthropic_api_package/
+│   ├── pipeline_assets.py # Reads ICL YAMLs from anthropic_api_package_release/
 │   ├── anthropic_client.py
 │   ├── pdf_utils.py
 │   ├── elicitation.py

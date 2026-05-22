@@ -27,7 +27,7 @@ Researchers, practitioners, designers, and policymakers who need to know whether
 
 ### Relationship to the existing pipeline
 
-The website is a thin web wrapper over [anthropic_api_package/](../anthropic_api_package/). The pipeline itself — prompts, model routing, scripts, ICL templates — is unchanged. The website orchestrates the existing pipeline through a FastAPI backend; it does not reimplement any pipeline logic. This means **the website and the paper give identical answers for identical inputs**.
+The website is a thin web wrapper over [anthropic_api_package_release/](../anthropic_api_package_release/). The pipeline itself — prompts, model routing, scripts, ICL templates — is unchanged. The website orchestrates the existing pipeline through a FastAPI backend; it does not reimplement any pipeline logic. This means **the website and the paper give identical answers for identical inputs**.
 
 ---
 
