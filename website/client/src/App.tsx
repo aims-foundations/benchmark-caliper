@@ -1019,7 +1019,7 @@ export function App() {
         <ProgressView
           events={phase.state.events}
           steps={AUTO_STEPS}
-          heading="Running the full pipeline — you can close this tab"
+          heading="Running the full pipeline"
         />
       )}
 
