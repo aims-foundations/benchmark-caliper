@@ -1,6 +1,0 @@
-{
-  "Q1": "The pharmaceutical regulatory documents are central to this use case. While SmPCs and leaflets use more formulaic language than research prose, the underlying task of extracting chemical compounds, dosages, and safety warnings remains consistent. The system handles this structured language as a foundational engine. For highly specialized formats like CTD modules, we can apply regulatory-specific templates to ensure the model meets the strict professional standards required for official submissions.",
-  "Q2": "Yes, these specific entities and phrasings are exactly what the system is designed to detect.",
-  "Q3": "The system is specifically designed for regulatory equivalence, recognizing that minor lexical changes, like dose thresholds, carry significant legal weight. While general semantic proximity is a baseline, the scoring function treats these specific discrepancies as critical mismatches. Borderline scores or inconsistencies in these high-stakes areas will flag the document for human review but not automatically reject them.",
-  "Q4": "A significant overlap is expected for core technical entities, but systematic disagreements are likely on borderline cases. Biomedical NLP annotators might prioritize clinical relevance over the rigid legal constraints."
-}

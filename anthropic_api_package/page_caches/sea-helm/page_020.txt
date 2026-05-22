@@ -1,8 +1,0 @@
-```json
-{
-  "quotes": [],
-  "page_summary": "This page contains examples from the NLP Classics Pillar, showing prompt templates and sample data for Indonesian QA and Thai Sentiment tasks with their respective labels and formatting.",
-  "continues_from_previous": true,
-  "continues_to_next": false
-}
-```

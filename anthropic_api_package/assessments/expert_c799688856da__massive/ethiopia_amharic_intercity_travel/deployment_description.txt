@@ -1,2 +1,0 @@
-Use case and domain: Amharic intercity-travel booking bots for Sky Bus, Selam Bus, and Ride covering routes, fares, and seat changes
-Target population: Inter-regional commuters and travelers booking long-distance buses and ride-hail trips via smartphone apps

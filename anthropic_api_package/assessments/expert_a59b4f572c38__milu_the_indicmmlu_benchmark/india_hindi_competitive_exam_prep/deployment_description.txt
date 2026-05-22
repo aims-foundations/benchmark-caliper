@@ -1,7 +1,0 @@
-Use case and domain: Deployment scenario: A Hindi-speaking student in India is testing his/her preparation for competitive job-related examinations, with an AI system providing feedback on their responses. The goal is to evaluate the applicability of the benchmark and the quality of the LLM’s feedback.
-
-Domain: Educational assessment
-Setting: Mobile application / enterprise software
-
-Note: The deployment hypothesis should be tested using Hindi-language sentences from the benchmark, as I am familiar with the language and can provide evaluation in a subsequent stage.
-Target population: A graduate student in North India interacting in the Hindi language. The student has completed their education primarily in Hindi, with limited exposure to English.

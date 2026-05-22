@@ -1,3 +1,0 @@
-```json
-["sub_saharan_africa.yaml"]
-```

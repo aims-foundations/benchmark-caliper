@@ -1,8 +1,0 @@
-```json
-{
-  "quotes": [],
-  "page_summary": "Page 24 contains Table C.12, which displays an example of an Indonesian multi-turn chat prompt from SEA-MTBench, showing two conversation turns with component descriptions, original text, and English translations, along with reference responses from GPT3.5.",
-  "continues_from_previous": false,
-  "continues_to_next": false
-}
-```

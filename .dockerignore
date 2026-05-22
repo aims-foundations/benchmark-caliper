@@ -1,5 +1,5 @@
 # Build context lives at the repo root for the backend image (so it can
-# copy `anthropic_api_package/`). This file keeps the context small.
+# copy `anthropic_api_package_release/`). This file keeps the context small.
 
 # Version control
 .git/
@@ -22,12 +22,10 @@ website/server/**/__pycache__/
 website/server/.pytest_cache/
 
 # Pipeline scratch directories — large and not used by the website backend
-anthropic_api_package/assessments/
-anthropic_api_package/page_caches/
-anthropic_api_package/papers/
-anthropic_api_package/results/
-anthropic_api_package/__pycache__/
-anthropic_api_package/**/__pycache__/
+anthropic_api_package_release/page_caches/
+anthropic_api_package_release/results/
+anthropic_api_package_release/__pycache__/
+anthropic_api_package_release/**/__pycache__/
 
 # Python tooling
 .venv/
@@ -38,4 +36,3 @@ anthropic_api_package/**/__pycache__/
 
 # Docs we don't need in the image
 *.pdf
-package.zip

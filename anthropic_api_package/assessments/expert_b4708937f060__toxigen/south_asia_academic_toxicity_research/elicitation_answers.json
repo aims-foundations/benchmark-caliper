@@ -1,6 +1,0 @@
-{
-  "Q1": "Yes it should contain country specific contexts. Such as for bangladesh and India-- Confict related to muslim and hindu living in this area. As well as political slurs for and from the spupporting parties (e.g. BJP, Congress, Awamileague). Country specific tension between india-pakistan that you might expect from the people's spoken words from those part. Also caste-based groups as well.",
-  "Q2": "yes code-mixed language is essential. yo are right it needs those are benign on the surface but toxic to in-group readers. They definately require South-Asian-specific rewording to feel ecologically valid, that's the main point.",
-  "Q3": "cross-regional consensus is essential but might be crucial to collect. there will be systematic disagreement in toxicity ratings between, say, Indian, Pakistani, and Sri Lankan annotators looking at the same text and that's the point of this research. That's why this is costly and sensitive.",
-  "Q4": "A multidimensional rating. Besides, a comparative ranking between a South Asian and Western equivalent stimulus or llm's view of an equivalent sentence might help. I think toxigen has a likert-scale type rating, not a binary level."
-}

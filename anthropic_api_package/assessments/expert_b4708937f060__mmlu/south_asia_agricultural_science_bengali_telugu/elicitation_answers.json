@@ -1,6 +1,0 @@
-{
-  "Q1": "Not really. The benchmark contain surface level knowledge about the agriculture of different parts of india. But the depth level subject knowledge is kind of missing.",
-  "Q2": "Yes there might be very implicit indian bengali styled wordding but mostly they are pretty standard wordings. Some dialect-specific agricultural terminology will definately make the bechmark more robust.",
-  "Q3": "Yes I think as these country share borders there are a lot of agricultural and water agreement and the general sentiment around these agreement might create different array of opinions based on the country. But those different perspective should be reflected and handled gracefully in the benchmark. And yes, Indian exam-derived answer might be considered authorative (though few cases, the main problem I want it to capture is the agricultural differences and practice differences in these regions and knowledge regarding that) by environmental scientists or agronomists based in Mymensingh",
-  "Q4": "So this part should contain questions in indian languages as well as in bengali (spoken both in india and bangladesh)"
-}

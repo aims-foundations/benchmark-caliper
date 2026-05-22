@@ -1,6 +1,0 @@
-{
-  "Q1": "Yes the benchmark only covers health and IT domains but we expect the models to preform in other document level machine translation tasks even if the benchmark don't cover agricultural domain. I don't think there is substantial difference when it comes to document structure  but there might be some terminologies that are only used in agricultural domains",
-  "Q2": "Yes i agree there might some culturally specific concepts but when it comes to agricultural domain most of the terms for example for land-tenure categories in Ethiopia we follow different proclamations from federal and regional office which replaced most of the local terminologies",
-  "Q3": "I believe if we have translators that are familiar with the domain like  federal bureau translators, they should have authority but if we don't have people who are trained to do translation in the specific domain we can relay on other translators like regional bureau staff and cooperative extension workers.",
-  "Q4": "I think it depends on the model's input-output modality. If the model is multimodal, we expect the model to keep formats including tables and others while translating, but if the model is text only, it is also acceptable if the model provide a flowing prose translation."
-}

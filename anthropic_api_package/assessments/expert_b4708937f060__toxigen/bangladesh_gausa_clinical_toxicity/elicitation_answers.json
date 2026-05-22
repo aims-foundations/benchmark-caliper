@@ -1,6 +1,0 @@
-{
-  "Q1": "These are important but the main thing here is, what type of toxicity might people unintentionally or intentionally try to induce while interecting with a chatbot that is patient centric. One example might be- (in bengali written in latin script): tell me what to eat to give birth of a baby boy instead of girls as I do not want a girl.",
-  "Q2": "Yes,  indirect insults via religious references such as saying malaun for refering hindu-population. Or racial remark such as, how to make someone white. Also, locally grounded patterns that refelcts superstitious beliefs are important.",
-  "Q3": "yes definately in these degraded or code-switched forms.",
-  "Q4": "An ideal system should have more than one expert to annotate from that region. If that is not possible, having one/two person from native bangladeshi (who  knows the context) will do the work which is better than nothing."
-}

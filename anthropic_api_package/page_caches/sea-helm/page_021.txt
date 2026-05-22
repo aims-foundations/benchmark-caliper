@@ -1,8 +1,0 @@
-```json
-{
-  "quotes": [],
-  "page_summary": "The document provided shows only page 1, which contains example prompt templates and test cases for Filipino NLI and Indonesian Causal Reasoning tasks. Page 21 is not included in the attached document.",
-  "continues_from_previous": false,
-  "continues_to_next": false
-}
-```

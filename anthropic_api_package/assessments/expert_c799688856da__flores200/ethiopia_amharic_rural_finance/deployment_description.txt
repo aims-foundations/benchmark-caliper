@@ -1,2 +1,0 @@
-Use case and domain: Document-level translation of agricultural input subsidy notices, land-use policy updates, and credit-scheme terms from federal and regional bureaus into Amharic
-Target population: Farmer cooperative leaders and rural microfinance clients (e.g., ACSI, ADCSI borrowers) in Amhara interpreting government and lender document

@@ -1,5 +1,0 @@
-Use case and domain: Task: Environment science and geograpy-specific agricultural knowledge understanding
-LLMs evaluated: Generic frontier model vs small llms as well as region specific llms
-Domain: Environmental science
-Setting: Environment science research utility assessment using llm and local-context
-Target population: An environment scientist from Mymensingh, Bangladesh wants to get knowledge about different south asian region specific agricultural practice. So having different region and language specific agricultural and demographic context understanding (e.g. telegu spoken area, hydrabad India and agricultural practice/problems vs farmers practice/problems from Mymensingh, Bangladesh~bengali spoken in Mymensingh accented dialect.)

@@ -1,8 +1,0 @@
-```json
-{
-  "quotes": [],
-  "page_summary": "Page 17 contains bibliographic references only, listing authors and publication details for various papers and resources cited in the document.",
-  "continues_from_previous": false,
-  "continues_to_next": false
-}
-```

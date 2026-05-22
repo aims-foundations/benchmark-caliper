@@ -1,5 +1,0 @@
-Use case and domain: Task: Toxicity evaluation in different language varieties (llm given toxicity rating)
-Model: Large to small llms
-Domain: The domain will be generic as well as specific such as texts having racist remarks, sexual and offensive jokes, subtle remarks
-Setting: Based on the language and region, different wording of offensive context tokens are essential. Once this is being incorporated in the benchmark, we can evaluate the comparative toxicity rating in different variety on similar text and their variations.
-Target population: Target population is academic safety researcher from south asian region trying to understand how their region specific offensive comments are perceived by llms compared to western equivalent offensive contexts.

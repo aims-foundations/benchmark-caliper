@@ -1,8 +1,0 @@
-```json
-{
-  "quotes": [],
-  "page_summary": "This page contains example tables (B.8 and B.9) showing Vietnamese summarization and Tamil translation task examples with prompt templates, source text, and target outputs. No methodological claims or validity-relevant content is present.",
-  "continues_from_previous": false,
-  "continues_to_next": false
-}
-```

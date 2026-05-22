@@ -1,2 +1,0 @@
-Use case and domain: Amharic utility chatbots for Ethiopian Electric Utility and Addis Ababa Water handling prepaid meter top-ups, outage reports, and bill disputes
-Target population: Urban households in Addis Ababa and regional capitals interacting with utility support over Telegram and SMS

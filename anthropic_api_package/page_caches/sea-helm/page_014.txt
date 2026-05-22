@@ -1,8 +1,0 @@
-```json
-{
-  "quotes": [],
-  "page_summary": "Page 14 contains a bibliography/references section with citations to various papers on language models, multilingual NLP, and evaluation benchmarks for Southeast Asian languages.",
-  "continues_from_previous": false,
-  "continues_to_next": false
-}
-```

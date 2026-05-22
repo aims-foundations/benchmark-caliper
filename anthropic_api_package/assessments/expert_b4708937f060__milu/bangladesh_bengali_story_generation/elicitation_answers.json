@@ -1,6 +1,0 @@
-{
-  "Q1": "yes, the benchmark should have Bangladesh specific contexts as well as you have mentioned.\nOther Bangladesh-specific topic:\n1. Education- Cover the common higer level exam mentions like SSC , HSC. Educational institute like Dhaka University, Buet, IUT, DMC, RU, Shahjalal university, Brac University.\n2. Village- Village life specific context, bangladesh specific river area life context, life of a farmer\n3. Political context- Recent political uprising, political knowledge driven from the period of 1971-2026; not only 1971\n4. Drama and film- Common drama and film history\n5. Culture- Specific cultural identifiers such as ekushe boimela.\n6. Tourism- Bnagladesh specific tourism places like cox's bazar, rangamati, bandarban, sajek etc.",
-  "Q2": "Yes I expect the benchmark shoud have Bangladeshi-specific named entities",
-  "Q3": "yes, Bangladeshi register specifically.\nno, exam-derived questions from India will not adequately reflect that register for your evaluation purposes",
-  "Q4": "native Bangladeshi Bengali speakers primarily. However, a mixed annotator pool also works.\nYes, I think that mismatch affect the reliability of evaluation scores for the Bangladesh-targeted deployment."
-}

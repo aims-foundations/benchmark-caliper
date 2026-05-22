@@ -1,6 +1,0 @@
-{
-  "Q1": "It would be helpful for the system to handle dialectal phrases but these are not measured by this benchmark; there are other benchmarks for dialectal Arabic like MADAR. The system wouldn't handle common tourist etiquette, religious customs, or navigating local transport and markets, although those would be frequently expected. It would mostly handle general questions that someone would expect to learn in school.",
-  "Q2": "Pan-Arab generalized framing is generally acceptable as Arab countries have a lot of shared culture that is influenced by a shared religion and language, but if some cultural content is specific to certain countries, the system should mention that.",
-  "Q3": "If there are multiple perspectives, it should acknowledge them and mention how different countries hold different positions so they are aware that it is contested and a potentially sensitive topic.",
-  "Q4": "The benchmark contains Arabic questions so non-Arab foreigners who are Arabic learners can practice their Arabic skills and prompt the system in Arabic. English and other languages may be supported but that may require additional training and would require additional testing on the system's cross-lingual capabilities."
-}
