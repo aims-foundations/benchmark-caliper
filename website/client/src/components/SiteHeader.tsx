@@ -25,11 +25,8 @@ type NavItem = NavLeaf | NavGroup
 
 const navItems: NavItem[] = [
   { href: `${SITE}/research`, label: 'Research' },
-  { href: `${SITE}/textbook/`, label: 'Textbook' },
-  { href: `${SITE}/competition`, label: 'Competition' },
-  { href: `${SITE}/workshop`, label: 'Workshop' },
   {
-    label: 'Software',
+    label: 'Software & Data',
     children: [
       { href: `${SITE}/torch_measure`, label: 'torch_measure' },
       { href: `${SITE}/measurement-db`, label: 'measurement-db' },
@@ -40,7 +37,15 @@ const navItems: NavItem[] = [
       },
     ],
   },
-  { href: `${SITE}/cs321m`, label: 'Course' },
+  { href: `${SITE}/competition`, label: 'Competition' },
+  { href: `${SITE}/workshop`, label: 'Workshop' },
+  {
+    label: 'Education',
+    children: [
+      { href: `${SITE}/textbook/`, label: 'Textbook' },
+      { href: `${SITE}/cs321m`, label: 'Course' },
+    ],
+  },
 ]
 
 function isGroup(item: NavItem): item is NavGroup {
