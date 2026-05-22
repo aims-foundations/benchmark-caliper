@@ -43,9 +43,7 @@ export function ProgressView({ events, steps, heading = 'Running' }: Props) {
           const progress = progressByStep.get(step)
           return (
             <li key={step} data-status={status ?? 'pending'}>
-              <span className="step-icon" aria-hidden="true">
-                {status === 'completed' ? '✓' : status === 'started' ? '…' : ' '}
-              </span>
+              <span className="step-marker" aria-hidden="true" />
               <span className="step-label">
                 {label}
                 {progress && status !== 'completed' && (

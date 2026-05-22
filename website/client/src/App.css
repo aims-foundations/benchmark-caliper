@@ -631,6 +631,7 @@ body {
 form,
 .result,
 .status,
+.progress,
 .error {
   display: flex;
   flex-direction: column;
@@ -646,7 +647,8 @@ form,
 /* Panels gain depth on hover — the lift effect from the AIMS link cards. */
 form:hover,
 .result:hover,
-.status:hover {
+.status:hover,
+.progress:hover {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
 }
 
@@ -878,18 +880,20 @@ code {
 .step-list {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 0.5rem 0 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.95rem;
 }
 
 .step-list li {
-  display: grid;
-  grid-template-columns: 1.5rem 1fr;
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.7rem;
+  font-size: 1rem;
+  line-height: 1.4;
   color: var(--black-60);
+  transition: color 0.2s var(--ease-out);
 }
 
 .step-list li[data-status='started'] {
@@ -901,14 +905,52 @@ code {
   color: var(--ink);
 }
 
-.step-icon {
-  font-family: var(--font-mono);
-  width: 1.25rem;
-  text-align: center;
+/* Round status marker, drawn per [data-status] on the row:
+   pending = grey ring, started = spinning cardinal ring,
+   completed = filled palo-alto disc with a white check. */
+.step-marker {
+  flex: 0 0 auto;
+  width: 1.2rem;
+  height: 1.2rem;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 2px solid var(--black-30);
+  position: relative;
 }
 
-.step-list li[data-status='completed'] .step-icon {
-  color: var(--palo-alto);
+.step-list li[data-status='started'] .step-marker {
+  border-color: var(--cardinal);
+  border-top-color: transparent;
+  animation: step-spin 0.7s linear infinite;
+}
+
+.step-list li[data-status='completed'] .step-marker {
+  border-color: var(--palo-alto);
+  background: var(--palo-alto);
+}
+
+.step-list li[data-status='completed'] .step-marker::after {
+  content: '';
+  position: absolute;
+  left: 0.36rem;
+  top: 0.15rem;
+  width: 0.28rem;
+  height: 0.55rem;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+@keyframes step-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.step-progress {
+  color: var(--muted);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------- question list ---------- */
@@ -1626,5 +1668,7 @@ button.tab.active {
   *::before,
   *::after {
     transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
