@@ -945,6 +945,16 @@ export function App() {
             Assess whether an AI benchmark applies to a different deployment
             context.
           </p>
+          <div className="hero-actions">
+            <a
+              className="hero-cta"
+              href="https://github.com/aims-foundations/benchmark-caliper"
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              View on GitHub
+            </a>
+          </div>
         </header>
       </div>
 
