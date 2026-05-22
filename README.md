@@ -22,6 +22,11 @@ The analysis runs on the Anthropic API with cost-routed model selection — ligh
 | [`anthropic_api_package_release/`](anthropic_api_package_release/) | The validity-analysis pipeline. Run it from the command line to inspect the assessments from the paper, reproduce one, or analyze your own benchmark. See its [README](anthropic_api_package_release/README.md). |
 | [`website/`](website/) | A web interface to the pipeline: upload a paper, describe a deployment, and receive a validity report. See its [README](website/README.md). |
 
+## Getting started
+
+- **To analyze a benchmark through the web interface:** see [`website/README.md`](website/README.md).
+- **To run the pipeline from the command line** — inspect the assessments from the paper, reproduce one, or analyze your own benchmark — see [`anthropic_api_package_release/README.md`](anthropic_api_package_release/README.md).
+
 ## Deployment
 
 The website (with the pipeline bundled) deploys as a single Docker service.
@@ -48,3 +53,13 @@ Each dimension is scored 1–5:
 | 3 | Partially addressed; mixed evidence |
 | 4 | Well addressed; minor concerns; documentation shows awareness |
 | 5 | No concerns; explicit validity-preserving practices demonstrated |
+
+## Ground-truth validation
+
+Three benchmark–region pairs from the paper were scored by domain experts and serve as ground truth for validating the framework's scores. Mean absolute error (MAE) is measured against the expert average:
+
+| Benchmark | Region | Expert avg | MAE |
+|-----------|--------|-----------|-----|
+| HELM | Southeast Asia | 1.7 | 0.00 |
+| SEA-HELM | Southeast Asia | 4.3 | 0.67 |
+| IberBench | Iberian | 3.7 | 0.00 |
