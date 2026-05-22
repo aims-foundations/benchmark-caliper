@@ -1,8 +1,6 @@
 # Benchmark Caliper — Website
 
-A public-facing interface to the validity-analysis pipeline from the paper *"Validity Analysis when Porting Benchmarks Across Cultures and Regions."*
-
-> **Status:** Live at <https://aimslab.stanford.edu/benchmark-caliper/>. The full 7-step flow works end-to-end, and the privacy infrastructure (consent gate, retention cron, export/delete) is in place. See [SECURITY.md](SECURITY.md) for the security posture.
+A public-facing interface to the validity-analysis pipeline. Now live at <https://aimslab.stanford.edu/benchmark-caliper/>. The full 7-step flow works end-to-end, and the privacy infrastructure (consent gate, retention cron, export/delete) is in place. See [SECURITY.md](SECURITY.md) for the security posture.
 
 ---
 
