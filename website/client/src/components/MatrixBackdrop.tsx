@@ -15,10 +15,13 @@ import { useEffect, useRef } from 'react'
    container; the cells themselves never re-render.
    ============================================================ */
 
-const ROWS = 22
-const COLS = 104
+// Matched to the AIMS home hero (binary-matrix-backdrop): 30 rows, gap 5px,
+// 0.12 base opacity. COLS is 88 (not the AIMS 96) because our band is the
+// viewport minus the 17rem sidebar — 88 keeps the cells the same ~12px size.
+const ROWS = 30
+const COLS = 88
 
-const BASE_OPACITY = 0.16
+const BASE_OPACITY = 0.12
 const HIGHLIGHT_OPACITY = 0.95
 const HIGHLIGHT_RADIUS_PX = 48
 const HIGHLIGHT_CORE = 0.45 // share of radius at full opacity before fade
@@ -67,10 +70,7 @@ function BackdropGrid({ variant }: { variant: 'base' | 'highlight' }) {
   return (
     <div
       className="matrix-grid"
-      style={{
-        gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))`,
-        gridTemplateRows: `repeat(${ROWS}, minmax(0, 1fr))`,
-      }}
+      style={{ gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))` }}
     >
       {CELL_STATES.map((state, i) => {
         if (state === 'unobserved')

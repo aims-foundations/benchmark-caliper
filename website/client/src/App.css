@@ -61,14 +61,6 @@
 body {
   margin: 0;
   background-color: var(--white);
-  /* Scientific dot-grid motif on white, matched to AIMS bg-grid-dots-light. */
-  background-image: radial-gradient(
-    circle,
-    rgba(46, 45, 41, 0.08) 1px,
-    transparent 1px
-  );
-  background-size: 24px 24px;
-  background-attachment: fixed;
 }
 
 *,
@@ -146,21 +138,25 @@ body {
   pointer-events: none;
 }
 
+/* Matches the AIMS binary-matrix-backdrop: the grid is centred in the band
+   and overflow-clipped, so its 30 aspect-square rows fill the band with no
+   white gaps while the cells stay genuinely square. */
 .matrix-layer {
   position: absolute;
   inset: 0;
+  display: flex;
+  align-items: center;
 }
 
-/* Grid fills the whole hero band — width and height — so the matrix never
-   leaves white gaps regardless of the band's dimensions. */
 .matrix-grid {
   display: grid;
   width: 100%;
-  height: 100%;
-  gap: 3px;
+  gap: 5px;
+  padding: 1.5rem;
 }
 
 .matrix-cell-box {
+  aspect-ratio: 1 / 1;
   border-radius: 2px;
 }
 
