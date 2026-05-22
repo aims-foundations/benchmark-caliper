@@ -22,9 +22,11 @@ A user pastes their Anthropic API key, uploads a benchmark paper PDF, and descri
 
 The final output is a 6-dimension validity report with per-dimension scores, reasoning, and evidence.
 
+A typical end-to-end run for a 20-page paper costs roughly $1.50–$2.50 of Anthropic API spend at current rates (Haiku 4.5 / Sonnet 4.6 / Opus 4.7). Web search adds $10 per 1,000 searches on top of tokens.
+
 ---
 
-## How to run it
+## Running it locally
 
 Requirements: Python 3.10+, Node 24+, an Anthropic API key.
 
@@ -56,24 +58,7 @@ The server prints a loud `⚠️  MOCK_ANTHROPIC=1` banner on startup and refuse
 
 ---
 
-## How to test it 
-
-### Click-through
-
-1. Open the site. You'll see a one-time consent screen — read it, click "I understand."
-2. Paste your Anthropic API key (the page never sends it to our server).
-3. Upload a short benchmark paper PDF. Anthropic supports up to 32 MB and ~100 pages per call.
-4. Type a deployment description like "Indonesian government chatbot answering KTP queries."
-5. Wait ~30 seconds for Steps 0–2 to stream.
-6. Answer the elicitation questions. Short answers are fine.
-7. Wait for the elicitation summary (~30 seconds).
-8. Click **Extract paper →**, re-upload the same PDF. Watch live page-by-page progress. The PDF is held for the duration of the run (so the admin `/verify` endpoint can re-check quotes against it) and is removed when the run is deleted or its workspace is reset.
-9. Click **Build region context →**. Web search enrichment can take 30–60 seconds.
-10. Click **Score validity →**. The Opus call typically takes 30–90 seconds.
-
-A typical end-to-end run for a 20-page paper costs roughly $1.50–$2.50 of Anthropic API spend at current rates (Haiku 4.5 / Sonnet 4.6 / Opus 4.7). Web search adds $10 per 1,000 searches on top of tokens.
-
-### Run the test suite
+## Testing
 
 ```bash
 # backend (run from the repository root)
@@ -88,28 +73,9 @@ All tests should pass (130 backend + 46 frontend = 176 total).
 
 ---
 
-## What to review
+## Deployment
 
-Most useful first reads:
-
-- [DESIGN.md](DESIGN.md) — narrative architecture, security posture, four-tier logging model, roadmap
-- [SECURITY.md](SECURITY.md) — verifiable checklist for everything we claim
-- [server/app.py](server/app.py) — every endpoint
-- [server/active_runs.py](server/active_runs.py) — the process-local store that holds the BYOK key + PDF for an auto-run; the only place key bytes live server-side
-- [server/email_notify.py](server/email_notify.py) — Resend wrapper used for the report-ready email, with a dry-run fallback when `RESEND_API_KEY` is unset
-- [server/logging_gate.py](server/logging_gate.py) — the single chokepoint to disk; everything privacy-related funnels through it
-- [client/src/App.tsx](client/src/App.tsx) — the state machine for the whole user flow
-
-For a faster skim, the slice-by-slice journey is in `MEMORY.md` and the project memory files.
-
----
-
-## Known gaps for v0
-
-- **Web search cost** isn't modeled in the cost ledger ($10 per 1k searches Anthropic charges separately).
-- **MVP deploy target is Render.** See [DEPLOYMENT.md](DEPLOYMENT.md) for the one-service Docker setup and the AIMS Vercel proxy.
-- **Terms of Service** copy still needs writing. The privacy policy page is live (`client/src/components/PrivacyNotice.tsx`, linked from the footer) and matches DESIGN.md section 6.
-- **Pre-launch security checklist** in SECURITY.md hasn't been ticked off; do not point a public domain at this until it has.
+The site deploys as a single Docker service on Render. See [DEPLOYMENT.md](DEPLOYMENT.md) for the one-service setup and the AIMS proxy.
 
 ---
 
@@ -117,8 +83,9 @@ For a faster skim, the slice-by-slice journey is in `MEMORY.md` and the project 
 
 ```
 website/
-├── DESIGN.md              # Narrative spec
-├── SECURITY.md            # Verifiable checklist
+├── DESIGN.md              # Narrative architecture and security posture
+├── SECURITY.md            # Verifiable security checklist
+├── DEPLOYMENT.md          # Hosted setup
 ├── README.md              # This file
 ├── server/                # FastAPI backend
 │   ├── app.py             # All HTTP endpoints
