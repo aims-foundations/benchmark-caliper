@@ -21,6 +21,7 @@ import { ScoringView } from './components/ScoringView'
 import { ReportView } from './components/ReportView'
 import { ConsentGate } from './components/ConsentGate'
 import { MatrixBackdrop } from './components/MatrixBackdrop'
+import { SiteHeader } from './components/SiteHeader'
 import { hasKey, getKey, clearKey } from './keyStorage'
 import { hasConsent } from './consentStorage'
 import {
@@ -921,7 +922,9 @@ export function App() {
         : null
 
   return (
-    <div className="app-shell">
+    <>
+      <SiteHeader />
+      <div className="app-shell">
       <GallerySidebar
         entries={galleryEntries}
         sessionEntry={sessionEntry}
@@ -935,16 +938,6 @@ export function App() {
       <div className="hero">
         <MatrixBackdrop />
         <header>
-          <a
-            className="brand"
-            href="https://aimslab.stanford.edu"
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            <span className="brand-mark">AIMS</span>
-            <span className="brand-tick" aria-hidden="true" />
-            <span className="brand-label">AI Measurement Science</span>
-          </a>
           <p className="eyebrow">Benchmark Caliper</p>
           <h1>Validity Analyzer</h1>
           <p className="tagline">
@@ -1187,6 +1180,7 @@ export function App() {
         </button>
       )}
       </main>
-    </div>
+      </div>
+    </>
   )
 }
