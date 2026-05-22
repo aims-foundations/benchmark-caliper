@@ -1,8 +1,8 @@
-# Validity Analyzer — Website
+# Benchmark Caliper — Website
 
 A public-facing interface to the validity-analysis pipeline from the paper *"Validity Analysis when Porting Benchmarks Across Cultures and Regions."*
 
-> **Status:** v0 draft. The full 7-step flow works end-to-end. Privacy infrastructure (consent gate, retention cron, export/delete) is in place. Not yet deployed to a public host. **Do not share publicly until pre-launch checklist in [SECURITY.md](SECURITY.md) is completed.**
+> **Status:** Live at <https://aimslab.stanford.edu/benchmark-caliper/>. The full 7-step flow works end-to-end, and the privacy infrastructure (consent gate, retention cron, export/delete) is in place. See [SECURITY.md](SECURITY.md) for the security posture.
 
 ---
 
@@ -28,7 +28,7 @@ The final output is a 6-dimension validity report with per-dimension scores, rea
 
 ## How to run it
 
-Requirements: Python 3.10+, Node 20+, an Anthropic API key.
+Requirements: Python 3.10+, Node 24+, an Anthropic API key.
 
 ```bash
 # Terminal 1 — backend (run from the repository root)
@@ -86,7 +86,7 @@ cd website/client
 npm test
 ```
 
-All tests should pass (101 backend + 51 frontend = 152 total).
+All tests should pass (130 backend + 46 frontend = 176 total).
 
 ---
 
@@ -135,7 +135,7 @@ website/
 │   ├── sse.py
 │   ├── db.py
 │   ├── requirements.txt
-│   └── tests/             # 101 backend tests
+│   └── tests/             # 130 backend tests
 └── client/                # Vite + React + TypeScript
     ├── src/
     │   ├── App.tsx
@@ -143,7 +143,7 @@ website/
     │   ├── consentStorage.ts
     │   ├── keyStorage.ts
     │   └── components/    # Per-phase views
-    └── (vitest tests, 48 of them)
+    └── (vitest tests, 46 of them)
 ```
 
 ---
