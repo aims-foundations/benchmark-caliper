@@ -52,6 +52,11 @@ const REGION_STREAM =
   'event: step-completed\ndata: {"step":"5-web-search","output":{"region_yaml":"name: indonesia_admin_chatbot\\nliteracy: 0.96\\n"}}\n\n' +
   'event: region-complete\ndata: {"run_id":"run-x","selected_templates":["southeast_asia.yaml"],"web_search_used":true}\n\n'
 
+// Step 5b runs between the region and score steps. The tests don't supply
+// an HF dataset, so the realistic stream is a single da-skipped event.
+const DA_STREAM =
+  'event: da-skipped\ndata: {"run_id":"run-x","reason":"no hf target resolved"}\n\n'
+
 const EXTRACT_STREAM =
   'event: step-started\ndata: {"step":"3a-extract","total":2}\n\n' +
   'event: step-progress\ndata: {"step":"3a-extract","completed":1,"total":2}\n\n' +
@@ -431,6 +436,8 @@ describe('App', () => {
         headers: (i.headers ?? {}) as Record<string, string>,
         body: i.body,
       })
+      if (u.endsWith('/dataset-analysis'))
+        return makeStreamingResponse(DA_STREAM)
       if (u.endsWith('/region')) return makeStreamingResponse(REGION_STREAM)
       if (u.endsWith('/extract')) return makeStreamingResponse(EXTRACT_STREAM)
       if (u.endsWith('/answers')) return makeStreamingResponse(SUMMARY_STREAM)
@@ -533,6 +540,8 @@ describe('App', () => {
         )
       }
       if (u.endsWith('/score')) return makeStreamingResponse(SCORE_STREAM)
+      if (u.endsWith('/dataset-analysis'))
+        return makeStreamingResponse(DA_STREAM)
       if (u.endsWith('/region')) return makeStreamingResponse(REGION_STREAM)
       if (u.endsWith('/extract')) return makeStreamingResponse(EXTRACT_STREAM)
       if (u.endsWith('/answers')) return makeStreamingResponse(SUMMARY_STREAM)
@@ -617,7 +626,9 @@ describe('App', () => {
     expect(scoreCall?.headers['X-Anthropic-Key']).toBe(fakeKey)
     expect(scoreCall?.url).not.toContain('sk-ant-')
     expect(scoreCall?.body as string).not.toContain('sk-ant-')
-  })
+    // Full pipeline drive-through (answers → extract → region → 5b → score)
+    // legitimately runs long; give it headroom over the 5s default.
+  }, 15000)
 
   it('"change key" clears storage and returns to the key form', async () => {
     const user = userEvent.setup()

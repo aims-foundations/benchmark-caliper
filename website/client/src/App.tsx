@@ -1105,6 +1105,7 @@ export function App() {
           slug={phase.state.slug}
           onStartOver={handleStartOver}
           onChangeKey={handleChangeKey}
+          emailStatus={phase.state.emailStatus}
         />
       )}
 

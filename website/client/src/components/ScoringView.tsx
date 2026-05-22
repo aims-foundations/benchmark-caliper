@@ -29,6 +29,13 @@ interface Props {
   pdfUrl?: string
   /** Curated/read-only view: hides the feedback form and key controls. */
   readOnly?: boolean
+  /** Report-email outcome from the run. Absent for the read-only gallery. */
+  emailStatus?: {
+    requested: boolean
+    sent?: boolean
+    fallback?: boolean
+    error?: string | null
+  }
 }
 
 const DIMENSION_LABELS: Record<string, string> = {
@@ -75,6 +82,7 @@ export function ScoringView({
   onChangeKey,
   pdfUrl,
   readOnly = false,
+  emailStatus,
 }: Props) {
   const [tab, setTab] = useState<Tab>('table')
   const [feedbackOpen, setFeedbackOpen] = useState(false)
@@ -151,6 +159,26 @@ export function ScoringView({
         dimensions, conditioned on your deployment context. Scores are 1–5;
         higher is better. Click a dimension to expand its reasoning.
       </p>
+
+      {emailStatus?.requested &&
+        (emailStatus.sent && !emailStatus.fallback ? (
+          <p className="email-status" role="status">
+            📧 The report has been emailed to you, with Markdown and JSON
+            copies attached.
+          </p>
+        ) : emailStatus.fallback ? (
+          <p className="email-status warn" role="status">
+            ✉️ Email delivery isn't configured on this deployment, so no
+            email was sent. Use the <strong>Download</strong> buttons below
+            to save the report.
+          </p>
+        ) : (
+          <p className="email-status warn" role="status">
+            ⚠️ We couldn't send the report email
+            {emailStatus.error ? ` (${emailStatus.error})` : ''}. Use the{' '}
+            <strong>Download</strong> buttons below to save the report.
+          </p>
+        ))}
 
       <div className="tab-bar" role="tablist">
         <button

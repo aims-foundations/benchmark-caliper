@@ -1053,6 +1053,25 @@ footer {
 
 /* ---------- disclaimers / feedback ---------- */
 
+.email-status {
+  margin: 0;
+  padding: 0.7rem 0.95rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(23, 94, 84, 0.28);
+  border-left: 3px solid var(--palo-alto);
+  background: #eef5f2;
+  color: var(--palo-alto);
+}
+
+.email-status.warn {
+  border-color: rgba(233, 131, 0, 0.35);
+  border-left-color: var(--poppy);
+  background: #fdf3e6;
+  color: #8a5800;
+}
+
 .score-disclaimer {
   margin-top: 1rem;
   padding: 0.85rem 1rem;
