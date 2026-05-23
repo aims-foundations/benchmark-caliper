@@ -5,6 +5,8 @@ interface Props {
   questions: Question[]
   onSubmit: (answers: Array<{ id: string; answer: string }>) => void
   onChangeKey: () => void
+  /** Optional pre-fill (used by demo mode to show expert answers). */
+  initialAnswers?: Record<string, string>
 }
 
 // Mirrors the 6 validity dimensions in framework.yaml. The 2-letter codes
@@ -42,8 +44,15 @@ const DIMENSION_INFO: Record<string, { name: string; blurb: string }> = {
   },
 }
 
-export function AnswerForm({ questions, onSubmit, onChangeKey }: Props) {
-  const [answers, setAnswers] = useState<Record<string, string>>({})
+export function AnswerForm({
+  questions,
+  onSubmit,
+  onChangeKey,
+  initialAnswers,
+}: Props) {
+  const [answers, setAnswers] = useState<Record<string, string>>(
+    () => initialAnswers ?? {},
+  )
 
   function handleChange(id: string, value: string): void {
     setAnswers((prev) => ({ ...prev, [id]: value }))

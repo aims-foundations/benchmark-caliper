@@ -3,9 +3,12 @@ import { setKey } from '../keyStorage'
 
 interface Props {
   onSaved: () => void
+  /** Optional. When provided, a "Try the demo" link is shown that
+   * replays a real expert run end-to-end without needing an API key. */
+  onTryDemo?: () => void
 }
 
-export function KeyForm({ onSaved }: Props) {
+export function KeyForm({ onSaved, onTryDemo }: Props) {
   const [value, setValue] = useState('')
   const [persist, setPersist] = useState(false)
 
@@ -63,6 +66,16 @@ export function KeyForm({ onSaved }: Props) {
       <button type="submit" disabled={!value.trim()}>
         Save key
       </button>
+
+      {onTryDemo && (
+        <p className="help key-form-demo-hint">
+          Don't have a key?{' '}
+          <button type="button" className="link" onClick={onTryDemo}>
+            Try a demo run instead →
+          </button>{' '}
+          <span>(replays a real assessment, no API key needed)</span>
+        </p>
+      )}
     </form>
   )
 }

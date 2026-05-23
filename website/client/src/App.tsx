@@ -23,6 +23,7 @@ import { ConsentGate } from './components/ConsentGate'
 import { MatrixBackdrop } from './components/MatrixBackdrop'
 import { SiteHeader } from './components/SiteHeader'
 import { SiteFooter } from './components/SiteFooter'
+import { DemoIntro } from './components/DemoIntro'
 import { hasKey, getKey, clearKey } from './keyStorage'
 import { hasConsent } from './consentStorage'
 import {
@@ -44,6 +45,19 @@ import {
   type GalleryReport,
 } from './api'
 import { appPath, stripBasePath } from './paths'
+import {
+  DEMO_DEPLOYMENT_DESCRIPTION,
+  DEMO_ELICITATION_SUMMARY,
+  DEMO_EXPERT_ANSWERS,
+  DEMO_METADATA,
+  DEMO_QUESTIONS,
+  DEMO_RAW_TEXT,
+  DEMO_RUN_ID,
+  DEMO_SCORING,
+  DEMO_SLUG,
+} from './demo/fixture'
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 interface RunningState {
   events: PipelineEvent[]
@@ -152,6 +166,7 @@ type Phase =
   | { name: 'consent' }
   | { name: 'enter-key' }
   | { name: 'idle' }
+  | { name: 'demo-intro' }
   | { name: 'viewing-report'; runId: string }
   | { name: 'running'; state: RunningState }
   | { name: 'answering'; state: AnsweringState }
@@ -211,6 +226,10 @@ export function App() {
   const [sessionBenchmark, setSessionBenchmark] = useState<ScoredState | null>(
     null,
   )
+  // Demo mode: when true, the pipeline phases are replayed from a cached
+  // expert assessment instead of making real API calls. No Anthropic key
+  // is required. Cleared by Restart session / Run another.
+  const [isDemo, setIsDemo] = useState(false)
 
   // Load the curated gallery once on mount.
   useEffect(() => {
@@ -269,7 +288,179 @@ export function App() {
     ) {
       window.history.replaceState(null, '', appPath('/'))
     }
+    setIsDemo(false)
     setPhase({ name: 'idle' })
+  }
+
+  // -------------------- Demo mode --------------------
+  // Replays the curated MathDial / India tutoring assessment as if it were
+  // a live run: ticks fake SSE events into the existing phase states with
+  // realistic delays, walks through the same UI components as a real run,
+  // and lands on the genuine scoring as the final report. The user never
+  // supplies an API key; no requests hit the backend.
+
+  function handleTryDemo(): void {
+    // Land on a pre-filled "describe your deployment" screen first, so
+    // the user sees Step 1 of the real flow (the upload form) before any
+    // progress starts ticking. Clicking "Run the demo" there calls
+    // runDemoIntro() below.
+    setIsDemo(true)
+    setPhase({ name: 'demo-intro' })
+  }
+
+  async function runDemoIntro(): Promise<void> {
+    const description = DEMO_DEPLOYMENT_DESCRIPTION
+    const events: PipelineEvent[] = []
+    const setRunning = () =>
+      setPhase({
+        name: 'running',
+        state: { events: [...events], description, optedInFull: false },
+      })
+    setRunning()
+
+    const push = (ev: PipelineEvent) => {
+      events.push(ev)
+      setRunning()
+    }
+
+    await sleep(600)
+    push({ type: 'step-started', step: '0-slug' })
+    await sleep(700)
+    push({ type: 'step-completed', step: '0-slug' })
+    await sleep(400)
+    push({ type: 'step-started', step: '1-metadata' })
+    await sleep(1500)
+    push({ type: 'step-completed', step: '1-metadata' })
+    await sleep(400)
+    push({ type: 'step-started', step: '2-questions' })
+    await sleep(2000)
+    push({ type: 'step-completed', step: '2-questions' })
+
+    await sleep(500)
+    setPhase({
+      name: 'answering',
+      state: {
+        events: [...events],
+        description,
+        optedInFull: false,
+        runId: DEMO_RUN_ID,
+        slug: DEMO_SLUG,
+        metadata: DEMO_METADATA,
+        questions: DEMO_QUESTIONS,
+      },
+    })
+  }
+
+  async function runDemoSummary(): Promise<void> {
+    if (phase.name !== 'answering') return
+    const base = phase.state
+    const events: PipelineEvent[] = []
+    const setSubmitting = () =>
+      setPhase({
+        name: 'submitting',
+        state: { ...base, events: [...events] },
+      })
+    setSubmitting()
+
+    const push = (ev: PipelineEvent) => {
+      events.push(ev)
+      setSubmitting()
+    }
+
+    await sleep(600)
+    push({ type: 'step-started', step: '2-summary' })
+    await sleep(2200)
+    push({ type: 'step-completed', step: '2-summary' })
+    await sleep(500)
+    setPhase({
+      name: 'summary',
+      state: {
+        runId: base.runId,
+        slug: base.slug,
+        summary: DEMO_ELICITATION_SUMMARY,
+      },
+    })
+  }
+
+  async function runDemoAuto(runId: string, slug: string): Promise<void> {
+    const events: PipelineEvent[] = []
+    const setAuto = () =>
+      setPhase({
+        name: 'auto-running',
+        state: { runId, slug, events: [...events] },
+      })
+    setAuto()
+
+    const push = (ev: PipelineEvent) => {
+      events.push(ev)
+      setAuto()
+    }
+
+    // 3a-extract — fan-out with progress
+    await sleep(400)
+    push({ type: 'step-started', step: '3a-extract', total: 20 })
+    for (const completed of [4, 9, 14, 18, 20]) {
+      await sleep(500)
+      push({
+        type: 'step-progress',
+        step: '3a-extract',
+        completed,
+        total: 20,
+      })
+    }
+    await sleep(300)
+    push({ type: 'step-completed', step: '3a-extract' })
+
+    // 3a-consolidate
+    await sleep(300)
+    push({ type: 'step-started', step: '3a-consolidate' })
+    await sleep(1600)
+    push({ type: 'step-completed', step: '3a-consolidate' })
+
+    // 3b-select
+    await sleep(300)
+    push({ type: 'step-started', step: '3b-select' })
+    await sleep(900)
+    push({ type: 'step-completed', step: '3b-select' })
+
+    // 3b-synthesize
+    await sleep(300)
+    push({ type: 'step-started', step: '3b-synthesize' })
+    await sleep(1800)
+    push({ type: 'step-completed', step: '3b-synthesize' })
+
+    // 4a-template
+    await sleep(300)
+    push({ type: 'step-started', step: '4a-template' })
+    await sleep(900)
+    push({ type: 'step-completed', step: '4a-template' })
+
+    // 4b-synthesize
+    await sleep(300)
+    push({ type: 'step-started', step: '4b-synthesize' })
+    await sleep(1800)
+    push({ type: 'step-completed', step: '4b-synthesize' })
+
+    // 5-web-search (longer, like the real thing)
+    await sleep(300)
+    push({ type: 'step-started', step: '5-web-search' })
+    await sleep(4500)
+    push({ type: 'step-completed', step: '5-web-search' })
+
+    // 7-score (the longest)
+    await sleep(400)
+    push({ type: 'step-started', step: '7-score' })
+    await sleep(6500)
+    push({ type: 'step-completed', step: '7-score' })
+
+    await sleep(400)
+    const scored: ScoredState = {
+      runId,
+      slug,
+      scoring: DEMO_SCORING,
+      rawText: DEMO_RAW_TEXT,
+    }
+    enterScored(scored)
   }
 
   async function handleRun(
@@ -370,6 +561,14 @@ export function App() {
     elicitationSummary: string
     stepByStep: boolean
   }): Promise<void> {
+    // Demo mode skips the key check and replays a cached run instead
+    // of making any API calls. Step-by-step is collapsed to the auto
+    // walkthrough in demo because the intermediate views aren't part
+    // of the cached fixture yet.
+    if (isDemo) {
+      void runDemoAuto(args.runId, args.slug)
+      return
+    }
     // The Anthropic key has to be available for both paths: auto-mode
     // needs the server to have already stashed it (it did on /api/runs),
     // and step-by-step still posts it as a header on each phase call.
@@ -827,6 +1026,13 @@ export function App() {
     answers: Array<{ id: string; answer: string }>,
   ): Promise<void> {
     if (phase.name !== 'answering') return
+    // Demo mode skips the real /answers call entirely; the answers the
+    // user typed (or the pre-filled expert ones) are accepted and the
+    // cached elicitation summary is displayed.
+    if (isDemo) {
+      void runDemoSummary()
+      return
+    }
     const apiKey = getKey()
     if (!apiKey) {
       setPhase({ name: 'enter-key' })
@@ -953,9 +1159,35 @@ export function App() {
         />
       )}
 
+      {isDemo && phase.name !== 'scored' && (
+        <div className="demo-banner" role="status">
+          <p>
+            <strong>Demo mode.</strong> Replaying a cached expert assessment
+            (MathDial — India urban English tutoring). No Anthropic API calls
+            are being made.
+          </p>
+          <button
+            type="button"
+            className="link"
+            onClick={handleStartOver}
+          >
+            Exit demo
+          </button>
+        </div>
+      )}
+
       {phase.name === 'consent' && <ConsentGate onAccept={handleConsent} />}
 
-      {phase.name === 'enter-key' && <KeyForm onSaved={handleKeySaved} />}
+      {phase.name === 'enter-key' && (
+        <KeyForm onSaved={handleKeySaved} onTryDemo={handleTryDemo} />
+      )}
+
+      {phase.name === 'demo-intro' && (
+        <DemoIntro
+          onStart={() => void runDemoIntro()}
+          onExit={handleStartOver}
+        />
+      )}
 
       {phase.name === 'idle' && (
         <RunForm onSubmit={handleRun} onChangeKey={handleChangeKey} />
@@ -970,6 +1202,7 @@ export function App() {
           questions={phase.state.questions}
           onSubmit={handleAnswers}
           onChangeKey={handleChangeKey}
+          initialAnswers={isDemo ? DEMO_EXPERT_ANSWERS : undefined}
         />
       )}
 
