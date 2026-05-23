@@ -927,8 +927,7 @@ export function App() {
       <div className="hero">
         <MatrixBackdrop />
         <header>
-          <p className="eyebrow">Benchmark Caliper</p>
-          <h1>Validity Analyzer</h1>
+          <h1>Benchmark Caliper</h1>
           <p className="tagline">
             Assess whether an AI benchmark applies to a different deployment
             context.
