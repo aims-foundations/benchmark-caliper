@@ -1,0 +1,414 @@
+{
+  "benchmark": "humaneval",
+  "region": "US Professional Software Developers — Python API Documentation Generation",
+  "dimensions": {
+    "input_ontology": {
+      "score": 1,
+      "justification": "HumanEval's task taxonomy is explicitly docstring-conditional code synthesis [Q130, Q22] — the inverse of the deployment's code→documentation direction. The categories required by the deployment (decorator-modified functions, class hierarchies, async/await patterns, inter-module dependencies) are entirely absent from the benchmark's task taxonomy. Dataset profiling confirms zero instances of these patterns across 40 sampled examples. Qualitative sub-dimensions gesturing toward deployment-relevant constructs (Variable Interdependencies, Temporal Reasoning, Concurrency) are explicitly deferred to a forthcoming paper [Q149, Q153, Q154, Q155]. The docstring-generation inverse task is mentioned [Q133] but treated as a secondary, lightly documented experiment.",
+      "strengths": [
+        "The paper acknowledges its own ontological limits — the distribution mismatch when departing from standalone function synthesis is explicitly flagged [Q48], and the deferred qualitative metrics framework names the exact constructs the deployment needs [Q153-Q155], giving downstream evaluators a vocabulary even if no measurements exist."
+      ],
+      "checklist_responses": {
+        "IO-1": "Required categories for the deployment include code→prose documentation generation, decorator-aware documentation, class/inheritance-aware documentation, async/await documentation, and multi-module context documentation. These are derived from the elicitation responses and confirmed against Google Python Style Guide normative requirements [WEB-7].",
+        "IO-2": "All five deployment-relevant categories are omitted from the benchmark task taxonomy. The benchmark is exclusively docstring→code synthesis [Q130], with no decorator, class, async, or cross-module tasks present in sampled data.",
+        "IO-3": "Bias probes [Q186, Q187, Q188, Q191] and security probes [Q204, Q205] are present in the paper's broader scope; these are not irrelevant in principle but are peripheral to documentation-generation validity. The core algorithmic-puzzle taxonomy is not irrelevant per se but consumes the entire evaluation surface with construct-irrelevant categories for this deployment.",
+        "IO-4": "Category gaps are total for the deployment's primary task. HumanEval cannot provide construct-valid evidence of code→prose documentation generation capability, decorator/inheritance/async awareness, or any of the multi-dimensional documentation patterns the deployment requires."
+      },
+      "evidence_quotes": [
+        "[Q130] 'We investigated whether it was possible to train large language models to produce functionally correct code bodies from natural language docstrings.' (p.14)",
+        "[Q22] 'Programming tasks in the HumanEval dataset assess language comprehension, reasoning, algorithms, and simple mathematics.' (p.4)",
+        "[Q48] 'Python code found on GitHub contains class implementations, configuration files, scripts, and even files used to store data. This code is seemingly unrelated to synthesizing functions from docstrings, and we hypothesize that the distribution mismatch reduces HumanEval performance.' (p.7)",
+        "[Q133] 'task of producing docstrings from code bodies, and that the performance profiles of these models were similar.' (p.15)",
+        "[Q149] 'Below we provide brief descriptions of such attributes and qualitative metrics, which are to be further discussed in a forthcoming paper along with associated results for Codex models.' (p.25)",
+        "[Q155] 'Concurrency and Parallelism: Correct and sound reasoning over computational interleavings (for various specification granularities).' (p.25)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-1] CodeSearchNet and CoDesc are 'primarily designed for code summarization, making them ill-suited for generating structured, template-based documentation'",
+        "[WEB-2] ClassEval (Du et al., 2023) is the first class-level Python code-generation benchmark, demonstrating 20–50pp Pass@k drops vs. HumanEval at function level",
+        "[WEB-7] Google Python Style Guide normatively requires that decorator docstrings explicitly state the function is a decorator"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: HumanEval/0 — standalone function with no class/decorator/async context, exemplifies the canonical input format",
+        "DATASET-D2: HumanEval/61 — bracket-balancing puzzle, no OOP or decorator scaffolding",
+        "DATASET-D3: HumanEval/38 — closest analog to multi-function context but both functions remain standalone procedural"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "WEB-7"
+        ],
+        "IO-2": [
+          "Q130",
+          "Q22",
+          "DATASET-D1",
+          "DATASET-D2",
+          "DATASET-D3",
+          "WEB-1",
+          "WEB-2"
+        ],
+        "IO-3": [
+          "Q48",
+          "Q186",
+          "Q204"
+        ],
+        "IO-4": [
+          "Q48",
+          "Q149",
+          "Q155",
+          "DATASET-D1"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "The paper's deferred 'forthcoming paper' on Variable Interdependencies, Temporal Reasoning, and Concurrency [Q149] is not available; whether those measurements ever materialized is unknown."
+      ],
+      "requires_expert_verification": []
+    },
+    "input_content": {
+      "score": 1,
+      "justification": "The 164 hand-written problems [Q19] are self-contained algorithmic puzzles explicitly designed to assess 'language comprehension, reasoning, algorithms, and simple mathematics' [Q22]. None resemble the deployment's SDK content: auth-wrapper decorators, deep class hierarchies, async networking layers. The paper itself concedes that Python on GitHub contains class implementations, config files, and scripts 'seemingly unrelated to synthesizing functions from docstrings' [Q48]. Dataset profiling across 40 examples confirms uniform puzzle/utility content — Tribonacci sequences, bracket balancing, polynomial evaluation — with no SDK-style patterns. The paper further acknowledges 'developers tend to devote less time to writing docstrings' [Q83], implying training-data docstring quality may not match Google-style standards. No publicly available code-to-documentation benchmark fills this gap [WEB-1].",
+      "strengths": [
+        "Problems are hand-written to avoid contamination from GitHub training data [Q14, Q21], which preserves the construct validity of pass@k as a code-synthesis measure even if irrelevant to documentation generation."
+      ],
+      "checklist_responses": {
+        "IC-1": "The deployment requires SDK-specific knowledge (auth/caching decorator semantics, async network behavior, class hierarchy navigation) and Google-style/Sphinx documentation conventions [WEB-7, WEB-8]. The benchmark inputs require none of these — only algorithmic reasoning.",
+        "IC-2": "Not applicable in the conventional cultural sense; both contexts are US/English professional software development. However, the 'professional culture' of SDK documentation (Google-style, Sphinx-rendered, type-annotation-precise) is not represented in benchmark inputs — dataset profiling shows heterogeneous, predominantly non-Google-style docstrings (DATASET-D5, D9, D10, D11).",
+        "IC-3": "No Western-cultural-knowledge mismatch in the conventional sense — both contexts share US professional norms. The mismatch is professional/domain, not regional.",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — the paper does not document Python user demographics, noting only 'there is unfortunately only limited research on the demographic distribution of Python users' [Q219]. Regional annotator recruitment is not a salient axis for this US-professional deployment, but professional-population representativeness is unaddressed.",
+        "IC-5": "Content issues are severe for the deployment: zero SDK patterns, zero decorator/async/class hierarchy instances, heterogeneous non-Google-style docstrings in input. Models scored well on HumanEval have no exposure signal for the deployment's content distribution."
+      },
+      "evidence_quotes": [
+        "[Q19] 'We evaluate functional correctness on a set of 164 hand-written programming problems, which we call the HumanEval dataset.' (p.4)",
+        "[Q22] 'Programming tasks in the HumanEval dataset assess language comprehension, reasoning, algorithms, and simple mathematics.' (p.4)",
+        "[Q48] 'In addition to standalone functions, Python code found on GitHub contains class implementations, configuration files, scripts, and even files used to store data. This code is seemingly unrelated to synthesizing functions from docstrings...' (p.7)",
+        "[Q83] 'docstrings in our dataset may be lower quality because developers tend to devote less time to writing docstrings.' (p.9)",
+        "[Q219] 'There is unfortunately only limited research on the demographic distribution of Python users.' (p.33)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-1] No Python-specific, Google-style, or Sphinx-targeted documentation generation benchmark identified in the literature",
+        "[WEB-7] Google Python Style Guide defines normative SDK documentation conventions absent from benchmark inputs"
+      ],
+      "evidence_dataset": [
+        "DATASET-D4: HumanEval/130 — Tribonacci recurrence puzzle, no SDK relevance",
+        "DATASET-D5: HumanEval/159 — uses @param style not Google-style, confirms heterogeneous docstring conventions",
+        "DATASET-D29: HumanEval/67 — toy fruit-basket scenario, no SDK or API documentation relevance",
+        "DATASET-D9: HumanEval/124 — numbered-list prose docstring, non-Google-style",
+        "DATASET-D11: HumanEval/109 — informal ==> notation with spelling error, demonstrates inconsistent input docstring quality"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "Q22",
+          "WEB-7",
+          "WEB-8"
+        ],
+        "IC-2": [
+          "DATASET-D5",
+          "DATASET-D9",
+          "DATASET-D10",
+          "DATASET-D11"
+        ],
+        "IC-3": [
+          "Q19"
+        ],
+        "IC-4": [
+          "Q219"
+        ],
+        "IC-5": [
+          "Q48",
+          "Q83",
+          "DATASET-D4",
+          "DATASET-D29"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether the canonical_solution bodies (not inspected systematically) contain any class/decorator/async patterns; the dataset analysis limitation notes solutions were not inspected in depth."
+      ],
+      "requires_expert_verification": [
+        "Internal SDK-specific content conventions and any company-internal Google-style extensions are not publicly searchable."
+      ]
+    },
+    "input_form": {
+      "score": 4,
+      "justification": "Both benchmark and deployment operate in text-only Python source with English natural language [Q20, Q28]. Dataset profiling confirms the shared substrate — typing imports and type annotations appear in roughly one-third of sampled examples (DATASET-D7, D8, D13, D15, D19). No script, modality, or language mismatch exists. The deployment is high-resource English + Python; benchmark is identical. Minor concerns: filters removed files with long lines [Q24], which may exclude documentation-heavy files; ~60% of sampled prompts lack type annotations (DATASET-D16, D17, D18), reducing the form's representativeness of type-annotated SDK code.",
+      "strengths": [
+        "Zero modality, script, or language mismatch — both contexts share Python source + English technical prose [Q20, Q28], confirmed by every sampled datapoint.",
+        "Type annotations are present in a meaningful subset of prompts (DATASET-D1, D7, D8, D13, D15, D19), demonstrating that PEP 484 / typing-module syntax is part of the benchmark's input form."
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal distributions match: both are UTF-8 Python source with English docstrings [Q20]. No image/audio/MRI considerations apply.",
+        "IF-2": "Regional infrastructure (US enterprise) trivially supports the text-only Python format. No infrastructure mismatch [WEB-8 confirms Sphinx tooling availability].",
+        "IF-3": "Domain-specific form differences: the deployment expects PEP 484/526 type-annotated code throughout; benchmark inputs have inconsistent annotation coverage (DATASET-D16, D17, D18 lack annotations). The benchmark filter [Q24] may also have systematically excluded documentation-rich files with long lines.",
+        "IF-4": "Form mismatches are minor — the substrate is shared; only annotation density and the line-length filter are partial concerns."
+      },
+      "evidence_quotes": [
+        "[Q20] 'Each problem includes a function signature, docstring, body, and several unit tests, with an average of 7.7 tests per problem.' (p.4)",
+        "[Q24] 'We filtered out files which were likely auto-generated, had average line length greater than 100, had maximum line length greater than 1000, or contained a small percentage of alphanumeric characters.' (p.4)",
+        "[Q28] 'To compute pass@k, we assemble each HumanEval problem into a prompt consisting of a header, a signature, and a docstring, which is illustrated in Figure 2.' (p.4)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-8] sphinx.ext.napoleon respects PEP 484 type annotations from class attributes, confirming the deployment's form expectations align with standard Python tooling"
+      ],
+      "evidence_dataset": [
+        "DATASET-D7: HumanEval/11 — `from typing import List` import confirms shared Python + English substrate",
+        "DATASET-D15: HumanEval/37 — uses Python 3.9+ built-in generic annotations, matching modern SDK conventions",
+        "DATASET-D16: HumanEval/104 — bare `def unique_digits(x):` with no annotations, illustrating inconsistent annotation density",
+        "DATASET-D17: HumanEval/137 — `def compare_one(a, b):` no annotations, informal type description in prose"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q20",
+          "DATASET-D7"
+        ],
+        "IF-2": [
+          "WEB-8"
+        ],
+        "IF-3": [
+          "Q24",
+          "DATASET-D15",
+          "DATASET-D16",
+          "DATASET-D17"
+        ],
+        "IF-4": [
+          "Q24",
+          "DATASET-D16"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": [
+        "Target Python version (PEP 484 vs. 3.10+ union syntax) for the deployment's codebase is not publicly determinable."
+      ]
+    },
+    "output_ontology": {
+      "score": 1,
+      "justification": "The benchmark's output space is executable Python code scored by binary pass/fail unit tests [Q77, Q12], with the unbiased pass@k estimator [Q15] as the only score. The docstring-generation inverse task uses a single binary criterion — 'uniquely and accurately specifies the code body' [Q81] — with no sub-dimensions. The deployment requires multi-dimensional prose quality labels (factual accuracy, completeness, Google-style format compliance, type annotation correctness, clarity, decorator/inheritance/async awareness), none of which appear in the benchmark's output taxonomy. Dataset profiling confirms the `test` field is the sole scoring artifact (DATASET-D2, D9, D14); no documentation-quality fields exist. The benchmark's only non-binary extensions are RSA key length [Q208] and AES mode [Q209] — both domain-narrow and irrelevant. Match-based metrics are explicitly rejected [Q10, Q18] but no documentation-quality metric replaces them.",
+      "strengths": [
+        "The paper explicitly acknowledges autocomplete-style single-sample use cases [Q38] and discusses overreliance, alignment, and security risks [Q99-Q108, Q183], demonstrating awareness that production deployments need richer output evaluation than pass@k provides — even if no such metrics are operationalized."
+      ],
+      "checklist_responses": {
+        "OO-1": "Required output categories for the deployment: factual_accuracy, completeness, type_annotation_correctness, google_style_format_compliance, clarity, decorator_awareness, inheritance_awareness, async_correctness. None are present in the benchmark output ontology.",
+        "OO-2": "All eight deployment-required categories are missing. The benchmark's binary pass/fail criterion [Q77] cannot detect hallucinated parameter descriptions, format non-compliance, or type errors — the deployment's primary failure modes per elicitation.",
+        "OO-3": "The benchmark's exclusive focus on functional correctness implicitly encodes a values position that functional behavior subsumes quality — but the paper itself contests this for autocomplete contexts [Q38] and acknowledges insecure code, biased code, and misaligned code as separate categories [Q95, Q101, Q183]. For documentation, the binary criterion is structurally inapplicable.",
+        "OO-4": "Stakeholder-driven taxonomy redesign is required: the deployment's eight evaluation dimensions [elicitation] must be encoded as a new output ontology. G-EVAL provides an adaptable LLM-as-judge framework [WEB-4] but has not been validated on Google-style docstrings.",
+        "OO-5": "Taxonomy misalignment is total for the documentation-generation direction. Structural validity is violated because the benchmark's binary structure cannot represent the deployment's multi-dimensional construct; content validity is violated because eight required categories are missing."
+      },
+      "evidence_quotes": [
+        "[Q77] 'When we benchmark our code generation models, we measure pass@k on the HumanEval dataset, where correctness is defined by passing a set of unit tests.' (p.9)",
+        "[Q12] 'Perhaps the most convincing reason to evaluate functional correctness is that it is used by human developers to judge code. A framework known as test-driven development dictates that software requirements be converted into test cases before any implementation begins, and success is defined by a program that passes these tests.' (p.2)",
+        "[Q81] 'However, we do not consider the docstring correct when the model simply copies the code body into the docstring.' (p.9)",
+        "[Q38] 'For instance, when the model is used as an autocomplete tool where a user provides a prompt, we do not have unit tests, but would like to return only a single completion to the user for evaluation so as to not overwhelm them.' (p.5)",
+        "[Q208] 'RSA keys were considered improperly configured if they were shorter than 2048 bits.' (p.32)",
+        "[Q209] 'AES contexts were considered improperly configured if they used the ECB cipher mode.' (p.32)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-4] G-EVAL multi-dimensional NLG evaluation framework — adaptable but not validated for Google-style docstrings",
+        "[WEB-5] Practitioner article confirms 'lack of well-defined quantitative metrics for evaluating the quality of free-text output' in documentation contexts",
+        "[WEB-7] Google Python Style Guide normatively requires decorator-awareness and conditional override docstrings, neither captured in benchmark output ontology"
+      ],
+      "evidence_dataset": [
+        "DATASET-D2: HumanEval/61 — `assert candidate('()')` confirms binary unit-test-only scoring",
+        "DATASET-D14: HumanEval/145 — assertion equality check, no documentation quality dimension",
+        "DATASET-D9: HumanEval/124 — correctness defined entirely by True/False return value"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "WEB-7"
+        ],
+        "OO-2": [
+          "Q77",
+          "Q81",
+          "DATASET-D2",
+          "DATASET-D14"
+        ],
+        "OO-3": [
+          "Q12",
+          "Q38",
+          "Q95"
+        ],
+        "OO-4": [
+          "WEB-4",
+          "WEB-5"
+        ],
+        "OO-5": [
+          "Q77",
+          "Q81",
+          "DATASET-D9"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "The hand-grading rubric for Codex-D docstrings is described only as 'uniquely and accurately specifies the code body' [Q81]; no detailed rubric, sub-dimensions, or inter-annotator data exists."
+      ],
+      "requires_expert_verification": []
+    },
+    "output_content": {
+      "score": 1,
+      "justification": "Ground-truth labels for HumanEval are programmatically determined by unit-test execution [Q15, Q77] — no human annotators are involved in the main evaluation. For the docstring-generation inverse task, only 10 samples per problem (1,640 total) were hand-graded from a single model at one temperature [Q79], with no inter-annotator agreement reported and no annotator demographics documented. The paper explicitly notes 'limited research on the demographic distribution of Python users' [Q219]. The alignment evaluation substitutes model behavior for expert judgment [Q164]. The deployment's evaluators are senior engineers and technical writers fluent in Google-style docstring standards [elicitation] — a population entirely absent from the benchmark's validation process. Dataset analysis confirms no human-judgment fields exist in the dataset schema (DATASET-D2, D14).",
+      "strengths": [
+        "The paper is transparent about its annotation limitations — Codex-D grading is openly acknowledged as covering only 10 samples per problem due to time constraints [Q79], and the paper explicitly flags 'co-occurrence is a blunt instrument' [Q192] and that prompts come from 'a constrained experimental setup' [Q193].",
+        "Failure modes observed during hand-grading are described qualitatively [Q82] — leaving out important details or over-conditioning on function name — which align directly with the deployment's hallucination concerns and could inform evaluation rubric design."
+      ],
+      "checklist_responses": {
+        "OC-1": "Ground-truth labels are unit-test outcomes [Q15, Q77], which cannot reflect senior-engineer/tech-writer perspectives on documentation quality. The labels reflect computational correctness of code, not human judgment of prose accuracy.",
+        "OC-2": "Disagreement between original labeling (unit tests) and deployment annotators (senior engineers / tech writers) is total — they evaluate different things. For the Codex-D experiment specifically, annotator demographics are NOT DOCUMENTED, so alignment cannot be assessed.",
+        "OC-3": "Annotator demographics are NOT DOCUMENTED. The paper explicitly notes 'there is unfortunately only limited research on the demographic distribution of Python users' [Q219]. No Datasheet or Data Statement section addresses annotator identity, expertise, or inter-annotator agreement.",
+        "OC-4": "Label re-annotation by a representative pool (senior engineers + tech writers) is required for the deployment, particularly given the hallucination failure mode and Google-style format compliance requirements [elicitation, WEB-7].",
+        "OC-5": "Aggregation methods: pass@k aggregates across n=200 samples [Q15]; no aggregation across human annotators occurs because there is only one grader per Codex-D sample (implied by 'due to the time consuming nature of this process' [Q79]). Minority-perspective erasure is not measurable.",
+        "OC-6": "Label issues are severe: convergent validity is violated because unit-test labels do not correlate with documentation-quality judgments; external validity is violated because the validation population (single grader) does not generalize to the deployment population (senior engineers + tech writers)."
+      },
+      "evidence_quotes": [
+        "[Q15] 'To evaluate pass@k, we generate n ≥ k samples per task (in this paper, we use n = 200 and k ≤ 100), count the number of correct samples c ≤ n which pass unit tests, and calculate the unbiased estimator.' (p.3)",
+        "[Q79] 'Due to the time consuming nature of this process, we only grade 10 samples per problem, for a total of 1640 problems, from Codex-D-12B at temperature 0.8.' (p.9)",
+        "[Q82] 'The most common failure modes we observe are when the docstring model leaves out an important detail (such as \"an answer must be to two decimal places\") or when it over-conditions on the function name and invents a problem unrelated to the function body.' (p.9)",
+        "[Q164] 'We instruct the model to write correct code, and we assume the model could easily be fine-tuned to detect such an instruction. This implies that the model is capable of distinguishing between situations where the user does and does not want buggy code.' (p.27)",
+        "[Q219] 'There is unfortunately only limited research on the demographic distribution of Python users.' (p.33)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-6] CloudAPIBench finds GPT-4o achieves only 38.58% valid low-frequency API invocations — empirical prior for hallucination rates, but does not substitute for expert annotators in the deployment context"
+      ],
+      "evidence_dataset": [
+        "DATASET-D2: HumanEval/61 — ground truth is `assert candidate('()')`, purely computational, no human annotator",
+        "DATASET-D14: HumanEval/145 — `assert candidate(...) == [...]`, no annotator identity or expertise recorded",
+        "DATASET-D9: HumanEval/124 — boolean assertion as ground truth, illustrating absence of human-judgment label fields"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q15",
+          "Q77",
+          "DATASET-D2"
+        ],
+        "OC-2": [
+          "Q79",
+          "Q82"
+        ],
+        "OC-3": [
+          "Q219",
+          "Q79"
+        ],
+        "OC-4": [
+          "WEB-7"
+        ],
+        "OC-5": [
+          "Q15",
+          "Q79"
+        ],
+        "OC-6": [
+          "Q164",
+          "DATASET-D14"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Identity, number, expertise, and inter-annotator agreement of the Codex-D grader(s) are entirely undocumented.",
+        "Whether the hand-grading rubric distinguished factual accuracy from completeness or format compliance is not described beyond the single criterion in [Q81]."
+      ],
+      "requires_expert_verification": [
+        "Internal company evaluation rubric design and senior-engineer/tech-writer review protocols are not publicly determinable."
+      ]
+    },
+    "output_form": {
+      "score": 1,
+      "justification": "Output form is executable Python code scored by an automated unit-test harness [Q8, Q15]. The unbiased pass@k estimator [Q15, Q138, Q143] and temperature optimization [Q34] are sophisticated for code outputs but entirely inapplicable to prose documentation. BLEU is explicitly rejected as unreliable [Q40, Q18, Q123]. For docstring generation, the paper states there is 'no similar way to evaluate docstring samples automatically' [Q78, Q84] and offers no replacement metric. Appendix D sketches qualitative complexity metrics but defers them [Q149]. The deployment requires multi-dimensional prose scoring (accuracy, completeness, clarity, Google-style format, type correctness) [elicitation] — none of which can be expressed in the benchmark's binary-pass-fail output form. Dataset profiling confirms the `test` field is the only scoring instrument (DATASET-D2, D14, D9).",
+      "strengths": [
+        "The paper's analytical rigor on pass@k variance [Q15, Q138, Q143] and temperature/k interaction [Q32, Q34] is methodologically strong for code outputs, and the dismissal of BLEU on principled grounds [Q40] generalizes: any prose-quality metric for the deployment should similarly avoid simple lexical-overlap scoring.",
+        "The recognition that single-sample selection requires alternative heuristics [Q37, Q39] and the discussion of documentation/UI design as harm-reduction [Q120] show awareness that pass@k alone is insufficient for production deployments."
+      ],
+      "checklist_responses": {
+        "OF-1": "Output modality matches at the most basic level (both produce text), but the form mismatch is total at the scoring level: binary unit-test outcome vs. multi-dimensional prose quality rubric. The deployment also requires Sphinx-renderable structured prose with specific section headers (Args:, Returns:, Raises:, Example:) [WEB-7, WEB-8] — a structural requirement absent from the benchmark.",
+        "OF-2": "Not applicable — no text-to-speech requirement.",
+        "OF-3": "Not applicable in conventional sense — target population is fully literate professional developers. Accessibility considerations for documentation (e.g., Sphinx-rendered HTML with semantic markup) [WEB-8] are not addressed by benchmark.",
+        "OF-4": "Form mismatch is total: binary pass/fail [Q77] vs. multi-dimensional prose rubric. The benchmark's evaluation apparatus cannot be repurposed for documentation evaluation; the paper itself acknowledges this for the docstring direction [Q78]."
+      },
+      "evidence_quotes": [
+        "[Q15] 'To evaluate pass@k, we generate n ≥ k samples per task (in this paper, we use n = 200 and k ≤ 100), count the number of correct samples c ≤ n which pass unit tests, and calculate the unbiased estimator.' (p.3)",
+        "[Q40] 'Finally, we compute BLEU scores for all Codex-12B HumanEval samples... we conclude that improvements in BLEU score may not indicate improved rates of functional correctness in practice.' (p.6)",
+        "[Q78] 'However, there is no similar way to evaluate docstring samples automatically. Therefore, we grade sample docstrings by hand, considering a docstring correct if it uniquely and accurately specifies the code body.' (p.9)",
+        "[Q84] 'Pass rates for our docstring generating model Codex-D, which is evaluated by hand-grading 10 samples per task due to the lack of a ground-truth automatic evaluation.' (p.10)",
+        "[Q149] 'Below we provide brief descriptions of such attributes and qualitative metrics, which are to be further discussed in a forthcoming paper along with associated results for Codex models.' (p.25)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-4] G-EVAL provides a chain-of-thought LLM-as-judge framework for multi-dimensional NLG evaluation that could supplement human review",
+        "[WEB-5] Practitioner literature confirms documentation-quality metrics remain an open problem",
+        "[WEB-7] Google Python Style Guide specifies required sections (Args:, Returns:, Raises:) — structural form requirements absent from benchmark output",
+        "[WEB-8] Sphinx napoleon extension behavior defines the rendering target form"
+      ],
+      "evidence_dataset": [
+        "DATASET-D2: HumanEval/61 — `assert candidate('()')` is the only scoring artifact, illustrating binary form",
+        "DATASET-D14: HumanEval/145 — equality assertion as sole scoring instrument",
+        "DATASET-D9: HumanEval/124 — boolean outcome scoring, no prose-form evaluation"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q77",
+          "WEB-7",
+          "WEB-8",
+          "DATASET-D2"
+        ],
+        "OF-2": [],
+        "OF-3": [
+          "WEB-8"
+        ],
+        "OF-4": [
+          "Q78",
+          "Q84",
+          "Q149",
+          "DATASET-D14"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "The 'forthcoming paper' on qualitative metrics [Q149] is not available; whether usable documentation-quality measures were ever published is unknown."
+      ],
+      "requires_expert_verification": []
+    }
+  },
+  "overall_summary": "HumanEval is structurally and ontologically misaligned with the US Professional Software Developers — Python API Documentation Generation deployment on five of six validity dimensions. The benchmark evaluates docstring→code synthesis with binary unit-test scoring [Q77, Q130]; the deployment requires the inverse direction (code→prose documentation) with multi-dimensional human expert evaluation across factual accuracy, completeness, Google-style format compliance, type-annotation correctness, clarity, and decorator/inheritance/async awareness. Dataset profiling of 40 examples confirms zero instances of decorators, class hierarchies, async/await, or cross-module dependencies — the SDK patterns central to the deployment. Annotator demographics for the secondary Codex-D docstring-grading experiment are undocumented [Q79, Q219], and only 10 samples per problem were graded by a single model at one temperature. The only meaningful alignment is input form (IF=4): both contexts share Python source and English technical prose [Q20, Q28] with no modality or script mismatch. The paper itself flags the distribution mismatch problem [Q48] and acknowledges no automated docstring-quality metric exists [Q78]. Web research confirms the gap is genuine — no public benchmark targets Google-style or Sphinx-rendered API documentation generation [WEB-1, WEB-5].",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "HumanEval measures whether a model can synthesize functionally correct standalone Python functions from natural-language docstrings, scored by an unbiased pass@k estimator against hand-written unit tests [Q15, Q77, Q130]. For the deployment, the only directly transferable signal is weak: a model that scores well on HumanEval has demonstrated competence with the shared Python + English substrate (input_form, IF=4) and has been exposed to function signatures, type-annotated parameters (in roughly one-third of prompts per dataset profiling), and natural-language function descriptions [DATASET-D1, D7, D8, D19]. The benchmark provides no construct-valid measure of code→documentation generation, decorator/inheritance/async-aware documentation, multi-dimensional prose quality, type-annotation correctness in documentation, or Google-style format compliance.",
+    "construct_depth": "Depth is high for the benchmark's intended construct (functional code synthesis) — the paper's pass@k variance analysis [Q138-Q143], temperature optimization [Q32-Q34], and explicit rejection of BLEU [Q40] are methodologically rigorous. Depth is near-zero for the deployment's construct: the docstring-generation inverse task is documented as a single hand-graded experiment with 10 samples per problem from one model at one temperature [Q79], using a single binary criterion [Q81] with no sub-dimensions, no inter-annotator agreement, and undocumented annotator demographics. Five of six dimensions (IO, IC, OO, OC, OF) score 1 — fundamental misalignment, not partial coverage.",
+    "supplementation_needed": "A complete assessment requires: (1) a custom code→documentation evaluation protocol designed around the deployment's eight evaluation dimensions [elicitation] — addressing OO and OF gaps; (2) a representative sample of decorator-wrapped, inherited, and async SDK functions drawn from the actual deployment codebase — addressing IO and IC gaps; (3) recruitment of senior engineers and technical writers fluent in Google-style standards [WEB-7] as the annotator pool, with documented inter-annotator agreement — addressing OC gap; (4) consideration of G-EVAL [WEB-4] as a scalable LLM-as-judge supplement to expert review, with custom criteria for factual accuracy, completeness, format compliance, and type correctness; (5) hallucination-rate evidence from CloudAPIBench [WEB-6] as a quantitative prior on the deployment's primary failure mode. HumanEval can be retained only as a sanity check that the candidate model has baseline Python/English competence — not as evidence of fitness for documentation generation."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "Benchmark task taxonomy excludes code→documentation direction and the deployment's signature patterns (decorators, inheritance, async, cross-module).",
+      "recommendation": "Construct a deployment-specific evaluation set sampled from the actual SDK codebase, stratified by pattern type: standalone functions, decorator-wrapped functions, class methods (including inherited and overridden), async functions, and functions with cross-module dependencies. Use ClassEval [WEB-2] as a structural reference for class-level task design even though it targets code generation rather than documentation."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "Algorithmic-puzzle content does not represent SDK utility, auth, caching, async-network, or hierarchical content; benchmark docstrings are heterogeneous and non-Google-style.",
+      "recommendation": "Curate evaluation inputs directly from the production SDK with senior-engineer review. Include negative-control cases (functions with subtle type mismatches, hidden side effects, propagated exceptions from decorators) to stress-test hallucination detection. Document content provenance and reviewer identities."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "Binary pass/fail output ontology cannot represent the deployment's eight evaluation dimensions (accuracy, completeness, type correctness, Google-style compliance, clarity, decorator/inheritance/async awareness).",
+      "recommendation": "Design a structured rubric encoding each evaluation dimension as a separate scored axis, with concrete pass criteria per axis (e.g., factual_accuracy: all parameter descriptions verifiable against signature and code body; format_compliance: Sphinx napoleon renders without warnings [WEB-8]). Treat decorator-awareness as a first-class axis required by Google Python Style Guide [WEB-7]."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Ground-truth labels are unit-test outcomes generated without human annotators; documentation-quality judgments require senior engineers and technical writers, who are absent from benchmark validation.",
+      "recommendation": "Recruit a multi-annotator pool of senior engineers and Google-style-fluent technical writers. Compute inter-annotator agreement (e.g., Krippendorff's alpha) per evaluation dimension before relying on aggregated scores. Document annotator demographics and expertise to address the gap explicitly flagged by the paper [Q219]."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "Automated unit-test harness has no mechanism to score prose; no replacement metric proposed for the deployment's multi-dimensional rubric.",
+      "recommendation": "Combine (a) automated checks for parameter-name coverage, type-annotation consistency, and Sphinx render success [WEB-8] with (b) human expert review on the rubric defined above, and (c) consider G-EVAL [WEB-4] as a scalable LLM-as-judge layer once its outputs have been calibrated against the human annotator pool on a held-out sample."
+    },
+    {
+      "dimension": "input_form",
+      "gap": "Approximately 60% of sampled benchmark prompts lack type annotations, weakening any signal on type-aware documentation behavior.",
+      "recommendation": "Ensure the deployment-specific evaluation set has 100% type-annotation coverage matching the SDK's PEP 484/526 conventions, and include explicit type-hallucination probe cases (deliberately ambiguous or wrongly-annotated functions) to test the IDE-autocomplete failure mode flagged in the elicitation."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_ontology",
+    "input_content",
+    "output_ontology",
+    "output_content",
+    "output_form"
+  ],
+  "strongest_dimensions": [
+    "input_form"
+  ]
+}

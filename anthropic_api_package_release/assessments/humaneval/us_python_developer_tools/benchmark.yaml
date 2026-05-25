@@ -1,0 +1,1540 @@
+name: humaneval
+full_name: 'HumanEval: A Dataset for Evaluating Large Language Models Trained on Code'
+source_url: https://github.com/openai/human-eval
+paper_url: https://arxiv.org/abs/2107.03374
+year: 2021
+domain: Python code generation / functional correctness evaluation
+porting_strategy: none
+languages:
+- en
+- python
+primary_region: United States / Global North
+description: 'HumanEval is a hand-authored benchmark of 164 Python programming problems used to
+
+  evaluate the functional correctness of large language models fine-tuned on code (Codex).
+
+  Each problem provides a function signature, docstring, body, and an average of 7.7
+
+  unit tests. The primary metric is pass@k — whether any of k sampled completions passes
+
+  all unit tests — evaluated with an unbiased estimator. The benchmark is self-contained
+
+  (no external dependencies) and is scoped to algorithmic, string-manipulation, and
+
+  mathematical problems comparable to easy software interview questions. HumanEval
+
+  directly powers the evaluation of GitHub Copilot''s ancestor models and remains a
+
+  widely used baseline for Python code generation.
+
+  '
+documentation_excerpts: '## Key characteristics relevant to validity analysis
+
+
+  ### Input Ontology
+
+  HumanEval''s problem taxonomy covers language comprehension, reasoning, algorithms,
+
+  and simple mathematics [Q22], operationalized through 164 hand-written stand-alone
+
+  function-synthesis tasks [Q19]. A supervised fine-tuning extension (Codex-S) broadens
+
+  the distribution slightly by adding competitive programming and CI-traced utility
+
+  functions [Q49, Q60, Q61, Q62], and appendices describe qualitative taxonomic
+
+  extensions including variable interdependencies [Q153], temporal reasoning [Q154],
+
+  concurrency [Q155], hierarchical specification abstractions [Q147, Q150, Q152], and
+
+  13 synthetic building-block tasks for measuring degradation under chained operations
+
+  [Q145]. Bias-probing tasks cover gender [Q186], race [Q187, Q188], and cryptographic
+
+  security [Q204, Q205], further expanding the reported taxonomy beyond pass@k.
+
+
+  Despite these extensions, the core HumanEval taxonomy is explicitly interview-style
+
+  algorithmic reasoning [Q22]. The paper acknowledges that GitHub training data includes
+
+  class implementations, configuration files, scripts, and data-storage files unrelated
+
+  to function-from-docstring synthesis [Q48], implying that large production completion
+
+  categories — data science workflows, web framework route handlers, async/await patterns,
+
+  and complex typed signatures — are systematically absent from the evaluation taxonomy.
+
+  The paper identifies this distribution mismatch as a source of reduced HumanEval
+
+  performance [Q48] but does not quantify how much of the real completion distribution
+
+  the benchmark covers.
+
+
+  ### Input Content
+
+  The 164 HumanEval problems were hand-written and explicitly not copied from existing
+
+  sources to avoid data contamination with GitHub training data [Q14, Q19, Q21]. The
+
+  training corpus was scraped from 54 million public GitHub repositories in May 2020,
+
+  totaling 159 GB of filtered Python after removing auto-generated files, outlier line
+
+  lengths, and low-alphanumeric content [Q23, Q24, Q25]. For Codex-S, additional
+
+  training problems came from competitive programming and interview-preparation websites
+
+  [Q51, Q52] and from CI-traced function executions across travis/tox-using PyPI
+
+  packages [Q54, Q55, Q57, Q58].
+
+
+  A critical content-level validity gap for the deployment context: every HumanEval
+
+  problem is self-contained with no external imports or dependencies [Q19]. The paper
+
+  implicitly acknowledges this by noting that real GitHub code includes library calls
+
+  and class-level structure [Q48], but does not provide evidence about what fraction of
+
+  real completions depend on third-party libraries or internal helpers. The alignment
+
+  evaluation subset uses 158 problems from HumanEval [Q171], and the security evaluation
+
+  used 5 prompts from Sonar Source''s Python vulnerability database generating ~30k
+
+  samples [Q206]. Sensitive data in training data is acknowledged as a memorization
+
+  risk [Q110, Q111].
+
+
+  ### Input Form
+
+  Each HumanEval problem is structured as a function header, signature, and docstring
+
+  in plain Python text [Q20, Q28]. The model receives this as a prompt and generation
+
+  is halted at standard Python structural tokens (`\nclass`, `\ndef`, `\n#`, `\nif`,
+
+  `\nprint`) [Q29]. Training used 100 billion tokens with Adam optimization and a cosine
+
+  learning rate schedule [Q26, Q27]. Input format is English-language natural-language
+
+  docstrings paired with Python source code — exactly the text-in / code-out format of
+
+  the target IDE inline-completion deployment. No modality mismatch, no non-Latin script
+
+  assumptions, no infrastructure constraints beyond a standard Python execution sandbox.
+
+  The form is a precise fit for the deployment context.
+
+
+  ### Output Ontology
+
+  The primary output ontology is binary: a generated function body is correct if and
+
+  only if it passes all unit tests for that problem [Q77]. The paper explicitly and
+
+  extensively argues that this functional-correctness criterion supersedes string-match
+
+  and BLEU-based metrics, demonstrating that BLEU score distributions for correct and
+
+  incorrect Codex-12B completions overlap substantially [Q40] and that BLEU improvement
+
+  does not reliably indicate functional correctness improvement [Q18, Q123]. Human
+
+  test-driven development is cited as the motivating standard for this binary criterion
+
+  [Q12].
+
+
+  For the docstring-generation inverse task (Codex-D), the output taxonomy is a human
+
+  judgment of whether a docstring "uniquely and accurately specifies the code body,"
+
+  explicitly excluding cases where the model copies the code body verbatim [Q78, Q81].
+
+  For the security evaluation, improperly configured RSA keys are defined as those
+
+  shorter than 2048 bits and AES contexts using ECB cipher mode [Q208, Q209, Q214],
+
+  thresholds grounded in cryptographic expert consensus [Q210].
+
+
+  The binary pass/fail ontology is the most significant output-validity gap for the
+
+  deployment context. The paper acknowledges that pass@k does not distinguish between
+
+  solutions that differ in idiomaticity, efficiency, style, or library use [Q77], and
+
+  that qualitative metrics for controlling specification complexity and abstraction level
+
+  are needed but deferred to forthcoming work [Q86, Q148, Q149]. The autocomplete
+
+  deployment scenario — where a single ranked completion must be returned to a user
+
+  without unit test access — is identified as requiring a selection heuristic beyond
+
+  pass@k [Q37, Q38], but no idiomaticity or style metric is incorporated into the
+
+  primary scoring framework.
+
+
+  ### Output Content
+
+  The primary evaluation labels are objective unit-test outcomes: a problem is solved
+
+  or not based on automated execution [Q77]. This annotation process is fully automated
+
+  and reviewer-independent for the main benchmark. The only human annotation step is
+
+  the docstring-generation evaluation (Codex-D), where human graders assessed 10
+
+  samples per problem across 164 problems (1,640 total judgments) from Codex-D-12B
+
+  at temperature 0.8 [Q79]; graders excluded docstrings that merely copy the code body
+
+  verbatim [Q81]. NOT DOCUMENTED: no inter-annotator agreement statistics, annotator
+
+  demographics, or qualification criteria are reported for human graders [Q79]. The
+
+  paper notes that some HumanEval prompts underspecify their target function, meaning
+
+  valid solutions may be wrongly penalized by unit tests [Q63], and that human-written
+
+  test suites have limited but targeted coverage that does not always work well against
+
+  algorithmic adversaries [Q129]. For the alignment evaluation, "correct" is operationally
+
+  defined as matching the pass@k behavior observed when high-quality code examples are
+
+  prepended to prompts [Q163, Q164], rather than independent human annotation.
+
+
+  ### Output Form
+
+  Generated outputs are open-ended Python function bodies sampled via nucleus sampling
+
+  (top p=0.95) [Q30]. The pass@k metric counts correct completions across n=200 samples
+
+  per task with k ≤ 100 [Q15], and an unbiased estimator is used because the naive
+
+  plug-in estimator is systematically biased downward [Q17, Q138, Q139, Q140, Q143].
+
+  Temperature is optimized per value of k (T*=0.2 for pass@1, T*=0.8 for pass@100 at
+
+  679M parameters) [Q34]. For the autocomplete deployment scenario, mean token log
+
+  probability is the recommended single-sample selection heuristic [Q39]. Output modality
+
+  (open-ended Python text) precisely matches the IDE completion deployment context.
+
+  The paper does not evaluate model outputs for language or script mismatches (not
+
+  applicable given the English/Python deployment setting), and BLEU is explicitly
+
+  discredited as a reliability indicator [Q18, Q10].
+
+
+  ### Stated Limitations
+
+  The paper documents Codex''s difficulty with chained operations (pass rate drops by
+
+  a factor of 2–3 per additional building block [Q90, Q93]), variable binding in
+
+  complex docstrings [Q92], and increasingly long or system-level specifications [Q88].
+
+  Alignment failures — the model completing buggy/insecure prompts with more
+
+  buggy/insecure code [Q102, Q103, Q104, Q160, Q165] — are identified as likely to
+
+  worsen with scale [Q105]. Security concerns include generation of insecure
+
+  cryptographic configurations [Q106, Q211, Q212], potential training data memorization
+
+  [Q110], and malware component generation risk [Q108, Q109]. Bias evaluations document
+
+  binary gender assumptions [Q186], restricted race categories [Q187, Q188], and
+
+  religion-associated term co-occurrence [Q191]. Broader impacts include energy footprint
+
+  [Q112, Q113], labor market displacement [Q226, Q227], and over-reliance on unreviewed
+
+  generated code [Q99, Q100, Q183].
+
+  '
+verbatim_quotes:
+- id: Q1
+  page: 1
+  dimension: input_ontology
+  text: We introduce Codex, a GPT language model finetuned on publicly available code from GitHub, and study its Python code-writing
+    capabilities.
+- id: Q2
+  page: 1
+  dimension: output_form
+  text: On HumanEval, a new evaluation set we release to measure functional correctness for synthesizing programs from docstrings,
+    our model solves 28.8% of the problems, while GPT-3 solves 0% and GPT-J solves 11.4%.
+- id: Q3
+  page: 1
+  dimension: output_form
+  text: Furthermore, we find that repeated sampling from the model is a surprisingly effective strategy for producing working
+    solutions to difficult prompts.
+- id: Q4
+  page: 1
+  dimension: output_form
+  text: Using this method, we solve 70.2% of our problems with 100 samples per problem.
+- id: Q5
+  page: 1
+  dimension: input_ontology
+  text: Careful investigation of our model reveals its limitations, including difficulty with docstrings describing long chains
+    of operations and with binding operations to variables.
+- id: Q6
+  page: 1
+  dimension: output_ontology
+  text: Finally, we discuss the potential broader impacts of deploying powerful code generation technologies, covering safety,
+    security, and economics.
+- id: Q7
+  page: 1
+  dimension: input_ontology
+  text: This paper describes several early Codex models, whose descendants power GitHub Copilot and the Codex models in the
+    OpenAI API.
+- id: Q8
+  page: 2
+  dimension: output_form
+  text: In this section, we discuss the details of our evaluation framework. We begin by defining the pass@k metric, and explain
+    its advantages over standard match-based metrics. Next, we describe the dataset of hand-written problems, called "HumanEval,"
+    which we created in order to benchmark our models. Finally, we discuss the sandbox environment we used to safely execute
+    model-generated code.
+- id: Q9
+  page: 2
+  dimension: output_form
+  text: Generative models for code are predominantly benchmarked by matching samples against a reference solution, where the
+    match can be exact or fuzzy (as in BLEU score).
+- id: Q10
+  page: 2
+  dimension: output_ontology
+  text: More fundamentally, match-based metrics are unable to account for the large and complex space of programs functionally
+    equivalent to a reference solution.
+- id: Q11
+  page: 2
+  dimension: output_ontology
+  text: We argue that this metric should be applied to docstring-conditional code generation as well.
+- id: Q12
+  page: 2
+  dimension: output_ontology
+  text: Perhaps the most convincing reason to evaluate functional correctness is that it is used by human developers to judge
+    code. A framework known as test-driven development dictates that software requirements be converted into test cases before
+    any implementation begins, and success is defined by a program that passes these tests.
+- id: Q13
+  page: 2
+  dimension: output_form
+  text: Kulal et al. (2019) evaluate functional correctness using the pass@k metric, where k code samples are generated per
+    problem, a problem is considered solved if any sample
+- id: Q14
+  page: 3
+  dimension: input_content
+  text: Though not a guarantee for problem novelty, all problems were hand-written and not programmatically copied from existing
+    sources.
+- id: Q15
+  page: 3
+  dimension: output_form
+  text: To evaluate pass@k, we generate n ≥ k samples per task (in this paper, we use n = 200 and k ≤ 100), count the number
+    of correct samples c ≤ n which pass unit tests, and calculate the unbiased estimator.
+- id: Q16
+  page: 3
+  dimension: output_form
+  text: Calculating this estimator directly results in very large numbers and numerical instability.
+- id: Q17
+  page: 3
+  dimension: output_form
+  text: One may be tempted to estimate pass@k with 1−(1−p̂)^k where p̂ is the empirical estimate of pass@1, but we show that
+    it is biased in Appendix A.
+- id: Q18
+  page: 3
+  dimension: output_ontology
+  text: Later, we provide evidence that BLEU score may not be a reliable indicator of functional correctness by showing that
+    functionally inequivalent programs generated by our model (which are guaranteed to disagree with the reference solution
+    on some input) often have higher BLEU scores than functionally equivalent ones.
+- id: Q19
+  page: 4
+  dimension: input_content
+  text: We evaluate functional correctness on a set of 164 hand-written programming problems, which we call the HumanEval
+    dataset.
+- id: Q20
+  page: 4
+  dimension: input_form
+  text: Each problem includes a function signature, docstring, body, and several unit tests, with an average of 7.7 tests
+    per problem.
+- id: Q21
+  page: 4
+  dimension: input_content
+  text: It is important for these tasks to be hand-written, since our models are trained on a large fraction of GitHub, which
+    already contains solutions to problems from a variety of sources.
+- id: Q22
+  page: 4
+  dimension: input_ontology
+  text: Programming tasks in the HumanEval dataset assess language comprehension, reasoning, algorithms, and simple mathematics.
+- id: Q23
+  page: 4
+  dimension: input_content
+  text: Our training dataset was collected in May 2020 from 54 million public software repositories hosted on GitHub, containing
+    179 GB of unique Python files under 1 MB.
+- id: Q24
+  page: 4
+  dimension: input_form
+  text: We filtered out files which were likely auto-generated, had average line length greater than 100, had maximum line
+    length greater than 1000, or contained a small percentage of alphanumeric characters.
+- id: Q25
+  page: 4
+  dimension: input_content
+  text: After filtering, our final dataset totaled 159 GB.
+- id: Q26
+  page: 4
+  dimension: input_form
+  text: We train Codex using the same learning rate as the corresponding GPT model, with a 175 step linear warmup and cosine
+    learning rate decay.
+- id: Q27
+  page: 4
+  dimension: input_form
+  text: We train for a total of 100 billion tokens, using the Adam optimizer with β1 = 0.9, β2 = 0.95, ε = 10−8, and a weight
+    decay coefficient of 0.1.
+- id: Q28
+  page: 4
+  dimension: input_form
+  text: To compute pass@k, we assemble each HumanEval problem into a prompt consisting of a header, a signature, and a docstring,
+    which is illustrated in Figure 2.
+- id: Q29
+  page: 4
+  dimension: input_form
+  text: 'We sample tokens from Codex until we encounter one of the following stop sequences: ''\nclass'', ''\ndef'', ''\n#'',
+    ''\nif'', or ''\nprint'', since the model will continue generating additional functions or statements otherwise.'
+- id: Q30
+  page: 4
+  dimension: output_form
+  text: We use nucleus sampling (Holtzman et al., 2020) with top p = 0.95 for all sampling evaluation in this work.
+- id: Q31
+  page: 5
+  dimension: output_form
+  text: model test loss follows a power law in model size (Kaplan et al., 2020), test loss after code fine-tuning follows
+    a similar power law with functional form (N / 5.92×10^7)^-0.13 where N is the number of non-embedding parameters in the
+    model.
+- id: Q32
+  page: 5
+  dimension: output_form
+  text: When evaluating pass@k, it is important to optimize sampling temperature for the particular value of k.
+- id: Q33
+  page: 5
+  dimension: output_form
+  text: We find that higher temperatures are optimal for larger k, because the resulting set of samples has higher diversity,
+    and the metric rewards only whether the model generates any correct solution.
+- id: Q34
+  page: 5
+  dimension: output_form
+  text: In particular, for a 679M parameter model, the optimal temperature for pass@1 is T* = 0.2 and the optimal temperature
+    for pass@100 is T* = 0.8.
+- id: Q35
+  page: 5
+  dimension: output_form
+  text: With these temperatures, we find that pass@1 and pass@100 scale smoothly as a function of model size (Figure 6).
+- id: Q36
+  page: 5
+  dimension: output_form
+  text: Pass@k can also be interpreted as the result of evaluating the best out of k samples, where the best sample is picked
+    by an oracle with prior knowledge of the unit tests.
+- id: Q37
+  page: 5
+  dimension: output_ontology
+  text: From a practical perspective, we are also interested in the setting where we must select a single sample from k samples
+    without having access to an oracle.
+- id: Q38
+  page: 5
+  dimension: output_ontology
+  text: For instance, when the model is used as an autocomplete tool where a user provides a prompt, we do not have unit tests,
+    but would like to return only a single completion to the user for evaluation so as to not overwhelm them.
+- id: Q39
+  page: 5
+  dimension: output_form
+  text: Inspired by similar work in language modeling, we find that choosing the sample with the highest mean token log probability
+    outperforms evaluating a random sample, while choosing the sample based on sum log probability can perform slightly worse
+    than picking randomly.
+- id: Q40
+  page: 6
+  dimension: output_ontology
+  text: Finally, we compute BLEU scores for all Codex-12B HumanEval samples (at temperature 0.8) against their reference solutions.
+    For each problem, when we plot the distributions of BLEU scores for correct and incorrect solutions, we notice significant
+    overlap (Figure 8). Since an incorrect solution is guaranteed to be functionally inequivalent to the reference solution,
+    we conclude that improvements in BLEU score may not indicate improved rates of functional correctness in practice.
+- id: Q41
+  page: 6
+  dimension: input_content
+  text: Two recent works similar in spirit to Codex are GPT-Neo (Black et al., 2021) and GPT-J (Wang & Komatsuzaki, 2021),
+    which are trained on The Pile (Gao et al., 2020), a dataset containing text from a variety of sources as well as 8% GitHub
+    code.
+- id: Q42
+  page: 6
+  dimension: output_form
+  text: We confirm these findings using the HumanEval dataset, showing that GPT-Neo achieves 6.4% pass@1 and 21.3% pass@100,
+    while GPT models of comparable sizes achieve near 0% on both metrics. We see a remarkable progression in capabilities,
+    with GPT-Neo-2.7B roughly equivalent to Codex-85M (30× fewer parameters). Similarly, GPT-J-6B achieves 11.6% pass@1 and
+    27.7% pass@100, which is roughly equivalent to Codex-300M (20× fewer parameters).
+- id: Q43
+  page: 6
+  dimension: output_form
+  text: Pass rates are obtained by taking the best result from evaluating at temperatures 0.2, 0.4, and 0.8 for GPT-Neo, and
+    from temperatures 0.2 and 0.8 for GPT-J.
+- id: Q44
+  page: 6
+  dimension: output_form
+  text: Finally, we benchmark Codex against the largest free model from Tabnine, a leading code autocomplete system, which
+    achieves 2.6% pass@1 (at T = 0.4) and 7.6% pass@100 (at T = 0.8).
+- id: Q45
+  page: 6
+  dimension: input_content
+  text: Recently, Hendrycks et al. (2021) introduced the APPS dataset to measure the coding challenge competence of language
+    models. The APPS dataset consists of 5000 training and 5000 test examples of coding problems, each with a set of unit
+    tests and, for the training data, a set of correct solutions.
+- id: Q46
+  page: 6
+  dimension: input_ontology
+  text: Most of the APPS tests problems are not formulated as single-function synthesis tasks, but rather as full-program
+    synthesis, reading input from stdin and printing output to stdout, in contrast to the main Codex training data.
+- id: Q47
+  page: 6
+  dimension: output_form
+  text: 'In the paper that introduces APPS, the authors benchmark a few language models and report two metrics: the percentage
+    of problems where the model finds a correct solution (called the "strict accuracy") and the percentage of unit tests passed,
+    even if the solution is incorrect. The latter measure is reported only so as to reduce variance of the measurements, because
+    the results on the first metric were so low. We avoid this metric and only focus on "strict accuracy"'
+- id: Q48
+  page: 7
+  dimension: input_content
+  text: In addition to standalone functions, Python code found on GitHub contains class implementations, configuration files,
+    scripts, and even files used to store data. This code is seemingly unrelated to synthesizing functions from docstrings,
+    and we hypothesize that the distribution mismatch reduces HumanEval performance.
+- id: Q49
+  page: 7
+  dimension: input_ontology
+  text: In order to adapt Codex to the distribution of the task of interest, we construct a set of training problems from
+    correctly implemented standalone functions, and use them for additional supervised fine-tuning.
+- id: Q50
+  page: 7
+  dimension: input_content
+  text: 'We describe two approaches for collecting these examples: from competitive programming websites and from repositories
+    with continuous integration.'
+- id: Q51
+  page: 7
+  dimension: input_content
+  text: Programming contest and interview preparation websites use hidden unit tests to automatically judge the functional
+    correctness of submissions. These problems are self-contained, come with well-written problem statements, and generally
+    have excellent test coverage. Additionally, these problems test algorithmic reasoning over a broad range of core skills
+    and difficulties.
+- id: Q52
+  page: 7
+  dimension: input_content
+  text: We collected problem statements, function signatures, and solutions from several popular programming contest and interview
+    preparation websites. We then assembled these into programming tasks similar to HumanEval, using the problem description
+    as the docstring. Since complete test suites are often hidden, we created unit tests from examples found in the problem
+    statements, or extracted additional test cases through submitting incorrect solutions. In total, we curated 10,000 problems
+    in this way.
+- id: Q53
+  page: 7
+  dimension: input_form
+  text: Taking advantage of sys.setprofile, we were able to trace and collect inputs and outputs for all functions called
+    during integration tests. This data could then be used to create unit tests for the functions.
+- id: Q54
+  page: 7
+  dimension: input_content
+  text: Projects that employ continuous integration (CI) are ideal candidates for tracing. We follow the commands in the CI
+    configuration files, which contain build and test commands, to set up the virtual environments, install dependencies,
+    and run integration tests.
+- id: Q55
+  page: 7
+  dimension: input_content
+  text: We considered GitHub repos using travis and tox as their CI frameworks, as they are two of the most popular CI tools.
+    We additionally used publicly available source code from pip packages found in the python package index (PyPI).
+- id: Q56
+  page: 8
+  dimension: input_form
+  text: Because these projects contained untrusted code, it was important to run integration tests in the sandboxed environment
+    described above.
+- id: Q57
+  page: 8
+  dimension: input_content
+  text: While there are millions of potential functions to curate problems from, we only collected about 40,000 because not
+    all functions accept inputs and return outputs.
+- id: Q58
+  page: 8
+  dimension: input_content
+  text: Even when they do, most objects captured at runtime cannot be pickled and restored outside the sandbox unless the
+    project was installed.
+- id: Q59
+  page: 8
+  dimension: input_form
+  text: Since our tracing methodology produced inputs and outputs for all invoked functions, even builtin and library calls
+    imported by the project were turned into problems.
+- id: Q60
+  page: 8
+  dimension: input_ontology
+  text: For this reason, functions from tracing tended to be the building blocks of command-line utilities.
+- id: Q61
+  page: 8
+  dimension: input_ontology
+  text: To excel at these tasks, the model does not need to know advanced algorithms and data structures. Rather, it needs
+    to be able to follow instructions to implement the functionality specified in the docstring.
+- id: Q62
+  page: 8
+  dimension: input_ontology
+  text: Thus, tracing complements the puzzle nature of coding competition problems and broadens the distribution of tasks.
+- id: Q63
+  page: 8
+  dimension: output_content
+  text: Some prompts underspecify the function that is implemented, in which case a perfectly valid solution may be wrongly
+    penalized by the unit test.
+- id: Q64
+  page: 8
+  dimension: output_content
+  text: Some problems are stateful, and subsequent executions can result in different outcomes.
+- id: Q65
+  page: 8
+  dimension: input_form
+  text: To address these issues, we use Codex-12B to generate 100 samples per curated problem. If no samples pass the unit
+    tests, we consider the task to be either ambiguous or too difficult, and filter it out.
+- id: Q66
+  page: 8
+  dimension: input_form
+  text: We reran this verification several times to remove stateful or non-deterministic problems.
+- id: Q67
+  page: 8
+  dimension: input_form
+  text: We fine-tune Codex on these training problems to produce a set of "supervised fine-tuned" models, which we call Codex-S.
+- id: Q68
+  page: 8
+  dimension: input_form
+  text: To produce examples from training problems, we assemble the problems into the format shown in Figure 2.
+- id: Q69
+  page: 8
+  dimension: input_form
+  text: If there are prompts of varying length in a batch, we left-pad shorter prompts to the length of the longest prompt,
+    so that the first tokens in the reference solutions line up in context.
+- id: Q70
+  page: 8
+  dimension: output_content
+  text: We train to minimize negative log-likelihood of the reference solution, and mask out loss for any tokens in the prompt.
+- id: Q71
+  page: 8
+  dimension: input_form
+  text: We train using a learning rate 1/10 as large as used for fine-tuning Codex, but adhere to the same learning rate schedule,
+    and train until validation loss plateaus (less than 10B tokens).
+- id: Q72
+  page: 8
+  dimension: output_form
+  text: As with Codex, we first compute the optimal temperature for evaluating pass@k for 1 ≤ k ≤ 100.
+- id: Q73
+  page: 8
+  dimension: output_form
+  text: We find that Codex-S prefers slightly higher temperatures for all k > 1, which possibly reflects the fact that Codex-S
+    captures a narrower distribution than Codex.
+- id: Q74
+  page: 8
+  dimension: output_form
+  text: We use T∗ = 0 for computing pass@1 and T∗ = 1 for computing pass@100.
+- id: Q75
+  page: 8
+  dimension: output_form
+  text: Next, we compare Codex-S against Codex on pass@1 and pass@100. Codex-S outperforms the corresponding Codex by an average
+    margin of 6.5 percentage points on pass@1 and by a larger average margin of 15.1 percentage points on pass@100 across
+    model size.
+- id: Q76
+  page: 8
+  dimension: output_form
+  text: We also plot the performance of different sample selection heuristics for Codex-S-12B against the same heuristics
+    for Codex-12B. When ranking between 1 and 100 samples by mean log probability, the average benefit over random ranking
+    is 11.6 percentage points, which is over 2 percentage points higher than the corresponding benefit for Codex.
+- id: Q77
+  page: 9
+  dimension: output_ontology
+  text: When we benchmark our code generation models, we measure pass@k on the HumanEval dataset, where correctness is defined
+    by passing a set of unit tests.
+- id: Q78
+  page: 9
+  dimension: output_ontology
+  text: However, there is no similar way to evaluate docstring samples automatically. Therefore, we grade sample docstrings
+    by hand, considering a docstring correct if it uniquely and accurately specifies the code body.
+- id: Q79
+  page: 9
+  dimension: output_content
+  text: Due to the time consuming nature of this process, we only grade 10 samples per problem, for a total of 1640 problems,
+    from Codex-D-12B at temperature 0.8.
+- id: Q80
+  page: 9
+  dimension: output_content
+  text: Codex-D often generates incorrect unit tests along with a docstring, but we ignore these during grading.
+- id: Q81
+  page: 9
+  dimension: output_ontology
+  text: However, we do not consider the docstring correct when the model simply copies the code body into the docstring.
+- id: Q82
+  page: 9
+  dimension: output_content
+  text: The most common failure modes we observe are when the docstring model leaves out an important detail (such as "an
+    answer must be to two decimal places") or when it over-conditions on the function name and invents a problem unrelated
+    to the function body.
+- id: Q83
+  page: 9
+  dimension: output_content
+  text: While generating docstrings may be more forgiving because natural language syntax is less strict than code syntax,
+    docstrings in our dataset may be lower quality because developers tend to devote less time to writing docstrings.
+- id: Q84
+  page: 10
+  dimension: output_form
+  text: Table 3. Pass rates for our docstring generating model Codex-D, which is evaluated by hand-grading 10 samples per
+    task due to the lack of a ground-truth automatic evaluation.
+- id: Q85
+  page: 10
+  dimension: input_content
+  text: First, Codex is not sample efficient to train. Our training dataset comprises a significant fraction of publicly available
+    Python code on GitHub, totaling hundreds of millions of lines of code.
+- id: Q86
+  page: 10
+  dimension: output_ontology
+  text: While evaluating code generation is well-studied (Xu et al., 2021; Helmuth & Spector, 2015; Pantridge et al., 2017),
+    many existing metrics measure performance in tightly specified, constrained problem instances (e.g., string manipulation
+    in FlashFill (Gulwani, 2011)). Therefore, we developed a set of qualitative metrics for measuring the capabilities of
+    code generating models while controlling for the complexity and abstraction level of the specifications (Appendix D).
+- id: Q87
+  page: 10
+  dimension: output_content
+  text: Applying this framework, we find that Codex can recommend syntactically incorrect or undefined code, and can invoke
+    functions, variables, and attributes that are undefined or outside the scope of the codebase.
+- id: Q88
+  page: 10
+  dimension: input_ontology
+  text: Moreover, Codex struggles to parse through increasingly long and higher-level or system-level specifications.
+- id: Q89
+  page: 10
+  dimension: input_content
+  text: To concretely illustrate model performance degradation as docstring length increases, we create a dataset of synthetic
+    problems assembled from 13 basic building blocks, each of which modifies an input string in a deterministic way.
+- id: Q90
+  page: 10
+  dimension: input_ontology
+  text: We find that as the number of chained building blocks in the docstring increases, model performance decreases exponentially.
+- id: Q91
+  page: 10
+  dimension: input_ontology
+  text: This behavior is uncharacteristic of a human programmer, who should be able to correctly implement a program for a
+    chain of arbitrary length if they can do so for a chain of length two.
+- id: Q92
+  page: 10
+  dimension: input_ontology
+  text: Further, just as text-conditional generative models in other modalities (Ramesh et al., 2021) have difficulty with
+    binding attributes to objects, Codex can make mistakes binding operations to variables, especially when the number of
+    operations and variables in the docstring is large.
+- id: Q93
+  page: 10
+  dimension: input_ontology
+  text: With each additional component, pass rate drops by roughly a factor of 2-3.
+- id: Q94
+  page: 10
+  dimension: input_ontology
+  text: Codex has the potential to be useful in a range of ways. For example, it could help onboard users to new codebases,
+    reduce context switching for experienced coders, enable non-programmers to write specifications and have Codex draft implementations,
+    and aid in education and exploration.
+- id: Q95
+  page: 10
+  dimension: output_ontology
+  text: However, Codex also raises significant safety challenges, does not always produce code that is aligned with user intent,
+- id: Q96
+  page: 11
+  dimension: output_ontology
+  text: To better understand some of the hazards of using Codex in a generative capacity, we conducted a hazard analysis focused
+    on identifying risk factors (Leveson, 2019) with the potential to cause harm.
+- id: Q97
+  page: 11
+  dimension: input_ontology
+  text: While some of our findings about the potential societal impacts of code generation systems were informed by work towards
+    responsible deployment of the production-oriented Codex models (which descended from the research-oriented Codex models
+    described in this paper), this section is not intended to provide a full account of any particular product's safety features.
+- id: Q98
+  page: 11
+  dimension: input_ontology
+  text: Unless otherwise specified, we anchor our analysis in the specific properties of the models described in this paper.
+- id: Q99
+  page: 11
+  dimension: output_ontology
+  text: One of the key risks associated with using code generation models in practice is over-reliance on generated outputs.
+- id: Q100
+  page: 11
+  dimension: output_ontology
+  text: Due to the limitations described above as well as alignment issues described below, Codex may suggest solutions that
+    superficially appear correct but do not actually perform the task the user intended.
+- id: Q101
+  page: 11
+  dimension: output_ontology
+  text: We discuss a related issue in Appendix G, namely that code generation models can suggest insecure code.
+- id: Q102
+  page: 11
+  dimension: output_ontology
+  text: As with other large language models trained on a next-token prediction objective, Codex will generate code that is
+    as similar as possible to its training distribution.
+- id: Q103
+  page: 11
+  dimension: output_ontology
+  text: One consequence of this is that such models may do things that are unhelpful for the user, despite having the capability
+    to be more helpful (see Figure 12).
+- id: Q104
+  page: 11
+  dimension: output_ontology
+  text: This is an alignment failure - the model is not aligned with the user's intentions.
+- id: Q105
+  page: 11
+  dimension: output_ontology
+  text: It is important to study misalignment because it is a problem that is likely to become worse, not better, as the capabilities
+    of our systems increase.
+- id: Q106
+  page: 12
+  dimension: output_ontology
+  text: Codex could have various effects on the security landscape. Because Codex can produce vulnerable or misaligned code,
+    qualified operators should review its generations before executing or trusting them, absent appropriate precautions.
+- id: Q107
+  page: 12
+  dimension: output_ontology
+  text: Future code generation models may be able to be trained to produce more secure code than the average developer, though
+    that is far from certain.
+- id: Q108
+  page: 12
+  dimension: output_ontology
+  text: Although this is worthy of concern, based on our testing, we believe that at their current level of capability, Codex
+    models do not materially lower the barrier to entry for malware development.
+- id: Q109
+  page: 12
+  dimension: output_ontology
+  text: The non-deterministic nature of systems like Codex could enable more advanced malware.
+- id: Q110
+  page: 12
+  dimension: input_content
+  text: Similar to large language models, Codex models can learn patterns present in their training data (Carlini et al.,
+    2021). Sensitive data present in source code are liable to be predicted by the model.
+- id: Q111
+  page: 12
+  dimension: input_content
+  text: Because Codex is trained on public repositories, we consider any sensitive data present in the training data to have
+    already been compromised.
+- id: Q112
+  page: 13
+  dimension: output_ontology
+  text: Codex, like other large generative models, has an energy footprint from both training and inference (Schwartz et al.,
+    2019; Bender et al., 2021; Patterson et al., 2021).
+- id: Q113
+  page: 13
+  dimension: output_ontology
+  text: The original training of GPT-3-12B consumed hundreds of petaflop/s-days of compute, while fine-tuning it to create
+    Codex-12B consumed a similar amount of compute.
+- id: Q114
+  page: 13
+  dimension: output_ontology
+  text: This training was performed on a platform (Azure) that purchases carbon credits and sources significant amounts of
+    renewable energy, reducing its carbon footprint.
+- id: Q115
+  page: 13
+  dimension: output_content
+  text: Our preliminary research also finds that Codex models rarely generate code that is identical to the contents of training
+    data. Such occurrences were < 0.1% in a study examining the frequency of code generations that appear to match code snippets
+    in the training data (Ziegler, 2021).
+- id: Q116
+  page: 13
+  dimension: output_content
+  text: In these rare instances, the generated code consisted of common expressions or conventions within the programming
+    language that appeared over and over again in the training data.
+- id: Q117
+  page: 13
+  dimension: output_content
+  text: We find that, to the extent the generated code appears identical to the training data, it is due to the predictive
+    weightings in the model rather than retention and copying of specific code.
+- id: Q118
+  page: 13
+  dimension: output_form
+  text: Generated code is also responsive and customized to the user's input, and the user retains complete control over editing
+    and acceptance of the generated code.
+- id: Q119
+  page: 13
+  dimension: output_ontology
+  text: In closing, given the above, models like Codex should be developed, used, and their capabilities explored carefully
+    with an eye towards maximizing their positive social impacts and minimizing intentional or unintentional harms that their
+    use might cause.
+- id: Q120
+  page: 13
+  dimension: output_ontology
+  text: Careful documentation and user interface design, code review requirements, and/or content controls (e.g., filtering
+    of outputs) may help to reduce harms associated with overreliance as well as offensive content or insecure code generation.
+- id: Q121
+  page: 14
+  dimension: output_form
+  text: We used functional correctness to benchmark our models, and observed improvements on this metric with more sampling.
+- id: Q122
+  page: 14
+  dimension: output_form
+  text: SPoC (Kulal et al., 2019) considered the problem of producing functionally correct code from pseudocode with a fixed
+    budget of compilations, which is similar to our pass@k metric.
+- id: Q123
+  page: 14
+  dimension: output_ontology
+  text: TransCoder (Lachaux et al., 2020) trained a system to translate between programming languages in an unsupervised manner,
+    and also observed that functional correctness better captured the capabilities of their model than BLEU score.
+- id: Q124
+  page: 14
+  dimension: input_content
+  text: Two early domain-specific datasets used to benchmark neural programming systems were FlashFill (Gulwani, 2011; Gulwani
+    et al., 2012) and Hearthstone (Ling et al., 2016), though the community has trended towards broader and more difficult
+    datasets.
+- id: Q125
+  page: 14
+  dimension: input_content
+  text: Barone & Sennrich (2017) proposed a large training and evaluation dataset consisting of Python declarations, docstrings,
+    and bodies scraped from GitHub.
+- id: Q126
+  page: 14
+  dimension: input_content
+  text: The CodeSearchNet challenge (Husain et al., 2019) built an even larger corpus from GitHub with data from multiple
+    popular programming languages.
+- id: Q127
+  page: 14
+  dimension: input_content
+  text: Recently, CodeXGLUE (Lu et al., 2021) aggregated several programming benchmarks, making use of the recently proposed
+    CodeBLEU metric (Ren et al., 2020).
+- id: Q128
+  page: 14
+  dimension: input_content
+  text: Most relevant to our evaluation work is the APPS (Hendrycks et al., 2021) benchmark for measuring functional correctness
+    based on problems from the competitive programming website Codeforces.
+- id: Q129
+  page: 14
+  dimension: output_content
+  text: Human developers often write test suites with limited but targeted coverage, but this does not always work well against
+    an algorithm, highlighting the challenges of evaluating correctness of programs.
+- id: Q130
+  page: 14
+  dimension: input_ontology
+  text: We investigated whether it was possible to train large language models to produce functionally correct code bodies
+    from natural language docstrings.
+- id: Q131
+  page: 14
+  dimension: input_content
+  text: By fine-tuning GPT on code from GitHub, we found that our models displayed strong performance on a dataset of human-written
+    problems with difficulty level comparable to easy interview problems.
+- id: Q132
+  page: 14
+  dimension: output_form
+  text: Model performance could be improved by training on a distribution more similar to the evaluation set, and also by
+    producing multiple samples from a model.
+- id: Q133
+  page: 15
+  dimension: input_ontology
+  text: task of producing docstrings from code bodies, and that the performance profiles of these models were similar.
+- id: Q134
+  page: 15
+  dimension: input_ontology
+  text: we expanded on the broader impacts of code generating models, and discussed model limitations, finding significant
+    room for improvement.
+- id: Q135
+  page: 15
+  dimension: input_content
+  text: We thank Sandhini Agarwal, Casey Chu, Jeffrey Ding, Peter Eckersley, Gillian Hadfield, Rich Harang, Jacob Jackson,
+    Yunxin Jiao, Jade Leung, Andrew Lohn, Ryan Lowe, Thomas McGuire, Margaret Mitchell, Florentine Eloundou Nekoul, Cullen
+    O'Keefe, Long Ouyang, Pranav Shyam, Irene Solaiman, Aravind Srinivas, Helen Toner, Ashish Vaswani, and Jeffrey Wu for
+    helpful discussions and feedback on drafts of this work.
+- id: Q136
+  page: 15
+  dimension: input_content
+  text: We are also grateful to the Acceleration and Supercomputing teams at OpenAI for their work on software and hardware
+    infrastructure that this project used.
+- id: Q137
+  page: 15
+  dimension: input_content
+  text: Finally, we thank GitHub for partnering to build GitHub Copilot and Microsoft Azure for supporting model training
+    with infrastructure management.
+- id: Q138
+  page: 19
+  dimension: output_form
+  text: While all estimators mentioned previously are consistent, only the empirical estimate used by Kulal et al. (2019),
+    and (1) are unbiased.
+- id: Q139
+  page: 19
+  dimension: output_form
+  text: Evaluating pass@k in an unbiased way with any number of samples n is important for fair comparison.
+- id: Q140
+  page: 19
+  dimension: output_form
+  text: For example, estimating pass@k = 1 − (1 − pass@1)k with 1 − (1 − p̂)k using the empirical pass@1, results in a consistent
+    underestimate as shown in Figure 13.
+- id: Q141
+  page: 19
+  dimension: output_form
+  text: The gap doesn't fully close even when n > 5k, and results can seem better with more samples.
+- id: Q142
+  page: 19
+  dimension: output_form
+  text: The interpretation of this estimator is that we draw k samples with replacement from a pool of n candidates, but the
+    k samples are not independent.
+- id: Q143
+  page: 19
+  dimension: output_form
+  text: (1) is unbiased, because it estimates the fail probability (1−pass@1)k as the probability of drawing k failed samples
+    without replacement.
+- id: Q144
+  page: 19
+  dimension: input_content
+  text: We show 8 random problems from HumanEval along with 8 random samples per problem generated from Codex-12B at temperature
+    0.8.
+- id: Q145
+  page: 24
+  dimension: input_ontology
+  text: We describe the 13 building blocks used to create synthetic tasks for evaluating model performance as a function of
+    docstring complexity.
+- id: Q146
+  page: 24
+  dimension: input_form
+  text: 'Each building block is specified by a line of text and a line of code:'
+- id: Q147
+  page: 25
+  dimension: input_ontology
+  text: We thus propose adapting attributes used to measure the expressivity and complexity of formal specifications to natural
+    language prompts.
+- id: Q148
+  page: 25
+  dimension: output_ontology
+  text: This entails evaluating the ability to reason over computations and states at different levels of abstractions (e.g.,
+    high-level requirements versus design-level requirements) as a base metric for complexity and expressivity (e.g., variable
+    dependencies, inter-procedural reasoning, computational interleavings, etc.).
+- id: Q149
+  page: 25
+  dimension: output_ontology
+  text: Below we provide brief descriptions of such attributes and qualitative metrics, which are to be further discussed
+    in a forthcoming paper along with associated results for Codex models.
+- id: Q150
+  page: 25
+  dimension: input_ontology
+  text: With regard to specification abstractions, higher-level requirements or specifications are often distinct from lower-level
+    specifications through the allocation of further structure and behavior within a defined boundary to satisfy one or more
+    higher-level requirements.
+- id: Q151
+  page: 25
+  dimension: input_ontology
+  text: The current capabilities of synthesis methodologies are only able to tackle tightly specified, constrained problem
+    instances or narrow tasks.
+- id: Q152
+  page: 25
+  dimension: input_ontology
+  text: However, Codex has demonstrated preliminary capabilities to consistently solve for high-level specifications.
+- id: Q153
+  page: 25
+  dimension: input_ontology
+  text: 'Variable Interdependencies: Tracking state of more than one variable, their interdependencies and nesting, all possible
+    permutations of state, and the relationship between input and output parameters'
+- id: Q154
+  page: 25
+  dimension: input_ontology
+  text: 'Temporal Reasoning: as consideration of future and past program states including Safety properties entailing that
+    a defined "bad" state never occurs and Liveness properties entailing progress towards a specific goal or state'
+- id: Q155
+  page: 25
+  dimension: input_ontology
+  text: 'Concurrency and Parallelism: Correct and sound reasoning over computational interleavings (for various specification
+    granularities).'
+- id: Q156
+  page: 26
+  dimension: output_ontology
+  text: We were interested in detecting problems with the Codex models that will not improve, or may even get more severe,
+    as model capability improves.
+- id: Q157
+  page: 26
+  dimension: output_ontology
+  text: In the literature, a model is defined informally as "intent aligned" with a user if (and only if) the model intends
+    to do what the user wants (Christiano, 2018; Kenton et al., 2021).
+- id: Q158
+  page: 26
+  dimension: output_ontology
+  text: It is ambiguous how to apply this definition to Transformer models, since it is unclear to what extent they can be
+    described as having "intent", or what that intent would be.
+- id: Q159
+  page: 26
+  dimension: output_ontology
+  text: However, there is an intuitive notion that, given its training objective, Codex is better described as "trying" to
+    continue the prompt by either matching or generalizing the training distribution, than as "trying" to be helpful to the
+    user.
+- id: Q160
+  page: 26
+  dimension: output_ontology
+  text: This caches out in predictions that the model will complete confused code with confused code, insecure code with insecure
+    code (see G), or biased code with similarly biased code (see F), regardless of the model's capability to produce secure,
+    unbiased, and high-quality code.
+- id: Q161
+  page: 26
+  dimension: output_ontology
+  text: Defining alignment is complex, and there is not yet a satisfactory formalization.
+- id: Q162
+  page: 26
+  dimension: output_ontology
+  text: 'We operationalize sufficient conditions for intent misalignment for a generative model as follows: 1. We consider
+    a model capable of some task X if it has'
+- id: Q163
+  page: 27
+  dimension: output_content
+  text: We conducted several alignment evaluations. In the example evaluation shown in Figure 14, we deduce that the model
+    is capable of outputting code with a lower frequency of bugs, based on the rate of bugs when prompted with high-quality
+    code.
+- id: Q164
+  page: 27
+  dimension: output_content
+  text: We instruct the model to write correct code, and we assume the model could easily be fine-tuned to detect such an
+    instruction. This implies that the model is capable of distinguishing between situations where the user does and does
+    not want buggy code.
+- id: Q165
+  page: 27
+  dimension: output_ontology
+  text: Based on this we conclude that we have identified misalignment in Codex models.
+- id: Q166
+  page: 27
+  dimension: output_ontology
+  text: There are several subtleties here; probably the most important one is distinguishing our observations from a robustness
+    failure. If the subtly buggy code is sufficiently out-of-distribution, we might observe that the model performs worse
+    in these cases, simply because it is thrown off by the OOD input - it is not in fact capable of outputting good code after
+    seeing OOD prompts.
+- id: Q167
+  page: 27
+  dimension: input_content
+  text: We believe this is unlikely to be a large factor here, as the GitHub dataset contains plenty of poor-quality code.
+    The bugs are designed to be of the sort we'd expect to appear commonly in the dataset; code that compiles and often runs
+    without errors but gives an incorrect answer. Examples include off-by-one errors or single-character typographic errors.
+- id: Q168
+  page: 27
+  dimension: input_content
+  text: The datasets used for these evaluations are available at https://github.com/openai/code-align-evals-data.
+- id: Q169
+  page: 27
+  dimension: input_content
+  text: One starting point is to more carefully curate the pre-training dataset to remove buggy or insecure code.
+- id: Q170
+  page: 27
+  dimension: output_content
+  text: However, it is notoriously difficult for most humans to write bug-free code, so rather than acquiring this dataset
+    through labeling it might need to be obtained by filtering input datasets using formal analysis or other metrics of code
+    quality.
+- id: Q171
+  page: 28
+  dimension: input_content
+  text: 'The alignment evaluations are based on the HumanEval dataset described earlier in the paper: 158 problems with a
+    docstring describing the task, reference solution, and tests.'
+- id: Q172
+  page: 28
+  dimension: input_form
+  text: We took a subset of 30 eval problems, and for each wrote one solution with a subtle bug.
+- id: Q173
+  page: 28
+  dimension: input_form
+  text: We construct prompts by prepending these solutions to the task docstring prompts for the HumanEval task.
+- id: Q174
+  page: 28
+  dimension: input_form
+  text: We either prepend three examples of [docstring + correct solution], or three examples of [docstring + solution with
+    subtle bugs], each sampled i.i.d. from the 30 problems mentioned above (excluding the current task).
+- id: Q175
+  page: 28
+  dimension: input_form
+  text: 'We include examples where we insert #instruction: write correct code even if the previous code contains bugs before
+    the start of the task docstring.'
+- id: Q176
+  page: 28
+  dimension: output_form
+  text: We then evaluate the performance of the Codex models on all 158 examples from the HumanEval dataset, comparing the
+    models' performance on the prompts with correct solutions prepended, no solutions prepended, and prompts with subtly buggy
+    solutions prepended.
+- id: Q177
+  page: 28
+  dimension: input_form
+  text: We ensure that the current task being evaluated never appears in the prompt.
+- id: Q178
+  page: 28
+  dimension: output_form
+  text: We used T = 0.2, following the evaluations in the main paper.
+- id: Q179
+  page: 28
+  dimension: input_content
+  text: The datasets are available at https://github.com/openai/code-align-evals-data.
+- id: Q180
+  page: 29
+  dimension: output_content
+  text: Generative models have been shown to encode bias in modalities such as natural language (Brown et al., 2020; Blodgett
+    et al., 2020) and images (Radford et al., 2021), and we find that the same is true of models like Codex that generate
+    code.
+- id: Q181
+  page: 29
+  dimension: output_content
+  text: Given the ways and contexts in which code is used and reused, and the role code plays in laying the foundations for
+    world-changing applications, the generation of biased code has the potential to cause allocative or representational harms,
+    and to do so at scale.
+- id: Q182
+  page: 29
+  dimension: output_content
+  text: While it can be tempting to think of code generation models as objective tools, we aim to demonstrate how they can
+    be far from that, and that the models can inherit the legacy of outdated and otherwise troublesome ideas.
+- id: Q183
+  page: 29
+  dimension: output_ontology
+  text: This is one key reason why code generated by the Codex models should be treated as untrusted by those using it for
+    research or development until they have reviewed and verified its accuracy and fitness for purpose themselves.
+- id: Q184
+  page: 29
+  dimension: output_ontology
+  text: Allocative harms occur when a system allocates or withholds a certain opportunity or resource. Representational harms
+    occur when systems reinforce the subordination of some groups along the lines of identity, e.g. stereotyping or denigration
+    (Crawford, 2017).
+- id: Q185
+  page: 30
+  dimension: input_ontology
+  text: In order to better understand the potential that code generation has to encode bias in the context of Codex in particular,
+    we developed a series of probes for instances of harmful bias in single- and multi-line autocompletions.
+- id: Q186
+  page: 30
+  dimension: input_ontology
+  text: We found that, in response to simple prompts like def gender(x):, the generations often assumed binary gender for
+    both single- and multi-line autocompletions.
+- id: Q187
+  page: 30
+  dimension: input_ontology
+  text: When we probed using the prompt def race(x):, we found that many of the most commonly-generated completions assumed
+    a small number of mutually exclusive race categories.
+- id: Q188
+  page: 30
+  dimension: input_ontology
+  text: 'Most synthesized completions included "White" and many included only a few other categories, followed by "other."
+    Several synthesized generations included only 3 categories: "white," "black," or "none."'
+- id: Q189
+  page: 30
+  dimension: output_form
+  text: To test these hypotheses and the related harms, we compared GPT-3 to Codex comment production on a series of co-occurrence
+    tests across gender, race, and religion.
+- id: Q190
+  page: 30
+  dimension: output_content
+  text: Very broadly, we found that when explicitly prompted to talk about specific genders, races, and religions, Codex comments
+    tend to reproduce similar biases to GPT-3, albeit with less diversity in the outputs.
+- id: Q191
+  page: 30
+  dimension: output_content
+  text: For example, with religion "Islam", in both models we observed occurrences of the word "terrorist" and "violent" at
+    a greater rate than with other groups, but GPT-3's outputs included more variants on these themes.
+- id: Q192
+  page: 30
+  dimension: output_form
+  text: Co-occurrence is a blunt instrument, as it doesn't pick up on the subtleties of how a particular word is used in context,
+    only that it is used in context.
+- id: Q193
+  page: 30
+  dimension: output_content
+  text: Additionally, since we are prompting both models to explicitly describe groups, they are not from the models talking
+    about these group features in the wild, but rather in a constrained experimental setup.
+- id: Q194
+  page: 30
+  dimension: output_form
+  text: Co-occurrence tests measure which words are likely to occur in the neighborhood of other words.
+- id: Q195
+  page: 31
+  dimension: output_ontology
+  text: The threat landscape for Codex is similar to that of language models. Actors can range from low and moderately skilled
+    or resourced actors to well-resourced and highly-organized "advanced persistent threat" (APT) groups.
+- id: Q196
+  page: 31
+  dimension: output_ontology
+  text: However, the manner in which Codex models may be misused will likely differ from that of language models.
+- id: Q197
+  page: 31
+  dimension: output_ontology
+  text: It is our assessment that Codex models do not differentially enable offensive cybersecurity capabilities because they
+    are not more efficient or effective than conventional tools or techniques are.
+- id: Q198
+  page: 31
+  dimension: output_ontology
+  text: We conducted experiments on Codex's ability to generate malicious code. While we found that while Codex is not proficient
+    at generating standalone malicious code, it is still capable of generating code that can be incorporated as components
+    of more complex systems.
+- id: Q199
+  page: 31
+  dimension: output_form
+  text: We found that Codex did not perform well when compared even to rudimentary Static Application Security Testing (SAST)
+    tools.
+- id: Q200
+  page: 31
+  dimension: output_form
+  text: We encountered no cases in our testing where using a Codex model led to better or more efficient results than SAST
+    tools.
+- id: Q201
+  page: 31
+  dimension: input_content
+  text: However, Codex is generally unable to suggest specific versions of packages, as package versions are specified outside
+    of the prompt context that Codex is aware of.
+- id: Q202
+  page: 31
+  dimension: output_content
+  text: Through testing, we found that the likelihood of Codex suggesting a vulnerable or malicious package is low in aggregate.
+- id: Q203
+  page: 31
+  dimension: input_ontology
+  text: We found that models trained on source code offered no advantages over conventional language models because the domains
+    are fundamentally different.
+- id: Q204
+  page: 32
+  dimension: input_ontology
+  text: To study this phenomenon, we asked Codex to suggest code that would call cryptographic libraries to generate cryptographic
+    contexts, and then evaluated whether any of these outputs were clearly insecure.
+- id: Q205
+  page: 32
+  dimension: input_ontology
+  text: When tested on a standard series of prompts asking the models to call functions to produce RSA keys or AES contexts,
+    we find that Codex models of varying sizes frequently use clearly insecure configurations (See Figure 15).
+- id: Q206
+  page: 32
+  dimension: input_content
+  text: We used 5 prompts across different libraries for RSA and AES based on Sonar Source's Python vulnerability database,
+    and generated ˜30k samples total.
+- id: Q207
+  page: 32
+  dimension: input_form
+  text: We then removed some generated samples based on expected runtime errors, as different model sizes tend to vary in
+    whether they produce code that runs.
+- id: Q208
+  page: 32
+  dimension: output_ontology
+  text: RSA keys were considered improperly configured if they were shorter than 2048 bits.
+- id: Q209
+  page: 32
+  dimension: output_ontology
+  text: AES contexts were considered improperly configured if they used the ECB cipher mode (see Menezes et al. (2018), p.
+    228).
+- id: Q210
+  page: 32
+  dimension: output_ontology
+  text: We chose these two tests to evaluate as targets because there is consensus among cryptography experts that these configurations
+    generally should not be used, and these were reasonable to evaluate programmatically.
+- id: Q211
+  page: 32
+  dimension: output_content
+  text: Interestingly, we do not see a robust model size trend (over 1 order of magnitude of parameters) in this data.
+- id: Q212
+  page: 32
+  dimension: output_ontology
+  text: 'This suggests that insecure code production, at least in this case, is an alignment issue (see Appendix E): it is
+    unclear if the models are improving with scale.'
+- id: Q213
+  page: 32
+  dimension: output_ontology
+  text: A larger study using the most common insecure code vulnerabilities may shed more light on this issue.
+- id: Q214
+  page: 33
+  dimension: output_ontology
+  text: 'When asked to create encryption keys, Codex models select clearly insecure configuration parameters in a significant
+    fraction of cases. We evaluated outputs as clearly insecure if: (a) RSA keys were shorter than 2048 bits, (b) AES contexts
+    used the ECB cipher mode.'
+- id: Q215
+  page: 33
+  dimension: output_ontology
+  text: Because security standards change over time as capabilities improve, this is likely an underestimate of the true rate
+    of improperly configured outputs.
+- id: Q216
+  page: 33
+  dimension: output_ontology
+  text: Similarly, the produced samples that were not classified as clearly insecure are not necessarily secure, as our tests
+    measure insecurity.
+- id: Q217
+  page: 33
+  dimension: input_content
+  text: Additionally, one of the challenges of code generation stem from relying on the assumption that intent is captured
+    sufficiently enough in comments and documentation to not compromise accuracy.
+- id: Q218
+  page: 33
+  dimension: input_ontology
+  text: Thus, even if the model were perfectly accurate, we would not expect it to reduce the labor costs associated with
+    writing code to zero.
+- id: Q219
+  page: 33
+  dimension: input_content
+  text: There is unfortunately only limited research on the demographic distribution of Python users.
+- id: Q220
+  page: 34
+  dimension: input_content
+  text: Codex imports substitutable packages at different rates based on patterns in its training data, which can have various
+    possible implications.
+- id: Q221
+  page: 34
+  dimension: output_content
+  text: Differential import rates by Codex might lead to subtle errors in cases where a certain import is ill-advised, increase
+    robustness in cases where the alternative package imported by an individual would have been worse, and/or increase the
+    dominance of an already-influential set of individuals and organizations in the software supply chain.
+- id: Q222
+  page: 34
+  dimension: input_content
+  text: The scale of these effects for Codex may be relatively low if users mostly import packages they know how to use or
+    have done outside research on, so they can double-check anything the model does.
+- id: Q223
+  page: 34
+  dimension: input_content
+  text: Moreover, because packages are generally imported at the top of a file without any comments, the model has very little
+    to go on in these cases, so users would most likely have to start typing out the name of the package they want to import
+    rather than trusting the model to know they are starting a machine learning project and want to import either PyTorch
+    or TensorFlow.
+- id: Q224
+  page: 34
+  dimension: output_form
+  text: 'As one example, we looked at completions of the prompt: # import machine learning package import and found that over
+    100 completions of 100 tokens, 6 contained suggestions for TensorFlow and 3 for PyTorch, two libraries that are rough
+    substitutes.'
+- id: Q225
+  page: 35
+  dimension: input_ontology
+  text: Most past studies of the impacts of code generation models consider performance on a closed set of tasks in a simulated
+    environment (Xu et al., 2021).
+- id: Q226
+  page: 35
+  dimension: output_ontology
+  text: As the deployment of Codex and other near-term technologies proceeds, we may be able to conduct more robust experiments
+    examining the impact of various strengths of models on real-world job performance, across teams and across firms.
+- id: Q227
+  page: 35
+  dimension: output_ontology
+  text: Precise and accurate prediction of any impacts without user or market signal is difficult, but the potential implications
+    on the long-run labor market and the possibility of disparate outcomes across groups warrant further exploration of these
+    issues.
+- id: Q228
+  page: 35
+  dimension: output_ontology
+  text: It may be possible to assess the relative likelihood of different scenarios by building a deeper understanding of
+    Codex's capabilities across several code-related tasks or by studying the effects of precise deployment scenarios.
+coverage_strengths:
+- user_priority: General-purpose algorithmic correctness as primary evaluation signal
+  benchmark_coverage: 'HumanEval directly evaluates functional correctness via unit test execution on
+
+    164 hand-written algorithmic problems covering language comprehension, reasoning,
+
+    algorithms, and simple mathematics [Q22]. The pass@k metric with unbiased
+
+    estimation [Q15, Q138, Q139] is the industry standard for this use case and
+
+    matches the user''s automated unit-test execution infrastructure exactly.
+
+    '
+  dimension: input_ontology
+- user_priority: Automated unit test execution as correctness signal
+  benchmark_coverage: 'The benchmark''s output scoring is fully automated: every HumanEval problem
+
+    includes an average of 7.7 unit tests [Q20] and correct solutions are those
+
+    that pass all tests [Q77]. The paper explicitly motivates this over string-match
+
+    or BLEU metrics [Q10, Q12], and provides a sandboxed execution environment [Q8]
+
+    that mirrors the user''s evaluation pipeline.
+
+    '
+  dimension: output_form
+- user_priority: English-language docstrings / Python source code deployment
+  benchmark_coverage: 'Problems are structured as English natural-language docstrings paired with
+
+    Python function signatures, with generation halted at Python structural tokens
+
+    [Q28, Q29]. The text-in / code-out format with nucleus sampling (top p=0.95)
+
+    [Q30] precisely matches the IDE inline-completion deployment context. No
+
+    modality or script mismatch exists.
+
+    '
+  dimension: input_form
+- user_priority: Data contamination avoidance
+  benchmark_coverage: 'All 164 HumanEval problems were hand-written and explicitly not copied from
+
+    existing sources to avoid overlap with the GitHub training corpus [Q14, Q19,
+
+    Q21], providing a clean held-out evaluation surface for models trained on
+
+    public code.
+
+    '
+  dimension: input_content
+coverage_gap_analysis:
+- user_priority: Library-dependent and repo-context completion (pandas, SQLAlchemy, requests, FastAPI)
+  benchmark_coverage: 'HumanEval problems are explicitly self-contained with no external imports or
+
+    dependencies [Q19]. The paper acknowledges that GitHub training data includes
+
+    library calls and class-level structure unrelated to self-contained function
+
+    synthesis [Q48], but does not quantify the fraction of real completions that
+
+    depend on third-party libraries. No library-aware or multi-file completion
+
+    problems are present in HumanEval.
+
+    '
+  gap_type: full
+  web_search_target: Python code completion benchmark library context repo-level DS-1000 SWE-bench RepoEval ClassEval HumanEval
+    extensions
+- user_priority: Async/await and type-annotated function signatures
+  benchmark_coverage: 'HumanEval problems are synchronous and minimally typed — the benchmark was
+
+    designed around interview-style algorithmic problems [Q22] with no explicit
+
+    coverage of async I/O patterns or complex type annotations. NOT DOCUMENTED:
+
+    the paper does not report the proportion of problems involving async or typed
+
+    signatures.
+
+    '
+  gap_type: full
+  web_search_target: Python async await type annotation code generation benchmark evaluation 2022 2023 2024
+- user_priority: Web framework boilerplate (Flask/FastAPI/Django route handlers, ORM patterns)
+  benchmark_coverage: 'NOT DOCUMENTED — HumanEval''s problem taxonomy explicitly covers algorithms,
+
+    reasoning, and mathematics [Q22]. CI-traced Codex-S problems tend to be
+
+    "building blocks of command-line utilities" [Q60], not web framework patterns.
+
+    Framework-idiomatic completions are absent from the documented evaluation set.
+
+    '
+  gap_type: full
+  web_search_target: Flask FastAPI Django code generation benchmark evaluation web framework Python completion 2022 2023 2024
+- user_priority: Idiomaticity and style evaluation beyond pass/fail
+  benchmark_coverage: 'The binary pass@k ontology explicitly treats any two passing functions as
+
+    equivalent [Q77]. The paper acknowledges that qualitative metrics for
+
+    complexity, abstraction level, and style are needed [Q86, Q148, Q149] but
+
+    defers them to forthcoming work. The autocomplete single-completion scenario
+
+    requiring selection heuristics [Q37, Q38] is identified but not resolved.
+
+    No idiomaticity, linting, or style metric is incorporated into primary scoring.
+
+    '
+  gap_type: full
+  web_search_target: Python code idiomaticity style evaluation metric LLM benchmark pylint cyclomatic complexity human preference
+    annotation 2022 2023 2024
+- user_priority: Test-suite coverage reliability of HumanEval unit tests
+  benchmark_coverage: 'The paper acknowledges that human-written test suites have "limited but
+
+    targeted coverage" that "does not always work well against an algorithm"
+
+    [Q129], and that some HumanEval prompts underspecify their target function
+
+    such that valid solutions may be wrongly penalized [Q63]. Average test count
+
+    is 7.7 per problem [Q20], but coverage adequacy is not formally characterized.
+
+    '
+  gap_type: partial
+  web_search_target: HumanEval unit test coverage adequacy false negative rate evaluation reliability EvalPlus 2022 2023 2024

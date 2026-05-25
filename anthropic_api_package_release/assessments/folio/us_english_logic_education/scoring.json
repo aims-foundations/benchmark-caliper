@@ -1,0 +1,440 @@
+{
+  "benchmark": "folio",
+  "region": "US Undergraduate Logic Students — Introductory and Intermediate Courses",
+  "dimensions": {
+    "input_ontology": {
+      "score": 3,
+      "justification": "FOLIO's task taxonomy centers on FOL deductive reasoning with multi-premise discourse-level arguments [Q15, Q71, Q72] and an NL-FOL translation subtask [Q67], which partially align with the deployment's predicate-logic and NL-to-formal-form translation requirements. However, the benchmark explicitly excludes temporal and modal logic [Q139, Q140] (consistent with deployment scope) but also offers no propositional-only subtask — the dataset sample confirms every example uses FOL quantifiers even in minimal 2-premise cases [DATASET-D1, D31]. Argument reconstruction from arguments with implicit premises is also not present as a category; FOLIO annotators added commonsense premises explicitly [Q55]. Given MODERATE priority on IO, these omissions represent a moderate coverage gap relative to the deployment's tri-partite requirement (propositional, FOL, implicit-premise reconstruction).",
+      "strengths": [
+        "Strong coverage of multi-step FOL deductive chains, with 28.7% of examples requiring 5+ reasoning depths [Q60], directly relevant to advanced-register predicate logic exercises",
+        "Discourse-level multi-premise translation task [Q71, Q72] aligns with deployment's NL-to-formal-form translation need",
+        "Syllogistic chains [Q43] map to canonical textbook exercise forms students encounter"
+      ],
+      "checklist_responses": {
+        "IO-1": "Required categories per elicitation Q3/A3: propositional logic, predicate/FOL reasoning, and argument reconstruction with implicit premises from everyday/quasi-legal scenarios. Modal/temporal/inductive are out of scope.",
+        "IO-2": "Omitted categories: (a) propositional-only reasoning — no examples in the sample use only sentential connectives without quantifiers [DATASET-D1, D31]; (b) implicit-premise/enthymeme reconstruction — annotators explicitly added commonsense premises [Q55], and dataset sampling confirms every premise needed is explicit [DATASET-D36, D19].",
+        "IO-3": "Categories present that may consume evaluation weight without serving the deployment: heavy reliance on HybLogic template-derived syllogism combinations [Q42, Q43] and abstract fictional-world scenarios [DATASET-D9, D8] that do not reflect everyday/quasi-legal argument types the deployment targets.",
+        "IO-4": "Content-validity gaps documented: (a) no propositional-only subtask; (b) no implicit-premise reconstruction subtask; (c) abstract template-derived scenarios consume evaluation weight beyond what deployment register requires. Modal/temporal exclusion [Q139, Q140] is aligned with deployment scope."
+      },
+      "evidence_quotes": [
+        "[Q15] 'a natural language reasoning dataset, FOLIO, with first-order logic reasoning problems which require the models to decide the correctness of conclusions given a world defined by the premises' (p.1)",
+        "[Q60] '28.7% of the examples need five or more depths of reasoning to infer the conclusions' (p.5)",
+        "[Q55] 'we also add necessary commonsense knowledge in both the NL and FOL premises... We add such knowledge as additional premises at this stage' (p.5)",
+        "[Q67] 'We propose a new natural language to first-order logic translation (NL-FOL translation) task alongside our reasoning dataset' (p.6)",
+        "[Q139] 'we consider temporal logic and modal logic as special-purpose logics' (p.13)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-11] Rosetta-PL is a 2025 benchmark purpose-built for propositional logic LLM evaluation — confirms propositional-only coverage is a distinct need not addressed by FOLIO",
+        "[WEB-13] ProofWriter covers propositional-level chaining with limited vocabulary but no Fitch notation"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: even simplest 2-premise example uses ∀x quantifier — no propositional-only examples found",
+        "DATASET-D31: minimal 2-premise example 'Each building is tall' uses ∀x quantification, not sentential connectives",
+        "DATASET-D36: 6 explicit premises about Meta employees rather than implicit-premise enthymeme",
+        "DATASET-D2: 7-premise complex chain demonstrates advanced-register depth"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "Q15",
+          "Q67"
+        ],
+        "IO-2": [
+          "Q55",
+          "DATASET-D1",
+          "DATASET-D31",
+          "DATASET-D36",
+          "WEB-11"
+        ],
+        "IO-3": [
+          "Q42",
+          "Q43",
+          "DATASET-D9",
+          "DATASET-D8"
+        ],
+        "IO-4": [
+          "Q139",
+          "Q55",
+          "WEB-11",
+          "WEB-13"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "No documented mapping between FOLIO's task taxonomy and Fitch-style natural deduction inference-rule taxonomy"
+      ],
+      "requires_expert_verification": [
+        "Whether the advanced-register subset of the curriculum specifically needs subproof-discharge categories (∨E, ¬I, →I via subproof) that FOLIO's flat-FOL output cannot exercise"
+      ]
+    },
+    "input_content": {
+      "score": 3,
+      "justification": "FOLIO's content is topically diverse (4,351 distinct words [Q62]; Wikipedia-seeded plus hybrid stories [Q33, Q58]) and explicitly bias-screened [Q47, Q127], which broadly fits a US undergraduate audience. Dataset sampling confirms wide topical coverage — science, sports, consumer goods, technology [DATASET-D4, D11, D21, D36]. However, FOLIO content is uniformly written as fully explicit, formalized premise sets [Q55], which mismatches the deployment's stated need for everyday/quasi-legal arguments with implicit premises. Several sampled examples involve geopolitically sensitive content (communist ideology, Russian sanctions, North Korean nationality) [DATASET-D6, D19, D16] that, while not pedagogically disqualifying, could create classroom-distraction concerns. With IC weighted MODERATE, the content profile partially serves the deployment but does not capture the implicit-premise everyday-argument register that students must learn to handle.",
+      "strengths": [
+        "Topical diversity from 304 Wikipedia-seeded stories yields 74% of vocabulary [Q62] — reduces topical overfitting risk",
+        "Explicit bias-removal protocol [Q47, Q127] aligns with US classroom content-neutrality expectations",
+        "Explicit-premise format directly matches textbook exercise style for the formal-exercise portion of the curriculum [DATASET-D20]"
+      ],
+      "checklist_responses": {
+        "IC-1": "Most content does not require US-specific cultural knowledge; examples reference globally-recognizable entities (Olympic medals, universities, consumer brands) [DATASET-D13, D11]. Some Wikipedia-seeded stories use less familiar entities (Bobby Flynn, John Nash architect) [DATASET-D18, D12], but these do not block reasoning.",
+        "IC-2": "Cultural alignment is broadly acceptable. Bias-removal protocol [Q127] reduces identity-linked stereotype risk. Several sampled examples touch politically sensitive geopolitical content (Russian sanctions [DATASET-D19], North Korean nationality [DATASET-D16], ardent communist [DATASET-D6]) — these are logically neutral but may cause classroom-context friction.",
+        "IC-3": "Content does not require Western-specific knowledge in a disqualifying way; cross-cultural Wikipedia seeding [Q34] yields mixed-origin entities (Andy Chang from Hong Kong [DATASET-D7], PRC/French nationals [DATASET-D16]).",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — no regional annotators (US-undergrad-logic-instructor reviewers) have re-annotated FOLIO content for classroom appropriateness. Would need instructor panel review.",
+        "IC-5": "Content gap: explicit-premise-only format does not exercise implicit-premise reconstruction [Q55, DATASET-D36]; abstract fictional scenarios (Size Town, Potterville) [DATASET-D9, D8] do not represent everyday/quasi-legal arguments the deployment targets."
+      },
+      "evidence_quotes": [
+        "[Q62] 'our dataset has a vocabulary of 4,351 words, and the examples based on Wikipedia account for 74% of the total vocabulary' (p.5)",
+        "[Q47] 'Our dataset prioritizes realism and factual accuracy, steering clear of biases and stereotypes' (p.4)",
+        "[Q55] 'Sometimes humans do not write certain commonsense knowledge in the premises that is required in the FOL reasoning process... We add such knowledge as additional premises' (p.5)",
+        "[Q127] 'We took out stories that had strongly opinionated language and contained gender, racial, and classist biases' (p.13)"
+      ],
+      "evidence_web_sources": [],
+      "evidence_dataset": [
+        "DATASET-D36: 'Everyone working at Meta has a high income...' — 6 fully explicit premises rather than implicit-premise reconstruction",
+        "DATASET-D6: 'ardent communist...prefers state ownership' — politically loaded predicate in classroom content",
+        "DATASET-D19: Russian foreign trade embargo as a logical premise",
+        "DATASET-D16: 'No North Korean nationals are citizens of the European Union' as a logical predicate",
+        "DATASET-D9: Size Town abstract scenario with no real-world referent",
+        "DATASET-D11: Rouge Dior lipstick product example — real-world content"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "Q62",
+          "DATASET-D13",
+          "DATASET-D11",
+          "DATASET-D18"
+        ],
+        "IC-2": [
+          "Q127",
+          "DATASET-D6",
+          "DATASET-D19",
+          "DATASET-D16"
+        ],
+        "IC-3": [
+          "DATASET-D7",
+          "DATASET-D16"
+        ],
+        "IC-4": [],
+        "IC-5": [
+          "Q55",
+          "DATASET-D36",
+          "DATASET-D9",
+          "DATASET-D8"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "No US-undergrad-instructor review of FOLIO content appropriateness for classroom use",
+        "No data on whether geopolitically sensitive examples disproportionately affect specific demographic subgroups of students"
+      ],
+      "requires_expert_verification": [
+        "Whether examples involving communist/Russian/North Korean content should be filtered or contextualized for US classroom deployment"
+      ]
+    },
+    "input_form": {
+      "score": 4,
+      "justification": "Input modality (text-only English [Q22]) and writing system (Latin + standard logical symbols) match the deployment exactly. Linguistic register is high-quality formal English with documented quality control (Grammarly check [Q49], English Literature reviewer pass [Q50], disambiguation conventions for disjunction/quantifiers/plurals [Q130-Q134]). One material concern remains: FOLIO uses Russell & Norvig FOL syntax [Q52], not the Fitch-style notation of the Barwise & Etchemendy curriculum [WEB-1, WEB-3]. The benchmark's own inference engine does not natively support its syntax and required a custom parser [Q149, Q150]. With IF priority LOWER and notation being the only meaningful concern (not modality), the dimension is well-aligned with minor reservations. Dataset sampling also identified some double-negative NL phrasing [DATASET-D33] that could create pedagogical noise.",
+      "strengths": [
+        "Text-only English-language input [Q22] matches deployment modality exactly",
+        "Strong NL quality control: Grammarly check [Q49] plus English Literature reviewer pass [Q50]",
+        "Explicit disambiguation conventions for disjunction, quantifier phrasing, singular/plural [Q130-Q134] reduce surface-form ambiguity",
+        "Readability distribution documented [Q59, Q154] supports accessibility assessment"
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal distributions match: both source and deployment are text-only English [Q22]. No image, audio, or multimodal mismatch. Dataset confirms uniformly text-formatted premises and conclusions [DATASET-D1 through D36].",
+        "IF-2": "Regional infrastructure supports text input fully — ~66-72% of US undergraduates use laptop/desktop primary [WEB-5], appropriate for symbolic-input tasks. ~64% experience unstable internet [WEB-5], which is a delivery concern but not an input-form one.",
+        "IF-3": "Domain-specific form difference: FOLIO uses Russell & Norvig flat FOL syntax [Q52] rather than Fitch-style numbered-line subproof notation [WEB-3, WEB-4]. This is a notation mismatch within the input-form layer that affects how formal-input strings are encoded.",
+        "IF-4": "External-validity concerns: (a) FOL notation differs from Fitch syntax students are taught — no published mapping exists [WEB-3, WEB-14]; (b) some NL premises use double-negative phrasing that may be pedagogically noisy [DATASET-D33]."
+      },
+      "evidence_quotes": [
+        "[Q22] 'We use formal logic, i.e., FOL to ensure the logical validity of the examples written in NL' (p.2)",
+        "[Q52] 'We adopt the FOL definitions and syntax most widely used in the AI community (Russell and Norvig, 2010)' (p.5)",
+        "[Q49] 'All the sentences are first checked with a grammar checking tool, Grammarly' (p.4)",
+        "[Q50] 'Our annotators who have graduated from or are senior students studying English Literature conducted a thorough round of review' (p.4)",
+        "[Q149] 'The inference engine does not support input in the FOL syntax adopted by standard education material (Russell and Norvig, 2010), which is used in our dataset' (p.14)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-3] OpenLogicProject Fitch checker confirms LPL Fitch notation is a distinct community-standard syntax",
+        "[WEB-4] logicmatters.net documents that Fitch (LPL), Jaśkowski, Kalish-Montague, and Gamut natural deduction styles are notationally distinct",
+        "[WEB-5] ~66-72% of US undergraduates primarily use laptop/desktop — supports text/symbolic input",
+        "[WEB-14] el-sambal/fitch-proof checker uses LPL Fitch notation distinct from FOLIO's R&N syntax"
+      ],
+      "evidence_dataset": [
+        "DATASET-D13: '∀x (OlympicGoldMedalWinner(x) → ProfessionalAthlete(x))' — Russell & Norvig flat FOL, no Fitch line numbers or rule citations",
+        "DATASET-D33: 'No satin-finish lipsticks in the set do not have rosewood in its official description' — double-negative NL phrasing"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q22",
+          "DATASET-D1"
+        ],
+        "IF-2": [
+          "WEB-5"
+        ],
+        "IF-3": [
+          "Q52",
+          "Q149",
+          "WEB-3",
+          "WEB-4",
+          "DATASET-D13"
+        ],
+        "IF-4": [
+          "Q149",
+          "DATASET-D33",
+          "WEB-14"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "No published systematic mapping between FOLIO's Russell & Norvig operators and LPL Fitch rule names"
+      ],
+      "requires_expert_verification": []
+    },
+    "output_ontology": {
+      "score": 1,
+      "justification": "FOLIO's output ontology is a three-way truth-value label (True/False/Unknown) determined by a FOL inference engine [Q36, Q66, Q94]. The deployment requires fundamentally different outputs: numbered Fitch-style proof traces with premise citations and inference-rule names, plus countermodels for invalid arguments (elicitation A1, A2). Dataset sampling confirms the schema contains exactly six fields with no proof-trace, rule-citation, or countermodel artifact for any example [DATASET-D1, D14, D4]. With OO priority HIGH, the output-ontology mismatch is essentially total: FOLIO labels every False example with only 'False', providing no countermodel for the deployment's required artifact [DATASET-D14]. The operator inventory [Q138] overlaps with Fitch connectives but no rule-vocabulary mapping exists [WEB-14].",
+      "strengths": [
+        "Engine-verified three-way labels [Q36, Q66] are reliable ground truth for the deductive-validity sub-judgment the deployment must make before producing a proof",
+        "Three-way distinction (True/False/Unknown) [Q94] identifies two distinct invalid-argument modes (contradiction vs. underdetermination) — useful signal even if countermodels are absent",
+        "Standard FOL operator inventory [Q138] overlaps with Fitch connective set"
+      ],
+      "checklist_responses": {
+        "OO-1": "Output categories required by deployment: (a) validity judgment (True/False/Unknown is approximately compatible); (b) numbered proof-trace with rule citations (absent); (c) countermodel for invalid arguments (absent); (d) register-differentiated explanation form (absent).",
+        "OO-2": "Missing categories specific to deployment: countermodel construction for False-labeled examples [Q66, DATASET-D14]; proof-trace structure (numbered lines, subproof boxes, rule-citation field) — none present in the FOLIO schema [DATASET schema observation in Concern 1]; register tags for introductory vs. advanced (absent).",
+        "OO-3": "FOLIO encodes Russell & Norvig FOL conventions [Q52] rather than Fitch-style rule taxonomy used by the LPL curriculum [WEB-3, WEB-4]. The decision rule (engine-verified single label) is curriculum-neutral but ignores the pedagogical structure of proof.",
+        "OO-4": "Stakeholder-driven redesign is warranted: a Fitch-rule-aligned proof-trace ontology would require introducing per-step rule labels, premise-citation fields, and subproof-structure tags — categories entirely absent from FOLIO.",
+        "OO-5": "Structural-validity violation: the construct 'logical argument validity in pedagogical context' has substantive internal structure (rule application, subproof discharge, countermodel) that FOLIO's single-label ontology collapses into a binary/ternary judgment. Content-validity violation: countermodel and rule-citation categories are entirely missing."
+      },
+      "evidence_quotes": [
+        "[Q36] 'Each of the stories is composed of several premises and conclusions with truth values of True, False, or Unknown' (p.4)",
+        "[Q66] 'Given P and H, the goal is to determine the truth values of the conclusions: True, False or Unknown, based on FOL reasoning' (p.6)",
+        "[Q94] 'The majority baseline of our dataset is 38.5% since in our test set, there are 87, 78 and 61 examples with labels of true, false and unknown' (p.7)",
+        "[Q138] 'We include the following operators: negation ¬, conjunction ∧, disjunction ∨, implication →, universal quantifier ∀, existential quantifier ∃, equal =' (p.13)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-3] OpenLogicProject Fitch — LPL Fitch rule-name vocabulary (→E, ∧I, etc.) is distinct from FOLIO's flat-FOL representation",
+        "[WEB-10] 'Learning to Disprove' and CounterMath confirm no off-the-shelf benchmark covers FOL countermodel construction as a pedagogical output",
+        "[WEB-14] el-sambal/fitch-proof documents LPL rule syntax with no cross-reference to FOLIO's operators"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: True-labeled example provides only the label, no proof trace showing deduction steps",
+        "DATASET-D14: False-labeled example 'There are no journalists that were born in Yorkshire' provides only the label 'False', no countermodel artifact",
+        "DATASET-D4: False-labeled example provides only the label, no explanation of which step in the chain fails",
+        "Dataset schema observation: exactly six fields (premises, premises-FOL, conclusion, conclusion-FOL, label, IDs) — no proof-trace, rule-citation, or countermodel fields exist"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q36",
+          "Q66"
+        ],
+        "OO-2": [
+          "Q66",
+          "DATASET-D14",
+          "WEB-10"
+        ],
+        "OO-3": [
+          "Q52",
+          "WEB-3",
+          "WEB-4"
+        ],
+        "OO-4": [
+          "WEB-3",
+          "WEB-14"
+        ],
+        "OO-5": [
+          "Q94",
+          "Q138",
+          "DATASET-D1",
+          "DATASET-D14"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether the inference engine, internally, generates countermodels as a byproduct for False-labeled examples (not exposed in schema)"
+      ],
+      "requires_expert_verification": [
+        "Whether a custom Fitch-rule-tagged extension of FOLIO is feasible as a supplementation strategy"
+      ]
+    },
+    "output_content": {
+      "score": 2,
+      "justification": "For the labels FOLIO does provide, ground-truth quality is high: engine-verified [Q2, Q57], multi-stage expert annotation [Q29, Q124, Q125], 39.2% rewrite rate to address quality issues [Q48], and expert-annotator accuracy of 95.98% [Q111] confirming label reliability. However, with OC priority MODERATE, two distinct concerns lower the score substantially: (1) no ground-truth content exists for pedagogically-acceptable explanations, Fitch-style rule citations, register-appropriate prose, or countermodels — the artifacts the deployment needs to evaluate; (2) dataset sampling found ~10% rate of FOL annotation artifacts (free variables, missing parentheses, NL/FOL contradiction, name mismatches) [DATASET-D24, D25, D26, D23, D30, D27] that could propagate as incorrect ground truth if used for NL-FOL translation evaluation or model training.",
+      "strengths": [
+        "Engine-verified labels [Q2, Q57] provide deterministic ground truth for deductive validity",
+        "Two-stage expert quality control (NLP/CL experts for NL, FOL experts for FOL) [Q29, Q124, Q125]",
+        "39.2% of stories rewritten to address quality issues [Q48] — substantial QC investment",
+        "Expert annotators achieve 95.98% accuracy [Q111], confirming labels are well-formed"
+      ],
+      "checklist_responses": {
+        "OC-1": "Truth-value labels are derived from formal inference and are not subject to regional-stakeholder disagreement — formal validity is invariant across US logic curricula. However, the deployment's required outputs (proof traces, countermodels, register-appropriate explanations) have no ground truth in FOLIO at all.",
+        "OC-2": "No disagreement expected on True/False/Unknown labels because they are engine-verified [Q2]. Disagreement is irrelevant because the deployment-relevant output types are absent.",
+        "OC-3": "Annotator demographics are documented at a high level: college/graduate students, native or near-native English, formal FOL coursework [Q27, Q28, Q122, Q123]. No fine-grained demographic breakdown is provided; geographic distribution of annotators unspecified.",
+        "OC-4": "Re-annotation by US-logic-instructor pool would be needed to introduce ground-truth Fitch-style proof traces, rule citations, register-tagged explanations, and countermodels — none exist in FOLIO. Dataset sampling also revealed FOL annotation errors that warrant cleanup [DATASET-D24, D25, D26].",
+        "OC-5": "Aggregation method (single engine-verified label per example) cannot encode minority perspectives because formal validity admits no minority view. The relevant concern is not aggregation but absence of explanation-quality labels.",
+        "OC-6": "Convergent-validity concern is minimal for the label that is present; external-validity concern is high because no labels exist for the explanation/countermodel artifacts the deployment must evaluate. Additionally, ~10% FOL-annotation-artifact rate observed in sample [DATASET-D24, D25, D26, D23, D30, D27] could harm convergent validity for NL-FOL translation evaluation."
+      },
+      "evidence_quotes": [
+        "[Q2] 'The logical correctness of the premises and conclusions is ensured by their FOL annotations, which are automatically verified by an FOL inference engine' (p.1)",
+        "[Q29] 'At the NL quality check stage, only annotators who are experts in natural language processing or computational linguistics are involved. For the FOL quality check, only annotators who are experts in first-order logic are involved' (p.4)",
+        "[Q48] 'we manually screened all stories and found that 39.2% of the stories suffer from at least one of these issues' (p.4)",
+        "[Q111] 'Expert annotations achieve an accuracy of 95.98% while non-expert annotations achieves 61.82%' (p.9)",
+        "[Q53] 'we found that the human-written FOL formulas suffer from FOL consistency issues, which necessitates an additional round of quality control' (p.5)",
+        "[Q122] 'Our annotators are either college or graduate students who are native English speakers or possess near-native proficiency in English' (p.12)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-7] P-FOLIO companion adds NL proof chains but not Fitch-style rule-cited proofs",
+        "[WEB-9] 2025 ITS study finds LLM hints score only 75% on contextual explanation — confirms explanation-quality evaluation is a research frontier without ground-truth corpora"
+      ],
+      "evidence_dataset": [
+        "DATASET-D24: free variable 'x' unbound in premises-FOL of Example 2 — FOL annotation error",
+        "DATASET-D25: missing closing parenthesis in Example 36 premises-FOL",
+        "DATASET-D26: NL says 'Matt does not invest' but FOL omits negation — direct NL/FOL contradiction",
+        "DATASET-D23: Example 52 NL uses 'John' while FOL uses 'jim' — entity-naming inconsistency",
+        "DATASET-D30: '∃x ∃y ∃y ∃w' duplicate variable declaration",
+        "DATASET-D27: extra closing parenthesis in Example 10 premises-FOL"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q2",
+          "Q57"
+        ],
+        "OC-2": [
+          "Q2",
+          "Q111"
+        ],
+        "OC-3": [
+          "Q27",
+          "Q122",
+          "Q123"
+        ],
+        "OC-4": [
+          "DATASET-D24",
+          "DATASET-D25",
+          "DATASET-D26"
+        ],
+        "OC-5": [
+          "Q2"
+        ],
+        "OC-6": [
+          "Q53",
+          "DATASET-D24",
+          "DATASET-D25",
+          "DATASET-D26",
+          "DATASET-D23",
+          "DATASET-D30",
+          "WEB-7"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Full FOL-annotation error rate across all 1,430 examples (sample-based lower-bound is ~10%)",
+        "Fine-grained annotator demographics beyond 'college/graduate students with FOL coursework'"
+      ],
+      "requires_expert_verification": [
+        "Whether observed FOL annotation artifacts are systematic or distributed; would benefit from re-running the inference engine across the full corpus"
+      ]
+    },
+    "output_form": {
+      "score": 1,
+      "justification": "FOLIO's output form is single-label classification accuracy [Q80] plus, for the translation subtask, Syntactic Validity and Execution Accuracy [Q73-Q76]. The deployment requires evaluation of structured, register-differentiated, rule-justified multi-step proof traces and countermodels — none of which FOLIO's metrics assess. With OF priority HIGH, the output-form mismatch is essentially complete. The evaluation infrastructure (Stanford CS221 inference engine + custom Python parser [Q148-Q151]) is purpose-built for label verification, and the authors themselves flag the need for a 'more reliable metric of NL-FOL translation' [Q77]. Dataset sampling confirms no proof-trace or countermodel artifact exists at the data level [Concern 1]. The only sub-task FOLIO can directly score for the deployment is the binary validity precondition, which is necessary but radically insufficient.",
+      "strengths": [
+        "Accuracy metric [Q80] is appropriate for the deductive-validity sub-judgment that must occur before proof generation",
+        "Translation Execution Accuracy [Q75, Q76] measures whether translated FOL preserves semantics — partially relevant to NL-to-formal-form correctness in the deployment",
+        "Confusion-matrix and depth-stratified analysis [Q99, Q155-Q157] reveal failure modes (over-prediction of True; harder at depths 4-7) that inform deployment risk assessment"
+      ],
+      "checklist_responses": {
+        "OF-1": "Output modality mismatch is total. FOLIO output: single label. Deployment output: numbered Fitch-style proof trace + premise citations + rule names + plain-English summary + (for invalid args) countermodel + register tag.",
+        "OF-2": "Not applicable — speech/TTS not required for either source or deployment (text-only).",
+        "OF-3": "Text-only output is accessible for most US undergraduates. Accessibility for screen-reader users with formal-notation output (MathML or equivalent) is a separate platform concern flagged as needing verification.",
+        "OF-4": "External-validity violation is severe: no FOLIO metric assesses (a) Fitch-style rule-citation correctness, (b) premise-citation correctness, (c) register appropriateness, (d) countermodel validity, (e) pedagogical clarity. The authors themselves note the need for better translation metrics [Q77]. The output-form gap is the deepest validity problem identified."
+      },
+      "evidence_quotes": [
+        "[Q80] 'We use accuracy for evaluating logical reasoning performance' (p.6)",
+        "[Q73] 'Two metrics are adopted to evaluate NL-FOL translation: 1). Syntactic validity (SynV)' (p.6)",
+        "[Q75] 'Inference Engine execution accuracy (ExcAcc). The group of translated FOL for premises and conclusions in one story is fed into our inference engine' (p.6)",
+        "[Q77] 'We leave for future work the design of a more reliable metric of NL-FOL translation' (p.6)",
+        "[Q148] 'we adopt the inference engine provided in the Stanford CS221 course page' (p.14)",
+        "[Q152] 'Although LLMs such as GPT-4 can be utilized to conduct the conversion, it is hard to ensure the GPT-4 outputs are always correct' (p.14)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-7] P-FOLIO adds pass@k over multi-step NL proof chains — closest existing extension but still not Fitch-style rule-cited proofs",
+        "[WEB-9] 2025 ITS study uses 4-criterion rubric (consistency, clarity, contextual explanation, pedagogical appropriateness) for LLM hints — closest to deployment evaluation but for propositional logic, not Fitch",
+        "[WEB-10] No benchmark evaluates formal countermodel construction as first-class output for pedagogical FOL/propositional logic"
+      ],
+      "evidence_dataset": [
+        "Schema observation (Concern 1): six fields (premises, premises-FOL, conclusion, conclusion-FOL, label, IDs) — no proof-trace, rule-citation, or countermodel fields",
+        "DATASET-D14: False-labeled example with no countermodel artifact",
+        "DATASET-D1: True-labeled example with no proof trace"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q80",
+          "DATASET-D1",
+          "DATASET-D14"
+        ],
+        "OF-2": [],
+        "OF-3": [],
+        "OF-4": [
+          "Q77",
+          "Q152",
+          "WEB-7",
+          "WEB-9",
+          "WEB-10"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether any FOLIO-derived rubric for proof-trace quality has been developed in follow-up work beyond P-FOLIO"
+      ],
+      "requires_expert_verification": [
+        "Whether the deployment can use P-FOLIO's NL proof chains as a stepping-stone supplement despite their non-Fitch format"
+      ]
+    }
+  },
+  "overall_summary": "FOLIO is a high-quality FOL deductive-reasoning benchmark with engine-verified labels, expert annotation, and topical diversity that partially serves a US undergraduate logic deployment — but only for one slice of what the deployment must evaluate. For the validity-precondition sub-judgment (does the conclusion follow from the premises?), FOLIO provides reliable ground truth and meaningful difficulty stratification, with strong support for the advanced predicate-logic register. However, the two HIGH-priority dimensions (output ontology and output form) are essentially completely misaligned: FOLIO outputs single labels, while the deployment requires numbered Fitch-style proof traces with rule citations, register-differentiated explanations, and countermodels for invalid arguments — none of which FOLIO produces, scores, or contains as ground truth. Secondary concerns include: no propositional-only coverage (deployment requires it), no implicit-premise reconstruction (deployment requires it), notation mismatch between FOLIO's Russell & Norvig syntax and the LPL Fitch syntax students learn, and a ~10% FOL annotation-artifact rate observed in dataset sampling. P-FOLIO and emerging propositional-logic benchmarks (Rosetta-PL, DivLogicEval, the 2025 ITS study) partially fill some gaps but no off-the-shelf benchmark covers Fitch-style rule-cited proof traces or pedagogical countermodel construction.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "FOLIO can directly support evaluation of two sub-capabilities the deployment requires: (1) the binary/ternary deductive-validity judgment that must precede any proof generation (strongest dimension: input ontology and input form, with reliable output content for the label itself), and (2) NL-to-FOL translation correctness at a discourse-multi-premise level. For predicate-logic content at advanced register, FOLIO's depth-stratified evaluation provides genuine difficulty discrimination. It does not measure proof-trace generation, rule-citation correctness, register-appropriate explanation, or countermodel construction — the deployment's primary output requirements.",
+    "construct_depth": "Construct coverage is shallow relative to deployment needs: FOLIO probes the OUTCOME of deductive reasoning (final label) but not the STRUCTURE (numbered steps, rule applications, subproof discharges) or the PEDAGOGICAL FRAMING (register-appropriate prose, premise-citation correctness). The expert/non-expert 34-point performance gap [Q111] and the GPT-4-vs-expert 31.82-point gap [Q113] confirm FOLIO discriminates between sound and unsound FOL reasoning at the label level, but provides no evidence about explanation quality. The deepest gaps are in OO and OF (both HIGH-priority, both scored 1), with material secondary gaps in IO (propositional + implicit-premise) and OC (no explanation ground truth).",
+    "supplementation_needed": "Multi-source supplementation required: (1) For Fitch-style proof-trace evaluation — no off-the-shelf benchmark exists; build a custom rubric-based evaluation harness, optionally bootstrapped from P-FOLIO's NL proof chains [WEB-7] adapted to Fitch notation with rule labels; (2) For propositional logic — supplement with Rosetta-PL [WEB-11] or DivLogicEval [WEB-12], noting they also lack Fitch traces; (3) For countermodel evaluation — no benchmark covers this; develop with logic instructors using textbook countermodel exercises, drawing on the Lean-based 'Learning to Disprove' framework as a methodological template [WEB-10]; (4) For implicit-premise reconstruction — develop a custom enthymeme corpus from textbook exercises (Hurley, Bergmann/Moor/Nelson); (5) For pedagogical clarity / register appropriateness — adapt the 2025 ITS study's 4-criterion rubric [WEB-9] to Fitch-notation outputs. Additionally, clean ~10% of FOL annotation artifacts in FOLIO before any training use [DATASET-D24, D25, D26]."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "output_ontology",
+      "gap": "No proof-trace structure or countermodel artifacts in output ontology; FOLIO collapses to single label",
+      "recommendation": "Build a Fitch-aligned output schema (numbered lines, rule-name field, premise-citation field, subproof-box markers, countermodel-as-domain-assignment field) and elicit reference proof traces from logic-instructor annotators for a curated subset of FOLIO stories; use P-FOLIO [WEB-7] as a starting NL-chain corpus and convert to Fitch notation."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "Accuracy metric does not evaluate proof-trace quality, register, or countermodel correctness",
+      "recommendation": "Develop a multi-component rubric drawing on the 2025 ITS study's criteria [WEB-9] (consistency, clarity, contextual explanation, pedagogical appropriateness) extended with Fitch-specific items (rule-name correctness, premise-citation correctness, subproof-discharge correctness); use both LLM-grader and human-instructor ratings."
+    },
+    {
+      "dimension": "input_ontology",
+      "gap": "No propositional-only subtask and no implicit-premise/enthymeme reconstruction subtask",
+      "recommendation": "Complement FOLIO with Rosetta-PL [WEB-11] or DivLogicEval [WEB-12] for propositional coverage; develop a custom enthymeme corpus drawn from US-textbook exercises (Hurley, Bergmann/Moor/Nelson) for implicit-premise reconstruction evaluation."
+    },
+    {
+      "dimension": "input_form",
+      "gap": "Russell & Norvig FOL syntax mismatches Fitch-style notation students learn",
+      "recommendation": "Develop and publish a systematic mapping between FOLIO's flat-FOL operators and LPL Fitch rule names (→E, ∧I/∧E, ∨E with subproof, ∀E, ∃E with subproof, ¬I); incorporate the lplfitch LaTeX package and el-sambal/fitch-proof checker [WEB-14] as reference encoders."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "~10% FOL annotation-artifact rate observed in dataset sample (free variables, missing parens, NL/FOL contradiction, name mismatches)",
+      "recommendation": "Re-run the inference engine on the full corpus and audit examples flagged in the dataset analysis [DATASET-D24, D25, D26, D23, D30, D27]; produce a cleaned subset before using FOLIO for any training or NL-FOL translation evaluation."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "Explicit-premise-only content; some geopolitically sensitive examples may distract in US classroom context",
+      "recommendation": "Filter or contextualize examples involving politically loaded predicates (communist, North Korean nationality, Russian sanctions [DATASET-D6, D16, D19]) for classroom deployment; develop an everyday/quasi-legal enthymeme corpus to complement FOLIO's fully-explicit-premise content."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "output_ontology",
+    "output_form"
+  ],
+  "strongest_dimensions": [
+    "input_form",
+    "input_ontology"
+  ]
+}

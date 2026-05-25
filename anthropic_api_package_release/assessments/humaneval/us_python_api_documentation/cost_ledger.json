@@ -1,0 +1,101 @@
+{
+  "2a_sim": {
+    "opus": {
+      "model_id": "claude-opus-4-7",
+      "calls": 1,
+      "input_tokens": 1108,
+      "output_tokens": 480,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "2_summary": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 1,
+      "input_tokens": 2245,
+      "output_tokens": 1402,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "3a_consolidate": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 1,
+      "input_tokens": 16472,
+      "output_tokens": 3727,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "3b_synthesize": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 1,
+      "input_tokens": 22109,
+      "output_tokens": 8654,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "4a_template": {
+    "haiku": {
+      "model_id": "claude-haiku-4-5-20251001",
+      "calls": 1,
+      "input_tokens": 1685,
+      "output_tokens": 15,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "4b_synthesize": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 1,
+      "input_tokens": 26210,
+      "output_tokens": 2889,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "5_web_search": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 1,
+      "input_tokens": 339603,
+      "output_tokens": 6136,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 7
+    }
+  },
+  "5b_da_interpret": {
+    "sonnet": {
+      "model_id": "claude-sonnet-4-6",
+      "calls": 1,
+      "input_tokens": 47361,
+      "output_tokens": 7401,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  },
+  "7_score": {
+    "opus": {
+      "model_id": "claude-opus-4-7",
+      "calls": 1,
+      "input_tokens": 47534,
+      "output_tokens": 13965,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "web_search_requests": 0
+    }
+  }
+}

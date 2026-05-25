@@ -1,0 +1,22 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "FOLIO focuses on formal deductive reasoning — given a set of premises, is a conclusion true, false, or uncertain. Your deployment involves much richer argument types: empirical claims backed by evidence, value-laden claims (e.g., 'national security outweighs civil liberties'), rhetorical moves like analogy or burden-shifting, and debate-specific structures like disadvantages, counterplans, or kritiks. Which of these categories does your system need to assess, and are any of them more central than pure deductive validity?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "OO",
+    "question": "FOLIO scores outputs as a three-way label (true / false / uncertain), which captures logical entailment but not argument quality. Your deployment requires holistic strength assessment — covering logical validity, evidence quality, relevance, and persuasive effectiveness. Should the system produce a single composite score, separate scores per dimension, qualitative feedback, or a ranking across competing arguments? And who defines what 'strong' means — coaches, judges, debate norms, or the platform itself?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OC",
+    "question": "In competitive high school debate, what counts as a strong argument is shaped by community norms that vary across circuits — for example, policy debate judges in the national circuit may reward speed and technical flow, while LD or PF judges in local circuits may weight rhetoric and clarity more heavily. Should the system's quality judgments reflect a single universal standard, or adapt to the judging community and format (policy, LD, PF, congressional) your students compete in?"
+  },
+  {
+    "id": "Q4",
+    "dimension": "IC",
+    "question": "Debate arguments frequently involve contested empirical claims where evidence quality is disputed (e.g., cherry-picked statistics, outdated studies, cards taken out of context) and value claims where reasonable people disagree (e.g., 'economic growth outweighs environmental protection'). Does your system need to evaluate the credibility and recency of cited evidence, or only assess the logical structure of the argument as stated — and how should it handle premises that are empirically false but internally consistent?"
+  }
+]

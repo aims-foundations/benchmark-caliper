@@ -1,0 +1,5 @@
+{
+  "Q1": "The course covers both propositional and first-order/predicate logic, with the latter being the focus of the second half of the semester. We stick to classical deductive logic \u2014 no modal, temporal, or probabilistic reasoning is in scope. The tool needs to handle quantifiers, connectives, and basic predicate structure.",
+  "Q2": "In our course, 'indeterminate' means the conclusion is neither entailed by nor contradicted by the premises \u2014 i.e., the premises are consistent with both the conclusion and its negation. We don't deal with undecidable formulas at the undergraduate level. The rubric treats valid, invalid (premises entail the negation), and indeterminate as three distinct categories.",
+  "Q3": "We use a custom course packet I've developed over several years, loosely based on the style of Hurley's Concise Introduction to Logic. The sentence patterns are fairly constrained \u2014 students see templates like 'All A are B,' 'If P then Q,' 'Some A is not B,' etc. \u2014 though we do introduce some natural-language paraphrases later in the term to test translation skills."
+}

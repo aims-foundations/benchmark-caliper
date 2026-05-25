@@ -1,0 +1,17 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "HumanEval covers standalone Python functions in isolation. Your task involves multi-file, multi-layer artifacts: database schemas (SQL/ORM), REST or GraphQL API route definitions, frontend component stubs (React, Vue, etc.), and deployment configs (Docker, Kubernetes, Terraform). Does your evaluation need to cover all of these artifact types, or are some layers more critical to validate than others? Are there specific technology stacks (e.g., FastAPI + PostgreSQL + React, or Spring Boot + MySQL + Angular) your architects work with most?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "OO",
+    "question": "HumanEval scores outputs by running unit tests against a single correct function — a binary pass/fail criterion. For your scaffolding task, what does 'correct' mean: Does the output compile or parse? Does it follow your internal architectural conventions and naming patterns? Does it satisfy the stated requirements at a functional level? Would your architects accept multiple valid scaffold designs for the same spec, or is there a house style they'd evaluate against?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "IF",
+    "question": "HumanEval inputs are concise, self-contained docstrings. Your inputs are high-level requirements documents — likely longer, semi-structured prose with business logic, data models, and non-functional requirements mixed together. How long and structured are these specs in practice: are they a few paragraphs, multi-page Word/Confluence documents, or something else? Does the LLM receive the full document at once, or chunked?"
+  }
+]

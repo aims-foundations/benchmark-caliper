@@ -1,0 +1,1171 @@
+name: gsm8k
+full_name: Grade School Math 8K (GSM8K)
+source_url: https://github.com/openai/grade-school-math
+paper_url: https://arxiv.org/abs/2110.14168
+year: 2021
+domain: Grade school arithmetic word problem solving
+porting_strategy: none
+languages:
+- en
+primary_region: United States
+description: 'GSM8K is a dataset of 8,500 high-quality, linguistically diverse grade school math
+
+  word problems with natural language solutions, developed by OpenAI. The benchmark
+
+  is designed to probe informal multi-step arithmetic reasoning in large language models.
+
+  A central contribution of the paper is not only the dataset itself but a verification
+
+  framework in which models sample many candidate solutions and rank them using a trained
+
+  verifier, rather than generating a single answer. Problems rely on elementary math
+
+  concepts (addition, subtraction, multiplication, division) but require multi-step
+
+  reasoning and proper interpretation of natural language context. The benchmark is
+
+  intended as a tractable but challenging target for LLM evaluation, positioned between
+
+  simpler datasets (ASDiv) and more complex ones (MATH).
+
+  '
+documentation_excerpts: '## Key characteristics relevant to validity analysis:
+
+
+  ### Input Ontology
+
+  GSM8K is scoped to grade school arithmetic word problems requiring multi-step
+
+  reasoning. The paper establishes two high-level solving strategies as the primary
+
+  task taxonomy: a finetuning baseline that generates a single solution [Q28] and a
+
+  verification approach that samples and ranks multiple candidate solutions [Q30]. Within
+
+  verification, the paper further distinguishes solution-level verifiers (one scalar
+
+  judgment per complete solution) from token-level verifiers that produce a value
+
+  prediction after each token [Q72, Q73, Q74]. The benchmark''s design principle is
+
+  explicitly scoped to "relatively simple grade school math concepts" [Q9], with
+
+  difficulty coming from linguistic diversity and multi-step reasoning rather than
+
+  advanced mathematics [Q22]. Problems require basic background knowledge (e.g.,
+
+  days in a week) in addition to arithmetic computation [Q21].
+
+
+  Critically for deployment validity, the paper does not document any systematic
+
+  subtask taxonomy by problem type. The appendix sample problems uniformly involve
+
+  counting, weight, and rate scenarios [Q128–Q136]; measurement/unit conversion,
+
+  geometry (perimeter, area), and data interpretation from tables or bar charts are
+
+  not identified as design goals, subtask categories, or coverage targets anywhere in
+
+  the paper. The difficulty distribution skews toward multi-step problems [Q19],
+
+  suggesting under-coverage of the simpler single-step arithmetic typical of grades 3–4.
+
+  The authors acknowledge that the benchmark is calibrated at a challenging level,
+
+  estimating that a 175B model would require at least two additional orders of magnitude
+
+  of training data to reach 80% accuracy [Q50], implying the lower difficulty end of
+
+  the grade 3–8 range is poorly represented.
+
+
+  ### Input Content
+
+  GSM8K comprises 8,500 human-written problems collected via freelance contractors on
+
+  Upwork and scaled through the Surge AI NLP labeling platform [Q103, Q104]. An initial
+
+  batch of ~1,000 problems was created by Upwork contractors; GPT-3 (175B) was used to
+
+  generate seed questions to assist contractors, though contractors could use them
+
+  directly, adapt them, or write entirely original problems [Q110, Q111]. The dataset
+
+  was designed with high linguistic diversity as an explicit goal [Q9], and pairwise
+
+  similarity scores were computed to detect and prevent template reuse [Q113].
+
+
+  The resulting problem content reflects US cultural defaults: American names, dollar
+
+  amounts, imperial units, and familiar school scenarios (consistent with the deployment
+
+  platform''s profile). The paper does not explicitly characterize the cultural grounding
+
+  of problem content, but the appendix examples [Q128–Q136] confirm US-contextualized
+
+  settings involving pounds, standard consumer goods, and domestically familiar scenarios.
+
+  The GPT-3-seeded generation process means the implicit cultural framing of problem
+
+  content was partly shaped by the model''s training distribution rather than curated by
+
+  domain educators — a mild validity concern for ensuring representative coverage of
+
+  all problem types teachers actually assign.
+
+
+  ### Input Form
+
+  All problems and solutions are text-only, in English, formatted as natural language
+
+  prose [Q9, Q32]. Problems are longer on average and require more reasoning steps than
+
+  comparable datasets like ASDiv [Q19]. Solutions are formatted as natural language
+
+  explanations rather than pure mathematical expressions, a deliberate design choice to
+
+  enable verbal analytical skills and produce human-interpretable outputs [Q32, Q33].
+
+  A notable preprocessing feature is the injection of calculator annotations into
+
+  training solutions: because models frequently make arithmetic errors [Q38, Q39],
+
+  all models are trained to invoke a calculator via specially formatted tokens, with
+
+  the calculator overriding model sampling at test time [Q40, Q41]. These annotations
+
+  were generated automatically by hard-coded logic and a finetuned language model, not
+
+  by human contractors [Q117]. The text-only, English-language format with natural
+
+  language chain-of-thought solutions exactly matches the deployment platform''s
+
+  infrastructure — no modality or script mismatch exists.
+
+
+  ### Output Ontology
+
+  GSM8K''s ground-truth label for each problem is a single correct final numerical answer
+
+  embedded in a natural language solution. Verifiers are trained to output a binary
+
+  correctness judgment — correct or incorrect — based solely on whether the candidate
+
+  solution reaches the correct final answer [Q31, Q60]. At inference, the verifier
+
+  outputs a continuous probability score conditioned on the problem and a candidate
+
+  solution [Q59], and an optional language modeling objective is trained jointly
+
+  alongside the correctness signal [Q67]. The token-level verifier is hypothesized to
+
+  provide a useful auxiliary signal encouraging the model to judge reasoning throughout
+
+  solutions rather than merely memorizing correct final answers [Q78].
+
+
+  For the deployment context, this output taxonomy presents a meaningful validity gap.
+
+  The benchmark''s correctness criterion reduces to a single extracted numerical string
+
+  with no representation of answer equivalence across forms. The scoring pipeline
+
+  checks whether the final answer is correct via a single low-temperature sample [Q29]
+
+  and does not implement fraction-decimal equivalence, rounding tolerance, or currency
+
+  normalization. The Python `eval` function is used to simulate the calculator [Q121],
+
+  and the evaluation overrides sampling only on well-formatted annotations [Q120]. The
+
+  benchmark''s label schema therefore does not stress-test the equivalence edge cases
+
+  (e.g., "0.5" vs. "1/2," "2.50" vs. "$2.50") that the deployment platform''s partial
+
+  normalization logic must handle.
+
+
+  ### Output Content
+
+  A dedicated re-solving quality-control step was performed: after full data collection,
+
+  a separate set of workers re-solved all problems without access to original solutions,
+
+  and any problems where the re-solver''s final answer disagreed with the original were
+
+  either repaired or discarded [Q105, Q106]. A second round of agreement checks on a
+
+  subset of problems found a 1.7% disagreement rate [Q107], which the authors estimate
+
+  to represent the fraction of problems containing breaking errors or ambiguities [Q108],
+
+  while acknowledging a potentially larger fraction may contain subtle errors [Q109].
+
+  Calculator annotations within solutions were not produced by human annotators but
+
+  generated automatically [Q117]. Contractors were instructed to write descriptive
+
+  solutions and avoid reusing problem settings or templates [Q112].
+
+
+  NOT DOCUMENTED: Annotator demographics (age, educational background, geographic
+
+  location, native language) are not reported beyond identifying the platforms used
+
+  (Upwork and Surge AI). This absence is validity-relevant: the 1.7% residual error
+
+  rate and the possibility of a higher rate of subtle errors [Q109] could partly reflect
+
+  annotators who were not US-schooled or unfamiliar with American grade school math
+
+  conventions (e.g., US currency formatting, imperial unit naming). The verifier training
+
+  process introduces additional label-correctness risk: some solutions will reach the
+
+  correct final answer using flawed reasoning, leading to false positives [Q61], while
+
+  correct solutions with ambiguous natural language may be rated as incorrect [Q153,
+
+  Q154]. False positives also arise from variable-binding errors in multi-quantity
+
+  problems [Q155].
+
+
+  ### Output Form
+
+  The primary evaluation metric is solution accuracy: the percentage of test problems
+
+  for which the model produces the correct final answer [Q29, Q46]. The paper introduces
+
+  `test@N` — the percentage of problems solved correctly at least once across N
+
+  independent samples — as a secondary metric to measure capability ceiling [Q52, Q53].
+
+  Verification performance is assessed by generating 100 candidate solutions per test
+
+  problem, ranking them with the verifier, and returning the top-ranked solution [Q68],
+
+  with performance peaking at approximately 400 completions before declining as
+
+  adversarial solutions begin to fool the verifier [Q82, Q83]. Additional output-form
+
+  analyses include majority voting among top-ranked solutions [Q85, Q87, Q88] and
+
+  token-level verifier interpretability visualizations [Q147, Q148, Q149, Q150, Q151].
+
+  The calculator simulation uses Python''s `eval` function [Q121, Q122], with a known
+
+  minor implementation bug that causes a less-than-1% underestimate of reported
+
+  performance [Q123, Q124, Q125].
+
+
+  The benchmark evaluates text-based outputs only and does not penalize or evaluate
+
+  format mismatches (e.g., fraction vs. decimal representations of the same value).
+
+  The standard scoring pipeline extracts a single numerical string and checks exact
+
+  match — it does not implement fraction-decimal equivalence, rounding tolerance, or
+
+  currency normalization. This is a structural mismatch with the deployment platform''s
+
+  grading logic, which requires tolerance-based matching to avoid false negatives when
+
+  students submit mathematically equivalent but differently formatted answers.
+
+  '
+verbatim_quotes:
+- id: Q1
+  page: 1
+  dimension: input_content
+  text: we introduce GSM8K, a dataset of 8.5K high quality linguistically diverse grade school math word problems.
+- id: Q2
+  page: 1
+  dimension: input_ontology
+  text: To increase performance, we propose training verifiers to judge the correctness of model completions.
+- id: Q3
+  page: 1
+  dimension: output_form
+  text: At test time, we generate many candidate solutions and select the one ranked highest by the verifier.
+- id: Q4
+  page: 1
+  dimension: output_form
+  text: We demonstrate that verification significantly improves performance on GSM8K, and we provide strong empirical evidence
+    that verification scales more effectively with increased data than a finetuning baseline.
+- id: Q5
+  page: 1
+  dimension: output_content
+  text: One significant challenge in mathematical reasoning is the high sensitivity to individual mistakes (Shen et al., 2021a).
+- id: Q6
+  page: 1
+  dimension: output_content
+  text: When generating a solution, autoregressive models have no mechanism to correct their own errors.
+- id: Q7
+  page: 1
+  dimension: input_content
+  text: Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser, Matthias Plappert, Jerry Tworek,
+    Jacob Hilton, Reiichiro Nakano, Christopher Hesse, John Schulman, OpenAI
+- id: Q8
+  page: 2
+  dimension: input_content
+  text: We are releasing GSM8K, a dataset of 8.5K high quality problems at the grade school math level.
+- id: Q9
+  page: 2
+  dimension: input_form
+  text: We designed this dataset to have high linguistic diversity while relying on relatively simple grade school math concepts.
+- id: Q10
+  page: 2
+  dimension: input_form
+  text: State-of-the-art language models struggle to achieve high performance on this dataset, primarily due to the high diversity
+    among problems.
+- id: Q11
+  page: 2
+  dimension: input_ontology
+  text: At the same time, GSM8K solutions depend only on elementary concepts, so achieving high test performance is a tractable
+    goal.
+- id: Q12
+  page: 2
+  dimension: input_content
+  text: We present a curated dataset of 8.5K grade school math questions and natural language solutions, useful for probing
+    the informal reasoning ability of large language models.
+- id: Q13
+  page: 2
+  dimension: output_form
+  text: We show that, compared to a finetuning baseline, the use of verifiers results in approximately the same performance
+    boost as a 30x model size increase, and that verifiers scale significantly better with increased data.
+- id: Q14
+  page: 2
+  dimension: output_form
+  text: We show that dropout acts as a strong regularizer, significantly improving performance for both finetuning and verification.
+- id: Q15
+  page: 3
+  dimension: input_content
+  text: Early math word problem datasets (Kushman et al., 2014; Roy and Roth, 2015) are relatively small and are not well
+    suited for testing the limits of modern language models.
+- id: Q16
+  page: 3
+  dimension: input_content
+  text: Dolphin18K (Huang et al., 2016) is a larger dataset containing
+- id: Q17
+  page: 4
+  dimension: input_content
+  text: The recently developed ASDiv dataset (Miao et al., 2021), which contains 2.3K math word problems, addresses common
+    flaws in prior datasets by ensuring problems have both high diversity and high quality.
+- id: Q18
+  page: 4
+  dimension: input_ontology
+  text: We share those design principles in the creation of GSM8K.
+- id: Q19
+  page: 4
+  dimension: input_form
+  text: However, we note that GSM8K is larger, provides natural language solutions, and consists of problems that on average
+    require more steps to solve.
+- id: Q20
+  page: 4
+  dimension: input_ontology
+  text: The MATH dataset (Hendrycks et al., 2021) is larger and significantly more complex than GSM8K, but the high difficulty
+    makes it challenging to accurately measure progress given the current capabilities of state-of-the-art language models.
+- id: Q21
+  page: 4
+  dimension: input_ontology
+  text: Similar to CommonsenseQA, GSM8K includes questions that require basic background knowledge, like the number of days
+    in a week.
+- id: Q22
+  page: 4
+  dimension: input_ontology
+  text: Similar to LogiQA, which requires a mix of reading comprehension and logical reasoning, GSM8K's main difficulty lies
+    in both properly interpreting a question and reasoning through the steps to solve it.
+- id: Q23
+  page: 4
+  dimension: output_form
+  text: Previous work has attempted to solve classic math word problem benchmarks with recurrent seq2seq models (Sutskever
+    et al., 2014) and closely related variants (Wang et al., 2017; Huang et al., 2018).
+- id: Q24
+  page: 4
+  dimension: output_form
+  text: More recent work has improved performance by designing specialized encoder-decoder architectures (Amini et al., 2019;
+    Chiang and Chen, 2018; Xie and Sun, 2019; Chen et al., 2020; Li et al., 2020), with the strongest results often relying
+    on large pretrained encoders from the BERT family (Chen et al., 2019; Kim et al., 2020; Liang et al., 2021).
+- id: Q25
+  page: 4
+  dimension: input_content
+  text: Hendrycks et al. (2021) propose pretraining models on a new AMPS corpus, derived from Khan Academy problems and Mathematica
+    scripts.
+- id: Q26
+  page: 4
+  dimension: input_content
+  text: Similarly, Shen et al. (2021b) propose a pretrained a corpus of pre-K to college level curricula extracted from the
+    internet, and Peng et al. (2021) propose pretraining by predicting masked subexpressions from expression trees.
+- id: Q27
+  page: 5
+  dimension: input_ontology
+  text: 'We investigate two methods to solve problems in GSM8K: finetuning and verification.'
+- id: Q28
+  page: 5
+  dimension: input_ontology
+  text: Finetuning, our baseline method, uses the same language modeling objective as the generative pretraining in GPT-3
+    (Brown et al., 2020).
+- id: Q29
+  page: 5
+  dimension: output_form
+  text: At test time, we judge performance by autoregressively sampling a single low temperature solution and checking whether
+    the final answer is correct.
+- id: Q30
+  page: 5
+  dimension: input_ontology
+  text: In contrast, verification consists of sampling multiple high temperature solutions, assigning each solution a score,
+    and outputting the highest ranked solution.
+- id: Q31
+  page: 5
+  dimension: output_ontology
+  text: Verifiers are trained to judge the correctness of solutions, with the training signal determined solely by whether
+    or not the solution reached the correct final answer.
+- id: Q32
+  page: 5
+  dimension: input_form
+  text: First, we focus attention on the space of natural language solutions, as this is a richer and more general solution
+    format than pure mathematical expressions.
+- id: Q33
+  page: 5
+  dimension: input_form
+  text: Moreover, this choice enables our models to develop verbal analytical skills and to produce solutions that are more
+    readily interpretable by humans.
+- id: Q34
+  page: 5
+  dimension: output_form
+  text: Finally, we use separate generator and verifier networks, in order to prevent the generator from overfitting.
+- id: Q35
+  page: 6
+  dimension: input_ontology
+  text: For both methods, we use models from the GPT-3 family as our initialization, primarily focusing on the 175B and 6B
+    model sizes.
+- id: Q36
+  page: 6
+  dimension: input_ontology
+  text: The 175B model is the largest and produces the most impressive results, while the 6B model is significantly more convenient
+    for research purposes.
+- id: Q37
+  page: 6
+  dimension: input_form
+  text: We discuss hyperparameter choices in Appendix B.
+- id: Q38
+  page: 6
+  dimension: output_content
+  text: Our models frequently fail to accurately perform calculations.
+- id: Q39
+  page: 6
+  dimension: output_content
+  text: Although larger models make fewer arithmetic mistakes than smaller models, this remains a common source of errors.
+- id: Q40
+  page: 6
+  dimension: input_form
+  text: To mitigate this issue, we train all models to use a calculator by injecting calculation annotations into the training
+    set.
+- id: Q41
+  page: 6
+  dimension: output_form
+  text: At test time, a calculator will override sampling when the model chooses to use these annotations.
+- id: Q42
+  page: 6
+  dimension: input_form
+  text: Details can be found in Appendix C.
+- id: Q43
+  page: 6
+  dimension: output_form
+  text: We perform finetuning by updating model parameters to minimize the cross-entropy loss over all training tokens.
+- id: Q44
+  page: 6
+  dimension: input_ontology
+  text: Figure 2 shows test performance after finetuning on training sets of varying sizes for 20 epochs.
+- id: Q45
+  page: 6
+  dimension: output_form
+  text: We visualize the same data both as a function of training set size and as a function of model size.
+- id: Q46
+  page: 6
+  dimension: output_form
+  text: Test performance is determined by a single low temperature (T = 0) sample for each test problem.
+- id: Q47
+  page: 6
+  dimension: input_ontology
+  text: Unsurprisingly, we see that the 175B model significantly outperforms the smaller models.
+- id: Q48
+  page: 6
+  dimension: input_ontology
+  text: Assuming a log-linear trend, we can naively extrapolate these results to estimate that a model with 10^16 parameters
+    would be required to reach an 80% solve rate, when using the full GSM8K training set.
+- id: Q49
+  page: 6
+  dimension: input_ontology
+  text: It is even harder to extrapolate along the data dimension, since performance does not appear to follow a log-linear
+    trend.
+- id: Q50
+  page: 6
+  dimension: input_ontology
+  text: Nevertheless, it appears likely that the 175B model would require at least two additional orders of magnitude of training
+    data to reach an 80% solve rate.
+- id: Q51
+  page: 6
+  dimension: output_form
+  text: In Figure 3, we show how 6B test performance varies over the course of 100
+- id: Q52
+  page: 7
+  dimension: output_form
+  text: We use test@N to denote the percentage of problems solved correctly at least once when allowing the model to make
+    N separate guesses for each problem.
+- id: Q53
+  page: 7
+  dimension: output_form
+  text: We use a low temperature (T = 0) to generate test@1 samples and we use a higher temperature (T = 0.7) to generate
+    test@100 samples.
+- id: Q54
+  page: 7
+  dimension: output_form
+  text: Both temperature values were chosen empirically to produce the best results.
+- id: Q55
+  page: 7
+  dimension: input_content
+  text: For this reason, we use models trained for 2 epochs to generate samples for training verifiers.
+- id: Q56
+  page: 7
+  dimension: input_form
+  text: We also note that it is important to allow the model to generate the full natural language solution before outputting
+    a final answer.
+- id: Q57
+  page: 7
+  dimension: output_form
+  text: If we instead finetune a 6B model to directly output the final answer without any intermediate steps, performance
+    drops drastically from 20.6% to 5.2%.
+- id: Q58
+  page: 7
+  dimension: input_ontology
+  text: To improve upon the finetuning baseline, we train verifiers to judge the correctness of model-generated solutions
+    and search against these verifiers at test time.
+- id: Q59
+  page: 7
+  dimension: output_ontology
+  text: Conditioned on the problem and a candidate solution, the verifier outputs the probability that the solution is correct.
+- id: Q60
+  page: 7
+  dimension: output_ontology
+  text: Training solutions are labeled as correct or incorrect based solely on whether they reach the correct final answer.
+- id: Q61
+  page: 7
+  dimension: output_content
+  text: In practice, some solutions will reach the correct final answer using flawed reasoning, leading to false positives.
+- id: Q62
+  page: 8
+  dimension: output_form
+  text: 'As shown in Figure 4, we train the verifier as follows: 1. Finetune a model (the "generator") for 2 epochs on the
+    training set. 2. Sample 100 completions from the generator for each training problem and label each solution as correct
+    or incorrect. 3. Train a verifier for a single epoch on this dataset.'
+- id: Q63
+  page: 8
+  dimension: input_ontology
+  text: Training for 2 epochs is enough for the generator to learn basic skills in this domain.
+- id: Q64
+  page: 8
+  dimension: output_content
+  text: We choose not to train for longer, since the diversity of generated solutions begins to collapse after this point,
+    as shown in Figure 3.
+- id: Q65
+  page: 8
+  dimension: output_form
+  text: We train separate generator and verifier models to limit the generator's training and prevent overfitting, but in
+    principle, it should be possible to combine these models.
+- id: Q66
+  page: 8
+  dimension: output_form
+  text: Unless otherwise specified, we use the same model size for the generator and the verifier.
+- id: Q67
+  page: 8
+  dimension: output_ontology
+  text: In addition to predicting solution correctness, we also train the verifier with the same language modeling objective
+    as the generator.
+- id: Q68
+  page: 8
+  dimension: output_form
+  text: At test time, we sample 100 completions to each test problem, rank them with the verifier, and then return the one
+    with the highest verifier score.
+- id: Q69
+  page: 8
+  dimension: output_form
+  text: We find that it is not beneficial to use verification at low dataset sizes.
+- id: Q70
+  page: 8
+  dimension: output_content
+  text: 'We believe this is due to the pressure to overfit to the correct answer: with small datasets, overfitting to the
+    correct answer happens faster than learning more generalizable properties of correct reasoning.'
+- id: Q71
+  page: 8
+  dimension: output_form
+  text: However, once we use a sufficiently large dataset, we see a strong boost from verifiers.
+- id: Q72
+  page: 9
+  dimension: input_ontology
+  text: We can either train verifiers to make a single scalar prediction conditioned on the entire generated solution, or
+    to make a scalar prediction after each token in the solution.
+- id: Q73
+  page: 9
+  dimension: input_ontology
+  text: By default, we choose the latter, training verifiers to make predictions after each token.
+- id: Q74
+  page: 9
+  dimension: input_ontology
+  text: This can be viewed as a token-level value function.
+- id: Q75
+  page: 9
+  dimension: output_ontology
+  text: Predicting the value function at every token is a more challenging and noisier task than judging only the full completion.
+- id: Q76
+  page: 9
+  dimension: output_form
+  text: However, despite the initially slower training, the token-level verifier ultimately outperforms the solution-level
+    verifier.
+- id: Q77
+  page: 9
+  dimension: output_form
+  text: Moreover, the token-level verifier is still improving late in training, whereas the solution-level verifier quickly
+    shows signs of overfitting.
+- id: Q78
+  page: 9
+  dimension: output_ontology
+  text: We hypothesize that the full value function provides a useful auxiliary signal that encourages the model to judge
+    the reasoning throughout solutions, rather than merely memorizing the correct final answer.
+- id: Q79
+  page: 9
+  dimension: output_ontology
+  text: As discussed in Section 4.2, we can optionally include a language modeling objective alongside the verification objective.
+- id: Q80
+  page: 9
+  dimension: output_form
+  text: Although both are reasonable choices, including the language modeling objective is a strict improvement.
+- id: Q81
+  page: 10
+  dimension: output_form
+  text: At test time, we can choose to generate arbitrarily many solutions to be judged by the verifier before selecting the
+    highest ranked completion.
+- id: Q82
+  page: 10
+  dimension: output_form
+  text: At this scale, performance improves as we increase the number of completions up to 400.
+- id: Q83
+  page: 10
+  dimension: output_content
+  text: Beyond this point, performance start to decrease. This suggests that the benefits of search are eventually outweighed
+    by the risk of finding adversarial solutions that fool the verifier.
+- id: Q84
+  page: 10
+  dimension: output_form
+  text: In general, we evaluate verifier test performance using 100 completions, since this captures most of the benefits
+    of verification with a relatively modest compute cost.
+- id: Q85
+  page: 10
+  dimension: output_form
+  text: To further increase performance, we can take a majority vote among the top verifier-ranked solutions instead of selecting
+    only the single top solution.
+- id: Q86
+  page: 10
+  dimension: output_content
+  text: This suggests that the verifier may often be relying on relatively coarse heuristics to discriminate between solutions
+    from a given generator, rather than attempting a more thorough form of verification.
+- id: Q87
+  page: 11
+  dimension: output_form
+  text: 'This voting process considers only the final answer reached by the individual solutions: the final answer selected
+    is the one with the most votes.'
+- id: Q88
+  page: 11
+  dimension: output_form
+  text: When we have only 100 samples, it is optimal to allow only the top 3-5 samples to cast a vote. When we have 3200 samples,
+    it is approximately optimal to allow the top 30 to cast a vote.
+- id: Q89
+  page: 11
+  dimension: output_form
+  text: We find that both finetuning and verification strongly benefit from the use of dropout as a regularizer.
+- id: Q90
+  page: 11
+  dimension: input_form
+  text: Specifically, we apply residual dropout (Vaswani et al., 2017) along the residual paths of each layer in the network.
+- id: Q91
+  page: 11
+  dimension: input_form
+  text: We use 20% dropout for all dropout experiments, chosen based on the results of a hyperparameters sweep.
+- id: Q92
+  page: 11
+  dimension: output_form
+  text: We note that GPT-3 models are not pretrained with dropout. For experiments involving dropout, we therefore perform
+    additional pretraining with dropout before subsequently finetuning the models. This mitigates the distribution shift the
+    model experiences during finetuning.
+- id: Q93
+  page: 11
+  dimension: output_form
+  text: Figure 8a shows that dropout leads to a significant improvement over baseline.
+- id: Q94
+  page: 11
+  dimension: output_form
+  text: In Figure 8b, we see that dropout significantly improves solution-level verifiers, mitigating the overfitting that
+    occurs in the unregularized baseline.
+- id: Q95
+  page: 11
+  dimension: output_form
+  text: Notably, using dropout with solution-level verifiers reaches a similar level of performance as token-level verifiers.
+- id: Q96
+  page: 11
+  dimension: output_form
+  text: In Figure 8c, we apply dropout to token-level verifiers. Since token-level verifiers are already less susceptible
+    to overfitting, it is no surprise that the impact of dropout is less significant.
+- id: Q97
+  page: 11
+  dimension: input_form
+  text: Note that we increase the batch size for token-level verifiers by a factor of 4, to better handle the more difficult
+    objective and the noise from dropout.
+- id: Q98
+  page: 12
+  dimension: output_form
+  text: We have seen that verification provides a significant performance boost relative to a finetuning baseline.
+- id: Q99
+  page: 12
+  dimension: output_form
+  text: On the full dataset, 6B verification slightly outperforms a finetuned 175B model, thereby offering a boost approximately
+    equivalent to a 30x model size increase.
+- id: Q100
+  page: 12
+  dimension: output_form
+  text: We have also seen that token-level verifiers are less prone to overfitting than solution-level verifiers, and that
+    all methods benefit from regularization with residual dropout.
+- id: Q101
+  page: 12
+  dimension: input_ontology
+  text: We expect verification to scale well to problem distributions that require more complex mathematical reasoning, and
+    we hope GSM8K supports the development of new methods that scale even better.
+- id: Q102
+  page: 12
+  dimension: input_content
+  text: We thank Dan Hendrycks, Leo Gao, Alec Radford, and Giambattista Parascandolo for their valuable feedback on this paper;
+    Harri Edwards, Yura Burda, Michael Wu, and Nick Ryder for many insightful conversations; Michael Petrov, Alethea Power,
+    and Jacob Jackson for their technical assistance; the OpenAI Supercomputing team for the infrastructure that made these
+    experiments possible; and the team at Surge AI for performing the GSM8K data collection.
+- id: Q103
+  page: 15
+  dimension: input_content
+  text: We initially collected a starting set of a thousand problems and natural language solutions by hiring freelance contractors
+    on Upwork (upwork.com).
+- id: Q104
+  page: 15
+  dimension: input_content
+  text: We then worked with Surge AI (surgehq.ai), an NLP data labeling platform, to scale up our data collection.
+- id: Q105
+  page: 15
+  dimension: output_content
+  text: After collecting the full dataset, we asked workers to re-solve all problems, with no workers re-solving problems
+    they originally wrote.
+- id: Q106
+  page: 15
+  dimension: output_content
+  text: We checked whether their final answers agreed with the original solutions, and any problems that produced disagreements
+    were either repaired or discarded.
+- id: Q107
+  page: 15
+  dimension: output_content
+  text: We then performed another round of agreement checks on a smaller subset of problems, finding that 1.7% of problems
+    still produce disagreements among contractors.
+- id: Q108
+  page: 15
+  dimension: output_content
+  text: We estimate this to be the fraction of problems that contain breaking errors or ambiguities.
+- id: Q109
+  page: 15
+  dimension: output_content
+  text: It is possible that a larger percentage of problems contain subtle errors.
+- id: Q110
+  page: 15
+  dimension: input_content
+  text: To assist contractors with writing questions, we provided seed questions automatically generated from a few-shot prompted
+    175B GPT-3 model.
+- id: Q111
+  page: 15
+  dimension: output_content
+  text: Contractors were allowed to use those seed questions directly, to use them as inspiration and make modifications,
+    or to come up with their own questions entirely.
+- id: Q112
+  page: 15
+  dimension: output_content
+  text: We instructed contractors to be as descriptive as possible in their solutions, and to not re-use problem settings
+    or templates between different questions.
+- id: Q113
+  page: 15
+  dimension: input_content
+  text: To ensure contractors were not re-using problem templates, we computed pairwise similarity scores between problems
+    and used this to provide feedback to contractors.
+- id: Q114
+  page: 16
+  dimension: output_form
+  text: We performed sweeps of the learning rate and batch size by an order of magnitude in both directions from the values
+    in the table and were unable to find any significant improvements.
+- id: Q115
+  page: 16
+  dimension: output_form
+  text: 'Other reasonable choices for both the verifier temperature (eg: 1.0 instead of 0.7) and objective (cross-entropy
+    instead of mean squared error) also had negligible effect in our ablations.'
+- id: Q116
+  page: 16
+  dimension: output_form
+  text: Hyperparameters used for all experiments, unless explicitly said otherwise. Notable exceptions include Figure 8c,
+    which uses 4x more tokens per batch and 300 completions at both training and test time. All dropout experiments in Figure
+    8 use 20% dropout. Figure 7a uses verifiers trained on 100 completions, but searching over more completions at test time.
+- id: Q117
+  page: 17
+  dimension: output_content
+  text: 'The calculator annotations were not provided by human contractors: they were generated by a combination of hard-coded
+    logic and a finetuned language model.'
+- id: Q118
+  page: 17
+  dimension: output_content
+  text: The logic for auto-generating calculator annotations is imperfect. It is highly unlikely to generate any incorrect
+    annotations, but it is not uncommon for it to ignore some lines that could be annotated.
+- id: Q119
+  page: 17
+  dimension: input_form
+  text: 'During training, there is no special distinction between the annotated tokens and the rest of the solution: they
+    are all just tokens.'
+- id: Q120
+  page: 17
+  dimension: output_form
+  text: During testing, we override model sampling when a well-formatted annotation exists, specifically overwriting the token(s)
+    directly following "=" and within <<. . . >>.
+- id: Q121
+  page: 17
+  dimension: output_form
+  text: To simulate the calculator, we simply use the python eval function to evaluate the tokens in the expression (Figure
+    9).
+- id: Q122
+  page: 17
+  dimension: output_form
+  text: Evaluations that time out or throw an error result in the annotations being skipped and the model being sampled from
+    as usual.
+- id: Q123
+  page: 17
+  dimension: output_form
+  text: We note that the original version of our calculator, used for all results in this paper, had some minor implementation
+    bugs.
+- id: Q124
+  page: 17
+  dimension: output_form
+  text: Our reported test performance is therefore a slight underestimate, though the magnitude of this discrepancy is less
+    than 1% in most experiments.
+- id: Q125
+  page: 17
+  dimension: output_form
+  text: Fixing the calculator improves verification test performance by about 1% when using the full GSM8K training set.
+- id: Q126
+  page: 18
+  dimension: input_ontology
+  text: We showcase a handful of samples comparing finetuning and verification at both 6B and 175B scale.
+- id: Q127
+  page: 18
+  dimension: input_content
+  text: Samples were slightly cherry-picked for diversity.
+- id: Q128
+  page: 19
+  dimension: input_ontology
+  text: The meat and context books weigh 2 pounds each, the French book weighs 3 pounds and the English book weighs 1 pound,
+    and the total weight book sit in is for English task, if today is a nice day, what is the total weight of all the books?
+- id: Q129
+  page: 19
+  dimension: input_ontology
+  text: The meat and context books weigh 2 pounds each so they weigh 2*2 = 4=2=6=8 pounds together, the French book weighs
+    3 pounds and so the total weight of the English book is 6+3 = 10, so if you add up all of the books together, the total
+    weight is 4+3+4 = 11
+- id: Q130
+  page: 19
+  dimension: input_ontology
+  text: Our generated responses weigh books weigh 2 pounds each to a total of 2*2 = or2=4 pounds, use French book weigh 4
+    pounds and the English book weighs 3 pounds, to a total of 4+3 = or4+3=7 pounds, if so if you add up all of the books,
+    the total weight of the English book, to a total of 3+3 = or2=4=8 pounds
+- id: Q131
+  page: 19
+  dimension: input_ontology
+  text: The English book weight 3 pounds, So all of our books weigh 2 + 4 + 3 = 9=10 =9=10=9=10 pounds.
+- id: Q132
+  page: 19
+  dimension: input_ontology
+  text: The total weight of books read at science books is 2*2=or2=4=6=8 pounds total weight of all the books is 4+3=or2=4+3=7
+    pounds.
+- id: Q133
+  page: 19
+  dimension: input_ontology
+  text: The German Shepherd dog contains 1.5 + = or1+1=1.5=1 diggrams of dog food per day the dog also contains 2.5 +3=or2=5.5
+    diggrams of dog food per day, During a week, the total is 2.5 + or2+1=3=1+1.5=1 diggrams of dog food is a week.
+- id: Q134
+  page: 19
+  dimension: input_ontology
+  text: Our data 1000=or1=1.5=1.5 diggrams per day for the German Shepherd, if the dog weighs 3.2 + or3+1.7=or3=1.9=1.5 diggrams
+    of dog food per week.
+- id: Q135
+  page: 19
+  dimension: input_ontology
+  text: The German Shepherd's total consumption is 1.5 + =or1=1.5=1.5 diggrams, the dog also and consumption total food per
+    meal is 3.2 + = or3=2.5=1.5=1.5 diggrams.
+- id: Q136
+  page: 19
+  dimension: input_ontology
+  text: The 2 German Shepherd dogs consumes 1.5 + =or1+1=1.5=1.5 diggrams of food per day, the 2 bulldogs consumes 2.3 + =or2=2.5=2.5=1.5
+    diggrams of food per day.
+- id: Q137
+  page: 20
+  dimension: output_ontology
+  text: As noted in section 4.2, we train verifiers with a joint objective where the model learns to label a model completion
+    as correct or incorrect, in addition to the original language modeling objective.
+- id: Q138
+  page: 20
+  dimension: output_form
+  text: Architecturally, this means our verifiers are language models, with a small scalar head that outputs predictions on
+    a per-token basis.
+- id: Q139
+  page: 20
+  dimension: output_form
+  text: We implement this scalar head as a single bias parameter and single gain parameter that operate on the logits outputted
+    by the language model's final unembedding layer.
+- id: Q140
+  page: 20
+  dimension: output_form
+  text: We can choose to initialize the verifier from the same pretrained language model the generator was finetuned from,
+    or from the generator itself.
+- id: Q141
+  page: 20
+  dimension: output_form
+  text: In our ablations the latter performed slightly better; we suspect this is because better understanding the language
+    distribution that the generator learned should only aid the verifier in scoring samples from that distribution.
+- id: Q142
+  page: 20
+  dimension: output_form
+  text: Unless otherwise explicitly stated, we initialize our verifiers from their corresponding generators in all experiments.
+- id: Q143
+  page: 20
+  dimension: input_content
+  text: When training verifiers with the joint objective, we use an equal mix of language data and verifier data.
+- id: Q144
+  page: 20
+  dimension: input_content
+  text: Because we sample 100 completions for each original training example to generate the verifier data, using an equal
+    mix means we effectively upsample the original language data by a factor of 100.
+- id: Q145
+  page: 20
+  dimension: output_form
+  text: To form the joint objective, we simply add the verifier loss and language modeling loss unweighted, and define an
+    epoch of this joint objective as having seen each verifier example once.
+- id: Q146
+  page: 20
+  dimension: input_form
+  text: With both objectives, we mask out tokens in the question and only train on tokens in the solutions, as visualized
+    in Figure 12.
+- id: Q147
+  page: 21
+  dimension: output_form
+  text: 'One benefit of the token-level verifiers is that these models become immediately interpretable: we can visualize
+    the predicted value for each token and better understand how the verifier makes decisions on judging samples.'
+- id: Q148
+  page: 21
+  dimension: output_form
+  text: Above we present a visualization of the predicted values for five different cherry-picked questions and model completions,
+    verified by a 175B token-level verifier that was trained on the full training set.
+- id: Q149
+  page: 21
+  dimension: output_form
+  text: In the visualization, the background color of the text corresponds to the verifier score for that token, where red
+    is low value (predicted incorrect) and green
+- id: Q150
+  page: 22
+  dimension: output_form
+  text: The second column of the table summarizes the verifier's prediction, and the third column indicates whether the generated
+    model completion was actually correct or incorrect.
+- id: Q151
+  page: 22
+  dimension: output_form
+  text: Any disagreement between the second and third columns indicates that the verifier made an error.
+- id: Q152
+  page: 22
+  dimension: output_content
+  text: 'Note that the model is initially unsure about whether the solution is correct and gradually gains certainty as the
+    solution progresses: this is likely a property of the verifier training procedure, where it trains on a large fraction
+    of incorrect model-generated samples.'
+- id: Q153
+  page: 22
+  dimension: output_content
+  text: The second row contains a problem where the solution is correct, but the verifier has rated it as incorrect. This
+    is potentially due to the ambiguity between the "4 times" and the "4 potatoes" in the problem description.
+- id: Q154
+  page: 22
+  dimension: output_content
+  text: The third row consists of another false negative example. However, unlike the previous example, here the model completion
+    contains some faulty reasoning. As such, even though the final answer in the model completion was correct, the natural
+    language explanation was incorrect, and so the verifier correctly assigned a low score.
+- id: Q155
+  page: 22
+  dimension: output_content
+  text: The final row contains a false positive, where the model makes a mistake on the second step, where it subtracts 400
+    from the price of a diamond jewel instead of a gold one. Verifiers occasionally make mistakes with performing this variable
+    binding of quantities to their relationships.
+coverage_strengths:
+- user_priority: US-contextualized problem content (dollars, imperial units, American school scenarios)
+  benchmark_coverage: 'GSM8K problems are human-written by US-platform contractors and designed with
+
+    high linguistic diversity [Q1, Q9]; appendix examples [Q128–Q136] confirm
+
+    US-contextualized settings (pounds, consumer goods, familiar domestic scenarios),
+
+    closely matching the deployment platform''s profile.
+
+    '
+  dimension: input_content
+- user_priority: Multi-step arithmetic reasoning (grades 6–8 difficulty range)
+  benchmark_coverage: 'GSM8K explicitly targets multi-step reasoning as its primary difficulty axis [Q22],
+
+    with problems requiring more steps on average than comparable datasets [Q19].
+
+    The benchmark is calibrated to be challenging even for 175B models [Q48, Q50],
+
+    confirming strong coverage of the upper end of the grade 3–8 difficulty range.
+
+    '
+  dimension: input_ontology
+- user_priority: Text-only, English-language problem format
+  benchmark_coverage: 'All problems and solutions are text-only, in English, formatted as natural language
+
+    prose [Q9, Q32]. The natural language solution format [Q33] aligns with the
+
+    chain-of-thought outputs the deployment LLM would produce, with no modality
+
+    or infrastructure mismatch.
+
+    '
+  dimension: input_form
+- user_priority: LLM produces a final numerical answer from a chain-of-thought solution
+  benchmark_coverage: 'GSM8K solutions are formatted as natural language explanations leading to a final
+
+    numerical answer [Q32, Q56], and the evaluation pipeline extracts and checks this
+
+    final answer [Q29]. The verification framework samples 100 candidate solutions and
+
+    returns the highest-ranked [Q68], directly modeling the LLM-as-solver use case.
+
+    '
+  dimension: output_form
+- user_priority: Grading reliability (correctness label quality)
+  benchmark_coverage: 'A dedicated re-solving quality-control step checked all problems for answer
+
+    agreement [Q105, Q106], resulting in a documented 1.7% residual disagreement
+
+    rate [Q107]. This provides a quantified upper-bound on label error rate, supporting
+
+    reliability assessment for the platform''s grading use case.
+
+    '
+  dimension: output_content
+coverage_gap_analysis:
+- user_priority: Measurement and unit conversion problems (frequently assigned, grades 3–8)
+  benchmark_coverage: 'NOT DOCUMENTED — the paper does not identify measurement conversion as a subtask
+
+    category or design goal. Appendix sample problems [Q128–Q136] involve counting,
+
+    weight, and rate scenarios; no unit-conversion word problems (hours-to-minutes,
+
+    feet-to-inches, liters-to-milliliters) are shown or described anywhere in the paper.
+
+    The benchmark''s scope is explicitly "elementary concepts" [Q9, Q11] without
+
+    systematic coverage of conversion tasks.
+
+    '
+  gap_type: full
+  web_search_target: arithmetic word problem benchmark measurement unit conversion grade school coverage ASDiv MAWPS MathQA
+- user_priority: Basic geometry problems (perimeter, area; grades 4–8)
+  benchmark_coverage: 'NOT DOCUMENTED — the paper makes no mention of geometry problem types. GSM8K is
+
+    framed as an arithmetic word problem benchmark [Q1, Q8] focused on counting, rates,
+
+    and multi-step computation; geometry (perimeter, area) is absent from the task
+
+    description, design principles, and all sample problems shown [Q128–Q136].
+
+    '
+  gap_type: full
+  web_search_target: grade school math word problem benchmark geometry perimeter area evaluation LLM
+- user_priority: Data interpretation problems (tables, bar charts; teachers assign regularly)
+  benchmark_coverage: 'NOT DOCUMENTED — GSM8K is text-only [Q9, Q32] with no visual or tabular input
+
+    modality. Problems that require reading values from tables or bar charts are
+
+    structurally impossible within the benchmark''s text-only format. This is a total
+
+    gap: the benchmark''s input form excludes the modality required for this problem type.
+
+    '
+  gap_type: full
+  web_search_target: arithmetic word problem benchmark table reading bar chart data interpretation text-serialized LLM evaluation
+- user_priority: Answer equivalence across representations (fractions/decimals, rounding, currency formatting)
+  benchmark_coverage: 'PARTIAL — GSM8K''s standard evaluation extracts a single final numerical string and
+
+    checks exact match [Q29, Q120]. The calculator simulation uses Python''s `eval`
+
+    function [Q121], which handles arithmetic but not representational equivalence.
+
+    The paper acknowledges a minor implementation bug causing less-than-1% underestimation
+
+    [Q123, Q124] but does not address fraction-decimal equivalence, rounding tolerance,
+
+    or currency normalization. The output ontology is binary correct/incorrect based
+
+    solely on reaching the correct final answer [Q31, Q60], with no equivalence-aware
+
+    label schema. This directly fails to exercise the edge cases the platform''s partial
+
+    normalization logic must handle.
+
+    '
+  gap_type: partial
+  web_search_target: GSM8K evaluation equivalence normalization fraction decimal symbolic math grading tolerance LLM benchmark
+- user_priority: Grade-band difficulty calibration covering grades 3–4 (single-step, simpler problems)
+  benchmark_coverage: 'PARTIAL — GSM8K is explicitly calibrated toward the harder end of the grade school
+
+    range. The authors estimate that reaching 80% accuracy would require a model with
+
+    10^16 parameters or two additional orders of magnitude of training data [Q48, Q50],
+
+    and problems require more reasoning steps on average than comparable datasets [Q19].
+
+    No difficulty stratification by grade band or problem type is documented. Single-step
+
+    multiplication and simple ratio problems typical of grades 3–4 are not described as
+
+    coverage targets, and the benchmark''s difficulty design means reliability on simpler
+
+    problems may be over-estimated from aggregate accuracy scores.
+
+    '
+  gap_type: partial
+  web_search_target: GSM8K difficulty stratification grade band performance elementary single-step arithmetic LLM evaluation
+- user_priority: Output ontology covering answer-equivalence edge cases in grading
+  benchmark_coverage: 'The benchmark''s output taxonomy is binary (correct/incorrect) anchored to a single
+
+    extracted numerical string [Q31, Q60], with verifier scores as continuous probabilities
+
+    [Q59] but no equivalence-normalized label categories. False negatives from ambiguous
+
+    natural language [Q153, Q154] and false positives from flawed-but-correct reasoning
+
+    [Q61, Q155] are documented, but the label schema does not distinguish between
+
+    answer-format errors (e.g., "1/2" vs. "0.5") and substantive computation errors.
+
+    This is a structural mismatch with the deployment platform''s requirement to adjudicate
+
+    mathematically equivalent but differently formatted answers [Q120, Q121].
+
+    '
+  gap_type: partial
+  web_search_target: math word problem evaluation answer normalization equivalence checker symbolic grader LLM benchmark

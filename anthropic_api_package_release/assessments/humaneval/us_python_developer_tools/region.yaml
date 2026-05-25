@@ -1,0 +1,336 @@
+name: US Professional Software Engineers — Python IDE Inline Completion
+abbreviation: US-SE-PY
+deployment_context:
+  product_type: Inline Python code completion feature embedded in a software IDE
+  trigger: User writes a function signature or docstring; system autocompletes the
+    function body
+  evaluation_mechanism: Automated unit test execution (pass/fail per completion)
+  deploying_organization_type: US-based developer tools company
+  deployment_geography: United States (primary user base)
+target_population:
+  description: Professional software engineers in the United States who use Python
+    IDEs as part of their daily development workflow. The population is defined by
+    occupational practice rather than cultural identity, geographic sub-region, or
+    demographic cohort. No significant sub-national, demographic, or linguistic variation
+    is expected to affect benchmark validity.
+  role: Professional software engineer
+  seniority_range: Mixed — junior through senior; the feature is used across experience
+    levels
+  primary_activity: Writing Python functions, data manipulation pipelines, web service
+    handlers, and async I/O code in an IDE environment
+languages:
+  natural_language: English (docstrings, comments, variable names, internal documentation)
+  programming_language: Python (primary; the benchmark and deployment are Python-only)
+  script: Latin (ASCII/UTF-8 identifiers and docstrings; no non-Latin script considerations
+    apply)
+  multilingual_notes: No significant non-English user segment is expected. The population
+    is defined by professional coding practice; English is the de facto standard for
+    Python docstrings and inline comments in this context.
+professional_context:
+  primary_completion_categories:
+  - Data manipulation (pandas, numpy)
+  - Web framework route handlers (Flask, FastAPI, Django)
+  - Async/await I/O patterns
+  - Heavily type-annotated functions with complex signatures
+  - General-purpose algorithmic / string-manipulation functions (interview-style,
+    matching HumanEval scope)
+  production_gap_note: General-purpose algorithmic correctness is the initial evaluation
+    focus, but the team acknowledges this covers only a subset of production usage
+    patterns. The majority of real completions involve library-dependent, framework-idiomatic,
+    or async code.
+  typical_file_context: Most real completions are made in files that already contain
+    third-party imports (requests, sqlalchemy, pandas, fastapi), internal helper module
+    references, or type annotation imports. Self-contained, dependency-free function
+    synthesis is atypical of production usage.
+  style_and_idiomaticity_importance: Users reject non-idiomatic completions even when
+    functionally correct. Efficiency matters for hot-path code. Two passing solutions
+    are considered substantively different in quality by end users.
+  evaluation_signal_hierarchy:
+  - rank: 1
+    signal: Functional correctness (unit test pass/fail)
+    automation: fully automated
+  - rank: 2
+    signal: Idiomaticity and style
+    automation: not yet automated for this deployment; harder to measure but confirmed
+      user-relevant
+  - rank: 3
+    signal: Efficiency / performance of generated code
+    automation: not yet automated
+infrastructure_and_environment:
+  interface_modality: Text-in (English docstring + Python signature) / code-out (Python
+    function body)
+  ide_integration: Inline completion within a Python IDE (e.g., VS Code, PyCharm,
+    or similar)
+  execution_environment: Standard Python interpreter; sandboxed unit test execution
+    for evaluation
+  platform_notes: No special infrastructure constraints. High-resource Latin-script
+    language; standard compute environment. No mobile or low-bandwidth considerations
+    apply to this population.
+  python_version_considerations: 'Python 3.11–3.13 are the dominant versions in professional
+    use as of 2024. The PSF/JetBrains Python Developers Survey 2024 (30,000+ respondents,
+    Oct–Nov 2024) reports that only 6% of users remain on end-of-life Python 3.8 and
+    below, and nearly 75% use one of the three most recent releases; Python 3.12 held
+    the highest individual share at time of survey. Python 3.13 introduced free-threaded
+    (no-GIL) mode as an opt-in experimental feature. Async/await syntax (stable since
+    3.5) and PEP 484/526 type annotations (fully supported since 3.5/3.6) are available
+    in all non-EOL versions, but newer pattern-matching (3.10+) and exception-group
+    (3.11+) syntax will not appear in HumanEval completions. Benchmark results generated
+    on older Python interpreters may silently pass/fail differently on 3.12+ due to
+    stdlib changes. Source: PSF/JetBrains Python Developers Survey 2024 — [|https://lp.jetbrains.com/python-developers-survey-2024/|];
+    The Register coverage of survey results — [|https://www.theregister.com/2025/08/19/python_survey/|]'
+  prevalent_third_party_libraries:
+  - pandas
+  - numpy
+  - requests
+  - SQLAlchemy
+  - FastAPI
+  - Flask
+  - Django
+  - pytest (for test execution)
+  prevalent_ide_environments: 'VS Code is the primary IDE for Python developers as
+    of the 2024 PSF/JetBrains survey (48% primary-IDE share, up from 41% in 2023),
+    followed by PyCharm at 25% (down from 31%). Jupyter Notebook/JupyterLab is a significant
+    secondary environment, used by 53% of VS Code users and 37% of PyCharm users for
+    notebook-mode work. Many developers multi-home: 58%+ use additional IDEs alongside
+    their primary choice. The Stack Overflow Developer Survey 2024 shows VS Code at
+    73.6% usage across all developers (all languages). Note: these figures are global/cross-country;
+    US-specific breakdowns are not separately published, but the trend is consistent
+    with the global pattern. Source: PSF/JetBrains Python Developers Survey 2024 —
+    [|https://lp.jetbrains.com/python-developers-survey-2024/|]; The Register survey
+    analysis — [|https://www.theregister.com/2025/08/19/python_survey/|]; Stack Overflow
+    Developer Survey 2024 (via secondtalent.com) — [|https://www.secondtalent.com/resources/ide-statistics/|]'
+benchmark_fit_summary:
+  benchmark: HumanEval
+  overall_fit: Partial — strong fit for input/output form and evaluation mechanism;
+    significant gaps in problem taxonomy and scoring function relative to production
+    usage
+  dimension_assessments:
+  - dimension: input_ontology
+    priority: MODERATE
+    fit: Partial
+    notes: HumanEval covers general algorithmic, string-manipulation, and mathematical
+      problems. A large fraction of real completions involve pandas/numpy, Flask/FastAPI,
+      async/await, and typed APIs — categories absent from HumanEval's problem set.
+      Accepted as a lower-bound starting point.
+  - dimension: input_content
+    priority: HIGH
+    fit: Low
+    notes: HumanEval problems are self-contained with no external imports or dependencies.
+      The majority of real completions reference third-party libraries, internal helpers,
+      or module-level imports already present in the file. This systematically undercounts
+      actual task difficulty.
+  - dimension: input_form
+    priority: LOWER
+    fit: High
+    notes: English docstring + Python function signature as prompt; code-out format.
+      Precise match with IDE deployment. No modality, script, or infrastructure mismatch.
+  - dimension: output_ontology
+    priority: HIGH
+    fit: Partial
+    notes: Binary pass/fail discards idiomaticity, efficiency, and style — qualities
+      confirmed as substantively important to users. Two passing solutions are not
+      equivalent from the user's perspective.
+  - dimension: output_content
+    priority: LOWER
+    fit: High
+    notes: Ground-truth labels are objective unit-test outcomes. The user population
+      shares the same technical and cultural tradition as benchmark designers. No
+      annotator perspective mismatch.
+  - dimension: output_form
+    priority: LOWER
+    fit: High
+    notes: Open-ended Python function body output matches the deployment output modality
+      exactly.
+flagged_gaps_for_web_search:
+- gap_id: 1
+  label: Library-dependent and repo-context completion benchmarks
+  description: Majority of real completions reference pandas, SQLAlchemy, requests,
+    FastAPI, or internal helpers. HumanEval is entirely dependency-free.
+  search_targets:
+  - DS-1000 benchmark data science code generation evaluation
+  - SWE-bench repository-level Python completion evaluation
+  - RepoEval multi-file context Python completion
+  - ClassEval class-level Python code generation
+  - HumanEval extensions library-aware context 2022 2023 2024
+  resolution: 'Multiple benchmarks now cover library-dependent and repo-level completion.
+    DS-1000 (Lai et al., 2022/ICML 2023) provides 1,000 data-science problems across
+    seven libraries (NumPy, Pandas, TensorFlow, PyTorch, SciPy, scikit-learn, Matplotlib),
+    sourced from StackOverflow, with multi-criteria evaluation (functional correctness
+    + API-usage constraints); false-accept rate is only 1.8% on Codex-002 predictions.
+    ClassEval (Du et al., 2023) offers 100 class-level Python tasks with library,
+    field, and method dependencies, directly modeling real-world class-level completion.
+    SWE-bench (Jimenez et al., ICLR 2024) provides 2,294 repository-level tasks drawn
+    from real GitHub issues across 12 Python repositories, requiring multi-file patching;
+    SWE-bench Verified (OpenAI, Aug 2024) is a human-validated subset that corrects
+    earlier leakage and test-coverage issues. For the deployment, DS-1000 is the most
+    immediately applicable supplement to HumanEval for the pandas/numpy dimension;
+    SWE-bench covers repo-context but is more relevant to agentic coding scenarios
+    than inline completion.
+
+    Sources: DS-1000 paper — [|https://arxiv.org/abs/2211.11501|]; DS-1000 project
+    page — [|https://ds1000-code-gen.github.io/|]; ClassEval summary — [|https://www.evidentlyai.com/blog/llm-coding-benchmarks|];
+    SWE-bench OpenAI Verified announcement — [|https://openai.com/index/introducing-swe-bench-verified/|]'
+- gap_id: 2
+  label: Async/await and type-annotated signature benchmarks
+  description: HumanEval problems are synchronous and minimally typed. Users frequently
+    write async I/O and complex typed signatures.
+  search_targets:
+  - Python async await code generation benchmark evaluation 2022 2023 2024
+  - PEP 484 type annotation code completion benchmark
+  - typed Python function synthesis LLM evaluation
+  resolution: '[NOT FOUND — Searched for benchmarks specifically targeting Python
+    async/await code generation and PEP 484 type-annotated function synthesis. No
+    dedicated benchmark for these patterns was found in the literature. The SWE-bench
+    paper notes that models ''write primitive Python code and do not leverage existing
+    third-party libraries'' and show ''little regard for code style or logical constraints''
+    (Jimenez et al., 2024), but async/await and typed-signature evaluation remains
+    an unaddressed gap in published benchmark suites as of 2024. This is a genuine
+    documentation gap in the field, not a thin culture.]'
+- gap_id: 3
+  label: Web framework boilerplate benchmarks (Flask/FastAPI/Django route handlers,
+    ORM patterns)
+  description: Route-handler and ORM-pattern completion is a distinct category absent
+    from HumanEval.
+  search_targets:
+  - Flask FastAPI Django code generation benchmark evaluation
+  - web framework Python boilerplate completion LLM 2022 2023 2024
+  - REST API route handler code synthesis benchmark
+  resolution: '[NOT FOUND — No benchmark specifically targeting Flask/FastAPI/Django
+    route-handler or ORM-pattern completion was found in the literature. The PSF/JetBrains
+    2024 survey confirms FastAPI is the fastest-growing Python web framework (38%
+    adoption in 2024, up from 29% in 2023), underscoring the deployment relevance
+    of this gap. This is an unaddressed evaluation gap in the field. Source for FastAPI
+    adoption: The Register coverage of PSF/JetBrains 2024 survey — [|https://www.theregister.com/2025/08/19/python_survey/|]]'
+- gap_id: 4
+  label: Idiomaticity and style evaluation metrics
+  description: Users reject non-idiomatic passing completions. Binary pass@k does
+    not capture this dimension.
+  search_targets:
+  - Python code idiomaticity style evaluation LLM benchmark
+  - pylint flake8 automated style scoring code generation
+  - cyclomatic complexity LLM code quality metric
+  - human preference annotation code completion idiomaticity 2022 2023 2024
+  resolution: 'Two relevant approaches were found. CodeArena (2024, arxiv 2412.05210)
+    is a human-curated benchmark of 397 samples across 40 categories and 44 languages,
+    designed to assess alignment with human coding preferences beyond functional correctness;
+    it reveals a notable performance gap between execution-based benchmarks and preference-based
+    scoring, and shows differences among 40+ LLMs. BigCodeArena (2024, arxiv 2510.08697)
+    is a crowdsourced evaluation platform collecting human pairwise preferences on
+    LLM-generated code with live execution, covering 10 languages and 8 execution
+    environments, accumulating 14K+ conversation sessions. Neither benchmark is Python-specific
+    or explicitly measures idiomaticity via linting/cyclomatic-complexity scores,
+    but both represent the field''s best current proxies for style and preference
+    alignment beyond pass@k. No automated linting-score-based evaluation benchmark
+    (pylint/flake8 as primary metric) was found in the literature.
+
+    Sources: CodeArena paper — [|https://arxiv.org/pdf/2412.05210|]; BigCodeArena
+    paper — [|https://arxiv.org/pdf/2510.08697|]'
+- gap_id: 5
+  label: HumanEval unit test coverage adequacy and false-negative rate
+  description: Average 7.7 tests per problem; known critique that tests may fail to
+    distinguish genuinely incorrect from correct completions.
+  search_targets:
+  - EvalPlus HumanEval augmented test cases coverage
+  - HumanEval unit test false negative rate evaluation reliability
+  - HumanEval test suite coverage adequacy critique 2022 2023 2024
+  resolution: 'EvalPlus (Liu et al., NeurIPS 2023) directly addresses this gap. It
+    creates HumanEval+, expanding HumanEval''s test suite by 80× (from avg 7.7 to
+    avg 764 test cases per problem via LLM-based seed generation and type-aware mutation).
+    Across 26 popular LLMs, pass@k scores on HumanEval+ drop 19.3–28.9% relative to
+    base HumanEval — quantifying how much the original test suite over-credits models.
+    Model rankings also flip (e.g., WizardCoder-CodeLlama outperforms ChatGPT on HumanEval+
+    despite the reverse on base HumanEval). EvalPlus also found and corrected errors
+    in 11% of original HumanEval ground-truth solutions. This is the strongest available
+    evidence that HumanEval''s limited test count materially inflates reliability
+    for the deployment''s primary correctness signal. The EvalPlus team recommends
+    HumanEval+ as the preferred evaluation in serious pipelines.
+
+    Sources: EvalPlus NeurIPS 2023 paper (proceedings PDF) — [|https://proceedings.neurips.cc/paper_files/paper/2023/file/43e9d647ccd3e4b7b5baab53f0368686-Paper-Conference.pdf|];
+    EvalPlus GitHub repo — [|https://github.com/evalplus/evalplus|]; AlphaXiv EvalPlus
+    summary — [|https://www.alphaxiv.org/benchmarks/university-of-illinois-at-urbana-champaign/evalplus|]'
+population_specific_validity_notes:
+  construct_irrelevant_variance_sources:
+  - Self-contained problem structure of HumanEval understates difficulty relative
+    to library-dependent real completions, introducing downward bias in difficulty
+    estimation.
+  - Binary pass@k treats all passing completions as equivalent, obscuring quality
+    variation that is meaningful to the target population.
+  - 'HumanEval''s limited per-problem test count (avg 7.7) inflates pass rates: EvalPlus
+    showed 19–29% score drops across 26 models when the suite was expanded 80× to
+    HumanEval+, meaning the original benchmark over-credits models and the deployment
+    team should treat raw HumanEval scores with corresponding caution.'
+  construct_underrepresentation_sources:
+  - Async/await patterns are absent from HumanEval; a growing share of professional
+    Python code uses these patterns. No dedicated benchmark was found in the literature
+    to fill this gap.
+  - Type-annotated complex signatures are absent; modern Python engineering practice
+    increasingly requires typed code. No dedicated benchmark was found.
+  - Web framework idioms (route decorators, ORM session management, dependency injection)
+    are absent. FastAPI adoption among Python developers grew from 29% to 38% in 2024
+    alone (PSF/JetBrains survey), amplifying this gap. No dedicated benchmark was
+    found.
+  cultural_and_institutional_notes: No significant cultural or institutional mismatch
+    between the benchmark designers and the target population. Both are professional
+    software engineers operating within the US/Global North Python ecosystem. Benchmark
+    problems were authored in the same technical tradition as the deployment users.
+  language_and_script_notes: Full alignment — English docstrings, Python source, Latin
+    script, no localization considerations.
+  test_reliability_note: 'HumanEval''s limited per-problem test count (avg 7.7) is
+    now formally quantified as a reliability problem by EvalPlus (NeurIPS 2023): scores
+    drop 19.3–28.9% under an 80× expanded test suite across 26 LLMs, and 11% of original
+    ground-truth solutions contained errors. The deployment team should use HumanEval+
+    (available at https://github.com/evalplus/evalplus) rather than base HumanEval
+    as the minimum evaluation bar. Source: [|https://proceedings.neurips.cc/paper_files/paper/2023/file/43e9d647ccd3e4b7b5baab53f0368686-Paper-Conference.pdf|]'
+  pass_at_k_deployment_mismatch: HumanEval's pass@k metric assumes oracle access to
+    unit tests for ranking. The deployment returns a single ranked completion to the
+    user without test access. The paper recommends mean token log probability as a
+    selection heuristic for this setting, but no idiomaticity signal is incorporated.
+    CodeArena and BigCodeArena represent emerging alternatives that incorporate human
+    preference but are not yet deployment-ready as drop-in replacements.
+fields_intentionally_omitted:
+- literacy_rates — not relevant; population is professional engineers with full technical
+  literacy
+- minority_languages — not applicable; population defined by occupational practice,
+  English-only context
+- traditional_medicine_practices — not applicable
+- regional_trade_blocs — not applicable
+- mobile_infrastructure / bandwidth — not applicable; standard developer workstation
+  environment
+- cultural_norms — no cultural identity dimension affects benchmark validity for this
+  population
+net_new_fields:
+  evalplus_recommendation: 'EvalPlus (NeurIPS 2023) is the most immediately actionable
+    upgrade to this deployment''s evaluation pipeline. It expands HumanEval to 80×
+    more test inputs (HumanEval+), corrects errors in 11% of ground-truth solutions,
+    and produces score drops of 19–29% across state-of-the-art models — quantifying
+    the exact false-negative risk flagged in the benchmark fit summary. The team should
+    adopt HumanEval+ as the minimum baseline before investing in domain-specific extensions.
+    Source: EvalPlus GitHub — [|https://github.com/evalplus/evalplus|]'
+  ds1000_as_supplement: 'DS-1000 (Lai et al., ICML 2023) is the most directly applicable
+    supplement to HumanEval for the pandas/numpy dimension of the deployment gap.
+    It provides 1,000 data-science problems across seven libraries with multi-criteria
+    evaluation (functional correctness + API-usage constraints) and a false-accept
+    rate of only 1.8%, sourced from real StackOverflow questions. Adopting DS-1000
+    alongside HumanEval+ would materially close the input_content and input_ontology
+    gaps identified in the benchmark fit summary. Source: DS-1000 arXiv paper — [|https://arxiv.org/abs/2211.11501|];
+    project page — [|https://ds1000-code-gen.github.io/|]'
+  swebench_for_repo_context: 'SWE-bench (Jimenez et al., ICLR 2024) provides 2,294
+    repository-level tasks from real GitHub issues across 12 Python repositories,
+    validated by SWE-bench Verified (OpenAI, Aug 2024). It is more relevant to agentic
+    multi-file editing than inline completion, but its finding that models ''write
+    primitive Python code and do not leverage existing third-party libraries'' directly
+    corroborates the input_content gap. Source: SWE-bench Verified announcement —
+    [|https://openai.com/index/introducing-swe-bench-verified/|]'
+  fastapi_adoption_trend: 'FastAPI grew from 29% to 38% adoption among Python developers
+    between the 2023 and 2024 PSF/JetBrains surveys, making it the fastest-growing
+    major Python web framework. This amplifies the web-framework boilerplate gap (gap_id
+    3) and means the production-distribution mismatch with HumanEval is widening year
+    over year. Source: The Register coverage of PSF/JetBrains 2024 survey — [|https://www.theregister.com/2025/08/19/python_survey/|]'
+  human_preference_benchmarks_emerging: 'CodeArena (arxiv 2412.05210, Dec 2024) and
+    BigCodeArena (arxiv 2510.08697, Oct 2024) represent the current frontier for measuring
+    LLM code quality via human preference rather than binary pass/fail. Neither is
+    Python-specific or directly deployable as a production evaluation metric, but
+    both confirm that execution-based benchmarks and human-preference rankings diverge
+    systematically — validating the output_ontology gap identified in the benchmark
+    fit summary. Sources: CodeArena — [|https://arxiv.org/pdf/2412.05210|]; BigCodeArena
+    — [|https://arxiv.org/pdf/2510.08697|]'

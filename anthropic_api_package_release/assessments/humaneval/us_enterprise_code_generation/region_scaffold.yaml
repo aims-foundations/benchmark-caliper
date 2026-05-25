@@ -1,0 +1,281 @@
+name: US Enterprise Software Architects — Full-Stack Scaffolding Generation
+abbreviation: US-ESA-SCAFFOLD
+assessment_context:
+  benchmark: humaneval
+  deployment_use_case: LLM evaluation for generating complete full-stack web application
+    scaffolding (database schemas, API routes, frontend component stubs, deployment
+    configurations) from multi-page semi-structured requirements documents (Confluence/PRDs).
+  evaluating_organization_type: US enterprise software company (internal AI capability
+    evaluation)
+  primary_region: United States
+  sub_national_scope: No formal sub-national boundary; user population is implicitly
+    concentrated in US tech-industry hubs (e.g., San Francisco Bay Area, Seattle,
+    New York, Austin, Boston). Remote/distributed teams also represented.
+target_population:
+  description: American software architects and senior engineers employed at a US
+    enterprise software company who are evaluating LLM-generated full-stack scaffolding.
+    They are the end-users and primary graders of model output. They possess strong
+    technical expertise across multiple layers of a modern web stack and grade outputs
+    against an internal architecture guide rather than purely algorithmic correctness.
+  occupation_cohort: Software architects and senior software engineers
+  seniority_level: Senior / Staff / Principal (architecture-decision makers)
+  organizational_role: Primary consumers and evaluators of LLM-generated scaffolding;
+    authors and custodians of the internal architecture guide used as the grading
+    rubric
+  team_context: Enterprise software product teams; evaluation context is pre-deployment
+    capability assessment, not production use
+languages:
+  primary:
+  - English (US)
+  code_languages:
+  - Python (FastAPI, SQLAlchemy, Pydantic)
+  - SQL (PostgreSQL dialect)
+  - TypeScript / JavaScript (React, Next.js, Angular)
+  - Java (Spring Boot)
+  - YAML (Docker Compose, Kubernetes manifests)
+  - HCL (Terraform)
+  - Bash / shell (CI/CD scripts)
+  natural_language_input_form: English-language semi-structured PRD / Confluence documents
+    (3–10 pages, consistent headings but variable prose)
+writing_systems:
+  scripts:
+  - Latin (ASCII + Unicode; standard US English prose and code)
+  note: All specification inputs and expected outputs are in US English / standard
+    ASCII-compatible code. No CJK, RTL, or special-script handling required. Tokenization
+    challenges are code-specific (e.g., camelCase, snake_case, kebab-case identifiers)
+    rather than script-level.
+technical_literacy:
+  general_literacy: Near-universal among target population (professional engineers)
+  code_literacy: Expert — primary graders are software architects fluent in multiple
+    languages and frameworks
+  ai_tool_familiarity: '[NEEDS VERIFICATION — estimated high given tech-hub concentration;
+    specific survey data on enterprise architect LLM familiarity not available]'
+  note: Population is not a lay-user cohort; all output evaluation is conducted by
+    domain experts capable of identifying syntactic, semantic, and architectural errors.
+technology_stack:
+  primary_stack:
+    backend_framework: FastAPI (Python)
+    orm: SQLAlchemy
+    schema_validation: Pydantic
+    database: PostgreSQL
+    frontend_framework: React / Next.js
+    language: TypeScript
+  secondary_stack:
+    backend_framework: Spring Boot (Java)
+    database: MySQL
+    frontend_framework: Angular
+    language: TypeScript / Java
+  deployment_targets:
+    containerization: Docker (Docker Compose for local dev)
+    orchestration: Kubernetes
+    cloud_provider: AWS
+    iac_tooling: Terraform (occasional use)
+  auxiliary_tooling:
+    api_style: REST (primary); GraphQL (mentioned as possibility)
+    ci_cd: '[NEEDS VERIFICATION — specific CI/CD toolchain not specified in elicitation]'
+    linting_formatting: '[NEEDS VERIFICATION — specific linters/formatters (e.g.,
+      Black, ESLint, Prettier, Checkstyle) not confirmed but implied by linting correctness
+      requirement]'
+    testing_frameworks: '[NEEDS VERIFICATION — pytest, Jest, JUnit assumed but not
+      confirmed]'
+artifact_layers_under_evaluation:
+  layer_priority: All four layers required; database schema and API routes are highest
+    priority due to refactoring cost
+  layers:
+  - layer: Database schema
+    artifact_types:
+    - SQL DDL (PostgreSQL)
+    - SQLAlchemy ORM models
+    - MySQL DDL (secondary stack)
+    criticality: HIGHEST — hardest to refactor post-generation
+  - layer: API routes
+    artifact_types:
+    - FastAPI route handlers
+    - Pydantic request/response schemas
+    - Spring Boot controllers and DTOs
+    criticality: HIGHEST — hardest to refactor post-generation
+  - layer: Frontend component stubs
+    artifact_types:
+    - React/Next.js components (TypeScript)
+    - Angular components (TypeScript)
+    criticality: HIGH — required for end-to-end scaffolding value proposition
+  - layer: Deployment configuration
+    artifact_types:
+    - Dockerfile
+    - Docker Compose YAML
+    - Kubernetes manifests (YAML)
+    - Terraform modules (HCL)
+    criticality: HIGH — required for end-to-end scaffolding value proposition; Terraform
+      use is occasional
+input_specification_format:
+  document_type: Confluence pages or PRD documents
+  typical_length_pages: 3–10 pages
+  structure: Semi-structured with consistent headings (business context, user stories,
+    data entities, API expectations, non-functional requirements) and variable prose
+    under each section
+  prompt_strategy: 'Currently: full document in a single prompt. Explored: section-by-section
+    prompting for larger specs'
+  note: This input format is categorically different from HumanEval's short single-paragraph
+    docstrings. Long-context handling and structured document parsing are central
+    evaluation concerns.
+correctness_model:
+  grading_approach: Rubric-based expert review (not binary unit-test pass/fail)
+  rubric_source: Internal architecture guide maintained by the organization
+  correctness_layers:
+  - layer: Syntactic / lint correctness
+    description: Output must parse/compile and pass relevant linters without errors
+  - layer: Requirements completeness
+    description: All entities, endpoints, and flows named in the PRD must be present
+  - layer: Architectural convention adherence
+    description: Output must conform to internal naming conventions, folder structure,
+      auth middleware patterns, and error handling patterns as specified in the architecture
+      guide
+  - layer: Multi-file coherence
+    description: Schema entities must match API models must match frontend prop types;
+      import graphs must be consistent across generated files
+  multiple_valid_designs: true
+  grading_note: Multiple valid architectural designs are acceptable provided they
+    satisfy the rubric. The rubric, not a single reference solution, is the ground
+    truth.
+infrastructure_notes:
+  development_environment: Laptops/workstations with high-speed corporate network
+    access; cloud IDE or local IDE (VS Code, IntelliJ) assumed
+  internet_access: '[NEEDS VERIFICATION — assumed unrestricted corporate internet
+    access typical of US tech companies; VPN/proxy configuration may vary]'
+  llm_access_mode: API-based LLM access (single-prompt, full-document context window);
+    section-by-section prompting explored as alternative
+  context_window_requirements: Large context window required (3–10 page PRDs); exact
+    token counts depend on document verbosity — [NEEDS VERIFICATION — average token
+    count per typical spec not measured]
+  output_size: Multi-file project tree; estimated total output size per scaffolding
+    generation [NEEDS VERIFICATION]
+organizational_and_process_notes:
+  evaluation_workflow: Architects review LLM-generated scaffolding against internal
+    architecture guide; evaluation is conducted as a capability assessment prior to
+    deciding whether to integrate LLM scaffolding into the development workflow
+  architecture_guide_status: Codified internal document; serves as grading rubric
+  internal_conventions_examples:
+  - Naming conventions (file names, variable names, endpoint path patterns)
+  - Folder/module structure
+  - Auth middleware placement and patterns
+  - Error handling conventions
+  - ORM relationship patterns
+  - API versioning conventions
+  specific_conventions: '[NEEDS VERIFICATION — exact convention details are internal
+    to the organization and not publicly available]'
+cultural_norms_notes: 'Population is US-based professional software engineers operating
+  in an enterprise software product context. Relevant norms include:
+
+  - English as the exclusive working language for both natural language (specifications,
+  comments) and code conventions.
+
+  - Strong preference for explicit documentation and typed interfaces (TypeScript,
+  Pydantic, OpenAPI specs).
+
+  - Convention-over-configuration culture: internal architecture guides are treated
+  as authoritative, reducing tolerance for creative deviation from established patterns.
+
+  - Expectation of code reviewability: generated scaffolding must be legible to senior
+  engineers, not just functionally correct.
+
+  - Security and compliance sensitivity typical of enterprise software contexts (auth
+  patterns, secrets management, data access controls).
+
+  - US enterprise software industry norms around code ownership, IP, and third-party
+  dependency choices may influence acceptable library selections in generated scaffolding.'
+domain_specific_notes:
+  architecture_patterns: RESTful API design with layered architecture (controller/service/repository
+    or equivalent). FastAPI dependency injection pattern; SQLAlchemy declarative ORM
+    models; Pydantic v2 schema validation; Spring Boot @RestController + @Service
+    + JPA Repository pattern.
+  security_patterns: Auth middleware (JWT or OAuth2 assumed but [NEEDS VERIFICATION
+    — specific auth standard not specified in elicitation]); secrets management (AWS
+    Secrets Manager or similar [NEEDS VERIFICATION]); input validation via Pydantic/DTO
+    layer.
+  database_conventions: PostgreSQL as primary; Alembic migration tooling likely [NEEDS
+    VERIFICATION]; MySQL for secondary Spring Boot stack.
+  deployment_conventions: Docker multi-stage builds expected; Kubernetes manifests
+    (Deployments, Services, ConfigMaps, Secrets); Terraform for AWS infrastructure
+    provisioning (VPC, EKS, RDS patterns assumed [NEEDS VERIFICATION]).
+  non_functional_requirements: NFRs (SLA constraints, performance targets, compliance
+    requirements) appear in PRD sections; LLM must surface these in generated scaffolding
+    (e.g., connection pooling config, rate limiting middleware, CORS settings).
+  frontend_conventions: Next.js App Router or Pages Router [NEEDS VERIFICATION — specific
+    routing paradigm not confirmed]; TypeScript strict mode assumed; component stub
+    conventions (prop interfaces, placeholder return JSX) [NEEDS VERIFICATION].
+benchmark_population_match:
+  geographic_match: Exact — HumanEval is US/Anglophone-origin; deployment population
+    is US-based.
+  language_match: Partial — English NL match is exact; HumanEval covers only Python,
+    while deployment requires Python, SQL, TypeScript, Java, YAML, HCL.
+  occupational_match: Poor — HumanEval's implicit target is competitive programmers
+    / interview candidates; deployment population is senior enterprise architects
+    evaluating multi-layer scaffolding.
+  task_match: Very poor — HumanEval covers only isolated single-function Python synthesis;
+    deployment requires multi-artifact, multi-language, multi-layer, rubric-graded
+    scaffolding generation.
+  input_form_match: Very poor — HumanEval inputs are short docstrings (~1–5 sentences);
+    deployment inputs are 3–10 page semi-structured PRDs.
+  output_form_match: Poor — HumanEval outputs are single Python functions evaluated
+    by binary unit tests; deployment outputs are multi-file project trees graded by
+    rubric.
+flagged_gaps_for_web_search:
+- gap_id: 1
+  label: Multi-artifact / multi-language code generation benchmarks
+  search_targets:
+  - SWE-bench
+  - CoderEval
+  - DevEval
+  - APIBench
+  - RepoEval
+  - Spider (SQL)
+  - multi-artifact scaffolding evaluation LLM
+  priority: HIGH
+- gap_id: 2
+  label: Rubric-based architectural correctness evaluation frameworks
+  search_targets:
+  - LLM-as-judge code quality rubric
+  - CodeScore
+  - enterprise code review automated evaluation
+  - architectural convention adherence LLM assessment
+  priority: HIGH
+- gap_id: 3
+  label: Long-context document-to-code generation benchmarks
+  search_targets:
+  - PRD to code generation benchmark
+  - requirements document code generation LLM
+  - long-context code generation evaluation user stories specification
+  priority: HIGH
+- gap_id: 4
+  label: FastAPI / Spring Boot / SQLAlchemy / Pydantic framework-specific evaluation
+  search_targets:
+  - FastAPI code generation benchmark
+  - SQLAlchemy ORM generation LLM
+  - Spring Boot code generation evaluation
+  - framework-specific LLM code quality
+  priority: HIGH
+- gap_id: 5
+  label: Multi-file project coherence evaluation
+  search_targets:
+  - multi-file code generation coherence evaluation
+  - repository-level LLM code generation
+  - cross-file consistency benchmark
+  - SWE-bench RepoEval import graph coherence
+  priority: HIGH
+- gap_id: 6
+  label: Deployment configuration / IaC generation correctness
+  search_targets:
+  - Dockerfile generation LLM benchmark
+  - Kubernetes manifest generation evaluation
+  - Terraform IaC generation correctness
+  - OPA Checkov static analysis IaC LLM
+  - infrastructure-as-code benchmark
+  priority: HIGH
+- gap_id: 7
+  label: Current market share and usage statistics for tech-hub concentration and
+    enterprise LLM adoption
+  search_targets:
+  - enterprise software architect LLM adoption rate US 2024
+  - LLM code generation enterprise survey
+  - US tech hub remote work distribution software engineers
+  priority: LOW

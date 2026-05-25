@@ -1,0 +1,349 @@
+name: US Adult Personal Finance Chatbot Users
+abbreviation: US-PF
+deployment_context:
+  product_type: Personal finance chatbot (US fintech startup)
+  deployment_geography: United States (nationwide, no sub-national scoping specified)
+  target_population_description: English-speaking American adults who are financially
+    active and interact with a chatbot via typed natural language to perform everyday
+    money math. Users span a range of financial sophistication, from simple bill-splitting
+    queries to complex multi-step financial instrument calculations involving APR,
+    compound interest, amortization schedules, credit card payoff timelines, and credit
+    utilization ratios.
+  interaction_modality: Text-only, typed natural language input and output
+  primary_use_cases:
+  - APR comparisons across credit products
+  - Credit card payoff timeline estimation
+  - Amortization schedule calculation
+  - Compound interest computation
+  - Credit utilization ratio assessment
+  - Balance transfer cost/benefit analysis
+  - Bill splitting and simple budgeting percentages
+  query_mix_notes: Multi-step financially specific reasoning (APR, compound interest,
+    amortization, payoff timelines) accounts for approximately 40–50% of expected
+    queries and defines the product's core value proposition. Simpler calculations
+    (bill splitting, budgeting percentages) are present but are considered commoditized
+    features.
+languages:
+  primary: English (American)
+  variants_notes: Standard American English; users will embed consumer finance vocabulary
+    (APR, minimum payment, balance transfer, credit utilization) in natural language
+    queries. No non-English language support is described in the deployment scope.
+  financial_register: Consumer finance vernacular is central — users phrase queries
+    using industry-standard and colloquial terms interchangeably. Correct semantic
+    mapping of these terms to mathematical operations is a named deployment requirement.
+writing_systems:
+  scripts:
+  - Latin (ASCII + standard Unicode punctuation and numerals)
+  note: Text-only, standard English script. No CJK, RTL, or multi-script complexity.
+    Numerals, currency symbols ($), percentage signs, and decimal notation are standard.
+financial_literacy_context:
+  population_financial_literacy_level: 'LOW-TO-MODERATE. FINRA Foundation 2024 National
+    Financial Capability Study (6th wave, n>25,500): only 27% of US adults correctly
+    answered at least 5 of 7 financial knowledge questions, on par with 28% in 2021;
+    only 4% answered all 7 correctly. On the compound interest question specifically
+    (''how many years to double a $1,000 debt at 20% annually?''), approximately 70%
+    of respondents answered incorrectly. The ''Big Five'' high-literacy rate (≥4/5
+    correct) has declined from 42% in 2009 to 32% in 2021 and held at 32% in 2024.
+    Source: FINRA Foundation NFCS 6th Edition July 2025 — [|https://www.finrafoundation.org/sites/finrafoundation/files/2025-07/NFCS-Report-Sixth-Edition-July-2025.pdf|];
+    FINRA state-by-state release April 2025 — [|https://www.finra.org/media-center/newsreleases/2025/finra-foundation-releases-state-state-financial-knowledge-findings|]'
+  known_conceptual_gaps: Research consistently documents that many US adults conflate
+    nominal and effective APR, underestimate compound interest effects, and misunderstand
+    minimum payment implications. These are named failure modes for the deployment.
+    The 2024 NFCS specifically confirms that ~70% of US adults fail the compound interest
+    doubling-time question, directly corroborating the deployment team's named risk
+    of APR/compound interest misinterpretation.
+  domain_vocabulary_sensitivity: High — the user confirmed that misinterpreting APR
+    as a flat rate or confusing minimum payment with full payment constitutes a serious
+    deployment risk even when underlying arithmetic is trivial. Terminology grounding
+    is a distinct construct from arithmetic ability.
+  relevant_consumer_finance_context_notes: '2024 NFCS: 81% of US adults with bank
+    accounts use mobile devices for checking/savings; 23% used Buy Now, Pay Later
+    in the past 12 months; only 20% of adults say they would be interested in getting
+    financial advice from AI. Middle-income households ($25k–$75k) and those aged
+    35–54 are under increasing financial strain and engaging in expensive credit card
+    practices — a cohort likely over-represented among personal finance chatbot users.
+    Source: FINRA Foundation NFCS 6th Edition July 2025 — [|https://www.finrafoundation.org/sites/finrafoundation/files/2025-07/NFCS-Report-Sixth-Edition-July-2025.pdf|];
+    FINRA news release July 2025 — [|https://www.finra.org/media-center/newsreleases/2025/finra-foundation-releases-sixth-wave-national-financial-capability|]'
+regulatory_and_institutional_context:
+  applicable_consumer_finance_regulation: 'No single AI-specific federal law governs
+    fintech chatbots; existing consumer protection laws apply in full. Key applicable
+    frameworks: (1) CFPB oversight under the Consumer Financial Protection Act (CFPA)
+    — the CFPB''s August 2024 comment to Treasury explicitly identified AI chatbots
+    providing financial information as presenting compliance risk for unfair, deceptive,
+    or abusive acts/practices (UDAAP) and potential failures to recognize statutory
+    rights under Regulation E and Regulation Z. The CFPB issued a dedicated ''Chatbots
+    in Consumer Finance'' issue spotlight (June 2023) flagging chatbot compliance
+    risks. (2) FTC Act Section 5 (unfair or deceptive acts). (3) ECOA/fair lending
+    if the chatbot influences credit-related outputs. No formal grace period exists
+    — the CFPB expects immediate compliance with existing laws. Source: CFPB Aug.
+    2024 Treasury comment — [|https://www.consumerfinance.gov/about-us/newsroom/cfpb-comment-on-request-for-information-on-uses-opportunities-and-risks-of-artificial-intelligence-in-the-financial-services-sector/|];
+    CFPB Chatbots in Consumer Finance (June 2023) — [|https://www.consumerfinance.gov/about-us/newsroom/cfpb-issue-spotlight-analyzes-artificial-intelligence-chatbots-in-banking/|];
+    Skadden analysis Aug. 2024 — [|https://www.skadden.com/insights/publications/2024/08/cfpb-comments-on-artificial-intelligence|]'
+  apr_disclosure_standards: 'TILA/Regulation Z (12 CFR Part 1026) specifies standardized
+    APR disclosure conventions. For open-end credit (credit cards), the basic method
+    is monthly periodic rate × 12 = APR (§1026.14). For closed-end credit, APR is
+    computed per Regulation Z Appendix J, which does not depend on compounding frequency,
+    day-count convention (360 vs. 365), or exact-day vs. fixed-month calculations
+    — these parameters are legally irrelevant to the disclosed APR figure under the
+    ''U.S. Rule'' (no compounding of unpaid accrued interest into principal). Accuracy
+    tolerance is 1/8 percentage point for regular closed-end loans. This means a chatbot
+    providing APR calculations consistent with Reg Z Appendix J methodology has a
+    legally grounded single correct answer for closed-end products, but effective
+    APR vs. nominal APR distinctions (e.g., daily compounding on credit card balances)
+    remain a consumer communication gap not resolved by disclosure rules alone. Source:
+    CFPB Reg Z §1026.22 — [|https://www.consumerfinance.gov/rules-policy/regulations/1026/22/|];
+    CFPB TILA overview — [|https://files.consumerfinance.gov/f/201503_cfpb_truth-in-lending-act.pdf|]'
+  minimum_payment_formula_variation: Issuer-specific minimum payment formulas vary
+    and are not standardized by federal regulation. This creates legitimate answer
+    ranges that exact-match scoring cannot handle.
+  data_protection_regulation: 'Three overlapping frameworks apply: (1) Gramm-Leach-Bliley
+    Act (GLBA) — applies to fintechs ''significantly engaged'' in financial activities,
+    broadly construed; requires privacy notices, opt-out rights, and a written information
+    security program (FTC Safeguards Rule). Effective May 2024, a breach notification
+    requirement was added (>500 consumers'' unencrypted data must be reported to FTC
+    within 30 days). (2) CCPA/CPRA (California) — does not grant entity-level GLBA
+    exemption; only GLBA-covered data at the data level is exempt, so California user
+    data not covered by GLBA (e.g., anonymous browsing data) remains in scope. As
+    of 2025, Montana and Connecticut have also eliminated broad GLBA entity-level
+    exemptions. (3) FTC Act Section 5 applies to deceptive or unfair data practices
+    regardless of GLBA coverage. GLBA modernization legislation (GUARD Financial Data
+    Act) was advancing in House Financial Services Committee as of May 2025 but path
+    forward is uncertain. Source: FTC GLBA page — [|https://www.ftc.gov/business-guidance/privacy-security/gramm-leach-bliley-act|];
+    Orrick GLBA/CCPA analysis July 2025 — [|https://www.orrick.com/en/Insights/2025/07/Where-is-the-GLBA-Entity-Level-Exemption-Two-More-State-Privacy-Laws|];
+    Consumer Finance Monitor GLBA modernization May 2025 — [|https://www.consumerfinancemonitor.com/2026/05/12/glba-modernization-legislation-key-implications-for-financial-institutions-data-practices/|]'
+infrastructure_and_access_notes:
+  internet_penetration_us_adults: '~95% of US adults report using the internet; 90%
+    own a smartphone; 78% subscribe to home broadband. Nine-in-ten US adults use the
+    internet daily, with 41% online almost constantly (consistent across 2023, 2024,
+    and 2025 Pew surveys). Income gap: 95% broadband adoption among households earning
+    ≥$100k vs. 57% for <$30k. Source: Pew Research Center Jan. 2026 — [|https://www.pewresearch.org/short-reads/2026/01/08/internet-use-smartphone-ownership-digital-divides-in-u-s/|];
+    Pew Jan. 2024 — [|https://www.pewresearch.org/internet/2024/01/31/americans-use-of-mobile-technology-and-home-broadband/|]'
+  smartphone_vs_desktop_access: '90% of US adults own a smartphone (Pew 2023/2024
+    data, stable through 2025). 2024 NFCS data confirms that 81% of US adults with
+    bank accounts use mobile devices to access checking/savings accounts, and 65%
+    use devices to transfer money — indicating mobile is the dominant channel for
+    personal finance interactions. No specific chatbot device-split data found; mobile-first
+    design assumption is well-supported. Source: Pew Research Center mobile fact sheet
+    — [|https://www.pewresearch.org/internet/fact-sheet/mobile/|]; FINRA NFCS 2024
+    — [|https://www.finra.org/investors/insights/finra-foundation-national-financial-capability-study|]'
+  digital_literacy_notes: Users are assumed to be digitally literate enough to engage
+    a text-based chatbot; the deployment does not target low-digital-literacy populations.
+  platform_delivery: Typed natural language chatbot interface; no voice, image, or
+    document modality described in the deployment scope.
+benchmark_domain_alignment:
+  benchmark: GSM8K (Grade School Math 8K)
+  benchmark_domain: Mathematical reasoning / grade-school word problems
+  deployment_domain: Consumer personal finance — multi-step quantitative reasoning
+    over financial instruments
+  domain_overlap_summary: GSM8K and the deployment share a text-in/text-out English
+    interface and require multi-step arithmetic reasoning. However, GSM8K is scoped
+    exclusively to grade-school arithmetic contexts (groceries, animals, household
+    items) with no financial instrument problem types. The 40–50% of deployment queries
+    that constitute the core value proposition (APR, amortization, compound interest,
+    payoff timelines) have zero representation in GSM8K.
+  terminology_coverage: None — GSM8K contains no consumer finance vocabulary. The
+    deployment requires that the evaluated model correctly map terms like 'APR,' 'credit
+    utilization,' 'balance transfer,' and 'minimum payment' to specific computations.
+  scoring_alignment: Misaligned — GSM8K uses binary exact-match scoring against a
+    single ground-truth number. A meaningful share of deployment queries (payoff timelines,
+    budgeting recommendations) have legitimate answer ranges depending on assumptions
+    such as compounding frequency and issuer-specific minimum payment formulas. Exact-match
+    scoring would misrepresent quality for these cases.
+answer_range_and_assumption_sensitivity:
+  overview: A structurally important characteristic of this deployment is that many
+    target queries do not have a single correct numeric answer. Answer legitimately
+    varies with compounding frequency assumptions, issuer-specific minimum payment
+    definitions, assumed interest accrual method, and user-specified vs. default parameters.
+  examples_of_assumption_sensitive_queries:
+  - Credit card payoff timeline (varies with compounding frequency and minimum payment
+    formula)
+  - Effective APR vs. nominal APR (varies with compounding convention)
+  - Amortization schedule total interest (varies with payment timing assumptions)
+  - Budgeting percentage recommendations (inherently ranges, not point estimates)
+  evaluation_implication: Benchmark scoring for this deployment requires either explicit
+    assumption-pinning in problem statements or tolerance-band / range-based acceptance
+    criteria. GSM8K's binary exact-match scheme does not accommodate this.
+  existing_frameworks_for_range_scoring: 'FinChain (2025, arXiv:2506.02515) introduces
+    CHAINEVAL, a dynamic alignment metric that jointly evaluates final-answer correctness
+    and step-level reasoning consistency using parameterized symbolic templates with
+    executable Python traces — enabling machine-verifiable reasoning across 58 financial
+    topics in 12 domains including compound interest (see Figure 1 of paper). This
+    is the closest identified framework for assumption-pinned, step-verified financial
+    evaluation. FinQA and ConvFinQA use exact-match scoring and do not address tolerance
+    bands or assumption sensitivity. No benchmark was found that explicitly implements
+    tolerance-band or range-based acceptance criteria for personal finance chatbot
+    outputs specifically. Source: FinChain paper — [|https://arxiv.org/abs/2506.02515|]'
+cultural_and_contextual_norms:
+  monetary_conventions: USD; decimal notation (e.g., $1,234.56); annual percentage
+    rate (APR) is the standard US consumer-facing interest rate disclosure unit under
+    TILA
+  institutional_norms: 'US-centric financial product structures: credit cards with
+    revolving balances, 30-year fixed-rate mortgages, employer-sponsored 401(k) accounts,
+    FICO-based credit scoring. Benchmark problem contexts should reflect these institutions.'
+  cultural_notes: No significant cross-cultural sensitivity flags for a US-nationwide
+    deployment of a personal finance chatbot. Users are expected to be familiar with
+    standard American financial product terminology.
+  source_culture_flag_from_benchmark: 'The benchmark metadata marks source culture
+    as ''transferred from different cultural context'' despite listing United States
+    as the primary region. This should be investigated to determine whether any GSM8K
+    problems reflect non-US monetary conventions or institutional assumptions that
+    could introduce noise. [NEEDS VERIFICATION — deferred: low impact for scoring;
+    GSM8K problems use no currency symbols and the everyday-consumer contexts (food,
+    animals, school) are broadly US-compatible; expert review of a sample of problems
+    would be more informative than a web search]'
+population_specific_risk_notes:
+  terminology_misinterpretation_risk: HIGH — Named by the deployment team as a serious
+    failure mode. A model that interprets APR as a simple flat rate rather than an
+    annualized compounding rate, or that conflates minimum payment with full payoff
+    payment, produces financially harmful outputs even when its arithmetic is correct.
+  complexity_ceiling_risk: HIGH — GSM8K is capped at grade-school difficulty. Multi-step
+    compound interest calculations, multi-month amortization, and balance transfer
+    break-even analyses exceed this ceiling. GSM8K scores may be uninformative or
+    misleadingly optimistic for the deployment's hardest and most valuable query types.
+  exact_match_scoring_risk: HIGH — For assumption-sensitive queries, exact-match scoring
+    against a single reference answer penalizes correct responses that use different
+    but valid assumptions, and may reward numerically matching but reasoning-flawed
+    responses.
+  annotator_expertise_risk: MODERATE — Any downstream effort to construct a finance-specific
+    evaluation set requires annotators with demonstrated consumer finance expertise.
+    GSM8K's annotator pool (Upwork + Surge AI contractors) has no documented domain
+    expertise, and the benchmark's 1.7% disagreement rate cannot be extrapolated to
+    financial content.
+  label_quality_for_financial_queries: 'Existing financial LLM benchmarks with structured
+    annotation: FinQA (Chen et al. 2021) uses financial report numerical reasoning
+    with expert-annotated executable programs; ConvFinQA (Chen et al. 2022) extends
+    FinQA to multi-turn conversational format; TAT-QA (Zhu et al. 2021) combines tabular
+    and textual evidence with F1 scoring; FinChain (2025) uses symbolic templates
+    with expert-curated topics and machine-verifiable Python traces across 12 domains
+    including compound interest. FinBen (NeurIPS 2024) holistically evaluates LLMs
+    across these and additional datasets. However, none of these benchmarks focuses
+    on consumer personal finance chatbot use cases (credit card payoff, minimum payment
+    semantics, budgeting) — they primarily target corporate financial reports and
+    SEC filings. The FiQA challenge included user-submitted personal finance questions
+    but was noted as lacking complexity for advanced AI evaluation. Source: FinBen
+    NeurIPS 2024 — [|https://proceedings.neurips.cc/paper_files/paper/2024/file/adb1d9fa8be4576d28703b396b82ba1b-Paper-Datasets_and_Benchmarks_Track.pdf|];
+    FinChain arXiv 2025 — [|https://arxiv.org/abs/2506.02515|]; Finance LLM Leaderboard
+    April 2026 — [|https://awesomeagents.ai/leaderboards/finance-llm-leaderboard/|]'
+flagged_gaps_for_web_search:
+- gap_id: 1
+  description: Missing financial-instrument problem types in GSM8K
+  search_target: financial reasoning benchmark LLM APR amortization compound interest
+    FinQA ConvFinQA TAT-QA personal finance evaluation dataset
+  search_outcome: 'RESOLVED. Key benchmarks identified: FinQA, ConvFinQA, TAT-QA target
+    corporate financial documents (not consumer personal finance). FinChain (2025)
+    is the closest match — symbolic templates cover compound interest and 57 other
+    financial topics with verifiable CoT. FinBen (NeurIPS 2024) aggregates multiple
+    financial benchmarks. No benchmark found specifically targeting consumer personal
+    finance chatbot query types (APR payoff timelines, minimum payment semantics,
+    credit utilization). This gap remains open for the specific deployment domain.'
+- gap_id: 2
+  description: Financial terminology comprehension as a distinct evaluation construct
+  search_target: financial terminology grounding LLM evaluation benchmark credit APR
+    minimum payment semantic understanding consumer finance
+  search_outcome: PARTIALLY RESOLVED. No benchmark was found that specifically tests
+    whether LLMs correctly map consumer finance vocabulary (APR, minimum payment,
+    balance transfer) to mathematical operations as a distinct construct separate
+    from arithmetic. FinChain tests symbolic reasoning correctness but not semantic
+    term-to-operation mapping. This remains an unaddressed gap requiring bespoke evaluation
+    design.
+- gap_id: 3
+  description: Range-based and assumption-sensitive answer evaluation frameworks
+  search_target: LLM math evaluation tolerance band range-based scoring assumption-conditioned
+    grading partial credit financial reasoning benchmark
+  search_outcome: PARTIALLY RESOLVED. FinChain's CHAINEVAL metric evaluates step-level
+    reasoning consistency alongside final-answer correctness using parameterized symbolic
+    templates with pinned assumptions — the closest available framework. No benchmark
+    implementing tolerance-band or range-based acceptance criteria for assumption-sensitive
+    personal finance queries was found. Explicit assumption-pinning in problem statements
+    (as FinChain does via parameterized templates) is the current best practice.
+- gap_id: 4
+  description: GSM8K complexity ceiling and correlation with harder financial reasoning
+    performance
+  search_target: GSM8K ceiling effect correlation harder math benchmarks MATH dataset
+    financial multi-step reasoning LLM performance scaling
+  search_outcome: 'NEEDS VERIFICATION — deferred: below search budget; existing benchmark
+    documentation (Q48–Q50) already establishes the ceiling concern; the FinChain
+    finding that ''even frontier proprietary systems exhibit clear limitations in
+    symbolic financial reasoning'' independently corroborates that GSM8K-level performance
+    does not predict financial reasoning competence.'
+- gap_id: 5
+  description: Source culture flag — whether any GSM8K problems reflect non-US monetary
+    conventions
+  search_target: GSM8K problem contexts non-US monetary conventions currency assumptions
+    dataset cultural provenance Upwork Surge AI contractor geography
+  search_outcome: 'NEEDS VERIFICATION — deferred: likely unsearchable (contractor
+    geography not documented online); low impact for scoring since GSM8K problems
+    use no currency symbols and everyday-consumer contexts are broadly US-compatible.'
+- gap_id: 6
+  description: US regulatory constraints on chatbot-provided financial calculations
+    (TILA, CFPB, Regulation Z)
+  search_target: CFPB AI chatbot financial guidance regulation Regulation Z APR disclosure
+    chatbot fintech compliance 2023 2024
+  search_outcome: 'RESOLVED. See regulatory_and_institutional_context fields above.
+    Key finding: CFPB applies existing laws (no AI-specific rules yet); chatbots are
+    explicitly identified as UDAAP/Regulation Z compliance risks; Reg Z Appendix J
+    APR calculation method does not depend on compounding frequency, partially reducing
+    the assumption-sensitivity concern for disclosed APR figures on closed-end loans.'
+net_new_fields:
+  finchain_benchmark_relevance:
+    description: 'FinChain (arXiv:2506.02515, 2025) is a symbolic benchmark for verifiable
+      chain-of-thought financial reasoning spanning 58 topics across 12 financial
+      domains, including explicit compound interest templates (see Figure 1). It introduces
+      CHAINEVAL, a dynamic alignment metric evaluating both final-answer correctness
+      and step-level reasoning consistency via parameterized symbolic templates with
+      executable Python traces. Evaluating 26 LLMs, the authors find that even frontier
+      models exhibit significant weaknesses in symbolic financial reasoning. This
+      is the most deployment-relevant benchmark identified: it covers compound interest
+      directly, uses assumption-pinned parameterized templates (addressing the answer-range
+      problem), requires verifiable CoT (addressing the reasoning-transparency requirement),
+      and is contamination-resistant. However, it does not cover consumer personal
+      finance query types (credit card minimum payment semantics, credit utilization)
+      specifically. Source: FinChain paper — [|https://arxiv.org/abs/2506.02515|]'
+    impact_on_assessment: High — FinChain should be evaluated as a supplementary or
+      replacement benchmark for the core-value-proposition query types (compound interest,
+      amortization) that GSM8K cannot assess. Its CHAINEVAL metric design also provides
+      a template for assumption-pinned evaluation of the remaining consumer finance
+      query types.
+  cfpb_chatbot_spotlight_2023:
+    description: 'CFPB June 2023 issue spotlight ''Chatbots in Consumer Finance''
+      explicitly analyzed AI chatbot risks in financial services, finding that poorly
+      deployed chatbots can impede dispute resolution and violate Regulation E and
+      Regulation Z obligations. The CFPB estimated ~37% of the US population had interacted
+      with a bank chatbot by 2022. This document is the primary regulatory reference
+      for the deployment''s compliance posture. Source: CFPB issue spotlight — [|https://www.consumerfinance.gov/about-us/newsroom/cfpb-issue-spotlight-analyzes-artificial-intelligence-chatbots-in-banking/|]'
+    impact_on_assessment: High — confirms that the deployment faces active regulatory
+      scrutiny under existing laws; accuracy of financial calculations provided by
+      the chatbot is a compliance issue, not just a product-quality issue.
+  consumer_ai_interest_data:
+    description: '2024 NFCS found that only 20% of US adults say they would be interested
+      in receiving financial advice from AI. This represents the realistic addressable
+      market ceiling for a personal finance AI chatbot among the general adult population
+      and suggests that early adopters are likely to be more financially sophisticated
+      than the general population — potentially shifting the effective user literacy
+      distribution upward relative to population-level NFCS figures. Source: FINRA
+      NFCS 2024 news release — [|https://www.finra.org/media-center/newsreleases/2025/finra-foundation-releases-sixth-wave-national-financial-capability|]'
+    impact_on_assessment: Medium — moderates the financial literacy concern somewhat;
+      actual chatbot users may have above-average financial literacy, but the compound
+      interest comprehension gap (70% wrong on NFCS question) likely persists even
+      among the more engaged subpopulation.
+  finben_benchmark_ecosystem:
+    description: 'FinBen (NeurIPS 2024 Datasets and Benchmarks Track) provides a holistic
+      financial benchmark aggregating FinQA, TAT-QA, ConvFinQA, and other datasets
+      for numerical QA, multi-turn QA, and text generation. FinQA and ConvFinQA use
+      exact-match scoring; TAT-QA uses F1. All three primary numerical QA benchmarks
+      focus on corporate financial reports and earnings tables, not consumer personal
+      finance. Source: FinBen NeurIPS 2024 — [|https://proceedings.neurips.cc/paper_files/paper/2024/file/adb1d9fa8be4576d28703b396b82ba1b-Paper-Datasets_and_Benchmarks_Track.pdf|]'
+    impact_on_assessment: Medium — FinBen/FinQA/ConvFinQA are more domain-relevant
+      than GSM8K for financial reasoning evaluation generally, but still do not cover
+      consumer personal finance query types; their exact-match scoring also inherits
+      the same structural problem as GSM8K for assumption-sensitive queries.
+  glba_safeguards_rule_2024_update:
+    description: 'Effective May 13, 2024, the FTC added a breach notification requirement
+      to the GLBA Safeguards Rule: financial institutions must report security events
+      affecting 500 or more consumers'' unencrypted data to the FTC within 30 days
+      of discovery; reports are public. This is a recently effective obligation relevant
+      to any US fintech startup handling user financial query data. Source: GLBA Safeguards
+      compliance guide — [|https://www.securityscientist.net/blog/glba-gramm-leach-bliley-act-compliance-guide/|]'
+    impact_on_assessment: 'Low for benchmark validity scoring, but operationally important
+      for deployment context: the fintech startup must treat user interaction data
+      as subject to GLBA breach notification obligations.'

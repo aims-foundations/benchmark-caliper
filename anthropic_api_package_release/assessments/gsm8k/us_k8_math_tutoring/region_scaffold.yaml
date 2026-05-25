@@ -1,0 +1,205 @@
+name: US K-8 Math Tutoring Platform — Homework Checker Deployment
+abbreviation: US-K8-MATH
+deployment_description: An LLM-powered homework-checker embedded in a US K-8 math
+  tutoring platform. The system receives arithmetic word problems as plain English
+  text and performs a binary correct/incorrect judgment on a student's submitted final
+  numerical answer. No partial credit, intermediate-step scoring, or written-reasoning
+  evaluation is required.
+target_population:
+  description: American elementary and middle school students in grades K-8, with
+    the highest-volume cohort in grades 3-6. Students access the platform nationwide
+    with no sub-national geographic targeting specified. Problems are authored to
+    US Common Core State Standards for Mathematics (CCSS-M) and use US customary units,
+    US dollar/cent currency, and culturally familiar American settings.
+  geography: United States (nationwide; no sub-national targeting)
+  grade_range: K-8 (grades K-2 present but lower volume; grades 3-6 highest volume;
+    grades 6-8 included for fractions, decimals, percentages, ratios)
+  age_band_approximate: Ages 5-14
+  institutional_context: Consumer-facing tutoring platform; not a single school district
+    or state system
+languages:
+  instruction_language: English (US)
+  other_languages_supported: None — platform is English-only
+  script: Latin alphabet
+curriculum_standards:
+  primary_standard: US Common Core State Standards for Mathematics (CCSS-M)
+  standard_body: National Governors Association / Council of Chief State School Officers
+  adoption_status: '[NEEDS VERIFICATION — confirm current state-level CCSS-M adoption
+    map and whether any non-adopting states'' students are meaningfully served by
+    the platform]'
+  grade_band_topics:
+    K-2: Single-step whole-number arithmetic, counting, basic measurement concepts
+    3-4: Multi-step problems with four operations on multi-digit numbers, introduction
+      to fractions, US customary measurement
+    '5': Multi-step fractions, decimals, volume, continued measurement conversion
+    6-8: Ratios, percentages, proportional reasoning, basic statistics (mean/median
+      from small datasets), area and perimeter word problems, introduction to metric
+      exposure per CCSS-M
+problem_type_inventory:
+  core_operation_types:
+  - Addition, subtraction, multiplication, division on multi-digit whole numbers
+  - Multi-step combinations of the four operations
+  - Fraction arithmetic (addition, subtraction, multiplication, division)
+  - Decimal arithmetic
+  - Percentage calculations
+  - Ratio and proportion
+  measurement_and_geometry:
+  - US customary unit conversion (feet↔inches, cups↔gallons, pounds↔ounces, miles,
+    quarts, etc.)
+  - Area and perimeter word problems (rectangles, composite shapes)
+  - Basic volume word problems
+  - Metric unit exposure (limited, upper-grade CCSS-M mandated)
+  data_and_statistics:
+  - Mean calculation from small datasets
+  - Median calculation from small datasets
+  excluded_types:
+  - Formal geometry proofs
+  - Algebraic symbol manipulation beyond arithmetic reasoning
+  - Trigonometry or advanced statistics
+cultural_and_contextual_norms:
+  currency: 'US dollars and cents exclusively (symbol: $; denominations: pennies,
+    nickels, dimes, quarters, dollars)'
+  unit_system: US customary as primary; metric appears only where explicitly required
+    by upper-grade CCSS-M
+  cultural_settings_in_problems: 'American everyday contexts: school cafeterias, sports
+    practice, shopping, birthday parties, home improvement, US holidays, American
+    sports'
+  language_register: Plain American English appropriate for elementary/middle school
+    reading level
+  sensitivity_considerations: No politically sensitive content expected; student-age-appropriate
+    problem framing required; no religious or partisan content
+evaluation_task_structure:
+  input_format: Natural language arithmetic word problem presented as plain English
+    text
+  output_requirement: Binary correct/incorrect judgment on submitted final numerical
+    answer only
+  partial_credit: false
+  intermediate_step_evaluation: false
+  written_reasoning_evaluation: false
+  answer_format: Single numerical value (integer, decimal, or fraction as appropriate
+    to grade level)
+  scoring_convention: An unconventional solution method yielding the correct numerical
+    answer is scored as correct
+benchmark_alignment_summary:
+  benchmark: GSM8K (Grade School Math 8K, 2021)
+  primary_region_label: United States
+  language_match: Full — both deployment and benchmark are English-only
+  modality_match: Full — both are plain text word problems
+  output_schema_match: High — GSM8K uses binary correct/incorrect final-answer grading
+    identical to deployment requirement
+  curriculum_alignment_status: Partial — GSM8K targets grade school multi-step arithmetic
+    broadly but was not explicitly designed to CCSS-M; no documented taxonomy of subtopic
+    coverage
+dimension_priority_weights:
+  IO:
+    priority: MODERATE
+    rationale: GSM8K covers core multi-step arithmetic well, but measurement conversions,
+      basic statistics (mean/median), and area/perimeter problems are not documented
+      as systematically represented and may be underrepresented.
+  IC:
+    priority: MODERATE
+    rationale: Platform uses US dollars, US customary units, and American cultural
+      settings exclusively. GSM8K carries a 'transferred from different cultural context'
+      metadata flag despite a US primary region label; contractor demographics and
+      nationality are undocumented, introducing non-trivial risk of non-US unit or
+      currency conventions in some problems.
+  IF:
+    priority: LOWER
+    rationale: Both benchmark and deployment are text-only English; no modality, script,
+      or language mismatch.
+  OO:
+    priority: LOWER
+    rationale: Deployment requires binary correct/incorrect final-answer checking;
+      GSM8K's verifier training signal is defined identically. Direct structural alignment.
+  OC:
+    priority: LOWER
+    rationale: Ground-truth labels are arithmetically verifiable numerical answers;
+      correctness is objective and not subject to cultural interpretation.
+  OF:
+    priority: LOWER
+    rationale: GSM8K produces a final numerical answer label mapping directly onto
+      the platform's binary answer-checking output; no format mismatch.
+flagged_gaps:
+- id: GAP-1
+  label: US customary unit conversion problems
+  description: US customary unit conversion problems (feet↔inches, cups↔gallons, pounds↔ounces)
+    appear regularly on the platform and are CCSS-M-aligned. GSM8K's paper does not
+    enumerate unit systems used, and contractor nationality is undocumented.
+  gap_type: partial
+  web_search_target: '[NEEDS VERIFICATION — search: GSM8K dataset unit systems US
+    customary metric measurement conversion problems frequency analysis]'
+- id: GAP-2
+  label: Basic statistics problems (mean/median)
+  description: Mean and median calculations from small datasets are part of the platform's
+    grades 6-8 problem set per CCSS-M. GSM8K does not document coverage of data/statistics
+    word problems; sample problems shown in the paper are all arithmetic-only.
+  gap_type: full
+  web_search_target: '[NEEDS VERIFICATION — search: GSM8K statistics mean median word
+    problems coverage Common Core grade 6 data analysis subtopic breakdown]'
+- id: GAP-3
+  label: Area and perimeter word problems
+  description: The platform includes area and perimeter word problems regularly. GSM8K
+    does not enumerate geometry sub-skills; no paper evidence that area/perimeter
+    problems are systematically present.
+  gap_type: full
+  web_search_target: '[NEEDS VERIFICATION — search: GSM8K area perimeter geometry
+    word problems coverage elementary benchmark subtopic analysis]'
+- id: GAP-4
+  label: US cultural context fidelity (currency, settings)
+  description: Despite US primary region label, GSM8K carries a 'transferred from
+    different cultural context' metadata flag. Contractor nationality is undocumented;
+    GPT-3 seed problems may carry non-US conventions. No explicit confirmation of
+    US dollar/cent usage or American cultural settings throughout the dataset.
+  gap_type: partial
+  web_search_target: '[NEEDS VERIFICATION — search: GSM8K cultural context US vs non-US
+    currency settings contractor demographics problem provenance Surge AI Upwork worker
+    location]'
+- id: GAP-5
+  label: K-2 and early-grade arithmetic coverage
+  description: GSM8K's difficulty calibration emphasizes multi-step problems; the
+    paper estimates 80% solve rate would require ~10^16 parameters, indicating the
+    benchmark skews toward upper-elementary difficulty and likely underrepresents
+    K-2 single-step arithmetic.
+  gap_type: partial
+  web_search_target: '[NEEDS VERIFICATION — search: GSM8K difficulty distribution
+    grade level K-2 single-step arithmetic coverage elementary benchmark]'
+- id: GAP-6
+  label: Grade-band difficulty distribution across K-8 span
+  description: 'GSM8K does not document the distribution of problems across grade-level
+    difficulty bands. Whether simpler (K-2) or more advanced (grades 6-8: ratios,
+    percentages, fractions) problems are proportionally represented relative to the
+    platform''s usage distribution is unknown.'
+  gap_type: partial
+  web_search_target: '[NEEDS VERIFICATION — search: GSM8K grade level difficulty distribution
+    K-8 Common Core alignment subtopic frequency study item-level analysis]'
+infrastructure_notes:
+  deployment_modality: Text-based web/mobile platform; LLM receives word problem text
+    and student-submitted answer via API
+  input_channel: Text string (word problem prose) submitted programmatically
+  output_channel: Binary correct/incorrect label returned to platform UI
+  latency_requirements: '[NEEDS VERIFICATION — not specified in elicitation; confirm
+    acceptable response-time SLA for homework-checker use case]'
+  device_access_patterns: '[NEEDS VERIFICATION — platform likely accessed via browser
+    and mobile app; device distribution across K-8 student population not specified]'
+  internet_access_assumption: Students assumed to have reliable internet access to
+    use the platform; no offline-mode requirement documented
+regulatory_and_privacy_notes:
+  applicable_federal_law: COPPA (Children's Online Privacy Protection Act) — platform
+    serves children under 13
+  applicable_state_laws: '[NEEDS VERIFICATION — various state student data privacy
+    laws (e.g., SOPIPA-type statutes) may apply depending on state; confirm platform''s
+    current compliance posture]'
+  ferpa_applicability: '[NEEDS VERIFICATION — confirm whether platform operates in
+    school-contracted (FERPA-covered) or direct-to-consumer mode, or both]'
+  data_handling_considerations: Student age population (under 13 cohort in K-5) triggers
+    heightened data protection obligations; benchmark evaluation data itself does
+    not involve student PII but deployment context requires COPPA-compliant data handling
+annotator_and_label_quality_notes:
+  gsm8k_label_error_rate: 1.7% documented disagreement rate among contractor re-solvers;
+    authors acknowledge possibly larger fraction of subtle errors
+  contractor_demographics: '[NEEDS VERIFICATION — Upwork and Surge AI contractor nationality,
+    native language, and familiarity with US Common Core are undocumented in the GSM8K
+    paper]'
+  ccss_m_calibration: '[NEEDS VERIFICATION — no documented assurance that GSM8K problems
+    were written to CCSS-M grade-level standards; alignment is incidental rather than
+    designed]'

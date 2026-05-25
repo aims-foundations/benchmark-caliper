@@ -1,0 +1,249 @@
+name: US Defense and High-Reliability Systems Engineers
+abbreviation: us-defense-syseng
+assessment_context:
+  benchmark: FOLIO
+  tool_description: LLM-powered logical inconsistency detection tool for technical
+    specification documents (SRDs, subsystem specs, ICDs), producing natural-language
+    explanations with confidence grading.
+  deployment_country: United States
+  deployment_sector: Defense, aerospace, and complex infrastructure engineering
+target_population:
+  description: United States-based systems engineers working on defense and/or high-reliability
+    engineering programs. Likely concentrated in the aerospace, defense, and complex
+    critical infrastructure sectors. Users are domain experts who will critically
+    evaluate tool outputs against a high bar for actionability. They interact with
+    the tool in a professional capacity, reviewing hundreds of requirements across
+    multiple document types.
+  occupational_role: Systems engineer (including sub-specialties such as requirements
+    engineer, ICD author, integration and test engineer, chief engineer)
+  employment_context: Defense primes, Tier 1 and Tier 2 contractors, government agencies
+    (e.g., DoD program offices, NASA), and regulated infrastructure operators
+  sub_national_variation: None relevant — professional norms, standards vocabulary,
+    and document conventions are nationally uniform for this cohort; no regional linguistic
+    or cultural scoping required.
+  linguistic_profile:
+    primary_language: English (American)
+    register: Formal technical English; normalized requirements-language register
+      ('shall', 'should', 'is required to') per MIL-STD, IEEE, and INCOSE conventions
+    dialect_variation: None relevant
+    non_english_exposure: Minimal for tool interaction; some engineers may reference
+      translated allied-nation specs in multinational programs, but primary tool inputs
+      are English-language documents
+professional_standards_environment:
+  key_standards_frameworks:
+  - MIL-STD-499 (Systems Engineering)
+  - MIL-STD-810 (Environmental Engineering)
+  - MIL-STD-461 (EMC requirements)
+  - IEEE 15288 (Systems and Software Engineering — System Life Cycle Processes)
+  - INCOSE Systems Engineering Handbook
+  - Interface Control Document (ICD) conventions per applicable program/agency
+  standards_reference_note: Engineers routinely cite standards by number without restating
+    content. A tool operating in this environment must recognize that a requirement
+    like 'shall comply with MIL-STD-461F' carries implicit constraints that are not
+    spelled out in the document under analysis.
+  regulatory_regime: '[NEEDS VERIFICATION — confirm current applicable DoD acquisition
+    regulation (e.g., DFARS, DoD Instruction 5000-series) that governs LLM-assisted
+    tools in defense program offices; check whether CMMC or CUI handling requirements
+    apply to specification documents ingested by the tool]'
+  classification_handling: '[NEEDS VERIFICATION — determine whether the target specification
+    documents are typically unclassified, CUI (Controlled Unclassified Information),
+    or classified, and what data-handling obligations that creates for the tool deployment]'
+  export_control_relevance: '[NEEDS VERIFICATION — assess whether ITAR/EAR constraints
+    apply to the specification content processed by the tool, and whether cloud-based
+    LLM inference is permissible under those regimes for the document types in scope]'
+document_types_in_scope:
+  primary_inputs:
+  - System Requirements Documents (SRDs / SRS)
+  - Subsystem specifications
+  - Interface Control Documents (ICDs)
+  - System-of-Systems specifications
+  - Concept of Operations (ConOps) documents
+  document_characteristics:
+    length: Multi-section, multi-thousand-word documents; individual specs may range
+      from dozens to hundreds of pages
+    cross_reference_density: High — requirements routinely reference other documents,
+      standards, and parent/derived requirement identifiers
+    vocabulary_register: Normalized modal language ('shall', 'should', 'will', 'is
+      required to'); tolerance expressions; unit conventions; interface parameter
+      tables
+    implicit_premise_prevalence: Pervasive — MIL-STD and IEEE references, unit and
+      tolerance conventions, bus protocol assumptions, and interface norms are treated
+      as shared background knowledge and not restated
+  cross_document_reasoning_note: The primary use case is tracing a requirement in
+    a system-level SRD against a constraint in a subsystem spec or ICD. Within-document
+    inconsistencies are a secondary use case.
+contradiction_taxonomy:
+  crisp_contradictions:
+    description: Explicit numeric conflicts (e.g., temperature bound stated as ≤ 70°C
+      in one document and ≥ 85°C minimum operating temp in another)
+    deployment_priority: Lower — these are detectable without deep domain reasoning
+      and are often caught by manual review
+  latent_contradictions:
+    description: Conflicts that require domain knowledge to recognize — e.g., a timing
+      requirement incompatible with a bus bandwidth specification, or a power dissipation
+      assumption that violates a thermal budget stated in a separate subsystem spec
+    deployment_priority: High — these represent the highest-value targets and the
+      hardest benchmark gap; FOLIO has no analog
+    example_domains:
+    - Thermal budgets vs. power dissipation assumptions
+    - Timing margins vs. bus bandwidth constraints
+    - Signal integrity requirements vs. connector pin-count allocations
+    - Mass/volume allocations across subsystem specs
+    - Software timing requirements vs. hardware interrupt latency specs
+output_requirements:
+  required_output_form: Natural-language explanation citing the specific requirements
+    involved, the conflict mechanism, and a confidence grade
+  bare_classification_acceptability: Not acceptable — True/False/Unknown labels without
+    explanation are explicitly non-actionable for this population
+  uncertain_handling: An 'Uncertain' or low-confidence finding is acceptable only
+    if accompanied by a statement of what additional information (e.g., which referenced
+    standard's content, what interface parameter) would resolve the ambiguity. An
+    unexplained 'Uncertain' is treated as a tool failure.
+  triage_function: 'Confidence grading serves a triage function: engineers reviewing
+    hundreds of requirements need to prioritize high-confidence findings for immediate
+    action and lower-confidence findings for expert review.'
+user_expertise_profile:
+  domain_expertise_level: High — users hold engineering degrees and have deep working
+    knowledge of the standards, physical constraints, and interface conventions relevant
+    to their programs
+  logical_reasoning_familiarity: High for engineering reasoning; not necessarily high
+    for formal first-order logic notation or academic NLI framing
+  tolerance_for_false_positives: Low — spurious contradiction flags erode trust and
+    increase review burden; users will critically evaluate every finding
+  tolerance_for_false_negatives: Very low in safety-critical contexts — a missed latent
+    contradiction in a defense or aerospace program can have severe downstream consequences
+  evaluation_bar: Users will compare tool outputs against their own expert judgment;
+    tool credibility depends on producing actionable, traceable, technically accurate
+    explanations
+infrastructure_and_deployment_notes:
+  interface_modality: Text-only; no image, audio, or multimodal inputs relevant
+  document_ingestion: Multi-document simultaneous context is the primary architectural
+    requirement; single-document analysis is a subset case
+  connectivity_environment: '[NEEDS VERIFICATION — determine whether target deployment
+    environments are air-gapped, on-premises, or cloud-connected, given potential
+    CUI/ITAR constraints on specification content]'
+  llm_deployment_model: '[NEEDS VERIFICATION — assess whether on-premises or private-cloud
+    LLM deployment is required for security compliance, or whether commercial API
+    access is permissible for the document classification levels in scope]'
+  context_window_requirements: Large — multi-section technical documents may require
+    context windows well beyond typical benchmark story lengths; [NEEDS VERIFICATION
+    — estimate typical combined token length of a full SRD + ICD pair for programs
+    of interest]
+benchmark_validity_considerations:
+  dimension_priority_weights:
+    IO:
+      priority: HIGH
+      rationale: 'FOLIO''s closed-world, fully explicit premise sets are structurally
+        opposite to the deployment''s core challenge: implicit premises drawn from
+        referenced standards and shared engineering conventions.'
+    IC:
+      priority: HIGH
+      rationale: FOLIO's domain-neutral, logically clean puzzles do not probe the
+        physics- and systems-engineering-grounded inference (thermal, timing, bandwidth)
+        that represents the deployment's highest-value targets.
+    IF:
+      priority: LOWER
+      rationale: 'Both benchmark and deployment are text-only English; no modality
+        or script mismatch. Minor mismatch in text length and register (FOLIO: short,
+        ambiguity-free narratives; deployment: long-form normalized requirements language).'
+    OO:
+      priority: HIGH
+      rationale: 'FOLIO''s three-way label taxonomy is fundamentally misaligned with
+        the deployment''s required output: a natural-language explanation of the conflict
+        mechanism paired with a confidence grade.'
+    OC:
+      priority: MODERATE
+      rationale: FOLIO annotators are CS students with FOL expertise, not systems
+        engineers. Ground-truth labels reflect logical provability from stated premises,
+        not whether a practicing engineer would recognize a latent domain-convention
+        conflict.
+    OF:
+      priority: HIGH
+      rationale: FOLIO evaluates isolated single-premise-set/conclusion pairs. The
+        deployment's primary use case — cross-document reasoning across multiple long-form
+        technical documents simultaneously — has no analog in the benchmark.
+  flagged_gaps_for_web_search:
+  - gap_id: 1
+    label: Implicit-premise reasoning
+    description: FOLIO contains no examples where relevant premises must be inferred
+      from external standards or domain conventions. The deployment's core difficulty
+      is exactly this open-world inference.
+    search_targets:
+    - open-world NLI benchmark implicit premise legal regulatory technical document
+    - statutory reference reasoning benchmark NLI law
+    - requirement traceability NLP implicit assumption detection
+  - gap_id: 2
+    label: Domain-specific latent contradiction detection
+    description: FOLIO is deliberately domain-neutral. No benchmark evidence exists
+      that FOLIO accuracy predicts performance on multi-hop, physics- or engineering-grounded
+      inference.
+    search_targets:
+    - engineering domain reasoning benchmark systems requirements NLP
+    - ScienceQA technical specification contradiction detection
+    - FOLIO accuracy correlation engineering reasoning
+  - gap_id: 3
+    label: Cross-document multi-context reasoning
+    description: FOLIO is a single-context benchmark. The deployment's central requirement
+      has no analog.
+    search_targets:
+    - multi-document NLI long-context consistency benchmark
+    - cross-document reasoning QASPER contract requirements traceability
+    - SCROLLS long-context NLI evaluation
+  - gap_id: 4
+    label: Natural-language explanation quality vs. classification accuracy
+    description: FOLIO measures only classification accuracy. The deployment requires
+      fluent, technically accurate explanations suitable for expert review.
+    search_targets:
+    - LLM contradiction explanation quality evaluation natural language rationale
+    - correlation FOLIO classification accuracy explanation generation quality
+    - NLI explanation faithfulness evaluation benchmark
+  - gap_id: 5
+    label: MIL-STD / IEEE / requirements-language vocabulary
+    description: FOLIO vocabulary is general-purpose narrative English. Defense and
+      aerospace specifications use a stylized, normalized register with modal verbs
+      and standards identifiers.
+    search_targets:
+    - requirements language NLP benchmark NASA DoD INCOSE
+    - shall should specification reasoning evaluation NLP
+    - systems engineering NLP dataset requirements verification
+  - gap_id: 6
+    label: Confidence calibration and actionable uncertainty
+    description: FOLIO's Unknown label reflects formal undecidability, not the deployment's
+      notion of uncertainty (missing referenced standard content, unresolved interface
+      parameter). No mechanism to assess whether uncertainty outputs are accompanied
+      by resolution guidance.
+    search_targets:
+    - LLM calibration uncertainty explanation benchmark
+    - confidence grading natural language generation evaluation
+    - actionable uncertainty NLI output requirements engineering
+cultural_and_professional_norms_notes: '- Engineers in this cohort are trained to
+  treat ''shall'' as a binding contractual requirement and ''should'' as a recommendation;
+  the tool must respect this modal distinction in its reasoning and outputs.
+
+  - Program-specific terminology and acronym conventions vary by platform and prime
+  contractor; the tool must handle undefined acronyms gracefully.
+
+  - Defense program culture values traceability: every finding should cite specific
+  requirement identifiers (e.g., ''REQ-SYS-0042 in the SRD conflicts with ICD-PWR-007
+  Section 3.2.1'').
+
+  - Engineers are skeptical of AI-generated outputs and will not adopt tools that
+  produce unexplained or poorly-calibrated results; trust is earned incrementally.
+
+  - Organizational security culture may create friction for cloud-based tool deployment;
+  on-premises or air-gapped deployment preferences are common in cleared facilities.'
+domain_specific_assessment_notes: '- The benchmark (FOLIO) was designed for closed-world,
+  domain-neutral logical reasoning. Its structural assumptions are nearly the inverse
+  of this deployment''s requirements on all high-priority dimensions (IO, IC, OO,
+  OF).
+
+  - FOLIO accuracy scores should be treated as a weak lower-bound proxy for general
+  logical reasoning capability, not as a predictive measure of deployment performance.
+
+  - Supplementary benchmarks targeting implicit-premise reasoning, long-context consistency,
+  and natural-language explanation quality are needed to fill the gap; the flagged
+  web search targets above are the starting point.
+
+  - Any evaluation of this tool must ultimately include domain-expert review by practicing
+  systems engineers who can assess whether latent contradictions are correctly identified
+  and whether explanations are technically accurate and actionable.'

@@ -1,0 +1,1209 @@
+name: folio
+full_name: 'FOLIO: Natural Language Reasoning with First-Order Logic'
+source_url: https://github.com/Yale-LILY/FOLIO
+paper_url: https://arxiv.org/abs/2209.00840
+year: 2022
+domain: Natural language logical reasoning (first-order logic)
+porting_strategy: none
+languages:
+- en
+primary_region: United States / Anglophone academic
+description: 'FOLIO is a high-quality, expert-annotated natural language reasoning benchmark built around
+
+  first-order logic (FOL). It presents 1,430 examples organized around 487 premise sets, each
+
+  requiring models to assign one of three truth values — True, False, or Unknown — to a
+
+  conclusion given a set of natural-language premises. All examples are annotated with parallel
+
+  FOL formulas whose correctness is automatically verified by an FOL inference engine. The
+
+  benchmark was constructed through two pipelines: WikiLogic (annotators write stories from
+
+  scratch using Wikipedia pages as creative seeds) and HybLogic (syllogistic templates filled
+
+  with human-authored real-world content). A secondary NL-FOL translation task is also defined.
+
+  FOLIO targets complex, multi-step deductive reasoning in classical FOL, explicitly excluding
+
+  modal, temporal, and probabilistic reasoning.
+
+  '
+documentation_excerpts: '## Key characteristics relevant to validity analysis
+
+
+  ### 1. Input Ontology
+
+  FOLIO defines two tasks: (1) a primary natural language reasoning task requiring models to
+
+  determine the truth value of a conclusion given a set of premises [Q15], and (2) a secondary
+
+  NL-FOL translation task in which a natural language reasoning example is translated into its
+
+  FOL counterpart [Q3, Q18, Q67]. The reasoning task is explicitly framed as an independent
+
+  evaluation of logical reasoning capability [Q7]. The logical scope covers FOL including
+
+  syllogisms and combinations of conjunction, disjunction, and implication [Q43], with modal
+
+  logic and temporal logic explicitly excluded as outside the benchmark''s definition of FOL
+
+  [Q139, Q140]. The benchmark does not document a propositional-only task category or
+
+  quantifier-free subset; the entire dataset is built around predicate-level FOL structures.
+
+  Reasoning complexity is a design priority: the modal depth distribution peaks at four steps,
+
+  with 28.7% of examples requiring five or more depths [Q60], and FOLIO has substantially more
+
+  distinct abstract syntax trees than prior datasets [Q61]. Models evaluated include BERT,
+
+  RoBERTa [Q84], LLaMA, GPT-3, GPT-3.5-Turbo, and GPT-4 [Q88], tested via fine-tuning and
+
+  few-shot prompting [Q82, Q87], including chain-of-thought, self-consistency, tree-of-thought
+
+  [Q89, Q90], and logic-specific methods [Q91].
+
+
+  A significant input-ontology gap for the deployment context is the absence of a purely
+
+  propositional task category. The course''s first half is propositional (no quantifiers), and
+
+  FOLIO does not document any quantifier-free or propositional-only subset that would cover
+
+  this domain.
+
+
+  ### 2. Input Content
+
+  FOLIO''s 1,430 examples were assembled through two distinct collection pipelines [Q1, Q33].
+
+  The WikiLogic pipeline had annotators select random Wikipedia pages as creative seeds and write
+
+  entirely original stories from scratch — without templates [Q34, Q35] — yielding 304 stories
+
+  with 753 conclusion pairs and 74% of FOLIO''s 4,351-word vocabulary [Q62]. The HybLogic
+
+  pipeline generated logically valid syllogistic templates and had human annotators fill abstract
+
+  entity slots with real-world content [Q40, Q42, Q44], yielding 183 stories with 682 conclusion
+
+  pairs [Q58]. The two pipelines were designed to maximize logical diversity (AST variety) and
+
+  naturalistic language breadth [Q33, Q38].
+
+
+  For the deployment context, both pipelines produce expert-authored naturalistic or
+
+  template-instantiated prose that differs substantially from the syntactically controlled,
+
+  pedagogically stylized register of Hurley-style course-packet problems (e.g., "All A are B,"
+
+  "If P then Q," "Some A is not B"). The paper explicitly chose to avoid bare template-style
+
+  generation in WikiLogic in favor of free composition [Q35], and adopted naturalness conventions
+
+  such as preferring "Some A is B" over existential notation [Q132, Q133] and adding epistemic
+
+  qualifiers to generalization statements [Q129]. While HybLogic''s syllogistic template
+
+  structure is closer in spirit to Hurley-style templates, its instantiation with natural-language
+
+  fillers still differs from the deployment''s syntactically controlled register. The possibility
+
+  that WikiLogic examples overlap with LLM training data [Q104] further complicates use as a
+
+  deployment benchmark. The dataset explicitly avoids stereotypes and identity-linked biases [Q47]
+
+  and removed or rewrote stories with opinionated language [Q127].
+
+
+  ### 3. Input Form
+
+  FOLIO is text-only English, written in standard Latin script, by native or near-native English
+
+  speakers [Q27]. All inputs are structured natural-language text consisting of n premises and m
+
+  conclusions [Q64]. The FOL annotations use standard AI-community FOL syntax [Q52]. Readability
+
+  is documented using the Dale-Chall formula [Q59, Q154]. Grammar was checked with Grammarly and
+
+  reviewed by annotators with English Literature backgrounds [Q49, Q50], and natural-language
+
+  ambiguity was eliminated where possible [Q51]. The train/validation/test split is 70%/15%/15%
+
+  by story [Q78, Q79].
+
+
+  For the deployment context, the input form is well-matched: both benchmark and deployment are
+
+  English text, standard script, no modality mismatch. The primary surface-form concern is
+
+  register (natural prose vs. pedagogical templates), which is an input-content rather than
+
+  input-form issue. Sentence-level formatting conventions — e.g., how disjunction is expressed
+
+  [Q130, Q131] and how generalization statements are qualified [Q129] — differ from bare
+
+  Hurley-style templates but remain within the same textual modality.
+
+
+  ### 4. Output Ontology
+
+  FOLIO uses a three-way label schema: True, False, or Unknown [Q36, Q66]. The logical
+
+  correctness of labels is guaranteed by FOL annotations automatically verified by an FOL
+
+  inference engine [Q2]. The label "Unknown" is defined as the case where the inference engine
+
+  returns neither True nor False given the premises [Q70]. The FOL operators in scope are
+
+  negation, conjunction, disjunction, implication, universal quantifier, existential quantifier,
+
+  and equality [Q138]; n-place predicates are used for expressivity [Q141], while Davidsonian
+
+  semantics are excluded [Q142]. The majority baseline on the test set is 38.5%, with 87 True,
+
+  78 False, and 61 Unknown examples in the test set [Q94]. GPT-4 struggles with 5% of
+
+  conclusions that have complex syntactic structure [Q120]. The inference engine proving pipeline
+
+  involves three steps: conversion to Python code, theorem-prover execution, and truth-value
+
+  output [Q153].
+
+
+  The output ontology is a HIGH-priority concern for the deployment context. The course''s
+
+  three-way scheme — valid (premises entail conclusion), invalid (premises entail the negation
+
+  of the conclusion), and indeterminate (consistent with both conclusion and negation) — does
+
+  not map straightforwardly onto FOLIO''s True/False/Unknown labels. In particular, the course''s
+
+  "invalid" strictly requires the premises to entail the negation of the conclusion, not merely
+
+  the failure of entailment. The proving pipeline [Q153] does return False when the negation is
+
+  provable, but the paper does not explicitly distinguish "False because the negation is entailed"
+
+  from "False because the conclusion simply fails to follow," leaving a residual ambiguity. The
+
+  Unknown label (defined by the inference engine returning neither True nor False [Q70]) maps
+
+  conceptually onto the course''s indeterminate, but the course explicitly excludes undecidable
+
+  formulas, which FOLIO does not explicitly address. The label imbalance — Unknown is the
+
+  smallest class with 61 test examples (27%) — is also relevant: if FOLIO''s indeterminate rate
+
+  does not match the course''s problem distribution, overall accuracy may not reliably predict
+
+  indeterminate-case performance.
+
+
+  ### 5. Output Content
+
+  All FOL annotations were written and reviewed by expert annotators — CS undergraduate and
+
+  graduate students and senior researchers in academia and industry [Q16, Q31] — with formal
+
+  education in first-order logic or semantic parsing [Q28, Q123] and native or near-native
+
+  English proficiency [Q27, Q122]. The annotation process spanned six stages totaling 980
+
+  person-hours [Q32], with separate NL and FOL quality checks by domain experts [Q29, Q124,
+
+  Q125]. A detailed FOL annotation protocol was designed to maximize cross-annotator consistency
+
+  in FOL formula construction [Q54, Q143, Q144, Q145, Q146]. Preliminary investigations found
+
+  consistency issues in human-written FOL, prompting an additional quality-control round [Q53].
+
+  A screening pass found 39.2% of stories had at least one quality issue, all rewritten under a
+
+  detailed protocol [Q48]. Commonsense knowledge implicit in human annotation was added as
+
+  explicit premises [Q55], and tense and plural verb forms were abstracted away in FOL formulas
+
+  [Q147]. The syntactic validity and label consistency of all FOL annotations were verified by
+
+  the inference engine [Q57].
+
+
+  Non-expert annotators achieved only 61.82% accuracy on the test set versus 95.98% for expert
+
+  annotators [Q111], confirming the consequential role of expert quality control. GPT-4 achieves
+
+  only 64.16%, a 31.82-point gap behind expert annotators [Q113]. Confusion matrix analysis
+
+  shows systematic bias toward True predictions, with False and Unknown accuracy at only 61.9%
+
+  under fine-tuning and 54.0% under few-shot prompting [Q155, Q156, Q157]. GPT-4 sometimes uses
+
+  commonsense shortcuts to arrive at wrong truth values [Q121]. Premise ordering experiments
+
+  found less than 1% accuracy change after shuffling [Q158, Q159, Q160], indicating no spurious
+
+  ordering cues.
+
+
+  For the deployment context, the expert annotation pipeline and FOL-engine verification are
+
+  significant strengths: ground-truth labels for clear cases are highly reliable. The primary
+
+  concern is the label-ontology mismatch (see Output Ontology): even if individual FOLIO labels
+
+  are correct under FOLIO''s own scheme, some may be systematically misaligned with the course
+
+  rubric''s stricter definition of "invalid." The annotator population (expert FOL knowledge,
+
+  native English, academic context) is appropriate for the US undergraduate deployment context,
+
+  though it reflects expert rather than student-novice production norms.
+
+
+  ### 6. Output Form
+
+  The primary metric for the NL reasoning task is accuracy [Q80], evaluated in both fine-tuned
+
+  and few-shot settings [Q19, Q23, Q93], with results reported on five randomly sampled sets
+
+  from the training set [Q93]. For NL-FOL translation, two metrics are used: Syntactic Validity
+
+  (SynV), a binary score for whether all generated FOL formulas pass a syntactic check [Q73,
+
+  Q74], and Inference Engine Execution Accuracy (ExcAcc), measuring whether translated FOL
+
+  produces matching truth values [Q75, Q76]. The proving pipeline converts FOL to Python code,
+
+  runs the theorem prover, and outputs truth values [Q153]. A custom Python FOL parser converts
+
+  human-annotated FOL to the inference engine''s input format [Q150, Q151]; the inference engine
+
+  does not natively support the FOL syntax used in the dataset [Q149]. The conversion step
+
+  introduces a potential reliability gap [Q152].
+
+
+  For the deployment context, the output form is well-matched: both benchmark and deployment
+
+  produce a categorical label from a fixed three-item set, with accuracy as the primary metric.
+
+  The secondary NL-FOL translation metrics (SynV, ExcAcc) are not deployment-relevant. The
+
+  acknowledged gap in NL-FOL translation metric reliability [Q77] is noted but does not affect
+
+  the primary reasoning task evaluation.
+
+  '
+verbatim_quotes:
+- id: Q1
+  page: 1
+  dimension: input_content
+  text: FOLIO consists of 1,430 examples (unique conclusions), each paired with one of 487 sets of premises used to deductively
+    reason for the validity of each conclusion.
+- id: Q2
+  page: 1
+  dimension: output_content
+  text: The logical correctness of the premises and conclusions is ensured by their FOL annotations, which are automatically
+    verified by an FOL inference engine.
+- id: Q3
+  page: 1
+  dimension: input_ontology
+  text: In addition to the main NL reasoning task, NL-FOL pairs in FOLIO constitute a new NL-FOL translation dataset.
+- id: Q4
+  page: 1
+  dimension: output_form
+  text: Our experiments on FOLIO systematically evaluate the FOL reasoning ability of supervised fine-tuning on medium-sized
+    language models.
+- id: Q5
+  page: 1
+  dimension: output_form
+  text: For both NL reasoning and NL-FOL translation, we benchmark multiple state-of-the-art language models.
+- id: Q6
+  page: 1
+  dimension: output_form
+  text: Our results show that a subset of FOLIO presents a challenge for one of the most capable Large Language Model (LLM)
+    publicly available, GPT-4.
+- id: Q7
+  page: 1
+  dimension: input_ontology
+  text: Logical reasoning is a central component for intelligent systems and should be sufficiently and independently evaluated
+    (Russell and Norvig, 2010).
+- id: Q8
+  page: 1
+  dimension: input_ontology
+  text: However, existing natural language tasks are inadequate in measuring the complex logical reasoning capability of a
+    model (Srivastava et al., 2023; Saparov and He, 2023; Tian et al., 2021).
+- id: Q9
+  page: 1
+  dimension: input_ontology
+  text: Some of these common benchmarks do not specifically evaluate logical reasoning independently of other forms of reasoning
+    (Yu et al., 2020; Liu et al., 2021).
+- id: Q10
+  page: 1
+  dimension: input_ontology
+  text: Those specifically designed for measuring logical reasoning are insufficient in terms of logical reasoning complexity
+    and natural language variety.
+- id: Q11
+  page: 1
+  dimension: input_ontology
+  text: Examples in RuleTaker (Clark et al., 2020) and LogicNLI (Tian et al., 2021) need at most five depths of reasoning.
+- id: Q12
+  page: 1
+  dimension: input_ontology
+  text: The entire corpus of RuleTaker or LogicNLI has fewer than 50 distinct abstract syntax trees.
+- id: Q13
+  page: 1
+  dimension: input_ontology
+  text: RuleTaker has only 101 words in its vocabulary and LogicNLI has 1077 words in the vocabulary.
+- id: Q14
+  page: 1
+  dimension: input_content
+  text: Moreover, none of them are written by humans with information drawn from real-world knowledge, making them less applicable
+    to real-world reasoning scenarios.
+- id: Q15
+  page: 1
+  dimension: input_ontology
+  text: We present a natural language reasoning dataset, FOLIO, with first-order logic reasoning problems which require the
+    models to decide the correctness of conclusions given a world defined by the premises.
+- id: Q16
+  page: 2
+  dimension: output_content
+  text: FOLIO is a high-quality and manually curated dataset, written by CS undergraduate and graduate students and researchers
+    in academia and industry.
+- id: Q17
+  page: 2
+  dimension: output_content
+  text: To ensure the conclusions of our examples follow the premises logically, we annotated all reasoning examples with
+    first-order logic (FOL) formulas.
+- id: Q18
+  page: 2
+  dimension: input_ontology
+  text: Based on our annotations, we propose a new NL-FOL translation task where an NL reasoning example is translated into
+    its FOL counterpart.
+- id: Q19
+  page: 2
+  dimension: output_form
+  text: Finally, we benchmark the performance of strong LMs in both fully supervised and few-shot settings to understand their
+    capabilities in logical reasoning (i.e., deriving the truth value of a logical conclusion from NL premises).
+- id: Q20
+  page: 2
+  dimension: output_content
+  text: Under the few-shot setting, the most capable publicly available LLM so far achieves only 53.1% on the stories written
+    in a hybrid manner, which is slightly better than random.
+- id: Q21
+  page: 2
+  dimension: output_content
+  text: We release a natural language reasoning dataset written by expert annotators, FOLIO, with first-order logical reasoning
+    problems.
+- id: Q22
+  page: 2
+  dimension: input_form
+  text: We use formal logic, i.e., FOL to ensure the logical validity of the examples written in NL and propose a new NL-FOL
+    translation task.
+- id: Q23
+  page: 2
+  dimension: output_form
+  text: We benchmark the performance of LMs by fine-tuning models and prompting LLMs with few-shot examples, on the FOLIO
+    reasoning task.
+- id: Q24
+  page: 3
+  dimension: output_content
+  text: We collected FOLIO through a carefully designed manual annotation process to achieve high-quality examples that necessitate
+    complex logical reasoning.
+- id: Q25
+  page: 3
+  dimension: output_content
+  text: Writing natural language reasoning stories with FOL requires sufficient knowledge in both semantic parsing and first-order
+    logic, as well as strong analytical skills.
+- id: Q26
+  page: 3
+  dimension: output_content
+  text: Given the complexities of such annotations, we selected annotators based on a few important criteria to ensures that
+    our dataset is annotated with the highest level of precision and expertise, reflecting the complexity and nuance required
+    for first-order logical reasoning.
+- id: Q27
+  page: 3
+  dimension: input_form
+  text: Our annotators are either college or graduate students who are native English speakers or possess near-native proficiency
+    in English.
+- id: Q28
+  page: 3
+  dimension: output_content
+  text: They possess formal education in first-order logic, having either completed relevant coursework or undertaken self-directed
+    studies in first-order logic or seman-
+- id: Q29
+  page: 4
+  dimension: output_content
+  text: At the NL quality check stage, only annotators who are experts in natural language processing or computational linguistics
+    are involved. For the FOL quality check, only annotators who are experts in first-order logic are involved.
+- id: Q30
+  page: 4
+  dimension: output_content
+  text: We also give the annotators several training sessions on how to write a story, by providing them with detailed annotation
+    guidelines.
+- id: Q31
+  page: 4
+  dimension: output_content
+  text: All stories and FOL annotations in FOLIO are written and reviewed by expert annotators, including CS undergraduate
+    and graduate students, and senior researchers, who met the aforementioned criteria.
+- id: Q32
+  page: 4
+  dimension: input_content
+  text: 'We develop our dataset in six stages: WikiLogic collection, HybLogic collection, NL quality control, FOL quality
+    control, NL-FOL alignment and FOL verification, spending 980 man-hours in total.'
+- id: Q33
+  page: 4
+  dimension: input_content
+  text: We collected our dataset using two different methods in order to obtain examples that are both logically diverse and
+    complex and have abundant abstract syntax tree (AST) variations.
+- id: Q34
+  page: 4
+  dimension: input_content
+  text: 'WikiLogic: annotation from scratch using Wikipedia articles as seeds. At this annotation stage, the annotators are
+    asked to select random Wikipedia pages by repeatedly using the Wikipedia Special Random link. The Wikipedia articles are
+    used to develop ideas for topics to write new stories.'
+- id: Q35
+  page: 4
+  dimension: input_content
+  text: We ask the annotators to create new stories from scratch without using templates based on real-world knowledge, which
+    should be plausible in general.
+- id: Q36
+  page: 4
+  dimension: output_ontology
+  text: Each of the stories is composed of several premises and conclusions with truth values of True, False, or Unknown (see
+    Table 2 for an example).
+- id: Q37
+  page: 4
+  dimension: output_ontology
+  text: We also ask the annotators to write parallel FOL sentences for both the premises and conclusions.
+- id: Q38
+  page: 4
+  dimension: input_content
+  text: This results in a wide range of topics, abundant AST variations, and a wide vocabulary for FOLIO.
+- id: Q39
+  page: 4
+  dimension: input_content
+  text: 'HybLogic: hybrid annotation The task of generating logically sound stories from scratch for a set of facts is very
+    time-consuming for human writers, where the main challenge is to create complex and varied logical patterns to arrive
+    at a conclusion.'
+- id: Q40
+  page: 4
+  dimension: input_content
+  text: 'To address the problems of solely using manual annotation, we also consider a hybrid approach to facilitate the process.
+    Our hybrid method is based on a common form of logical stories: syllogisms.'
+- id: Q41
+  page: 4
+  dimension: input_ontology
+  text: A syllogism consists of two premises and a single conclusion, and the conclusion states some facts about the entities
+    and categories in the premises.
+- id: Q42
+  page: 4
+  dimension: input_content
+  text: 'In this approach, we first generate logically valid stories, which are templates containing abstract categories and
+    entities, by combining multiple syllogisms into a single story template: the conclusion of one syllogism is used as a
+    premise for the next syllogism.'
+- id: Q43
+  page: 4
+  dimension: input_ontology
+  text: There are 256 logically distinct types of syllogisms and 24 of them are valid (Lehman, 1973). We use various combinations
+    of 24 valid syllogisms. We also add in conjunction, disjunction, and implication.
+- id: Q44
+  page: 4
+  dimension: input_content
+  text: We then ask human annotators to assign nouns, phrases, or clauses to the abstract entities or categories that reflect
+    real-life scenarios to each template and write logically-valid stories in natural language.
+- id: Q45
+  page: 4
+  dimension: input_content
+  text: The usage of the template is to ensure that we have a set of varied and complex logical stories with multiple conclusions.
+    There are many ways of expressing the same logic template in natural language, and so the generated templates augment,
+    rather than limit, the creativity of humans.
+- id: Q46
+  page: 4
+  dimension: output_content
+  text: To ensure the highest quality of the dataset, we dedicated considerable attention to the following key aspects of
+    the natural language sentences during the quality control process.
+- id: Q47
+  page: 4
+  dimension: input_content
+  text: Our dataset prioritizes realism and factual accuracy, steering clear of biases and stereotypes linked to identity
+    markers like race, ethnicity, gender, sexuality, nationality, class, and religion.
+- id: Q48
+  page: 4
+  dimension: output_content
+  text: Toward these objectives, we manually screened all stories and found that 39.2% of the stories suffer from at least
+    one of these issues. We implemented a detailed protocol to rewrite these stories.
+- id: Q49
+  page: 4
+  dimension: input_form
+  text: Apart from grammar, we make sure the sentences in our dataset are highly natural. All the sentences are first checked
+    with a grammar checking tool, Grammarly.
+- id: Q50
+  page: 4
+  dimension: input_form
+  text: Our annotators who have graduated from or are senior students studying English Literature conducted a thorough round
+    of review for grammatical correctness and language naturalness.
+- id: Q51
+  page: 4
+  dimension: input_form
+  text: We also eliminate natural language ambiguity when it is possible.
+- id: Q52
+  page: 5
+  dimension: input_form
+  text: We adopt the FOL definitions and syntax most widely used in the AI community (Russell and Norvig, 2010).
+- id: Q53
+  page: 5
+  dimension: output_content
+  text: In preliminary investigations, we found that the human-written FOL formulas suffer from FOL consistency issues, which
+    necessitates an additional round of quality control for FOL formulas.
+- id: Q54
+  page: 5
+  dimension: output_content
+  text: One NL sentence can be translated into FOL through multiple non-equivalent ways. For example, sometimes additional
+    information inferred from a sentence can be represented in FOL, leading to multiple representations. We therefore design
+    an annotation protocol for FOL translation in order to ensure that our FOL translations are as consistent as possible
+    across all examples in our dataset.
+- id: Q55
+  page: 5
+  dimension: output_content
+  text: Apart from checking whether NL and FOL express equivalent meanings, we also add necessary commonsense knowledge in
+    both the NL and FOL premises. Sometimes humans do not write certain commonsense knowledge in the premises that is required
+    in the FOL reasoning process, which is based solely on the premises given. We add such knowledge as additional premises
+    at this stage.
+- id: Q56
+  page: 5
+  dimension: input_form
+  text: In particular, intrinsic properties of some predicates are required in the FOL reasoning process. For example, "LocatedIn(x,y)"
+    should be transitive and "BeFamily(x,y)" should be symmetric.
+- id: Q57
+  page: 5
+  dimension: output_content
+  text: Recognizing that the FOL formula annotations can be error-prone, we verify the syntactic validity and label consistency
+    of FOL formula annotations with an FOL inference engine.
+- id: Q58
+  page: 5
+  dimension: input_content
+  text: Table 3 shows that examples based on Wikipedia make up the largest portion of FOLIO, with 304 stories, 1,353 NL and
+    FOL premise pairs, and 753 NL and FOL conclusion pairs. Hybrid annotations consist of 183 stories with 1,054 NL and FOL
+    premise pairs, and 682 NL and FOL conclusion pairs in total.
+- id: Q59
+  page: 5
+  dimension: output_form
+  text: We use the Dale-Chall Readability Formula (Dale and Chall, 1948, 1995) to show the text complexity of FOLIO following
+    (Singh et al., 2023; Arps et al., 2022; Wei et al., 2021).
+- id: Q60
+  page: 5
+  dimension: input_ontology
+  text: As shown in Figure 1, the mode of reasoning depths is four in FOLIO. 28.7% of the examples need five or more depths
+    of reasoning to infer the conclusions, while the previous datasets needed at most five reasoning depths as shown in Table
+    1.
+- id: Q61
+  page: 5
+  dimension: input_ontology
+  text: Table 1 shows that FOLIO also has a much larger number of distinct ASTs than the previous datasets, indicating that
+    FOLIO is much more logically diverse.
+- id: Q62
+  page: 5
+  dimension: input_content
+  text: Table 3 shows that our dataset has a vocabulary of 4,351 words, and the examples based on Wikipedia account for 74%
+    of the total vocabulary even though the WikiLogic stories take up only 63% of the total number of stories.
+- id: Q63
+  page: 6
+  dimension: input_ontology
+  text: We define two new tasks based on FOLIO, natural language reasoning with first-order logic and NL-FOL translation.
+- id: Q64
+  page: 6
+  dimension: input_form
+  text: 'Each natural language (NL) story S in FOLIO consists of n premises: P = {p1, p2, ..., pn} and m conclusions: H =
+    {h1, h2, ..., hm}.'
+- id: Q65
+  page: 6
+  dimension: input_form
+  text: All NL stories are annotated with parallel FOL stories SF, which are sets of FOL formulas consisting of n premises
+    PF = {pf1, pf2, ..., pfn} and m conclusions HF = {hf1, hf2, ..., hfm}.
+- id: Q66
+  page: 6
+  dimension: output_ontology
+  text: 'Given P and H, the goal is to determine the truth values of the conclusions: "True", "False" or "Unknown", based
+    on FOL reasoning.'
+- id: Q67
+  page: 6
+  dimension: input_ontology
+  text: We propose a new natural language to first-order logic translation (NL-FOL translation) task alongside our reasoning
+    dataset.
+- id: Q68
+  page: 6
+  dimension: output_ontology
+  text: In particular, each of the NL sentence pi or hi and the parallel FOL formula pfi or hfi should be logically and semantically
+    equivalent.
+- id: Q69
+  page: 6
+  dimension: output_ontology
+  text: Moreover, the truth values for the conclusions should be the same based on the NL story S and the parallel FOL story
+    FS.
+- id: Q70
+  page: 6
+  dimension: output_ontology
+  text: In our dataset, the premises and conclusions are set up in such a way to ensure that the inference engine always returns
+    an answer given enough resources such as time and memory.
+- id: Q71
+  page: 6
+  dimension: input_ontology
+  text: Unlike previous work (Singh et al., 2020) which translates problems with a single premise and a single hypothesis,
+    our task is on translating examples of various lengths with a focus on stories with multiple premises.
+- id: Q72
+  page: 6
+  dimension: input_ontology
+  text: Thus, it also requires the models to consider discourse-level consistencies as opposed to translation at the sentence
+    level.
+- id: Q73
+  page: 6
+  dimension: output_form
+  text: 'Two metrics are adopted to evaluate NL-FOL translation to capture different aspects of the generation results: 1).
+    Syntactic validity (SynV).'
+- id: Q74
+  page: 6
+  dimension: output_form
+  text: The Syntactic Validity score measures whether the FOL formulas are syntactically valid. The score will be 1 if all
+    FOL formulas of an example can pass the syntactic check and 0 otherwise 2).
+- id: Q75
+  page: 6
+  dimension: output_form
+  text: Inference Engine execution accuracy (ExcAcc). The group of translated FOL for premises and conclusions in one story
+    is fed into our inference engine to output the truth value for each conclusion.
+- id: Q76
+  page: 6
+  dimension: output_form
+  text: We define the accuracy of the output labels as the execution accuracy.
+- id: Q77
+  page: 6
+  dimension: output_form
+  text: We leave for future work the design of a more reliable metric of NL-FOL translation.
+- id: Q78
+  page: 6
+  dimension: input_form
+  text: We split FOLIO by 70%/15%/15% split for the train/validation/test sets with 1,001/203/226 examples respectively.
+- id: Q79
+  page: 6
+  dimension: input_form
+  text: We split by story so that models are evaluated on unseen stories.
+- id: Q80
+  page: 6
+  dimension: output_form
+  text: We use accuracy for evaluating logical reasoning performance.
+- id: Q81
+  page: 6
+  dimension: output_form
+  text: For NL-FOL translation, we use the metrics in Section 4.2.
+- id: Q82
+  page: 6
+  dimension: input_ontology
+  text: We test the logical reasoning capabilities of LMs using fully supervised fine-tuning and few-shot prompting.
+- id: Q83
+  page: 6
+  dimension: input_ontology
+  text: We also test NL-FOL translation with few-shot prompting.
+- id: Q84
+  page: 7
+  dimension: input_ontology
+  text: As fine-tuning baselines, we experiment with BERT (Devlin et al., 2019), and RoBERTa (Liu et al., 2020).
+- id: Q85
+  page: 7
+  dimension: output_form
+  text: We fine-tune the base and large versions of both BERT and RoBERTa, with an additional two-layer classification layer
+    to predict the truth values.
+- id: Q86
+  page: 7
+  dimension: input_ontology
+  text: For the second task, i.e., NL-FOL translation, we only report few-shot prompting methods.
+- id: Q87
+  page: 7
+  dimension: input_ontology
+  text: We conduct zero-shot and few-shot prompting experiments on larger LMs with few-shot capabilities.
+- id: Q88
+  page: 7
+  dimension: input_ontology
+  text: For open-source models, we test LLaMA-13B and LLaMA-70B (Touvron et al., 2023), GPT-NeoX-20B (Black et al., 2022);
+    for proprietary models we test GPT-3 (Brown et al., 2020), GPT-3.5-Turbo and GPT-4 (OpenAI et al., 2023) using prompts
+    with 8 examples.
+- id: Q89
+  page: 7
+  dimension: input_ontology
+  text: We experiment with incorporating recent prompting strategies into GPT-4 as they have shown improvements in the general
+    reasoning performance of LLMs.
+- id: Q90
+  page: 7
+  dimension: input_ontology
+  text: The prompting strategies include chain-of-thought (CoT) prompting (Wei et al., 2022b), chain-of-thought prompting
+    with self-consistency (Wang et al., 2023) and tree-of-thought prompting (Yao et al., 2023).
+- id: Q91
+  page: 7
+  dimension: input_ontology
+  text: 'We also test recent methods specifically designed for logical reasoning: Logic-LM (2023), LINC (Olausson et al.,
+    2023) and DetermLR(Sun et al., 2023), using GPT-4 as the base model.'
+- id: Q92
+  page: 7
+  dimension: input_form
+  text: For the second task (NL-FOL translation), we use the same examples as in the Few-Shot NL experiments except that all
+    the conclusions are included in each example.
+- id: Q93
+  page: 7
+  dimension: output_form
+  text: We run experiments on five randomly sampled sets of examples from the training set and report the average accuracy.
+- id: Q94
+  page: 7
+  dimension: output_ontology
+  text: The majority baseline of our dataset is 38.5% since in our test set, there are 87, 78 and 61 examples with labels
+    of true, false and unknown respectively.
+- id: Q95
+  page: 7
+  dimension: input_form
+  text: In experimenting with different prompts, we found 8 shot examples to perform slightly better. It is also the maximum
+    number of examples that fits in the text-davinci-002 context.
+- id: Q96
+  page: 8
+  dimension: output_form
+  text: Table 5 shows the results of NL-FOL translation. The syntactic validity scores are around 93% with both GPT-3.5-Turbo
+    and GPT-4. This indicates that language models with sufficient scales are good at picking up the patterns for FOL formulas
+    and generating syntactically valid FOL formulas.
+- id: Q97
+  page: 8
+  dimension: output_form
+  text: However, GPT-3.5-Turbo and GPT-4 are not yet good at translating an NL story to a logically or semantically similar
+    FOL counterpart, as indicated by the low inference engine execution accuracy score.
+- id: Q98
+  page: 8
+  dimension: output_form
+  text: Below we provide analysis of our results and key findings, providing additional insights into our dataset FOLIO and
+    the current capabilities of LLMs in logical reasoning.
+- id: Q99
+  page: 8
+  dimension: output_form
+  text: With few-shot prompting, GPT-3.5 and GPT-4 both perform much better on examples with a 0 ∼ 3 reasoning depth, indicating
+    that examples with a 4 ∼ 7 reasoning depth pose a challenge to the SoTA LMs.
+- id: Q100
+  page: 8
+  dimension: output_form
+  text: This indicates that fine-tuning on longer and more difficult reasoning chains in the training set can improve model
+    performance on equally-long test example chains.
+- id: Q101
+  page: 8
+  dimension: input_ontology
+  text: FOLIO's unique complexity reveals that current LMs are limited in their ability to extrapolate to longer and more
+    complex reasoning chains, and suggests an avenue for further study.
+- id: Q102
+  page: 8
+  dimension: output_form
+  text: As shown in Table 6, in logical reasoning, GPT-3.5 and GPT-4 achieve substantially lower results on HybLogic than
+    on WikiLogic and the result is slightly higher than chance.
+- id: Q103
+  page: 8
+  dimension: input_content
+  text: We hypothesize that this is because HybLogic has high logical complexity that the SoTA LLMs like GPT-4 cannot solve
+    yet while WikiLogic examples require shorter reasoning chains which the model is already capable of solving.
+- id: Q104
+  page: 8
+  dimension: input_content
+  text: Moreover, since the examples in WikiLogic are created from scratch by humans, it is possible that LLMs have seen similar
+    texts with similar logical patterns in the training data.
+- id: Q105
+  page: 8
+  dimension: input_content
+  text: However, fine-tuning RoBERTa-large achieves higher performance on HybLogic than on WikiLogic. This is likely because
+    HybLogic is created from templates and some of the logical patterns can be learned during fine-tuning.
+- id: Q106
+  page: 8
+  dimension: input_content
+  text: In NL-FOL translation, performs 10 points better on HybLogic than WikiLogic. This could be because WikiLogic has more
+    distinct and diverse sentence-level logical and language patterns and FOL annotations. WikiLogic has 53 ASTs while HybLogic
+    has 33.
+- id: Q107
+  page: 9
+  dimension: output_content
+  text: We collected truth value annotations of logical reasoning for FOLIO test set from expert and non-expert annotators.
+- id: Q108
+  page: 9
+  dimension: output_content
+  text: Our expert annotators are computer science college students familiar with FOL.
+- id: Q109
+  page: 9
+  dimension: output_content
+  text: Non-expert annotators are community college or high school students who have not taken the SAT.
+- id: Q110
+  page: 9
+  dimension: output_content
+  text: Both expert and non-expert annotators are native English speakers.
+- id: Q111
+  page: 9
+  dimension: output_content
+  text: Expert annotations achieve an accuracy of 95.98% while non-expert annotations achieves 61.82%, with a gap of 34.16%.
+- id: Q112
+  page: 9
+  dimension: input_ontology
+  text: This shows that sufficient domain knowledge of FOL is necessary for good performance on FOLIO.
+- id: Q113
+  page: 9
+  dimension: output_content
+  text: The expert and GPT-4 gap is 31.82%, suggesting significant room for model improvement.
+- id: Q114
+  page: 9
+  dimension: input_content
+  text: We focus on collecting a very high-quality dataset in evaluating logical reasoning rather than merely a large dataset.
+- id: Q115
+  page: 9
+  dimension: output_content
+  text: 'Optimizing for quality required us to adopt a rigorous annotation process with domain experts selected based on a
+    few important criteria as mentioned in Appendix A: Annotator Selection.'
+- id: Q116
+  page: 9
+  dimension: input_content
+  text: Significantly scaling up this process would have required resources beyond our current means and we are unable further
+    expand our dataset for investigating how the size of training data affects the performance of fine-tuning experiments.
+- id: Q117
+  page: 9
+  dimension: input_content
+  text: We encourage the community to apply our annotation protocol to expand this realistic and complex FOL reasoning story
+    set.
+- id: Q118
+  page: 9
+  dimension: output_form
+  text: Approximately 65% of the time, the model struggles to construct accurate reasoning chains for complex problems with
+    intricate steps, leading to faulty reasoning paths and indicating a limited ability to solve problems with long reasoning
+    chains.
+- id: Q119
+  page: 9
+  dimension: output_form
+  text: In 25% of cases, erroneous derivations occur within certain reasoning steps, highlighting potential inaccuracies and
+    flaws in logical deductions.
+- id: Q120
+  page: 9
+  dimension: output_ontology
+  text: 5% of conclusions in FOLIO have a complex syntactic structure, posing comprehension challenges for GPT-4.
+- id: Q121
+  page: 9
+  dimension: output_content
+  text: 5% of outputs show that GPT-4 leverage commonsense reasoning to employ spurious shortcuts that lead to the wrong truth
+    value for the conclusion.
+- id: Q122
+  page: 12
+  dimension: output_content
+  text: Given the complexities of our annotations, we selected annotators based on a few important criteria 1). Our annotators
+    are either college or graduate students who are native English speakers or possess near-native proficiency in English.
+- id: Q123
+  page: 12
+  dimension: output_content
+  text: They possess formal education in first-order logic, having either completed relevant coursework or undertaken self-directed
+    studies in first-order logic or semantic parsing.
+- id: Q124
+  page: 12
+  dimension: output_content
+  text: At the NL quality check stage, only annotators who are experts in natural language processing or computational linguistics
+    are involved.
+- id: Q125
+  page: 12
+  dimension: output_content
+  text: For the FOL quality check, only annotators who are experts in first-order logic are involved.
+- id: Q126
+  page: 13
+  dimension: input_content
+  text: We rewrote those that are not reflective of well-established scientific, historical, or legal facts.
+- id: Q127
+  page: 13
+  dimension: input_content
+  text: We took out stories that had strongly opinionated language and contained gender, racial, and classist biases.
+- id: Q128
+  page: 13
+  dimension: input_content
+  text: We accept certain classes of "psychologically fundamental generalizations" (Leslie, 2008), however, such as "Covid
+    is transmitted through the air" or "Tigers eat other animals," that may not be factually invariant but add logical and
+    semantic nuances to the stories.
+- id: Q129
+  page: 13
+  dimension: input_form
+  text: For stories that pertain to generalization, such as "All As are Bs," we have added specifiers like "all Dan knows"
+    to give a degree of reasonable factuality.
+- id: Q130
+  page: 13
+  dimension: input_form
+  text: We always use "either-or" to express exclusive disjunction.
+- id: Q131
+  page: 13
+  dimension: input_form
+  text: We use either "A or B" or "A or B, or both" to express inclusive disjunction.
+- id: Q132
+  page: 13
+  dimension: input_form
+  text: It is more natural to say "Some A is B" rather than "there exists an A such that A is B."
+- id: Q133
+  page: 13
+  dimension: input_form
+  text: '"All A are B" can be more natural than "If A then B".'
+- id: Q134
+  page: 13
+  dimension: input_form
+  text: Other common issues in NL quality include singular/plural issues, especially in statements that deal with both categories
+    and individual members of those categories; as well as ambiguities resulting from improper introduction of, or failure
+    to introduce, proper nouns.
+- id: Q135
+  page: 13
+  dimension: output_ontology
+  text: FOL enables deriving facts from other facts (Russell and Norvig, 2010).
+- id: Q136
+  page: 13
+  dimension: output_ontology
+  text: FOL, as a logical form, is a more explicit logical representation than its NL counterpart and can be used as input
+    to an FOL prover in order to obtain the exact truth values for the conclusions.
+- id: Q137
+  page: 13
+  dimension: output_ontology
+  text: FOL has no ambiguity while ambiguity can occur at various levels of NLP.
+- id: Q138
+  page: 13
+  dimension: output_ontology
+  text: 'We include the following operators: negation ¬, conjunction ∧, disjunction ∨, implication →, universal quantifier
+    ∀, existential quantifier ∃, equal =.'
+- id: Q139
+  page: 13
+  dimension: input_ontology
+  text: Following (Russell and Norvig, 2010), we consider temporal logic and modal logic as special-purpose logics.
+- id: Q140
+  page: 13
+  dimension: input_ontology
+  text: Consequently, they are beyond the scope of the definition of first-order logic used in our dataset.
+- id: Q141
+  page: 13
+  dimension: output_ontology
+  text: We use n-place predicates when applicable for the expressivity of the FOL formulas.
+- id: Q142
+  page: 13
+  dimension: output_ontology
+  text: However, we do not use the Davidsonian (Davidson, 2001) or neo-Davidsonian semantics (Parsons, 1990) because translating
+    the majority of the FOL formulas in our dataset only requires one-place and two-place predicates.
+- id: Q143
+  page: 14
+  dimension: output_content
+  text: We therefore design an annotation protocol for first-order logic translation in order to ensure that our FOL translations
+    are as consistent as possible across all examples in our dataset.
+- id: Q144
+  page: 14
+  dimension: output_content
+  text: First-order logic formulas need to preserve as much as possible the semantics of natural language sentences.
+- id: Q145
+  page: 14
+  dimension: output_content
+  text: First-order logic formulas should stay as faithful to the structure of the original NL sentence as possible.
+- id: Q146
+  page: 14
+  dimension: output_content
+  text: Semantic decomposition is not needed unless necessary for maintaining the NL expressivity.
+- id: Q147
+  page: 14
+  dimension: output_content
+  text: In terms of abstraction, we neglect tense and remove all the plural forms of verbs.
+- id: Q148
+  page: 14
+  dimension: output_form
+  text: Although there are many provers widely used in the community (McCune, 2005–2010; Sutcliffe, 2017; Nipkow et al., 2002),
+    we adopt the inference engine provided in the Stanford CS221 course page, which is a compact module designed specifically
+    for procesing first-order logic statements.
+- id: Q149
+  page: 14
+  dimension: output_form
+  text: The inference engine does not support input in the FOL syntax adopted by standard education material (Russell and
+    Norvig, 2010), which is used in our dataset.
+- id: Q150
+  page: 14
+  dimension: output_form
+  text: We therefore developed a FOL parser in order to convert the FOL formulas written by humans to the input format of
+    the inference engine.
+- id: Q151
+  page: 14
+  dimension: output_form
+  text: The converter is a semantic parser tool written in Python.
+- id: Q152
+  page: 14
+  dimension: output_form
+  text: Although LLMs such as GPT-4 can be utilized to conduct the conversion, it is hard to ensure the GPT-4 outputs are
+    always correct.
+- id: Q153
+  page: 14
+  dimension: output_form
+  text: Proving a story requires three steps. First, the FOL statements of the premises and conclusions of a story annotated
+    by humans are converted to Python code. Then, the code snippets are used as input to the theorem prover. Finally, the
+    theorem prover outputs whether the conclusions are True / False / Unknown, based on the premises.
+- id: Q154
+  page: 14
+  dimension: input_form
+  text: We show the distribution of readability in Figure 3.
+- id: Q155
+  page: 15
+  dimension: output_form
+  text: Confusion matrices in Figure 4 for the fine-tuning and 8-shot NL prompt results both show that LLMs are significantly
+    better at making the correct predictions for conclusions with labels of True than the conclusions with labels of False
+    or Unknown.
+- id: Q156
+  page: 15
+  dimension: output_form
+  text: The accuracy on examples with False or Unknown conclusions is 61.9% with fine-tuning and 54.0% with few-shot prompting.
+- id: Q157
+  page: 15
+  dimension: output_form
+  text: They also tend to make more predictions of True than the other labels.
+- id: Q158
+  page: 15
+  dimension: output_content
+  text: To test if the premise ordering in FOLIO has spurious correlations with the conclusion label which a model can exploit,
+    we shuffle the input premises to evaluate models.
+- id: Q159
+  page: 15
+  dimension: output_content
+  text: We find that accuracy increases or decreases by roughly 1% in most settings compared to our unshuffled premises.
+- id: Q160
+  page: 15
+  dimension: output_content
+  text: This indicates that the ordering of premises in FOLIO examples does not yield significant information about the label,
+    and thus models will not be able to use the premise ordering as a strong heuristic or statistical feature for its predictions.
+- id: Q161
+  page: 15
+  dimension: output_ontology
+  text: FOL formulas have a clearer and more straightforward logical structure than NL sentences.
+- id: Q162
+  page: 15
+  dimension: output_form
+  text: As shown in Table 11, the performance slightly increases in the NL+FOL setting for GPT-4 while GPT-3.5 performs worse
+    in both the NL+FOL and the FOL-only settings.
+- id: Q163
+  page: 15
+  dimension: output_form
+  text: FOL always serves as additional useful information for GPT-4, but not for GPT-3.5 regardless of whether FOL is concatenated
+    with NL.
+coverage_strengths:
+- user_priority: FOL deductive reasoning as core task (second-half course focus)
+  benchmark_coverage: 'FOLIO is built explicitly around first-order logic deductive reasoning — determining
+
+    whether a conclusion is true, false, or unknown given premises — and frames this as an
+
+    independent evaluation target [Q7, Q15]. The logical operator set (negation, conjunction,
+
+    disjunction, implication, universal and existential quantifiers, equality [Q138]) and
+
+    n-place predicate expressivity [Q141] fully cover the course''s FOL second-half scope.
+
+    '
+  dimension: input_ontology
+- user_priority: Classical logic only — modal, temporal, probabilistic reasoning excluded
+  benchmark_coverage: 'FOLIO explicitly excludes temporal logic and modal logic as special-purpose logics outside
+
+    its classical FOL definition [Q139, Q140], aligning directly with the course''s strict
+
+    classical-deductive-only scope.
+
+    '
+  dimension: input_ontology
+- user_priority: Three-way classification (valid / invalid / indeterminate)
+  benchmark_coverage: 'FOLIO uses a three-way output schema (True / False / Unknown [Q36, Q66]) that structurally
+
+    parallels the deployment''s three-way rubric. All labels are verified by an FOL inference
+
+    engine [Q2], and the proving pipeline explicitly returns True, False, or Unknown based on
+
+    provability from premises [Q153], giving each label a proof-theoretic basis.
+
+    '
+  dimension: output_ontology
+- user_priority: High label reliability for entailment judgments
+  benchmark_coverage: 'Expert annotators (CS students and researchers with formal FOL training [Q16, Q31]) achieved
+
+    95.98% accuracy on the test set [Q111], confirmed by a six-stage quality-control process
+
+    spanning 980 person-hours [Q32] with separate NL and FOL expert checks [Q29, Q124, Q125]
+
+    and FOL-engine verification of all labels [Q57]. A detailed FOL annotation protocol was
+
+    designed specifically to maximize cross-annotator consistency [Q54, Q143, Q144, Q145, Q146].
+
+    '
+  dimension: output_content
+- user_priority: English text, standard script, no modality constraints
+  benchmark_coverage: 'All FOLIO inputs are English natural-language text produced by native or near-native English
+
+    speakers [Q27], grammar-checked and reviewed for naturalness [Q49, Q50], with no modality
+
+    or script variation. The dataset format (structured NL premises and conclusions [Q64]) is
+
+    directly compatible with the deployment''s text-input pipeline.
+
+    '
+  dimension: input_form
+coverage_gap_analysis:
+- user_priority: Propositional logic coverage (course first half)
+  benchmark_coverage: 'NOT DOCUMENTED — FOLIO is built entirely around FOL predicate structures. No quantifier-free
+
+    or propositional-only subset is documented. The benchmark''s design rationale emphasizes
+
+    AST diversity and syllogistic complexity [Q33, Q61], and the HybLogic pipeline is based
+
+    on syllogisms (inherently predicate-level) [Q40, Q41]. No quote establishes a propositional
+
+    sub-corpus.
+
+    '
+  gap_type: full
+  web_search_target: FOLIO propositional logic subset quantifier-free examples benchmark coverage
+- user_priority: Hurley-style templated sentence register (dominant course-packet input style)
+  benchmark_coverage: 'FOLIO explicitly avoids template-based generation in WikiLogic [Q35], and its naturalness
+
+    conventions produce phrasing (e.g., "Some A is B" over bare existential notation [Q132],
+
+    epistemic qualifiers on generalizations [Q129]) that differs from unqualified Hurley-style
+
+    templates ("All A are B," "If P then Q"). HybLogic uses syllogistic templates but
+
+    instantiates them with human-authored prose fillers [Q44], not the bare syntactic forms
+
+    of course-packet problems. The mismatch in register is a documented design choice [Q35].
+
+    '
+  gap_type: partial
+  web_search_target: FOL benchmark textbook-style templated sentences Hurley logic course evaluation
+- user_priority: 'Clean valid/invalid/indeterminate label mapping (strict: invalid = entailment of negation)'
+  benchmark_coverage: 'The proving pipeline [Q153] returns False when the negation is provable from the premises
+
+    via the FOL theorem prover, which aligns with the course''s strict "invalid = premises entail
+
+    negation" definition. However, the paper does not explicitly state whether "False" is
+
+    reserved solely for provable negation entailment or could also include cases where the
+
+    conclusion simply fails to follow; this distinction is not documented in any extracted
+
+    quote. The Unknown label is defined by the inference engine returning neither True nor False
+
+    [Q70], which operationally maps onto indeterminate, but whether this excludes undecidable
+
+    formulas (as the course requires) is not documented.
+
+    '
+  gap_type: partial
+  web_search_target: FOLIO false label annotation protocol entailment negation vs failure to entail FOL prover semantics
+- user_priority: Sufficient indeterminate/unknown example frequency to evaluate rubric's third category
+  benchmark_coverage: 'The test set contains 87 True, 78 False, and only 61 Unknown examples, yielding a majority
+
+    baseline of 38.5% [Q94]. Unknown constitutes approximately 27% of the test set — the
+
+    smallest class. Confusion matrix analysis shows False and Unknown accuracy is only 61.9%
+
+    under fine-tuning and 54.0% under few-shot prompting [Q155, Q156], indicating that
+
+    Unknown-class performance is already identified as unreliable. If the course''s indeterminate
+
+    rate differs from FOLIO''s ~27%, overall accuracy metrics will not reliably predict
+
+    indeterminate-case performance.
+
+    '
+  gap_type: partial
+  web_search_target: FOLIO unknown indeterminate class distribution base rate logic benchmark three-way classification

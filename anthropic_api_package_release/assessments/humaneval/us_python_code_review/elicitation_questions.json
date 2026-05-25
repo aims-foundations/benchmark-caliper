@@ -1,0 +1,17 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "HumanEval tests generation of new functions from scratch (docstring-to-code). Your system reads existing, potentially buggy code and identifies defects — logic errors, off-by-one bugs, null dereferences. Do your review tasks primarily involve: (a) understanding what existing code does, (b) localizing where a bug occurs, (c) classifying the bug type, or (d) generating a corrected code snippet? Which of these are most critical, and are any out of scope?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "IC",
+    "question": "Your users are American development teams, which implies real-world codebases with things like framework-specific patterns (Django, Flask, NumPy), legacy code styles, incomplete or misleading variable names, and missing or incorrect docstrings. Does your system need to handle code that lacks docstrings or has misleading comments — conditions essentially absent from HumanEval's clean, well-documented problem set?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OO",
+    "question": "HumanEval scores by pass/fail on unit tests — a binary correctness signal for freshly generated code. For your bug-detection feature, what counts as a correct system output: flagging the right line, naming the right bug category, producing a fix that passes tests, or producing a fix that a human reviewer would accept even if tests weren't available? Could a technically passing fix still be rejected by your reviewers as wrong or unsafe?"
+  }
+]

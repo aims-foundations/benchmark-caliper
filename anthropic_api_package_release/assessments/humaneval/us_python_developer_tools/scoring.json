@@ -1,0 +1,412 @@
+{
+  "benchmark": "humaneval",
+  "region": "US Professional Software Engineers — Python IDE Inline Completion",
+  "dimensions": {
+    "input_ontology": {
+      "score": 2,
+      "justification": "HumanEval's taxonomy is explicitly 'language comprehension, reasoning, algorithms, and simple mathematics' [Q22] — interview-style algorithmic problems. The deployment elicitation confirms a large production gap: pandas/numpy data manipulation, Flask/FastAPI route handlers, async/await I/O, and heavily typed signatures form a major share of real completions. Dataset analysis of 40 problems confirms zero async functions, only primitive `List[T]` typing, and no third-party library tasks. The paper itself acknowledges the distribution mismatch [Q48]. With IO marked MODERATE priority and explicit acknowledgement that this is a lower-bound starting point, a score of 2 reflects significant construct underrepresentation while recognizing the algorithmic core is genuinely covered.",
+      "strengths": [
+        "Hand-authored coverage of core algorithmic categories (bracket matching, sorting, sequences, polynomial roots, string manipulation) is broad within its scope and provides a meaningful lower-bound signal for general-purpose correctness."
+      ],
+      "checklist_responses": {
+        "IO-1": "Required categories per elicitation: data manipulation (pandas/numpy), web framework route handlers (Flask/FastAPI/Django), async/await patterns, heavily type-annotated complex signatures, and general algorithmic correctness. Only the last is covered by HumanEval [Q22].",
+        "IO-2": "Yes — HumanEval's taxonomy omits pandas/numpy data workflows, async/await, web framework idioms, and modern typed APIs. The paper acknowledges class implementations, configurations, and scripts in real GitHub data are absent from the synthesis task [Q48]. Dataset analysis confirms no async, no third-party libs, no modern typing across 40 sampled problems [D1, D6, D32].",
+        "IO-3": "No category in HumanEval is positively irrelevant to the target population — interview-style algorithmic problems remain a (smaller) part of professional engineering practice. The narrative/puzzle framings ('hungry rabbit', 'Tribonacci') introduce minor stylistic mismatch but the underlying task categories are still in-scope [D27, D28].",
+        "IO-4": "Documented gaps harming content validity: (a) async/await — no benchmark in the field fills this per regional research [gap_id 2 NOT FOUND]; (b) typed-signature synthesis — same gap; (c) web framework boilerplate — confirmed unaddressed [gap_id 3 NOT FOUND]; (d) library-dependent completions — partially addressed by DS-1000 [WEB-4] and SWE-bench [WEB-7] as supplements."
+      },
+      "evidence_quotes": [
+        "[Q22] 'Programming tasks in the HumanEval dataset assess language comprehension, reasoning, algorithms, and simple mathematics.' (p.4)",
+        "[Q48] 'Python code found on GitHub contains class implementations, configuration files, scripts, and even files used to store data. This code is seemingly unrelated to synthesizing functions from docstrings, and we hypothesize that the distribution mismatch reduces HumanEval performance.' (p.7)",
+        "[Q88] 'Codex struggles to parse through increasingly long and higher-level or system-level specifications.' (p.10)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-4] DS-1000 provides 1,000 data-science problems across seven libraries — supplements pandas/numpy gap",
+        "[WEB-7] SWE-bench finding: models 'do not leverage existing third-party libraries' — corroborates taxonomy gap",
+        "[WEB-2] FastAPI adoption grew from 29% to 38% among Python developers in 2024 — amplifies web-framework gap"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: HumanEval/0 uses only `List[float]` — most complex typing observed across sample",
+        "DATASET-D6: HumanEval/34 uses only `from typing import List`; no domain library across 40 problems",
+        "DATASET-D8: HumanEval/61 bracket-matching is canonical algorithmic problem — within scope",
+        "DATASET-D9: HumanEval/130 Tribonacci — pure math recursion typical of HumanEval taxonomy"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "Q22"
+        ],
+        "IO-2": [
+          "Q48",
+          "Q22",
+          "WEB-4",
+          "WEB-7",
+          "D1",
+          "D6"
+        ],
+        "IO-3": [
+          "D27",
+          "D28"
+        ],
+        "IO-4": [
+          "WEB-4",
+          "WEB-7",
+          "WEB-2"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "No quantification in the paper of what fraction of real-world completions fall in each category",
+        "Async/await and typed-signature benchmarks remain unaddressed in the literature per regional research"
+      ],
+      "requires_expert_verification": [
+        "Empirical distribution of completion categories observed in the deploying organization's actual user telemetry"
+      ]
+    },
+    "input_content": {
+      "score": 1,
+      "justification": "Input content is the highest-priority dimension per elicitation (HIGH). HumanEval problems are 'hand-written and not programmatically copied from existing sources' [Q14, Q21] and are explicitly self-contained — every sampled problem uses at most stdlib (`math`, `typing`) [D3, D5, D6]. The elicitation states 'the majority of real completions reference imports already in the file, internal helper modules, or third-party libraries (requests, sqlalchemy, pandas).' Dataset analysis confirms zero third-party libraries across 40 sampled problems [Concern 1]. The paper itself flags this as a distribution mismatch [Q48]. Several docstrings also use narrative/puzzle register ('hungry rabbit', 'In this task') rather than professional API style [D26, D27, D28], adding further content mismatch. Score 1 reflects the magnitude of this gap on a HIGH-priority dimension.",
+      "strengths": [
+        "Hand-authored problems explicitly avoid GitHub contamination [Q14, Q21] — preserves the integrity of the correctness signal for models trained on public code, confirmed by dataset analysis showing idiosyncratic framings unlikely to appear in training data [D26, D27]."
+      ],
+      "checklist_responses": {
+        "IC-1": "Region-specific knowledge is minimal — the deployment is US English-speaking professional engineers. One minor instance: HumanEval/124 hardcodes US MM-DD-YYYY date format as correct and rejects ISO 8601 [D10, D35]. This aligns with US deployment but represents a regional encoding.",
+        "IC-2": "Culturally aligned — both benchmark designers and target users are professional engineers in the US/Global North Python ecosystem; no cultural mismatch.",
+        "IC-3": "No problematic Western-specific knowledge for this deployment; the US date format is in fact aligned with the population.",
+        "IC-4": "Not necessary — population and benchmark designers share technical culture; the validity concerns are structural (dependency-free, register) rather than culturally annotative.",
+        "IC-5": "Major content gaps: (a) zero third-party library usage in 40/40 sampled problems [D3, D5, D6] vs. majority of real completions using imports [elicitation A3]; (b) no internal helper / multi-file context — only HumanEval/32 and /38 use a second function in the prompt [D29, D30]; (c) docstring register skews narrative/puzzle rather than `Args:`/`Returns:` professional style [D26, D27, D28]; (d) paper acknowledges distribution mismatch [Q48] but does not quantify it."
+      },
+      "evidence_quotes": [
+        "[Q14] 'Though not a guarantee for problem novelty, all problems were hand-written and not programmatically copied from existing sources.' (p.3)",
+        "[Q19] 'We evaluate functional correctness on a set of 164 hand-written programming problems, which we call the HumanEval dataset.' (p.4)",
+        "[Q48] 'we hypothesize that the distribution mismatch reduces HumanEval performance.' (p.7)",
+        "[Q21] 'It is important for these tasks to be hand-written, since our models are trained on a large fraction of GitHub, which already contains solutions to problems from a variety of sources.' (p.4)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-4] DS-1000 covers seven data-science libraries with 1.8% false-accept rate — direct supplement for library-dependent completions",
+        "[WEB-7] SWE-bench provides 2,294 repo-level Python tasks; finding that models 'do not leverage existing third-party libraries' corroborates the input_content gap",
+        "[WEB-2] FastAPI adoption widening (29%→38% in 2024) — production-distribution mismatch is growing year over year"
+      ],
+      "evidence_dataset": [
+        "DATASET-D3: HumanEval/32 — only stdlib `import math`; no pip dependency",
+        "DATASET-D5: HumanEval/38 — no imports at all",
+        "DATASET-D6: HumanEval/34 — typing-only import; no domain library",
+        "DATASET-D26: HumanEval/67 — 'In this task' narrative register, not professional API docstring",
+        "DATASET-D27: HumanEval/159 — 'You're a hungry rabbit' puzzle framing",
+        "DATASET-D35: HumanEval/124 — US date format MM-DD-YYYY hardcoded as correct; ISO 8601 rejected"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "D10",
+          "D35"
+        ],
+        "IC-2": [],
+        "IC-3": [],
+        "IC-4": [],
+        "IC-5": [
+          "Q48",
+          "D3",
+          "D5",
+          "D6",
+          "D26",
+          "D27",
+          "D28",
+          "WEB-4",
+          "WEB-7"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Paper does not quantify what fraction of real GitHub Python code uses third-party libraries vs. self-contained patterns",
+        "No empirical telemetry from the deployment's user base on import-frequency distribution"
+      ],
+      "requires_expert_verification": [
+        "Audit of the deploying organization's actual completion logs to confirm the elicitation's claim that 'majority' of completions involve imports"
+      ]
+    },
+    "input_form": {
+      "score": 5,
+      "justification": "Input form is a precise match. HumanEval prompts consist of 'a header, a signature, and a docstring' in plain Python text [Q28], which is exactly the IDE inline-completion trigger described in the deployment context. Stop sequences (`\\nclass`, `\\ndef`, etc.) [Q29] match how IDE completions naturally terminate. Dataset analysis confirms every sampled problem follows this format [D1, D7, D29]. No modality mismatch, no script issues (Latin/ASCII throughout), no infrastructure constraint. IF was marked LOWER priority precisely because of this alignment.",
+      "strengths": [
+        "Signature + English docstring → function body prompt format is identical to the IDE inline completion trigger [Q28, D1]",
+        "Stop-token handling matches natural IDE completion boundaries [Q29]",
+        "Latin script / ASCII / UTF-8 / standard sandboxed Python execution — zero infrastructure mismatch with deployment"
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal distributions match exactly — text-in/code-out, English docstring + Python signature. Standard sandboxed Python execution sufficient [Q28, Q29].",
+        "IF-2": "US developer infrastructure (VS Code at 48% primary IDE share, PyCharm 25%, per PSF/JetBrains 2024) supports the same plain-text prompt/completion format used by HumanEval [WEB-1, WEB-2].",
+        "IF-3": "One domain-specific observation: HumanEval typing is limited to legacy `from typing import List` and primitives; no `async def`, no `Optional/Union`, no PEP 604 `X | Y`, no dataclass, no Protocol [D1, D2, D32]. This is more an ontology gap than a pure form gap, but to the extent 'form' includes modern syntactic constructs, the benchmark's form is somewhat dated relative to Python 3.11–3.13 (the dominant versions per [WEB-1]).",
+        "IF-4": "No form mismatch that materially harms external validity for the deployment's primary text-in/code-out modality."
+      },
+      "evidence_quotes": [
+        "[Q28] 'To compute pass@k, we assemble each HumanEval problem into a prompt consisting of a header, a signature, and a docstring, which is illustrated in Figure 2.' (p.4)",
+        "[Q29] 'We sample tokens from Codex until we encounter one of the following stop sequences: \\nclass, \\ndef, \\n#, \\nif, or \\nprint, since the model will continue generating additional functions or statements otherwise.' (p.4)",
+        "[Q20] 'Each problem includes a function signature, docstring, body, and several unit tests, with an average of 7.7 tests per problem.' (p.4)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-1] PSF/JetBrains Python Developers Survey 2024 — VS Code 48% primary IDE share, PyCharm 25%, confirms text-based IDE completion is universal",
+        "[WEB-2] Python 3.11–3.13 dominant versions; modern syntax beyond HumanEval's coverage"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: HumanEval/0 — signature + docstring + List typing matches IDE trigger format",
+        "DATASET-D7: HumanEval/17 — `>>>` example notation in docstring mirrors real engineering docstrings",
+        "DATASET-D29: HumanEval/32 — two-function prompt confirms multi-function context handling",
+        "DATASET-D32: HumanEval/76 — completely untyped signature; benchmark covers untyped cases too"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q28",
+          "Q29",
+          "D1"
+        ],
+        "IF-2": [
+          "WEB-1",
+          "WEB-2"
+        ],
+        "IF-3": [
+          "D1",
+          "D2",
+          "D32",
+          "WEB-1"
+        ],
+        "IF-4": [
+          "Q28"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether the deployment's IDE plugin prepends additional context (open file contents, other files in workspace) that HumanEval does not simulate"
+      ],
+      "requires_expert_verification": []
+    },
+    "output_ontology": {
+      "score": 2,
+      "justification": "Output ontology is HIGH priority per elicitation. HumanEval's output ontology is binary functional correctness: 'correctness is defined by passing a set of unit tests' [Q77]. The paper extensively argues this supersedes BLEU [Q10, Q18, Q40] — a genuine strength. However, the paper itself acknowledges that pass@k does not distinguish among functionally equivalent solutions [Q86] and that the autocomplete deployment requires a single-sample heuristic [Q37, Q38] for which mean log probability is the only recommendation [Q39] — no idiomaticity or efficiency signal is incorporated. The elicitation directly confirms that 'users will reject non-idiomatic completions even when functionally correct' and 'two passing solutions are considered substantively different in quality by end users.' Dataset analysis shows canonical solutions themselves use anti-idiomatic patterns (bare `except:` in HumanEval/105, operator-precedence bugs) that the binary metric cannot surface [D21, D33]. Score 2 reflects significant scoring-function misalignment with the user-relevant quality dimension on a HIGH-priority dimension.",
+      "strengths": [
+        "Functional correctness over BLEU is well-justified and demonstrated empirically [Q40] — eliminates a major class of false signals",
+        "Test-driven development framing [Q12] aligns with professional engineering practice",
+        "Unbiased pass@k estimator [Q15, Q17, Q138] addresses statistical bias other reports do not",
+        "Paper explicitly identifies the autocomplete single-sample selection problem [Q37, Q38] and recommends mean log probability as a heuristic [Q39]"
+      ],
+      "checklist_responses": {
+        "OO-1": "Binary pass/fail [Q77] is relevant to the deployment's primary signal but does not cover idiomaticity (rank-2 signal in elicitation) or efficiency (rank-3 signal). The elicitation explicitly identifies these as user-relevant quality dimensions not captured by binary pass@k.",
+        "OO-2": "Missing categories: idiomaticity scoring (style, PEP-8 adherence, avoidance of bare `except:` etc.), efficiency scoring, library-use appropriateness. CodeArena [WEB-8] and BigCodeArena [WEB-9] are emerging human-preference benchmarks that begin to address this but are not Python-specific.",
+        "OO-3": "No category in HumanEval encodes non-regional values — the cryptographic security thresholds (RSA ≥ 2048, no ECB mode) [Q208, Q209, Q210] reflect standard professional consensus aligned with US engineering practice.",
+        "OO-4": "Stakeholder-driven extension would add: (a) linter-based idiomaticity score, (b) runtime/complexity efficiency check, (c) human-preference pairwise comparison per CodeArena methodology [WEB-8]. The deployment's elicitation confirms users would value these signals.",
+        "OO-5": "Documented harm to structural and content validity: the binary criterion treats `try: ... except: pass` solutions [D33] identically to clean idiomatic implementations, and treats O(n³) prime factorization identically to O(n log log n) — collapsing a quality dimension the user population explicitly cares about. Paper itself acknowledges deferred qualitative metrics [Q86, Q148, Q149]."
+      },
+      "evidence_quotes": [
+        "[Q77] 'When we benchmark our code generation models, we measure pass@k on the HumanEval dataset, where correctness is defined by passing a set of unit tests.' (p.9)",
+        "[Q37] 'From a practical perspective, we are also interested in the setting where we must select a single sample from k samples without having access to an oracle.' (p.5)",
+        "[Q38] 'when the model is used as an autocomplete tool where a user provides a prompt, we do not have unit tests, but would like to return only a single completion to the user' (p.5)",
+        "[Q86] 'we developed a set of qualitative metrics for measuring the capabilities of code generating models while controlling for the complexity and abstraction level of the specifications (Appendix D).' (p.10)",
+        "[Q40] 'when we plot the distributions of BLEU scores for correct and incorrect solutions, we notice significant overlap ... improvements in BLEU score may not indicate improved rates of functional correctness in practice.' (p.6)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-8] CodeArena (2024) — human-preference benchmark; reveals gap between execution-based and preference-based scoring across 40+ LLMs",
+        "[WEB-9] BigCodeArena (2024) — crowdsourced human pairwise preference platform, 14K+ sessions, confirms binary pass/fail misses preference signal"
+      ],
+      "evidence_dataset": [
+        "DATASET-D33: HumanEval/105 canonical solution uses bare `except:` — anti-idiomatic but passes; binary metric cannot distinguish",
+        "DATASET-D21: HumanEval/124 canonical solution has operator-precedence bug yet passes test suite — correctness signal itself contaminated",
+        "DATASET-D22: HumanEval/105 canonical solution sorts entire array descending instead of filtering 1–9 first — obscures intent but still passes"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q77",
+          "Q86"
+        ],
+        "OO-2": [
+          "Q86",
+          "Q148",
+          "Q149",
+          "WEB-8",
+          "WEB-9",
+          "D33"
+        ],
+        "OO-3": [
+          "Q208",
+          "Q209",
+          "Q210"
+        ],
+        "OO-4": [
+          "WEB-8",
+          "WEB-9",
+          "Q39"
+        ],
+        "OO-5": [
+          "Q77",
+          "Q86",
+          "D21",
+          "D22",
+          "D33"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "No automated, deployment-ready Python-specific idiomaticity metric is identified in either paper or regional research",
+        "Paper defers qualitative metrics to 'forthcoming work' [Q149] which is not directly usable"
+      ],
+      "requires_expert_verification": [
+        "Whether the deploying team's user acceptance telemetry (accept/reject rates) correlates with pass@k or diverges based on style — this would empirically confirm the elicited concern"
+      ]
+    },
+    "output_content": {
+      "score": 3,
+      "justification": "Output content (label correctness) was rated LOWER priority because labels are objective unit-test outcomes [Q77] authored by domain insiders sharing the target population's technical culture. This is a real strength. However, dataset analysis reveals significant label-quality issues: (a) filler `assert True` statements appear in ≥8 of 40 sampled test suites [D11–D16]; (b) several test suites have only 3–6 functional assertions [D17, D18, D25]; (c) the canonical solution for HumanEval/124 contains an operator-precedence bug not surfaced by the test suite [D21]; (d) EvalPlus (NeurIPS 2023) [WEB-10] empirically quantifies that scores drop 19.3–28.9% across 26 LLMs when tests are expanded 80×, and 11% of original ground-truth solutions contain errors. The paper itself acknowledges 'some prompts underspecify the function' [Q63] and that human test suites have limited coverage [Q129]. Score 3 reflects strong conceptual alignment (objective labels, no cultural mismatch) tempered by empirically documented label-quality problems.",
+      "strengths": [
+        "Objective unit-test outcomes [Q77] eliminate annotator subjectivity that plagues many benchmarks",
+        "Annotator population (OpenAI engineers + collaborators) shares technical culture with US professional engineers — no cross-cultural label mismatch",
+        "Docstring-generation evaluation [Q78, Q79] uses transparent grading rule (excluding code-copying [Q81]) even though IAA is not reported"
+      ],
+      "checklist_responses": {
+        "OC-1": "Ground truth (unit-test pass/fail) reflects regional stakeholder perspectives directly — US professional engineers use the same functional-correctness criterion. No cultural mismatch.",
+        "OC-2": "Disagreement between original annotators and target population is minimal at the labeling level. The disagreement is structural (binary vs. quality-aware) rather than annotative.",
+        "OC-3": "Paper does not report annotator demographics for docstring-grading or test-suite-authoring [Q79 notes 1,640 judgments but no demographic breakdown]. INSUFFICIENT DOCUMENTATION on who authored test suites and their qualifications.",
+        "OC-4": "Re-annotation is not the primary remediation here; test-suite augmentation (EvalPlus [WEB-10]) is. EvalPlus has already done this work — adopting HumanEval+ closes most of the label-correctness gap.",
+        "OC-5": "Aggregation method (pass@k unbiased estimator [Q15, Q138]) is statistically sound and does not erase minority perspectives — the issue is the underlying test suites' coverage, not aggregation.",
+        "OC-6": "Documented label issues: filler `assert True` statements [D11–D16, Concern 3], thin per-problem coverage [D17, D18, D25], operator-precedence bug in HumanEval/124 canonical solution [D21], paper acknowledgement of underspecified prompts [Q63] and limited test coverage [Q129], and EvalPlus's quantification of 19–29% score inflation and 11% ground-truth errors [WEB-10]."
+      },
+      "evidence_quotes": [
+        "[Q63] 'Some prompts underspecify the function that is implemented, in which case a perfectly valid solution may be wrongly penalized by the unit test.' (p.8)",
+        "[Q79] 'Due to the time consuming nature of this process, we only grade 10 samples per problem, for a total of 1640 problems, from Codex-D-12B at temperature 0.8.' (p.9)",
+        "[Q129] 'Human developers often write test suites with limited but targeted coverage, but this does not always work well against an algorithm, highlighting the challenges of evaluating correctness of programs.' (p.14)",
+        "[Q77] 'correctness is defined by passing a set of unit tests.' (p.9)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-10] EvalPlus (NeurIPS 2023) — expands HumanEval test suite 80×; scores drop 19.3–28.9% across 26 LLMs; 11% of original ground-truth solutions contain errors",
+        "[WEB-11] EvalPlus GitHub — HumanEval+ available as drop-in replacement",
+        "[WEB-12] AlphaXiv EvalPlus summary confirms model rankings flip on HumanEval+ vs. base"
+      ],
+      "evidence_dataset": [
+        "DATASET-D11: HumanEval/105 contains `assert True, \"This prints if this assert fails\"` filler — zero coverage",
+        "DATASET-D13: HumanEval/145 — filler assert at end of edge-cases section",
+        "DATASET-D14: HumanEval/121 — section header 'edge cases' with no following assertions",
+        "DATASET-D17: HumanEval/72 — only 6 functional assertions",
+        "DATASET-D18: HumanEval/123 — only 4 test cases for an infinite-sequence function",
+        "DATASET-D21: HumanEval/124 — canonical solution operator-precedence bug not caught by test suite",
+        "DATASET-D25: HumanEval/11 — only 3 test cases for XOR function"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q77"
+        ],
+        "OC-2": [
+          "Q77"
+        ],
+        "OC-3": [],
+        "OC-4": [
+          "WEB-10",
+          "WEB-11"
+        ],
+        "OC-5": [
+          "Q15"
+        ],
+        "OC-6": [
+          "Q63",
+          "Q129",
+          "D11",
+          "D13",
+          "D14",
+          "D17",
+          "D21",
+          "D25",
+          "WEB-10"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Inter-annotator agreement for docstring-grading not reported [Q79]",
+        "Annotator demographics and qualification criteria not documented",
+        "Per-problem test coverage variance not analyzed in original paper"
+      ],
+      "requires_expert_verification": []
+    },
+    "output_form": {
+      "score": 5,
+      "justification": "Output form is a precise match: HumanEval expects open-ended Python function bodies sampled via nucleus sampling [Q30], which is exactly the deployment's output modality. Dataset analysis confirms all problems output Python function bodies evaluated via `assert` statements [Strength 2, D8, D34]. The paper explicitly discredits BLEU as a reliability indicator [Q18, Q40], aligning with the deployment's preference for execution-based evaluation. OF was marked LOWER priority precisely because of this fit.",
+      "strengths": [
+        "Open-ended Python text output matches IDE inline-completion output modality exactly [Q30]",
+        "Unbiased pass@k estimator [Q15, Q17, Q138, Q143] provides statistically sound scoring",
+        "BLEU explicitly discredited [Q18, Q40] — eliminates a misleading form-based metric",
+        "Temperature optimization per k [Q34] supports the deployment's k=1 inline-completion setting (T*=0.2)"
+      ],
+      "checklist_responses": {
+        "OF-1": "Expected output modality (Python function body as text) matches deployment requirements exactly [Q30, D8].",
+        "OF-2": "Not applicable — text/code modality, no speech-output requirement.",
+        "OF-3": "Not applicable — population is professional software engineers with full technical literacy; no accessibility constraints differentiate this deployment.",
+        "OF-4": "No form mismatches identified. The only minor caveat: pass@k assumes oracle access for ranking, while inline-completion returns a single sample; the paper addresses this with mean log probability as a heuristic [Q39], but this is a scoring-procedure issue (output ontology) rather than output form."
+      },
+      "evidence_quotes": [
+        "[Q30] 'We use nucleus sampling (Holtzman et al., 2020) with top p = 0.95 for all sampling evaluation in this work.' (p.4)",
+        "[Q18] 'BLEU score may not be a reliable indicator of functional correctness' (p.3)",
+        "[Q34] 'for a 679M parameter model, the optimal temperature for pass@1 is T* = 0.2 and the optimal temperature for pass@100 is T* = 0.8.' (p.5)",
+        "[Q39] 'choosing the sample with the highest mean token log probability outperforms evaluating a random sample' (p.5)"
+      ],
+      "evidence_web_sources": [],
+      "evidence_dataset": [
+        "DATASET-D8: HumanEval/61 — 12 boolean assertions over generated function body output",
+        "DATASET-D34: HumanEval/32 — numeric tolerance assertion `math.fabs(...) < 1e-4` over generated function output"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q30",
+          "D8"
+        ],
+        "OF-2": [],
+        "OF-3": [],
+        "OF-4": [
+          "Q39"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": []
+    }
+  },
+  "overall_summary": "For US professional software engineers using Python IDE inline completion, HumanEval provides a precisely-formatted but narrow evaluation. Input form and output form are excellent matches (5/5 each): English docstring + Python signature → function body sampled at standard temperatures, with execution-based scoring. The benchmark's hand-authored, contamination-resistant problems and unbiased pass@k estimator are genuine strengths. However, on the two HIGH-priority dimensions, the benchmark falls significantly short. Input content (1/5) is the largest concern: 40/40 sampled problems are dependency-free and stdlib-only, while the elicitation confirms the majority of real completions involve third-party libraries (pandas, FastAPI, SQLAlchemy, requests) or internal helpers — a gap the paper itself acknowledges [Q48]. Output ontology (2/5) is the next-largest: the binary pass/fail criterion discards idiomaticity and efficiency, both confirmed as user-relevant; dataset analysis shows canonical solutions themselves use bare `except:` and contain precedence bugs that the metric cannot surface. Input ontology (2/5) omits async/await, modern typing, and web-framework patterns. Output content (3/5) is conceptually sound but empirically compromised by EvalPlus's quantification of 19–29% score inflation and 11% ground-truth errors, plus dataset-confirmed filler `assert True` statements. HumanEval should be treated as a lower-bound algorithmic-correctness baseline, supplemented by HumanEval+ (test-suite reliability), DS-1000 (library-dependent completions), and emerging human-preference benchmarks (idiomaticity).",
+  "risk_assessment": "medium",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "HumanEval measures general-purpose Python function-synthesis correctness on hand-authored, dependency-free algorithmic and string-manipulation problems, scored binary via unit tests. For the deployment, it provides a calibrated lower-bound signal on the smallest but still relevant slice of real usage — interview-style algorithmic completions in self-contained contexts. Strongest dimensions (input form and output form, both 5/5) confirm the prompt/output modality precisely matches inline IDE completion.",
+    "construct_depth": "The benchmark probes functional correctness shallowly but broadly within its taxonomy: 164 problems averaging 7.7 tests each, with documented per-problem coverage variance (some problems have only 3–6 functional assertions plus `assert True` filler [D11–D17, D25]). EvalPlus's 80× test-suite expansion [WEB-10] empirically demonstrates that base HumanEval over-credits models by 19–29%. The benchmark provides no depth at all on idiomaticity, efficiency, library-use appropriateness, async patterns, or typed-signature complexity — all confirmed user-relevant quality dimensions per the elicitation.",
+    "supplementation_needed": "To approach a complete evaluation for this deployment, supplement HumanEval with: (1) HumanEval+ [WEB-11] as the minimum baseline to address the output_content reliability gap; (2) DS-1000 [WEB-4] to address the input_content/input_ontology pandas/numpy gap; (3) SWE-bench Verified [WEB-7] for repo-context completion (though more agentic than inline); (4) an internal evaluation incorporating linter-based idiomaticity scoring and accept/reject telemetry to address the output_ontology style gap; (5) a custom evaluation of async/await and typed-signature synthesis, since no public benchmark fills these gaps per regional research."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_content",
+      "gap": "Zero third-party library usage in benchmark; elicitation confirms majority of real completions involve imports (pandas, FastAPI, SQLAlchemy, requests)",
+      "recommendation": "Adopt DS-1000 [WEB-4] alongside HumanEval as the primary library-dependent evaluation. DS-1000's 1,000 problems across seven libraries with 1.8% false-accept rate directly address the pandas/numpy slice of the deployment's production distribution."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Filler `assert True` statements, thin per-problem coverage, and canonical-solution bugs (e.g., HumanEval/124 precedence error) inflate pass rates; EvalPlus quantifies 19–29% score inflation across 26 LLMs",
+      "recommendation": "Replace base HumanEval with HumanEval+ [WEB-11] as the minimum reliability bar. EvalPlus has already done the 80× test-suite augmentation and corrected 11% of buggy ground-truth solutions."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "Binary pass/fail discards idiomaticity and efficiency — both confirmed user-relevant; canonical solutions themselves use bare `except:` and non-idiomatic patterns [D33, D22]",
+      "recommendation": "Layer a Python-specific style scoring pass (pylint or ruff) on top of pass@k, and stand up an internal pairwise human-preference evaluation following the CodeArena/BigCodeArena methodology [WEB-8, WEB-9]. Use deployment accept/reject telemetry as a proxy for the missing idiomaticity signal."
+    },
+    {
+      "dimension": "input_ontology",
+      "gap": "No async/await, no modern typing (Optional/Union/Protocol/dataclass/PEP 604), no web-framework patterns; gaps confirmed as unfilled in published literature",
+      "recommendation": "Build an internal mini-benchmark targeting these three explicit gaps (async function synthesis, complex typed signatures, FastAPI/Flask route handlers) sized at 50–100 hand-authored problems following HumanEval methodology. This is the only available path since no public benchmark covers these patterns."
+    },
+    {
+      "dimension": "input_ontology",
+      "gap": "No multi-file or repo-context completion in HumanEval; deployment files typically contain pre-existing imports and helpers",
+      "recommendation": "Add SWE-bench Verified [WEB-7] as a secondary agentic-coding signal, while recognizing it tests a different (multi-file editing) use case than inline completion. For inline-completion-specific repo-context evaluation, consider building an internal eval from real workspace contexts."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "Pass@k assumes oracle test access; inline completion returns a single sample without tests [Q37, Q38]",
+      "recommendation": "Operationalize the paper's mean-log-probability heuristic [Q39] as a baseline single-sample ranker, but evaluate it against alternative rankers (e.g., reranker models, style-score-weighted ranking) using deployment accept/reject telemetry as ground truth."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_content",
+    "output_ontology"
+  ],
+  "strongest_dimensions": [
+    "input_form",
+    "output_form"
+  ]
+}

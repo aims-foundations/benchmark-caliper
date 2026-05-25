@@ -1,0 +1,17 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "HumanEval tests generation of code *from* docstrings, but your system generates documentation prose *from* code. Beyond basic function descriptions, does your system need to handle specific documentation patterns common in your codebase — for example, complex class hierarchies, decorator-modified functions, async/await patterns, or modules with extensive interdependencies between functions?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "OO",
+    "question": "For your API documentation output, how is correctness defined — is a description 'correct' only if it matches a ground-truth reference doc, or do multiple valid phrasings count as equally acceptable? Would your team evaluate quality by automated means, human reviewer judgment, or both?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OF",
+    "question": "HumanEval measures functional correctness via unit tests passing, which is a binary signal. For your use case, the outputs are technical prose rather than executable code — does your evaluation need to assess dimensions like clarity, completeness, formatting compliance (e.g., reStructuredText, Google style, NumPy style), or accuracy of parameter type annotations, beyond simple correctness?"
+  }
+]

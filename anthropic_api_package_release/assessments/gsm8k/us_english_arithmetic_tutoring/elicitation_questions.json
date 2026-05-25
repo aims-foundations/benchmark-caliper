@@ -1,0 +1,22 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "GSM8K covers multi-step word problems at a grade school level, but your diagnostic task requires the system to identify and explain specific error types — for example, misapplied operation (adding instead of multiplying), arithmetic slip (correct procedure, wrong calculation), wrong problem setup (misread question), or incomplete reasoning chain. Which of these error categories, or others, does your tutoring module need to diagnose? Are there error patterns specific to US elementary curricula (e.g., Common Core sequencing, unit conversion errors, fraction/decimal confusion) that you'd expect to appear frequently in student work?"
+  },
+  {
+    "id": "OO",
+    "dimension": "OO",
+    "question": "GSM8K scores solutions as correct or incorrect, but your system must pinpoint where in a multi-step worked solution the error first appears and explain why it's wrong. Does your rubric require identifying the single earliest error, all errors across the solution, or the most pedagogically significant one? And should the diagnostic explanation match how a US classroom teacher would describe the mistake (e.g., 'you forgot to carry the ten' vs. a more abstract characterization)?"
+  },
+  {
+    "id": "IC",
+    "dimension": "IC",
+    "question": "GSM8K word problems were designed for linguistic diversity but are rooted in a US context with US-default names, currency (dollars), units (miles, pounds, Fahrenheit), and cultural settings (lemonade stands, baseball). Your students will submit their own worked solutions, which may reflect Common Core notation, US grade-level conventions, or school-specific formatting. Are there surface features of student-submitted work — notation styles, abbreviations, informal language — that the system must tolerate and correctly interpret when diagnosing errors?"
+  },
+  {
+    "id": "OC",
+    "dimension": "OC",
+    "question": "When your system labels a step in a student's solution as erroneous, whose judgment defines ground truth — math educators, curriculum specialists, automated symbolic checkers, or some combination? And at which grade levels (e.g., 3rd vs. 6th grade) does your system need to operate, since what counts as an acceptable intermediate step or rounding convention can differ across US grade-level standards?"
+  }
+]

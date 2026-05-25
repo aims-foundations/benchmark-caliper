@@ -1,0 +1,445 @@
+name: US K-8 Arithmetic Auto-Grading Platform (Grades 3–8)
+abbreviation: us_k8_autograde
+assessment_target:
+  benchmark: gsm8k
+  deployment_description: A text-based LLM auto-grading platform operated by a US
+    edtech company for American K–8 schools. The LLM independently solves arithmetic
+    word problems assigned by teachers and compares its numerical answer to student
+    submissions to determine correctness. The evaluation goal is to assess whether
+    the LLM reliably produces correct final numerical answers across the problem types
+    the platform actually serves.
+  population_type: institutional_deployment
+  primary_users: Grade 3–8 students in American schools and the teachers who assign
+    arithmetic word problems through the platform
+geography:
+  country: United States
+  sub_national_scope: National; no specific state or district scoping identified.
+    Platform serves schools across the US.
+  regional_curricular_variation: '41 states + DC, four territories, and DoDEA have
+    adopted CCSS-M; notable non-adopters include Texas (uses TEKS), Virginia (uses
+    SOL), Nebraska, Alaska, and Minnesota (adopted ELA but not math CCSS). Florida
+    replaced CCSS with the B.E.S.T. standards in 2020; New York and Indiana initially
+    adopted CCSS but later wrote their own replacements. In practice, non-CCSS states
+    cover the same core arithmetic content (multi-step word problems, fractions, ratios,
+    percents, measurement) but may differ in grade-band sequencing — e.g., Texas TEKS
+    introduces certain fraction operations one year earlier than CCSS-M. For a platform
+    serving schools nationally, this variation is real but unlikely to change the
+    benchmark gap analysis materially: the confirmed essential problem types (unit
+    conversion, geometry, data interpretation) are absent from GSM8K regardless of
+    which state standard governs the classroom.
+
+    Sources: Common Core State Standards Initiative — [|https://www.thecorestandards.org/standards-in-your-state/|];
+    World Population Review CCSS 2026 — [|https://worldpopulationreview.com/state-rankings/common-core-states|];
+    Goblins Math Standards by State — [|https://goblinsapp.com/standards/math|]'
+languages:
+  primary:
+  - English (American)
+  variants:
+  - Standard American English as used in US K–8 classroom materials
+  note: Platform is English-only. Problems use US-standard mathematical vocabulary
+    and notation conventions (e.g., 'quotient', 'dividend', imperial unit names).
+    No multilingual or code-switching considerations apply.
+writing_systems:
+  scripts:
+  - Latin alphabet
+  - Arabic numerals
+  - Standard US mathematical notation
+  note: Text-only interface; no script mismatch. Mathematical expressions appear as
+    inline text or calculator-style notation, not as rendered LaTeX or symbolic markup.
+target_grade_band:
+  grades: 3–8
+  approximate_ages: 8–14 years
+  difficulty_range_description: Spans single-step multiplication (grade 3) through
+    multi-step ratio, percent, and rate problems (grade 8). The lower end (grades
+    3–4) involves single-step and two-step problems; the upper end (grades 6–8) involves
+    multi-step reasoning with fractions, decimals, ratios, and percents.
+  grade_band_benchmark_alignment_note: 'GSM8K problems each require between 2 and
+    8 solution steps and are calibrated toward the upper end of the grade-school difficulty
+    range. Performance on GSM8K declines consistently as the number of required solution
+    expressions increases, and the benchmark was designed to emulate scenarios solvable
+    by a bright middle-school student — not early elementary. Aggregate GSM8K accuracy
+    scores therefore likely over-estimate reliability on simpler single-step problems
+    typical of grades 3–4.
+
+    Source: EmergentMind GSM8K overview — [|https://www.emergentmind.com/topics/gsm8k-dataset|];
+    klu.ai GSM8K benchmark — [|https://klu.ai/glossary/GSM8K-eval|]'
+  common_core_grade_level_standards_reference: '[NEEDS VERIFICATION — deferred: below
+    search budget; low marginal impact since gap analysis does not depend on CCSS
+    standard codes. Platform team or a curriculum specialist should map confirmed
+    essential problem types to specific CCSS-M grade-band standards (e.g., 3.OA, 4.MD,
+    5.NBT, 6.RP, 7.RP) for precise gap analysis.]'
+problem_type_coverage:
+  confirmed_essential_types:
+  - Single-step multiplication and division
+  - Multi-step arithmetic (addition, subtraction, multiplication, division)
+  - Ratio and proportion problems
+  - Percent and percentage change problems
+  - Rate problems (speed, unit rate, price per unit)
+  - Measurement and unit conversion (hours-to-minutes, feet-to-inches, pounds-to-ounces;
+    occasional metric in science contexts)
+  - Time problems (elapsed time, scheduling)
+  - Basic geometry word problems (perimeter, area of rectangles and simple polygons)
+  - Simple data interpretation (reading values from tables and bar charts before computing)
+  cultural_contextualization: 'Problems are predominantly US-contextualized: US dollars,
+    imperial units (feet, inches, pounds, ounces, miles, gallons), American names
+    and settings (stores, sports, pizza-sharing, school scenarios). A small minority
+    of teachers include metric units in science-adjacent problems. International currencies
+    and non-US cultural framing are essentially absent.'
+  metric_unit_minority_share: '[NEEDS VERIFICATION — deferred: likely unsearchable
+    (platform-internal operational data); requires direct query to platform team.
+    Elicitation characterizes this as ''a small minority''; no public source would
+    have this figure.]'
+  geometry_subtypes_in_scope: Perimeter and area are confirmed in scope; volume and
+    more advanced geometry (coordinate geometry, transformations) are not mentioned
+    as platform priorities.
+  data_interpretation_format: Problems require reading numerical values from tables
+    or bar charts embedded in or described within the problem text before performing
+    arithmetic. The platform presents these as text-based or image-based inputs; exact
+    modality should be confirmed.
+  data_interpretation_modality: '[NEEDS VERIFICATION — deferred: below search budget;
+    requires platform team confirmation. No public source documents the internal rendering
+    pipeline. This is a high-relevance operational detail: if tables are image-rendered,
+    no existing text-only benchmark (including GSM8K) can cover this modality gap
+    at all.]'
+answer_representation_requirements:
+  equivalence_forms_in_deployment:
+  - Fractions vs. decimals (e.g., '1/2' vs. '0.5')
+  - Trailing zeros in decimals (e.g., '2.50' vs. '2.5')
+  - Currency formatting (e.g., '$2.50' vs. '2.50' vs. '2.5')
+  - Mixed numbers vs. improper fractions (e.g., '1 1/2' vs. '3/2')
+  - Rounded vs. exact values depending on problem context
+  - Unit-stripped vs. unit-included answers (e.g., '12' vs. '12 feet')
+  platform_normalization_logic: The platform has partial normalization logic including
+    unit stripping and decimal/fraction equivalence within tolerance. Exact match
+    alone produces too many false negatives.
+  gsm8k_scoring_alignment: 'GSM8K''s standard evaluation pipeline strips currency
+    symbols and units from the extracted final number, but does not implement fraction-decimal
+    equivalence, rounding tolerance, or mixed-number normalization. Community documentation
+    notes that ''overly aggressive normalization can introduce false positives'' (e.g.,
+    conflating cents and dollars) while under-normalization produces false negatives
+    when formatting differs. This is a structural mismatch with the platform''s grading
+    requirements.
+
+    Source: mbrenndoerfer.com GSM8K evaluation pipeline — [|https://mbrenndoerfer.com/writing/gsm8k-evaluating-mathematical-reasoning-language-models|]'
+  tolerance_thresholds_in_use: '[NEEDS VERIFICATION — deferred: platform-internal
+    operational data; requires direct query to platform team. Not publicly documented
+    anywhere.]'
+  rounding_convention_source: '[NEEDS VERIFICATION — deferred: likely unsearchable
+    (platform-internal); requires platform team confirmation or curriculum alignment
+    review.]'
+curriculum_and_standards_context:
+  primary_standards_framework: Common Core State Standards for Mathematics (CCSS-M)
+    or state-specific equivalents
+  ccss_adoption_status: '41 states, the District of Columbia, four territories, and
+    the Department of Defense Education Activity (DoDEA) have adopted CCSS-M. Four
+    states never adopted: Texas (TEKS), Virginia (SOL), Nebraska, and Alaska. Minnesota
+    adopted ELA CCSS but not math CCSS. Several additional states (Florida with B.E.S.T.,
+    New York, Indiana) replaced CCSS with locally revised standards that remain substantially
+    similar for K-8 arithmetic. In practice, the arithmetic content covered by the
+    platform''s confirmed essential problem types is consistent across CCSS and major
+    state alternatives at the grades 3–8 level; standards variation affects grade-band
+    sequencing more than coverage of arithmetic operations.
+
+    Sources: CCSSI Standards in Your State — [|https://www.thecorestandards.org/standards-in-your-state/|];
+    Goblins Math Standards by State — [|https://goblinsapp.com/standards/math|]'
+  grade_band_sequencing:
+    grades_3_4: Single-step and two-step word problems; multiplication and division
+      facts; simple fractions; basic measurement
+    grades_5_6: Multi-step problems; fractions and decimals; ratios and rates introduced;
+      area and perimeter
+    grades_7_8: Proportional reasoning; percents; multi-step ratio problems; basic
+      geometry formulas
+  teacher_assignment_patterns: Teachers assign problems through the platform; problem
+    types reflect actual classroom curricula. The confirmed essential problem types
+    (unit conversion, geometry, data interpretation) reflect teacher-assigned content
+    distinct from GSM8K's distribution.
+  standardized_test_alignment: '[NEEDS VERIFICATION — deferred: below search budget;
+    low marginal impact for gap scoring. SBAC is the primary CCSS-aligned assessment
+    consortium; PARCC is used in some states; Texas uses STAAR and Virginia uses SOL
+    assessments. Whether the platform''s problem set is deliberately aligned to any
+    of these is an operational question for the platform team.]'
+infrastructure_and_deployment_context:
+  interface_modality: Text-based only; no audio or image generation by the LLM. Problem
+    inputs may include text-serialized tables or described chart data.
+  language_model_role: 'LLM acts as independent solver: receives problem text, produces
+    a numerical answer, which is then compared to the student''s submitted answer
+    by the platform''s grading logic.'
+  grading_pipeline_structure: LLM solution → numerical answer extraction → platform
+    normalization logic → comparison with student submission → correctness determination
+  chain_of_thought_usage: '[NEEDS VERIFICATION — deferred: platform-internal operational
+    detail; requires platform team confirmation. Whether chain-of-thought steps are
+    surfaced to students or teachers as worked solutions is a pedagogical design choice
+    not inferable from public sources.]'
+  deployment_latency_requirements: '[NEEDS VERIFICATION — deferred: platform-internal
+    operational data; below search budget. No public source documents this.]'
+  integration_points: '[NEEDS VERIFICATION — deferred: platform-internal operational
+    data; below search budget. Google Classroom and Canvas are the dominant US K-12
+    LMS platforms but whether this platform integrates with either requires direct
+    confirmation.]'
+benchmark_fit_summary:
+  primary_strengths:
+  - US cultural defaults (dollars, imperial units, American school scenarios) closely
+    match platform problem profile
+  - Multi-step arithmetic reasoning coverage aligns with grades 6–8 upper end of platform
+    range
+  - Text-only English format exactly matches deployment infrastructure
+  - Human-written problems with quality-control re-solving step provides reliable
+    labels for core arithmetic types
+  - Natural language chain-of-thought solution format matches LLM-as-solver deployment
+    pattern
+  primary_gaps:
+  - gap: Measurement and unit conversion problems
+    severity: HIGH
+    dimension: IO
+    notes: 'User-confirmed essential problem type; not documented as a GSM8K coverage
+      target; absent from all sample problems in the paper. ASDiv explicitly includes
+      a ''UnitTrans'' problem type category and grade-level annotations and is a stronger
+      candidate for this coverage gap than GSM8K. Source: ASDiv paper arxiv.org/abs/2106.15772
+      — [|https://arxiv.org/abs/2106.15772|]'
+  - gap: Basic geometry problems (perimeter, area)
+    severity: HIGH
+    dimension: IO
+    notes: 'User-confirmed essential problem type for grades 4–8; GSM8K is arithmetic-only
+      with no geometry coverage documented. ASDiv explicitly includes a ''Geometry''
+      problem type category, making it the strongest currently available supplementary
+      benchmark for this gap. Source: ASDiv paper — [|https://arxiv.org/abs/2106.15772|]'
+  - gap: Data interpretation problems (tables, bar charts)
+    severity: HIGH
+    dimension: IO
+    notes: 'Total gap: GSM8K is text-only and structurally cannot include visual or
+      tabular data inputs. The closest existing benchmarks (TAT-QA, FinQA) combine
+      tabular and textual arithmetic reasoning but are calibrated to financial-report
+      difficulty, not K-8 level. No K-8-calibrated arithmetic benchmark with text-serialized
+      table inputs was found; this gap is likely unaddressable by any existing benchmark
+      and requires bespoke evaluation. Source: TAT-QA (ACL 2021) — [|https://aclanthology.org/2021.acl-long.254/|]'
+  - gap: Answer equivalence normalization in scoring
+    severity: HIGH
+    dimension: OO
+    notes: 'GSM8K''s standard scoring pipeline strips currency symbols and units but
+      does not implement fraction-decimal equivalence, rounding tolerance, or mixed-number
+      normalization — a structural mismatch with the platform''s grading logic. GSM-Plus
+      (Li et al., 2024) includes an ''integer-decimal-fraction conversion'' perturbation
+      category that surfaces LLM robustness failures when number representations are
+      changed (e.g., ''9'' → ''24.5''), and all tested models showed significant performance
+      drops on this perturbation type. GSM-Plus is the closest existing tool for stress-testing
+      this class of failure. Source: GSM-Plus (ACL 2024) — [|https://arxiv.org/abs/2402.19255|]'
+  - gap: Grade-band difficulty calibration for grades 3–4
+    severity: MODERATE
+    dimension: IO
+    notes: 'GSM8K problems require 2–8 solution steps and are calibrated toward a
+      bright middle-school student. Performance declines consistently as the number
+      of required solution steps increases, but no grade-band-specific accuracy breakdown
+      is published. Single-step multiplication and simple ratio problems typical of
+      grades 3–4 are not described as coverage targets. The Easy2Hard-Bench project
+      (Ding et al., 2024) provides human-grounded difficulty labels for a GSM8K subset
+      (E2H-GSM8K) via LLM leaderboard performance data, which could be used to stratify
+      evaluation by difficulty tier. Source: ''LLMs Encode How Difficult Problems
+      Are'' arxiv 2510.18147 — [|https://arxiv.org/pdf/2510.18147|]'
+supplementary_benchmark_candidates:
+  note: The following are candidate benchmarks to address identified gaps. Verification
+    status is updated based on web searches conducted during this enrichment pass.
+  candidates:
+  - benchmark: ASDiv (Academia Sinica Diverse MWP Dataset)
+    potential_coverage: Broader problem type taxonomy explicitly including 'Geometry'
+      and 'UnitTrans' (unit transformation) categories; grade-level annotations covering
+      elementary school levels; 2,305 problems with high lexical diversity.
+    verification_status: 'VERIFIED — ASDiv contains explicit ''Geometry'' and ''UnitTrans''
+      problem type categories with per-problem grade-level annotations, directly addressing
+      the geometry and unit conversion gaps. The arithmetic subset (ASDiv-A) covers
+      ~1,218 problems. Difficulty is lower than GSM8K on average, better matching
+      grades 3–6. The full dataset (ASDiv-W) includes multi-step and higher-type problems.
+      Answer format uses single numerical values; scoring methodology is compatible
+      with the platform''s grading logic. Source: arxiv.org/abs/2106.15772 — [|https://arxiv.org/abs/2106.15772|];
+      GitHub repo — [|https://github.com/chaochun/nlu-asdiv-dataset|]'
+  - benchmark: MAWPS (Math Word Problem Repository)
+    potential_coverage: Collection of arithmetic word problems covering addition,
+      subtraction, multiplication, division, and multi-operation ('multi') categories.
+    verification_status: 'PARTIALLY VERIFIED — MAWPS covers basic arithmetic operation
+      types but its problem type taxonomy does not include explicit geometry or unit
+      conversion categories. It is primarily used as a training set combined with
+      ASDiv-A and SVAMP. For the platform''s gaps, ASDiv is a stronger candidate.
+      Source: SVAMP GitHub (references MAWPS taxonomy) — [|https://github.com/arkilpatel/SVAMP|]'
+  - benchmark: SVAMP (Simple Variations on Arithmetic Math Problems)
+    potential_coverage: Challenge set of 1,000 problems designed to test robustness
+      of MWP solvers beyond ASDiv-A and MAWPS; focuses on question sensitivity and
+      structural variation.
+    verification_status: 'NET-NEW — SVAMP is a robustness challenge set (not a coverage
+      set) that tests whether solvers rely on shallow heuristics. It does not add
+      geometry or unit conversion coverage but is relevant for testing the platform''s
+      need for reliable performance on simple problems that models may solve via pattern-matching
+      rather than genuine reasoning. Source: NAACL 2021 — [|https://github.com/arkilpatel/SVAMP|]'
+  - benchmark: MathQA
+    potential_coverage: Larger and more diverse problem types potentially including
+      geometry.
+    verification_status: 'PARTIALLY VERIFIED — MathQA includes geometry and measurement
+      problem types, but community analysis (ASDiv paper) documents significant quality
+      issues including inconsistent answers and high template reuse within MathQA.
+      Not recommended as a primary supplement without quality filtering. Source: ASDiv
+      paper noting MathQA inconsistencies — [|https://arxiv.org/abs/2106.15772|]'
+  - benchmark: MATH dataset (Hendrycks et al.)
+    potential_coverage: Includes geometry category; however, likely too advanced for
+      grades 3–8 lower range.
+    verification_status: 'CONFIRMED TOO ADVANCED — MATH is significantly more complex
+      than GSM8K and is positioned as more challenging than the grade 3–8 platform
+      range. The geometry subtasks in MATH involve coordinate geometry, proofs, and
+      competition-level problems not relevant to K-8 perimeter/area. Not recommended
+      as a supplement for this deployment. Source: GSM8K paper positioning (Q20) and
+      EmergentMind GSM8K overview — [|https://www.emergentmind.com/topics/gsm8k|]'
+  - benchmark: TAT-QA
+    potential_coverage: Combines tabular and textual arithmetic reasoning with numerical
+      operations including addition, subtraction, multiplication, division, counting,
+      and comparison.
+    verification_status: 'DOMAIN MISMATCH — TAT-QA is built from real financial reports
+      and calibrated to finance-domain difficulty; it is not K-8 level. It confirms
+      that no K-8-calibrated arithmetic benchmark combining text-serialized table
+      inputs with word problems currently exists. For the data interpretation gap,
+      bespoke evaluation items are likely required. Source: ACL 2021 TAT-QA paper
+      — [|https://aclanthology.org/2021.acl-long.254/|]'
+  - benchmark: GSM-Plus (Li et al., ACL 2024)
+    potential_coverage: Adversarial extension of GSM8K with 8 perturbation types including
+      integer-decimal-fraction conversion, digit expansion, numerical substitution,
+      distractor insertion, and critical thinking variants; 10,552 question variations
+      based on all 1,319 GSM8K test problems.
+    verification_status: 'NET-NEW — VERIFIED. GSM-Plus directly addresses the answer
+      equivalence/normalization gap by including an ''integer-decimal-fraction conversion''
+      perturbation that changes number representation types (e.g., integer → decimal
+      or fraction). All 25 tested LLMs showed significant performance drops on this
+      perturbation type, confirming it is a real failure mode. GSM-Plus is the strongest
+      currently available tool for stress-testing the platform''s normalization edge
+      cases within GSM8K''s problem distribution. It does not address the geometry,
+      unit conversion, or data interpretation gaps. Source: ACL 2024 — [|https://arxiv.org/abs/2402.19255|];
+      GitHub — [|https://github.com/qtli/GSM-Plus|]'
+  - benchmark: GSM1K (Zhang et al., 2024)
+    potential_coverage: 1,250 newly constructed grade-school math problems mirroring
+      GSM8K's difficulty distribution, created without LLM assistance to test data
+      contamination. Designed with the same difficulty profile as GSM8K (2–8 steps,
+      basic arithmetic only, all answers positive integers).
+    verification_status: 'NET-NEW — VERIFIED. GSM1K reveals that several open-source
+      models (notably Mistral and Phi families) show ~10% accuracy drops versus GSM8K,
+      indicating benchmark overfitting. For the platform, GSM1K provides a contamination-controlled
+      complement to GSM8K for evaluating genuine multi-step arithmetic reliability,
+      but shares GSM8K''s problem type distribution (no geometry, unit conversion,
+      or table reading). Source: arxiv 2405.00332 — [|https://arxiv.org/pdf/2405.00332|]'
+  - benchmark: Easy2Hard-Bench / E2H-GSM8K (Ding et al., 2024)
+    potential_coverage: Human-grounded difficulty labels for a GSM8K subset derived
+      from LLM Open Leaderboard performance data, enabling difficulty-stratified evaluation.
+    verification_status: 'NET-NEW — VERIFIED. E2H-GSM8K provides standardized difficulty
+      ratings for a GSM8K subset, enabling performance breakdown by difficulty tier
+      (approximating grade-band correspondence). This partially addresses the grade
+      3–4 lower-difficulty calibration gap by allowing separate accuracy measurement
+      on easier vs. harder subsets. Source: arxiv 2510.18147 — [|https://arxiv.org/pdf/2510.18147|]'
+dimension_priority_weights:
+  IO: HIGH — measurement conversion, geometry, and data/table interpretation are user-confirmed
+    essential problem types absent from GSM8K
+  OO: HIGH — answer equivalence across representations (fractions/decimals, rounding,
+    currency formatting) is a real operational requirement not exercised by GSM8K's
+    exact-match scoring
+  OC: MODERATE — GSM8K labels are mathematically objective but scoring pipeline heuristics
+    may not align with platform normalization logic at boundary cases
+  OF: MODERATE — GSM8K produces a final numerical value from chain-of-thought, partially
+    matching deployment need, but lacks equivalence-normalized output or tolerance
+    logic
+  IC: LOWER — deployment problems closely match GSM8K's US cultural defaults; minimal
+    divergence reported
+  IF: LOWER — both benchmark and deployment are text-only, English, US-based; no modality
+    or infrastructure mismatch
+net_new_findings:
+  gsm8k_saturation_note: 'As of early 2026, most frontier LLMs achieve >90% accuracy
+    on GSM8K, substantially reducing its discriminative power for selecting among
+    current models. For the platform, this means a high GSM8K score is a necessary
+    but far from sufficient reliability signal. GSM1K and GSM-Plus provide contamination-controlled
+    and robustness-focused alternatives within the same arithmetic domain.
+
+    Source: EmergentMind GSM8K — [|https://www.emergentmind.com/topics/gsm8k|]'
+  gsm_plus_integer_decimal_fraction: 'GSM-Plus (Li et al., ACL 2024) explicitly tests
+    LLM robustness to integer-decimal-fraction conversion — the same representational
+    equivalence edge cases the platform''s normalization logic must handle. All 25
+    tested LLMs showed significant performance drops on this perturbation, confirming
+    this is a genuine failure mode rather than a minor edge case. The integer-decimal-fraction
+    conversion subset of GSM-Plus is the most deployment-relevant existing evaluation
+    tool for the OO gap.
+
+    Source: arxiv 2402.19255 — [|https://arxiv.org/abs/2402.19255|]'
+  asdiv_geometry_and_unittrans_confirmed: 'ASDiv''s full dataset (ASDiv-W, 2,305 problems)
+    includes explicit ''Geometry'' and ''UnitTrans'' (unit transformation) problem
+    type categories with per-problem grade-level annotations covering elementary school
+    levels. This makes ASDiv the strongest currently available supplementary benchmark
+    for the IO gaps in geometry and unit conversion. The arithmetic-only subset (ASDiv-A,
+    ~1,218 problems) does not include these types; the full ASDiv-W dataset is required.
+
+    Source: ACL 2020 / arxiv 2106.15772 — [|https://arxiv.org/abs/2106.15772|]'
+  no_k8_table_arithmetic_benchmark_found: 'No benchmark combining K-8-calibrated arithmetic
+    word problems with text-serialized table or bar-chart data inputs was found. TAT-QA
+    (ACL 2021) and FinQA are the closest existing benchmarks with hybrid tabular-textual
+    numerical reasoning, but both are finance-domain and far above K-8 difficulty.
+    The data interpretation IO gap is unaddressable by any existing benchmark; bespoke
+    evaluation items authored to match actual teacher-assigned content are required.
+
+    Source: TAT-QA ACL 2021 — [|https://aclanthology.org/2021.acl-long.254/|]'
+  ccss_adoption_landscape_2025: '41 states + DC have adopted CCSS-M; four states (Texas,
+    Virginia, Nebraska, Alaska) never adopted; Minnesota adopted ELA but not math
+    CCSS; Florida replaced CCSS with B.E.S.T. in 2020. For a nationally-deployed platform,
+    problems from Texas and Virginia classrooms will follow TEKS and SOL sequencing
+    respectively, which may differ from CCSS-M in grade-band placement of specific
+    topics. The practical impact on benchmark gap analysis is low since all state
+    standards cover the confirmed essential problem types; sequencing differences
+    affect when topics appear, not whether they appear across grades 3–8.
+
+    Sources: CCSSI — [|https://www.thecorestandards.org/standards-in-your-state/|];
+    World Population Review — [|https://worldpopulationreview.com/state-rankings/common-core-states|]'
+flagged_web_search_targets:
+- id: WS1
+  topic: Arithmetic word problem benchmarks covering measurement and unit conversion
+  query_guidance: arithmetic word problem benchmark measurement unit conversion grade
+    school coverage ASDiv MAWPS MathQA LLM evaluation
+  gap_addressed: Measurement and unit conversion problem type coverage
+  search_status: RESOLVED — ASDiv (full dataset) confirmed to include explicit 'UnitTrans'
+    and 'Geometry' categories with grade-level annotations. See supplementary_benchmark_candidates.
+- id: WS2
+  topic: Grade school math word problem benchmarks covering geometry (perimeter, area)
+  query_guidance: grade school math word problem benchmark geometry perimeter area
+    evaluation LLM K-8
+  gap_addressed: Basic geometry problem type coverage
+  search_status: RESOLVED — ASDiv-W confirmed as the primary available supplement.
+    MATH dataset confirmed too advanced for K-8 geometry. See supplementary_benchmark_candidates.
+- id: WS3
+  topic: Arithmetic benchmarks with text-serialized table or chart data interpretation
+  query_guidance: arithmetic word problem benchmark table reading bar chart data interpretation
+    text-serialized LLM evaluation K-8
+  gap_addressed: Data interpretation problem type coverage
+  search_status: RESOLVED (null result) — No K-8-calibrated arithmetic benchmark with
+    table/chart inputs exists. TAT-QA and FinQA confirmed as domain-mismatched (finance).
+    Gap requires bespoke evaluation items. See net_new_findings.
+- id: WS4
+  topic: GSM8K evaluation variants with answer equivalence / normalization
+  query_guidance: GSM8K evaluation equivalence normalization fraction decimal symbolic
+    math grading tolerance LLM benchmark scoring pipeline
+  gap_addressed: Answer equivalence and normalization in scoring
+  search_status: RESOLVED — GSM-Plus integer-decimal-fraction conversion perturbation
+    confirmed as the strongest available tool. Standard GSM8K pipeline confirmed to
+    lack fraction-decimal equivalence. See net_new_findings and supplementary_benchmark_candidates.
+- id: WS5
+  topic: GSM8K difficulty stratification by grade band or problem complexity
+  query_guidance: GSM8K difficulty stratification grade band performance elementary
+    single-step arithmetic LLM evaluation breakdown
+  gap_addressed: Grade 3–4 lower difficulty band coverage
+  search_status: PARTIALLY RESOLVED — GSM8K difficulty is measured by number of solution
+    steps (2–8); performance declines consistently with more steps. E2H-GSM8K provides
+    human-grounded difficulty labels for a subset. No grade-band-specific accuracy
+    breakdown published. See target_grade_band.grade_band_benchmark_alignment_note
+    and supplementary_benchmark_candidates.
+- id: WS6
+  topic: Common Core State Standards Math adoption and state-specific standards variation
+  query_guidance: CCSS math adoption by state 2024 state-specific standards TEKS Virginia
+    SOL arithmetic word problems grade band
+  gap_addressed: Curricular standards alignment and regional variation
+  search_status: RESOLVED — See geography.regional_curricular_variation and curriculum_and_standards_context.ccss_adoption_status.
+- id: WS7
+  topic: Math word problem evaluation with symbolic equivalence checking
+  query_guidance: math word problem evaluation answer normalization equivalence checker
+    symbolic grader LLM benchmark fraction decimal tolerance
+  gap_addressed: Scoring methodology alignment with platform grading logic
+  search_status: RESOLVED — Standard GSM8K pipeline confirmed to apply basic normalization
+    (strip currency symbols, units) but not fraction-decimal equivalence or rounding
+    tolerance. GSM-Plus integer-decimal-fraction conversion subset is the primary
+    evaluation tool for this gap. See answer_representation_requirements.gsm8k_scoring_alignment.

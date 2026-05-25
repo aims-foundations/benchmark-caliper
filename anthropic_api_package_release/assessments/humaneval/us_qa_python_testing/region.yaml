@@ -1,0 +1,434 @@
+name: US Professional QA Engineers — Python Test Generation
+abbreviation: US-QA-PY
+deployment_context:
+  country: United States
+  organizational_setting: Software development companies (commercial, startup, and
+    enterprise); QA engineering teams embedded in product engineering organizations
+  occupational_cohort: Professional QA engineers and software engineers in test (SET),
+    writing and reviewing unit tests for production Python codebases
+  tool_description: An AI-assisted tool that automatically generates unit tests for
+    existing Python functions, given a function signature, docstring, and source code
+    body. The primary objective is regression-catching test quality, not mere coverage.
+target_population_description: Professional QA engineers based in the United States
+  working in software development organizations. Users are experienced Python practitioners
+  who routinely write tests against real-world production code spanning data science
+  (pandas, NumPy, scikit-learn), web services (Flask, FastAPI, requests, Django),
+  and application backends (SQLAlchemy ORM, psycopg2, Redis clients). They are accustomed
+  to pytest idioms, unittest.mock, and fixture-based test design. They are not students
+  or hobbyists — they understand boundary conditions, regression risk, and mock boundaries.
+  Their primary frustration is the time cost of writing thorough, meaningful tests
+  for dependency-heavy functions.
+languages:
+  primary: English (American)
+  code_language: Python 3 (modern idioms; 3.8+ expected, 3.10–3.12 likely common at
+    time of deployment)
+  nlp_considerations: No script, tokenization, or translation challenges. All prompts
+    and outputs are ASCII/UTF-8 English prose plus standard Python source text. Technical
+    vocabulary (pytest, mock, fixture, parametrize, monkeypatch, asyncio) must be
+    handled correctly; jargon is dense and domain-specific.
+writing_systems:
+  scripts:
+  - Latin (ASCII and UTF-8 string literals within Python source)
+  note: No multi-script or CJK complexity. String literals in test inputs may contain
+    Unicode edge cases (emoji, null bytes, non-ASCII identifiers) that are themselves
+    test-worthy inputs.
+professional_context:
+  experience_level: Mid- to senior-level engineers; comfortable reading complex Python
+    including decorators, metaclasses, async/await, and type annotations
+  primary_testing_frameworks:
+  - pytest
+  - unittest
+  common_mocking_libraries:
+  - unittest.mock
+  - pytest-mock
+  - responses (for HTTP)
+  - moto (for AWS SDK)
+  common_async_testing_tools:
+  - pytest-asyncio
+  - anyio
+  production_code_archetypes:
+  - Data transformation functions using pandas/NumPy with complex dtype and index
+    assumptions
+  - ORM model methods using SQLAlchemy or Django ORM with database session dependencies
+  - HTTP client functions using requests or httpx calling external APIs
+  - File I/O and filesystem-touching functions
+  - Class methods with mutable instance state (service objects, repository pattern,
+    state machines)
+  - 'Functions with side effects: database writes, message queue publishes, cache
+    invalidation'
+  - Async functions using asyncio (less frequent but in scope)
+  - Functions decorated with custom decorators (auth guards, retry logic, caching
+    wrappers)
+  quality_definition: A test is considered high quality if and only if it would catch
+    plausible regressions — off-by-one errors, incorrect boundary handling, missing
+    None/empty-input guards, wrong exception types, incorrect mock call counts or
+    argument values. Coverage alone (line, branch) is explicitly insufficient. Tests
+    that merely pin current behavior without asserting on semantically meaningful
+    conditions are considered low quality.
+  annotation_note: QA engineers in this cohort are capable of critically evaluating
+    generated tests and will reject superficial or tautological assertions. They are
+    the implicit human-in-the-loop oracle for test quality.
+infrastructure_notes: Deployment is entirely within standard US software-industry
+  infrastructure. Engineers work on macOS or Linux development machines with full
+  Python toolchain installed (pip, venv/conda, pytest, mypy, black). CI/CD pipelines
+  (GitHub Actions, Jenkins, CircleCI) are the execution context for generated tests.
+  Internet connectivity is unrestricted; no bandwidth or device constraints apply.
+  IDE integration (VS Code, PyCharm) is the expected delivery surface for the tool.
+regulatory_and_compliance_context:
+  data_privacy: 'SOC 2 Type II is the de facto baseline compliance requirement for
+    B2B SaaS tools processing proprietary source code in US enterprise contexts —
+    enterprise customers routinely require it before signing contracts. CCPA applies
+    to California-based users whose personal data (e.g., developer identity, usage
+    patterns) is processed. HIPAA Business Associate Agreement (BAA) is required on
+    request if healthcare-sector customers submit code touching PHI; at least one
+    comparable AI coding tool (Codeium Enterprise) already offers HIPAA BAA on request.
+    SOC 2 does not itself ban AI coding assistants but requires vendor risk management
+    documentation under Common Criteria CC9.2. Source: Augment Code enterprise security
+    guide — [|https://www.augmentcode.com/guides/7-soc-2-ready-ai-coding-tools-for-enterprise-security|];
+    Probo SOC 2 AI tools guide — [|https://www.probo.com/hub/ai-coding-tools-soc2-compliance|]'
+  ip_and_licensing: 'Under current US law, code generated solely by AI without meaningful
+    human authorship is not eligible for copyright protection and may be treated as
+    public domain (Thaler v. Perlmutter, DC Circuit affirmed March 2025; Supreme Court
+    denied certiorari March 2, 2026). If a QA engineer substantially edits, prompts
+    iteratively, or arranges AI-generated test code, copyright may attach to the human-authored
+    aspects only. The open litigation Doe v. GitHub (on appeal to the Ninth Circuit)
+    raises questions about whether AI-generated code may reproduce licensed open-source
+    code without proper attribution — directly relevant to test suites generated from
+    code trained on GitHub. Organizations should document human involvement and retain
+    prompt logs to support any copyright claims. Source: Morgan Lewis LawFlash, March
+    2026 — [|https://www.morganlewis.com/pubs/2026/03/us-supreme-court-declines-to-consider-whether-ai-alone-can-create-copyrighted-works|];
+    MBHB legal analysis — [|https://www.mbhb.com/intelligence/snippets/navigating-the-legal-landscape-of-ai-generated-code-ownership-and-liability-challenges/|]'
+  export_controls: '[NEEDS VERIFICATION — deferred: below search budget; EAR/ITAR
+    applicability to AI coding tools is low-impact for this deployment''s scoring
+    dimensions and typically does not restrict domestic US enterprise SaaS deployment
+    to US-based engineers]'
+benchmark_domain_alignment:
+  benchmark: HumanEval
+  surface_match: Both benchmark and deployment are English-language, Python-focused,
+    text-in/code-out tasks with standard US software-industry infrastructure. No modality,
+    script, or language mismatch.
+  task_direction_mismatch: HumanEval evaluates docstring → implementation synthesis.
+    This deployment requires implementation → test suite generation. The task direction
+    is structurally inverted; no HumanEval problem evaluates the reverse capability.
+  input_type_mismatch: HumanEval inputs are self-contained pure functions with no
+    external dependencies. Deployment inputs routinely include class methods with
+    instance state, functions with database/network/file side effects, and functions
+    accepting ORM models or dataclass inputs requiring mock setup.
+  output_type_mismatch: HumanEval outputs are function bodies evaluated against a
+    fixed oracle test suite. Deployment outputs are test suites that must themselves
+    serve as oracles. The pass@k metric cannot evaluate whether a generated test catches
+    regressions.
+  evaluation_criterion_mismatch: HumanEval's binary pass/fail metric cannot distinguish
+    behavior-pinning tests from regression-catching tests. The deployment requires
+    mutation-score-equivalent reasoning about test quality.
+gap_flags:
+- gap_id: 1
+  label: Task direction inversion
+  description: HumanEval is implementation-generation (docstring → code body); this
+    deployment is test-generation (code body → test suite). No HumanEval problem evaluates
+    the reverse direction.
+  web_search_target: 'Confirmed: Multiple dedicated test-generation benchmarks now
+    exist. TestEval (arXiv 2406.04531, 2024) collects 210 Python programs from LeetCode
+    and evaluates LLMs on overall coverage, targeted line/branch coverage, and targeted
+    path coverage tasks — confirmed to use Python, confirmed to evaluate test generation
+    (not code generation). However, its source programs are LeetCode algorithmic puzzles,
+    not production dependency-heavy code, and it does not report mutation score. TestGenEval
+    (arXiv 2410.00752, 2024) is a larger-scale benchmark of 1,210 real Python code-test
+    file pairs drawn from 11 well-maintained open-source repositories via SWE-Bench;
+    it evaluates both full test suite generation and test completion, reporting code
+    coverage and mutation score. The best model (GPT-4o) achieves only 35.2% average
+    coverage and 18.8% mutation score, confirming the task is substantially harder
+    than HumanEval-style algorithmic generation. Neither TestEval nor TestGenEval
+    covers mocking, fixture generation, or production dependency-heavy code specifically.
+    Sources: TestEval — [|https://arxiv.org/abs/2406.04531|]; TestGenEval — [|https://arxiv.org/abs/2410.00752|];
+    TestGenEval GitHub — [|https://github.com/facebookresearch/testgeneval|]'
+- gap_id: 2
+  label: Mocking and fixture complexity
+  description: HumanEval contains zero problems requiring unittest.mock, pytest fixtures,
+    dependency injection, or mock boundary reasoning. This is a structural absence,
+    not a weighting gap.
+  web_search_target: 'No benchmark specifically targeting mocking/fixture generation
+    for Python has been identified. The ASTER tool (IBM Research, multi-language LLM
+    test generation) explicitly incorporates mocking capability for functions with
+    database operations, services, or complex libraries using static analysis to identify
+    types needing mocking — but ASTER is a tool, not a benchmark with a reusable evaluation
+    dataset. ChatUniTest''s adaptive focal context mechanism attempts to handle class-level
+    dependencies but is evaluated primarily on Java projects and does not constitute
+    a Python mocking benchmark. TestGenEval''s real-world repositories will implicitly
+    include some dependency-heavy code, but mock boundary correctness is not a distinct
+    evaluation criterion in that benchmark. This gap remains unaddressed by any identified
+    standalone benchmark. Source: ASTER paper — [|https://web.eecs.umich.edu/~movaghar/Multi-language%20Unit%20Testing%20LLM%202024.pdf|];
+    ChatUniTest — [|https://arxiv.org/abs/2305.04764|]'
+- gap_id: 3
+  label: Class-level and stateful code
+  description: HumanEval is restricted to standalone pure functions. Class methods
+    with mutable instance state are entirely absent from the benchmark.
+  web_search_target: 'Confirmed: ClassEval (arXiv 2308.01861, 2023) is a manually
+    crafted benchmark of 100 class-level Python code generation tasks, the first benchmark
+    designed for class-level code generation. It reveals that LLMs perform significantly
+    worse on class-level tasks than on function-level benchmarks. However, ClassEval
+    evaluates class-level code *generation* (natural language → class implementation),
+    not class-level *test generation* (class implementation → test suite). No Python
+    benchmark specifically evaluating test generation for class methods with mutable
+    instance state has been found. ClassEval''s finding that dependency mismanagement
+    (AttributeErrors from field initialization, TypeErrors from structure mismatches)
+    dominates incorrect outputs is directly relevant to the deployment''s mock-boundary
+    challenge. Sources: ClassEval — [|https://arxiv.org/abs/2308.01861|]; ClassEval
+    GitHub — [|https://github.com/FudanSELab/ClassEval|]'
+- gap_id: 4
+  label: Third-party library ecosystems
+  description: pandas, NumPy, requests, SQLAlchemy, and similar libraries introduce
+    non-trivial type complexity, call-site semantics, and mock boundary challenges
+    absent from HumanEval.
+  web_search_target: '[NEEDS VERIFICATION — deferred: below search budget after covering
+    higher-impact gaps. TestGenEval''s 11 real-world Python repositories likely include
+    some library-using code, but whether pandas/NumPy/ORM idioms are specifically
+    represented is not documented in the papers reviewed. No dedicated benchmark for
+    data-science or ORM-specific Python test generation was identified in searches.]'
+- gap_id: 5
+  label: Regression quality as evaluation criterion
+  description: HumanEval's pass/fail metric cannot distinguish behavior-pinning from
+    regression-catching tests. Mutation-testing-based evaluation (mutation score as
+    proxy) does not appear in the benchmark.
+  web_search_target: 'Confirmed and active research area: Mutation score as an evaluation
+    criterion for LLM-generated tests is now established in the literature. TestGenEval
+    (2024) explicitly measures mutation score by injecting synthetic bugs and measuring
+    the proportion detected — it is the first large-scale benchmark to do so for Python
+    real-world repositories. The best current model achieves only 18.8% mutation score
+    (GPT-4o), confirming severe underperformance on regression-catching quality. A
+    critical empirical finding relevant to this deployment: one study (MutGen, 2025)
+    found LLMs generate tests for a HumanEval-Java subject with 100% line and branch
+    coverage yet only 4% mutation score — directly validating the benchmark''s coverage-vs-regression
+    gap. Separate 2024 work (Dakhel et al.) proposes prompt-based approaches to improve
+    mutation score for Python specifically. The use of mutation score as a proxy for
+    regression-catching is now well-supported academically, but no ready-to-use Python
+    mutation-testing evaluation harness targeting production dependency-heavy code
+    exists yet. Sources: TestGenEval — [|https://arxiv.org/abs/2410.00752|]; MutGen/mutation
+    score finding — [|https://www.researchgate.net/publication/394720083_Mutation-Guided_LLM-based_Test_Generation_at_Meta|];
+    MutGen paper — [|https://arxiv.org/html/2506.02954v2|]'
+- gap_id: 6
+  label: Async and decorator patterns
+  description: HumanEval's stop-token regime and synchronous single-function structure
+    are structurally incompatible with async functions and multi-decorator code patterns.
+  web_search_target: '[NEEDS VERIFICATION — deferred: below search budget. No benchmark
+    specifically covering async Python function test generation or decorator-aware
+    test generation was identified in searches conducted. This gap is likely unsearchable
+    at this level of specificity — it requires stakeholder or expert elicitation to
+    confirm whether any internal evaluation corpus covers these patterns.]'
+- gap_id: 7
+  label: Semantic edge-case and assertion quality
+  description: HumanEval provides no mechanism to measure whether generated tests
+    exercise boundary conditions, empty inputs, None values, or error paths. No label
+    schema for assertion semantic meaningfulness exists in the benchmark.
+  web_search_target: 'Confirmed gap, partially addressed: TestGenEval notes that models
+    ''frequently fail to generate tests that follow the prompt format or have asserts,''
+    and the mutation score metric serves as a partial proxy for semantic assertion
+    quality (tests that don''t detect synthetic bugs are implicitly asserting on the
+    wrong things). However, no benchmark provides a fine-grained label schema distinguishing
+    behavior-pinning assertions from semantically meaningful edge-case assertions.
+    The MutGen line-coverage/mutation-score divergence finding (100% line coverage,
+    4% mutation score on a HumanEval-Java subject) empirically demonstrates that assertion
+    semantic quality is systematically uncaptured by coverage metrics. TestEval''s
+    targeted path coverage task is the closest existing approximation — it requires
+    LLMs to generate inputs that exercise specific execution paths — but it uses LeetCode-style
+    programs, not production code, and does not evaluate assertion correctness. Sources:
+    TestGenEval — [|https://arxiv.org/abs/2410.00752|]; TestGenEval GitHub — [|https://github.com/facebookresearch/testgeneval|]'
+dimension_priority_weights:
+  IO:
+    priority: HIGH
+    rationale: HumanEval's problem taxonomy (interview-style algorithmic pure functions)
+      is structurally absent of class methods, async code, decorators, third-party
+      library calls, and side-effectful functions — the dominant patterns in this
+      deployment.
+  IC:
+    priority: HIGH
+    rationale: HumanEval problems are self-contained with no external dependencies.
+      The deployment's core requirement — mocking, fixtures, ORM models, network clients,
+      database sessions — is not represented in any benchmark instance.
+  IF:
+    priority: LOWER
+    rationale: Both benchmark and deployment are English-language, text-in/code-out,
+      Python-focused, with standard US software infrastructure. No modality, script,
+      or language mismatch.
+  OO:
+    priority: HIGH
+    rationale: 'HumanEval scores functional correctness by running generated code
+      against pre-written unit tests. This deployment inverts the task: tests are
+      the output, not the oracle. Quality is defined by regression-catching ability,
+      not pass/fail against a fixed suite.'
+  OC:
+    priority: HIGH
+    rationale: HumanEval's ground-truth labels are pre-written test suites verifying
+      correct implementation. For this deployment, 'correct' means semantic meaningfulness,
+      edge-case coverage, and regression detection — criteria with no equivalent in
+      HumanEval's label schema.
+  OF:
+    priority: MODERATE
+    rationale: Both benchmark and deployment produce Python code as output. However,
+      HumanEval evaluates function implementations while this deployment evaluates
+      test suites; the surface form matches but the structural requirements differ
+      substantially (imports, fixtures, mock setup, assertion patterns).
+alternative_benchmarks_to_investigate:
+  note: The following candidates have been web-verified. Adequacy for this deployment
+    is assessed inline.
+  candidates:
+  - name: TestEval
+    hypothesis: May evaluate LLM-generated unit tests for Python functions
+    verification_needed: 'Confirmed: TestEval (arXiv 2406.04531, Wang et al. 2024)
+      collects 210 Python programs from LeetCode and designs three tasks: overall
+      coverage, targeted line/branch coverage, and targeted path coverage. It evaluates
+      16 LLMs on these tasks. Limitation for this deployment: programs are LeetCode
+      algorithmic puzzles (self-contained, no external dependencies), not production
+      code. Mutation score is not reported; coverage metrics are the primary signal.
+      Top models achieve over 90% on TestEval''s coverage tasks, suggesting ceiling
+      effects that would not transfer to production code. Partially addresses Gap
+      1 (task direction) but does not address Gaps 2–7. Source: [|https://arxiv.org/abs/2406.04531|]'
+  - name: TestGenEval
+    hypothesis: Large-scale real-world Python test generation benchmark with mutation
+      score
+    verification_needed: 'Confirmed and highly relevant: TestGenEval (arXiv 2410.00752,
+      Jain, Synnaeve, Rozière 2024; Meta/CMU) comprises 68,647 tests from 1,210 code-test
+      file pairs across 11 well-maintained Python repositories drawn from SWE-Bench.
+      It evaluates both full test suite generation and test completion, reporting
+      code coverage improvement and mutation score improvement vs. human-written tests.
+      Best model (GPT-4o) achieves only 35.2% coverage and 18.8% mutation score on
+      full generation. Real-world files average 782 LOC (code) and 677 LOC (test).
+      This is the closest existing benchmark to this deployment''s requirements: real
+      Python projects, mutation score as quality proxy, implementation → test suite
+      direction. Partial gap: mock boundary correctness and fixture generation quality
+      are not separately evaluated; the 11 source repositories may not include heavy
+      data-science (pandas/NumPy) or ORM workloads specifically. Sources: [|https://arxiv.org/abs/2410.00752|];
+      [|https://github.com/facebookresearch/testgeneval|]; [|https://testgeneval.github.io/|]'
+  - name: CoverageEval
+    hypothesis: May use code coverage as a proxy for test generation quality
+    verification_needed: '[NOT FOUND — no benchmark under the name ''CoverageEval''
+      was identified in searches. Coverage-based evaluation is incorporated into TestEval
+      and TestGenEval; no standalone CoverageEval benchmark appears to exist as a
+      distinct artifact.]'
+  - name: ChatUniTest / TestPilot / CodaMosa
+    hypothesis: Automated test generation systems with associated evaluation datasets
+    verification_needed: 'Partially confirmed: ChatUniTest (arXiv 2305.04764, FSE
+      2024) is a Java-focused LLM test generation framework using adaptive focal context
+      and generation-validation-repair cycles; it is evaluated on four Java projects
+      (not Python) and uses line coverage, not mutation score. TestPilot (GitHub Next,
+      Schäfer et al. 2023) is a JavaScript/TypeScript tool, not Python. CodaMosa (Lemieux
+      et al. 2023) is a hybrid search-based + LLM Python test generator built on Pynguin;
+      it targets coverage improvement at search plateaus but is not a benchmark with
+      a standalone evaluation dataset. None of these constitutes an adequate benchmark
+      for this deployment''s requirements (production-scale Python, mocking, mutation
+      score). ASTER (IBM Research, multi-language) adds mocking capability via static
+      analysis for Java EE applications with database/service dependencies — the only
+      tool identified that explicitly addresses mocking, but evaluated on Java not
+      Python. Sources: ChatUniTest — [|https://arxiv.org/abs/2305.04764|]; TestPilot
+      — [|https://github.com/githubnext/testpilot|]; ASTER — [|https://web.eecs.umich.edu/~movaghar/Multi-language%20Unit%20Testing%20LLM%202024.pdf|]'
+  - name: ClassEval
+    hypothesis: Evaluates LLMs on class-level Python code generation; partially relevant
+      to class-method test generation gap
+    verification_needed: 'Confirmed: ClassEval (arXiv 2308.01861, Du et al. 2023)
+      is a manually crafted benchmark of 100 class-level Python code generation tasks
+      (not test generation). It reveals LLMs perform significantly worse on class-level
+      tasks vs. function-level. Key finding: dependency mismanagement (AttributeErrors
+      from field initialization, TypeErrors from structure mismatches) dominates errors
+      — directly analogous to the mock-boundary challenges in this deployment. ClassEval
+      does not evaluate test generation direction and cannot be used directly, but
+      its task difficulty signal informs the class-method gap severity. Sources: [|https://arxiv.org/abs/2308.01861|];
+      [|https://github.com/FudanSELab/ClassEval|]'
+  - name: SWE-bench
+    hypothesis: Evaluates LLMs on real GitHub issues including test-writing; may include
+      stateful and dependency-heavy code
+    verification_needed: 'Partially confirmed: SWE-bench provides 2,294 issues and
+      fixes from 12 Python projects and has become a widely used benchmark. TestGenEval
+      is explicitly derived from SWE-bench repositories. SWE-bench primarily evaluates
+      patch generation (fixing failing tests), not test suite generation from scratch;
+      it is not a test generation benchmark per se. However, the SWE-bench repository
+      set (real Python projects with real dependencies) forms the basis of the most
+      relevant existing test generation benchmark (TestGenEval). Direct use of SWE-bench
+      as a test generation benchmark would require significant adaptation. Source:
+      [|https://arxiv.org/html/2602.10471v2|]'
+  - name: Mutation-testing evaluation frameworks
+    hypothesis: Academic literature may exist using mutation score (e.g., via MutPy,
+      mutmut, cosmic-ray) as an automated proxy for regression-catching ability of
+      LLM-generated tests
+    verification_needed: 'Confirmed: Mutation-score-based evaluation of LLM-generated
+      tests is an active and growing research area. Key findings: (1) TestGenEval
+      (2024) reports mutation score as a primary metric for real-world Python test
+      generation. (2) MutGen (2025, arXiv 2506.02954) proposes a mutation-guided LLM
+      approach explicitly maximizing mutation score, evaluated on 204 Java subjects.
+      (3) Dakhel et al. (2024) targets Python benchmarks and proposes prompt-based
+      approaches to improve mutation score. (4) A critical empirical result: LLMs
+      can achieve 100% line/branch coverage on a HumanEval-Java subject while achieving
+      only 4% mutation score — directly confirming the coverage-vs-regression gap
+      flagged in this assessment. The mutation score proxy for regression-catching
+      ability is now academically validated. Python-specific mutation testing tools
+      (mutmut, cosmic-ray) exist but are not yet the basis of widely adopted standalone
+      LLM evaluation benchmarks beyond TestGenEval. Sources: MutGen — [|https://arxiv.org/html/2506.02954v2|];
+      Dakhel Python work cited in — [|https://arxiv.org/html/2506.02954v1|]; TestGenEval
+      mutation score — [|https://arxiv.org/abs/2410.00752|]'
+  - name: ULT (UnLeakedTestbench)
+    hypothesis: Net-new benchmark identified during search; may address data leakage
+      concerns in test generation evaluation
+    verification_needed: 'Confirmed: ULT (arXiv 2508.00408, 2025) is a new benchmark
+      for function-level unit test generation from real-world Python functions, constructed
+      through a multi-stage curation process emphasizing high cyclomatic complexity
+      and mitigating test case contamination. It contains 3,909 function-level tasks.
+      A companion PLT (PreLeakedTestbench) enables controlled analysis of memorization
+      vs. reasoning. ULT is more challenging than existing benchmarks and addresses
+      data leakage concerns that may affect TestGenEval (which is based on pre-2023
+      SWE-bench repositories where model contamination is documented). Limitation:
+      function-level scope; mocking and class-level patterns not specifically addressed.
+      Source: [|https://arxiv.org/abs/2508.00408|]'
+cultural_and_professional_norms_notes: QA engineering culture in US software companies
+  places high value on test readability, determinism, and isolation. Engineers expect
+  generated tests to follow pytest conventions (function-scoped test names prefixed
+  with test_, fixture injection via function arguments, parametrize for data-driven
+  cases). Behavior-driven naming (test_returns_empty_list_when_input_is_none rather
+  than test_function_1) is a strong professional norm. Over-mocking (mocking internals
+  that should be tested through integration) is considered an anti-pattern. The cohort
+  is sensitive to generated tests that pass trivially (assert result is not None)
+  or that assert on implementation details rather than observable behavior.
+sociotechnical_risks:
+  over_reliance: QA engineers may accept generated tests without verifying that assertions
+    are semantically meaningful, particularly under time pressure. Tests that appear
+    thorough (high coverage, multiple assertions) but miss the semantically important
+    edge cases represent a specific failure mode.
+  behavior_pinning: A model that generates tests matching current (possibly buggy)
+    behavior rather than intended behavior could reduce the regression-catching value
+    of the test suite while appearing to increase coverage metrics.
+  mock_boundary_errors: Incorrectly placed mock boundaries (mocking too deeply, leaving
+    real I/O calls in tests, or mocking the wrong layer) can produce tests that pass
+    in isolation but provide no real regression signal.
+  security_of_generated_test_code: Generated test code that embeds real credentials,
+    seeds with production-like PII, or inadvertently exercises real external endpoints
+    poses security and compliance risks in CI/CD pipelines.
+net_new_fields:
+  coverage_mutation_score_divergence_finding: 'Empirical research (2025) demonstrates
+    LLMs can achieve 100% line/branch coverage on a code subject while achieving only
+    4% mutation score — confirming that coverage metrics used in existing benchmarks
+    are structurally inadequate proxies for regression-catching quality. This is the
+    strongest empirical validation of the OO and OC gap scores in this assessment.
+    Source: MutGen/mutation-guided generation at Meta — [|https://www.researchgate.net/publication/394720083_Mutation-Guided_LLM-based_Test_Generation_at_Meta|]'
+  testgeneval_sota_scores: 'As of 2024–2025, the best available models on TestGenEval
+    (the most deployment-relevant Python test generation benchmark) achieve only 35.2%
+    line coverage and 18.8% mutation score in full test suite generation mode. An
+    agentic feedback-driven approach (TestForge, 2025) raises this to 44.4% line coverage
+    and 33.8% mutation score — still far below production-quality thresholds. These
+    figures directly calibrate expected model performance on this deployment. Sources:
+    TestGenEval baseline — [|https://arxiv.org/abs/2410.00752|]; TestForge SOTA —
+    [|https://arxiv.org/pdf/2503.14713|]'
+  data_leakage_risk_for_test_generation_benchmarks: 'TestGenEval is derived from SWE-bench
+    repositories (pre-2023 Python projects). Research (2025) demonstrates that existing
+    models perform better on pre-2023 data than post-2023 data due to training data
+    contamination, indicating that TestGenEval scores may overestimate real-world
+    performance on novel codebases. ULT (2025) was specifically designed to mitigate
+    this leakage risk for function-level evaluation. This is a calibration caveat
+    for any benchmark comparison referencing TestGenEval scores. Source: TestExplora
+    scalability analysis — [|https://arxiv.org/html/2602.10471v2|]; ULT — [|https://arxiv.org/abs/2508.00408|]'
+  ai_generated_code_ip_status_2026: 'As of March 2026, the US Supreme Court declined
+    to review Thaler v. Perlmutter, leaving in place the DC Circuit ruling that the
+    Copyright Act requires all eligible work to be ''authored in the first instance
+    by a human being.'' AI-generated test code without sufficient human creative involvement
+    is not copyrightable and may be treated as public domain. The ongoing Doe v. GitHub
+    case (Ninth Circuit appeal) additionally raises open questions about whether AI-generated
+    test code may reproduce licensed open-source patterns without attribution. Organizations
+    should document human review and editing of generated tests to preserve IP rights.
+    Source: Morgan Lewis LawFlash — [|https://www.morganlewis.com/pubs/2026/03/us-supreme-court-declines-to-consider-whether-ai-alone-can-create-copyrighted-works|]'

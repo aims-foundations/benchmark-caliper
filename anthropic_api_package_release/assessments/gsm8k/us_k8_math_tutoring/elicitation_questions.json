@@ -1,0 +1,17 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "GSM8K covers grade school math broadly, but your platform targets K-8 specifically. Which operation types and complexity levels are most critical for your students — for example, single-digit arithmetic for K-2, multi-step word problems with fractions for grades 4-6, or percentage and ratio problems for grades 7-8? Are there any Common Core-aligned topic areas (e.g., measurement, geometry, data/statistics) that your word problems regularly include but that might not appear in a general grade school math set?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "IC",
+    "question": "US elementary math word problems often embed culturally specific contexts — dollar amounts and cents, US customary units (inches, feet, gallons, pounds), sports like baseball or American football, and familiar settings like school cafeterias or county fairs. Do your platform's actual word problems consistently use these American contexts, or do they sometimes use metric units, non-US currency, or culturally neutral settings? Would a mismatch between benchmark problem contexts and your real problem set affect how representative the evaluation is?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OO",
+    "question": "Your deployment task is checking whether a student's final numerical answer is correct — essentially a binary right/wrong judgment. Does your system only need to verify the final number, or does it also need to evaluate partial credit, intermediate steps, or the student's written reasoning? If a student arrives at the correct answer through an unconventional method, should that count as correct?"
+  }
+]

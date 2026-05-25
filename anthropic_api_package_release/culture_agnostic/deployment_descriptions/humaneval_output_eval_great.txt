@@ -1,0 +1,1 @@
+We are a US IDE vendor building a code suggestion feature for American developers. The tool proposes Python function implementations that are validated by running the user's test suite. We care about functional correctness: does the generated code compile, run, and pass all tests? We need to evaluate the LLM's ability to produce functionally correct Python code.

@@ -1,0 +1,430 @@
+{
+  "benchmark": "humaneval",
+  "region": "US Professional QA Engineers — Python Test Generation",
+  "dimensions": {
+    "input_ontology": {
+      "score": 1,
+      "justification": "HumanEval's input ontology is structurally inverted relative to the deployment. The benchmark probes 'language comprehension, reasoning, algorithms, and simple mathematics' [Q22] via docstring→implementation synthesis [Q130], whereas the deployment requires implementation→test-suite generation. Beyond direction inversion, the taxonomy omits every category the deployment identifies as dominant: class methods with instance state, async functions, decorators, third-party library calls, and side-effectful functions. Dataset analysis confirms 100% of sampled problems are standalone module-level pure functions with no class, async, or decorator constructs (DATASET-D1, D2, D8, D23). The benchmark itself acknowledges the GitHub distribution mismatch [Q48] and that traced functions tend toward 'building blocks of command-line utilities' [Q60] requiring no 'advanced algorithms and data structures' [Q61]. Aspirational complexity dimensions like Variable Interdependencies [Q153] and Concurrency [Q155] are explicitly deferred [Q149]. No reweighting can bridge this gap — the task direction is baked into every datapoint.",
+      "strengths": [
+        "Algorithmic problem variety demonstrates Python reasoning depth, a prerequisite capability for generating meaningful test assertions (DATASET-D22, D24, D25).",
+        "Benchmark explicitly acknowledges its narrow scope and the GitHub distribution mismatch [Q48, Q151], providing honest signal about its limits."
+      ],
+      "checklist_responses": {
+        "IO-1": "Deployment categories per elicitation: class methods with instance state, async functions, decorators, pandas/NumPy data transforms, HTTP clients, ORM model methods, file/DB side-effectful functions. Test-generation direction (impl → tests) is required, not impl-generation.",
+        "IO-2": "HumanEval omits every required category: zero class methods, zero async, zero decorators, zero third-party library calls, zero side-effectful functions in the sampled data (DATASET-D1, D3, D4, D19, D21). The benchmark restricts to standalone function synthesis [Q46] and stop tokens '\\nclass', '\\ndef' [Q29] structurally exclude class and multi-function output.",
+        "IO-3": "The benchmark includes 'simple mathematics' and interview-puzzle framings (fruit baskets, word-spelled numbers, Tribonacci variants — DATASET-D20, D7, D25) that have no production-engineering analog and consume evaluation weight without informing the deployment.",
+        "IO-4": "Critical content-validity gaps: (1) task direction inversion — no HumanEval problem evaluates test generation; (2) absent class-level/OOP patterns; (3) absent async and decorator patterns; (4) absent third-party library calls and mocking-relevant code; (5) absent side-effectful functions. ClassEval research [WEB-10] confirms class-level tasks are substantially harder, making the OOP omission especially costly."
+      },
+      "evidence_quotes": [
+        "[Q22] 'Programming tasks in the HumanEval dataset assess language comprehension, reasoning, algorithms, and simple mathematics.' (p.4)",
+        "[Q46] 'Most of the APPS tests problems are not formulated as single-function synthesis tasks, but rather as full-program synthesis...' (p.6)",
+        "[Q48] 'In addition to standalone functions, Python code found on GitHub contains class implementations, configuration files, scripts... we hypothesize that the distribution mismatch reduces HumanEval performance.' (p.7)",
+        "[Q60] 'For this reason, functions from tracing tended to be the building blocks of command-line utilities.' (p.8)",
+        "[Q61] 'To excel at these tasks, the model does not need to know advanced algorithms and data structures.' (p.8)",
+        "[Q130] 'We investigated whether it was possible to train large language models to produce functionally correct code bodies from natural language docstrings.' (p.14)",
+        "[Q149] 'Below we provide brief descriptions of such attributes and qualitative metrics, which are to be further discussed in a forthcoming paper...' (p.25)",
+        "[Q151] 'The current capabilities of synthesis methodologies are only able to tackle tightly specified, constrained problem instances or narrow tasks.' (p.25)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-10] ClassEval confirms LLMs perform significantly worse on class-level Python tasks than on function-level benchmarks — directly relevant to the OOP gap.",
+        "[WEB-6] TestGenEval (2024) confirms test generation is the appropriate task direction for this deployment and is not addressed by HumanEval."
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: HumanEval/61 is a standalone pure string function — representative of 100% of sampled problems",
+        "DATASET-D8: HumanEval/104 has no class context, no self, no instance state",
+        "DATASET-D22: HumanEval/127 combines interval arithmetic and primality — algorithmic reasoning but no production framing",
+        "DATASET-D23: HumanEval/154 is a pure string-rotation algorithm; no OOP",
+        "DATASET-D24: HumanEval/109 is an array-rotation puzzle; pure function",
+        "DATASET-D3: HumanEval/38 contains two synchronous functions; no async, no decorator anywhere",
+        "DATASET-D20: HumanEval/67 is a fruit-distribution word problem irrelevant to production engineering",
+        "DATASET-D35: HumanEval/0 confirms task direction is implementation generation (prompt is docstring, oracle is pre-written test suite)"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "Q130"
+        ],
+        "IO-2": [
+          "Q29",
+          "Q46",
+          "DATASET-D1",
+          "DATASET-D3",
+          "DATASET-D8",
+          "DATASET-D19",
+          "DATASET-D21"
+        ],
+        "IO-3": [
+          "Q22",
+          "Q61",
+          "DATASET-D7",
+          "DATASET-D20",
+          "DATASET-D25"
+        ],
+        "IO-4": [
+          "Q48",
+          "Q149",
+          "Q151",
+          "WEB-10",
+          "WEB-6",
+          "DATASET-D35"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether the unsampled 124 problems contain any class-level, async, or third-party-library code — unlikely given documented structural constraints but not fully audited."
+      ],
+      "requires_expert_verification": []
+    },
+    "input_content": {
+      "score": 1,
+      "justification": "Content-level analysis reinforces the ontology gap. HumanEval's 164 hand-written problems [Q19] were authored within OpenAI [Q136] with primitive type signatures only. Dataset analysis of 40/164 problems found zero instances of unittest.mock, pytest fixtures, requests, pandas, numpy, sqlalchemy, httpx, or any third-party library — only stdlib imports (typing, math, random, copy, string) appear (DATASET-D2, D4, D5, D19, D21). The Codex-S fine-tuning data added ~10K competition problems [Q51, Q52] and ~40K traced CI functions [Q54, Q55] but explicitly skewed toward 'building blocks of command-line utilities' [Q60]; even there, many objects 'cannot be pickled and restored outside the sandbox' [Q58], filtering out the very dependency-heavy patterns the deployment needs. The deployment's core requirement — determining correct mock boundaries for DB sessions, HTTP clients, and ORM models — is entirely absent from every benchmark instance. Problems use educational/puzzle framings (fruit baskets DATASET-D20; word-spelled numbers DATASET-D7) with no production-domain grounding.",
+      "strengths": [
+        "Hand-written problems avoid training-data contamination [Q14, Q19, Q21], which is a methodologically sound construction choice (though independent of deployment alignment).",
+        "Problems are correctly formatted idiomatic Python 3 with type annotations (DATASET-D5, D6), matching the deployment's surface modality."
+      ],
+      "checklist_responses": {
+        "IC-1": "Deployment does not require region-specific cultural or dialectal knowledge — both benchmark and deployment are US-context English/Python. However, deployment requires domain-specific content (ORM models, HTTP clients, dataframes) that is structurally absent.",
+        "IC-2": "Surface cultural alignment is fine (US English, ASCII identifiers). No cultural mismatch identified.",
+        "IC-3": "INSUFFICIENT DOCUMENTATION on whether any Western-specific knowledge is encoded in problem framings; surface inspection of sampled problems shows generic algorithmic content. Not a primary concern for this deployment.",
+        "IC-4": "Regional annotator recruitment not applicable — the relevant 'regional' expertise is professional QA engineering, and the deployment elicitation already provides that signal: production code archetypes (pandas, ORM, HTTP clients, async, decorators) are not represented in benchmark content.",
+        "IC-5": "Content gaps that harm validity: (1) zero third-party library imports beyond stdlib (DATASET-D2, D4); (2) zero functions with database/network/file side effects (DATASET-D19, D21); (3) zero ORM/dataclass/custom-domain inputs; (4) docstrings noted as 'may be lower quality because developers tend to devote less time to writing docstrings' [Q83]; (5) puzzle-style semantic framings without production-domain grounding (DATASET-D20, D7, D25)."
+      },
+      "evidence_quotes": [
+        "[Q14] 'Though not a guarantee for problem novelty, all problems were hand-written and not programmatically copied from existing sources.' (p.3)",
+        "[Q19] 'We evaluate functional correctness on a set of 164 hand-written programming problems...' (p.4)",
+        "[Q48] '...we hypothesize that the distribution mismatch reduces HumanEval performance.' (p.7)",
+        "[Q58] 'Even when they do, most objects captured at runtime cannot be pickled and restored outside the sandbox unless the project was installed.' (p.8)",
+        "[Q60] '...functions from tracing tended to be the building blocks of command-line utilities.' (p.8)",
+        "[Q83] '...docstrings in our dataset may be lower quality because developers tend to devote less time to writing docstrings.' (p.9)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-6] TestGenEval covers 11 real-world Python repos with code-test pairs — the kind of dependency-heavy content HumanEval lacks.",
+        "[WEB-18] ULT (2025) was constructed specifically because existing benchmarks lack high-complexity real-world Python content."
+      ],
+      "evidence_dataset": [
+        "DATASET-D2: HumanEval/0 inputs are List[float] and float — no external dependency",
+        "DATASET-D4: HumanEval/32 imports only `math` — deepest import in sample",
+        "DATASET-D5: HumanEval/11 imports only `typing`",
+        "DATASET-D19: HumanEval/3 simulates bank operations with plain list — no DB, no ORM",
+        "DATASET-D21: HumanEval/95 uses plain dict — no dataclass, no ORM model",
+        "DATASET-D20: HumanEval/67 fruit-basket word problem with no production analog",
+        "DATASET-D7: HumanEval/19 word-spelled-number parsing puzzle"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "DATASET-D2",
+          "DATASET-D19"
+        ],
+        "IC-2": [],
+        "IC-3": [],
+        "IC-4": [
+          "Q48",
+          "DATASET-D21"
+        ],
+        "IC-5": [
+          "Q83",
+          "Q60",
+          "DATASET-D4",
+          "DATASET-D5",
+          "DATASET-D20",
+          "DATASET-D7",
+          "WEB-6"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Full audit of canonical solution quality across all 164 problems (sample identified one logic bug and one bare-except anti-pattern, DATASET-D40, D9)."
+      ],
+      "requires_expert_verification": []
+    },
+    "input_form": {
+      "score": 3,
+      "justification": "Surface input form aligns well: both benchmark and deployment are text-in Python source code with docstrings, ASCII/UTF-8 English, and standard infrastructure. Each HumanEval problem has 'a function signature, docstring, body, and several unit tests' [Q20] assembled into a prompt [Q28], matching the deployment's input format. The deployment's IF priority is LOWER per elicitation, reflecting this surface match. However, two form-level constraints reduce the score: (1) the stop-token regime ('\\nclass', '\\ndef', '\\n#', '\\nif', '\\nprint') [Q29] is structurally incompatible with multi-function test files, class-method tests, or pytest fixture modules — the deployment's required output form; (2) the paper acknowledges Codex 'struggles to parse through increasingly long and higher-level or system-level specifications' [Q88] with pass rates dropping 2-3x per chained component [Q93], suggesting form-level brittleness on production-length docstrings. Async syntax and decorators are also structurally absent from sampled inputs (DATASET-D3, D4).",
+      "strengths": [
+        "Text-in / code-out modality matches deployment exactly; no script, language, or infrastructure mismatch (DATASET-D5, D6).",
+        "Type-annotated Python 3 signatures and consistent docstring format match what production engineers write (DATASET-D6, D9)."
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal distribution match is strong at the surface: ASCII/UTF-8 Python 3 source, English prose docstrings, function signatures with type hints (DATASET-D5, D6). No resolution, sampling-rate, or modality concerns apply.",
+        "IF-2": "US software-industry infrastructure (pytest, IDE integration, GitHub Actions CI) supports the same data capture spec; no regional infrastructure gap.",
+        "IF-3": "Domain-specific form differences: (1) stop-token regime [Q29] prohibits class, multi-def, or test-file output; (2) production docstrings may be much longer than benchmark's, where performance degrades exponentially with docstring complexity [Q90, Q93]; (3) async (`async def`, `await`) and decorator (`@`) syntax structurally absent from sampled inputs (DATASET-D3).",
+        "IF-4": "External-validity concern: model has not been form-evaluated on multi-function test modules, fixture-injection patterns, or async/decorator syntax — all required output forms for the deployment."
+      },
+      "evidence_quotes": [
+        "[Q20] 'Each problem includes a function signature, docstring, body, and several unit tests, with an average of 7.7 tests per problem.' (p.4)",
+        "[Q28] 'To compute pass@k, we assemble each HumanEval problem into a prompt consisting of a header, a signature, and a docstring...' (p.4)",
+        "[Q29] 'We sample tokens from Codex until we encounter one of the following stop sequences: \\nclass, \\ndef, \\n#, \\nif, or \\nprint...' (p.4)",
+        "[Q88] 'Codex struggles to parse through increasingly long and higher-level or system-level specifications.' (p.10)",
+        "[Q93] 'With each additional component, pass rate drops by roughly a factor of 2-3.' (p.10)"
+      ],
+      "evidence_web_sources": [],
+      "evidence_dataset": [
+        "DATASET-D5: Clean type-annotated Python 3 signature matches deployment surface",
+        "DATASET-D6: Consistent docstring+signature format throughout",
+        "DATASET-D3: Two synchronous functions; no async/decorator syntax anywhere",
+        "DATASET-D9: Multi-rule docstring format similar to production"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q20",
+          "Q28",
+          "DATASET-D5",
+          "DATASET-D6"
+        ],
+        "IF-2": [],
+        "IF-3": [
+          "Q29",
+          "Q88",
+          "Q93",
+          "DATASET-D3"
+        ],
+        "IF-4": [
+          "Q29",
+          "Q93"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Distribution of production docstring lengths in target deployment vs. HumanEval — would help calibrate Q93's chained-component degradation finding."
+      ],
+      "requires_expert_verification": []
+    },
+    "output_ontology": {
+      "score": 1,
+      "justification": "The output ontology mismatch is fundamental. HumanEval's output label space is binary: 'correctness is defined by passing a set of unit tests' [Q77], scored via pass@k [Q8, Q15]. The output produced is a function body that is evaluated against a fixed oracle. The deployment inverts this: the model output IS the test suite, and quality must be measured by regression-catching ability, not pass/fail. The paper itself anticipates this gap: 'human developers often write test suites with limited but targeted coverage, but this does not always work well against an algorithm, highlighting the challenges of evaluating correctness of programs' [Q129], and 'there is no similar way to evaluate docstring samples automatically' [Q78] — an analogous absence exists for test quality. Dataset analysis confirms every sampled problem encodes this direction structurally (DATASET-D35, D16, D11). Web-verified empirical evidence makes the gap concrete: TestGenEval's mutation-score metric [WEB-6] and MutGen's finding that LLMs can achieve 100% line/branch coverage with only 4% mutation score [WEB-12, WEB-13] confirm pass/fail and coverage cannot distinguish regression-catching tests from behavior-pinning ones. No HumanEval label can express 'this test would catch an off-by-one regression.'",
+      "strengths": [
+        "Paper explicitly argues against match-based metrics like BLEU [Q18, Q40] and adopts functional correctness — a methodologically defensible choice for implementation generation, even if it does not transfer to test-generation evaluation.",
+        "Security sub-evaluation uses narrow programmatic criteria (RSA < 2048 bits, AES-ECB) [Q208, Q209] with explicit expert consensus rationale [Q210], demonstrating awareness that output-criterion design requires justification."
+      ],
+      "checklist_responses": {
+        "OO-1": "Output labels are binary pass/fail on a fixed oracle [Q77]; for docstring generation, 'uniquely and accurately specifies the code body' [Q78]; for security, RSA/AES configuration thresholds [Q208, Q209]. None capture test-quality dimensions (regression-catching, edge-case coverage, semantic meaningfulness, mock-boundary correctness) required by deployment.",
+        "OO-2": "Missing categories: regression-catching ability, edge-case coverage breadth, assertion semantic meaningfulness, mock-boundary correctness, fixture-design quality, test isolation/determinism. None exist anywhere in HumanEval's label schema. Mutation-score metric [WEB-6] and pytest-convention scoring would be required substitutes.",
+        "OO-3": "The binary pass@k criterion encodes the assumption that a model's output is an implementation evaluated by tests. This is not just irrelevant but actively misleading for the deployment — a model could score high on HumanEval and still produce trivial `assert True` test code (which HumanEval's own oracle suites contain, DATASET-D13, D14).",
+        "OO-4": "Stakeholder-driven taxonomy redesign required: mutation-score-based scoring (per TestGenEval [WEB-6, WEB-7]) or human QA-engineer grading of generated tests for boundary/regression coverage would be needed. Per elicitation, QA engineers are the implicit human-in-the-loop oracle for test quality.",
+        "OO-5": "Structural-validity violation: the construct ('test quality') is misrepresented entirely as 'implementation passes oracle.' Content-validity violation: no labels for regression-catching, edge-case coverage, or mock-boundary correctness. External-validity risk is severe: HumanEval performance is unlikely to generalize to test-generation deployment."
+      },
+      "evidence_quotes": [
+        "[Q77] 'When we benchmark our code generation models, we measure pass@k on the HumanEval dataset, where correctness is defined by passing a set of unit tests.' (p.9)",
+        "[Q78] 'However, there is no similar way to evaluate docstring samples automatically.' (p.9)",
+        "[Q129] 'Human developers often write test suites with limited but targeted coverage, but this does not always work well against an algorithm, highlighting the challenges of evaluating correctness of programs.' (p.14)",
+        "[Q208] 'RSA keys were considered improperly configured if they were shorter than 2048 bits.' (p.32)",
+        "[Q209] 'AES contexts were considered improperly configured if they used the ECB cipher mode...' (p.32)",
+        "[Q210] '...there is consensus among cryptography experts that these configurations generally should not be used, and these were reasonable to evaluate programmatically.' (p.32)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-6] TestGenEval reports mutation score as primary metric for real-world Python test generation; GPT-4o achieves only 18.8% mutation score, confirming pass/fail cannot capture test quality.",
+        "[WEB-12] MutGen finding: LLMs achieved 100% line/branch coverage on a HumanEval-Java subject while achieving only 4% mutation score — direct empirical proof of the coverage/regression gap.",
+        "[WEB-13] MutGen paper formalizing mutation-guided LLM test generation as the appropriate evaluation paradigm."
+      ],
+      "evidence_dataset": [
+        "DATASET-D35: HumanEval/0 confirms task direction — prompt is docstring, oracle is pre-written test suite",
+        "DATASET-D16: HumanEval/130 assertion `assert candidate(3) == [1, 3, 2.0, 8.0]` is the oracle, not the output",
+        "DATASET-D11: HumanEval/61 oracle tests evaluate correctness of bracketing implementation"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q77",
+          "Q78",
+          "Q208",
+          "Q209",
+          "DATASET-D11",
+          "DATASET-D16"
+        ],
+        "OO-2": [
+          "Q129",
+          "WEB-6",
+          "WEB-12"
+        ],
+        "OO-3": [
+          "Q77",
+          "DATASET-D13",
+          "DATASET-D14",
+          "DATASET-D35"
+        ],
+        "OO-4": [
+          "WEB-6",
+          "WEB-7"
+        ],
+        "OO-5": [
+          "Q77",
+          "Q129",
+          "WEB-12",
+          "WEB-13"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": []
+    },
+    "output_content": {
+      "score": 1,
+      "justification": "Ground-truth labels in HumanEval reflect OpenAI-internal authorship [Q136] with no documented external validation, no annotator demographics, no inter-annotator agreement protocol, and no review for regression-catching coverage. The hand-graded docstring evaluation states 'we only grade 10 samples per problem' [Q79] due to time constraints. For the alignment evaluation, the authors 'instruct the model to write correct code, and assume the model could easily be fine-tuned to detect such an instruction' [Q164] — an inference, not annotation. Dataset analysis surfaces material concerns: (1) at least 4 of 40 sampled oracle test suites contain bare `assert True` placeholders (DATASET-D12, D13, D14, D15) that score identically to substantive regression-catching tests; (2) at least one canonical solution contains a bare-except anti-pattern (DATASET-D40) and another has an operator-precedence logic bug (DATASET-D9); (3) METADATA fields are inconsistent and non-demographic (DATASET-D26, D35), confirming no systematic review. The paper itself flags this as 'an alignment issue' where 'insecure code production' is unlikely to improve with scale [Q212, Q105]. For the QA-engineer deployment cohort — who define quality by regression-catching, not pass/fail — the ground-truth labels in HumanEval fail to correlate with regional stakeholder judgments of what makes a test 'correct.'",
+      "strengths": [
+        "Some sampled test suites do include meaningful boundary/edge-case assertions (empty list/string, single-element, exact-boundary), demonstrating partial alignment with QA-engineer quality criteria (DATASET-D27, D28, D36).",
+        "A small number of suites use property-based / randomized patterns (DATASET-D17, D18), which are higher-quality patterns recognized by the deployment cohort.",
+        "Paper explicitly acknowledges its own label gap: 'human developers often write test suites with limited but targeted coverage, but this does not always work well against an algorithm' [Q129]."
+      ],
+      "checklist_responses": {
+        "OC-1": "Ground-truth labels do not reflect US QA-engineer stakeholder perspectives on test quality. Labels are pass/fail oracle outcomes, not annotations of test-quality dimensions (regression-catching, mock-boundary correctness, fixture design) that the cohort uses to evaluate tests per elicitation.",
+        "OC-2": "Significant disagreement expected. Per elicitation: 'Tests that merely pin current behavior without exercising edge cases ... are considered low quality even if they pass.' Several sampled HumanEval test suites would be rejected by professional QA engineers as containing tautological placeholders (DATASET-D12, D13, D14, D15) or unprofessional patterns (DATASET-D40 bare-except).",
+        "OC-3": "INSUFFICIENT DOCUMENTATION on annotator demographics. Paper states only that problems were authored at OpenAI [Q136]; only legacy METADATA entries with author initials like 'jt' appear (DATASET-D26, D35). No Datasheet or Data Statement disclosure of annotator backgrounds, no inter-annotator agreement, no QA-engineering expertise verification.",
+        "OC-4": "Label re-annotation by a representative QA-engineer pool would be required to assess test-quality dimensions. Mutation-score evaluation [WEB-6, WEB-12] provides a partial automated substitute.",
+        "OC-5": "INSUFFICIENT DOCUMENTATION on aggregation methods — only single-author authorship is documented [Q136]. No aggregation occurs because no multiple-annotator process is described.",
+        "OC-6": "Convergent-validity violation: labels fail to correlate with QA-engineer perspectives on test quality (DATASET-D13, D40). External-validity violation: OpenAI-internal authorship judgments do not generalize to US professional QA-engineer judgments. Bias documentation [Q180-Q188] shows authors recognized representational harm risks but did not extend that scrutiny to test-quality labeling."
+      },
+      "evidence_quotes": [
+        "[Q79] 'Due to the time consuming nature of this process, we only grade 10 samples per problem, for a total of 1640 problems, from Codex-D-12B at temperature 0.8.' (p.9)",
+        "[Q105] '...this is likely to become worse, not better, as the capabilities of our systems increase.' (p.11)",
+        "[Q129] 'Human developers often write test suites with limited but targeted coverage, but this does not always work well against an algorithm, highlighting the challenges of evaluating correctness of programs.' (p.14)",
+        "[Q136] 'We are also grateful to the Acceleration and Supercomputing teams at OpenAI for their work on software and hardware infrastructure that this project used.' (p.15)",
+        "[Q164] 'We instruct the model to write correct code, and we assume the model could easily be fine-tuned to detect such an instruction.' (p.27)",
+        "[Q212] '...insecure code production, at least in this case, is an alignment issue (see Appendix E): it is unclear if the models are improving with scale.' (p.32)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-12] Empirical finding: LLMs can achieve 100% coverage with 4% mutation score — confirms label-quality gap.",
+        "[WEB-6] TestGenEval establishes mutation score as the appropriate label proxy for regression-catching test quality."
+      ],
+      "evidence_dataset": [
+        "DATASET-D12: HumanEval/104 'check edge cases' section contains only `assert True` placeholder",
+        "DATASET-D13: HumanEval/105 contains two `assert True` placeholders in oracle suite",
+        "DATASET-D14: HumanEval/88 placeholder alongside substantive assertions",
+        "DATASET-D15: HumanEval/145 placeholder in multi-assert test",
+        "DATASET-D40: HumanEval/105 canonical solution contains bare `except: pass` anti-pattern",
+        "DATASET-D9: HumanEval/124 canonical solution has operator-precedence logic bug in `and`/`or` chain",
+        "DATASET-D26: METADATA `{'author': 'jt', 'dataset': 'test'}` — single-author initials, no inter-annotator validation",
+        "DATASET-D27: HumanEval/66 explicit empty-string edge case (strength)",
+        "DATASET-D28: HumanEval/42 empty-list boundary tested (strength)",
+        "DATASET-D36: HumanEval/52 exact-boundary test (strength)"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q77",
+          "Q129",
+          "DATASET-D13"
+        ],
+        "OC-2": [
+          "Q129",
+          "DATASET-D12",
+          "DATASET-D13",
+          "DATASET-D40"
+        ],
+        "OC-3": [
+          "Q79",
+          "Q136",
+          "DATASET-D26",
+          "DATASET-D35"
+        ],
+        "OC-4": [
+          "WEB-6",
+          "WEB-12"
+        ],
+        "OC-5": [],
+        "OC-6": [
+          "Q105",
+          "Q164",
+          "Q212",
+          "DATASET-D9",
+          "DATASET-D40"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Full audit of all 164 canonical solutions for additional bugs or anti-patterns.",
+        "Full prevalence count of `assert True` placeholders across all 164 oracle test suites (sample yielded 4/40 = 10%, projection uncertain)."
+      ],
+      "requires_expert_verification": []
+    },
+    "output_form": {
+      "score": 2,
+      "justification": "Surface output form — Python source code as text — matches the deployment. Both produce Python code, and the evaluation infrastructure (sandbox execution [Q56], unit-test-driven scoring [Q8]) is conceptually similar to CI/CD test execution. However, three form-level mismatches reduce alignment: (1) HumanEval evaluates function-body output, not test-suite output — the structural shape of the expected output (imports, fixtures, test functions, mock setup, parametrize decorators) is entirely different; (2) the benchmark's own oracle test suites use a non-pytest `def check(candidate):` harness (DATASET-D11, D38) rather than `def test_*():` pytest idioms required by the deployment cohort; (3) the pass@k metric [Q15] cannot evaluate any output-form quality dimension relevant to test code (readability, parametrize use, fixture injection, async-aware decorators). The paper acknowledges 'there is no similar way to evaluate docstring samples automatically' [Q78] — by analogy, no automatic evaluation of test-quality output exists in this benchmark. Cryptographic security generation [Q204-Q214] is the closest sub-evaluation to programmatic output-form scoring but is narrowly scoped to specific configuration-parameter checks, not test-suite structure.",
+      "strengths": [
+        "Output modality (Python source text) matches deployment, with standard sandbox execution infrastructure [Q56] analogous to CI pipelines.",
+        "Paper rigorously rejects BLEU and match-based output metrics [Q18, Q40] in favor of execution-based evaluation — methodologically aligned with the deployment's need for behavioral, not surface-match, evaluation."
+      ],
+      "checklist_responses": {
+        "OF-1": "Output modality (Python code as text) matches deployment exactly. However, the structural shape of expected output differs: HumanEval expects a single function body terminated at stop tokens [Q29]; deployment expects multi-function test modules with imports, fixtures, and pytest decorators.",
+        "OF-2": "Not applicable — text-out modality, no speech requirement.",
+        "OF-3": "Not applicable — literacy is not a factor for professional QA engineers; both contexts assume professional Python literacy.",
+        "OF-4": "External-validity gap: (1) `def check(candidate):` harness in oracle suites (DATASET-D11, D38) does not match pytest `def test_*():` conventions required by deployment; (2) no fixtures, parametrize decorators, or mock setup appear anywhere in benchmark outputs; (3) pass@k cannot evaluate output-form quality dimensions relevant to test code. The deployment requires output forms (pytest-asyncio, fixture-injected, parametrize-decorated) that the benchmark does not generate or score."
+      },
+      "evidence_quotes": [
+        "[Q15] 'To evaluate pass@k, we generate n ≥ k samples per task (in this paper, we use n = 200 and k ≤ 100)...' (p.3)",
+        "[Q18] '...BLEU score may not be a reliable indicator of functional correctness...' (p.3)",
+        "[Q29] 'We sample tokens from Codex until we encounter one of the following stop sequences...' (p.4)",
+        "[Q56] 'Because these projects contained untrusted code, it was important to run integration tests in the sandboxed environment described above.' (p.8)",
+        "[Q78] 'However, there is no similar way to evaluate docstring samples automatically.' (p.9)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-6] TestGenEval evaluates full pytest-style test suite generation against real repositories — the form HumanEval does not address."
+      ],
+      "evidence_dataset": [
+        "DATASET-D11: Oracle uses `def check(candidate):` harness, not pytest `def test_*():` convention",
+        "DATASET-D38: HumanEval/72 oracle uses `is True` identity check rather than `== True` — non-pytest style"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q29"
+        ],
+        "OF-2": [],
+        "OF-3": [],
+        "OF-4": [
+          "Q15",
+          "Q78",
+          "DATASET-D11",
+          "DATASET-D38",
+          "WEB-6"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": []
+    }
+  },
+  "overall_summary": "HumanEval is fundamentally misaligned with the US Professional QA Engineers — Python Test Generation deployment. The benchmark evaluates docstring→implementation synthesis on standalone pure functions with stdlib-only dependencies, while the deployment requires implementation→test-suite generation for production code involving class methods with instance state, async functions, decorators, ORM models, HTTP clients, and database-touching side effects. Five of six dimensions show critical (score 1) or significant (score 2) mismatches: input ontology, input content, output ontology, and output content all score 1, output form scores 2, and only input form (text-in/code-out surface match) scores 3. Dataset analysis empirically confirms the structural absences claimed in documentation: 0/40 sampled problems contain class definitions, async syntax, decorators, third-party imports, or side-effectful code, and 4/40 oracle test suites contain tautological `assert True` placeholders that would score identically to substantive regression-catching tests. Web-verified research (TestGenEval, MutGen) provides empirical evidence that even SOTA models achieve only 18.8% mutation score on real Python test generation and that LLMs can score 100% line coverage with only 4% mutation score — directly confirming the coverage-vs-regression gap. HumanEval performance provides essentially no signal about test-generation quality on the deployment task.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "HumanEval measures a model's ability to synthesize a Python function body that passes a pre-written oracle test suite, given a function signature and docstring describing an interview-style algorithmic task with no external dependencies. It provides evidence of Python syntactic fluency, basic algorithmic reasoning, and ability to follow short natural-language specifications — capabilities that are prerequisites for any code-related task. For the QA-engineering deployment, only the surface fluency signal (input_form, score 3) transfers; the core constructs — test quality, regression-catching ability, mock-boundary reasoning, fixture design — are entirely outside what this benchmark probes.",
+    "construct_depth": "Construct depth for the deployment is essentially zero on five of six dimensions. The benchmark cannot distinguish a model that generates `assert True` placeholders from one that generates regression-catching boundary tests, because its oracle suites themselves contain such placeholders (DATASET-D13). It cannot evaluate any model on class-method test generation, async test generation, decorator-aware testing, or mock-boundary correctness, because none of those patterns appear in any problem instance. A pass@k score on HumanEval is uninformative about test-generation quality.",
+    "supplementation_needed": "Substantial supplementation is required across IO, IC, OO, OC, and OF. Primary supplement: TestGenEval [WEB-6, WEB-7] is the closest existing benchmark — it evaluates implementation→test-suite generation on 11 real Python repositories using mutation score as a quality proxy. Secondary supplements: (a) ClassEval [WEB-10] for class-level task difficulty calibration; (b) ULT [WEB-18] for function-level evaluation with reduced data-leakage risk; (c) a custom held-out evaluation set drawn from the deployment organization's production code, scored by professional QA engineers for regression-catching quality and mock-boundary correctness (addresses OC gap). Mutation-testing tools (mutmut, cosmic-ray) should be integrated into any deployment evaluation harness to provide programmatic regression-catching signal. Async, decorator, and mocking patterns must be sampled separately — no existing public benchmark covers them adequately."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "Task direction is inverted (implementation generation vs. test generation) and required code categories (class methods, async, decorators, third-party libraries, side-effectful functions) are structurally absent.",
+      "recommendation": "Replace or augment HumanEval with TestGenEval [WEB-6] as the primary benchmark, supplemented by a deployment-specific evaluation corpus stratified by production code archetype (pandas/NumPy data transforms, ORM model methods, HTTP-client functions, async functions, decorated functions). Use ClassEval's task-difficulty signal [WEB-10] to calibrate class-method-test expectations."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "Zero instances of third-party library use, mocking-relevant code, ORM/dataclass inputs, or side-effectful functions in benchmark content.",
+      "recommendation": "Construct a held-out evaluation set of 100-300 real production Python functions from the deployment organization's codebases (or representative open-source equivalents), stratified to include pytest fixtures, unittest.mock targets, SQLAlchemy/Django ORM methods, requests/httpx clients, and pandas/NumPy operations. Use ULT [WEB-18] methodology to reduce data-leakage risk."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "Binary pass/fail metric cannot distinguish regression-catching tests from behavior-pinning tests; no label schema for test-quality dimensions exists.",
+      "recommendation": "Adopt mutation score as the primary evaluation metric using mutmut or cosmic-ray on the held-out evaluation corpus, following TestGenEval [WEB-6] methodology. Set SOTA-calibrated targets (e.g., > 35% mutation score per [WEB-19]) and report alongside line coverage to surface the coverage-vs-mutation gap [WEB-12]."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Ground-truth labels lack QA-engineer perspective; oracle suites contain tautological `assert True` placeholders and at least one canonical solution has anti-patterns/bugs.",
+      "recommendation": "Recruit 3-5 professional QA engineers from the deployment cohort to rate samples of generated tests on regression-catching ability, mock-boundary correctness, edge-case coverage, and pytest-idiomatic style. Compute inter-annotator agreement and use these ratings as the primary label source for a custom evaluation set, replacing HumanEval's pass/fail labels."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "Oracle suites use non-pytest `def check(candidate):` harness; no fixtures, parametrize, mock setup, or pytest-asyncio appear in benchmark outputs.",
+      "recommendation": "Specify pytest conventions as a hard requirement in the deployment evaluation rubric (test function naming, fixture injection, parametrize where appropriate, pytest-asyncio for async). Score generated tests for conformance to these conventions in addition to mutation score, with optional manual review."
+    },
+    {
+      "dimension": "input_form",
+      "gap": "Stop-token regime and short benchmark docstrings do not reflect production docstring lengths; Codex performance degrades 2-3x per chained component [Q93].",
+      "recommendation": "Sample production docstrings from the deployment context to characterize length and complexity distribution; evaluate model performance on the held-out corpus stratified by docstring length to detect form-induced degradation before deployment."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_ontology",
+    "input_content",
+    "output_ontology",
+    "output_content"
+  ],
+  "strongest_dimensions": [
+    "input_form"
+  ]
+}

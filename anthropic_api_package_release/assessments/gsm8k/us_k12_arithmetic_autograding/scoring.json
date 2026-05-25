@@ -1,0 +1,412 @@
+{
+  "benchmark": "gsm8k",
+  "region": "US K-8 Arithmetic Auto-Grading Platform (Grades 3–8)",
+  "dimensions": {
+    "input_ontology": {
+      "score": 2,
+      "justification": "Input ontology is the HIGH-priority dimension for this deployment, and GSM8K shows significant gaps. The benchmark's scope is explicitly limited to multi-step grade-school arithmetic word problems [Q9, Q11], with no systematic subtask taxonomy by problem type. Three user-confirmed essential problem types — measurement/unit conversion, basic geometry (perimeter/area), and data interpretation from tables/bar charts — are absent or only incidentally present. The dataset analysis confirms zero standalone unit conversion problems (conversion appears only as embedded sub-steps in D7, D8) and zero geometry formula problems (D9 uses area as input, D10 computes prism volume incidentally). Data interpretation from tables/charts is structurally impossible in this text-only benchmark. Additionally, the difficulty distribution skews to 2–8 step problems [WEB-4, WEB-5], under-representing grade 3–4 single-step arithmetic (DATASET-D17, D18, D19 show the lower-bound complexity is still upper-grade-band).",
+      "strengths": [
+        "Strong coverage of multi-step ratio, percent, rate, and proportional reasoning aligned to grades 6–8 (DATASET-D15, D16, D18, D20)",
+        "Linguistic diversity within the arithmetic domain is an explicit design goal [Q9], reducing template-driven overfitting risk",
+        "Explicit positioning as grade-school level with elementary concepts [Q11] aligns with the broad deployment domain"
+      ],
+      "checklist_responses": {
+        "IO-1": "Required categories per elicitation: single-step multiplication/division (grades 3–4), multi-step arithmetic, ratio/proportion, percent, rate, measurement/unit conversion, time, basic geometry (perimeter/area), and simple data interpretation from tables/bar charts.",
+        "IO-2": "Confirmed omissions: (a) standalone unit conversion — only embedded incidentally (DATASET-D7, D8); (b) geometry formula application — absent (DATASET-D9, D10 nearest, neither computes perimeter/area); (c) tabular/chart data interpretation — structurally impossible in text-only format; (d) single-step grade 3–4 calibration — paper acknowledges 175B model needs 2 orders of magnitude more data to reach 80% [Q50], and minimum sampled complexity is 2-step (DATASET-D29, D30).",
+        "IO-3": "No clearly irrelevant categories identified; all problem types in GSM8K (multi-step arithmetic, ratio, percent, rate) are within the platform's stated scope.",
+        "IO-4": "Documented gaps: unit conversion (HIGH), geometry (HIGH), data interpretation (HIGH/structural), grade 3–4 single-step calibration (MODERATE). These harm content validity because the benchmark systematically under-represents categories the platform actually serves."
+      },
+      "evidence_quotes": [
+        "[Q9] 'We designed this dataset to have high linguistic diversity while relying on relatively simple grade school math concepts.' (p.2)",
+        "[Q11] 'GSM8K solutions depend only on elementary concepts, so achieving high test performance is a tractable goal.' (p.2)",
+        "[Q19] 'GSM8K is larger, provides natural language solutions, and consists of problems that on average require more steps to solve.' (p.4)",
+        "[Q50] 'It appears likely that the 175B model would require at least two additional orders of magnitude of training data to reach an 80% solve rate.' (p.6)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-4] GSM8K problems each require between 2 and 8 solution steps; calibrated toward bright middle-school student",
+        "[WEB-7] ASDiv explicitly includes 'Geometry' and 'UnitTrans' problem categories that GSM8K lacks",
+        "[WEB-8] No K-8-calibrated benchmark combining arithmetic word problems with table/chart inputs exists; TAT-QA is finance-domain"
+      ],
+      "evidence_dataset": [
+        "DATASET-D7, D8: Unit conversion appears only as incidental embedded sub-step, never as primary task",
+        "DATASET-D9, D10: No problem applies perimeter/area formulas; closest is rectangular prism volume as intermediate step",
+        "DATASET-D17, D18, D19, D20: Lower-end sampled problems still require algebra or compound percent — well above grades 3–4",
+        "DATASET-D29, D30: Simplest sampled problems are 2-step, not single-step"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "WEB-1",
+          "WEB-3"
+        ],
+        "IO-2": [
+          "Q9",
+          "WEB-7",
+          "WEB-8",
+          "DATASET-D7",
+          "DATASET-D8",
+          "DATASET-D9",
+          "DATASET-D10"
+        ],
+        "IO-3": [
+          "Q9",
+          "Q11"
+        ],
+        "IO-4": [
+          "Q50",
+          "WEB-4",
+          "DATASET-D17",
+          "DATASET-D29"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Statistical frequency of unit-conversion-like and geometry-adjacent problems in the full 8,500-item dataset (only 47 main examples sampled)",
+        "Whether any test-split problems differ in type distribution from the train split observed"
+      ],
+      "requires_expert_verification": [
+        "Mapping of confirmed essential problem types to specific CCSS-M codes (e.g., 3.OA, 4.MD, 6.RP) for precise gap accounting",
+        "Platform-internal data interpretation modality (text-serialized vs. image-rendered tables)"
+      ]
+    },
+    "input_content": {
+      "score": 4,
+      "justification": "Input content is a LOWER-priority dimension and is one of GSM8K's stronger fits. Dataset analysis confirms US dollar amounts, imperial units (pounds, feet, inches, cubic feet), American names, and familiar US school/sports/consumer scenarios across the sample (DATASET-D1, D2, D3, D4, D5). One metric instance (DATASET-D11, kilograms) appears, broadly matching the elicitation's description of a 'small minority' of metric problems. Minor concerns: annotator demographics are not documented [Q103, Q104], and GPT-3-generated seed questions [Q110] partly shaped problem framing rather than curated by US educators. Cherry-picking for diversity in appendix samples [Q127] limits confidence about systematic representativeness, but the empirical evidence strongly supports cultural alignment.",
+      "strengths": [
+        "US monetary contextualization is pervasive — dollars, cents, tax, savings scenarios (DATASET-D1, D4, D6, D27)",
+        "Imperial units dominate with occasional metric, matching platform distribution (DATASET-D2, D3, D11)",
+        "Linguistic diversity is an explicit design principle with template-reuse detection [Q9, Q113]",
+        "American school, sports, and consumer scenarios match deployment profile (DATASET-D5, D1, D32)"
+      ],
+      "checklist_responses": {
+        "IC-1": "Inputs require US-typical cultural knowledge — dollar pricing, American school scenarios, US sports (football scoring in DATASET-D5). This aligns with the deployment target.",
+        "IC-2": "Cultural alignment is strong: dataset analysis confirms predominantly US contextualization (DATASET-D1, D2, D4, D5) matching the elicitation's description of platform problems as 'almost entirely US-contextualized.'",
+        "IC-3": "Minimal Western-non-US content. Metric units appear sporadically (DATASET-D11) but do not constitute a systematic mismatch given the elicitation acknowledges some metric problems exist in science-adjacent platform content.",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — annotator demographics are not reported beyond identifying Upwork and Surge AI [Q103, Q104]. Would need demographic data on contractor pool to confirm US-schooled framing.",
+        "IC-5": "Content issues are limited: undocumented annotator demographics and GPT-3-seeded generation [Q110, Q111] introduce mild risk that some problem framings were not curated by US K-8 educators, but empirical evidence does not surface concrete misalignments."
+      },
+      "evidence_quotes": [
+        "[Q9] 'We designed this dataset to have high linguistic diversity while relying on relatively simple grade school math concepts.' (p.2)",
+        "[Q103] 'We initially collected a starting set of a thousand problems and natural language solutions by hiring freelance contractors on Upwork (upwork.com).' (p.15)",
+        "[Q104] 'We then worked with Surge AI (surgehq.ai), an NLP data labeling platform, to scale up our data collection.' (p.15)",
+        "[Q110] 'To assist contractors with writing questions, we provided seed questions automatically generated from a few-shot prompted 175B GPT-3 model.' (p.15)",
+        "[Q113] 'To ensure contractors were not re-using problem templates, we computed pairwise similarity scores between problems and used this to provide feedback to contractors.' (p.15)"
+      ],
+      "evidence_web_sources": [],
+      "evidence_dataset": [
+        "DATASET-D1: US birthday party with brand-name candies and dollar prices",
+        "DATASET-D2: Imperial weight (pounds) in pet scenario",
+        "DATASET-D5: American football scoring — culturally US-specific",
+        "DATASET-D11: Single metric (kilogram) example — matches elicitation's 'small minority'",
+        "DATASET-D32: Linguistic diversity across domains (sports, food, finance, ecology)"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "DATASET-D1",
+          "DATASET-D5"
+        ],
+        "IC-2": [
+          "DATASET-D1",
+          "DATASET-D2",
+          "DATASET-D4",
+          "DATASET-D5"
+        ],
+        "IC-3": [
+          "DATASET-D11"
+        ],
+        "IC-4": [],
+        "IC-5": [
+          "Q103",
+          "Q104",
+          "Q110"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Annotator demographics (geographic location, native language, US-schooled status)",
+        "Frequency of metric vs. imperial unit problems across the full 8,500-item dataset"
+      ],
+      "requires_expert_verification": []
+    },
+    "input_form": {
+      "score": 5,
+      "justification": "Input form is a LOWER-priority dimension and aligns nearly perfectly. Both benchmark and platform are text-only, English-language, US-standard mathematical notation (DATASET-D33 shows the consistent calculator-annotation format). No script, modality, or language mismatch exists. The calculator-annotation training format [Q40] and natural-language chain-of-thought solutions [Q32, Q33] are structurally congruent with the LLM-as-solver deployment pattern. The only minor caveat is that the socratic config (DATASET-D31) provides sub-question scaffolding that doesn't match deployment problem format, but this is a configuration choice the platform can avoid.",
+      "strengths": [
+        "Text-only English format exactly matches platform infrastructure [Q9]",
+        "Natural-language chain-of-thought solutions match LLM-as-solver deployment pattern [Q32, Q33]",
+        "Calculator-annotation format provides clean step-by-step computation (DATASET-D33)",
+        "No script or notation mismatch — Arabic numerals, standard US math notation throughout"
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal distributions match exactly: both are text-only English prose with US-standard mathematical notation (DATASET-D33).",
+        "IF-2": "Regional infrastructure (US edtech platform) fully supports text-only LLM I/O; no capture-specification differences apply.",
+        "IF-3": "Domain-specific form: chain-of-thought reasoning with calculator annotations [Q40, Q119] matches the platform's expected LLM solving pattern. One caveat: data interpretation problems may involve image-rendered tables in deployment, which GSM8K cannot represent — but this is captured under input ontology rather than form.",
+        "IF-4": "No material form mismatches for the text-only problem subset. Modality gap for table/chart inputs is real but more appropriately categorized as an ontology gap (table reading is a problem type GSM8K lacks)."
+      },
+      "evidence_quotes": [
+        "[Q9] 'We designed this dataset to have high linguistic diversity while relying on relatively simple grade school math concepts.' (p.2)",
+        "[Q32] 'First, we focus attention on the space of natural language solutions, as this is a richer and more general solution format than pure mathematical expressions.' (p.5)",
+        "[Q33] 'This choice enables our models to develop verbal analytical skills and to produce solutions that are more readily interpretable by humans.' (p.5)",
+        "[Q40] 'To mitigate this issue, we train all models to use a calculator by injecting calculation annotations into the training set.' (p.6)",
+        "[Q119] 'During training, there is no special distinction between the annotated tokens and the rest of the solution: they are all just tokens.' (p.17)"
+      ],
+      "evidence_web_sources": [],
+      "evidence_dataset": [
+        "DATASET-D33: Calculator annotation format `<<expr=result>>` visible throughout solutions",
+        "DATASET-D31: Socratic config adds sub-question scaffolding — diverges from deployment format; main config should be used"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q9",
+          "Q32",
+          "DATASET-D33"
+        ],
+        "IF-2": [
+          "Q32"
+        ],
+        "IF-3": [
+          "Q40",
+          "Q119",
+          "DATASET-D33",
+          "DATASET-D31"
+        ],
+        "IF-4": [
+          "DATASET-D31"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Platform's exact rendering of data-interpretation problems (text-serialized vs. image-rendered tables) — affects whether any IF gap exists for that subset"
+      ],
+      "requires_expert_verification": [
+        "Platform team confirmation of chain-of-thought surfacing to students/teachers and table-rendering modality"
+      ]
+    },
+    "output_ontology": {
+      "score": 2,
+      "justification": "Output ontology is the second HIGH-priority dimension and shows significant misalignment. GSM8K's correctness criterion reduces to a single extracted numerical string with binary correct/incorrect judgment based solely on final answer match [Q31, Q60]. The standard scoring pipeline strips currency symbols and units [WEB-6] but does not implement fraction-decimal equivalence, rounding tolerance, or mixed-number normalization — a structural mismatch with the platform's partial normalization logic that must handle representational equivalences (e.g., '1/2' vs. '0.5', '$2.50' vs. '2.50'). GSM-Plus's findings [WEB-9] confirm this is a real LLM failure mode: all 25 tested models showed significant drops on integer-decimal-fraction perturbations. The dataset analysis surfaces conditions that generate these equivalences (decimal currency in DATASET-D6, D27; fractions in DATASET-D23, D24, D25; comma-formatted answers in DATASET-D21, D22), but the scoring schema doesn't stress-test them.",
+      "strengths": [
+        "Decision rule is mathematically objective — final answer correctness is unambiguous for integer answers [Q31, Q60]",
+        "Token-level verifier provides interpretable per-token judgment (DATASET-D33) [Q72, Q73, Q147]",
+        "Clean `#### N` answer format makes extraction unambiguous (DATASET-D13, D30)"
+      ],
+      "checklist_responses": {
+        "OO-1": "Output label is a single numerical string with binary correct/incorrect judgment [Q31, Q60]. Categories are mathematically universal and regionally relevant.",
+        "OO-2": "Missing categories for the deployment: no representation of answer equivalence forms (fraction↔decimal, mixed↔improper, currency formatting, rounding tolerance, unit-stripped vs. unit-included). The platform's grading logic needs these; the benchmark schema does not encode them.",
+        "OO-3": "No categories encode non-regional values. The gap is structural (missing equivalence handling) rather than value-laden.",
+        "OO-4": "Stakeholder-driven redesign would mean augmenting evaluation with equivalence-class scoring (e.g., GSM-Plus integer-decimal-fraction subset [WEB-9]) rather than redesigning core categories.",
+        "OO-5": "Documented taxonomy issue: exact-match scoring [Q29, Q46] without equivalence normalization is a structural validity gap — the benchmark's construct (final answer correctness) is operationalized more narrowly than the deployment requires. Confidence is high because both verbatim quotes and web sources confirm the scoring pipeline lacks equivalence logic."
+      },
+      "evidence_quotes": [
+        "[Q29] 'At test time, we judge performance by autoregressively sampling a single low temperature solution and checking whether the final answer is correct.' (p.5)",
+        "[Q31] 'Verifiers are trained to judge the correctness of solutions, with the training signal determined solely by whether or not the solution reached the correct final answer.' (p.5)",
+        "[Q46] 'Test performance is determined by a single low temperature (T = 0) sample for each test problem.' (p.6)",
+        "[Q60] 'Training solutions are labeled as correct or incorrect based solely on whether they reach the correct final answer.' (p.7)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-6] GSM8K standard pipeline strips currency symbols and units but does not implement fraction-decimal equivalence, rounding tolerance, or mixed-number normalization",
+        "[WEB-9] GSM-Plus integer-decimal-fraction conversion perturbation causes significant performance drops in all 25 tested LLMs — confirms equivalence handling is a real failure mode"
+      ],
+      "evidence_dataset": [
+        "DATASET-D6, D27: Decimal dollar amounts in inputs but final answers are integers, masking equivalence-handling requirement",
+        "DATASET-D23, D24, D25: Fractional multipliers in reasoning but integer final answers",
+        "DATASET-D21, D22: Comma-formatted answer strings in annotations ('2,250'; '333,200.00') require format normalization not exercised by exact-match scoring"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q31",
+          "Q60"
+        ],
+        "OO-2": [
+          "WEB-6",
+          "WEB-9",
+          "DATASET-D6",
+          "DATASET-D23",
+          "DATASET-D21"
+        ],
+        "OO-3": [
+          "Q31"
+        ],
+        "OO-4": [
+          "WEB-9"
+        ],
+        "OO-5": [
+          "Q29",
+          "Q46",
+          "WEB-6"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Frequency of non-integer final answers (fractions, mixed numbers) in the full test split — sample shows nearly all integers, suggesting low frequency"
+      ],
+      "requires_expert_verification": [
+        "Platform's exact tolerance thresholds and normalization logic for cross-comparison with GSM-Plus-style evaluation"
+      ]
+    },
+    "output_content": {
+      "score": 3,
+      "justification": "Output content is MODERATE priority. Label quality is reasonable for the core arithmetic types: dedicated re-solving QC found 1.7% disagreement [Q107], which authors estimate as the breaking-error rate, while acknowledging subtle errors may be more frequent [Q109]. The dataset analysis confirms clean integer labels with consistent `#### N` extraction (DATASET-D13, D30). However, several concerns: (a) annotator demographics are not documented [Q103, Q104], so subtle convention mismatches (US currency formatting, imperial unit naming) cannot be ruled out; (b) calculator annotations are auto-generated, not human-validated, and have known imperfections [Q117, Q118] — DATASET-D2 shows a minor annotation inconsistency ('6+6' instead of '6*2'); (c) verifier-based scoring introduces additional label risk via false positives from flawed reasoning [Q61, Q155] and false negatives from ambiguous language [Q153, Q154]. For the platform's grading use case (LLM-as-solver, not verifier-as-grader), risk (c) is less directly relevant.",
+      "strengths": [
+        "Dedicated re-solving QC pass with disagreement-driven repair/discard [Q105, Q106]",
+        "Quantified residual error rate of 1.7% [Q107] provides a published quality floor",
+        "Clean integer ground-truth labels for the large majority of problems (DATASET-D13, D30)",
+        "Anti-template-reuse pairwise similarity check [Q113] improves label diversity"
+      ],
+      "checklist_responses": {
+        "OC-1": "Ground-truth labels for arithmetic problems are mathematically determined and reflect universal regional perspectives on numerical correctness. Risk concentrates at edge cases involving conventions (currency formatting, unit naming) where annotator demographics matter.",
+        "OC-2": "Potential disagreement with US-schooled annotators is bounded by the documented 1.7% rate [Q107]; subtle errors may be higher [Q109]. No regional-population-specific re-annotation evidence available.",
+        "OC-3": "INSUFFICIENT DOCUMENTATION — annotator demographics (age, geography, native language, educational background) are not reported beyond identifying Upwork and Surge AI as platforms [Q103, Q104]. Would need a Datasheets/Data Statements entry on contractor demographics.",
+        "OC-4": "Re-annotation by US K-8 educators on a sample of problems would be a reasonable remediation, especially for any problems involving fractions, mixed numbers, or unit-stripped answers where convention matters.",
+        "OC-5": "Aggregation: labels were validated via two-stage re-solving with disagreement repair/discard [Q105, Q106, Q107]. This conservative aggregation likely under-erases minority perspectives for objective math but could not surface culturally-specific convention disputes.",
+        "OC-6": "Documented label issues: 1.7% breaking-error rate, plus potentially larger subtle-error rate [Q108, Q109]; calculator-annotation auto-generation imperfections [Q117, Q118] confirmed in DATASET-D2."
+      },
+      "evidence_quotes": [
+        "[Q105] 'After collecting the full dataset, we asked workers to re-solve all problems, with no workers re-solving problems they originally wrote.' (p.15)",
+        "[Q107] 'We then performed another round of agreement checks on a smaller subset of problems, finding that 1.7% of problems still produce disagreements among contractors.' (p.15)",
+        "[Q109] 'It is possible that a larger percentage of problems contain subtle errors.' (p.15)",
+        "[Q117] 'The calculator annotations were not provided by human contractors: they were generated by a combination of hard-coded logic and a finetuned language model.' (p.17)",
+        "[Q118] 'The logic for auto-generating calculator annotations is imperfect.' (p.17)"
+      ],
+      "evidence_web_sources": [],
+      "evidence_dataset": [
+        "DATASET-D13, D30: Clean integer labels with consistent `#### N` extraction",
+        "DATASET-D2: Minor annotation inconsistency ('6+6' in annotation vs. 'doubled'/'6*2' in narrative) — confirms documented annotation imperfection [Q118]"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q60"
+        ],
+        "OC-2": [
+          "Q107",
+          "Q109"
+        ],
+        "OC-3": [
+          "Q103",
+          "Q104"
+        ],
+        "OC-4": [
+          "Q109"
+        ],
+        "OC-5": [
+          "Q105",
+          "Q106",
+          "Q107"
+        ],
+        "OC-6": [
+          "Q108",
+          "Q109",
+          "Q117",
+          "Q118",
+          "DATASET-D2"
+        ]
+      },
+      "confidence": "medium",
+      "information_gaps": [
+        "Annotator demographics (geographic, educational, linguistic)",
+        "Subtle-error rate (beyond the 1.7% breaking-error figure)"
+      ],
+      "requires_expert_verification": [
+        "Sample re-annotation by US K-8 educators on edge-case problems (fractions, mixed numbers, unit-stripped answers)"
+      ]
+    },
+    "output_form": {
+      "score": 3,
+      "justification": "Output form is MODERATE priority. The benchmark produces a final numerical answer extracted from a natural-language chain-of-thought solution [Q29, Q46], which structurally matches the deployment's LLM-as-solver pattern. The calculator-override mechanism [Q41, Q120] further aligns with reliable computation. However, two concerns: (1) the standard scoring pipeline does single-sample exact-match evaluation [Q29] without testing tolerance-based or equivalence-aware grading that the platform requires; (2) GSM8K saturation (>90% on frontier LLMs per [WEB-13]) reduces discriminative power for selecting among current models. The output format itself is well-matched; the gap is in what the scoring procedure evaluates rather than what the model produces.",
+      "strengths": [
+        "Final numerical answer format matches deployment grading-pipeline input [Q29]",
+        "Calculator-override mechanism reduces arithmetic-error noise in produced answers [Q41, Q120]",
+        "Natural language chain-of-thought output matches LLM-as-solver deployment pattern (DATASET-D33)",
+        "Clean `#### N` answer extraction convention is unambiguous (DATASET-D13, D30)"
+      ],
+      "checklist_responses": {
+        "OF-1": "Expected output modality (text with embedded final numerical answer) matches deployment exactly — both produce a numerical answer that the platform's grading logic then compares to student submission.",
+        "OF-2": "Not applicable — no speech-based output requirement.",
+        "OF-3": "Not applicable — platform users (grades 3–8 students) interact via text; LLM output is consumed by the grading pipeline, not the student.",
+        "OF-4": "Form mismatches are minor: (a) exact-match scoring [Q29] doesn't exercise equivalence-aware grading the platform requires (overlaps with OO finding); (b) saturation [WEB-13] limits the benchmark's ability to discriminate among frontier models; (c) socratic config (DATASET-D31) would inflate scores if used — should use main config."
+      },
+      "evidence_quotes": [
+        "[Q29] 'At test time, we judge performance by autoregressively sampling a single low temperature solution and checking whether the final answer is correct.' (p.5)",
+        "[Q41] 'At test time, a calculator will override sampling when the model chooses to use these annotations.' (p.6)",
+        "[Q46] 'Test performance is determined by a single low temperature (T = 0) sample for each test problem.' (p.6)",
+        "[Q120] 'During testing, we override model sampling when a well-formatted annotation exists, specifically overwriting the token(s) directly following \"=\" and within <<. . . >>.' (p.17)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-13] Most frontier LLMs achieve >90% accuracy on GSM8K — discriminative power for frontier-model selection is reduced",
+        "[WEB-9] GSM-Plus tests robustness to answer-format perturbations not covered by GSM8K's exact-match scoring"
+      ],
+      "evidence_dataset": [
+        "DATASET-D33: Final answer extracted as `#### 28` from chain-of-thought — matches deployment pattern",
+        "DATASET-D13, D30: Clean unambiguous final answer extraction",
+        "DATASET-D31: Socratic config provides scaffolding that doesn't match deployment problem format"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q29",
+          "DATASET-D33"
+        ],
+        "OF-2": [],
+        "OF-3": [],
+        "OF-4": [
+          "Q29",
+          "WEB-13",
+          "WEB-9",
+          "DATASET-D31"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether the platform's grading pipeline expects only the final number or full chain-of-thought; affects whether output-form match extends to intermediate reasoning"
+      ],
+      "requires_expert_verification": [
+        "Platform team confirmation of chain-of-thought consumption (final answer only vs. full reasoning surfaced to teachers/students)"
+      ]
+    }
+  },
+  "overall_summary": "GSM8K is a partially valid evaluation for the US K-8 Arithmetic Auto-Grading Platform's deployment context. It is strongly aligned on input form, input content, and the basic chain-of-thought output pattern, all of which match the platform's text-only English, US-contextualized infrastructure. However, the two HIGH-priority dimensions (input ontology, output ontology) both show significant gaps: (1) GSM8K's problem-type coverage omits user-confirmed essential categories — standalone unit conversion, basic geometry (perimeter/area), and tabular/chart data interpretation — and under-represents grade 3–4 single-step difficulty; (2) GSM8K's exact-match scoring does not stress-test the answer-equivalence and tolerance-based normalization the platform's grading logic must handle. The benchmark provides a useful but incomplete reliability signal — necessary for assessing multi-step arithmetic reasoning in grades 5–8 but insufficient for the platform's full problem distribution and grading requirements. Saturation on frontier LLMs further reduces its discriminative value.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "GSM8K can reliably evaluate an LLM's ability to solve US-contextualized multi-step arithmetic word problems requiring 2–8 reasoning steps, particularly in the grades 5–8 difficulty range. Its strongest dimensions (input_form: 5, input_content: 4) make it well-suited as a baseline reliability signal for the platform's English, text-only, US-dollar-and-imperial-unit problem profile. For multi-step ratio, percent, rate, and proportional reasoning problems (DATASET-D15, D16, D18, D20), GSM8K provides a representative evaluation.",
+    "construct_depth": "The benchmark probes final-answer correctness on multi-step arithmetic but does not probe at depth: (a) problem-type coverage is bounded to narrative arithmetic — omitting geometry, standalone unit conversion, and data interpretation (input_ontology: 2); (b) scoring is exact-match without equivalence normalization, so it does not probe whether the LLM handles representational variants the platform must grade (output_ontology: 2); (c) saturation on frontier models means a high score reflects coverage of a solved sub-problem rather than evidence of full reliability. The benchmark provides surface-level coverage of multi-step reasoning rather than a comprehensive reliability probe.",
+    "supplementation_needed": "To complete the assessment, the platform should supplement GSM8K with: (1) ASDiv-W [WEB-7] for explicit Geometry and UnitTrans problem-type coverage, addressing the input_ontology gap; (2) GSM-Plus integer-decimal-fraction conversion subset [WEB-9] for stress-testing answer-equivalence handling, addressing the output_ontology gap; (3) bespoke evaluation items authored by US K-8 educators for data interpretation from tables/bar charts, which no existing benchmark covers (input_ontology / input_form gap); (4) GSM1K [WEB-15] for contamination-controlled multi-step arithmetic evaluation given GSM8K saturation; (5) Easy2Hard-Bench / E2H-GSM8K [WEB-10] for difficulty-stratified evaluation approximating grade-band breakdown, addressing the grade 3–4 calibration gap; (6) sample re-annotation by US K-8 educators on edge cases to address output_content demographic uncertainty."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "Standalone unit conversion and basic geometry (perimeter/area) problem types are absent or only incidentally present, despite being confirmed essential for grades 3–8.",
+      "recommendation": "Supplement GSM8K with ASDiv-W [WEB-7], which provides explicit 'UnitTrans' and 'Geometry' problem categories with grade-level annotations; use grade-level metadata to filter for the platform's 3–8 range."
+    },
+    {
+      "dimension": "input_ontology",
+      "gap": "Data interpretation from tables/bar charts is structurally impossible to cover with any existing text-only K-8 arithmetic benchmark.",
+      "recommendation": "Author a bespoke evaluation set of 100–200 data-interpretation items matching actual teacher-assigned content (text-serialized tables or image-rendered charts depending on platform modality), validated by US K-8 educators."
+    },
+    {
+      "dimension": "input_ontology",
+      "gap": "Grade 3–4 single-step arithmetic is underrepresented; the minimum sampled complexity is 2 steps and many problems require algebraic or compound reasoning.",
+      "recommendation": "Use E2H-GSM8K [WEB-10] difficulty stratification to report accuracy by tier separately, and supplement with single-step problem sets from MAWPS or ASDiv-A subset filtered for grades 3–4."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "Exact-match scoring does not stress-test answer-equivalence (fractions↔decimals, currency formatting, mixed numbers, rounding tolerance) that the platform's grading logic must handle.",
+      "recommendation": "Add the GSM-Plus integer-decimal-fraction conversion perturbation subset [WEB-9] to the evaluation suite; additionally implement a custom equivalence-class scoring harness aligned to the platform's tolerance thresholds."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Annotator demographics are undocumented, so subtle convention mismatches (US currency formatting, imperial unit naming) cannot be ruled out; residual subtle-error rate may exceed the documented 1.7% [Q107, Q109].",
+      "recommendation": "Conduct a focused re-annotation pass with US K-8 educators on a stratified sample of 200–500 problems, prioritizing problems with fractions, mixed numbers, or unit-stripped answers; quantify residual disagreement rate."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "GSM8K saturation on frontier LLMs (>90% accuracy per [WEB-13]) limits discriminative power for selecting among current models the platform might deploy.",
+      "recommendation": "Use GSM1K [WEB-15] as a contamination-controlled complement to GSM8K, and rely on the supplementary benchmarks above for the differentiation that GSM8K alone cannot provide at the frontier."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_ontology",
+    "output_ontology"
+  ],
+  "strongest_dimensions": [
+    "input_form",
+    "input_content"
+  ]
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "HumanEval covers standalone function synthesis from docstrings, with problems resembling software interview questions. Does your deployment also need to handle more applied US developer workflows — e.g., completing functions that call third-party libraries (NumPy, pandas, boto3), working within class hierarchies, or handling async/await patterns — or is standalone algorithmic function synthesis the primary use case?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "OO",
+    "question": "HumanEval scores correctness by passing hand-written unit tests against generated code. In your IDE, the user's own test suite is the validation oracle. Are there correctness criteria your users care about beyond test passage — for example, security hygiene (avoiding eval, SQL injection patterns), style conformance (PEP 8, type annotations), or performance constraints — that a pure pass/fail signal would miss?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "IC",
+    "question": "HumanEval problems are self-contained with all context in the docstring. In your IDE, do users typically work with functions that reference project-specific types, internal APIs, or domain conventions (e.g., finance, healthcare, ML pipelines) that would not be captured in a benchmark built from isolated, context-free problems?"
+  }
+]

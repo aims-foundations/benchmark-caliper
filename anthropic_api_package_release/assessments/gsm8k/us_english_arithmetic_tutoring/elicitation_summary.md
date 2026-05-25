@@ -1,0 +1,44 @@
+## Use Case
+A US edtech tutoring module receives a grade-school arithmetic word problem paired with a student's step-by-step worked solution and produces a diagnostic explanation identifying where and why errors occurred. The evaluation goal is to assess whether an LLM can reliably analyze student reasoning errors in this diagnostic role. GSM8K (a benchmark of grade-school math word problems scored correct/incorrect) is being considered as the evaluation instrument.
+
+## Target Population
+**Deployment users:** US elementary and middle school students in grades 3–6, submitting handwritten or typed step-by-step arithmetic solutions. **Evaluating system against:** no specific end-user demographic for the benchmark itself — the benchmark is used to assess the LLM's diagnostic capability, which will be applied to the student population above. Relevant sub-national context: US Common Core–aligned curricula, English only, standard US units and conventions (inches/feet, cups/quarts, dollars), grade-level norms that vary across 3rd–6th grade.
+
+## Elicitation Responses
+
+Q1 [IO]: Which error categories does your tutoring module need to diagnose, and are there US elementary curricula–specific error patterns you expect to appear frequently?
+A1: All four listed categories are required: misapplied operation, arithmetic slip, wrong problem setup/misread, and incomplete reasoning chain. High-frequency US-specific patterns include fraction/decimal confusion (grades 3–5), unit conversion slips (inches/feet, cups/quarts), place value errors in carrying/borrowing, misinterpretation of Common Core phrasings ("how many more" vs. "how many total"), and order-of-operations mistakes for upper elementary.
+
+Q2 [OO]: Does your rubric require identifying the single earliest error, all errors, or the most pedagogically significant one — and should the explanation match how a US classroom teacher would describe the mistake?
+A2: The rubric prioritizes the single earliest error (since later steps often cascade from it), but independent downstream errors should also be flagged. Explanations must be concrete and student-facing, matching classroom teacher register — e.g., "you multiplied when you needed to divide because the problem is asking how many groups" — not abstract formalism. Tone is targeted at elementary students and their teachers.
+
+Q3 [IC]: Are there surface features of student-submitted work — notation styles, abbreviations, informal language — that the system must correctly interpret rather than flag as errors?
+A3: Yes. Student work includes vertical arithmetic with carry marks, partial products, scratch work mixed with final answers, abbreviations ("b/c," "r" for remainder), arrow notation, and informal phrasing ("I did 5 times 3"). Common Core–specific strategies also appear: number bonds, area models, partial-quotients division. The system must parse all of these correctly and not treat unconventional notation as a mathematical error.
+
+Q4 [OC]: Who defines ground truth when a step is labeled erroneous, and across which grade levels must the system operate?
+A4: Ground truth comes from an internal team of former elementary/middle school teachers plus curriculum specialists for edge cases; symbolic checkers are used only as a numerical sanity check, not for pedagogical judgment. The system targets grades 3–6. Grade-level norms matter: e.g., leaving an answer as an improper fraction is acceptable in 5th grade but may be flagged in 3rd grade, and rounding conventions differ across grades.
+
+## Dimension Priority Weights
+
+| Dimension | Priority | Rationale |
+|-----------|----------|-----------|
+| IO | HIGH | GSM8K only labels solutions correct/incorrect and does not contain an error-type taxonomy; the deployment requires diagnosing at least five distinct error categories (misapplied operation, arithmetic slip, wrong setup, incomplete chain, plus US-curriculum–specific sub-types) that are entirely absent from GSM8K's ontology. |
+| IC | HIGH | Student-submitted work contains messy, non-standard notation (carry marks, area models, "r" for remainder, Common Core strategies) that GSM8K's clean, LLM-facing problem text does not represent; the system must parse this input correctly, and GSM8K offers no coverage of it. |
+| IF | MODERATE | Both benchmark and deployment are text-only in English, which limits modality mismatch; however, student work may include quasi-structured notation (vertical algorithms, partial products) that differs meaningfully from the prose solutions in GSM8K, warranting moderate concern. |
+| OO | HIGH | GSM8K's output ontology is binary (correct/incorrect final answer); the deployment requires a structured output identifying the location of the first error, flagging independent downstream errors, and generating teacher-register explanations — a fundamentally different and more complex output space that GSM8K cannot evaluate. |
+| OC | HIGH | GSM8K labels are based on final numerical correctness; the deployment's ground truth is defined by domain educators applying grade-level pedagogical standards (e.g., what counts as an acceptable intermediate step at grade 3 vs. grade 5), creating a deep annotator-population and judgment-type mismatch. |
+| OF | MODERATE | GSM8K produces a numeric answer label, while the deployment requires free-form diagnostic explanation in classroom-teacher register; the output form mismatch is significant for evaluation purposes, though both are text modalities. |
+
+## Flagged Gaps
+
+1. **Error taxonomy absent from GSM8K.** GSM8K has no labeled error types. Downstream search should investigate whether any math-reasoning benchmarks (e.g., MathBench, MATH error analysis variants, or educational NLP datasets like ASDiv or MAWPS) include annotated student error categories aligned to US Common Core, particularly for grades 3–6.
+
+2. **Student-work input distribution.** GSM8K problems are clean prose; the deployment input is noisy student-authored work with carry marks, area models, partial-quotients notation, and informal language. Downstream search should investigate benchmarks or datasets derived from actual student submissions (e.g., ASSISTments, Khan Academy logs, or error-annotated student work corpora) that would better match deployment input distribution.
+
+3. **Grade-level pedagogical norms.** The deployment requires grade-differentiated judgments (e.g., improper fractions acceptable in grade 5 but not grade 3; rounding conventions varying by grade). GSM8K has no grade-level metadata. Downstream search should look for US Common Core–aligned rubrics or datasets that encode grade-level acceptability standards for intermediate steps.
+
+4. **Diagnostic explanation quality evaluation.** The deployment requires evaluating whether generated explanations match classroom-teacher register. GSM8K provides no mechanism for this. Downstream search should identify NLG evaluation frameworks or human-judgment rubrics used in educational AI (e.g., teacher-facing explanation quality studies, MathQA explanation corpora) that could supplement GSM8K scoring.
+
+5. **US-specific unit and currency conventions.** GSM8K does incidentally use US defaults (dollars, miles), but unit conversion problems (inches/feet, cups/quarts) that are a high-frequency error source in the deployment population have unknown coverage in GSM8K. Downstream search should quantify how many GSM8K problems involve unit conversions relevant to grades 3–6 US curricula.
+
+6. **Common Core–specific problem phrasings.** The user flagged "how many more" vs. "how many total" as a frequent error trigger tied to Common Core language. It is unknown whether GSM8K's problems include this phrasing at representative rates. Downstream search should examine whether GSM8K's linguistic diversity includes these constructions or whether they are systematically absent.

@@ -1,0 +1,205 @@
+name: US AI Research Lab — FOLIO FOL Reasoning Evaluation
+abbreviation: us_ai_lab_folio
+deployment_context:
+  organization_type: US-based AI research laboratory
+  user_population: AI researchers, ML engineers, and benchmark evaluators with formal
+    training in logic and NLP; not a general consumer population
+  task: Benchmarking LLM logical reasoning via three-way classification (entailment
+    / contradiction / neutral) on structured premise-conclusion pairs drawn from FOLIO
+  evaluation_paradigm: Classification accuracy on a three-way categorical label (True
+    / False / Unknown), with potential secondary interest in NL-to-FOL translation
+    quality metrics
+  geography: United States (research lab context); no sub-national or demographic
+    variation relevant to this deployment
+  domain: Formal classical first-order logic reasoning
+languages:
+  primary:
+  - English
+  variants:
+  - Standard American English (academic/technical register)
+  note: All benchmark inputs and outputs are in English. The population consists of
+    native or near-native English speakers with advanced technical literacy. No multilingual
+    or dialect variation is relevant to this deployment.
+writing_systems:
+  scripts:
+  - Latin alphabet
+  - Standard FOL symbolic notation (¬, ∧, ∨, →, ∀, ∃, =)
+  note: Inputs may be presented in natural language (Latin script), in formal FOL
+    symbolic notation, or as a hybrid of both. The choice between presentation modes
+    is a live, unresolved decision by the lab and constitutes the highest-priority
+    validity concern for this assessment.
+population_expertise_profile:
+  domain_knowledge: Users possess formal education in first-order logic and are familiar
+    with classical deductive reasoning, quantifiers, negation, conditionals, and multi-step
+    inference chains
+  nlp_ml_background: Users are practicing AI/ML researchers capable of interpreting
+    benchmark methodology, score distributions, confusion matrices, and ceiling-effect
+    diagnostics
+  benchmark_literacy: High; users will scrutinize validity claims and are aware of
+    failure modes such as data contamination, ceiling effects, and input-format sensitivity
+  note: This is an expert evaluator population, not an end-user or consumer population.
+    Cultural loading, accessibility, and general literacy concerns that apply to consumer-facing
+    deployments are not applicable here.
+benchmark_alignment:
+  benchmark_name: 'FOLIO: Natural Language Reasoning with First-Order Logic'
+  benchmark_domain: Logical reasoning (first-order logic)
+  benchmark_language: en
+  label_mapping:
+    entailment: 'True'
+    contradiction: 'False'
+    neutral: Unknown
+    mapping_status: Clean and confirmed by deployment elicitation; no sub-distinctions
+      within Unknown required
+  in_scope_reasoning_types:
+  - Classical deductive FOL
+  - Universal and existential quantification
+  - Negation
+  - Conditionals (implication)
+  - Conjunction and disjunction
+  - Multi-step deduction chains
+  out_of_scope_reasoning_types:
+  - Temporal logic
+  - Modal logic
+  - Arithmetic reasoning
+  - Probabilistic reasoning
+input_format_considerations:
+  priority: HIGH — primary validity concern for this deployment
+  folio_native_format: Natural-language-first; FOL is a parallel annotation layer,
+    not the primary input signal
+  lab_presentation_options:
+  - mode: Natural language only (NL)
+    folio_match: Strong — FOLIO was designed and validated for NL-first presentation
+  - mode: Hybrid NL + FOL
+    folio_match: Supported — FOLIO provides parallel NL/FOL annotations; paper documents
+      NL+FOL improves GPT-4 but hurts GPT-3.5
+  - mode: Pure symbolic (FOL only)
+    folio_match: Weak — FOLIO score distributions derive primarily from NL-first presentation;
+      pure-symbolic regime may not generalize to or from documented FOLIO scores
+  decision_status: Unresolved as of elicitation; lab is actively considering both
+    pure-symbolic and hybrid modes
+  closest_alternative_for_pure_symbolic: '[NEEDS VERIFICATION — investigate ProofWriter,
+    ProntoQA, LogicNLI, and other benchmarks that present inputs in formal/symbolic
+    notation rather than natural language]'
+evaluation_pipeline_considerations:
+  primary_task: NL reasoning classification (three-way accuracy)
+  secondary_task: NL-to-FOL translation (SynV and ExcAcc metrics)
+  task_separation_status: FOLIO defines the two tasks with separate metrics, but whether
+    the lab's pipeline conflates or separates translation quality from downstream
+    classification accuracy is unresolved
+  metric_for_primary_task: Classification accuracy over True / False / Unknown labels
+  metrics_for_secondary_task:
+  - Syntactic Validity (SynV) — binary score on FOL formula syntactic correctness
+  - Inference Engine Execution Accuracy (ExcAcc) — label match after feeding translated
+    FOL into inference engine
+  known_label_asymmetry: Models systematically underperform on False and Unknown relative
+    to True; accuracy on non-True labels is substantially lower (54.0% few-shot, 61.9%
+    fine-tuning). Lab should account for this when interpreting aggregate accuracy.
+discriminability_and_ceiling_concerns:
+  folio_gpt4_few_shot_accuracy: 53.1% on HybLogic (near random for three-class problem)
+  expert_human_accuracy: 95.98%
+  expert_gpt4_gap_at_publication: 31.82 percentage points
+  frontier_model_scores_2024_2025: '[NEEDS VERIFICATION — check whether GPT-4o, Claude
+    3.5, Gemini 1.5, and other current frontier models have been evaluated on FOLIO
+    and whether the ceiling concern has materialized]'
+  ceiling_risk_assessment: Moderate-to-high concern; near-random GPT-4 performance
+    at publication suggests headroom existed in 2022, but rapid model improvement
+    since then may have reduced discriminability among current frontier LLMs
+  headroom_indicator: '[NEEDS VERIFICATION — confirm with 2024–2025 evaluation literature]'
+deduction_chain_depth_coverage:
+  depth_distribution_summary: Mode = 4; 28.7% of examples require five or more reasoning
+    depths
+  per_depth_example_counts: '[NEEDS VERIFICATION — check FOLIO paper appendices or
+    dataset repository for breakdown of example counts at each depth level (especially
+    depth 6–7)]'
+  statistical_power_at_high_depth: '[NEEDS VERIFICATION — determine whether the number
+    of examples at depth ≥ 5 is sufficient for reliable accuracy estimation at the
+    lab''s most challenging target depth levels]'
+  performance_by_depth_band: GPT-3.5 and GPT-4 substantially weaker at depth 4–7 versus
+    depth 0–3 (documented in FOLIO paper)
+data_quality_and_contamination:
+  annotation_process: Expert-annotated by CS students and researchers with FOL training;
+    NL quality reviewed by NLP/CL experts and English Literature specialists; FOL
+    quality reviewed by FOL experts separately
+  label_grounding: Automated FOL inference engine (Stanford CS221 module); ground
+    truth is logically objective, not dependent on annotator agreement
+  quality_control_pass_rate: 39.2% of stories had at least one issue and were rewritten
+  wikilogic_contamination_risk: WikiLogic examples derived from Wikipedia topics may
+    overlap with LLM pretraining data — possible confound for NL-condition evaluations
+    of large pretrained models
+  hyblogic_pattern_leakage_risk: HybLogic's template origin may allow fine-tuned models
+    to learn structural patterns rather than genuine reasoning
+  current_contamination_exposure: '[NEEDS VERIFICATION — assess whether FOLIO test
+    set has been incorporated into training data of models released after 2022]'
+infrastructure_notes:
+  deployment_environment: Research lab compute infrastructure; high-resource setting
+    with no connectivity, device, or bandwidth constraints relevant to this deployment
+  tooling: Standard NLP/ML tooling (Python, HuggingFace, OpenAI API, etc.); FOL inference
+    engine is Stanford CS221 module with custom Python parser bridge
+  interface_type: Programmatic API / batch evaluation pipeline; no consumer UI concerns
+  accessibility_concerns: Not applicable — expert evaluator population in a well-resourced
+    lab environment
+regulatory_and_ethical_considerations:
+  data_sensitivity: Low — benchmark consists of logically structured fictional stories
+    with no personal data
+  bias_screening: FOLIO excludes stories with identity-based biases (race, ethnicity,
+    gender, sexuality, nationality, class, religion); factually inaccurate or opinionated
+    stories were rewritten
+  applicable_us_ai_evaluation_standards: '[NEEDS VERIFICATION — check whether NIST
+    AI RMF, OSTP AI bill of rights, or emerging federal AI evaluation standards impose
+    requirements on internal benchmark use at US research labs]'
+  irb_or_human_subjects: Not applicable — evaluation uses existing benchmark data,
+    not new human subjects
+  annotator_demographics: 'Not fully documented; known: native/near-native English
+    speakers, CS students/researchers with FOL education; gender, racial, and institutional
+    diversity are NOT DOCUMENTED in the paper'
+validity_dimension_priorities:
+  input_format_IF: HIGH — live unresolved decision between pure-symbolic and hybrid
+    presentation; primary gap between FOLIO design and potential lab use
+  input_ontology_IO: LOWER — FOLIO's classical FOL coverage matches lab scope precisely;
+    temporal/modal/arithmetic out-of-scope exclusions confirmed
+  input_content_IC: LOWER — formal logical statements with no cultural loading; expert-annotated,
+    not web-scraped; source culture matches target population
+  output_ontology_OO: LOWER — True/False/Unknown maps cleanly to entailment/contradiction/neutral;
+    no residual ambiguity confirmed
+  output_content_OC: LOWER — machine-verified ground truth anchored in formal logical
+    validity; not subject to annotator subjectivity
+  output_format_OF: LOWER — both benchmark and deployment use three-way categorical
+    classification accuracy; exact match
+flagged_gaps_for_downstream_search:
+- gap_id: 1
+  dimension: IF
+  description: 'Input format mismatch: pure-symbolic vs. NL-first presentation'
+  search_target: '[NEEDS VERIFICATION — search for FOL reasoning benchmarks with purely
+    symbolic/formal input: ProofWriter, ProntoQA, LogicNLI formal-notation variants,
+    or any 2023–2025 benchmark designed for pure-symbolic FOL input evaluation]'
+- gap_id: 2
+  dimension: IF + OF
+  description: 'Hybrid NL+FOL pipeline: unclear whether lab accuracy metric covers
+    translation quality or only downstream classification given correctly formed FOL'
+  search_target: '[NEEDS VERIFICATION — check FOLIO documentation and follow-on work
+    for guidance on separating translation quality from reasoning accuracy in evaluation
+    pipelines]'
+- gap_id: 3
+  dimension: IO
+  description: Per-depth example counts at high deduction-chain depths (depth ≥ 5,
+    especially 6–7) not documented with sufficient granularity
+  search_target: '[NEEDS VERIFICATION — check FOLIO GitHub repository and supplementary
+    materials for depth-stratified example count table]'
+- gap_id: 4
+  dimension: OF
+  description: 'GPT-4 ceiling concern: near-random performance at publication; unknown
+    whether current frontier models (2024–2025) have saturated the benchmark'
+  search_target: '[NEEDS VERIFICATION — search for FOLIO evaluations of GPT-4o, Claude
+    3.5 Sonnet/Opus, Gemini 1.5 Pro/Ultra, Llama 3, Mistral Large, and other frontier
+    models released after mid-2023]'
+cultural_norms_notes: Not applicable to this deployment. Users are expert AI researchers
+  evaluating formal logical reasoning benchmarks. Cultural loading, regional sensitivity,
+  formality norms, and consumer-facing accessibility considerations are irrelevant
+  to this population and task.
+domain_specific_notes: 'The core domain is formal classical first-order logic reasoning,
+  independent of any applied subject-matter domain. FOLIO''s content spans real-world
+  topics (Wikipedia-seeded stories), but the reasoning task is purely deductive and
+  domain-agnostic. The lab''s evaluation is focused on model capability, not applied
+  domain knowledge. Key domain-specific considerations for this assessment are methodological:
+  input format sensitivity, deduction-chain depth coverage, label-class asymmetry
+  in model performance, and benchmark discriminability among frontier LLMs.'

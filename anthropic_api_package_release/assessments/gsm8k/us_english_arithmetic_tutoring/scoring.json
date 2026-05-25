@@ -1,0 +1,454 @@
+{
+  "benchmark": "gsm8k",
+  "region": "US Elementary/Middle School Arithmetic Tutoring — Grade 3–6 Diagnostic Module",
+  "dimensions": {
+    "input_ontology": {
+      "score": 2,
+      "justification": "The deployment is HIGH-priority on input ontology because it requires diagnosing at least five error categories (misapplied operation, arithmetic slip, wrong setup, incomplete chain, plus US-curriculum-specific subtypes). GSM8K's task ontology is organized around a single task — solving grade-school math word problems — with no error-type subtaxonomy [Q1, Q11, Q22]. Its only category-like distinctions are methodological (finetuning vs. verification, solution-level vs. token-level verifier) [Q27, Q28, Q30, Q72, Q73], not diagnostic. Dataset inspection confirms every record has only {question, answer} with a final number after `####` and no error-type metadata (DATASET-D1, DATASET-D2). Additionally, a non-trivial portion of sampled problems is above the grades 3–6 CCSS-M band — algebraic variables, simple interest, ratio/proportion (DATASET-D8, DATASET-D9, DATASET-D10, DATASET-D11) — introducing construct-irrelevant variance for a grade 3–6 diagnostic evaluation. ASDiv offers grade-level/problem-type annotations [WEB-5] but does not provide student-error taxonomy. MR-GSM8K reframes GSM8K for error localization [WEB-7], but the base GSM8K ontology itself remains unsuited to the deployment.",
+      "strengths": [
+        "Problems consistently require 2–6 step chain-of-thought arithmetic reasoning, matching the kind of multi-step student work the deployment must analyze (DATASET-D1, DATASET-D16, DATASET-D25).",
+        "The Socratic config decomposes solutions into explicit sub-question steps, providing a structural parallel to step-indexed analysis (DATASET-D23).",
+        "GSM8K explicitly targets 'elementary concepts' and shares design principles with ASDiv [Q11, Q18], so part of the ontology overlaps with grades 3–6 arithmetic."
+      ],
+      "checklist_responses": {
+        "IO-1": "Required test case categories include misapplied operation, arithmetic slip, wrong setup/misread, incomplete reasoning chain, plus US-curriculum subtypes (fraction/decimal confusion, US customary unit conversion, place value, Common Core phrasing misread, order of operations), differentiated by grade band 3–6 (per elicitation Q1/A1 and region YAML).",
+        "IO-2": "Yes. GSM8K has no error-type subtaxonomy [Q31, Q60]; no grade-level differentiation across 3–6; no unit-conversion problem category found in the dataset sample (DATASET-D3, DATASET-D17 use customary units but require no conversion). All deployment-relevant diagnostic categories are omitted.",
+        "IO-3": "Yes. Sampled problems include content above grades 3–6: algebraic equation solving (DATASET-D8, DATASET-D10), simple interest (DATASET-D9), real-estate pricing (DATASET-D28). These exercise reasoning irrelevant to the elementary diagnostic context.",
+        "IO-4": "Content validity is harmed in two directions: construct underrepresentation (no error-type taxonomy, no grade-level metadata, no unit-conversion category) and construct-irrelevant variance (above-grade algebra/finance problems). The MR-GSM8K result that top GSM8K solvers collapse to MR-Scores <0.02 on error localization [WEB-7, WEB-25] empirically confirms the ontology mismatch."
+      },
+      "evidence_quotes": [
+        "[Q1] 'we introduce GSM8K, a dataset of 8.5K high quality linguistically diverse grade school math word problems.' (p.1)",
+        "[Q11] 'GSM8K solutions depend only on elementary concepts, so achieving high test performance is a tractable goal.' (p.2)",
+        "[Q22] 'GSM8K's main difficulty lies in both properly interpreting a question and reasoning through the steps to solve it.' (p.4)",
+        "[Q27] 'We investigate two methods to solve problems in GSM8K: finetuning and verification.' (p.5)",
+        "[Q31] 'Verifiers are trained to judge the correctness of solutions, with the training signal determined solely by whether or not the solution reached the correct final answer.' (p.5)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-5] ASDiv provides problem-type taxonomy and grade-level metadata but no student-error taxonomy",
+        "[WEB-7] MR-GSM8K shows top GSM8K solvers collapse to MR-Scores <0.02 on error localization",
+        "[WEB-25] EmergentMind summary confirms GSM8K-strong models fail at meta-reasoning"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: every record has only {question, answer} with no error-type label",
+        "DATASET-D8: algebraic equation with variable x — above grades 3–6",
+        "DATASET-D9: simple interest problem — beyond elementary scope",
+        "DATASET-D10: algebraic equation solving (10N=6(N+8)) — outside grades 3–6",
+        "DATASET-D11: ratio/proportion problem — grade 6 borderline",
+        "DATASET-D23: Socratic config provides explicit sub-question scaffolding"
+      ],
+      "evidence_map": {
+        "IO-1": [],
+        "IO-2": [
+          "Q31",
+          "Q60",
+          "DATASET-D1",
+          "DATASET-D3",
+          "DATASET-D17"
+        ],
+        "IO-3": [
+          "DATASET-D8",
+          "DATASET-D9",
+          "DATASET-D10",
+          "DATASET-D28"
+        ],
+        "IO-4": [
+          "Q11",
+          "Q22",
+          "WEB-7",
+          "WEB-25",
+          "WEB-5"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "No published quantitative breakdown of GSM8K problem types by CCSS-M grade level or by unit-conversion presence.",
+        "Frequency of Common Core phrasings ('how many more' vs. 'how many total') across the full 8.5K dataset is unquantified."
+      ],
+      "requires_expert_verification": [
+        "Manual audit of the GSM8K problem set by a US elementary math curriculum specialist to estimate the fraction of problems in/out of grades 3–6 CCSS-M scope."
+      ]
+    },
+    "input_content": {
+      "score": 2,
+      "justification": "The deployment's HIGH-priority concern is that inputs are student-authored work with carry marks, area models, partial-quotients division, number bonds, remainder shorthand, and informal phrasing. GSM8K's input content is professionally authored or GPT-3-seeded clean prose [Q9, Q103, Q104, Q110, Q111], with linguistic diversity but stylistic only, not student-register. Every sampled datapoint shows fluent, grammatical English with machine-generated calculator annotations and no student-work features (DATASET-D2, DATASET-D19). Cultural fit is partial: USD currency and US consumer references are prevalent (DATASET-D5, DATASET-D20), and US customary units appear incidentally (DATASET-D3, DATASET-D17). However, adult financial/professional contexts dominate a noticeable share of problems (DATASET-D15, DATASET-D27, DATASET-D28) and one metric-unit example appears (DATASET-D24). The 2026 DrawEduMath follow-up empirically confirms that models 'misdiagnose errors' on student work containing errors [WEB-11], directly evidencing the IC validity concern.",
+      "strengths": [
+        "USD currency and US consumer/school contexts dominate, partially matching the deployment's US frame (DATASET-D5, DATASET-D20).",
+        "Some incidental coverage of US customary units (feet, pounds, inches) in problem givens (DATASET-D3, DATASET-D17).",
+        "'How many more' phrasing — a named CCSS-M-aligned error trigger — appears operationalized correctly (DATASET-D20).",
+        "GSM8K is designed for high linguistic diversity within elementary content [Q9], giving some surface-form variation."
+      ],
+      "checklist_responses": {
+        "IC-1": "Yes — the deployment requires parsing US-customary-unit references, Common Core phrasing conventions, and US child-context problem framings. Region YAML and elicitation Q3/A3 specify these as input features.",
+        "IC-2": "Partially. USD and US contexts align (DATASET-D5, DATASET-D20), but adult-finance and real-estate contexts (DATASET-D15, DATASET-D27, DATASET-D28) and a metric-unit instance (DATASET-D24) reduce alignment with the elementary student frame.",
+        "IC-3": "Yes — algebraic and adult financial contexts (DATASET-D8, DATASET-D10, DATASET-D27, DATASET-D28) require knowledge or reasoning patterns outside grades 3–6 students' frame.",
+        "IC-4": "Regional annotation by US elementary teachers would be needed to verify (a) the fraction of GSM8K problems within grades 3–6 CCSS-M scope and (b) the frequency of US-curriculum-specific phrasing and unit-conversion items. INSUFFICIENT DOCUMENTATION on this from the paper alone.",
+        "IC-5": "Content validity is harmed primarily by the complete absence of student-register notation (carry marks, area models, partial quotients, number bonds, 'r' remainder shorthand, informal phrasing). DrawEduMath empirical findings [WEB-11] indicate that models fail specifically where the deployment most needs them to succeed."
+      },
+      "evidence_quotes": [
+        "[Q9] 'We designed this dataset to have high linguistic diversity while relying on relatively simple grade school math concepts.' (p.2)",
+        "[Q21] 'GSM8K includes questions that require basic background knowledge, like the number of days in a week.' (p.4)",
+        "[Q103] 'We initially collected a starting set of a thousand problems and natural language solutions by hiring freelance contractors on Upwork' (p.15)",
+        "[Q104] 'We then worked with Surge AI, an NLP data labeling platform, to scale up our data collection.' (p.15)",
+        "[Q110] 'we provided seed questions automatically generated from a few-shot prompted 175B GPT-3 model.' (p.15)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-9] DrawEduMath provides 2,030 handwritten student math responses with teacher annotations from ASSISTments — closest student-work corpus",
+        "[WEB-11] 2026 DrawEduMath follow-up: VLMs misdiagnose errors specifically on student work containing errors",
+        "[WEB-13] Daheim et al. (2024) ~1K student-reasoning chains with first-error annotation"
+      ],
+      "evidence_dataset": [
+        "DATASET-D2: Solutions are fluent prose with machine calculator annotations — no student notation",
+        "DATASET-D5: US-branded consumer products and USD pricing",
+        "DATASET-D3, DATASET-D17: US customary units (feet, inches) used incidentally",
+        "DATASET-D20: 'How much more' phrasing operationalized as subtraction",
+        "DATASET-D15, DATASET-D27, DATASET-D28: Adult financial / real-estate contexts dominate substantial subset",
+        "DATASET-D24: Metric (kilograms) used, inconsistent with grades 3–6 US customary norm",
+        "DATASET-D19: Even mid-narration label errors stay in clean-prose format, not student register"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "Q21"
+        ],
+        "IC-2": [
+          "DATASET-D5",
+          "DATASET-D20",
+          "DATASET-D15",
+          "DATASET-D27",
+          "DATASET-D24"
+        ],
+        "IC-3": [
+          "DATASET-D8",
+          "DATASET-D10",
+          "DATASET-D27",
+          "DATASET-D28"
+        ],
+        "IC-4": [],
+        "IC-5": [
+          "Q9",
+          "Q103",
+          "Q110",
+          "WEB-11",
+          "DATASET-D2",
+          "DATASET-D19"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Frequency distribution of US customary unit references and unit-conversion problems across the full dataset.",
+        "Fraction of GSM8K problems whose contexts (school, household, child activities) match grades 3–6 student frame versus adult-domain contexts."
+      ],
+      "requires_expert_verification": [
+        "US elementary educator review to flag which GSM8K problems contain context, phrasing, or numeric scale outside the grade 3–6 student frame."
+      ]
+    },
+    "input_form": {
+      "score": 3,
+      "justification": "Input form priority is MODERATE per elicitation. Both benchmark and deployment are English text [Q9, Q32, Q33], so there is no gross modality mismatch — a meaningful partial alignment. However, GSM8K inputs are well-formed prose sentences with machine-injected `<<expr=result>>` calculator annotations [Q40, Q41, Q119, DATASET-D2], whereas student-submitted work includes vertical algorithms with carry marks, area models, partial-quotients layouts, number bonds, 'r' remainder shorthand, and informal phrasing — none of which appear anywhere in the sampled dataset. The form mismatch is therefore narrower than for IC (it's a representational rather than ontological gap) but still material: a parser tuned on GSM8K-style prose has no exposure to the quasi-structured notation it will encounter.",
+      "strengths": [
+        "Shared text+English modality eliminates gross signal mismatch (no audio, no image, no multilingual issues) [Q9, Q32, Q33].",
+        "Multi-step natural-language solutions are demanded — the paper shows direct-answer finetuning drops to 5.2% from 20.6% [Q57], so intermediate-step text is intrinsic to the form.",
+        "Socratic config's labeled sub-question format (DATASET-D23) provides a structural scaffold partially analogous to step-indexed work."
+      ],
+      "checklist_responses": {
+        "IF-1": "Both are English text. However, deployment text includes quasi-structured notation (vertical algorithms, area models, partial products, arrow flow) absent from GSM8K's clean prose (DATASET-D2). Calculator annotation tokens `<<…>>` in GSM8K solutions [Q40, Q119] have no counterpart in student work.",
+        "IF-2": "US K-12 device landscape (Chromebooks, iPads, browser-capable) supports text-based deployment per [WEB-21, WEB-22, WEB-23, WEB-24]. No infrastructure barrier prevents text input.",
+        "IF-3": "Domain-specific differences: student notation includes carry marks, crossing-out, area-model layout, partial-quotients division, number bonds, 'r' remainder shorthand, and informal phrasing (per region YAML); none appear in GSM8K's input form.",
+        "IF-4": "External validity is moderately harmed: the benchmark's input form is a proper subset of the form distribution the deployment encounters, so good GSM8K performance does not establish robustness to notational heterogeneity."
+      },
+      "evidence_quotes": [
+        "[Q9] 'We designed this dataset to have high linguistic diversity while relying on relatively simple grade school math concepts.' (p.2)",
+        "[Q32] 'we focus attention on the space of natural language solutions, as this is a richer and more general solution format than pure mathematical expressions.' (p.5)",
+        "[Q40] 'we train all models to use a calculator by injecting calculation annotations into the training set.' (p.6)",
+        "[Q57] 'If we instead finetune a 6B model to directly output the final answer without any intermediate steps, performance drops drastically from 20.6% to 5.2%.' (p.7)",
+        "[Q119] 'During training, there is no special distinction between the annotated tokens and the rest of the solution: they are all just tokens.' (p.17)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-21] Chromebooks in 93% of US school districts (2025)",
+        "[WEB-23] 88% of public schools have 1-to-1 computing programs (2024–25)",
+        "[WEB-22] iPad significant in lower elementary; Chromebooks from grade 2 upward"
+      ],
+      "evidence_dataset": [
+        "DATASET-D2: Solutions contain `<<30/2=15>>` calculator annotations throughout — distinctive to GSM8K form",
+        "DATASET-D23: Socratic config offers sub-question structural scaffolding"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q9",
+          "Q32",
+          "DATASET-D2"
+        ],
+        "IF-2": [
+          "WEB-21",
+          "WEB-22",
+          "WEB-23"
+        ],
+        "IF-3": [
+          "Q40",
+          "Q119",
+          "DATASET-D2"
+        ],
+        "IF-4": [
+          "Q32",
+          "Q57"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether deployment preprocessing strips calculator annotations or otherwise normalizes representational differences is INSUFFICIENT DOCUMENTATION."
+      ],
+      "requires_expert_verification": [
+        "Deployment-team verification of whether OCR/handwriting preprocessing is in scope and how unconventional notation is canonicalized before reaching the LLM."
+      ]
+    },
+    "output_ontology": {
+      "score": 1,
+      "justification": "HIGH priority and the most severe mismatch. GSM8K's output ontology is strictly binary at the solution level — correct vs. incorrect, judged solely on whether the final numerical answer matches the gold answer [Q31, Q60]. Even the token-level verifier outputs a scalar value function, not error-type labels [Q74, Q78]. The paper explicitly notes that solutions reaching the correct answer through flawed reasoning are still labeled correct [Q61], confirming that the ontology cannot distinguish reasoning quality from final-answer correctness. Dataset inspection confirms records contain only {question, answer} with no error-location, error-type, or grade-level acceptability metadata (DATASET-D1, DATASET-D2, DATASET-D16). The deployment requires structured output identifying earliest error location, independent downstream errors, error-type classification across five+ categories, and teacher-register explanation. The MR-GSM8K empirical result — top GSM8K solvers collapse to MR-Scores <0.02 on error localization [WEB-7, WEB-25] — quantifies the gap as not merely structural but severe.",
+      "strengths": [
+        "Token-level verifier produces per-token scalar value predictions [Q74, Q147, Q148] — the closest GSM8K comes to step-level signal, useful as an interpretability artifact even though it isn't evaluated.",
+        "Final-answer correctness, while too narrow, is a necessary sanity-check signal that the deployment's symbolic checker also uses (per region YAML)."
+      ],
+      "checklist_responses": {
+        "OO-1": "GSM8K's label categories (correct, incorrect) are deployment-relevant only as a baseline numerical sanity check; they do not cover error location, error type, or grade-level acceptability.",
+        "OO-2": "Missing categories: earliest error step, independent downstream errors, five error types (misapplied operation, arithmetic slip, wrong setup, incomplete chain), US-curriculum subtypes (fraction/decimal confusion, unit conversion, place value, Common Core phrasing misread, order of operations), and grade-level acceptability differentiation. All absent [Q31, Q60, Q61].",
+        "OO-3": "The paper acknowledges that solutions with flawed reasoning but correct final answers are labeled correct [Q61] — this encodes a final-answer-only value that is misaligned with the deployment's pedagogical-judgment ground truth.",
+        "OO-4": "Stakeholder-driven taxonomy redesign is required. ProcessBench [WEB-14, WEB-15] and MR-GSM8K [WEB-7] partially address earliest-error-location. BEA 2025 Shared Task [WEB-16] (Mistake Identification, Mistake Location, Providing Guidance, Actionability) is the most aligned framework.",
+        "OO-5": "Structural validity is severely compromised: the construct's structure (multi-dimensional diagnostic judgment) is misrepresented as a single binary scalar. Content validity is compromised by complete category omission. External validity is compromised — confirmed by the >80%-to-<0.02 collapse [WEB-7, WEB-25]."
+      },
+      "evidence_quotes": [
+        "[Q31] 'Verifiers are trained to judge the correctness of solutions, with the training signal determined solely by whether or not the solution reached the correct final answer.' (p.5)",
+        "[Q60] 'Training solutions are labeled as correct or incorrect based solely on whether they reach the correct final answer.' (p.7)",
+        "[Q61] 'In practice, some solutions will reach the correct final answer using flawed reasoning, leading to false positives.' (p.7)",
+        "[Q74] 'This can be viewed as a token-level value function.' (p.9)",
+        "[Q78] 'the full value function provides a useful auxiliary signal that encourages the model to judge the reasoning throughout solutions, rather than merely memorizing the correct final answer.' (p.9)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-7] MR-GSM8K: top LLMs >80% on GSM8K collapse to MR-Scores <0.02 on error localization",
+        "[WEB-14] ProcessBench: 3,400 cases with human-annotated earliest erroneous step, including 400 GSM8K-level cases",
+        "[WEB-16] BEA 2025 Shared Task: Mistake Identification, Mistake Location, Providing Guidance, Actionability — most aligned framework",
+        "[WEB-25] EmergentMind summary corroborating GSM8K→meta-reasoning collapse"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: only {question, answer} fields with final '#### 32' — no error-type metadata",
+        "DATASET-D16: '#### 138' is the entirety of what is scored",
+        "DATASET-D22: 'every sixth customer' but ÷5 in solution — illustrates label space cannot distinguish setup error from arithmetic error"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q31",
+          "Q60",
+          "DATASET-D1"
+        ],
+        "OO-2": [
+          "Q31",
+          "Q60",
+          "Q61",
+          "DATASET-D1",
+          "DATASET-D16"
+        ],
+        "OO-3": [
+          "Q61",
+          "DATASET-D22"
+        ],
+        "OO-4": [
+          "WEB-14",
+          "WEB-7",
+          "WEB-16"
+        ],
+        "OO-5": [
+          "Q31",
+          "Q61",
+          "WEB-7",
+          "WEB-25"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": [
+        "Whether ProcessBench-style step-level annotation can be adapted to student-authored (not LLM-generated) work for the deployment's grade band."
+      ]
+    },
+    "output_content": {
+      "score": 1,
+      "justification": "HIGH priority and severely misaligned. GSM8K ground-truth labels are produced by Upwork/Surge AI freelance contractors who re-solved problems and compared final numerical answers [Q103, Q104, Q105, Q106], with an estimated 1.7% breaking-error/ambiguity rate and acknowledged subtle errors [Q107, Q108, Q109]. No domain educators, curriculum specialists, or classroom teachers participated. Annotator demographics are not documented. Calculator annotations were generated by hard-coded logic and a finetuned language model, not human contractors [Q117, Q118]. Dataset inspection reveals concrete annotation defects (DATASET-D4: `6*2=<<6+6=12>>` inconsistency) and at least one likely problem-setup error that survived review (DATASET-D22: 'every sixth customer' but ÷5). The deployment's ground truth comes from former US elementary/middle school teachers and curriculum specialists applying grade-differentiated pedagogical standards (elicitation Q4/A4) — a fundamentally different annotator population and judgment type.",
+      "strengths": [
+        "Two-stage re-solve quality control with disagreement resolution [Q105, Q106] gives a baseline final-answer correctness signal.",
+        "Pairwise similarity checks for template re-use [Q112, Q113] reduce one form of construct-irrelevant variance.",
+        "Estimated breaking-error rate (~1.7%) is reported, providing at least some transparency [Q107, Q108]."
+      ],
+      "checklist_responses": {
+        "OC-1": "No. Ground-truth labels reflect contractor agreement on final numerical answers [Q31, Q60], not US elementary teachers' grade-differentiated pedagogical judgment (elicitation Q4/A4).",
+        "OC-2": "High potential for disagreement. The deployment requires labels like 'acceptable as an improper fraction at grade 5 but flagged at grade 3' (region YAML); GSM8K labels carry no such grade-sensitive information. JEDM corpus [WEB-17] shows teacher-validated annotation at scale is feasible but absent from GSM8K.",
+        "OC-3": "Annotator demographics are not documented beyond 'Upwork freelance contractors' and 'Surge AI' [Q102, Q103, Q104]. No data statement or datasheet was located. INSUFFICIENT DOCUMENTATION on annotator demographics, training, or domain background.",
+        "OC-4": "Re-annotation by representative regional annotators (former US elementary teachers + curriculum specialists, per elicitation Q4/A4) is required for any deployment use. DrawEduMath's teacher QA layer [WEB-9, WEB-10] is a precedent.",
+        "OC-5": "Aggregation method (final-answer agreement; repair or discard on disagreement [Q106]) collapses pedagogical disagreement to binary signal, which would erase minority/edge-case judgments. No reporting of inter-annotator agreement beyond the 1.7% breaking-error estimate [Q107].",
+        "OC-6": "Convergent validity harmed: labels do not correlate with what classroom teachers would judge for the same student work. External validity harmed: contractor agreement on final answer does not generalize to pedagogical judgment."
+      },
+      "evidence_quotes": [
+        "[Q31] '…training signal determined solely by whether or not the solution reached the correct final answer.' (p.5)",
+        "[Q103] 'hiring freelance contractors on Upwork' (p.15)",
+        "[Q104] 'we worked with Surge AI… to scale up our data collection.' (p.15)",
+        "[Q105] 'we asked workers to re-solve all problems, with no workers re-solving problems they originally wrote.' (p.15)",
+        "[Q107] '1.7% of problems still produce disagreements among contractors.' (p.15)",
+        "[Q109] 'It is possible that a larger percentage of problems contain subtle errors.' (p.15)",
+        "[Q117] 'The calculator annotations were not provided by human contractors: they were generated by a combination of hard-coded logic and a finetuned language model.' (p.17)",
+        "[Q118] 'it is not uncommon for it to ignore some lines that could be annotated.' (p.17)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-17] JEDM 8,307 problems / 193,187 student responses / 1,296 teachers with 5-point scale + free-text feedback — precedent for teacher-validated ground truth at scale",
+        "[WEB-9] DrawEduMath teacher-annotated student work (CCSS-aligned)",
+        "[WEB-10] DrawEduMath benchmark site"
+      ],
+      "evidence_dataset": [
+        "DATASET-D4: calculator annotation `<<6+6=12>>` inconsistent with prose `6*2` — confirms annotation imperfection in sample",
+        "DATASET-D22: 'every sixth customer' but ÷5 in solution — likely problem/setup ambiguity surviving QC",
+        "DATASET-D19: '90 snakes' labeling error in mid-solution narration — final answer correct, intermediate narration wrong"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q31",
+          "Q60"
+        ],
+        "OC-2": [
+          "WEB-17"
+        ],
+        "OC-3": [
+          "Q102",
+          "Q103",
+          "Q104"
+        ],
+        "OC-4": [
+          "WEB-9",
+          "WEB-10",
+          "WEB-17"
+        ],
+        "OC-5": [
+          "Q106",
+          "Q107"
+        ],
+        "OC-6": [
+          "Q61",
+          "Q109",
+          "DATASET-D4",
+          "DATASET-D22"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "No documented annotator demographics, training, or curriculum-domain background for GSM8K contractors.",
+        "No inter-annotator agreement statistic beyond the 1.7% breaking-error estimate."
+      ],
+      "requires_expert_verification": [
+        "Internal deployment team's IAA figures (region YAML notes these are [NEEDS VERIFICATION]).",
+        "US elementary teacher review of GSM8K labels for pedagogical-acceptability conflicts at grade 3, 4, 5, and 6 norms."
+      ]
+    },
+    "output_form": {
+      "score": 2,
+      "justification": "MODERATE priority but still substantially misaligned. GSM8K's scoring output is a binary correct/incorrect judgment derived from final-answer comparison, or in verifier mode a ranked list of completions [Q3, Q29, Q46, Q68]. The token-level visualizations are interpretability aids, not scored elements [Q147, Q150, Q151]. The deployment requires free-form structured diagnostic text in classroom-teacher register identifying earliest error, downstream errors, error type, and a student-facing explanation (elicitation Q2/A2, region YAML). MathTutorBench [WEB-18] and the 2024 AI Tutor Evaluation Taxonomy paper [WEB-19] confirm that no standard NLG metric captures pedagogical-explanation quality and that generic metrics (BLEU/BERTScore) can be gamed — meaning GSM8K's evaluation harness cannot be repurposed as a proxy. Both deployment and benchmark share text modality, which is the basis for the score not being 1.",
+      "strengths": [
+        "Shared text modality means deployment outputs can at least be generated in the same channel that GSM8K solutions occupy (no TTS or modality bridge needed) [Q32, Q33].",
+        "Hyperparameter robustness is documented within the binary-accuracy paradigm [Q114, Q115, Q116] — useful only for the final-answer sanity-check sub-task.",
+        "The paper produced human-interpretable natural-language solutions explicitly [Q32, Q33], so there is at least a free-form text artifact (though unscored for quality)."
+      ],
+      "checklist_responses": {
+        "OF-1": "Partial match. Both are text. But the required structured diagnostic format (earliest-error location + downstream flags + error-type label + teacher-register explanation, per elicitation Q2/A2) is not produced or scored by GSM8K [Q29, Q46, Q68].",
+        "OF-2": "Not applicable — the deployment is text-only on browser-capable devices [WEB-21, WEB-22]; no TTS requirement.",
+        "OF-3": "Target users are grades 3–6 students; explanations must be concrete and student-facing (elicitation Q2/A2). GSM8K's output form provides no register signal — only a number.",
+        "OF-4": "External validity is harmed: a model's GSM8K score gives no evidence about explanation quality, register appropriateness, or pedagogical accuracy. BEA 2025 Shared Task [WEB-16] and MathTutorBench [WEB-18] are needed supplementary frameworks."
+      },
+      "evidence_quotes": [
+        "[Q3] 'At test time, we generate many candidate solutions and select the one ranked highest by the verifier.' (p.1)",
+        "[Q29] 'we judge performance by autoregressively sampling a single low temperature solution and checking whether the final answer is correct.' (p.5)",
+        "[Q46] 'Test performance is determined by a single low temperature (T = 0) sample for each test problem.' (p.6)",
+        "[Q68] 'we sample 100 completions to each test problem, rank them with the verifier, and then return the one with the highest verifier score.' (p.8)",
+        "[Q120] 'During testing, we override model sampling when a well-formatted annotation exists' (p.17)",
+        "[Q150] 'The second column of the table summarizes the verifier's prediction… disagreement…indicates that the verifier made an error.' (p.22)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-18] MathTutorBench: BLEU/BERTScore do not capture pedagogical value; no unified pedagogical evaluation metric exists",
+        "[WEB-19] AI Tutor Evaluation Taxonomy: NLG metrics gamed by trivial responses",
+        "[WEB-16] BEA 2025 Shared Task: four-dimensional tutor-response evaluation framework",
+        "[WEB-20] TutorBench: LLM-judge with rubric criteria achieves F1=0.82 vs human F1=0.91"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: final '#### 32' is the entirety of what is scored",
+        "DATASET-D16: '#### 138' anchors evaluation; intermediate prose unscored"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q29",
+          "Q46",
+          "Q68",
+          "DATASET-D1",
+          "DATASET-D16"
+        ],
+        "OF-2": [
+          "WEB-21",
+          "WEB-22"
+        ],
+        "OF-3": [],
+        "OF-4": [
+          "Q29",
+          "WEB-18",
+          "WEB-16"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "No rubric or metric within GSM8K for evaluating teacher-register explanation quality."
+      ],
+      "requires_expert_verification": [
+        "Whether the deployment team plans to adopt BEA 2025 / TutorBench-style rubric scoring or develop a proprietary teacher-register rubric."
+      ]
+    }
+  },
+  "overall_summary": "GSM8K is a problem-solving benchmark — it tests whether models can produce correct grade-school math word problem solutions, scored by binary final-answer correctness. The deployment is a diagnostic system that must analyze student-authored solutions, locate the earliest error and downstream errors, classify error types according to a five-plus-category US-curriculum taxonomy, and generate teacher-register explanations differentiated by grade level. The directional mismatch is severe on every HIGH-priority dimension: input ontology lacks an error taxonomy and grade-level metadata; input content is professionally authored clean prose with none of the student-register notation the deployment must parse; output ontology is binary final-answer correctness with no error-location, error-type, or pedagogical-acceptability label space; output content is annotated by freelance contractors with no domain-educator involvement. The MR-GSM8K empirical result that top GSM8K solvers (>80% accuracy) collapse to MR-Scores <0.02 on error localization quantifies the gap as not merely structural but operationally severe. Partial alignments — shared text/English modality, USD currency, US-customary unit incidence, and the multi-step chain-of-thought solution format — are real but secondary. GSM8K is at best a final-answer sanity check; it cannot serve as the primary evaluation instrument for a diagnostic deployment.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "GSM8K measures a model's ability to *produce* a correct final numerical answer to a clean, professionally authored grade-school-level word problem when given the problem alone. It exercises multi-step chain-of-thought arithmetic reasoning (a strength for input_ontology) and verifies the final number against contractor-agreed ground truth. For the deployment, this provides only a baseline competency check: 'can this model do the underlying arithmetic if it had to?'",
+    "construct_depth": "Shallow with respect to the deployment's construct. The construct of interest is *diagnostic meta-reasoning over student work*, which has at least four sub-constructs: (1) parsing non-standard student notation, (2) localizing the earliest error, (3) classifying error type against a curriculum-aligned taxonomy, and (4) generating teacher-register explanation. GSM8K touches sub-construct (0) — does the model know the arithmetic at all — and none of (1)–(4). The MR-GSM8K finding of near-zero error-localization performance from GSM8K-strong models [WEB-7, WEB-25] is direct empirical evidence that depth on the deployment construct is essentially absent.",
+    "supplementation_needed": "Substantial supplementation required across all six dimensions. For IO/OO: ProcessBench [WEB-14] for earliest-error-step identification, MR-GSM8K [WEB-7] for error-reason generation as a sub-task, BEA 2025 Shared Task [WEB-16] for a four-dimensional tutor-response rubric, and a deployment-built error-type taxonomy aligned to the five categories plus US-curriculum subtypes. For IC: DrawEduMath [WEB-9, WEB-10] or Daheim et al. (2024) [WEB-13] for student-authored work distribution; ideally a deployment-collected corpus of grades 3–6 student work. For OC: an in-house teacher-annotated evaluation set with grade-differentiated pedagogical acceptability criteria (JEDM precedent [WEB-17]; DrawEduMath QA layer). For OF: rubric-based or LLM-judge evaluation along the BEA 2025 dimensions (Mistake Identification, Mistake Location, Providing Guidance, Actionability) plus human teacher review for register. GSM8K should be retained only as a baseline final-answer sanity check, not as a primary instrument."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "No error-type taxonomy, no grade-level metadata, no unit-conversion category; substantial fraction of problems above grades 3–6 scope.",
+      "recommendation": "Build a deployment-internal evaluation set that labels each problem by CCSS-M grade band (3, 4, 5, 6), by required error-trigger category (misapplied operation, arithmetic slip, wrong setup, incomplete chain, plus US-curriculum subtypes), and filter out algebra/finance problems above the elementary band. Use ASDiv [WEB-5] for problem-type metadata and supplement with curriculum-specialist tagging."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "GSM8K contains no student-register notation (carry marks, area models, partial quotients, number bonds, 'r' shorthand, informal phrasing); adult-domain contexts overrepresented.",
+      "recommendation": "Collect or license a corpus of grades 3–6 student-authored arithmetic work — DrawEduMath text-derivative annotations [WEB-9, WEB-10] for vision-derived work, or Daheim et al. (2024) [WEB-13] for text-format student reasoning chains — and use this as the primary IC evaluation set. Treat GSM8K as out-of-distribution input."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "Binary final-answer correctness cannot evaluate earliest-error localization, error-type classification, or grade-level acceptability.",
+      "recommendation": "Adopt ProcessBench [WEB-14] for earliest-error-step evaluation as a supplementary benchmark; adopt the BEA 2025 four-dimensional framework [WEB-16] (Mistake Identification, Mistake Location, Providing Guidance, Actionability); and build a deployment-specific error-type classification eval against the five+ categories with grade-differentiated rubrics."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Ground truth is freelance-contractor final-answer agreement, with no domain educators, no grade-level differentiation, no documented annotator demographics, and a 1.7% breaking-error rate plus acknowledged subtle errors.",
+      "recommendation": "Construct an in-house teacher-annotated evaluation set with the deployment's stated annotator pool (former US elementary/middle school teachers + curriculum specialists). Use the JEDM corpus methodology [WEB-17] (5-point scale + free-text feedback) and DrawEduMath teacher-QA layer [WEB-10] as design precedents. Report IAA by grade level."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "No evaluation mechanism for free-form teacher-register diagnostic explanation; generic NLG metrics are inadequate.",
+      "recommendation": "Use rubric-based human evaluation along the BEA 2025 dimensions [WEB-16] for register and pedagogical accuracy. Supplement with LLM-as-judge rubric scoring (TutorBench F1=0.82 vs human F1=0.91 [WEB-20]) for scale. Avoid BLEU/BERTScore as primary metrics per [WEB-18, WEB-19]."
+    },
+    {
+      "dimension": "input_form",
+      "gap": "Quasi-structured student notation (vertical algorithms, area models, partial quotients) has no analog in GSM8K's clean-prose form.",
+      "recommendation": "Define an explicit preprocessing/parsing layer for student notation forms in scope (per elicitation Q3/A3) and build form-robustness tests using perturbed or synthesized student-style inputs. Document which notation forms the LLM is expected to parse natively versus which require canonicalization."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "output_ontology",
+    "output_content",
+    "input_ontology",
+    "input_content"
+  ],
+  "strongest_dimensions": [
+    "input_form",
+    "output_form"
+  ]
+}

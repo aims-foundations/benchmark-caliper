@@ -1,0 +1,199 @@
+name: US Management Consulting — Business Case Reasoning
+abbreviation: us_mgmt_consulting_folio
+assessment_context:
+  benchmark: folio
+  deployment_description: 'A US consulting firm evaluating whether an LLM can assist
+    American management consultants in constructing persuasive business cases: assembling
+    evidence, structuring arguments, anticipating counterarguments, and tailoring
+    reasoning to C-suite and board audiences.'
+  primary_concern: FOLIO's closed-world deductive ontology, domain-knowledge-free
+    content, discrete classification output, and FOL-validity ground truth are all
+    categorically misaligned with the inductive, abductive, rhetorical, and domain-grounded
+    reasoning that defines success in this deployment.
+countries:
+  primary:
+  - United States
+  sub_national_variation: None identified. No regional or sub-national variation noted
+    in the elicitation; the deployment is firm-wide across US office locations.
+languages:
+  primary: English (American)
+  variants:
+  - Standard American business English
+  - Executive/boardroom register
+  - Financial and sector-specific terminology
+  note: 'All interactions are in English. Register variation is significant: consultants
+    must produce output calibrated to CFO and board-level audiences, distinct from
+    analyst-tier or general prose. No script or language mismatch with FOLIO''s English-only
+    benchmark.'
+writing_systems:
+  scripts:
+  - Latin alphabet (standard ASCII and Unicode)
+  note: No script mismatch. Both benchmark and deployment are text-only English. Financial
+    notation, tables, and structured frameworks (e.g., 2x2 matrices, waterfall charts
+    described in prose) may appear in deployment outputs but not in benchmark inputs.
+target_population:
+  description: United States–based management consultants and engagement partners
+    at a consulting firm. Users are highly educated professionals with graduate-level
+    business or domain training, experienced in structuring persuasive arguments for
+    senior executive audiences. Business audiences (CFOs, boards, C-suite) are the
+    downstream recipients of LLM-assisted outputs, not direct LLM users.
+  roles:
+  - Management consultant (analyst through manager level)
+  - Engagement partner (senior reviewer and quality gatekeeper)
+  - 'Indirect audience: CFO, board members, C-suite executives across corporate sectors'
+  education_level: Graduate-level (MBA, JD, domain-specialist Master's or PhD typical);
+    high quantitative and analytical literacy
+  professional_norms: Outputs are subject to partner review before client delivery.
+    Partner judgment — not formal logical validity — is the operative ground truth
+    for output quality. Consulting culture prizes precision, confidence, concision,
+    and audience calibration over exhaustive hedging.
+  sector_coverage: Cross-sector corporate clients; financial services, industrials,
+    healthcare, technology, consumer goods, and other verticals may all appear in
+    engagement scenarios
+  no_demographic_variation_noted: true
+reasoning_types_required:
+  dominant:
+  - Inductive reasoning (market sizing from partial data, trend extrapolation)
+  - Abductive reasoning (best-explanation inference from business signals)
+  - Analogical reasoning (comparable deal or engagement pattern-matching)
+  - Rhetorical reasoning (audience-calibrated argument framing, objection anticipation)
+  present_but_secondary:
+  - Deductive reasoning (logical structure of argument chain)
+  - Probabilistic/uncertainty reasoning (confidence intervals, scenario analysis)
+  absent_from_benchmark: FOLIO covers only formal deductive reasoning in closed logical
+    worlds. All dominant reasoning types in this deployment are entirely absent from
+    the benchmark.
+  note: The elicitation explicitly confirms that strict deductive reasoning is a small
+    minority of the consulting reasoning task.
+domain_knowledge_requirements:
+  description: The deployment is deeply dependent on real-world business domain knowledge.
+    Financial metrics, sector benchmarks, regulatory context, and competitive dynamics
+    are the raw material of consulting arguments.
+  knowledge_domains:
+  - 'Financial metrics and valuation frameworks (EBITDA, NPV, ROIC, etc.) — [NEEDS
+    VERIFICATION: confirm most commonly referenced frameworks in LLM consulting use
+    cases]'
+  - 'Sector-specific benchmarks and KPIs — [NEEDS VERIFICATION: identify most relevant
+    sectors for target firm]'
+  - 'Regulatory and compliance context — [NEEDS VERIFICATION: sector-dependent]'
+  - M&A and competitive dynamics
+  - Macroeconomic indicators and scenario framing
+  benchmark_gap: FOLIO explicitly excludes domain-specific knowledge by design. No
+    financial, regulatory, or competitive content appears in any FOLIO example. This
+    is a full content mismatch.
+output_quality_criteria:
+  description: A successful output is one an engagement partner would present to a
+    client without revision. Quality is multi-dimensional and audience-sensitive.
+  criteria:
+  - Persuasiveness and rhetorical effectiveness
+  - Narrative coherence and structured argumentation
+  - Objection anticipation and preemptive rebuttal
+  - Executive-audience calibration (CFO/board register and framing)
+  - Evidence selection quality and appropriate confidence levels
+  - Logical validity (necessary but insufficient alone)
+  ground_truth_standard: Engagement partner professional judgment — not formal logical
+    validity or automated scoring.
+  benchmark_gap: FOLIO's output ontology is a three-way logical-validity label (True/False/Unknown).
+    None of the deployment's success criteria map to this label. The benchmark's ground
+    truth is an FOL inference engine; the deployment's ground truth is a senior professional's
+    expert judgment.
+output_form_requirements:
+  deployment_form: Open-ended, long-form structured argumentative text (business case
+    narratives, executive summaries, structured frameworks, recommendation memos)
+    — suitable for partner review and client delivery.
+  benchmark_form: Discrete three-way classification label or FOL formula string.
+  mismatch_severity: Fundamental. The benchmark produces no natural language output
+    that could be evaluated for argument quality. No evaluation infrastructure for
+    long-form generation exists within FOLIO.
+infrastructure_and_access:
+  deployment_channel: Internal consulting firm tooling; likely enterprise LLM API
+    integration (specific platform [NEEDS VERIFICATION])
+  modality: Text-only input and output
+  language_tooling: High-quality NLP tooling for American English is well-established;
+    no tooling gap.
+  connectivity: Enterprise US office environment; high-bandwidth connectivity assumed;
+    no connectivity constraints relevant to assessment.
+  device_context: Desktop/laptop professional workstation; no mobile or low-bandwidth
+    considerations.
+regulatory_and_compliance_context:
+  applicable_data_protection_law: '[NEEDS VERIFICATION — likely state-level privacy
+    laws (CCPA, others) plus any firm-specific data handling agreements with enterprise
+    LLM providers]'
+  professional_liability_considerations: Consulting outputs carry client-advisory
+    liability; factual accuracy and appropriate confidence calibration are legally
+    and professionally significant — not merely stylistic preferences.
+  sector_specific_regulation: '[NEEDS VERIFICATION — regulated industries (financial
+    services, healthcare) may impose additional constraints on AI-assisted advisory
+    outputs; confirm whether target firm''s practice areas trigger SEC, FINRA, HIPAA,
+    or similar obligations]'
+  ai_governance_policies: '[NEEDS VERIFICATION — firm-level AI use policy and any
+    applicable bar on LLM output in client-deliverable documents]'
+cultural_and_professional_norms:
+  communication_register: Formal American business English; precise, confident, concise.
+    Executive audiences expect structured logic, quantified claims, and clear recommendations
+    — not hedged academic prose.
+  audience_calibration_norms: CFO and board audiences prioritize financial impact,
+    risk, and strategic optionality. Argument framing must lead with business value
+    and anticipate fiduciary objections.
+  partner_review_culture: Engagement partners function as quality gatekeepers; their
+    professional judgment is the operative success criterion. A technically valid
+    but poorly framed argument will fail this review.
+  sector_norms_variation: '[NEEDS VERIFICATION — confirm whether specific practice
+    area conventions (e.g., private equity vs. public sector vs. healthcare) create
+    meaningfully different argument-structure expectations]'
+benchmark_validity_summary:
+  overall_alignment: Very low. FOLIO evaluates a narrow sub-component (formal deductive
+    reasoning) of a much broader capability requirement, uses artificial domain-knowledge-free
+    content, produces discrete labels rather than long-form text, and defines ground
+    truth via FOL proof rather than professional judgment.
+  dimension_priority_weights:
+    IO: HIGH — FOLIO's deductive-only ontology excludes the inductive, abductive,
+      and rhetorical reasoning that dominate the consulting task.
+    IC: HIGH — FOLIO's domain-knowledge-free artificial premises are categorically
+      mismatched with the deployment's dependence on real-world financial, regulatory,
+      and competitive content.
+    IF: LOWER — Both benchmark and deployment are text-only in English; no modality
+      or script mismatch.
+    OO: HIGH — FOLIO's three-way logical-validity label does not map to any consulting
+      success criterion; persuasiveness, coherence, and audience calibration are entirely
+      absent.
+    OC: MODERATE — FOLIO's FOL-prover ground truth is internally rigorous but structurally
+      irrelevant to partner-review-based ground truth; convergent validity gap is
+      large.
+    OF: HIGH — Discrete classification label vs. long-form structured argumentative
+      narrative is a fundamental output-form mismatch.
+  usable_signal: FOLIO provides a documented baseline for the deductive reasoning
+    sub-component only. GPT-4's near-chance performance on HybLogic examples and the
+    31.82% expert–GPT-4 gap establish a minimum deductive floor, but this signal is
+    peripheral to the deployment's core requirements.
+  flagged_gaps_for_web_search:
+  - gap_id: 1
+    label: Reasoning-type coverage gap
+    description: No existing FOLIO coverage of inductive, abductive, or analogical
+      reasoning in business contexts.
+    search_target: business reasoning benchmark inductive abductive analogical LLM
+      evaluation MBA case consulting scenario
+  - gap_id: 2
+    label: Persuasion and audience-calibration gap
+    description: No benchmark dimension for rhetorical effectiveness, executive framing,
+      or objection anticipation.
+    search_target: argument quality evaluation benchmark LLM persuasion executive
+      communication rhetorical effectiveness rubric scoring
+  - gap_id: 3
+    label: Business domain knowledge gap
+    description: FOLIO excludes all real-world domain knowledge; deployment is fully
+      dependent on it.
+    search_target: financial domain reasoning benchmark LLM FinQA BusinessBench consulting
+      domain knowledge evaluation sector benchmarks
+  - gap_id: 4
+    label: Open-ended generation evaluation gap
+    description: FOLIO has no infrastructure for evaluating long-form argumentative
+      text quality.
+    search_target: long-form argument generation evaluation LLM structured business
+      narrative rubric-based assessment consulting memo
+  - gap_id: 5
+    label: Partner-review alignment gap
+    description: FOLIO ground truth is FOL-prover output; deployment ground truth
+      is expert professional judgment.
+    search_target: professional expert annotation benchmark consulting business reasoning
+      LLM evaluation partner review judgment human expert ground truth

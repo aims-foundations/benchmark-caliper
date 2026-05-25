@@ -1,0 +1,441 @@
+{
+  "benchmark": "folio",
+  "region": "US Undergraduate Introductory Logic Course — Automated Validity Checker",
+  "dimensions": {
+    "input_ontology": {
+      "score": 2,
+      "justification": "FOLIO's logical scope aligns with the second half of the deployment course (predicate/first-order logic with quantifiers, connectives, and combinations [Q43, Q138]), and the operator inventory comprehensively covers the FOL portion of the curriculum (DATASET-D21, D8, D38). However, the benchmark contains no quantifier-free or propositional-only subset — every sampled example uses ∀ or ∃ (DATASET-D1, D2, D4), and the documentation treats FOL with quantifiers as the inherent design [Q15, Q63]. Since the course's first half is entirely propositional, FOLIO alone gives zero coverage of roughly half the course's logical scope. Reasoning depth also skews deeper than introductory problems: the mode is 4 steps with 28.7% requiring 5+ [Q60], whereas course-packet problems typically span 1–3 steps. Modal and temporal logic are explicitly excluded from FOLIO [Q139, Q140], which matches the deployment's classical-deductive-only constraint.",
+      "strengths": [
+        "FOL operator coverage (∀, ∃, ¬, ∧, ∨, →, =, ⊕) comprehensively matches the second-half course scope [Q138, DATASET-D21, D8]",
+        "Explicit exclusion of modal and temporal logic [Q139, Q140] matches the course's classical-deductive-only scope",
+        "Contains some minimal syllogistic forms structurally close to Hurley templates (e.g., 'No A are B' / 'All C are B') usable for the predicate-logic half (DATASET-D1, D2, D5)"
+      ],
+      "checklist_responses": {
+        "IO-1": "Deployment requires two categories: (a) propositional-logic problems (truth tables, MP, MT, HS, DS, CD, etc.) for the first half and (b) first-order predicate logic problems with quantifiers and basic syllogistic forms for the second half. The Hurley-style register is dominant across both halves.",
+        "IO-2": "FOLIO omits the entire propositional-only category. Every sampled example contains at least one quantifier (DATASET-D1, D2, D4), and the documentation treats FOL with quantifiers as foundational [Q15, Q63]. LogicBench [WEB-1] is identified as a complementary benchmark covering nine propositional inference rules.",
+        "IO-3": "FOLIO includes very deep reasoning chains (mode 4 steps, 28.7% requiring 5+ [Q60]; DATASET-D7, D10, D21 show 6–7 premise chains) that exceed typical introductory difficulty and may introduce construct-irrelevant variance for the deployment's 1–3 step target.",
+        "IO-4": "Two documented gaps harm content validity: (a) total absence of propositional-only subset undertests the first half of the course; (b) reasoning depth distribution skews well above the typical course-packet 1–3 step range."
+      },
+      "evidence_quotes": [
+        "[Q15] 'a natural language reasoning dataset, FOLIO, with first-order logic reasoning problems which require the models to decide the correctness of conclusions given a world defined by the premises' (p.1)",
+        "[Q43] 'There are 256 logically distinct types of syllogisms and 24 of them are valid... We use various combinations of 24 valid syllogisms. We also add in conjunction, disjunction, and implication.' (p.4)",
+        "[Q60] '28.7% of the examples need five or more depths of reasoning to infer the conclusions' (p.5)",
+        "[Q138] 'We include the following operators: negation ¬, conjunction ∧, disjunction ∨, implication →, universal quantifier ∀, existential quantifier ∃, equal =' (p.13)",
+        "[Q139] 'we consider temporal logic and modal logic as special-purpose logics' (p.13)",
+        "[Q140] 'they are beyond the scope of the definition of first-order logic used in our dataset' (p.13)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-2] FOL2NS characterizes quantifiers as the key feature distinguishing FOL from propositional logics; FOLIO has no propositional-only subset",
+        "[WEB-1] LogicBench (ACL 2024) covers nine propositional inference rules (MP, MT, HS, DS, CD, DD, BD, CT, MI) as complementary benchmark"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: simplest two-premise FOLIO example still uses ∀ for both premises — confirms no propositional-only examples",
+        "DATASET-D4: shortest sampled example also quantified — '∀x (Building(x) → Tall(x))'",
+        "DATASET-D21: 6-premise chained reasoning across multiple universal rules — exceeds introductory depth",
+        "DATASET-D7: 7-premise tech-company narrative with nested XOR — substantially deeper than course-packet target"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "Q15",
+          "Q43"
+        ],
+        "IO-2": [
+          "Q15",
+          "Q63",
+          "WEB-2",
+          "WEB-1",
+          "DATASET-D1",
+          "DATASET-D2",
+          "DATASET-D4"
+        ],
+        "IO-3": [
+          "Q60",
+          "DATASET-D7",
+          "DATASET-D10",
+          "DATASET-D21"
+        ],
+        "IO-4": [
+          "Q60",
+          "WEB-2",
+          "DATASET-D1"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Exact proportion of FOLIO examples that fall in the 1–3 step depth range usable as proxy for course-packet difficulty"
+      ],
+      "requires_expert_verification": [
+        "Course instructor confirmation of typical reasoning depth distribution in actual course packets"
+      ]
+    },
+    "input_content": {
+      "score": 2,
+      "justification": "The deployment's dominant input register is heavily templated Hurley-style prose ('All A are B', 'If P then Q'), explicitly confirmed in elicitation A3. FOLIO's WikiLogic pipeline deliberately avoided template-style generation [Q35] and produces naturalistic, Wikipedia-seeded prose; HybLogic uses syllogistic templates instantiated with naturalistic NL fillers [Q42, Q44]. Sampled data confirms predominance of complex naturalistic narratives — tech companies (DATASET-D7), branded products (DATASET-D9), economics with geopolitical content (DATASET-D14), astronomy with technical nomenclature (DATASET-D25). Only a minority of examples (DATASET-D1, D2, D3, D5) approach Hurley-template form. FOLIO also added epistemic qualifiers to generalizations [Q129] and used naturalistic disjunction phrasings [Q130, Q131, Q132, Q133] that depart from bare templates. WikiLogic content may overlap with LLM training data [Q104], further confounding deployment performance prediction. The benchmark does explicitly avoid identity-linked biases and stereotypes [Q47, Q127], which is appropriate for a US academic context.",
+      "strengths": [
+        "Subset of HybLogic examples uses minimal syllogistic forms structurally close to Hurley templates (DATASET-D1, D2, D5)",
+        "Explicit exclusion of identity stereotypes and opinionated language [Q47, Q127] matches academic deployment norms",
+        "Topic diversity and AST variety [Q38, Q61] reduce risk of narrow-domain overfit"
+      ],
+      "checklist_responses": {
+        "IC-1": "Deployment requires syntactically constrained, domain-neutral pedagogical templates. FOLIO inputs frequently embed real-world domain knowledge (Russia/embargo D14, Rouge Dior products D9, PSO J318.5−22 D25) that introduces construct-irrelevant variance not present in Hurley-style problems.",
+        "IC-2": "Cultural content is broadly US/Western academic (Wikipedia-seeded). Aligns with US undergraduate deployment population. No identity-linked biases were retained [Q47, Q127].",
+        "IC-3": "Western-specific knowledge appears (Yale references in D11, US tech companies in D23, US film industry in D12) but the deployment is itself US-based, so this is not a transfer problem. The greater concern is construct-irrelevant domain knowledge load.",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — no regional annotator recruitment was performed for this assessment; concern is based on register/style mismatch, not cultural sensitivity.",
+        "IC-5": "Register mismatch (naturalistic prose vs. Hurley-style bare templates) is the primary content-validity concern; LLM training-data contamination for WikiLogic [Q104] adds a secondary concern."
+      },
+      "evidence_quotes": [
+        "[Q33] 'collected our dataset using two different methods in order to obtain examples that are both logically diverse and complex and have abundant abstract syntax tree (AST) variations' (p.4)",
+        "[Q35] 'We ask the annotators to create new stories from scratch without using templates based on real-world knowledge' (p.4)",
+        "[Q44] 'we then ask human annotators to assign nouns, phrases, or clauses to the abstract entities or categories that reflect real-life scenarios to each template' (p.4)",
+        "[Q47] 'Our dataset prioritizes realism and factual accuracy, steering clear of biases and stereotypes' (p.4)",
+        "[Q104] 'since the examples in WikiLogic are created from scratch by humans, it is possible that LLMs have seen similar texts with similar logical patterns in the training data' (p.8)",
+        "[Q127] 'We took out stories that had strongly opinionated language and contained gender, racial, and classist biases' (p.13)",
+        "[Q129] 'For stories that pertain to generalization, such as \"All As are Bs,\" we have added specifiers like \"all Dan knows\"' (p.13)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-1] LogicBench uses heuristic single-rule templates but does not replicate Hurley-style bare templates",
+        "No benchmark explicitly replicating Hurley-style bare-template register was identified after ACL Anthology and arXiv search"
+      ],
+      "evidence_dataset": [
+        "DATASET-D7: 7-premise tech-company narrative with embedded relative clauses — maximally different from Hurley bare templates",
+        "DATASET-D9: branded Rouge Dior lipstick product line — domain-specific NP terminology",
+        "DATASET-D14: Russia embargo economics scenario — geopolitical content alien to introductory course packets",
+        "DATASET-D25: 'PSO J318.5−22 is a rogue planet' — technical astronomical designation adds parsing load",
+        "DATASET-D1, D2, D3, D5: short syllogistic examples that do approach Hurley register — minority subset"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "Q35",
+          "Q104",
+          "DATASET-D7",
+          "DATASET-D9",
+          "DATASET-D14",
+          "DATASET-D25"
+        ],
+        "IC-2": [
+          "Q47",
+          "Q127"
+        ],
+        "IC-3": [
+          "DATASET-D14",
+          "DATASET-D25"
+        ],
+        "IC-4": [],
+        "IC-5": [
+          "Q35",
+          "Q104",
+          "Q129",
+          "DATASET-D7",
+          "WEB-1"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Proportion of HybLogic examples that match Hurley templates closely enough to use as a focused subset",
+        "Quantitative measure of LLM training-data contamination risk for WikiLogic examples"
+      ],
+      "requires_expert_verification": [
+        "Course-instructor sampling of representative course-packet problems to compare against FOLIO subsets for register match"
+      ]
+    },
+    "input_form": {
+      "score": 4,
+      "justification": "Modality, script, and language match the deployment cleanly: both are English text in standard Latin script [Q27, Q64]. FOLIO's premises-and-conclusions structural format is directly compatible with the deployment's input style. Grammar was checked with Grammarly and reviewed by English Literature annotators [Q49, Q50], and ambiguity was minimized [Q51]. The 70/15/15 train/val/test split by story [Q78, Q79] avoids cross-split leakage. The only form-level wrinkles are: (a) FOLIO uses naturalistic disjunction conventions [Q130, Q131] and adds epistemic qualifiers [Q129] rather than bare connective phrasings — but these are register-level (input content) rather than modality-level concerns; (b) the HuggingFace dataset's mean Dale-Chall readability score could not be retrieved [WEB-7]. No infrastructure or signal-distribution mismatch.",
+      "strengths": [
+        "Text-only English in standard Latin script matches deployment exactly [Q27, Q64]",
+        "Grammar-checked, ambiguity-minimized prose [Q49, Q50, Q51]",
+        "Story-level train/val/test split prevents leakage [Q78, Q79]"
+      ],
+      "checklist_responses": {
+        "IF-1": "No signal-distribution mismatch — both benchmark and deployment use English text. Dale-Chall readability distribution is reported in FOLIO Figure 3 [Q154] but no mean is accessible; Hurley templates likely score lower (simpler) than FOLIO's naturalistic prose [WEB-7].",
+        "IF-2": "Deployment infrastructure is standard US-university NLP tooling; full compatibility with FOLIO's text format. NLI tooling availability is strong for English.",
+        "IF-3": "Sentence-level conventions (e.g., 'Some A is B' over '∃x...' [Q132], 'All A are B' over 'If A then B' [Q133]) approach Hurley forms; 'either-or' for XOR [Q130] is also a textbook convention. Where FOLIO diverges is in qualifier addition [Q129] and richer naturalistic prose.",
+        "IF-4": "No modality or infrastructure mismatch identified. Residual readability concern flagged but low-priority."
+      },
+      "evidence_quotes": [
+        "[Q27] 'Our annotators are either college or graduate students who are native English speakers or possess near-native proficiency in English' (p.3)",
+        "[Q49] 'All the sentences are first checked with a grammar checking tool, Grammarly' (p.4)",
+        "[Q50] 'Our annotators who have graduated from or are senior students studying English Literature conducted a thorough round of review' (p.4)",
+        "[Q51] 'We also eliminate natural language ambiguity when it is possible' (p.4)",
+        "[Q64] 'Each natural language (NL) story S in FOLIO consists of n premises... and m conclusions' (p.6)",
+        "[Q78] 'We split FOLIO by 70%/15%/15% split for the train/validation/test sets' (p.6)",
+        "[Q79] 'We split by story so that models are evaluated on unseen stories' (p.6)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-7] FOLIO GitHub repository — Figure 3 readability distribution not retrievable from text passages; mean Dale-Chall not reported"
+      ],
+      "evidence_dataset": [],
+      "evidence_map": {
+        "IF-1": [
+          "Q27",
+          "Q64",
+          "WEB-7"
+        ],
+        "IF-2": [
+          "Q27"
+        ],
+        "IF-3": [
+          "Q130",
+          "Q132",
+          "Q133",
+          "Q129"
+        ],
+        "IF-4": [
+          "Q49",
+          "Q50"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Mean Dale-Chall readability score for FOLIO vs. typical course packet"
+      ],
+      "requires_expert_verification": []
+    },
+    "output_ontology": {
+      "score": 4,
+      "justification": "FOLIO uses a three-way True/False/Unknown label schema [Q36, Q66] that maps onto the deployment's valid/invalid/indeterminate rubric. The label-mapping concern flagged in elicitation (whether 'False' = entailment of negation, as the course requires for 'invalid') is resolved as aligned: the proving pipeline returns a definite truth value via theorem-prover execution [Q153], and the resolution-based Stanford CS221 engine returns False only when the negation is provably entailed [WEB-3, WEB-4]. The Unknown label is formally defined as the case where the inference engine returns neither True nor False [Q70], which matches the course's indeterminate definition (S ⊭ H and S ⊭ ¬H). Undecidable formulas are excluded by construction [Q70], matching the course rubric's exclusion. Empirical inspection confirms False labels are assigned only with provable counterexamples (DATASET-D11, D12, D13). Two residual concerns: (a) the HuggingFace dataset uses the label string 'Uncertain' rather than the paper's 'Unknown' (DATASET-D3, D15, D37), a practical-implementation hazard; (b) label imbalance (Unknown = 27% of test set [Q94]) combined with model bias toward True predictions [Q155, Q156, Q157] means accuracy may not equally reflect performance on the invalid and indeterminate categories the rubric distinguishes.",
+      "strengths": [
+        "Three-way schema [Q36, Q66] structurally matches deployment rubric",
+        "False label formally equivalent to S ⊨ ¬H via resolution prover [WEB-3, WEB-4], matching course's strict 'invalid' definition",
+        "Unknown excludes undecidable formulas by construction [Q70], matching course's exclusion",
+        "Empirical False examples reflect provable negation entailment (DATASET-D11, D12, D13)"
+      ],
+      "checklist_responses": {
+        "OO-1": "All three FOLIO categories are deployment-relevant: True↔valid, False↔invalid (both = entailment of negation), Unknown↔indeterminate [Q36, Q66, Q70, WEB-3, WEB-4].",
+        "OO-2": "No regionally-specific category missing — the deployment's three-way scheme is fully represented.",
+        "OO-3": "No non-regional values encoded; FOL semantics are universal.",
+        "OO-4": "No taxonomy redesign required. However, evaluation code must use the actual label string 'Uncertain' (HuggingFace) rather than 'Unknown' (paper) [DATASET-D3, D15, D37].",
+        "OO-5": "Residual issues: label-string inconsistency between paper and HuggingFace data; label imbalance (Unknown 27%) combined with documented model bias toward True [Q155, Q156] reduces accuracy's informativeness for the indeterminate category."
+      },
+      "evidence_quotes": [
+        "[Q36] 'Each of the stories is composed of several premises and conclusions with truth values of True, False, or Unknown' (p.4)",
+        "[Q66] 'Given P and H, the goal is to determine the truth values of the conclusions: \"True\", \"False\" or \"Unknown\", based on FOL reasoning' (p.6)",
+        "[Q70] 'the premises and conclusions are set up in such a way to ensure that the inference engine always returns an answer given enough resources such as time and memory' (p.6)",
+        "[Q94] 'in our test set, there are 87, 78 and 61 examples with labels of true, false and unknown respectively' (p.7)",
+        "[Q153] 'the FOL statements... are converted to Python code... the theorem prover outputs whether the conclusions are True / False / Unknown' (p.14)",
+        "[Q155] 'LLMs are significantly better at making the correct predictions for conclusions with labels of True than the conclusions with labels of False or Unknown' (p.15)",
+        "[Q156] 'The accuracy on examples with False or Unknown conclusions is 61.9% with fine-tuning and 54.0% with few-shot prompting' (p.15)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-3] CGD-PD paper formalizes FOLIO labels as True = S ⊨ H, False = S ⊨ ¬H, Unknown = S ⊭ H and S ⊭ ¬H",
+        "[WEB-4] Stanford CS221 resolution-based inference engine semantics confirm False is returned only when negation is provably entailed",
+        "[WEB-5] FOLIO paper Q70 confirmation: undecidables excluded by construction"
+      ],
+      "evidence_dataset": [
+        "DATASET-D11, D12, D13: False labels assigned with clear provable counterexamples — confirms S ⊨ ¬H semantics empirically",
+        "DATASET-D17, D26: Unknown labels assigned where premises are silent on conclusion topic — confirms indeterminate semantics empirically",
+        "DATASET-D3, D15, D37: HuggingFace data uses label string 'Uncertain' rather than paper's 'Unknown' — practical implementation gap"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q36",
+          "Q66",
+          "Q70",
+          "WEB-3",
+          "WEB-4",
+          "DATASET-D11",
+          "DATASET-D17"
+        ],
+        "OO-2": [
+          "Q36"
+        ],
+        "OO-3": [
+          "Q138"
+        ],
+        "OO-4": [
+          "DATASET-D3",
+          "DATASET-D15"
+        ],
+        "OO-5": [
+          "Q94",
+          "Q155",
+          "Q156",
+          "DATASET-D3"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether FOLIO's 27% Unknown share matches the course packet's indeterminate problem frequency"
+      ],
+      "requires_expert_verification": [
+        "Course-instructor elicitation of typical course-packet indeterminate problem rate"
+      ]
+    },
+    "output_content": {
+      "score": 3,
+      "justification": "Ground-truth label generation is rigorous: expert annotators (CS undergraduates/graduates and senior researchers with formal FOL training and native or near-native English [Q16, Q27, Q28, Q31, Q122, Q123]) executed a six-stage 980-person-hour annotation pipeline [Q32] with separate NL and FOL expert quality checks [Q29, Q124, Q125]. All FOL annotations are verified by an inference engine [Q2, Q57], and expert human accuracy reaches 95.98% [Q111] — strong convergent evidence for label correctness on clear cases. Premise ordering does not yield spurious labels [Q158, Q159, Q160]. However, empirical inspection of the HuggingFace data reveals multiple concrete annotation errors: free variables in FOL conditionals (DATASET-D27), name inconsistencies between premises and conclusions (DATASET-D24, D28), missing closing parentheses (DATASET-D29, D30, D35), and a potential NL-FOL alignment gap on inclusive disjunction (DATASET-D36). The 2026 Vampire-prover cleaning study confirms these are systemic [WEB-6]. The annotator population (expert FOL-trained academics) is appropriate for producing reliable ground-truth labels but is not representative of novice-student production norms — this is acceptable for ground-truth quality and not a concern for the deployment's use of FOLIO as a label oracle.",
+      "strengths": [
+        "Expert annotator population with formal FOL training [Q16, Q27, Q28, Q123]",
+        "Six-stage 980-person-hour annotation pipeline with separate NL and FOL quality checks [Q29, Q32, Q124, Q125]",
+        "FOL-engine verification of all label annotations [Q2, Q57]",
+        "Expert human accuracy 95.98% [Q111] — strong convergent evidence",
+        "No premise-ordering spurious correlations [Q158, Q159, Q160]"
+      ],
+      "checklist_responses": {
+        "OC-1": "Ground-truth labels reflect formal FOL semantics, which is the deployment's normative standard for valid/invalid/indeterminate. Regional stakeholder perspective is replaced by formal logical correctness — appropriate for this deployment.",
+        "OC-2": "Disagreement between annotators and regional population is not a meaningful axis here, since the rubric is formal-logical. Novice students would disagree with expert labels but only because the experts are correct.",
+        "OC-3": "Annotator demographics documented: native/near-native English speakers, college and graduate CS students with formal FOL training, NLP and FOL domain experts assigned to quality-check stages [Q27, Q28, Q31, Q122, Q123, Q124, Q125].",
+        "OC-4": "Re-annotation by regional pool not necessary — formal-logical labels are the target. However, the 2026 Vampire-prover cleaned split [WEB-6] should be preferred if available, given the annotation errors observed in the raw HuggingFace data (DATASET-D27, D28, D29, D30, D35).",
+        "OC-5": "Aggregation method (FOL-engine verification) does not erase minority perspectives; it enforces formal correctness.",
+        "OC-6": "Concrete annotation errors observable in sampled data (free variables, name mismatches, unmatched parentheses) confirm the 2026 cleaning study's findings — undermines label reliability for some portion of the dataset and warrants using the cleaned split."
+      },
+      "evidence_quotes": [
+        "[Q2] 'The logical correctness of the premises and conclusions is ensured by their FOL annotations, which are automatically verified by an FOL inference engine' (p.1)",
+        "[Q16] 'FOLIO is a high-quality and manually curated dataset, written by CS undergraduate and graduate students and researchers in academia and industry' (p.2)",
+        "[Q28] 'They possess formal education in first-order logic' (p.3)",
+        "[Q29] 'At the NL quality check stage, only annotators who are experts in natural language processing or computational linguistics are involved. For the FOL quality check, only annotators who are experts in first-order logic are involved.' (p.4)",
+        "[Q32] 'We develop our dataset in six stages... spending 980 man-hours in total' (p.4)",
+        "[Q57] 'we verify the syntactic validity and label consistency of FOL formula annotations with an FOL inference engine' (p.5)",
+        "[Q111] 'Expert annotations achieve an accuracy of 95.98% while non-expert annotations achieves 61.82%' (p.9)",
+        "[Q160] 'the ordering of premises in FOLIO examples does not yield significant information about the label' (p.15)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-6] 2026 Agentified Assessment paper using Vampire theorem prover identified label errors and NL-FOL misalignments in original FOLIO; auto-formalization reached 86.70% on validation set after cleaning"
+      ],
+      "evidence_dataset": [
+        "DATASET-D27: free variable x in FOL conditional antecedent — annotation error",
+        "DATASET-D24: name inconsistency between premises (John) and conclusion (Jim)",
+        "DATASET-D28: name inconsistency between premises (Matt) and conclusion (Mike)",
+        "DATASET-D29: missing closing parenthesis in FOL formula",
+        "DATASET-D30: trailing unmatched parenthesis in conclusion-FOL",
+        "DATASET-D35: unmatched trailing parenthesis in FOL premise",
+        "DATASET-D36: NL 'either...or both' (inclusive) rendered as bare ∨ without verification"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q2",
+          "Q57"
+        ],
+        "OC-2": [
+          "Q111"
+        ],
+        "OC-3": [
+          "Q27",
+          "Q28",
+          "Q31",
+          "Q122",
+          "Q123",
+          "Q124",
+          "Q125"
+        ],
+        "OC-4": [
+          "WEB-6",
+          "DATASET-D27",
+          "DATASET-D28",
+          "DATASET-D29"
+        ],
+        "OC-5": [
+          "Q2"
+        ],
+        "OC-6": [
+          "WEB-6",
+          "DATASET-D24",
+          "DATASET-D27",
+          "DATASET-D29",
+          "DATASET-D35",
+          "DATASET-D36"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Total proportion of FOLIO examples affected by annotation errors observable only via systematic prover verification",
+        "Whether the 2026 cleaned split is publicly accessible at time of deployment"
+      ],
+      "requires_expert_verification": [
+        "Logic-instructor spot-check of FOLIO labels against course rubric on a sample of HybLogic examples that match Hurley register"
+      ]
+    },
+    "output_form": {
+      "score": 4,
+      "justification": "The deployment produces a single categorical label from a fixed three-item set (valid/invalid/indeterminate), and FOLIO's primary reasoning task evaluates a categorical label from True/False/Unknown with accuracy as the primary metric [Q80, Q66]. Output modality and form are well-matched. The NL-FOL translation metrics (SynV, ExcAcc [Q73–Q76]) are not deployment-relevant. Two minor wrinkles: (a) the public HuggingFace dataset does not expose the `test` split that published baselines [Q93, Q94] are computed on, limiting direct comparison; (b) accuracy alone (without per-class breakdown) is insufficient given documented model bias toward True predictions [Q155, Q156, Q157] — per-class accuracy should be reported. Literacy and accessibility are non-issues: the deployment population is US undergraduates in an English-language course.",
+      "strengths": [
+        "Categorical label from fixed small set matches deployment exactly [Q66, Q80]",
+        "Accuracy is a transparent, deployment-aligned metric",
+        "No modality mismatch — text in, label out"
+      ],
+      "checklist_responses": {
+        "OF-1": "Output modality (single categorical label) matches deployment need exactly [Q66, Q80].",
+        "OF-2": "Text-to-speech not relevant; deployment is a text-based tool used by literate undergraduates.",
+        "OF-3": "Literacy assumed (US undergraduate population); accessibility-of-output not a concern at this stage.",
+        "OF-4": "Practical concerns: (a) test split unavailable on HuggingFace (DATASET limitation) — published baselines [Q93, Q94] cannot be directly replicated; (b) overall accuracy hides class-imbalance effects, so per-class accuracy should be reported [Q155, Q156]."
+      },
+      "evidence_quotes": [
+        "[Q66] 'Given P and H, the goal is to determine the truth values of the conclusions: \"True\", \"False\" or \"Unknown\"' (p.6)",
+        "[Q80] 'We use accuracy for evaluating logical reasoning performance' (p.6)",
+        "[Q93] 'We run experiments on five randomly sampled sets of examples from the training set and report the average accuracy' (p.7)",
+        "[Q155] 'LLMs are significantly better at making the correct predictions for conclusions with labels of True than the conclusions with labels of False or Unknown' (p.15)",
+        "[Q156] 'The accuracy on examples with False or Unknown conclusions is 61.9% with fine-tuning and 54.0% with few-shot prompting' (p.15)"
+      ],
+      "evidence_web_sources": [],
+      "evidence_dataset": [
+        "Dataset analysis limitation: HuggingFace exposes only train (1001) and validation (203) splits; the test split (226 examples) used for published baselines is not publicly accessible"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q66",
+          "Q80"
+        ],
+        "OF-2": [],
+        "OF-3": [],
+        "OF-4": [
+          "Q93",
+          "Q155",
+          "Q156"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether the public release of FOLIO test split has been updated since dataset analysis"
+      ],
+      "requires_expert_verification": []
+    }
+  },
+  "overall_summary": "FOLIO is a partially valid benchmark for a US undergraduate introductory logic course's automated validity checker. Its three-way label schema (True/False/Unknown) cleanly maps to the course rubric (valid/invalid/indeterminate) — including the course's strict 'invalid = premises entail the negation' definition, which is operationally satisfied by FOLIO's resolution-based inference engine [WEB-3, WEB-4]. The expert-annotated, FOL-engine-verified labels [Q2, Q16, Q57] provide strong ground-truth quality on the FOL portion of the course. However, two structural issues limit overall validity: (1) FOLIO contains no propositional-only subset, leaving the entire first half of the course uncovered (every sampled example uses ∀ or ∃ — DATASET-D1, D2, D4); and (2) the dominant FOLIO input register is naturalistic, Wikipedia-seeded prose with embedded real-world domain knowledge [Q35, DATASET-D7, D9, D14, D25], substantially different from the course's syntactically controlled Hurley-style templates. Reasoning depth also skews deeper than typical course problems [Q60]. Additional concerns include observable annotation errors in the HuggingFace data (DATASET-D27, D28, D29) and a paper-vs-data label-string mismatch ('Unknown' vs 'Uncertain', DATASET-D3). For a tool intended to cover the full course, FOLIO must be supplemented with a propositional-logic benchmark (LogicBench [WEB-1]) and ideally a small course-packet-aligned probe set to bridge the register gap.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "FOLIO measures a model's ability to determine, from naturalistic English prose containing first-order logical structure, whether a conclusion is entailed (True), its negation is entailed (False), or neither follows (Unknown). The output ontology (Output Ontology, strong) maps directly to the course's three-way valid/invalid/indeterminate rubric. The output content (Output Content, moderate) is generally high-quality due to expert annotation and FOL-engine verification, though some annotation errors are observable in the public release. For the FOL/second-half portion of the course (covered by Input Ontology and observable in DATASET-D21, D8, D38), FOLIO provides meaningful signal at the higher end of difficulty.",
+    "construct_depth": "FOLIO probes reasoning across deep chains (mode 4 steps, 28.7% at 5+ [Q60]) and a wide AST variety [Q61], so a model scoring well on FOLIO has been tested on combinations of quantifiers, connectives, and chained inferences. However, it does not probe propositional-only reasoning at all (DATASET-D1, D2 confirm universal quantifier presence in every example) and does not probe the syntactically controlled Hurley-style register that dominates the course packet (Input Content is the weakest dimension after Input Ontology). Per-class accuracy is essential because models exhibit systematic bias toward True predictions [Q155, Q156]; overall accuracy can mask poor invalid/indeterminate performance.",
+    "supplementation_needed": "Three supplementation steps are necessary: (1) Add LogicBench [WEB-1] to cover propositional inference rules (MP, MT, HS, DS, etc.) for the course's first half — this directly addresses the IO gap. (2) Construct a small course-packet-aligned probe set in Hurley-style templates to address the IC register mismatch and validate model performance on the deployment's dominant register. (3) Prefer the 2026 Vampire-cleaned FOLIO split [WEB-6] over the raw HuggingFace release to mitigate the annotation errors observed in OC. Reporting per-class accuracy (especially for False and Unknown) is essential given documented model bias [Q155, Q156, Q157]."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "Complete absence of propositional-only (quantifier-free) examples leaves the course's first half uncovered.",
+      "recommendation": "Supplement FOLIO with LogicBench [WEB-1], which explicitly covers nine propositional inference rules (MP, MT, HS, DS, CD, DD, BD, CT, MI) directly relevant to the propositional half of the course."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "FOLIO's dominant naturalistic prose register (with Wikipedia-seeded content and real-world domain knowledge) does not match the course's Hurley-style syntactically controlled templates.",
+      "recommendation": "Construct a small course-packet-aligned probe set (50–100 problems) in bare Hurley-template form ('All A are B', 'If P then Q', etc.) for register-matched validation. Optionally filter FOLIO to the HybLogic subset that approaches template form (e.g., DATASET-D1, D2, D5) for a closer FOLIO-internal proxy."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "Label string in HuggingFace data ('Uncertain') differs from paper documentation ('Unknown'); label imbalance plus documented model bias toward True predictions reduces informativeness of overall accuracy.",
+      "recommendation": "Use the actual label strings as released ('Uncertain') in evaluation pipelines, and report per-class accuracy (True/False/Uncertain separately) in addition to overall accuracy. Track invalid- and indeterminate-class accuracy specifically as the deployment-critical metrics."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Observable annotation errors in the public HuggingFace release (free variables, name mismatches, unmatched parentheses) confirm a known systemic issue identified by the 2026 Vampire-prover cleaning study.",
+      "recommendation": "Prefer the 2026 cleaned FOLIO split [WEB-6] when available; if using the original release, run a syntactic check on all FOL formulas and manually verify a sample of False and Uncertain labels before reporting performance."
+    },
+    {
+      "dimension": "input_ontology",
+      "gap": "Reasoning depth distribution (mode 4 steps, 28.7% at 5+) substantially exceeds typical introductory course-packet problems (1–3 steps).",
+      "recommendation": "Stratify FOLIO evaluation by reasoning depth and report 1–3 step accuracy separately as the course-aligned metric; treat 5+ step performance as informative but not deployment-critical."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "Public HuggingFace release does not expose the test split that published baselines are computed on, limiting direct replication of GPT-4 64.16% / expert 95.98% comparisons.",
+      "recommendation": "Use the validation split (203 examples) for deployment-aligned benchmarking and document the split used; treat published test-set baselines as approximate references rather than exact targets."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_ontology",
+    "input_content"
+  ],
+  "strongest_dimensions": [
+    "output_ontology",
+    "input_form",
+    "output_form"
+  ]
+}

@@ -1,0 +1,443 @@
+name: US High School Competitive Debate — Argument Quality Assessment
+abbreviation: us_hs_debate
+deployment_context:
+  platform_type: Debate coaching platform (US-based, interscholastic)
+  primary_use_case: LLM-based scoring of argument quality and delivery of qualitative
+    coaching feedback for high school competitive debaters
+  user_roles:
+  - Student debaters (primary end users receiving scores and feedback)
+  - Debate coaches (defining rubrics, interpreting output, calibrating platform standards)
+  - Tournament judges (implicit quality-norm setters via circuit paradigms)
+  interaction_mode: Text-based input (speech transcripts or written cases) and text-based
+    output (sub-scores + qualitative coaching rationales)
+target_population:
+  description: United States high school students competing in NSDA-sanctioned and
+    independent interscholastic debate. Students range across all four major competitive
+    formats — Policy, Lincoln-Douglas (LD), Public Forum (PF), and Congressional Debate
+    — and compete at both local/regional circuit events and national-circuit bid tournaments
+    (TOC, NSDA Nationals). Quality standards are defined externally by NSDA norms,
+    TOC circuit paradigms, and coaching staff rubrics rather than by the platform
+    itself.
+  country: United States
+  sub_national_scope: Significant sub-national variation by regional circuit (e.g.,
+    Texas lay circuits, California national-circuit hubs, Midwest lay circuits); see
+    circuit_variation below.
+  age_band: Approximately 14–18 years old (grades 9–12)
+  approximate_student_population: '141,132 total NSDA student members as of 2024 (includes
+    middle and high school, across all speech and debate events, not broken down by
+    format); chapters at 3,152 high schools. Source: Wikipedia/NSDA — [|https://en.wikipedia.org/wiki/National_Speech_and_Debate_Association|];
+    corroborated by NSDA media page — [|https://www.speechanddebate.org/media/|].
+    Note: NSDA membership figures cover all speech and debate events; format-level
+    breakdowns (Policy vs. LD vs. PF vs. Congressional) are not publicly disaggregated.'
+  approximate_school_programs: '3,152 high school chapters chartered with NSDA as
+    of 2024. Source: Wikipedia/NSDA — [|https://en.wikipedia.org/wiki/National_Speech_and_Debate_Association|].
+    Note: this is the number of NSDA-chartered high school programs; programs competing
+    outside NSDA or in independent circuits are not counted.'
+languages:
+  primary: English (American)
+  register_variation: 'Significant register variation by format and circuit: spread/fast
+    delivery in tech-circuit Policy and LD; conversational oratory register in Congressional;
+    persuasive public rhetoric register in lay PF'
+  technical_vocabulary:
+  - 'Debate-format-specific jargon: disadvantage (DA), counterplan (CP), kritik (K),
+    link, impact, turn, solvency, flow, shell, off-case, on-case, topicality (T),
+    framework (FW), value/criterion (VC), contention, plan text, net benefit, permutation,
+    burden of proof, fiat'
+  - 'Evidence-handling terminology: card, cut card, tag, cite, warrant, extend, miscut,
+    out-of-context evidence, recency'
+  - 'Circuit/community terminology: TOC, bid, octafinals, NSDA, lay judge, tech judge,
+    paradigm, flow, judge philosophy'
+  minority_or_secondary_languages: None applicable to this deployment population
+  note: All input and output is English text. No multilingual, RTL, or script considerations
+    apply. Speech-to-text preprocessing may be relevant if audio is used as input,
+    but current scope is text-only.
+debate_formats:
+  policy:
+    description: Two-person teams debate a yearly national resolution (typically a
+      federal government policy action). Rounds involve a case structure with plan,
+      advantages, disadvantages, counterplans, and topicality arguments. National
+      circuit is characterized by rapid delivery (spreading) and dense technical flows.
+    typical_round_duration_minutes: 'Approximately 90–100 minutes total including
+      cross-examination and preparation time. Speech times: 1AC 8 min, CX 3 min, 1NC
+      8 min, CX 3 min, 2AC 8 min, CX 3 min, 2NC 8 min, CX 3 min, 1NR 5 min, 1AR 5
+      min, 2NR 5 min, 2AR 5 min; each team also receives 8 minutes of preparation
+      time. The prevailing 8/5-minute speech structure was introduced in the 1990s.
+      Source: Wikipedia Structure of Policy Debate — [|https://en.wikipedia.org/wiki/Structure_of_policy_debate|];
+      DebateUS — [|https://debateus.org/the-basic-structure-of-policy-debate-3/|].'
+    speech_structure: '8 speeches total in order: 1AC (8 min) → CX → 1NC (8 min) →
+      CX → 2AC (8 min) → CX → 2NC (8 min) → CX → 1NR (5 min) → 1AR (5 min) → 2NR (5
+      min) → 2AR (5 min). The 2NC+1NR together form the ''negative block'' (13 minutes).
+      Each team receives 8 minutes of preparation time distributed across the round.
+      Source: Wikipedia Structure of Policy Debate — [|https://en.wikipedia.org/wiki/Structure_of_policy_debate|].'
+    argument_types_central:
+    - Disadvantages (DAs)
+    - Counterplans (CPs)
+    - Topicality (T)
+    - Kritiks (Ks)
+    - Solvency arguments
+    - Impact calculus
+    quality_norm_axis: Strongly tech-circuit on national circuit; some local circuits
+      remain flow-heavy but not speed-focused
+  lincoln_douglas:
+    description: Individual one-on-one debate on a bi-monthly NSDA resolution, typically
+      framed as a value/criterion dispute. National-circuit LD has shifted significantly
+      toward policy-style argumentation including plans, counterplans, and kritiks.
+    typical_round_duration_minutes: 'Approximately 40–45 minutes including cross-examinations
+      and preparation time. Total speaking time is 13 minutes per side. Each debater
+      receives 4 minutes of preparation time. Source: NSD Debate Camp format guide
+      — [|https://www.nsdebatecamp.com/lincoln-douglas/debate-format|]; Debate Experts
+      — [|https://debateexperts.com/mastering-lincoln-douglas-debate-format/|].'
+    speech_structure: '5 speeches and 2 cross-examinations: 1AC (6 min) → CX by Neg
+      (3 min) → 1NC (7 min) → CX by Aff (3 min) → 1AR (4 min) → 2NR (6 min) → 2AR
+      (3 min). Each debater receives 4 minutes of preparation time. Total speaking
+      time is 13 minutes per side. Source: NSD Debate Camp — [|https://www.nsdebatecamp.com/lincoln-douglas/debate-format|];
+      Debate Experts — [|https://debateexperts.com/mastering-lincoln-douglas-debate-format/|].'
+    argument_types_central:
+    - Value/criterion framework disputes
+    - Contention-level offense
+    - Plans and counterplans (national circuit)
+    - Kritiks (national circuit)
+    - Theory arguments
+    - Philosophical/normative framework debates
+    quality_norm_axis: 'Bimodal: lay/traditional LD rewards rhetoric and clarity;
+      national-circuit LD rewards technical flow and speed'
+  public_forum:
+    description: Two-person teams debate a monthly NSDA resolution, typically a current-events
+      policy or evaluative topic. Historically lay-oriented with emphasis on persuasion
+      and accessible argument; national circuit has grown more technical.
+    typical_round_duration_minutes: 'Approximately 40–50 minutes. Speeches are 2–4
+      minutes each, interspersed with 3-minute crossfire sections. Source: Wikipedia
+      Public Forum Debate — [|https://en.wikipedia.org/wiki/Public_forum_debate|].'
+    speech_structure: 'Standard PF order: Team A Constructive (4 min) → Team B Constructive
+      (4 min) → Crossfire (3 min) → Team A Rebuttal (4 min) → Team B Rebuttal (4 min)
+      → Crossfire (3 min) → Team A Summary (3 min) → Team B Summary (3 min) → Grand
+      Crossfire (3 min) → Team A Final Focus (2 min) → Team B Final Focus (2 min);
+      each team receives 2–3 minutes of preparation time. Source: Wikipedia Public
+      Forum Debate — [|https://en.wikipedia.org/wiki/Public_forum_debate|].'
+    argument_types_central:
+    - Contentions with empirical evidence
+    - Rebuttal and refutation
+    - Weighing (magnitude, probability, timeframe)
+    - Summary/final focus collapse strategy
+    quality_norm_axis: Local/lay circuits strongly weight clarity, rhetoric, and accessibility;
+      national circuit increasingly rewards technical evidence battles and flow
+  congressional:
+    description: Simulated legislative session format where students give prepared
+      speeches on legislation, respond to questions, and are ranked by a presiding
+      officer and judges on persuasiveness, research quality, and oratory. Less head-to-head
+      adversarial structure than other formats.
+    argument_types_central:
+    - Legislative advocacy (pro/con positions)
+    - Refutation and response to prior speakers
+    - Rhetorical effectiveness and oratory
+    - Research quality and evidence citation
+    quality_norm_axis: Strongly oratory/rhetoric-weighted; less circuit variation
+      than Policy or LD
+circuit_variation:
+  description: The US high school debate community is not uniform. Quality standards
+    vary substantially by geographic circuit and by whether a tournament is on the
+    'national circuit' (TOC bid events, prestigious invitationals) versus local/regional
+    circuits.
+  national_circuit:
+    description: TOC bid tournaments and major invitationals drawing national-caliber
+      competitors. Judges are typically experienced coaches or former debaters who
+      value technical argumentation, speed, flow, and dense evidence engagement.
+    key_quality_norms:
+    - Technical flowing accuracy
+    - Speed (spreading) tolerance in Policy and LD
+    - Evidence quality and warrants
+    - Impact calculus precision
+    - Argument layering and prioritization
+    representative_tournaments: 'The TOC qualifies competitors via bids earned at
+      over 100 designated qualifying tournaments across the US and internationally.
+      Examples for 2025–2026 include the Grapevine Classic (TX) for Policy, Yale Invitational
+      (CT) for LD and PF, and the Glenbrooks Tournament (IL) for multiple events.
+      Popular bid tournaments across formats include Greenhill (TX), Harvard (MA),
+      and UC Berkeley (CA). Qualification generally requires two gold bids (LD, Policy,
+      PF Gold TOC) or one gold/two silver bids (PF Silver TOC). Source: TOC official
+      site — [|https://ci.uky.edu/debate/toc|]; TOC Bid Tournaments page — [|https://ci.uky.edu/debate/toc/bids/bid-tournaments|];
+      Wikipedia TOC — [|https://en.wikipedia.org/wiki/Tournament_of_Champions_(debate)|];
+      Policy Debate Central 2024–25 — [|https://policydebatecentral.com/2024-25-policy-toc-bid-tournaments-by-state/|].'
+  local_and_regional_circuits:
+    description: District, regional, and invitational tournaments served by lay judges
+      (community volunteers, parents, non-debate coaches). Quality standards emphasize
+      clarity, rhetoric, accessibility, and persuasive effectiveness over technical
+      flow.
+    key_quality_norms:
+    - Clarity of delivery and organization
+    - Persuasive rhetoric and storytelling
+    - Accessibility of arguments (avoiding jargon)
+    - Confidence and presentation style
+    notable_examples: Texas lay PF circuit is a frequently cited example of a regional
+      circuit with strongly lay-judge norms; similar dynamics exist in many Midwest
+      and Southeast state circuits
+  nsda_nationals:
+    description: NSDA National Championship, the largest competitive debate tournament
+      in the US, with state-qualifying requirements. Mix of lay and experienced judges;
+      NSDA maintains official rules and guidelines.
+    notes: 'NSDA Nationals 2024 drew approximately 6,700 middle and high school students
+      from 1,500 schools, competing for 42 championship titles. Qualification proceeds
+      through District Tournaments; a Last-Chance Qualifier also provides additional
+      qualification pathways. The tournament covers Policy, LD, PF, Congressional,
+      and multiple speech events. Source: Aralia Education guide — [|https://www.aralia.com/helpful-information/guide-to-the-nsda-nationals/|].'
+argument_quality_dimensions:
+  description: Per the elicitation, the system must produce separate sub-scores across
+    these dimensions plus qualitative coaching feedback. 'Strong' is defined by external
+    community standards (NSDA norms, TOC circuit paradigms, coaching staff rubrics).
+  dimensions:
+  - name: Evidence quality
+    weight: Highest (per elicitation)
+    components:
+    - Source credibility and authority
+    - Recency of evidence
+    - Contextual integrity (card not miscut or out-of-context)
+    - Warrant clarity (does the evidence actually support the claim)
+    - Cherry-picking detection
+  - name: Logical structure and warrant quality
+    weight: High
+    components:
+    - Claim-warrant-impact structure
+    - Inferential validity (deductive and inductive)
+    - Argument completeness (no missing warrants)
+    - Internal consistency
+  - name: Relevance and responsiveness
+    weight: High
+    components:
+    - On-topic relevance to the resolution
+    - Direct responsiveness to opponent's arguments
+    - Burden fulfillment
+    - Clash quality in rebuttal
+  - name: Persuasive effectiveness
+    weight: Format/circuit-conditioned
+    components:
+    - Rhetorical clarity and organization
+    - Impact framing and weighing
+    - Narrative coherence
+    - Accessibility to the judging audience
+  output_types_required:
+  - Separate sub-scores per dimension
+  - Qualitative coaching feedback explaining weaknesses
+  - Pairwise comparison scores for rebuttal practice
+  - Format-conditioned and circuit-conditioned scoring norms
+normative_standards:
+  nsda:
+    description: National Speech and Debate Association — sets official rules, event
+      structures, and ethical guidelines for all four formats
+    relevant_documents: '[NEEDS VERIFICATION — deferred: below search budget; NSDA
+      official rulebooks are available at speechanddebate.org but format-specific
+      document URLs were not retrieved in this pass]'
+    evidence_ethics_policy: '[NEEDS VERIFICATION — deferred: below search budget;
+      NSDA evidence ethics rules (standards for cutting, citing, and representing
+      evidence) require direct access to current NSDA rulebook documents]'
+  toc:
+    description: Tournament of Champions (hosted by University of Kentucky) — the
+      most prestigious US high school debate tournament; TOC bid qualification structures
+      the national-circuit competitive calendar
+    bid_structure: 'For the 2025–2026 season, most debate events (Policy, LD, Congressional)
+      require at least two bids for full qualification. In PF, a Gold TOC requires
+      two Gold bids and a Silver TOC requires two Silver bids or one Gold bid. Bids
+      are awarded at over 100 qualifying tournaments selected by event-specific advisory
+      committees. Bid levels are tiered (Octafinals, Quarterfinals, Semifinals, Finals,
+      etc.) based on tournament size. All US entries must represent the degree-granting
+      school at which students are enrolled. Source: TOC official bid page — [|https://ci.uky.edu/debate/toc/bids/bid-tournaments|];
+      CDA Debate blog — [|https://www.cdadebate.com/blog/how-to-qualify-to-the-tournament-of-champions-as-independents|];
+      NSD Debate Camp glossary — [|https://www.nsdebatecamp.com/glossary/tournament-of-champions|].'
+  judge_paradigms:
+    description: Individual judges publish paradigms stating their preferences, which
+      function as the operative quality-norm document for a given round. Paradigms
+      vary on speed tolerance, argument type preferences, evidence standards, and
+      voting issues.
+    platforms: 'Tabroom.com is the primary platform for tournament management and
+      paradigm hosting; it is also the official registration portal for NSDA events
+      and TOC qualification reporting. Source: Aralia Education NSDA guide — [|https://www.aralia.com/helpful-information/guide-to-the-nsda-nationals/|];
+      TOC bid page — [|https://ci.uky.edu/debate/toc/bids/bid-tournaments|].'
+  coaching_rubrics:
+    description: Coaching staff at individual programs may define internal rubrics
+      that supplement NSDA and circuit norms. These are the proximate quality-standard
+      setters for the platform's coaching feedback function.
+infrastructure_and_access:
+  platform_delivery: US-based SaaS debate coaching platform; end users access via
+    web browser or app on school-issued or personal devices
+  device_context: Mix of school-issued Chromebooks/laptops and personal smartphones/tablets;
+    connectivity generally reliable in school settings
+  input_pipeline: Text-based (written cases, typed flows, speech transcripts); no
+    audio/video processing in current scope
+  school_technology_access: '[NEEDS VERIFICATION — deferred: below search budget;
+    reliable sub-national figures on broadband and device access specifically for
+    debate programs not found in this pass]'
+  data_privacy_considerations: Students are minors (under 18); FERPA and COPPA compliance
+    required for any student data handling
+  applicable_regulations: 'Federal baseline: FERPA (Family Educational Rights and
+    Privacy Act) governs privacy of education records for all schools receiving federal
+    funding; EdTech vendors access records as ''school officials'' under FERPA. COPPA
+    (Children''s Online Privacy Protection Act) applies to services collecting personal
+    data from children under 13. As of 2024–2025, more than 40 states have enacted
+    additional student data privacy laws beyond federal requirements; California''s
+    SOPIPA (prohibits sale of student data and targeted advertising), New York''s
+    Education Law 2-d, and Illinois'' SOPPA are among the most impactful state-level
+    laws. At least 13 states have passed SOPIPA-modeled legislation. COPPA 2.0 passed
+    the US Senate in July 2024 and may expand coverage. Multi-state platforms must
+    satisfy the strictest applicable state law. Source: McDermott Law — [|https://www.mcdermottlaw.com/insights/edtech-and-privacy-navigating-a-shifting-regulatory-landscape/|];
+    StudentDPA — [|https://studentdpa.com/blog/understanding-ferpa-coppa-state-privacy-laws-03202025|];
+    Hireplicity — [|https://www.hireplicity.com/blog/ferpa-coppa-soc2-edtech-compliance-guide|].'
+content_considerations:
+  topic_volatility: Debate resolutions address current-events policy and normative
+    questions that may be politically or socially sensitive (e.g., immigration, criminal
+    justice, healthcare, foreign policy, environmental regulation). The system must
+    assess argument quality without taking sides on contested value questions.
+  value_pluralism: LD and Congressional debates explicitly center on normatively contested
+    premises where reasonable people disagree. The system must score argument structure
+    and warrant quality independently of whether the system 'agrees' with the underlying
+    value claim.
+  empirical_contestation: PF and Policy debates frequently involve disputed empirical
+    claims (e.g., economic impact estimates, scientific consensus questions, statistical
+    projections). Evidence credibility assessment must be calibrated to distinguish
+    genuine expert disagreement from misrepresented or cherry-picked evidence.
+  age_appropriateness: All content involves high school students (minors). Feedback
+    must be constructively framed for educational development contexts.
+  current_resolution_topics: 'Active and recent NSDA resolutions (2025–2026 season
+    unless noted):
+
+    - Policy (CX) 2025–2026: Resolved: The United States federal government should
+    significantly increase its exploration and/or development of the Arctic.
+
+    - LD 2025–2026 topics include (by cycle): ''Democracies ought to prioritize the
+    protection of civil liberties over national security'' (Nationals 2026); ''The
+    United States military ought to abide by the principle of non-intervention'' (March/April);
+    ''The possession of nuclear weapons is immoral'' (Jan/Feb); ''In the United States
+    criminal justice system, plea bargaining is just'' (active cycle per DebateUS).
+
+    - PF Nov/Dec 2025: Resolved: The United States federal government should require
+    technology companies to provide lawful access to encrypted communications.
+
+    - PF Nationals 2025: Resolved: On balance, in the United States, the benefits
+    of presidential executive orders outweigh the harms.
+
+    - Congressional: Topics set by student-submitted legislation voted on by National
+    Tournament participants; submissions open Oct 1, 2025 with deadline Feb 5, 2026
+    for 2026 nationals.
+
+    Source: NSDA Topics page — [|https://www.speechanddebate.org/topics/|]; Wikipedia
+    Public Forum Debate — [|https://en.wikipedia.org/wiki/Public_forum_debate|]; DebateUS
+    current resources — [|https://debateus.org/|]; Tabroom tournament listing — [|https://www.tabroom.com/index/tourn/index.mhtml?webpage_id=36055&tourn_id=36375|].'
+population_specific_notes: '- The quality-defining community for this deployment is
+  not the platform itself but the external NSDA/TOC/coaching ecosystem; benchmark
+  annotator populations (e.g., FOL-trained CS students or NLP researchers) are categorically
+  mismatched to this community.
+
+  - Circuit-level adaptation is a strong desideratum per the elicitation: a single
+  universal scoring standard will systematically mis-score arguments evaluated against
+  lay vs. tech norms.
+
+  - Evidence quality assessment (card quality, recency, contextualization) is the
+  highest-weight sub-dimension and is the farthest from any existing logical reasoning
+  benchmark''s coverage.
+
+  - Debate-specific structural argument types (DAs, CPs, kritiks, T shells, theory
+  arguments) constitute a first-class argument ontology with no representation in
+  standard NLI or argument mining benchmarks.
+
+  - Pairwise rebuttal comparison is a structural requirement not met by any standalone
+  argument scoring benchmark; this is a near-unique deployment requirement.
+
+  - Congressional debate has a meaningfully different quality ontology from the other
+  three formats (oratory-focused, less adversarial, no flowing) and may require a
+  partially separate evaluation approach.
+
+  - Student development trajectory matters: coaching feedback should be calibrated
+  to student skill level (novice vs. varsity), which may require the platform to track
+  student baseline and adapt feedback accordingly.'
+net_new_fields:
+  relevant_datasets_and_benchmarks:
+    description: Searches surfaced several datasets and benchmarks directly relevant
+      to gap analysis. None cover the full deployment requirement, but some partially
+      address specific gaps.
+    entries:
+    - name: DebateSum
+      relevance: Large-scale Policy Debate evidence dataset compiled from NSDA community
+        data over 7 years (2013–2019), containing 187,000+ pieces of evidence with
+        extractive/abstractive summaries and rich metadata (citation, author, word
+        counts). Directly covers Policy Debate evidence structure. However, it focuses
+        on argument mining and summarization, not argument quality scoring or circuit-conditioned
+        evaluation.
+      gap_addressed: Partial coverage of evidence-handling terminology and Policy
+        Debate card structure (evidence quality gap); does not address multi-dimensional
+        scoring, format-conditioned norms, or pairwise comparison.
+      source: Semantic Scholar — [|https://www.semanticscholar.org/paper/DebateSum:-A-large-scale-argument-mining-and-Roush-Balaji/d27b3096c0707f42b068fc9b3b47ce87560cbd56|]
+    - name: OpenDebateEvidence (NeurIPS 2024)
+      relevance: Massive-scale dataset (3.5 million documents) from the American Competitive
+        Debate community, covering both high school and college debates across the
+        full season. Includes rich metadata (author, date, source, citation, debate
+        round). Directly sourced from the deployment population. However, the benchmark
+        task is argumentative summarization evaluated with ROUGE and LLM-as-judge
+        scores, not argument quality scoring or circuit-conditioned evaluation.
+      gap_addressed: Strong corpus-level coverage of actual US competitive debate
+        evidence (addresses IC gap for evidence content); does not address output
+        ontology mismatch, pairwise comparison, or format/circuit-conditioned scoring.
+      source: arXiv 2406.14657 — [|https://arxiv.org/abs/2406.14657|]; NeurIPS 2024
+        — [|https://neurips.cc/virtual/2024/poster/97854|]
+    - name: IBM Project Debater datasets (argument quality, key point analysis)
+      relevance: IBM's Project Debater published multiple datasets covering argument
+        detection, argument quality ranking (IBM-ArgQ-5.3kArgs, IBM-Rank-30k, IBM-ArgQ-9.1kPairs),
+        and key point analysis on controversial topics. Argument quality is assessed
+        on general controversial topics (not competitive debate formats) using crowdsourced
+        annotations. Pairwise argument quality classification tasks exist. However,
+        content is general debate topics, not NSDA format-specific; annotators are
+        crowdworkers, not debate judges; no circuit-conditioned or format-conditioned
+        norms.
+      gap_addressed: Partial coverage of pairwise argument ranking task structure;
+        partial coverage of argument quality multi-dimensional scoring. Does not address
+        debate-specific argument ontology, evidence card quality, or NSDA/TOC circuit
+        norms.
+      source: IBM Research blog — [|https://research.ibm.com/blog/project-debater-api|];
+        neurohive.io overview — [|https://neurohive.io/en/datasets/more-than-10-nlp-datasets-available-from-ibm-s-project-debater/|]
+    - name: ArgQuality / CompAQA (pairwise argument ranking)
+      relevance: Research benchmarks for pairwise argument quality ranking (IBM-ArgQ
+        family, Habernal & Gurevych 2016). Tasks include pointwise and pairwise argument
+        quality classification on controversial topics. A 2024 MDPI paper (CompAQA)
+        proposes a comparison-based framework integrating both pairwise classification
+        and ranking. LLMs (GPT-3.5-turbo) have been shown to struggle to match supervised
+        models on pairwise ranking tasks. Annotation inter-rater agreement for quality
+        is low (kappa ~0.10–0.12), confirming inherent subjectivity.
+      gap_addressed: Directly addresses the pairwise comparison gap at the task-structure
+        level; however, content is general controversial topics, not competitive debate
+        formats, and annotators are not debate community members.
+      source: MDPI Electronics 2024 — [|https://www.mdpi.com/2079-9292/13/20/4088|];
+        arXiv 2406.13905 — [|https://arxiv.org/html/2406.13905|]
+    - name: DebateBench (2025)
+      relevance: A benchmark of British Parliamentary (BP) debate transcripts with
+        speech-level scores and house rankings from official adjudication data (256
+        speeches across 32 debates). Tests LLMs on speech scoring, argument ranking,
+        and long-context reasoning. Closest existing benchmark to the deployment's
+        scoring task. However, it covers BP format only (not NSDA Policy/LD/PF/Congressional),
+        adjudication norms differ substantially, and it does not capture lay vs. tech
+        circuit variation.
+      gap_addressed: Provides existence proof that LLM-based debate speech scoring
+        benchmarks are feasible; partially relevant to output form (multi-score +
+        rationale) and output content (community-anchored judge scores). Format mismatch
+        to NSDA is significant.
+      source: arXiv 2502.06279 — [|https://arxiv.org/pdf/2502.06279|]
+    - name: ArgBench (2025)
+      relevance: A recent benchmark (arXiv 2604.17366) covering multiple computational
+        argumentation tasks including argument mining, quality assessment, argument
+        similarity, and ad-hominem detection. Evaluates transfer learning across tasks.
+        Relevant as a multi-task argumentation benchmark but does not cover competitive
+        debate formats, circuit-conditioned norms, or evidence card quality.
+      gap_addressed: Partially addresses IO gap (argument task taxonomy broader than
+        FOLIO); does not address deployment-specific requirements.
+      source: arXiv 2604.17366 — [|https://arxiv.org/html/2604.17366v1|]
+    overall_assessment: 'No existing benchmark covers the full deployment requirement.
+      The closest partial matches are: OpenDebateEvidence for evidence corpus coverage;
+      IBM ArgQ datasets for pairwise argument quality task structure; DebateBench
+      for speech-level adjudication scoring. The combination of NSDA-format-specific
+      content, circuit-conditioned quality norms, multi-dimensional sub-scores, and
+      pairwise rebuttal comparison is unmet by any single existing resource.'
+  generative_ai_policy_in_debate:
+    description: 'The NSDA competitive debate community has explicitly addressed generative
+      AI use. Multiple state-level organizations (e.g., Ohio Speech and Debate Association)
+      prohibit using or paraphrasing AI-generated text as student original work in
+      competition, and prohibit AI-generated text as evidence in rounds. This is deployment-relevant:
+      the platform must be positioned as a coaching tool that does not generate content
+      students present as their own, and any evidence quality assessment must be able
+      to distinguish AI-generated from human-authored evidence.'
+    source: Ohio Speech and Debate Association policy — [|https://sites.google.com/theosda.org/theosda/resources/debate|]

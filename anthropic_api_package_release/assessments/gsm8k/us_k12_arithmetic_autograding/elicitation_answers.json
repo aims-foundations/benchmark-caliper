@@ -1,0 +1,5 @@
+{
+  "Q1": "Our problems are almost entirely US-context: dollars, miles/feet, American names, and typical US classroom scenarios like school stores, sports, or pizza-sharing. Some teachers occasionally use metric units in science-adjacent problems, but that's a small minority. We don't see much in the way of international currencies or non-US cultural framing.",
+  "Q2": "Yes, this is actually a real pain point for us. Students might submit '0.5' when the LLM produces '1/2', or '2.50' vs '$2.50', or round differently than the model. We have some normalization logic for common cases (stripping units, decimal/fraction equivalence within tolerance), but exact match alone would produce too many false negatives.",
+  "Q3": "We serve roughly grades 3-8, so it spans single-step multiplication up through multi-step ratio, percent, and rate problems. Beyond pure arithmetic word problems, teachers frequently assign measurement conversion (units, time), basic geometry (perimeter/area), and simple data interpretation from tables or bar charts \u2014 those would all need to be covered for us to trust a reliability number."
+}

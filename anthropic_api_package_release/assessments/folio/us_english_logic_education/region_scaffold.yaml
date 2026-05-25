@@ -1,0 +1,238 @@
+name: US Undergraduate Logic Students — Introductory and Intermediate Courses
+abbreviation: us_undergrad_logic
+assessment_context:
+  benchmark: FOLIO
+  deployment_description: An LLM-powered educational tool on a US platform that (1)
+    determines the validity of logical arguments, (2) produces step-by-step, rule-justified
+    proof traces in Fitch-style natural deduction notation, and (3) differentiates
+    explanations by student register (introductory vs. advanced). The tool also handles
+    natural-language-to-formal-logic translation and generates countermodels for invalid
+    arguments.
+  population_description: English-speaking undergraduate students enrolled in introductory
+    and intermediate logic courses at US higher-education institutions. Curriculum
+    is anchored to widely used US textbooks, primarily Barwise & Etchemendy's Language,
+    Proof and Logic, with pedagogy centered on Fitch-style natural deduction. No sub-national
+    geographic differentiation is specified.
+geography:
+  country: United States
+  sub_national_scope: None specified — deployment is national across US higher-education
+    institutions offering introductory and intermediate logic courses.
+  institutional_context: US colleges and universities; courses typically housed in
+    philosophy departments, mathematics departments, and computer science departments
+    depending on institutional structure.
+languages:
+  primary:
+  - English
+  variants:
+  - Standard American Academic English
+  formal_notation_registers:
+  - Fitch-style natural deduction (Barwise & Etchemendy syntax)
+  - Standard FOL notation (Russell & Norvig convention, used in FOLIO)
+  - Informal natural-language argumentation (everyday and quasi-legal registers)
+  note: 'No multilingual or translation concerns. The critical register distinction
+    is not linguistic but formal-notational: FOLIO uses Russell & Norvig FOL syntax,
+    which differs from the Fitch-style notation students are taught. This notation
+    mismatch is a deployment-salient concern even within English.'
+writing_systems:
+  scripts:
+  - Latin alphabet
+  - Standard logical notation symbols (¬, ∧, ∨, →, ↔, ∀, ∃, =)
+  fitch_specific_symbols:
+  - Vertical bar / subproof box notation
+  - Inference rule abbreviations (MP, MT, DN, ∧I, ∧E, ∨I, ∨E, →I, →E, ¬I, ¬E, ∀I,
+    ∀E, ∃I, ∃E)
+  note: All content is Latin-script English. The deployment-salient concern is that
+    Fitch-style proof notation uses structural conventions (subproof boxes, line-numbered
+    deductions, rule citations) not present in FOLIO's flat FOL annotation format.
+target_population_profile:
+  education_level: Undergraduate (first and second year most common for introductory;
+    second through fourth year for intermediate/advanced)
+  prior_logic_exposure:
+    introductory_register: Little to no prior formal logic training; students reason
+      informally and require heavy natural-language scaffolding with minimal symbolic
+      notation.
+    advanced_register: Completed at least one semester of formal logic; comfortable
+      with quantifiers, predicates, and named inference rules; expect formal annotations
+      alongside prose.
+  course_types:
+  - Introductory symbolic logic (philosophy departments)
+  - Discrete mathematics / proof-writing (mathematics and CS departments)
+  - Intermediate logic / formal methods
+  primary_textbook_anchor: Barwise & Etchemendy, Language, Proof and Logic (LPL);
+    secondary references may include Hurley's A Concise Introduction to Logic (propositional-heavy),
+    Bergmann/Moor/Nelson The Logic Book, and others.
+  argument_types_encountered:
+  - Propositional logic arguments (sentential logic with connectives only)
+  - Predicate/FOL arguments (quantifiers, predicates, identity)
+  - Natural-language arguments with implicit premises requiring reconstruction
+  - Everyday scenario arguments (quasi-legal, ethical, practical)
+  - Multi-step deduction chains from course exercises and textbook problems
+  out_of_scope_argument_types:
+  - Modal logic
+  - Temporal logic
+  - Inductive reasoning
+  - Fallacy identification (planned as separate module)
+curriculum_and_pedagogy:
+  proof_system: Fitch-style natural deduction
+  proof_system_description: Proofs are presented as numbered lines in a structured
+    box format. Each line is either a premise, an assumption (opening a subproof),
+    or a derived conclusion with an explicit rule citation and the line numbers of
+    the premises or lines the rule was applied to. Subproofs are used for conditional
+    introduction, negation introduction, and universal introduction.
+  canonical_inference_rules:
+  - Modus Ponens (→E)
+  - Modus Tollens (MT)
+  - Conditional Introduction (→I)
+  - Conjunction Introduction (∧I) and Elimination (∧E)
+  - Disjunction Introduction (∨I) and Elimination (∨E)
+  - Negation Introduction (¬I) and Elimination (¬E) / Double Negation (DN)
+  - Universal Introduction (∀I) and Elimination (∀E)
+  - Existential Introduction (∃I) and Elimination (∃E)
+  - Biconditional Introduction (↔I) and Elimination (↔E)
+  countermodel_expectation: For invalid arguments, students are expected to produce
+    a countermodel (an interpretation that makes all premises true and the conclusion
+    false) rather than a failed or incomplete proof.
+  register_differentiation:
+    introductory: Numbered steps with plain-English descriptions of each logical move;
+      minimal symbolic notation; connective names spelled out (e.g., 'and', 'if…then');
+      step-by-step prose summaries dominate.
+    advanced: Numbered steps with formal rule names and citations in Fitch notation;
+      quantifiers and predicates rendered symbolically; prose summaries condensed
+      or optional; countermodels expressed as explicit domain assignments.
+  textbook_notation_vs_folio_notation: FOLIO uses the Russell & Norvig (2010) FOL
+    syntax convention, which differs from the Barwise & Etchemendy Fitch-style syntax
+    students are taught. Compatibility between these two notational systems is a flagged
+    deployment gap requiring verification.
+infrastructure_and_access:
+  delivery_context: US higher-education platform; web-based LLM tool accessed via
+    browser on campus or at home.
+  device_access: '[NEEDS VERIFICATION — typical undergraduate device split between
+    laptop/desktop and mobile; logic tool likely optimized for keyboard-heavy input
+    given formal notation requirements]'
+  connectivity: '[NEEDS VERIFICATION — US undergraduate population generally has reliable
+    broadband or campus WiFi access; off-campus or low-income student connectivity
+    gaps may exist]'
+  accessibility_considerations: Screen-reader compatibility for formal notation (MathML
+    or equivalent) may be relevant for students with disabilities; [NEEDS VERIFICATION
+    — platform-specific accessibility commitments]
+  platform_modality: Text-only; structured proof output with numbered lines and formal
+    symbols; no audio or image modality required.
+  nlp_tooling: High-resource English NLP ecosystem; strong model availability for
+    English formal reasoning tasks.
+cultural_and_institutional_norms:
+  academic_integrity: US higher-education academic integrity policies are directly
+    relevant — the tool must be designed so it supports learning rather than answer-copying;
+    proof traces should be pedagogically scaffolded to encourage student reasoning,
+    not replace it.
+  disciplinary_variation: Logic is taught across philosophy, mathematics, and CS departments
+    with different notational conventions and emphases (philosophers favor Fitch natural
+    deduction; mathematicians may use sequent calculus or informal proof; CS may use
+    resolution or tableau methods). The deployment is specifically anchored to the
+    philosophy/LPL tradition.
+  student_diversity: '[NEEDS VERIFICATION — undergraduate logic enrollment demographics
+    by institution type; community college vs. four-year university differences in
+    prior preparation]'
+  pedagogical_expectations: US undergraduate logic pedagogy emphasizes showing work
+    explicitly — partial credit for correct reasoning steps is standard. The tool's
+    step-by-step trace requirement directly reflects this norm.
+  sensitivity_considerations: Argument content drawn from everyday and quasi-legal
+    scenarios may touch on politically or ethically sensitive topics (e.g., legal
+    reasoning examples involving rights, liability). Content neutrality consistent
+    with FOLIO's own bias-removal protocol is appropriate.
+benchmark_alignment_notes:
+  primary_coverage_strengths:
+  - FOLIO's FOL deductive reasoning coverage maps to the advanced register of the
+    deployment's predicate logic requirements.
+  - FOLIO's NL-FOL translation task partially covers the deployment's natural-language-to-formal-form
+    translation need.
+  - Engine-verified correctness labels provide reliable ground truth for the deductive
+    validity component.
+  - FOLIO's reasoning-depth stratification (modes at 4 steps; 28.7% requiring 5+)
+    maps loosely to the introductory/advanced difficulty distinction.
+  primary_coverage_gaps:
+  - gap: Output form mismatch — proof traces vs. classification labels
+    priority: HIGH
+    description: FOLIO outputs a three-way truth-value label (True/False/Unknown).
+      The deployment requires numbered, rule-justified Fitch-style proof traces with
+      premise citations, differentiated by student register. No FOLIO metric evaluates
+      explanation quality, pedagogical clarity, or register appropriateness.
+    web_search_target: Logic reasoning benchmark step-by-step proof trace evaluation
+      pedagogical explanation NaturalProofs ProofWriter Fitch natural deduction rubric
+  - gap: Countermodel generation
+    priority: HIGH
+    description: FOLIO labels invalid arguments False or Unknown but does not construct
+      or evaluate countermodels. The deployment requires explicit countermodel artifacts
+      for all invalid arguments.
+    web_search_target: Countermodel generation benchmark FOL propositional logic counterexample
+      evaluation NLP educational
+  - gap: Propositional logic coverage
+    priority: HIGH
+    description: FOLIO is exclusively FOL-scoped. The deployment explicitly requires
+      propositional/sentential logic handling as a distinct layer. No FOLIO subtask
+      covers propositional-only reasoning.
+    web_search_target: Propositional sentential logic reasoning benchmark LLM evaluation
+      LogiQA bAbI RuleTaker introductory undergraduate logic
+  - gap: Fitch-style notation vs. FOLIO FOL syntax
+    priority: HIGH
+    description: FOLIO uses Russell & Norvig FOL syntax, which its own inference engine
+      does not natively support and which differs from the Barwise & Etchemendy Fitch-style
+      notation the curriculum requires. Inference rule names, subproof structure,
+      and formula syntax are all misaligned.
+    web_search_target: Fitch natural deduction Barwise Etchemendy LPL LLM evaluation
+      formal proof benchmark notation compatibility
+  - gap: Implicit-premise argument reconstruction
+    priority: MODERATE
+    description: FOLIO premises are fully explicit and formalized; implicit commonsense
+      premises were added by annotators. The deployment requires handling everyday
+      arguments where premises are left unstated and must be reconstructed — a distinct
+      task not covered in FOLIO.
+    web_search_target: Implicit premise argument reconstruction enthymeme NLP benchmark
+      informal reasoning formalization dataset
+  - gap: Register-differentiated explanation generation
+    priority: MODERATE
+    description: FOLIO has no output schema or metric for generating or evaluating
+      register-appropriate explanations (introductory plain-language vs. advanced
+      formal annotation). The expert/non-expert accuracy gap documents difficulty
+      stratification but not explanation register.
+    web_search_target: Register-differentiated logic explanation introductory advanced
+      student LLM pedagogical output benchmark difficulty stratification undergraduate
+  - gap: Pedagogical explanation quality metric
+    priority: HIGH
+    description: No existing FOLIO metric evaluates whether a reasoning trace is pedagogically
+      clear, correctly cites premises, or uses appropriate rule names. A rubric or
+      reference-trace evaluation framework is needed and absent from the benchmark.
+    web_search_target: Pedagogical explanation quality rubric logic proof trace evaluation
+      NLP benchmark educational AI step-by-step reasoning
+flagged_verification_items:
+- item: US undergraduate enrollment in logic-relevant courses (philosophy logic, discrete
+    math, CS formal methods)
+  notes: '[NEEDS VERIFICATION — course enrollment figures by department type and institution
+    type]'
+- item: Prevalence of Barwise & Etchemendy LPL as primary textbook vs. competing texts
+  notes: '[NEEDS VERIFICATION — current adoption rates; Hurley, Bergmann et al., and
+    others may dominate in some institutional contexts]'
+- item: Availability of existing LLM-powered logic tutoring tools in US higher education
+  notes: '[NEEDS VERIFICATION — competitive landscape; tools like Carnap.io, Fitch
+    proof checkers, and emerging LLM-based tutors]'
+- item: NaturalProofs, ProofWriter, or other benchmark coverage of step-by-step natural
+    deduction evaluation
+  notes: '[NEEDS VERIFICATION — whether any benchmark includes rubrics or reference
+    traces for Fitch-style proof quality]'
+- item: Existing propositional logic benchmarks suitable as FOLIO complements
+  notes: '[NEEDS VERIFICATION — LogiQA, bAbI, RuleTaker, ProntoQA propositional coverage
+    and compatibility with deployment needs]'
+- item: Counterexample generation benchmarks for FOL and propositional logic
+  notes: '[NEEDS VERIFICATION — whether any benchmark elicits and evaluates countermodel
+    construction as a first-class output]'
+- item: FOLIO inference-rule vocabulary vs. Fitch-style rule names — formal compatibility
+    mapping
+  notes: '[NEEDS VERIFICATION — whether a systematic mapping between Russell & Norvig
+    FOL operators and LPL Fitch rule names has been documented]'
+- item: Device and connectivity profile of US undergraduate logic students
+  notes: '[NEEDS VERIFICATION — laptop vs. mobile split; campus vs. off-campus access
+    patterns; low-income student digital divide data]'
+- item: Institutional variation in logic course conventions (proof system used, notation
+    standards) across philosophy vs. math vs. CS departments
+  notes: '[NEEDS VERIFICATION — whether Fitch natural deduction is dominant or whether
+    sequent calculus, tableau, or other systems are comparably prevalent in target
+    institutions]'

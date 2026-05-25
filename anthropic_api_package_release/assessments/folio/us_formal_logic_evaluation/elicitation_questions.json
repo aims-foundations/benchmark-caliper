@@ -1,0 +1,17 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "OO",
+    "question": "FOLIO uses a three-way label scheme (True, False, Unknown) to classify whether a conclusion follows from premises. Your deployment description mentions entailment, contradiction, and neutral — do these map cleanly onto FOLIO's True/False/Unknown categories for your use case, or does your evaluation require finer distinctions (e.g., separating 'unknown due to insufficient information' from 'unknown due to open-world assumptions')?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "IO",
+    "question": "FOLIO covers a range of FOL reasoning patterns — existential and universal quantification, negation, nested conditionals, and multi-step deduction chains. Are there specific reasoning sub-types (e.g., temporal logic, arithmetic constraints, modal or probabilistic reasoning) that are particularly important for the models you are evaluating, or are you looking for broad coverage of classical deductive FOL patterns?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "IF",
+    "question": "Your deployment specifies structured premise-conclusion pairs as input, whereas FOLIO premises are written in natural language (with FOL annotations as a parallel layer). Will the models you evaluate receive purely formal/symbolic logical statements, natural language statements, or a hybrid of both — and does that match the signal format your evaluation needs to measure?"
+  }
+]

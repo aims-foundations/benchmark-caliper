@@ -1,0 +1,17 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "GSM8K covers elementary arithmetic and multi-step grade school math (e.g., fraction word problems, unit conversions, simple proportions). Your deployment requires graduate-level statistical reasoning: regression diagnostics, p-value interpretation, ANOVA assumptions, effect size estimation, power analysis. Does your evaluation need to cover these advanced statistical reasoning categories, or is elementary quantitative reasoning sufficient as a proxy?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "IC",
+    "question": "GSM8K problems are narrative word problems written for children (e.g., 'Sally has 5 apples...'). Your analysts will paste real datasets and ask questions like 'Is the homoscedasticity assumption violated here?' or 'Should I use a Welch t-test given unequal variances?'. Do you expect the LLM to reason over tabular data, statistical outputs (e.g., R or Python output), or domain-specific jargon that would never appear in grade school word problems?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OO",
+    "question": "GSM8K scores answers as correct or incorrect against a single numeric ground truth. Many statistical analysis questions your analysts would ask have defensible multiple valid answers depending on modeling choices (e.g., which covariates to include, whether to log-transform a skewed variable, how to handle multicollinearity). Does your evaluation need to reward methodologically sound reasoning even when the final recommendation differs from a single reference answer, or is exact-match numerical correctness sufficient for your use case?"
+  }
+]

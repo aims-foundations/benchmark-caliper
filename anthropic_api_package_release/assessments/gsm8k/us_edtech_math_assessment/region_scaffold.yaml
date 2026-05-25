@@ -1,0 +1,273 @@
+name: 'US K–8 Edtech: CCSS-Aligned Math Assessment Item Generation'
+abbreviation: US_K8_CCSS_MCQ
+deployment_context:
+  country: United States
+  sector: K–12 education technology
+  deployment_type: LLM-powered math assessment item generation tool
+  primary_users: K–8 classroom teachers in US public and private schools, spanning
+    urban, suburban, and rural settings
+  secondary_users: K–8 students (grades K–8) whose formative assessments are built
+    from generated content
+  geographic_scope: National (no sub-national restriction); content must be inclusive
+    across all US regional and demographic contexts
+  use_case_summary: Teachers specify a CCSS standard (e.g., 4.NF.A.2), grade level,
+    and difficulty; the system generates a complete multiple-choice assessment item
+    with a verified correct answer and misconception-grounded distractor choices for
+    use in targeted formative assessment.
+target_population_profile:
+  teacher_characteristics:
+    grade_bands_served:
+    - K–2
+    - 3–5
+    - 6–8
+    settings:
+    - urban
+    - suburban
+    - rural
+    student_populations_served:
+    - General education students
+    - English Language Learners (ELL/multilingual learners)
+    - Students from lower-income households
+    - Students from diverse racial and ethnic backgrounds
+    pedagogical_role: Formative assessment design; teachers use generated items for
+      targeted skill diagnosis, not summative grading
+    assumed_content_knowledge: Grade-level math content familiarity; not assumed to
+      have psychometric or item-writing expertise
+  student_characteristics:
+    age_range_approx: 5–14 years
+    grade_range: K–8
+    linguistic_diversity: Significant ELL population; low-idiom, plain-language problem
+      stems required
+    socioeconomic_diversity: Includes students from lower-income households; money-related
+      problem contexts require sensitivity
+    cultural_diversity: Broad US demographic diversity; regionally neutral, culturally
+      inclusive contexts required
+curriculum_framework:
+  primary_standard: Common Core State Standards for Mathematics (CCSS-M)
+  standard_adoption_status: '[NEEDS VERIFICATION — confirm current state-level CCSS
+    adoption map, particularly states that have withdrawn or modified CCSS]'
+  relevant_domains_by_grade_band:
+    K–2:
+    - Counting & Cardinality (CC)
+    - Operations & Algebraic Thinking (OA)
+    - Number & Operations in Base Ten (NBT)
+    - Measurement & Data (MD)
+    - Geometry (G)
+    3–5:
+    - Operations & Algebraic Thinking (OA)
+    - Number & Operations in Base Ten (NBT)
+    - Number & Operations—Fractions (NF)
+    - Measurement & Data (MD)
+    - Geometry (G)
+    6–8:
+    - Ratios & Proportional Relationships (RP)
+    - The Number System (NS)
+    - Expressions & Equations (EE)
+    - Functions (F)
+    - Statistics & Probability (SP)
+    - Geometry (G)
+  example_target_standards:
+  - 4.NF.A.2
+  - 6.RP.A.3
+  - 3.OA.A.1
+  - 5.NF.B.4
+  standard_granularity_required: Standard-cluster level (e.g., 4.NF.A.2), not domain-level
+  ccss_alignment_in_gsm8k: NOT PRESENT — GSM8K contains no CCSS tagging at domain,
+    cluster, or standard level; this is a fundamental ontological gap
+  alternative_frameworks_in_scope: '[NEEDS VERIFICATION — identify whether any US
+    states use alternate math frameworks (e.g., Texas TEKS, Virginia SOL) that would
+    require parallel coverage for national deployment]'
+languages:
+  primary: English (American English)
+  register_requirements: Low-idiom, plain-language register for ELL accessibility;
+    lexical complexity norms for math word problems targeting multilingual learners
+  ell_frameworks_relevant:
+  - WIDA English Language Development Standards
+  - CCSS-ELL language standards
+  - '[NEEDS VERIFICATION — confirm current WIDA framework version in use]'
+  script: Latin alphabet
+  modality: Text-only; no audio, image, or symbol-only modality required
+  gsm8k_language_match: Full match on language and modality — lowest-risk validity
+    dimension
+output_format_requirements:
+  item_package_components:
+  - Problem stem (grade-appropriate language, culturally inclusive context)
+  - Verified correct answer (mathematically accurate, clearly labeled)
+  - Distractor choices (typically 3, grounded in specific documented student misconceptions)
+  - 'Optional: worked solution explanation (step-level, grade-appropriate reasoning
+    chain)'
+  distractor_design_standard: Distractors must reflect specific, predictable student
+    errors (e.g., adding numerators and denominators independently when adding fractions
+    for 4.NF.A.2); arbitrary wrong numbers are not acceptable
+  item_format: Multiple-choice (MCQ)
+  gsm8k_output_format_match: CATEGORICAL MISMATCH — GSM8K evaluates free-form natural
+    language solution generation scored by final numeric answer only; structured MCQ
+    output (stem + answer + misconception-grounded distractors) is entirely outside
+    GSM8K's evaluation scope
+  misconception_research_sources: '[NEEDS VERIFICATION — identify published databases
+    of documented K–8 math student misconceptions by CCSS standard (e.g., ASSISTments,
+    Khan Academy, NCTM research)]'
+evaluation_rubric:
+  dimension_hierarchy:
+  - rank: 1
+    dimension: Mathematical solution accuracy
+    description: Hard prerequisite; items with incorrect solutions are discarded
+    gsm8k_coverage: Direct — GSM8K measures this dimension via final numeric answer
+      correctness
+    priority: HARD GATE
+  - rank: 2
+    dimension: Distractor plausibility and misconception grounding
+    description: Each distractor must reflect a specific, documented student error;
+      implausible or accidentally correct distractors fail the item
+    gsm8k_coverage: NOT COVERED — no metric or label in GSM8K addresses MCQ distractor
+      quality
+    priority: HIGH
+  - rank: 3
+    dimension: CCSS standard alignment
+    description: Generated item must genuinely target the specified standard's specific
+      skill, not merely grade-level math broadly
+    gsm8k_coverage: NOT COVERED — GSM8K has no CCSS taxonomy
+    priority: HIGH
+  - rank: 4
+    dimension: Grade-level language appropriateness
+    description: Problem stem vocabulary, sentence complexity, and context must be
+      appropriate for the specified grade band
+    gsm8k_coverage: NOT COVERED — GSM8K provides no grade-level tagging or age-appropriate
+      language validation
+    priority: HIGH
+  - rank: 5
+    dimension: Cultural inclusivity
+    description: Contexts must be accessible across urban/suburban/rural settings,
+      low-idiom for ELL students, diverse names, no income-stigmatizing money contexts
+    gsm8k_coverage: NOT COVERED — GSM8K has no documented inclusivity guidelines or
+      cultural audit
+    priority: HIGH
+  classroom_readiness_definition: 'An item is ''correct'' only if the entire MCQ package
+    is classroom-ready: mathematically accurate, CCSS-aligned, grade-appropriate language,
+    plausible misconception-grounded distractors, and culturally inclusive context'
+  gsm8k_construct_coverage: GSM8K captures only the hard-gate prerequisite dimension
+    (mathematical accuracy); the large majority of the deployment's evaluation construct
+    is entirely unmeasured by the benchmark
+cultural_inclusivity_requirements:
+  required: true
+  guidelines:
+  - Contexts must be accessible across urban, suburban, and rural US settings
+  - 'Avoid culturally narrow references: assumed family structures, regionally specific
+    foods, particular sports with uneven US cultural distribution'
+  - Use low-idiom language to support multilingual learners
+  - Include diverse names in problem scenarios
+  - Handle money contexts sensitively to avoid stigmatizing students from lower-income
+    households
+  - Avoid references that presuppose particular household income levels or material
+    circumstances
+  relevant_equity_frameworks:
+  - NCTM Principles to Actions equity framework
+  - NCTM Catalyzing Change series
+  - '[NEEDS VERIFICATION — confirm current NCTM equity guidelines for problem design,
+    publication year]'
+  - WIDA English Language Development Standards (for ELL accessibility)
+  - '[NEEDS VERIFICATION — identify whether any published cultural audit of K–8 math
+    word problem datasets exists]'
+  gsm8k_inclusivity_coverage: NOT DOCUMENTED — GSM8K contractor guidelines addressed
+    template reuse and solution descriptiveness but contain no documented inclusivity
+    constraints; GPT-3-seeded problem generation introduces uncharacterized cultural
+    influence
+grade_band_infrastructure:
+  grade_bands:
+  - K–2
+  - 3–5
+  - 6–8
+  grade_level_tagging_in_gsm8k: NOT PRESENT — GSM8K treats all problems as undifferentiated
+    'grade school math' with no grade-level or grade-band annotation
+  readability_standards_relevant:
+  - '[NEEDS VERIFICATION — identify Flesch-Kincaid or Lexile grade-band targets for
+    K–2, 3–5, 6–8 math word problems]'
+  - '[NEEDS VERIFICATION — confirm whether WIDA or CCSS-ELL frameworks specify lexical
+    complexity targets by grade band for math contexts]'
+  difficulty_calibration: Teachers specify difficulty at item-generation time; system
+    must honor grade-band-appropriate difficulty, not just broad 'grade school' difficulty
+    range
+  existing_grade_tagged_item_banks: '[NEEDS VERIFICATION — identify whether state
+    assessment item banks (e.g., Smarter Balanced, PARCC released items) or platforms
+    (ASSISTments, Khan Academy) provide grade-level-tagged CCSS-aligned MCQ items
+    usable as evaluation reference]'
+benchmark_validity_summary:
+  benchmark: GSM8K
+  overall_validity_assessment: LOW — GSM8K measures only the hard-gate prerequisite
+    (multi-step arithmetic accuracy) of a five-dimension evaluation construct; four
+    of five dimensions (CCSS alignment, distractor quality, grade-level language,
+    cultural inclusivity) are entirely outside the benchmark's scope
+  dimensions_covered:
+  - Mathematical solution accuracy (partial — numeric answer only, no step-level quality)
+  dimensions_not_covered:
+  - CCSS standard-level alignment
+  - Distractor plausibility and misconception grounding
+  - Grade-level language appropriateness (K–2 vs. 3–5 vs. 6–8)
+  - Cultural inclusivity and ELL accessibility
+  - Structured MCQ output format quality
+  priority_gaps:
+  - gap: CCSS standard-level coverage mapping
+    priority: HIGH
+    web_search_target: CCSS-aligned math word problem benchmark standard-level tagging
+      4.NF.A.2 6.RP.A.3 evaluation MATH MathBench state item banks
+  - gap: Distractor-quality evaluation criteria grounded in student misconceptions
+    priority: HIGH
+    web_search_target: MCQ distractor quality evaluation rubric student misconceptions
+      math formative assessment benchmark ASSISTments Khan Academy item banks
+  - gap: Multilingual learner (ELL) linguistic accessibility standards for math word
+      problems
+    priority: HIGH
+    web_search_target: readability lexical complexity math word problems ELL multilingual
+      learners WIDA CCSS-ELL grade band benchmark
+  - gap: Culturally inclusive math context audit and design guidelines
+    priority: HIGH
+    web_search_target: culturally inclusive math word problems cultural audit bias
+      review NCTM equity guidelines grade school benchmark design
+  - gap: Grade-band granularity tagging for grade-level-appropriate item generation
+    priority: HIGH
+    web_search_target: math word problem dataset grade-level tagging K-8 grade band
+      Smarter Balanced PARCC item bank difficulty annotation
+  - gap: Pedagogical accuracy of solution explanations (step-level quality beyond
+      final answer)
+    priority: MEDIUM
+    web_search_target: math solution explanation quality evaluation step-level correctness
+      benchmark pedagogical reasoning chain scoring grade school
+regulatory_and_policy_context:
+  data_privacy: '[NEEDS VERIFICATION — confirm applicability of FERPA, COPPA (given
+    K–8 student age), and any relevant state student data privacy laws (e.g., SOPIPA-type
+    statutes) to LLM-generated assessment content]'
+  accessibility_requirements: '[NEEDS VERIFICATION — confirm whether WCAG 2.1 AA or
+    Section 508 applies to the edtech platform deploying this tool in school contexts]'
+  ccss_adoption_map: '[NEEDS VERIFICATION — confirm which US states have fully adopted,
+    modified, or withdrawn from CCSS-M as of current year, to assess whether CCSS
+    alignment covers the full national deployment scope]'
+  ai_in_education_policy: '[NEEDS VERIFICATION — identify any US Department of Education
+    or state-level guidance on AI-generated assessment content, disclosure requirements,
+    or validity standards for AI-assisted formative assessment tools]'
+infrastructure_notes: Deployment is a web-based or integrated edtech platform accessed
+  by classroom teachers on school-issued or personal devices. No modality mismatch
+  with GSM8K (both text-only English). Infrastructure risk is low for the benchmark
+  validity assessment; primary validity concerns are pedagogical and curricular, not
+  infrastructural.
+domain_specific_notes: '- CCSS-M is the authoritative curriculum framework; standard-level
+  alignment (not domain-level) is non-negotiable for the deployment use case.
+
+  - Formative assessment item design is a specialized psychometric sub-domain; distractor
+  construction grounded in misconception research (e.g., fraction arithmetic errors,
+  place-value confusion) is distinct from general math problem generation.
+
+  - ELL accessibility is a legal and ethical requirement in US public schools under
+  Title III of ESEA/ESSA; low-idiom language is not merely a preference.
+
+  - Cultural responsiveness in math contexts is supported by NCTM equity frameworks
+  and is increasingly a district-level procurement requirement.
+
+  - Grade-band differentiation (K–2, 3–5, 6–8) reflects real developmental differences
+  in reading level, abstract reasoning, and CCSS domain progression that a single
+  ''grade school math'' benchmark cannot capture.
+
+  - Money-related problem contexts are pervasive in grade school math word problems;
+  sensitivity guidelines are needed to avoid reinforcing income-related stigma for
+  students from lower-income households.
+
+  '

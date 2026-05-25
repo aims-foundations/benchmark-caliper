@@ -1,0 +1,17 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "GSM8K covers grade-school word problems involving basic arithmetic, fractions, and multi-step reasoning. Your deployment involves adult financial math: compound interest, APR calculations, amortization schedules, percentage-based budgeting, and credit utilization ratios. Do these financial reasoning types — especially multi-step problems involving interest compounding or loan payoff timelines — represent the majority of your target queries, or do simpler split-the-bill calculations dominate? Understanding the distribution helps assess whether grade-school problem complexity is actually representative of what your users will ask."
+  },
+  {
+    "id": "Q2",
+    "dimension": "IC",
+    "question": "GSM8K problems use everyday US consumer contexts (e.g., buying groceries, school trips) rather than financial instruments. Your users will phrase questions with domain-specific vocabulary like 'APR,' 'minimum payment,' 'balance transfer,' or '401(k) contribution.' Does your system need to handle this financial terminology embedded in natural language queries, and would a failure to reason correctly over those terms — even if the underlying arithmetic is simple — be a meaningful deployment risk?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OO",
+    "question": "GSM8K scores answers as numerically correct or incorrect against a single ground-truth value. In your personal finance context, some queries may have defensible answer ranges rather than a single right number — for example, 'how long to pay off my balance' depends on assumptions about minimum payment policies or interest compounding frequency. Does your evaluation need to handle partial credit or range-based correctness, or is exact numeric accuracy the only criterion that matters for your use case?"
+  }
+]

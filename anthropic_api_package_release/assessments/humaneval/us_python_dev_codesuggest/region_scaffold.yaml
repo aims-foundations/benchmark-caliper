@@ -1,0 +1,245 @@
+name: US Professional Software Developers — Python IDE Code Suggestion (HumanEval
+  Assessment)
+abbreviation: us_python_ide_dev
+assessment_context:
+  benchmark: humaneval
+  deployment_product: IDE code suggestion feature (text-to-Python function completion)
+  vendor_location: United States
+  primary_evaluation_criterion: Functional correctness via user test-suite passage
+    (pass/fail oracle)
+target_population:
+  description: 'Professional software developers based in the United States using
+    an IDE code suggestion tool that generates Python function implementations. The
+    population is defined by role and tool usage, not by sub-national geography or
+    demographic group. Primary variation is along two axes: (1) technical domain of
+    the codebase (fintech, healthtech, ML/data pipelines, general-purpose), and (2)
+    code pattern type (standalone algorithmic, library-grounded, class-method, async/await).'
+  geography: United States (no meaningful sub-national variation identified)
+  role: Professional software developers
+  language_of_use: English (natural language prompts/docstrings); Python (code output)
+  key_enterprise_segments:
+  - Fintech (financial data processing, payment systems, trading infrastructure)
+  - Healthtech (EHR integrations, clinical data pipelines, HIPAA-adjacent tooling)
+  - ML/Data pipelines (model training orchestration, feature engineering, ETL)
+languages:
+  natural_language: English (American)
+  programming_language: Python 3.x
+  dialects_or_variants: None — population is monolingual English and uses standard
+    Python. Minor variation in docstring verbosity and style by developer seniority.
+  note: All prompts and docstrings are in American English. No NLP localization concerns.
+    Python version variation (3.8 vs 3.10 vs 3.12) may affect async syntax and type
+    annotation idioms; benchmark was designed against Python 3 without version-pinning.
+writing_systems:
+  scripts:
+  - ASCII / UTF-8 (Python source and docstrings)
+  note: No script mismatch. Identifier naming conventions (PEP 8 snake_case) and docstring
+    formats (Google, NumPy, reStructuredText) are the relevant variation axes, not
+    script.
+developer_population_profile:
+  estimated_us_professional_python_developers: '[NEEDS VERIFICATION — search for current
+    Stack Overflow Developer Survey, JetBrains Developer Ecosystem Report figures
+    for US Python developer headcount]'
+  python_as_primary_language_share_us: '[NEEDS VERIFICATION]'
+  ide_adoption_rates: '[NEEDS VERIFICATION — VS Code, JetBrains PyCharm, Jupyter market
+    share among US Python developers]'
+  enterprise_vs_individual_split: '[NEEDS VERIFICATION — proportion of US Python developers
+    in enterprise (>250 employee) vs. SMB vs. solo contexts]'
+  seniority_distribution: '[NEEDS VERIFICATION — junior/mid/senior breakdown relevant
+    to baseline capability and code review behavior]'
+technical_domain_segments:
+  fintech:
+    description: Developers building financial data processing, payment, trading,
+      or risk systems. Codebases typically involve pandas/NumPy for numeric computation,
+      proprietary ORM layers, strict type-checking, and regulatory audit requirements.
+    dominant_libraries:
+    - pandas
+    - NumPy
+    - SQLAlchemy
+    - boto3
+    - pydantic
+    key_conventions: Decimal precision handling, idempotent transaction logic, audit-log
+      patterns
+    regulatory_context: '[NEEDS VERIFICATION — relevant US financial regulations affecting
+      code practices, e.g., SOX, PCI-DSS, SEC Rule 17a-4 data retention requirements
+      and their coding implications]'
+    benchmark_coverage_note: HumanEval contains zero fintech-domain problems; no basis
+      for predictive validity in this segment
+  healthtech:
+    description: Developers building EHR integrations, clinical data pipelines, patient-facing
+      applications, or medical device software. Codebases involve FHIR/HL7 parsers,
+      de-identification logic, and strict PHI-handling conventions.
+    dominant_libraries:
+    - fhir.resources
+    - pandas
+    - SQLAlchemy
+    - requests
+    - boto3
+    key_conventions: PHI field masking, audit logging, deterministic de-identification,
+      HL7/FHIR schema adherence
+    regulatory_context: '[NEEDS VERIFICATION — HIPAA Security Rule technical safeguard
+      implications for generated code; FDA Software as a Medical Device (SaMD) guidance
+      if applicable]'
+    benchmark_coverage_note: HumanEval contains zero healthtech-domain problems; no
+      basis for predictive validity in this segment
+  ml_data_pipelines:
+    description: Developers building model training pipelines, feature stores, ETL
+      jobs, and inference services. Codebases involve NumPy/pandas transformations,
+      framework-specific patterns (PyTorch, TensorFlow, scikit-learn), and orchestration
+      tools.
+    dominant_libraries:
+    - pandas
+    - NumPy
+    - scikit-learn
+    - PyTorch
+    - TensorFlow
+    - boto3
+    - Apache Beam / Spark (PySpark)
+    key_conventions: Vectorized operation idioms, reproducibility seeds, shape-assertion
+      patterns, pipeline DAG structure
+    regulatory_context: '[NEEDS VERIFICATION — any sector-specific ML model governance
+      requirements affecting code, e.g., financial model risk management SR 11-7]'
+    benchmark_coverage_note: DS-1000 partially covers this segment; search should
+      verify DS-1000 scope and validation against professional ML developer workflows
+  general_purpose_algorithmic:
+    description: Domain-neutral utility code, scripting, and algorithmic tasks. Closest
+      to HumanEval's problem distribution. Confirmed by elicitation as a meaningful
+      minority use case.
+    dominant_libraries:
+    - standard library
+    - itertools
+    - collections
+    - typing
+    benchmark_coverage_note: HumanEval covers this segment well; highest expected
+      benchmark-to-deployment validity
+code_pattern_taxonomy:
+  standalone_algorithmic:
+    deployment_frequency: Meaningful minority — confirmed by elicitation
+    humaneval_coverage: Strong — 164 problems, all standalone algorithmic functions
+    validity_assessment: Highest validity segment; benchmark scores most predictive
+      here
+  library_grounded_synthesis:
+    deployment_frequency: Majority use case — confirmed by elicitation
+    dominant_libraries_in_deployment:
+    - pandas
+    - NumPy
+    - requests
+    - boto3
+    humaneval_coverage: None — benchmark contains zero library-call problems
+    validity_assessment: Full gap; benchmark scores not predictive for this pattern
+      type
+    candidate_supplement_benchmarks: '[NEEDS VERIFICATION — DS-1000, APIBench, ExecEval
+      coverage, recency, and professional-workflow validation status]'
+  class_method_synthesis:
+    deployment_frequency: Common — confirmed by elicitation as majority pattern alongside
+      library calls
+    humaneval_coverage: None — benchmark restricted to module-level standalone functions
+    validity_assessment: Full gap
+    candidate_supplement_benchmarks: '[NEEDS VERIFICATION — any HumanEval-adjacent
+      benchmarks covering OOP class hierarchy synthesis in Python]'
+  async_await_io:
+    deployment_frequency: Common — confirmed by elicitation
+    humaneval_coverage: None — no async/await problems exist in HumanEval
+    validity_assessment: Full gap
+    candidate_supplement_benchmarks: '[NEEDS VERIFICATION — any Python async correctness
+      evaluation benchmarks; check whether SWE-bench instances include async patterns]'
+  repository_level_context_grounded:
+    deployment_frequency: Dominant real-world mode — confirmed by elicitation as the
+      most important capability gap
+    humaneval_coverage: None — all problems are context-free single-docstring prompts
+    validity_assessment: Structural mismatch; benchmark cannot exercise retrieval
+      and grounding over project-internal types, ORM models, helper modules
+    candidate_supplement_benchmarks: '[NEEDS VERIFICATION — RepoCoder, SWE-bench,
+      CrossCodeEval scope, language coverage, and professional-workflow applicability]'
+correctness_dimensions:
+  primary:
+    name: Functional correctness (test-suite passage)
+    benchmark_alignment: Strong — HumanEval pass@k metric directly mirrors deployment's
+      test-suite oracle
+    deployment_oracle: User's own project test suite (not benchmark-provided tests)
+  secondary_enterprise:
+  - name: Security hygiene
+    sub_dimensions:
+    - eval() usage
+    - shell injection patterns
+    - SQL injection patterns
+    - hardcoded secrets / credentials
+    - insecure cryptographic configurations
+    benchmark_alignment: Partial — HumanEval appendix covers RSA key length and AES
+      ECB mode only; eval, injection, and hardcoded-secret patterns are absent
+    candidate_supplement_benchmarks: '[NEEDS VERIFICATION — SecurityEval, CyberSecEval,
+      PurpleLlama CyberSecEval scope and Python coverage]'
+  - name: Style conformance
+    sub_dimensions:
+    - PEP 8 compliance
+    - type annotation coverage
+    - codebase-local naming conventions
+    - docstring format consistency
+    benchmark_alignment: None — HumanEval has no style scoring dimension
+    candidate_supplement_benchmarks: '[NEEDS VERIFICATION — any Python style conformance
+      evaluation benchmarks; whether linting-integrated evaluation frameworks exist]'
+  - name: Performance
+    deployment_relevance: Occasionally raised but rarely blocks acceptance — lower
+      priority
+    benchmark_alignment: None — HumanEval has no performance dimension
+infrastructure_and_deployment_notes:
+  interface_type: IDE plugin / inline code suggestion (not chat or web interface)
+  interaction_latency_sensitivity: High — IDE completions are expected near-real-time;
+    evaluation latency is not a HumanEval concern but matters for production deployment
+    decisions
+  execution_environment: Developer local machine or cloud dev environment; test execution
+    runs in the user's project virtualenv with project-specific dependencies installed
+  python_version_distribution: '[NEEDS VERIFICATION — current US enterprise Python
+    3.x version distribution, e.g., 3.8 vs 3.10 vs 3.12 adoption by enterprise segment]'
+  package_manager_ecosystem: '[NEEDS VERIFICATION — pip vs conda vs poetry adoption
+    rates in target enterprise segments]'
+  ci_cd_integration: Test suites typically integrated into CI/CD pipelines (GitHub
+    Actions, Jenkins, CircleCI); the deployment oracle is the same test runner used
+    in CI
+  ide_platform_distribution: '[NEEDS VERIFICATION — VS Code vs JetBrains vs other
+    IDE market share among US Python developers in target segments]'
+regulatory_and_compliance_context:
+  us_federal:
+    data_protection: '[NEEDS VERIFICATION — current US federal AI/software liability
+      framework relevant to AI-generated code in production systems; FTC guidance
+      on AI; NIST AI RMF applicability]'
+    sector_specific: '[NEEDS VERIFICATION — SOX implications for fintech code generation;
+      HIPAA Security Rule for healthtech; FDA SaMD guidance for medical device software]'
+  code_licensing: '[NEEDS VERIFICATION — current status of US copyright law as applied
+    to AI-generated code; any relevant court decisions post-2023; GitHub Copilot litigation
+    status and implications]'
+  enterprise_procurement: '[NEEDS VERIFICATION — common enterprise AI acceptable-use
+    policy requirements relevant to IDE tools; SOC 2 / ISO 27001 certification expectations
+    for vendor]'
+cultural_and_professional_norms_notes: US professional software development culture
+  emphasizes test-driven development, code review, and CI/CD discipline — all of which
+  align with HumanEval's functional-correctness oracle. Enterprise engineering cultures
+  (particularly in fintech and healthtech) add strong expectations around security
+  hygiene, auditability, and style consistency enforced via linters and pre-commit
+  hooks. The developer population is technically sophisticated, will actively scrutinize
+  suggestions, and is unlikely to accept completions that fail obvious style or security
+  checks even if they pass unit tests. Over-reliance risk (accepting plausible-looking
+  but incorrect completions) is a documented concern in the HumanEval paper and is
+  relevant to enterprise adoption.
+benchmark_validity_summary:
+  strongest_validity_segment: Standalone algorithmic function synthesis (domain-neutral,
+    module-level, no external dependencies) — minority of deployment volume
+  weakest_validity_segments:
+  - Repository-level context-grounded completions — dominant real-world mode, zero
+    benchmark coverage
+  - Library-grounded synthesis (pandas, NumPy, boto3) — majority use case, zero benchmark
+    coverage
+  - Domain-specific code (fintech, healthtech, ML pipelines) — major enterprise segments,
+    zero benchmark coverage
+  partial_validity_segments:
+  - Security hygiene — benchmark covers narrow cryptographic anti-patterns only; shell
+    injection, eval, hardcoded secrets absent
+  recommended_supplement_search_targets:
+  - DS-1000 (library-grounded ML code generation)
+  - APIBench (API-call correctness)
+  - ExecEval (execution-based evaluation with library dependencies)
+  - RepoCoder (repository-level completion)
+  - SWE-bench (real-world GitHub issue resolution)
+  - CrossCodeEval (cross-file context grounding)
+  - SecurityEval / CyberSecEval / PurpleLlama (security hygiene)
+  - Domain-specific Python code generation evaluations for fintech, healthtech, ML
+    pipelines

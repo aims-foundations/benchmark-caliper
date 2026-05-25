@@ -1,0 +1,259 @@
+name: US Professional Data Science Consultancy — Statistical Analysis Assistant
+abbreviation: US-DataSci-StatAssist
+assessment_context:
+  benchmark: GSM8K (Grade School Math 8K)
+  benchmark_domain: Mathematical reasoning — grade school arithmetic word problems
+  deployment_use_case: LLM-powered automated statistical analysis assistant for professional
+    data analysts and applied statisticians at a US consultancy, supporting regression
+    modeling, hypothesis testing, ANOVA, experimental design, and interpretation of
+    statistical software outputs.
+  overall_validity_concern: 'Severe construct mismatch across all major dimensions:
+    GSM8K tests elementary arithmetic reasoning via child-oriented narrative word
+    problems scored by binary exact-match, while the deployment requires graduate-level
+    statistical reasoning over semi-structured professional inputs evaluated by methodological
+    soundness.'
+deployment_population:
+  geography: United States (nationally scoped; no sub-national variation identified
+    as relevant)
+  organizational_context: Private-sector data science consultancy environment; analysts
+    serve external clients across multiple industry verticals
+  occupation: Professional data analysts and applied statisticians
+  educational_background: Quantitatively trained professionals; expected to hold at
+    minimum a bachelor's degree in statistics, mathematics, computer science, economics,
+    or a related field; many likely hold graduate degrees
+  professional_tools:
+  - R
+  - Python (statsmodels, scipy, pandas, numpy)
+  - standard statistical software output formats (lm(), glm(), summary.aov(), etc.)
+  language: English — technical/domain-specific register (dense professional jargon,
+    not conversational or elementary)
+  demographic_specifics: No age-band, gender, or ethnicity constraints specified;
+    cohort defined by occupational role and technical training rather than demographic
+    characteristics
+language_and_register:
+  primary_language: English (en)
+  register: Technical professional — graduate-level statistical discourse
+  vocabulary_profile:
+    representative_terms:
+    - heteroscedasticity
+    - multicollinearity
+    - VIF (Variance Inflation Factor)
+    - Type III Sums of Squares
+    - Welch correction
+    - post-hoc corrections (Tukey HSD, Bonferroni)
+    - random effects / mixed models
+    - residual diagnostics
+    - Cook's distance
+    - confidence interval interpretation
+    - p-value interpretation under NHST
+    - effect size (Cohen's d, eta-squared, omega-squared)
+    - power analysis / sample size calculation
+    - log-transformation
+    - interaction terms
+    - overdispersion
+    - Bayesian credible intervals
+    note: Vocabulary bears no resemblance to GSM8K's child-oriented narrative scenarios.
+      All terms listed above are absent from GSM8K's input and output distributions.
+  input_format_profile:
+    primary_formats:
+    - Plain-text statistical queries in professional English prose
+    - Pasted CSV snippets or tabular data previews
+    - R software output blocks (e.g., lm(), summary.lm(), anova(), confint() output)
+    - Python software output blocks (e.g., statsmodels OLS summary tables, scipy t-test
+      results)
+    - Summary statistics tables (mean, SD, n, range, skewness, kurtosis)
+    - Correlation matrices
+    - Residual plot descriptions or numeric residual vectors
+    note: Inputs are semi-structured to structured, not plain narrative prose. GSM8K
+      contains no analogues to any of these formats.
+task_taxonomy:
+  note: Derived from elicitation responses; represents the actual task distribution
+    the deployment must cover. GSM8K covers none of these categories.
+  core_categories:
+  - category: Regression diagnostics
+    subtasks:
+    - Heteroscedasticity detection and interpretation (Breusch-Pagan, White test)
+    - Multicollinearity diagnosis (VIF interpretation, condition indices)
+    - Residual analysis (normality, independence, outlier identification)
+    - Cook's distance and leverage point interpretation
+    - Model fit assessment (R-squared, adjusted R-squared, AIC/BIC)
+    gsm8k_coverage: none
+  - category: Hypothesis testing under violated assumptions
+    subtasks:
+    - Test selection given non-normality (parametric vs. non-parametric alternatives)
+    - Welch t-test selection under unequal variances
+    - Robust standard error methods
+    - Assumption testing (Shapiro-Wilk, Levene, Bartlett)
+    gsm8k_coverage: none
+  - category: ANOVA and post-hoc testing
+    subtasks:
+    - One-way and factorial ANOVA interpretation
+    - Type I / Type II / Type III Sums of Squares selection
+    - Post-hoc corrections (Tukey HSD, Bonferroni, Holm, Dunnett)
+    - Repeated-measures ANOVA and sphericity (Mauchly's test, Greenhouse-Geisser correction)
+    - Mixed-model ANOVA
+    gsm8k_coverage: none
+  - category: Experimental design
+    subtasks:
+    - Randomization and control group design
+    - Factorial and block designs
+    - Confound identification and covariate selection
+    - Repeated-measures vs. between-subjects design tradeoffs
+    gsm8k_coverage: none
+  - category: Power analysis and sample size calculation
+    subtasks:
+    - A priori power analysis for specified effect size and alpha
+    - Post-hoc power calculation interpretation
+    - Sample size determination for regression, t-tests, ANOVA
+    - Effect size estimation (Cohen's d, f, eta-squared)
+    gsm8k_coverage: none
+  - category: Interpretation of statistical software outputs
+    subtasks:
+    - Reading and interpreting R lm() / glm() summary output
+    - Reading Python statsmodels OLS result tables
+    - Coefficient interpretation (unstandardized, standardized, interaction terms)
+    - p-value and confidence interval interpretation
+    - Model comparison outputs
+    gsm8k_coverage: none
+  - category: Modeling choice under methodological pluralism
+    subtasks:
+    - Variable selection strategies (stepwise, LASSO, domain-driven)
+    - Log or other transformation decisions for skewed variables
+    - Fixed vs. random effects model selection
+    - Outlier handling strategies
+    - Missing data treatment (listwise deletion, multiple imputation)
+    gsm8k_coverage: none
+  - category: Narrow computational subtasks (exact-match appropriate)
+    subtasks:
+    - Computing a test statistic from supplied data
+    - Calculating degrees of freedom
+    - Standard error computation
+    - Effect size calculation from provided means and SDs
+    gsm8k_coverage: partial — GSM8K arithmetic covers numeric computation only at
+      elementary level; these subtasks require graduate-level formulas
+    note: User confirmed these subtasks warrant exact-match numeric correctness scoring,
+      unlike the majority of deployment tasks
+evaluation_requirements:
+  scoring_regime_needed: 'Hybrid: rubric-based methodological soundness scoring for
+    open-ended analytical tasks; exact-match numeric correctness for narrow computational
+    subtasks'
+  methodological_pluralism: Many valid modeling choices produce legitimately different
+    but equally defensible outputs; evaluation must reward reasoning quality, not
+    just numeric agreement with a single reference
+  gsm8k_scoring_compatibility: None — binary exact-match against a single numeric
+    answer is structurally incompatible with the deployment's primary task distribution
+  annotator_requirements: Ground-truth labels require practicing statisticians or
+    applied data scientists; crowdworker annotation without domain expertise (as in
+    GSM8K) is insufficient for this deployment
+  candidate_alternative_benchmarks_to_investigate:
+  - StatQA (if extant) [NEEDS VERIFICATION]
+  - DS-1000 [NEEDS VERIFICATION — assess statistical reasoning coverage]
+  - MATH dataset (Hendrycks et al.) — likely too focused on pure mathematics rather
+    than applied statistics [NEEDS VERIFICATION]
+  - SciCode or domain-specific coding/analysis benchmarks [NEEDS VERIFICATION]
+  - Any benchmark specifically covering R/Python statistical software output interpretation
+    [NEEDS VERIFICATION]
+infrastructure_and_access_context:
+  deployment_modality: Text-based LLM interface, likely web application or API integration
+    within a consultancy toolchain
+  input_delivery: Users paste content directly into the system; inputs are self-service
+    and professionally authored
+  internet_connectivity: High-reliability broadband expected in professional US office/remote
+    work setting [NEEDS VERIFICATION — confirm typical consultancy IT environment
+    assumptions]
+  device_profile: Desktop or laptop workstations; professional computing environment
+    [NEEDS VERIFICATION — confirm no mobile-first use cases]
+  software_ecosystem_integration: '[NEEDS VERIFICATION — determine whether deployment
+    integrates with specific IDEs, Jupyter notebooks, or RStudio, which would affect
+    input format distribution]'
+regulatory_and_institutional_context:
+  applicable_data_privacy_regulations: '[NEEDS VERIFICATION — identify relevant US
+    federal and state regulations affecting LLM use with client data, e.g., datasets
+    pasted into prompts may include client PII or proprietary business data]'
+  professional_standards_bodies: '[NEEDS VERIFICATION — assess whether ASA (American
+    Statistical Association) or other professional bodies have issued guidance on
+    AI-assisted statistical analysis that would constrain acceptable LLM behavior
+    or evaluation criteria]'
+  liability_context: Consultancy context implies professional liability for analytical
+    recommendations; errors in statistical guidance may have downstream consequences
+    for client deliverables [NEEDS VERIFICATION — assess whether this affects evaluation
+    rubric stringency]
+  client_sector_variation: '[NEEDS VERIFICATION — determine whether the consultancy''s
+    client base spans regulated industries (healthcare, finance, pharma) that impose
+    additional constraints on statistical methodology and documentation]'
+dimension_priority_weights:
+  input_ontology:
+    priority: HIGH
+    rationale: GSM8K's task taxonomy is limited to elementary arithmetic; deployment
+      requires an entirely different taxonomy (regression diagnostics, ANOVA, power
+      analysis, assumption testing) that is structurally absent from the benchmark.
+  input_content:
+    priority: HIGH
+    rationale: GSM8K instances are child-oriented narrative word problems authored
+      by crowdworkers; deployment inputs are tabular data, software output blocks,
+      and jargon-dense professional queries with no content overlap.
+  input_form:
+    priority: MODERATE
+    rationale: Both benchmark and deployment are English text-only, limiting the worst-case
+      mismatch; however, deployment requires parsing semi-structured tabular and software-output
+      content that is entirely outside GSM8K's plain-prose distribution.
+  output_ontology:
+    priority: HIGH
+    rationale: GSM8K uses binary exact-match against a single numeric answer; deployment
+      requires evaluation of multi-path methodologically defensible reasoning where
+      multiple correct outputs exist.
+  output_content:
+    priority: HIGH
+    rationale: GSM8K ground truths were produced by crowdworkers for elementary arithmetic
+      correctness; deployment ground truths require expert statistical judgment with
+      legitimate pluralism — annotator populations are entirely unrepresentative.
+  output_form:
+    priority: MODERATE
+    rationale: Both use text output; however, GSM8K rewards terse numeric answers
+      while deployment requires open-ended methodological recommendations, diagnostic
+      narratives, and software-output interpretations.
+flagged_gaps_for_web_search:
+- gap_id: 1
+  dimension: input_ontology
+  description: 'Missing statistical reasoning categories: regression diagnostics,
+    ANOVA post-hoc testing, power analysis, Bayesian vs. frequentist reasoning'
+  search_target: LLM benchmark advanced statistical reasoning regression diagnostics
+    ANOVA hypothesis testing power analysis evaluation suite
+- gap_id: 2
+  dimension: input_content / input_form
+  description: No GSM8K items involve structured or semi-structured data (CSV, dataframes,
+    R/Python software output blocks)
+  search_target: LLM evaluation benchmark tabular data statistical software output
+    R Python statsmodels lm() interpretation parsing
+- gap_id: 3
+  dimension: output_ontology
+  description: 'Multi-valid-answer evaluation protocols: GSM8K binary scoring is incompatible
+    with methodological pluralism in applied statistics'
+  search_target: rubric-based LLM evaluation multi-valid-answer statistical reasoning
+    scoring framework StatQA DS-1000 applied data science benchmark expert panel scoring
+- gap_id: 4
+  dimension: input_content
+  description: 'Domain-jargon grounding: GSM8K contains no instances with professional
+    statistical vocabulary (VIF, heteroscedasticity, Type III SS, random effects)'
+  search_target: LLM benchmark professional statistical terminology domain jargon
+    VIF heteroscedasticity data science evaluation coverage
+- gap_id: 5
+  dimension: output_content
+  description: 'Expert annotator representativeness: GSM8K labels produced by crowdworkers;
+    deployment needs practicing statisticians or data scientists as ground-truth annotators'
+  search_target: LLM benchmark expert annotators practicing statisticians data scientists
+    ground truth statistical reasoning evaluation inter-rater agreement
+- gap_id: 6
+  dimension: output_ontology / output_form
+  description: 'Hybrid exact-match and open-ended evaluation: deployment has narrow
+    computational subtasks (exact-match appropriate) alongside open-ended methodological
+    reasoning tasks'
+  search_target: hybrid benchmark exact-match open-ended evaluation computational
+    statistical reasoning LLM mixed scoring rubric
+- gap_id: 7
+  dimension: regulatory_and_institutional_context
+  description: Professional liability and data privacy implications of LLM-assisted
+    statistical analysis in a consultancy context where client datasets may be pasted
+    into prompts
+  search_target: LLM use policy US data science consultancy ASA guidelines AI statistical
+    analysis liability data privacy client data

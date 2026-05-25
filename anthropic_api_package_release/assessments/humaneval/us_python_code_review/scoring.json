@@ -1,0 +1,405 @@
+{
+  "benchmark": "humaneval",
+  "region": "US Professional Software Development Teams — Code Review / Bug Localization",
+  "dimensions": {
+    "input_ontology": {
+      "score": 1,
+      "justification": "HumanEval's task taxonomy is exclusively docstring-to-function synthesis [Q1, Q22], with a secondary docstring-from-code task [Q133]. The deployment's two HIGH-priority task types — bug localization in existing code and diff generation against buggy bodies — are entirely absent. Dataset inspection confirms 100% of sampled examples follow the clean-spec generate-from-scratch pattern [DATASET-D1, DATASET-D10, DATASET-D24]. The paper itself acknowledges that 'most past studies of the impacts of code generation models consider performance on a closed set of tasks in a simulated environment' [Q225]. Even Codex-S's auxiliary training distribution (competitive programming + CI-traced utilities) targets generation-from-spec rather than defect-detection [Q60, Q61]. This is a fundamental ontology mismatch on a HIGH-priority dimension.",
+      "strengths": [
+        "HumanEval provides a clean lower-bound signal on pure algorithmic Python reasoning, which is an implicit prerequisite for code comprehension in review settings [DATASET-D4, Q22]",
+        "Self-contained problems on primitive types make scores interpretable as algorithmic ability free from framework confounds [DATASET-D2, DATASET-D18]"
+      ],
+      "checklist_responses": {
+        "IO-1": "Deployment requires (b) bug localization and (d) diff/fix generation as primary tasks, with (a) code comprehension as prerequisite and (c) bug classification as secondary. Bug localization and diff generation are entirely out of HumanEval's task ontology [DATASET-D1, DATASET-D10].",
+        "IO-2": "Yes — bug localization, diff generation, and reasoning over existing buggy code are all omitted. The paper explicitly defines the task as 'synthesizing programs from docstrings' [Q1, Q22] and Appendix D's proposed qualitative taxonomy [Q148, Q149, Q153, Q154, Q155] is preliminary and deferred, not operationalized.",
+        "IO-3": "The benchmark's algorithm/interview-puzzle framing [Q22, Q131, DATASET-D15, DATASET-D26] is largely irrelevant to the deployment's defect classes (SQLAlchemy N+1, Django ORM lazy-load, NumPy broadcasting). Bias probes [Q186, Q187, Q188] and cryptographic-security probes [Q204, Q205] are not relevant to the bug-localization/code-review deployment.",
+        "IO-4": "Category gaps: (1) no bug-localization tasks, (2) no diff/patch generation, (3) no reasoning over existing buggy code, (4) no framework-specific defect classes. These omissions are construct-underrepresentation failures for the deployment's primary capabilities."
+      },
+      "evidence_quotes": [
+        "[Q1] 'We introduce Codex, a GPT language model finetuned on publicly available code from GitHub, and study its Python code-writing capabilities.' (p.1)",
+        "[Q22] 'Programming tasks in the HumanEval dataset assess language comprehension, reasoning, algorithms, and simple mathematics.' (p.4)",
+        "[Q60] 'For this reason, functions from tracing tended to be the building blocks of command-line utilities.' (p.8)",
+        "[Q61] 'To excel at these tasks, the model does not need to know advanced algorithms and data structures. Rather, it needs to be able to follow instructions to implement the functionality specified in the docstring.' (p.8)",
+        "[Q225] 'Most past studies of the impacts of code generation models consider performance on a closed set of tasks in a simulated environment.' (p.35)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-17] HumanEval is saturated (>94% pass on top models) and known to have benchmark-overfitting issues, further weakening its discriminative power for the deployment's tasks"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: HumanEval/61 — clean docstring-to-function bracket matching; no existing code to localize defect in",
+        "DATASET-D10: HumanEval/88 — clean spec, empty body, generate-from-scratch pattern",
+        "DATASET-D24: HumanEval/109 — complete accurate docstring with rotation-sort task; pattern is uniformly generate-from-scratch across the 40-sample inspection"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "Q1",
+          "Q22",
+          "DATASET-D1",
+          "DATASET-D10"
+        ],
+        "IO-2": [
+          "Q1",
+          "Q22",
+          "Q148",
+          "Q149"
+        ],
+        "IO-3": [
+          "Q22",
+          "Q131",
+          "DATASET-D15",
+          "DATASET-D26",
+          "Q186",
+          "Q204"
+        ],
+        "IO-4": [
+          "Q225",
+          "WEB-17",
+          "DATASET-D1"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "No purpose-built benchmark targeting bug localization with line-range scoring was identified in the regional context (gap_1 partially resolved by SWE-bench/BugsInPy but neither fully covers line-range localization)"
+      ],
+      "requires_expert_verification": []
+    },
+    "input_content": {
+      "score": 1,
+      "justification": "HumanEval problems are hand-written algorithm/interview puzzles operating on primitive Python types [Q14, Q19, Q22], with imports limited to `typing`, `math`, `random`, `string` in the sampled examples [DATASET-D4, DATASET-D5]. None of the deployment's framework-heavy input distribution — Django views, Flask routing, SQLAlchemy session lifecycles, NumPy broadcasting, pandas operations — appears in the benchmark. The paper itself acknowledges the distribution mismatch: 'Python code found on GitHub contains class implementations, configuration files, scripts... we hypothesize that the distribution mismatch reduces HumanEval performance' [Q48]. Equally critical for this deployment, all sampled docstrings are clean, accurate, and complete [DATASET-D9, DATASET-D3], whereas the deployment explicitly requires reasoning over absent, stale, or misleading documentation. The paper gestures toward this gap ('intent is [not always] captured sufficiently enough in comments and documentation' [Q217]) but does not evaluate it. Two HIGH-priority IC failures stack on a single dimension.",
+      "strengths": [
+        "Hand-written problems mitigate training-data contamination risk by design [Q14, Q21], though this strength is partially eroded by reported benchmark saturation [WEB-17]",
+        "Problems are linguistically English-native and Python-native, matching the deployment's language assumptions [DATASET-D4]"
+      ],
+      "checklist_responses": {
+        "IC-1": "Inputs do not require region-specific cultural or geographic knowledge — they are algorithm puzzles on primitive types [DATASET-D2, DATASET-D17]. This is not a positive feature for this deployment, which instead requires framework-specific and codebase-specific knowledge.",
+        "IC-2": "Not applicable in the cultural sense — relevant heterogeneity is codebase/framework, not demographic. The benchmark's algorithmic content does not align with the deployment's framework-heavy content [Q48, DATASET-D13].",
+        "IC-3": "No Western-specific cultural transfer issue, but the algorithmic-puzzle content is generally irrelevant to professional code review work [Q22, DATASET-D13, DATASET-D15].",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — paper does not describe annotator demographics or recruit professional software engineers for input curation. The paper notes 'limited research on the demographic distribution of Python users' [Q219].",
+        "IC-5": "Documented content gaps: (1) no framework code (Django/Flask/SQLAlchemy/NumPy/pandas), (2) no legacy code patterns, (3) no sparse/stale/misleading docstrings, (4) no long-context calling environments. These omissions are construct-irrelevant-variance failures: high HumanEval performance does not predict deployment performance [Q48, Q88, WEB-9]."
+      },
+      "evidence_quotes": [
+        "[Q14] 'Though not a guarantee for problem novelty, all problems were hand-written and not programmatically copied from existing sources.' (p.3)",
+        "[Q19] 'We evaluate functional correctness on a set of 164 hand-written programming problems, which we call the HumanEval dataset.' (p.4)",
+        "[Q48] 'Python code found on GitHub contains class implementations, configuration files, scripts, and even files used to store data. This code is seemingly unrelated to synthesizing functions from docstrings, and we hypothesize that the distribution mismatch reduces HumanEval performance.' (p.7)",
+        "[Q88] 'Codex struggles to parse through increasingly long and higher-level or system-level specifications.' (p.10)",
+        "[Q217] 'one of the challenges of code generation stem from relying on the assumption that intent is captured sufficiently enough in comments and documentation to not compromise accuracy.' (p.33)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-9] Removing semantic cues such as docstrings causes severe model degradation, but no benchmark deliberately curates absent/stale/misleading docstrings as an input condition",
+        "[WEB-1] SWE-bench includes Django, NumPy, pandas, scikit-learn, matplotlib instances — the framework distribution HumanEval lacks",
+        "[WEB-4] BugsInPy contains 493 real bugs across 17 Python projects including pandas and scikit-learn — what HumanEval would need to approximate the deployment"
+      ],
+      "evidence_dataset": [
+        "DATASET-D4: HumanEval/0 uses only `typing` import — no Django/Flask/SQLAlchemy/NumPy in sample",
+        "DATASET-D13: HumanEval/67 fruit_distribution — toy word-problem with zero real-world deployment relevance",
+        "DATASET-D9: HumanEval/17 — complete inline legend for ASCII music notation; deployment's legacy utilities never have this level of inline documentation",
+        "DATASET-D14: HumanEval/38 decode_cyclic is the sparsest docstring in the sample but the encode function is fully provided as context — still a clean-spec condition"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "DATASET-D2",
+          "DATASET-D17"
+        ],
+        "IC-2": [
+          "Q48",
+          "DATASET-D13"
+        ],
+        "IC-3": [
+          "Q22",
+          "DATASET-D13",
+          "DATASET-D15"
+        ],
+        "IC-4": [
+          "Q219"
+        ],
+        "IC-5": [
+          "Q48",
+          "Q88",
+          "Q217",
+          "WEB-1",
+          "WEB-4",
+          "WEB-9",
+          "DATASET-D4",
+          "DATASET-D9"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether any of the unsampled 124 HumanEval problems involve framework-specific code (very unlikely given paper's stated scope [Q22], but not exhaustively verified)"
+      ],
+      "requires_expert_verification": []
+    },
+    "input_form": {
+      "score": 3,
+      "justification": "Input form is the only dimension with substantive partial alignment. Both benchmark and deployment operate on plain-text Python source [Q20, Q29, DATASET-D4], with no modality mismatch (no audio, image, or non-text concerns). The IF priority is explicitly marked LOWER in elicitation. However, two form-level concerns remain: (1) HumanEval prompts are short, self-contained function signatures with clean docstrings [Q20, DATASET-D9], whereas deployment inputs include 100–1000+ line calling contexts that stress long-context reasoning [Q88]; (2) the structural assumption that a complete, accurate docstring precedes the function body [Q20, Q28] does not hold in the deployment, though this is more accurately characterized as content-level than form-level. The paper does not evaluate inputs with absent or partial documentation as a form variable.",
+      "strengths": [
+        "Plain-text Python input matches deployment modality exactly — no audio, image, or cross-modal concern [Q20, DATASET-D4]",
+        "Standardized prompt format with stop sequences [Q29] is structurally similar to how production code-review tools assemble prompts"
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal distributions match at the modality level: both are UTF-8 plain-text Python source [Q20, DATASET-D4]. Length distributions diverge — HumanEval prompts are short single-function units while deployment inputs include extended calling context [Q88].",
+        "IF-2": "Not applicable in the infrastructure sense — both contexts use the same text encoding and Python runtime; no capture-device mismatch exists.",
+        "IF-3": "Domain-specific form difference: HumanEval assumes prompt structure of [signature + docstring + body prefix] [Q20, Q28]; deployment inputs may have no docstring or a misleading one, and may include surrounding class/module context. This is partially structural and partially content-driven.",
+        "IF-4": "Form mismatches: (1) prompt length distribution narrower in benchmark than deployment, (2) benchmark assumes docstring presence as a structural feature [Q20]. Both are minor relative to ontology/content concerns on this LOWER-priority dimension."
+      },
+      "evidence_quotes": [
+        "[Q20] 'Each problem includes a function signature, docstring, body, and several unit tests, with an average of 7.7 tests per problem.' (p.4)",
+        "[Q28] 'To compute pass@k, we assemble each HumanEval problem into a prompt consisting of a header, a signature, and a docstring' (p.4)",
+        "[Q29] 'We sample tokens from Codex until we encounter one of the following stop sequences' (p.4)",
+        "[Q88] 'Codex struggles to parse through increasingly long and higher-level or system-level specifications.' (p.10)"
+      ],
+      "evidence_web_sources": [],
+      "evidence_dataset": [
+        "DATASET-D4: HumanEval/0 confirms plain-text Python prompt format matching deployment modality",
+        "DATASET-D31: HumanEval/38 (encode_cyclic context) is the closest the benchmark comes to providing existing code as context, but it is helper-function context, not a buggy body to localize defects in"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q20",
+          "Q88",
+          "DATASET-D4"
+        ],
+        "IF-2": [],
+        "IF-3": [
+          "Q20",
+          "Q28",
+          "DATASET-D31"
+        ],
+        "IF-4": [
+          "Q20",
+          "Q88"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": []
+    },
+    "output_ontology": {
+      "score": 1,
+      "justification": "HumanEval's output ontology is binary unit-test pass/fail [Q8, Q13, Q77], operationalized via pass@k [Q15]. The deployment requires a multi-component judgment: localization accuracy + diff acceptability + semantic safety + convention adherence, with human reviewer acceptance as the primary criterion (Q3 elicitation response). The paper itself acknowledges pass@k's oracle-selection problem [Q36, Q37, Q38] and the gap between test-passing and developer-intent satisfaction [Q102, Q103, Q104, Q166]. Dataset inspection confirms thin test coverage (HumanEval/104 has 4 assertions including `assert True` [DATASET-D2]) and a known case where the canonical solution itself contains an operator-precedence bug [DATASET-D29]. Web-sourced evidence on the next-best alternative (SWE-bench) reveals that even there, ~29.6% of test-passing patches diverge behaviorally from oracle patches and ~7.8% fail the full test suite [WEB-2, WEB-3] — empirically validating the deployment's concern that test-pass is insufficient for the primary success criterion. No HumanEval output category captures localization correctness, semantic preservation, or convention adherence.",
+      "strengths": [
+        "Functional correctness via executable tests is more meaningful than match-based metrics like BLEU [Q9, Q10, Q40] — a defensible methodological choice for the benchmark's own task",
+        "Test structure is transparent and inspectable [DATASET-D1, DATASET-D7], so consumers can see exactly what is being measured"
+      ],
+      "checklist_responses": {
+        "OO-1": "Output category space is a single binary (pass/fail) [Q8, Q77]. Deployment requires categories like {correct localization, diff acceptable, semantic-preserving, convention-adherent, bug-masking, regression-introducing} — none present.",
+        "OO-2": "Missing categories: localization accuracy (line/range), diff quality, semantic preservation, convention adherence, reviewer acceptability. Appendix D proposes richer qualitative metrics [Q148, Q149] but defers them to a forthcoming paper.",
+        "OO-3": "The binary pass/fail rule encodes the assumption that unit tests can stand in for developer intent — explicitly contradicted by the deployment's elicitation response (Q3) and by the paper's own alignment discussion [Q102, Q103, Q104].",
+        "OO-4": "Stakeholder-driven taxonomy redesign would be necessary: human reviewer accept/reject as primary label, with sub-labels for localization, semantic safety, and convention adherence. No public benchmark currently uses merge-acceptance ground truth [WEB-8 partial precedent only].",
+        "OO-5": "Taxonomy issues: (1) binary output collapses multi-component judgment, (2) underspecified prompts cause valid solutions to be wrongly penalized [Q63], (3) ~29.6% behavioral divergence between test-pass and oracle even on SWE-bench [WEB-3]. These violate structural validity and external validity on a HIGH-priority dimension."
+      },
+      "evidence_quotes": [
+        "[Q8] 'we begin by defining the pass@k metric... and explain its advantages over standard match-based metrics' (p.2)",
+        "[Q77] 'When we benchmark our code generation models, we measure pass@k on the HumanEval dataset, where correctness is defined by passing a set of unit tests.' (p.9)",
+        "[Q36] 'Pass@k can also be interpreted as the result of evaluating the best out of k samples, where the best sample is picked by an oracle with prior knowledge of the unit tests.' (p.5)",
+        "[Q63] 'Some prompts underspecify the function that is implemented, in which case a perfectly valid solution may be wrongly penalized by the unit test.' (p.8)",
+        "[Q102] 'Codex will generate code that is as similar as possible to its training distribution.' (p.11)",
+        "[Q104] 'This is an alignment failure - the model is not aligned with the user's intentions.' (p.11)",
+        "[Q148] 'This entails evaluating the ability to reason over computations and states at different levels of abstractions' (p.25)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-3] ~29.6% of plausible SWE-bench patches diverge behaviorally from oracle patches; ~7.8% fail full developer test suite — empirical validation that test-pass is insufficient",
+        "[WEB-2] SWE-ABS rejected 19.78% of previously-passing patches when applying strengthened tests, dropping top agent from 78.80% to 62.20%",
+        "[WEB-8] DPO-F+ formalizes developer-preference alignment for code repair but operates as alignment signal, not benchmark ground truth — confirmed gap in human-reviewer-acceptance benchmarks"
+      ],
+      "evidence_dataset": [
+        "DATASET-D2: HumanEval/104 has only 4 assertions including `assert True` no-op — thin coverage could pass incorrect solutions",
+        "DATASET-D22: HumanEval/130 test depends on exact float-vs-int type — semantically equivalent integer solution would fail despite logical correctness",
+        "DATASET-D29: HumanEval/124 canonical solution contains operator-precedence bug — direct confirmation that benchmark's own ground truth is not always correct"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q8",
+          "Q77",
+          "DATASET-D2"
+        ],
+        "OO-2": [
+          "Q148",
+          "Q149"
+        ],
+        "OO-3": [
+          "Q102",
+          "Q103",
+          "Q104"
+        ],
+        "OO-4": [
+          "WEB-8"
+        ],
+        "OO-5": [
+          "Q63",
+          "WEB-2",
+          "WEB-3",
+          "DATASET-D29"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": [
+        "Whether any deployment-internal evaluation harness uses merge-acceptance proxies that could supplement HumanEval"
+      ]
+    },
+    "output_content": {
+      "score": 1,
+      "justification": "Ground-truth labels in HumanEval are produced by benchmark-author-written unit tests, not by professional software engineers acting as code reviewers. The paper documents no annotator demographics, no inter-annotator agreement procedure, and no professional-developer validation [Q129, Q219]. The only human-graded subset is docstring generation: 10 samples per problem, 1,640 total items, single model, single temperature [Q79] — not bug-fix evaluation. The paper itself flags label reliability concerns: 'Some prompts underspecify the function that is implemented, in which case a perfectly valid solution may be wrongly penalized by the unit test' [Q63], and 'human developers often write test suites with limited but targeted coverage, but this does not always work well against an algorithm' [Q129]. Dataset inspection confirms concrete quality issues in canonical solutions: an operator-precedence bug in HumanEval/124 [DATASET-D29], a docstring formula typo in HumanEval/32 [DATASET-D21], formatting errors in HumanEval/158 and HumanEval/19 [DATASET-D28, DATASET-D30], and bare `except:` clauses in canonical solutions that violate professional Python conventions [DATASET-D20, DATASET-D7]. For the deployment's HIGH-priority OC dimension, none of these labels approximate professional reviewer judgment.",
+      "strengths": [
+        "Functional correctness labels are reproducible and auditable [Q15, DATASET-D1] — better than subjective single-annotator judgment for the benchmark's own task",
+        "The paper transparently acknowledges its label-reliability limits [Q63, Q129]"
+      ],
+      "checklist_responses": {
+        "OC-1": "Ground-truth labels do not reflect US professional software engineer reviewer perspectives — they reflect benchmark-author-written unit tests [Q14, Q77]. No reviewer-acceptance signal exists.",
+        "OC-2": "High potential for disagreement: the deployment's elicitation response (Q3) explicitly states test-passing fixes can be rejected for semantic/convention reasons. Canonical solutions using bare `except:` [DATASET-D20] would likely be rejected in PEP-8/Google-Style-enforced codebases.",
+        "OC-3": "INSUFFICIENT DOCUMENTATION — the paper provides no Datasheet, Data Statement, or annotator demographic breakdown. It explicitly notes 'there is unfortunately only limited research on the demographic distribution of Python users' [Q219].",
+        "OC-4": "Re-annotation by US professional reviewers would be needed to align labels with deployment ground truth. Even alternative benchmarks like SWE-bench use test-pass proxies rather than merge-acceptance [WEB-3, WEB-8].",
+        "OC-5": "INSUFFICIENT DOCUMENTATION — paper does not describe aggregation across annotators because there are effectively no annotators beyond the authors; inter-annotator agreement is not reported.",
+        "OC-6": "Label issues: (1) test-author labels are not reviewer-acceptance labels [Q63, Q129], (2) confirmed canonical-solution bugs [DATASET-D29], (3) confirmed docstring typos [DATASET-D21, DATASET-D28, DATASET-D30], (4) bare `except:` violates professional conventions [DATASET-D20]. These violate convergent validity and external validity on a HIGH-priority dimension."
+      },
+      "evidence_quotes": [
+        "[Q14] 'all problems were hand-written and not programmatically copied from existing sources.' (p.3)",
+        "[Q63] 'Some prompts underspecify the function that is implemented, in which case a perfectly valid solution may be wrongly penalized by the unit test.' (p.8)",
+        "[Q77] 'correctness is defined by passing a set of unit tests.' (p.9)",
+        "[Q79] 'we only grade 10 samples per problem, for a total of 1640 problems, from Codex-D-12B at temperature 0.8.' (p.9)",
+        "[Q129] 'Human developers often write test suites with limited but targeted coverage, but this does not always work well against an algorithm, highlighting the challenges of evaluating correctness of programs.' (p.14)",
+        "[Q219] 'There is unfortunately only limited research on the demographic distribution of Python users.' (p.33)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-3] Even SWE-bench (the best Python alternative) does not use human reviewer acceptance — ~29.6% of test-passing patches diverge from oracle behavior",
+        "[WEB-8] DPO-F+ is the closest precedent for developer-preference alignment in code repair, but no benchmark uses merge-acceptance as primary ground truth — confirmed gap"
+      ],
+      "evidence_dataset": [
+        "DATASET-D29: HumanEval/124 canonical solution contains operator-precedence bug — concrete confirmation that ground-truth labels are not always correct",
+        "DATASET-D21: HumanEval/32 docstring formula typo (`xs[1]` should be `xs[2]`)",
+        "DATASET-D28: HumanEval/158 docstring contains formatting typo",
+        "DATASET-D30: HumanEval/19 misspells 'numerals' as 'numberals' in the specification",
+        "DATASET-D20: HumanEval/105 canonical solution uses bare `except: pass` — violates PEP 8 / Google Python Style Guide",
+        "DATASET-D7: HumanEval/124 canonical solution wraps body in broad try/except — masks defects, contrary to deployment's no-bug-masking requirement"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q14",
+          "Q77"
+        ],
+        "OC-2": [
+          "Q63",
+          "DATASET-D20",
+          "DATASET-D7"
+        ],
+        "OC-3": [
+          "Q219"
+        ],
+        "OC-4": [
+          "WEB-3",
+          "WEB-8"
+        ],
+        "OC-5": [],
+        "OC-6": [
+          "Q63",
+          "Q129",
+          "DATASET-D29",
+          "DATASET-D21",
+          "DATASET-D28",
+          "DATASET-D30",
+          "DATASET-D20"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Annotator demographics and inter-annotator agreement procedures are not documented anywhere in the paper"
+      ],
+      "requires_expert_verification": []
+    },
+    "output_form": {
+      "score": 2,
+      "justification": "Output form is partially aligned at the modality level: both produce Python code [Q2, DATASET-D8]. However, HumanEval's output unit is a complete standalone function body generated token-by-token with stop sequences [Q29], whereas the deployment requires a targeted unified diff with line-range localization metadata, file path, and bug-type label. These are structurally divergent outputs even though both are 'Python text.' The paper acknowledges the practical single-completion challenge [Q37, Q38] and offers only a mean-log-probability heuristic [Q39] rather than any patch/diff format. No HumanEval evaluation tests line-range localization output, unified-diff structural correctness, or minimality of change. Dataset inspection confirms every sampled problem produces complete function bodies, not diffs [DATASET-D8, DATASET-D6]. OF is marked MODERATE priority in the elicitation, so the partial alignment at modality level provides some signal — but the structural mismatch on output unit is meaningful.",
+      "strengths": [
+        "Python text output matches deployment output modality [Q2, DATASET-D8]",
+        "Stop-sequence-based generation [Q29] is structurally compatible with extracting function-scoped fragments, which could be adapted for diff context"
+      ],
+      "checklist_responses": {
+        "OF-1": "Output modality (Python text) matches [Q2, DATASET-D8], but output unit (complete function body vs. unified diff with localization metadata) does not. The deployment's required output form is structurally absent from HumanEval.",
+        "OF-2": "Not applicable — speech/TTS not in scope; both contexts are text-based.",
+        "OF-3": "Not applicable in the literacy sense — target population is professional software engineers; the relevant accessibility consideration is whether output format integrates into PR review UIs (unified diff), which HumanEval does not provide.",
+        "OF-4": "Form mismatches: (1) complete function body vs. targeted diff, (2) no line-range localization metadata, (3) no file-path or bug-type labels. These violate external validity for diff-based review tooling, though OF is MODERATE-priority [Q37, Q38, DATASET-D8]."
+      },
+      "evidence_quotes": [
+        "[Q2] 'On HumanEval, a new evaluation set we release to measure functional correctness for synthesizing programs from docstrings' (p.1)",
+        "[Q29] 'We sample tokens from Codex until we encounter one of the following stop sequences' (p.4)",
+        "[Q37] 'we are also interested in the setting where we must select a single sample from k samples without having access to an oracle.' (p.5)",
+        "[Q38] 'when the model is used as an autocomplete tool where a user provides a prompt, we do not have unit tests, but would like to return only a single completion to the user' (p.5)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-1] SWE-bench uses unified-diff patches as the output format — the closest match for the deployment's required form, though it does not score line-range localization separately (gap_7 partially resolved)"
+      ],
+      "evidence_dataset": [
+        "DATASET-D8: HumanEval/42 canonical output is full function body `return [(e + 1) for e in l]` — no diff structure, no localization metadata",
+        "DATASET-D6: HumanEval/38 produces complete new function body even when helper context is provided, not a targeted diff"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q2",
+          "DATASET-D8"
+        ],
+        "OF-2": [],
+        "OF-3": [],
+        "OF-4": [
+          "Q37",
+          "Q38",
+          "DATASET-D8",
+          "WEB-1"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether SWE-bench's diff scoring would be a near-drop-in replacement for HumanEval's output-form contract (gap_7 deferred)"
+      ],
+      "requires_expert_verification": []
+    }
+  },
+  "overall_summary": "HumanEval is fundamentally misaligned with the US professional code review / bug localization deployment across all five HIGH and MODERATE priority dimensions. The benchmark measures docstring-to-function synthesis on clean algorithm puzzles scored by author-written unit tests [Q1, Q22, Q77]; the deployment requires bug localization and diff generation against existing, framework-heavy, sparsely-documented Python code, evaluated by professional reviewer acceptance (elicitation Q1–Q3). All four HIGH-priority dimensions (IO, IC, OO, OC) score 1, confirmed by both verbatim quotes from the paper acknowledging the relevant gaps [Q48, Q63, Q88, Q102, Q104, Q129, Q225] and dataset inspection showing 100% of sampled problems follow the misaligned pattern [DATASET-D1, DATASET-D8, DATASET-D29]. Input form (LOWER priority) partially aligns at the modality level (Python plain-text) and scores 3. Output form (MODERATE priority) is structurally divergent (complete function vs. unified diff) and scores 2. Web-sourced findings further weaken HumanEval's utility: benchmark saturation [WEB-17] erodes discriminative power, and the best Python-native alternative (SWE-bench) still suffers from ~29.6% test-pass-vs-oracle divergence [WEB-3], confirming that even moving to SWE-bench would not fully address the deployment's primary OO/OC concerns. No public benchmark uses human reviewer merge-acceptance as ground truth [WEB-8].",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "HumanEval measures Python algorithmic reasoning ability when given a clean, accurate, complete natural-language specification — a narrow construct dominated by interview-style and competitive-programming-style problems [Q22, Q131, DATASET-D2, DATASET-D26]. For this deployment, it provides only a weak lower-bound signal on the implicit code-comprehension prerequisite (deployment task (a)) and offers no signal on the primary tasks of bug localization (b) or diff generation (d). The Input Form dimension is the only one where HumanEval provides genuine alignment (both contexts are plain-text Python).",
+    "construct_depth": "Shallow with respect to the deployment's constructs. HumanEval probes single-function, single-call-site, primitive-typed algorithmic synthesis. It does not probe: localization accuracy, semantic preservation, convention adherence, framework-specific defect detection, long-context reasoning over realistic calling environments, or behavior under sparse/stale/misleading documentation. The paper's own Appendix D proposes deeper qualitative metrics but defers them [Q148, Q149], and benchmark saturation [WEB-17] further compresses the discriminative range. Even the best-available alternative, SWE-bench, has documented oracle-inflation issues of ~6.4 percentage points [WEB-3] on a related Python defect-repair construct.",
+    "supplementation_needed": "Substantial supplementation required across IO, IC, OO, and OC: (1) Add SWE-bench Verified for real-Python-repo localization + patch tasks including Django/NumPy/pandas instances [WEB-1], applying SWE-ABS-style strengthened tests to mitigate oracle inflation [WEB-2]; (2) Add BugsInPy for function-level bug localization on scientific Python [WEB-4, WEB-5]; (3) Build a deployment-specific evaluation set using customer-representative codebases with framework-specific defects (SQLAlchemy, Flask routing) — no public benchmark covers this [WEB-9]; (4) Operationalize human reviewer acceptance via internal annotation by US professional developers, since no public benchmark uses merge-acceptance ground truth [WEB-8]; (5) Curate a sparse/stale/misleading-documentation evaluation subset, since this condition is unaddressed by any public benchmark [WEB-9]. Plan for NIST SP 800-218A SSDF Community Profile compliance [WEB-16] given the AI-assisted code modification scope."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "HumanEval contains no bug localization or diff generation tasks — the deployment's two primary capabilities",
+      "recommendation": "Replace HumanEval as the primary evaluation with SWE-bench Verified (real Python repos, includes Django/NumPy/pandas/scikit-learn) and BugsInPy (493 bugs across 17 projects with reproducible failing tests) for the localization+repair capability; demote HumanEval to an algorithmic-reasoning prerequisite check only [WEB-1, WEB-4]"
+    },
+    {
+      "dimension": "input_content",
+      "gap": "No framework-specific Python content (Django, Flask, SQLAlchemy, NumPy, pandas) and no sparse/stale/misleading documentation conditions",
+      "recommendation": "Construct an internal, customer-representative evaluation set drawn from real production Python codebases containing the deployment's defect taxonomy (SQLAlchemy N+1, Django ORM lazy-load, NumPy broadcasting, Flask routing). Explicitly stratify by documentation quality (well-documented / sparsely-documented / misleadingly-documented) since no public benchmark curates this dimension [WEB-9, Q48]"
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "Binary pass/fail collapses the multi-component judgment (localization + semantic safety + convention adherence + reviewer acceptance) that the deployment requires",
+      "recommendation": "Operationalize a multi-label scoring rubric drawn from the elicitation: {localization_correct, fix_minimal, semantics_preserved, conventions_adhered, reviewer_would_merge}. Collect labels via professional developer annotators. Apply SWE-ABS-style strengthened test suites to mitigate the ~29.6% oracle-divergence problem documented even in SWE-bench [WEB-2, WEB-3, Q148]"
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Ground-truth labels are author-written unit tests, not professional reviewer judgments; canonical solutions contain confirmed bugs and convention violations",
+      "recommendation": "Recruit US professional software engineers (representative of the deployment's target reviewers) to re-annotate a representative evaluation slice using accept/reject judgments with documented inter-annotator agreement. Audit any reused HumanEval items for canonical-solution defects (e.g., HumanEval/124 operator-precedence bug) before scoring [DATASET-D29, DATASET-D20, Q63, Q129]"
+    },
+    {
+      "dimension": "output_form",
+      "gap": "HumanEval emits complete function bodies; deployment requires unified diffs with line-range/file-path localization metadata",
+      "recommendation": "Adopt unified-diff output as the contract (matching SWE-bench's format [WEB-1]) and add explicit scoring for line-range localization accuracy, minimality of change, and well-formed patch structure — none of which HumanEval measures [Q37, Q38]"
+    },
+    {
+      "dimension": "input_form",
+      "gap": "Prompt length distribution and absence of surrounding calling context do not stress the long-context reasoning the deployment requires",
+      "recommendation": "Include long-context evaluation items (100–1000+ lines of surrounding class/module context) drawn from real codebases, since HumanEval's narrow length distribution does not exercise this capability [Q88]"
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_ontology",
+    "input_content",
+    "output_ontology",
+    "output_content"
+  ],
+  "strongest_dimensions": [
+    "input_form"
+  ]
+}

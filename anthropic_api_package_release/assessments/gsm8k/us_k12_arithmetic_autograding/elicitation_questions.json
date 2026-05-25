@@ -1,0 +1,17 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IC",
+    "question": "GSM8K problems are written with US cultural defaults (dollars, miles, American names, typical US school contexts). Do your teachers' assigned problems match this profile closely, or do they include problems with non-standard units, non-US currencies, or culturally varied contexts (e.g., metric units, international settings, local community scenarios) that the benchmark may not represent?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "OO",
+    "question": "Your system compares the LLM's numerical answer to the student's submission — but real arithmetic problems can sometimes accept multiple valid forms of a correct answer (e.g., fractions vs decimals, rounded vs exact values, different unit expressions). Does your grading logic need to handle answer equivalence across these representations, or is exact numerical match sufficient?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "IO",
+    "question": "GSM8K covers grade school multi-step reasoning problems. Does your platform serve a specific grade band (e.g., K-2 single-step addition vs 6-8 multi-step ratio problems), and are there arithmetic problem types your teachers commonly assign — such as measurement conversion, geometry, or data interpretation — that you would consider essential to cover in any reliability evaluation?"
+  }
+]

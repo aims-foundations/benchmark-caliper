@@ -1,0 +1,17 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "FOLIO tests formal deductive reasoning where premises fully define a closed logical world and conclusions are either provably true, false, or unknown. In your consulting use case, how much of the reasoning involved is strictly deductive versus inductive, abductive, or rhetorical — for example, inferring market opportunity from incomplete data, building analogical arguments from comparable deals, or framing trade-offs to resonate with a CFO? Would you say strict FOL-style deduction represents a minority or a majority of the reasoning tasks you care about?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "OO",
+    "question": "The benchmark scores each example as a three-way label: true, false, or unknown — purely about logical validity. In your deployment, what counts as a 'good' reasoning output — is it logical validity alone, or does it also include persuasiveness, executive-audience calibration, narrative coherence, and anticipation of stakeholder objections? If an argument is logically valid but poorly framed for a board audience, would your evaluators score it as a success or a failure?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "IC",
+    "question": "FOLIO's premises are self-contained logical worlds with no real-world domain knowledge required. Your consultants work with business-specific content — financial metrics, industry benchmarks, regulatory constraints, competitive dynamics. Do the reasoning chains your system needs to construct depend heavily on this kind of domain-grounded business knowledge, or are you primarily testing the structural logic layer independent of business content?"
+  }
+]

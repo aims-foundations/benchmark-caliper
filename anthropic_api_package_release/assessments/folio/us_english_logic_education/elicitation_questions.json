@@ -1,0 +1,17 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "OF",
+    "question": "FOLIO produces binary correctness labels (true/false/uncertain) as outputs, but your deployment requires step-by-step reasoning traces that students can follow. How detailed and structured should these explanations be — for example, do you need numbered deduction steps referencing specific premises, plain-English summaries of the logical moves, formal notation like quantifiers and predicates, or some combination? Would explanations targeted at introductory logic students differ meaningfully from those for advanced students?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "OO",
+    "question": "In a logic course, a 'correct' explanation of a valid argument can take many forms — natural deduction, truth tables, syllogistic reasoning, or FOL proof steps. Does your platform commit to a specific proof method or pedagogical framework (e.g., Fitch-style natural deduction, informal argumentation)? Would an explanation that reaches the right conclusion via a different valid reasoning path be scored as acceptable, or must it follow the canonical approach your curriculum teaches?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "IO",
+    "question": "FOLIO focuses on deductive FOL reasoning, but logic curricula often cover a wider range — inductive reasoning, fallacy identification, modal logic, propositional logic before predicate logic, or argument reconstruction from natural language. Which of these categories does your tool need to handle, and are there argument types (e.g., multi-step sorites, arguments with implicit premises, real-world domain examples like legal or mathematical reasoning) that your students regularly encounter but that pure FOL exercises might not capture?"
+  }
+]

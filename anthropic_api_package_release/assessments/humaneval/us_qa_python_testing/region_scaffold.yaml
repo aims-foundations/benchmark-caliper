@@ -1,0 +1,244 @@
+name: US Professional QA Engineers — Python Test Generation
+abbreviation: US-QA-PY
+deployment_context:
+  country: United States
+  organizational_setting: Software development companies (commercial, startup, and
+    enterprise); QA engineering teams embedded in product engineering organizations
+  occupational_cohort: Professional QA engineers and software engineers in test (SET),
+    writing and reviewing unit tests for production Python codebases
+  tool_description: An AI-assisted tool that automatically generates unit tests for
+    existing Python functions, given a function signature, docstring, and source code
+    body. The primary objective is regression-catching test quality, not mere coverage.
+target_population_description: Professional QA engineers based in the United States
+  working in software development organizations. Users are experienced Python practitioners
+  who routinely write tests against real-world production code spanning data science
+  (pandas, NumPy, scikit-learn), web services (Flask, FastAPI, requests, Django),
+  and application backends (SQLAlchemy ORM, psycopg2, Redis clients). They are accustomed
+  to pytest idioms, unittest.mock, and fixture-based test design. They are not students
+  or hobbyists — they understand boundary conditions, regression risk, and mock boundaries.
+  Their primary frustration is the time cost of writing thorough, meaningful tests
+  for dependency-heavy functions.
+languages:
+  primary: English (American)
+  code_language: Python 3 (modern idioms; 3.8+ expected, 3.10–3.12 likely common at
+    time of deployment)
+  nlp_considerations: No script, tokenization, or translation challenges. All prompts
+    and outputs are ASCII/UTF-8 English prose plus standard Python source text. Technical
+    vocabulary (pytest, mock, fixture, parametrize, monkeypatch, asyncio) must be
+    handled correctly; jargon is dense and domain-specific.
+writing_systems:
+  scripts:
+  - Latin (ASCII and UTF-8 string literals within Python source)
+  note: No multi-script or CJK complexity. String literals in test inputs may contain
+    Unicode edge cases (emoji, null bytes, non-ASCII identifiers) that are themselves
+    test-worthy inputs.
+professional_context:
+  experience_level: Mid- to senior-level engineers; comfortable reading complex Python
+    including decorators, metaclasses, async/await, and type annotations
+  primary_testing_frameworks:
+  - pytest
+  - unittest
+  common_mocking_libraries:
+  - unittest.mock
+  - pytest-mock
+  - responses (for HTTP)
+  - moto (for AWS SDK)
+  common_async_testing_tools:
+  - pytest-asyncio
+  - anyio
+  production_code_archetypes:
+  - Data transformation functions using pandas/NumPy with complex dtype and index
+    assumptions
+  - ORM model methods using SQLAlchemy or Django ORM with database session dependencies
+  - HTTP client functions using requests or httpx calling external APIs
+  - File I/O and filesystem-touching functions
+  - Class methods with mutable instance state (service objects, repository pattern,
+    state machines)
+  - 'Functions with side effects: database writes, message queue publishes, cache
+    invalidation'
+  - Async functions using asyncio (less frequent but in scope)
+  - Functions decorated with custom decorators (auth guards, retry logic, caching
+    wrappers)
+  quality_definition: A test is considered high quality if and only if it would catch
+    plausible regressions — off-by-one errors, incorrect boundary handling, missing
+    None/empty-input guards, wrong exception types, incorrect mock call counts or
+    argument values. Coverage alone (line, branch) is explicitly insufficient. Tests
+    that merely pin current behavior without asserting on semantically meaningful
+    conditions are considered low quality.
+  annotation_note: QA engineers in this cohort are capable of critically evaluating
+    generated tests and will reject superficial or tautological assertions. They are
+    the implicit human-in-the-loop oracle for test quality.
+infrastructure_notes: Deployment is entirely within standard US software-industry
+  infrastructure. Engineers work on macOS or Linux development machines with full
+  Python toolchain installed (pip, venv/conda, pytest, mypy, black). CI/CD pipelines
+  (GitHub Actions, Jenkins, CircleCI) are the execution context for generated tests.
+  Internet connectivity is unrestricted; no bandwidth or device constraints apply.
+  IDE integration (VS Code, PyCharm) is the expected delivery surface for the tool.
+regulatory_and_compliance_context:
+  data_privacy: '[NEEDS VERIFICATION — applicable frameworks for a SaaS tool processing
+    proprietary source code: SOC 2, CCPA for California-based users, potential HIPAA
+    concerns if healthcare-sector customers submit code touching PHI]'
+  ip_and_licensing: '[NEEDS VERIFICATION — legal status of AI-generated test code
+    derived from proprietary source functions; open questions around copyrightability
+    of generated test suites]'
+  export_controls: '[NEEDS VERIFICATION — EAR/ITAR applicability to AI coding tools
+    generally]'
+benchmark_domain_alignment:
+  benchmark: HumanEval
+  surface_match: Both benchmark and deployment are English-language, Python-focused,
+    text-in/code-out tasks with standard US software-industry infrastructure. No modality,
+    script, or language mismatch.
+  task_direction_mismatch: HumanEval evaluates docstring → implementation synthesis.
+    This deployment requires implementation → test suite generation. The task direction
+    is structurally inverted; no HumanEval problem evaluates the reverse capability.
+  input_type_mismatch: HumanEval inputs are self-contained pure functions with no
+    external dependencies. Deployment inputs routinely include class methods with
+    instance state, functions with database/network/file side effects, and functions
+    accepting ORM models or dataclass inputs requiring mock setup.
+  output_type_mismatch: HumanEval outputs are function bodies evaluated against a
+    fixed oracle test suite. Deployment outputs are test suites that must themselves
+    serve as oracles. The pass@k metric cannot evaluate whether a generated test catches
+    regressions.
+  evaluation_criterion_mismatch: HumanEval's binary pass/fail metric cannot distinguish
+    behavior-pinning tests from regression-catching tests. The deployment requires
+    mutation-score-equivalent reasoning about test quality.
+gap_flags:
+- gap_id: 1
+  label: Task direction inversion
+  description: HumanEval is implementation-generation (docstring → code body); this
+    deployment is test-generation (code body → test suite). No HumanEval problem evaluates
+    the reverse direction.
+  web_search_target: '[NEEDS VERIFICATION — search for LLM unit test generation benchmarks:
+    TestEval, CoverageEval, CodaMosa, EvoEval, ChatUniTest, TestPilot, or any 2023–2024
+    benchmark specifically evaluating test generation from existing implementations]'
+- gap_id: 2
+  label: Mocking and fixture complexity
+  description: HumanEval contains zero problems requiring unittest.mock, pytest fixtures,
+    dependency injection, or mock boundary reasoning. This is a structural absence,
+    not a weighting gap.
+  web_search_target: '[NEEDS VERIFICATION — search for benchmarks or datasets covering
+    test generation for functions with external I/O, database, or network dependencies;
+    search for pytest fixture generation in LLM evaluation literature]'
+- gap_id: 3
+  label: Class-level and stateful code
+  description: HumanEval is restricted to standalone pure functions. Class methods
+    with mutable instance state are entirely absent from the benchmark.
+  web_search_target: '[NEEDS VERIFICATION — search for object-oriented Python test
+    generation evaluation; class method unit test LLM benchmark 2023 2024]'
+- gap_id: 4
+  label: Third-party library ecosystems
+  description: pandas, NumPy, requests, SQLAlchemy, and similar libraries introduce
+    non-trivial type complexity, call-site semantics, and mock boundary challenges
+    absent from HumanEval.
+  web_search_target: '[NEEDS VERIFICATION — search for pandas NumPy data science Python
+    test generation LLM evaluation; SQLAlchemy ORM mock test generation benchmark]'
+- gap_id: 5
+  label: Regression quality as evaluation criterion
+  description: HumanEval's pass/fail metric cannot distinguish behavior-pinning from
+    regression-catching tests. Mutation-testing-based evaluation (mutation score as
+    proxy) does not appear in the benchmark.
+  web_search_target: '[NEEDS VERIFICATION — search for mutation testing LLM test generation
+    evaluation; mutation score Python LLM benchmark 2023 2024; LLM-generated test
+    suite regression detection empirical evaluation]'
+- gap_id: 6
+  label: Async and decorator patterns
+  description: HumanEval's stop-token regime and synchronous single-function structure
+    are structurally incompatible with async functions and multi-decorator code patterns.
+  web_search_target: '[NEEDS VERIFICATION — search for async Python function test
+    generation LLM benchmark; pytest-asyncio test generation evaluation; decorator-aware
+    code generation benchmark]'
+- gap_id: 7
+  label: Semantic edge-case and assertion quality
+  description: HumanEval provides no mechanism to measure whether generated tests
+    exercise boundary conditions, empty inputs, None values, or error paths. No label
+    schema for assertion semantic meaningfulness exists in the benchmark.
+  web_search_target: '[NEEDS VERIFICATION — search for LLM test generation assertion
+    quality evaluation; semantic coverage edge case test suite evaluation Python 2023
+    2024]'
+dimension_priority_weights:
+  IO:
+    priority: HIGH
+    rationale: HumanEval's problem taxonomy (interview-style algorithmic pure functions)
+      is structurally absent of class methods, async code, decorators, third-party
+      library calls, and side-effectful functions — the dominant patterns in this
+      deployment.
+  IC:
+    priority: HIGH
+    rationale: HumanEval problems are self-contained with no external dependencies.
+      The deployment's core requirement — mocking, fixtures, ORM models, network clients,
+      database sessions — is not represented in any benchmark instance.
+  IF:
+    priority: LOWER
+    rationale: Both benchmark and deployment are English-language, text-in/code-out,
+      Python-focused, with standard US software infrastructure. No modality, script,
+      or language mismatch.
+  OO:
+    priority: HIGH
+    rationale: 'HumanEval scores functional correctness by running generated code
+      against pre-written unit tests. This deployment inverts the task: tests are
+      the output, not the oracle. Quality is defined by regression-catching ability,
+      not pass/fail against a fixed suite.'
+  OC:
+    priority: HIGH
+    rationale: HumanEval's ground-truth labels are pre-written test suites verifying
+      correct implementation. For this deployment, 'correct' means semantic meaningfulness,
+      edge-case coverage, and regression detection — criteria with no equivalent in
+      HumanEval's label schema.
+  OF:
+    priority: MODERATE
+    rationale: Both benchmark and deployment produce Python code as output. However,
+      HumanEval evaluates function implementations while this deployment evaluates
+      test suites; the surface form matches but the structural requirements differ
+      substantially (imports, fixtures, mock setup, assertion patterns).
+alternative_benchmarks_to_investigate:
+  note: The following are candidate benchmarks for web-search verification; none are
+    confirmed as adequate replacements for HumanEval in this deployment context.
+  candidates:
+  - name: TestEval
+    hypothesis: May evaluate LLM-generated unit tests for Python functions
+    verification_needed: '[NEEDS VERIFICATION — confirm existence, scope, task format,
+      and whether it covers dependency-heavy or stateful code]'
+  - name: CoverageEval
+    hypothesis: May use code coverage as a proxy for test generation quality
+    verification_needed: '[NEEDS VERIFICATION — confirm existence and whether coverage
+      metric captures regression-catching ability]'
+  - name: ChatUniTest / TestPilot / CodaMosa
+    hypothesis: Automated test generation systems with associated evaluation datasets
+    verification_needed: '[NEEDS VERIFICATION — confirm whether associated benchmarks
+      evaluate test semantic quality or mutation score, and whether production-style
+      dependencies are covered]'
+  - name: SWE-bench
+    hypothesis: Evaluates LLMs on real GitHub issues including test-writing; may include
+      stateful and dependency-heavy code
+    verification_needed: '[NEEDS VERIFICATION — confirm whether SWE-bench tasks include
+      test generation specifically and whether evaluation criteria align with regression-catching
+      quality]'
+  - name: Mutation-testing evaluation frameworks
+    hypothesis: Academic literature may exist using mutation score (e.g., via MutPy,
+      mutmut, cosmic-ray) as an automated proxy for regression-catching ability of
+      LLM-generated tests
+    verification_needed: '[NEEDS VERIFICATION — search for empirical studies using
+      mutation score to evaluate LLM test generation quality, 2022–2024]'
+cultural_and_professional_norms_notes: QA engineering culture in US software companies
+  places high value on test readability, determinism, and isolation. Engineers expect
+  generated tests to follow pytest conventions (function-scoped test names prefixed
+  with test_, fixture injection via function arguments, parametrize for data-driven
+  cases). Behavior-driven naming (test_returns_empty_list_when_input_is_none rather
+  than test_function_1) is a strong professional norm. Over-mocking (mocking internals
+  that should be tested through integration) is considered an anti-pattern. The cohort
+  is sensitive to generated tests that pass trivially (assert result is not None)
+  or that assert on implementation details rather than observable behavior.
+sociotechnical_risks:
+  over_reliance: QA engineers may accept generated tests without verifying that assertions
+    are semantically meaningful, particularly under time pressure. Tests that appear
+    thorough (high coverage, multiple assertions) but miss the semantically important
+    edge cases represent a specific failure mode.
+  behavior_pinning: A model that generates tests matching current (possibly buggy)
+    behavior rather than intended behavior could reduce the regression-catching value
+    of the test suite while appearing to increase coverage metrics.
+  mock_boundary_errors: Incorrectly placed mock boundaries (mocking too deeply, leaving
+    real I/O calls in tests, or mocking the wrong layer) can produce tests that pass
+    in isolation but provide no real regression signal.
+  security_of_generated_test_code: Generated test code that embeds real credentials,
+    seeds with production-like PII, or inadvertently exercises real external endpoints
+    poses security and compliance risks in CI/CD pipelines.

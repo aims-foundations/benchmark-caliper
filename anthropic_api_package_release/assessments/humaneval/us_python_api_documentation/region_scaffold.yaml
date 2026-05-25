@@ -1,0 +1,209 @@
+name: US Professional Software Developers — Python API Documentation Generation
+abbreviation: US-SW-APIDOC
+deployment_context:
+  country: United States
+  organization_type: US software company (internal tooling evaluation)
+  deployment_scope: Internal evaluation by senior engineers and technical writers;
+    downstream consumption by external developer community
+  task: LLM-assisted generation of API reference documentation (Google-style docstrings,
+    Sphinx-rendered) from Python source code modules
+  task_direction: code → prose documentation (inverse of HumanEval's docstring → code
+    direction)
+target_population:
+  primary_evaluators: Senior software engineers and technical writers employed at
+    the commissioning company, fluent in Python conventions, Google-style docstring
+    standards, and Sphinx rendering behavior
+  end_consumers: External software developers consuming the generated API reference
+    documentation via Sphinx-rendered HTML or IDE tooling
+  relevant_expertise: Professional Python development; familiarity with SDK-style
+    codebases; Google developer documentation style; type annotation conventions (PEP
+    484, PEP 526)
+  language: English technical prose
+  sub_national_variation: Not a primary concern — population is defined by professional
+    role and technical fluency, not geography within the US
+languages:
+  natural_language: English
+  code_language: Python
+  documentation_standard: Google-style docstrings rendered via Sphinx
+  note: High-resource language pair (English + Python); no script mismatch, no modality
+    mismatch with benchmark
+codebase_characteristics:
+  class_hierarchy_depth: Deep class hierarchy in core SDK; inheritance relationships
+    must be reflected in generated docs
+  decorator_patterns: Heavy decorator use for auth and caching wrappers; documented
+    interface may differ from raw function signature
+  async_patterns: Async/await throughout network layer; async-aware documentation
+    required
+  module_interdependencies: Inter-dependent modules where understanding one function
+    requires context from related helpers
+  documentation_target: All public parameters, return values, raised exceptions, and
+    side effects
+evaluation_design:
+  ground_truth_availability: No pre-existing reference documentation; multiple phrasings
+    acceptable if factually accurate
+  primary_evaluation_method: Human judgment by senior engineers and technical writers
+  supplementary_evaluation: Automated checks for parameter name coverage and type-annotation
+    consistency
+  primary_failure_mode: Hallucinated parameters or incorrect return-type descriptions
+  evaluation_dimensions:
+  - dimension: factual_accuracy
+    description: Correct descriptions of parameters, return types, side effects, and
+      behavior
+    criticality: HIGH
+  - dimension: completeness
+    description: All public params, returns, and raises documented; no omissions
+    criticality: HIGH
+  - dimension: type_annotation_correctness
+    description: Generated type signatures match actual signatures; no hallucinated
+      types; IDE autocomplete reliability
+    criticality: HIGH
+  - dimension: google_style_format_compliance
+    description: Adherence to Google-style docstring schema as rendered through Sphinx
+    criticality: HIGH
+  - dimension: clarity
+    description: Prose readable and unambiguous for the target developer audience
+    criticality: MEDIUM-HIGH
+  - dimension: decorator_awareness
+    description: Documentation reflects the wrapped interface and decorator effects,
+      not just the inner function
+    criticality: HIGH
+  - dimension: inheritance_awareness
+    description: Inherited methods and overridden behaviors accurately described in
+      SDK class hierarchy context
+    criticality: HIGH
+  - dimension: async_correctness
+    description: Async/await semantics and concurrency behavior accurately described
+    criticality: HIGH
+benchmark_alignment_profile:
+  benchmark: HumanEval
+  overall_validity: LOW — near-total task-direction mismatch; benchmark evaluates
+    docstring→code, deployment requires code→documentation prose
+  dimension_gaps:
+  - dimension: input_ontology
+    severity: HIGH
+    note: HumanEval tests prose→code; deployment requires code→prose; decorator, inheritance,
+      async patterns entirely absent from benchmark task taxonomy
+  - dimension: input_content
+    severity: HIGH
+    note: 164 standalone algorithmic puzzles vs. complex real-world SDK with auth
+      wrappers, async layers, and deep class hierarchies
+  - dimension: input_form
+    severity: LOW
+    note: Both use Python source and English; no modality or script mismatch
+  - dimension: output_ontology
+    severity: HIGH
+    note: Benchmark output is executable code; deployment output is multi-dimensional
+      structured prose
+  - dimension: output_content
+    severity: HIGH
+    note: No annotators resembling senior engineers or tech writers; no inter-annotator
+      agreement; hallucination detection requires domain experts absent from benchmark
+  - dimension: output_form
+    severity: HIGH
+    note: Binary pass/fail via unit test harness vs. multi-dimensional human prose
+      quality scoring (accuracy, completeness, clarity, style, type correctness)
+flagged_benchmark_gaps:
+- gap_id: 1
+  label: Inverse task direction (code → documentation)
+  description: No systematic benchmark tasks cover code-to-documentation-prose generation;
+    HumanEval's docstring-generation experiment covers 10 samples/problem from one
+    model only
+  web_search_target: Python code to documentation generation LLM benchmark evaluation
+    CodeSearchNet DocPrompting doc-generation
+- gap_id: 2
+  label: Decorator and metaprogramming documentation
+  description: No publicly known benchmark systematically tests documentation of decorator-wrapped
+    functions where documented interface differs from raw function signature
+  web_search_target: LLM code documentation benchmark decorator metaprogramming Python
+    wrapped function evaluation
+- gap_id: 3
+  label: Async/await and concurrency pattern documentation
+  description: HumanEval contains no async Python; no code-documentation benchmark
+    known to cover async patterns as a distinct category
+  web_search_target: async Python code documentation LLM benchmark evaluation concurrency
+    await
+- gap_id: 4
+  label: Class hierarchy and inheritance documentation
+  description: HumanEval is all standalone functions; no benchmark known to include
+    class-level or inheritance-aware documentation tasks
+  web_search_target: class hierarchy inheritance documentation generation LLM Python
+    SDK benchmark evaluation
+- gap_id: 5
+  label: Multi-dimensional prose quality evaluation
+  description: No existing benchmark provides metrics for documentation clarity, completeness,
+    or Google-style formatting compliance; HumanEval docstring grading is binary with
+    no sub-dimensions
+  web_search_target: documentation prose quality evaluation metrics LLM BARTScore
+    G-Eval technical writing Google-style docstring rubric Sphinx
+- gap_id: 6
+  label: Type annotation correctness as a distinct failure mode
+  description: Hallucinated parameter types or return types are not measurable via
+    pass@k; no known benchmark pairs ground-truth type signatures with documentation
+    quality metrics
+  web_search_target: Python type annotation correctness LLM evaluation hallucination
+    parameter type return type benchmark PEP 484
+- gap_id: 7
+  label: Human expert annotator population
+  description: HumanEval docstring grading lacks documented annotator demographics,
+    inter-annotator agreement, and expert-level reviewers matching the deployment's
+    senior-engineer / tech-writer evaluators
+  web_search_target: expert software engineer technical writer annotation LLM documentation
+    evaluation inter-annotator agreement Google-style
+docstring_format_requirements:
+  style: Google-style docstrings
+  renderer: Sphinx (sphinx.ext.napoleon or equivalent)
+  required_sections:
+  - Summary line
+  - Args (with types and descriptions for all public parameters)
+  - Returns (with type and description)
+  - Raises (all documented exceptions)
+  - Example (usage examples)
+  applicable_style_guide: '[NEEDS VERIFICATION — confirm canonical Google Python Style
+    Guide version and any company-internal extensions]'
+  sphinx_extension_config: '[NEEDS VERIFICATION — confirm sphinx.ext.napoleon vs.
+    sphinxcontrib-napoleon and relevant configuration options]'
+infrastructure_notes:
+  interface: Text-only; developers access generated docs via Sphinx-rendered HTML
+    and IDE docstring popups (e.g., VS Code, PyCharm)
+  ide_autocomplete_dependency: Type annotations in generated docs directly affect
+    IDE autocomplete accuracy; hallucinated types cause downstream developer friction
+  ci_integration: '[NEEDS VERIFICATION — confirm whether doc generation is integrated
+    into CI/CD pipeline or run as a standalone evaluation workflow]'
+  python_version_target: '[NEEDS VERIFICATION — confirm Python version(s) in use;
+    relevant for type annotation syntax differences between 3.8, 3.9, 3.10+]'
+professional_and_regulatory_context:
+  ip_and_licensing: '[NEEDS VERIFICATION — confirm whether company policy addresses
+    LLM-generated documentation and IP ownership considerations]'
+  internal_doc_standards: '[NEEDS VERIFICATION — confirm whether company has internal
+    documentation policy layered on top of Google style guide]'
+  sdk_public_api_surface: '[NEEDS VERIFICATION — confirm scope: public API surface
+    only, or also internal/private methods; affects completeness requirements]'
+domain_specific_notes: 'The deployment''s evaluation population (senior engineers
+  and technical writers) is professionally specialized, not geographically or demographically
+  diverse in ways relevant to standard regional benchmarking. The key population-level
+  constraints are:
+
+  - Shared professional fluency in Google-style docstring conventions and Sphinx rendering
+
+  - High sensitivity to type annotation errors (IDE autocomplete dependency)
+
+  - Expectation of decorator-aware, inheritance-aware, and async-aware documentation
+
+  - No ground-truth reference docs; correctness is defined by expert human consensus
+
+  - Primary risk is LLM hallucination of plausible-but-wrong parameter names, types,
+  or return values
+
+
+  The benchmark (HumanEval) was designed for an entirely different task direction
+  (docstring→code) and output form (executable code, binary pass/fail). Validity for
+  this deployment is near-zero on the dimensions of output ontology, output form,
+  input ontology, and input content. The only partial coverage is on input form (shared
+  Python + English substrate) and on the documented awareness of hallucination/misalignment
+  failure modes.
+
+
+  Downstream search should prioritize: code-to-documentation benchmarks (CodeSearchNet,
+  DocPrompting), multi-dimensional prose quality evaluation frameworks (G-Eval, reference-free
+  metrics applied to technical prose), and any evaluation suites covering decorator,
+  async, or class-hierarchy documentation tasks.'

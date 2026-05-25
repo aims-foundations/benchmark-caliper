@@ -1,0 +1,415 @@
+{
+  "benchmark": "folio",
+  "region": "US High School Competitive Debate — Argument Quality Assessment",
+  "dimensions": {
+    "input_ontology": {
+      "score": 1,
+      "justification": "FOLIO's input ontology is organized exclusively around formal deductive entailment and NL-FOL translation [Q15, Q63, Q67], with task complexity operationalized through reasoning depth and AST diversity [Q60, Q61]. The deployment requires assessment of inductive/evidentiary reasoning, value-laden claims, rhetorical moves, and debate-specific structural arguments (DAs, CPs, kritiks, T shells, theory) — none of which appear in FOLIO's taxonomy. Dataset analysis confirms zero coverage: even when 'inductive reasoning' appears, it is treated as a deductive predicate label rather than as an actual inductive inference [DATASET-D3, D25]. The HIGH-priority elicitation flag on IO is fully borne out.",
+      "strengths": [
+        "Provides a rigorous upper-bound test for the narrow sub-component of multi-step deductive validity, with reasoning depth modal at 4 and 28.7% of examples requiring 5+ inference steps [Q60], and substantially more distinct ASTs than prior datasets [Q61]"
+      ],
+      "checklist_responses": {
+        "IO-1": "The deployment requires test categories spanning: (a) evidence-backed empirical arguments, (b) value-laden/normative claims (LD, Congressional), (c) rhetorical/persuasive moves, (d) debate-specific structural arguments (DAs, CPs, kritiks, T, theory, impact calculus), and (e) pairwise rebuttal comparison. Evidence quality is identified as the highest-weight sub-dimension per elicitation.",
+        "IO-2": "FOLIO's taxonomy omits all five of the above categories. The benchmark is framed strictly around deductive entailment over premise sets [Q15, Q66] and NL-FOL translation [Q18, Q67]. Dataset analysis confirms zero presence of debate-specific tokens (disadvantage, counterplan, kritik, topicality, solvency, impact, turn, burden, framework, value, criterion) across the 57 sampled examples.",
+        "IO-3": "FOLIO includes the NL-FOL translation task [Q3, Q67] which is largely irrelevant to the deployment — debate coaching does not require translating speeches into formal first-order logic. Syllogism-template-instantiated stories [Q42, Q43] also have low ecological validity for actual debate discourse.",
+        "IO-4": "Category gaps are total relative to deployment-critical evaluation: evidence-handling, value-laden argument assessment, rhetorical effectiveness, and debate-structural moves are entirely unrepresented. Authors themselves note prior NL benchmarks are inadequate for measuring complex reasoning [Q8, Q9, Q10], but FOLIO's response narrows the scope further into pure deductive logic rather than broadening to argumentation."
+      },
+      "evidence_quotes": [
+        "[Q15] 'We present a natural language reasoning dataset, FOLIO, with first-order logic reasoning problems which require the models to decide the correctness of conclusions given a world defined by the premises.' (p.1)",
+        "[Q43] 'There are 256 logically distinct types of syllogisms and 24 of them are valid (Lehman, 1973). We use various combinations of 24 valid syllogisms. We also add in conjunction, disjunction, and implication.' (p.4)",
+        "[Q60] 'the mode of reasoning depths is four in FOLIO. 28.7% of the examples need five or more depths of reasoning' (p.5)",
+        "[Q63] 'We define two new tasks based on FOLIO, natural language reasoning with first-order logic and NL-FOL translation.' (p.6)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-28] DebateBench (arXiv 2502.06279) demonstrates that LLM-based debate speech scoring benchmarks exist for BP format but with adjudication-norm content absent in FOLIO",
+        "[WEB-22] OpenDebateEvidence (NeurIPS 2024) provides actual US competitive debate evidence corpus structure, confirming the categorical gap from FOLIO's logic-puzzle ontology"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: Two-premise syllogism with no evidentiary content — confirms purely formal deductive task structure",
+        "DATASET-D3: 'Inductive reasoning' appears only as a named predicate within deductive reasoning — no actual inductive inference performed",
+        "DATASET-D7: Exclusive-disjunction chain with no debate-relevant structure",
+        "DATASET-D20: Six-premise WikiLogic chain with no rhetorical, persuasive, or debate-structural elements"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "WEB-22",
+          "WEB-28"
+        ],
+        "IO-2": [
+          "Q15",
+          "Q63",
+          "DATASET-D1",
+          "DATASET-D7",
+          "DATASET-D20"
+        ],
+        "IO-3": [
+          "Q3",
+          "Q43",
+          "Q67"
+        ],
+        "IO-4": [
+          "Q8",
+          "Q9",
+          "Q10",
+          "DATASET-D3"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": []
+    },
+    "input_content": {
+      "score": 1,
+      "justification": "FOLIO content is deliberately constructed to be free of evidentiary disputes, normative contestation, and culturally embedded judgment [Q47, Q127], with stories rewritten to remove biases and opinionated language [Q48, Q127]. The deployment, by contrast, centers on contested empirical claims, value-laden arguments, and miscontextualized evidence as the highest-weight sub-dimensions. Dataset analysis confirms that even when politically adjacent content appears (Russia embargo, state ownership, TikTok addictiveness, human rights), it is rendered as deductive predicate labels rather than as evidentiary or normative claims [DATASET-D2, D4, D5, D10, D22]. The HIGH-priority elicitation flag on IC is fully borne out.",
+      "strengths": [
+        "Diverse topical breadth in WikiLogic stories covers geography, science, economics, technology, and consumer products [Q38, Q62, DATASET-D2, D15, D16], so the benchmark does not over-narrow into a single domain vocabulary",
+        "Authors deliberately screened out biased/stereotyped content [Q47, Q127] — for general logical-validity sub-testing this is a quality-positive even though it removes the very normative contestation the deployment requires"
+      ],
+      "checklist_responses": {
+        "IC-1": "The deployment requires content that reflects contested empirical claims (PF/Policy), value disputes (LD/Congressional), and circuit-specific argument registers (lay vs. tech). Content must include cited evidence with sources, authors, and recency [WEB-21, WEB-22]. FOLIO content does not require this — premises are stated as definitional universals or given facts [DATASET-D1, D2, D17, D24].",
+        "IC-2": "FOLIO content is deliberately neutralized of normatively charged content [Q47, Q127], and 'psychologically fundamental generalizations' are explicitly accepted as a workaround [Q128]. The deployment requires content that *engages* contested value claims (e.g., 'civil liberties vs. national security' per 2026 NSDA LD topics [WEB-18]) — the benchmark systematically excludes this content type.",
+        "IC-3": "FOLIO does not require region-specific knowledge in a problematic way (American English, broad topic seeds), but it does not contain Western-debate-specific knowledge either — no evidence cards, no warrant-citation patterns, no spread/flow language. The mismatch is in argument register, not regional culture per se.",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — the paper does not report regional annotator review. The dataset analysis substitutes for this: 57 sampled examples were reviewed against deployment criteria and found to contain zero competitive-debate content.",
+        "IC-5": "Content issues are severe: (a) no evidence-citation structure — confirmed across all sampled examples; (b) no hedged empirical claims [DATASET-D24, D22]; (c) no value-pluralism content [DATASET-D4, D5]; (d) potential pretraining contamination of WikiLogic stories [Q104, DATASET concern 9]."
+      },
+      "evidence_quotes": [
+        "[Q47] 'Our dataset prioritizes realism and factual accuracy, steering clear of biases and stereotypes linked to identity markers like race, ethnicity, gender, sexuality, nationality, class, and religion.' (p.4)",
+        "[Q127] 'We took out stories that had strongly opinionated language and contained gender, racial, and classist biases.' (p.13)",
+        "[Q104] 'since the examples in WikiLogic are created from scratch by humans, it is possible that LLMs have seen similar texts with similar logical patterns in the training data.' (p.8)",
+        "[Q128] 'We accept certain classes of \"psychologically fundamental generalizations\"' (p.13)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-18] NSDA topics include normatively contested resolutions (civil liberties vs. national security, plea bargaining justice, encryption lawful access) — the exact content FOLIO excludes",
+        "[WEB-21] DebateSum exemplifies the evidence-card structure with citation/author/recency metadata absent from FOLIO",
+        "[WEB-22] OpenDebateEvidence provides 3.5M documents of actual debate evidence with source citations — confirms the IC content gap"
+      ],
+      "evidence_dataset": [
+        "DATASET-D2: Russia embargo claim stated as logical axiom rather than as cited evidence requiring credibility assessment",
+        "DATASET-D4: 'State ownership of means of production' appears as a predicate label — no value judgment required",
+        "DATASET-D5: Social insurance policy treated as definitional universal — no contested empirical claim",
+        "DATASET-D10: Human rights framing used purely as deductive predicate — no normative weight evaluated",
+        "DATASET-D22: TikTok addictiveness rendered as logical axiom rather than empirically contested claim",
+        "DATASET-D17: Boeing/Airbus/SpaceX factual claims encoded as fixed premises, not as warranted evidence"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "WEB-21",
+          "WEB-22",
+          "DATASET-D1",
+          "DATASET-D2",
+          "DATASET-D17",
+          "DATASET-D24"
+        ],
+        "IC-2": [
+          "Q47",
+          "Q127",
+          "Q128",
+          "WEB-18"
+        ],
+        "IC-3": [
+          "DATASET-D22",
+          "DATASET-D24"
+        ],
+        "IC-4": [],
+        "IC-5": [
+          "Q104",
+          "DATASET-D4",
+          "DATASET-D5",
+          "DATASET-D10",
+          "DATASET-D22"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "No paper-level documentation of how debate-community reviewers would assess FOLIO content (substituted by dataset analysis)"
+      ],
+      "requires_expert_verification": [
+        "Whether any subset of WikiLogic stories happens to mirror specific Policy/PF resolution content closely enough to provide partial deployment signal — likely zero based on sample, but full corpus not reviewed"
+      ]
+    },
+    "input_form": {
+      "score": 4,
+      "justification": "FOLIO is text-only, standard American English, with grammar checked via Grammarly and reviewed by English Literature annotators [Q49, Q50]. The deployment is also text-only English (with possible speech-transcript input out of current scope). Dataset analysis confirms no modality or script mismatch across all 57 sampled examples. The IF priority was correctly flagged LOWER in elicitation; main residual concern is register mismatch — FOLIO uses logic-textbook universal-statement register, while debate discourse uses hedged, evidence-citing, warrant-heavy language.",
+      "strengths": [
+        "Text-only English with no modality, script, or language mismatch [Q22, DATASET-D1, D8]",
+        "Grammar and naturalness checked by linguistically trained annotators [Q49, Q50]",
+        "Standardized NL conventions reduce ambiguity [Q130-Q133]"
+      ],
+      "checklist_responses": {
+        "IF-1": "Both source and target are text in standard American English [Q49, Q50]. Signal distribution matches at the modality level; no resolution/sampling-rate analog applies to text.",
+        "IF-2": "US school infrastructure supports text input via Chromebooks and personal devices per deployment context. No infrastructure mismatch.",
+        "IF-3": "Register mismatch is a domain-specific form difference: FOLIO uses formal-universal sentences ('All X are Y') with named constants [DATASET-D1, D24], while debate discourse uses hedged citations, spread delivery transcripts, and warrant-heavy phrasing [WEB-21, WEB-22]. If speech transcripts (with disfluencies, mid-sentence corrections) enter scope, the gap widens further.",
+        "IF-4": "Form mismatches at the modality level are minimal; register-level differences are documentable but secondary to the IO/IC/OO/OC/OF mismatches."
+      },
+      "evidence_quotes": [
+        "[Q22] 'We use formal logic, i.e., FOL to ensure the logical validity of the examples written in NL' (p.2)",
+        "[Q49] 'All the sentences are first checked with a grammar checking tool, Grammarly.' (p.4)",
+        "[Q50] 'Our annotators who have graduated from or are senior students studying English Literature conducted a thorough round of review for grammatical correctness and language naturalness.' (p.4)",
+        "[Q130] 'We always use \"either-or\" to express exclusive disjunction.' (p.13)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-21] DebateSum evidence cards include hedged author/citation register absent from FOLIO",
+        "[WEB-22] OpenDebateEvidence transcripts include the hedged, warrant-citing register typical of competitive debate"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: Standard English text confirmed",
+        "DATASET-D8: Grammatically natural complex sentence structure",
+        "DATASET-D24: Formal-universal register ('Everyone working at Meta has a high income') differs from hedged empirical debate claims"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q22",
+          "Q49",
+          "DATASET-D1",
+          "DATASET-D8"
+        ],
+        "IF-2": [],
+        "IF-3": [
+          "DATASET-D1",
+          "DATASET-D24",
+          "WEB-21",
+          "WEB-22"
+        ],
+        "IF-4": [
+          "Q130"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether deployment will include ASR-transcribed speech (with disfluencies, spread delivery artifacts) — out of current scope per deployment context but flagged as potential future expansion"
+      ],
+      "requires_expert_verification": []
+    },
+    "output_ontology": {
+      "score": 1,
+      "justification": "FOLIO's output label space is the three-way categorical scheme True/False/Unknown [Q36, Q66], with FOL operators restricted to standard truth-functional connectives and quantifiers [Q138]. Temporal logic, modal logic, and Davidsonian semantics are explicitly excluded [Q139-Q142]. The deployment requires multi-dimensional sub-scores across evidence quality, logical structure, relevance, and persuasive effectiveness, plus qualitative coaching feedback, pairwise rebuttal rankings, and format/circuit-conditioned norms. Dataset analysis confirms every example produces exactly one categorical label with no sub-scores, no rationales, and no comparative structure [DATASET-D11, D13, D18, D23]. The HIGH-priority elicitation flag on OO is fully borne out.",
+      "strengths": [
+        "Output label space is unambiguous and well-defined [Q135-Q137] — for the narrow sub-component of logical validity, the three-way scheme is principled",
+        "Open-world assumption is correctly handled via the Unknown label [DATASET-D23]"
+      ],
+      "checklist_responses": {
+        "OO-1": "FOLIO labels are True/False/Unknown [Q36, Q66]. These categories do not map to any deployment-required output: sub-score per dimension, qualitative feedback, pairwise ranking, or circuit-conditioned scoring [elicitation A2, A3].",
+        "OO-2": "All deployment-relevant output categories are missing: (a) evidence-quality sub-score, (b) relevance/responsiveness sub-score, (c) persuasive-effectiveness sub-score, (d) pairwise comparative ranking, (e) format/circuit-conditioned quality bands. Note that BP-debate scoring benchmarks exist [WEB-28] but FOLIO does not approximate them.",
+        "OO-3": "FOLIO's output ontology encodes the assumption that argument correctness is mechanically verifiable via theorem proving [Q2, Q135-Q137]. The deployment's correctness standard is pluralistic and community-norm-based — these assumptions are categorically incompatible.",
+        "OO-4": "Stakeholder-driven taxonomy redesign would not be a 'redesign' of FOLIO — it would require constructing an entirely separate evaluation with no shared output space. FOLIO cannot be adapted; only supplemented.",
+        "OO-5": "Taxonomy issues represent a fundamental structural validity violation. Benchmark performance metrics (accuracy over True/False/Unknown, majority baseline 38.5% [Q94]) cannot inform any of the deployment's required output dimensions."
+      },
+      "evidence_quotes": [
+        "[Q36] 'Each of the stories is composed of several premises and conclusions with truth values of True, False, or Unknown' (p.4)",
+        "[Q66] 'Given P and H, the goal is to determine the truth values of the conclusions: \"True\", \"False\" or \"Unknown\", based on FOL reasoning.' (p.6)",
+        "[Q135] 'FOL enables deriving facts from other facts (Russell and Norvig, 2010).' (p.13)",
+        "[Q138] 'We include the following operators: negation ¬, conjunction ∧, disjunction ∨, implication →, universal quantifier ∀, existential quantifier ∃, equal =.' (p.13)",
+        "[Q139] 'Following (Russell and Norvig, 2010), we consider temporal logic and modal logic as special-purpose logics.' (p.13)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-26] CompAQA framework demonstrates pairwise argument quality ranking as a separate task structure — confirms FOLIO's OO does not support it",
+        "[WEB-28] DebateBench uses speech-level scores and house rankings — a fundamentally different output ontology from FOLIO's True/False/Unknown"
+      ],
+      "evidence_dataset": [
+        "DATASET-D11: Output is single True/False/Uncertain label with no sub-dimensions",
+        "DATASET-D13: Six-premise chain collapses to single 'True' label — no sub-scores, no rationale",
+        "DATASET-D18: Multiple conclusions from same story scored independently, not pairwise",
+        "DATASET-D23: Open-world assumption correctly handled via Uncertain label"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q36",
+          "Q66"
+        ],
+        "OO-2": [
+          "WEB-26",
+          "WEB-28",
+          "DATASET-D13",
+          "DATASET-D18"
+        ],
+        "OO-3": [
+          "Q2",
+          "Q135",
+          "Q137"
+        ],
+        "OO-4": [
+          "Q138",
+          "Q139"
+        ],
+        "OO-5": [
+          "Q94",
+          "DATASET-D11"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": []
+    },
+    "output_content": {
+      "score": 1,
+      "justification": "FOLIO ground-truth labels are mechanically derived from a theorem prover [Q2, Q57] and human annotators are CS undergraduates/graduates with formal FOL training and native or near-native English proficiency [Q27, Q28, Q122, Q123]. The expert/non-expert performance gap (95.98% vs. 61.82%, 34.16 points) confirms that FOL domain knowledge is necessary for the benchmark's correctness standard [Q107-Q112]. The deployment's quality-defining community is NSDA/TOC judges, circuit coaches, and the broader competitive-debate community — a categorically different population with different domain expertise and different correctness norms (paradigms, lay vs. tech circuit). Dataset analysis confirms every label is theorem-prover output [DATASET-D9, D12]. The HIGH-priority elicitation flag on OC is fully borne out.",
+      "strengths": [
+        "Within the narrow scope of formal deductive validity, labels are mechanically verified and reproducible [Q2, Q57] — no annotator disagreement or subjective variance",
+        "Annotation process is rigorous: 980 person-hours across six stages [Q32], senior researcher review [Q31], dedicated FOL and NL expert subgroups [Q29, Q124, Q125]"
+      ],
+      "checklist_responses": {
+        "OC-1": "Ground-truth labels are theorem-prover outputs [Q2, Q57] derived from FOL annotations by CS-trained annotators [Q27, Q28]. They do not reflect debate-community quality judgments — paradigm-based judging, circuit norms, and coach rubrics play no role.",
+        "OC-2": "The annotator population (CS students familiar with FOL [Q108]) is categorically different from the deployment's quality-defining community (NSDA judges, TOC paradigms, coaches). The non-expert annotation experiment in the paper itself shows that even high school students unfamiliar with FOL achieve only 61.82% accuracy on FOLIO labels [Q109, Q111] — indicating that FOLIO's correctness standard does not converge with the population most similar to the deployment's end users.",
+        "OC-3": "Annotator demographics are documented: native or near-native English speakers, CS/graduate students with FOL coursework or self-study [Q27, Q28, Q122, Q123]. No debate-community annotators are reported.",
+        "OC-4": "Label re-annotation by debate judges/coaches would not produce comparable labels — the labels capture FOL entailment, not argument quality. Re-annotation would require redefining the task, not refining labels.",
+        "OC-5": "Labels are deterministic (theorem-prover output), so aggregation does not erase minority perspectives within FOLIO's scope. However, this very determinism is the problem: pluralistic debate-community judgment cannot be approximated by a deterministic prover [Q137].",
+        "OC-6": "Convergent validity is violated because FOLIO labels do not correlate with the deployment's correctness standard; external validity is violated because performance on FOLIO labels does not generalize to debate-community quality judgments."
+      },
+      "evidence_quotes": [
+        "[Q2] 'The logical correctness of the premises and conclusions is ensured by their FOL annotations, which are automatically verified by an FOL inference engine.' (p.1)",
+        "[Q27] 'Our annotators are either college or graduate students who are native English speakers or possess near-native proficiency in English.' (p.3)",
+        "[Q108] 'Our expert annotators are computer science college students familiar with FOL.' (p.9)",
+        "[Q111] 'Expert annotations achieve an accuracy of 95.98% while non-expert annotations achieves 61.82%, with a gap of 34.16%.' (p.9)",
+        "[Q112] 'This shows that sufficient domain knowledge of FOL is necessary for good performance on FOLIO.' (p.9)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-12] NSDA Nationals adjudication and judge paradigms define a community-norm-based quality standard fundamentally different from theorem-prover labels",
+        "[WEB-26] CompAQA notes low inter-rater agreement (kappa ~0.10-0.12) for argument quality — confirming inherent pluralism in debate-relevant judgment absent in FOLIO"
+      ],
+      "evidence_dataset": [
+        "DATASET-D9: Label derived from FOL formula and theorem prover, not human judgment of argument quality",
+        "DATASET-D12: Ground truth 'False' on Russia monetary policy story is mechanically derived from FOL inference, not from debate-community judgment"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q2",
+          "Q57",
+          "WEB-12"
+        ],
+        "OC-2": [
+          "Q108",
+          "Q109",
+          "Q111",
+          "WEB-26"
+        ],
+        "OC-3": [
+          "Q27",
+          "Q28",
+          "Q122",
+          "Q123"
+        ],
+        "OC-4": [
+          "Q2",
+          "Q137"
+        ],
+        "OC-5": [
+          "Q137",
+          "DATASET-D9"
+        ],
+        "OC-6": [
+          "Q111",
+          "Q112",
+          "DATASET-D12"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": [
+        "Whether any FOLIO labels would be considered 'persuasive' or 'well-warranted' by debate judges if the corresponding NL stories were used as speech material — likely no systematic correlation, but not empirically tested"
+      ]
+    },
+    "output_form": {
+      "score": 1,
+      "justification": "FOLIO's output form is a single categorical label per conclusion [Q80, Q153], with the NL-FOL translation task using Syntactic Validity and Inference Engine Execution Accuracy [Q73-Q76]. The deployment requires multi-dimensional sub-scores, free-text coaching rationales, and pairwise comparative outputs (per elicitation A2). Dataset analysis confirms all 57 examples produce single labels with no sub-scores, no rationales, no comparative structures [DATASET-D13, D14, D19, D21]. The authors themselves acknowledge the translation metric is insufficiently reliable [Q77]. The HIGH-priority elicitation flag on OF is fully borne out.",
+      "strengths": [
+        "Accuracy over a balanced three-way label space [Q80, Q94] is a clean, reproducible metric within FOLIO's scope",
+        "Multiple random seeds and averaged results [Q93] support statistical reliability of the metric",
+        "Premise-shuffling analysis confirms metric is not gameable via ordering heuristics [Q158-Q160]"
+      ],
+      "checklist_responses": {
+        "OF-1": "Output modality (single categorical label) does not match deployment needs: separate sub-scores per dimension, free-text qualitative feedback, and pairwise rankings are all required [elicitation A2]. None can be derived from FOLIO's output form.",
+        "OF-2": "Not applicable — deployment is text-based; speech output not required in current scope.",
+        "OF-3": "Not applicable in the conventional sense — target users are literate US high school students.",
+        "OF-4": "Form mismatches are fundamental: benchmark performance metrics (accuracy, SynV, ExcAcc) are structurally uninformative for assessing whether a model can produce multi-dimensional argument scores, coaching rationales, or pairwise comparisons. The translation metric is itself flagged as insufficient by the authors [Q77]."
+      },
+      "evidence_quotes": [
+        "[Q80] 'We use accuracy for evaluating logical reasoning performance.' (p.6)",
+        "[Q73] 'Two metrics are adopted to evaluate NL-FOL translation to capture different aspects of the generation results: 1). Syntactic validity (SynV).' (p.6)",
+        "[Q76] 'We define the accuracy of the output labels as the execution accuracy.' (p.6)",
+        "[Q77] 'We leave for future work the design of a more reliable metric of NL-FOL translation.' (p.6)",
+        "[Q153] 'Proving a story requires three steps... Finally, the theorem prover outputs whether the conclusions are True / False / Unknown' (p.14)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-28] DebateBench evaluates speech-level scoring and ranking — confirms multi-output debate benchmarks are feasible but FOLIO does not match",
+        "[WEB-26] CompAQA argues for combined pairwise classification and ranking — the kind of output form the deployment requires and FOLIO lacks"
+      ],
+      "evidence_dataset": [
+        "DATASET-D13: Six-premise reasoning chain collapses to single 'True' label with no sub-scores or rationale",
+        "DATASET-D14: Complex multi-step deduction produces single categorical label",
+        "DATASET-D18: Multiple conclusions scored independently — no pairwise comparison structure",
+        "DATASET-D19: Negation/disjunction complexity still produces single binary-equivalent label",
+        "DATASET-D21: Machine-verified label with no qualitative feedback dimension"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q80",
+          "Q153",
+          "DATASET-D13",
+          "DATASET-D14",
+          "DATASET-D18"
+        ],
+        "OF-2": [],
+        "OF-3": [],
+        "OF-4": [
+          "Q73",
+          "Q76",
+          "Q77",
+          "WEB-26",
+          "WEB-28"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": []
+    }
+  },
+  "overall_summary": "FOLIO is a high-quality benchmark for formal deductive entailment over natural-language premises, with rigorous annotation, verified labels, and substantial logical complexity. However, for the US high school competitive debate argument-quality assessment deployment, FOLIO is fundamentally misaligned across five of six validity dimensions. The input ontology omits all deployment-required argument categories (evidence-backed claims, value-laden arguments, rhetorical moves, debate-structural arguments). The input content is deliberately stripped of normative contestation and evidentiary disputes — the very content types most central to debate. The output ontology (True/False/Unknown) cannot represent multi-dimensional sub-scores, qualitative feedback, or pairwise rankings. The output content's correctness standard (theorem-prover verification by FOL-trained CS students) is categorically different from the pluralistic, format-varying, circuit-varying debate-community judgment standard. The output form produces a single categorical label, structurally uninformative for the deployment's required outputs. Only the input form (text in standard American English) aligns well. Dataset analysis across 57 sampled examples confirms these gaps empirically: no example contains evidence citation, normative contestation, debate-structural arguments, sub-scores, rationales, or pairwise comparisons. The benchmark provides at most a narrow upper-bound test on multi-step deductive validity, which is one minor component of the deployment's logical-structure sub-score — far from sufficient for deployment-level evaluation.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "FOLIO measures formal deductive entailment over natural-language premise sets and NL-to-FOL translation accuracy. Within the deployment's framework, it provides signal for only a narrow sub-component of the 'logical structure and warrant quality' sub-score — specifically, whether a model can correctly determine entailment relationships under multi-step deduction. It does not measure evidence quality (the highest-weight deployment sub-dimension), relevance/responsiveness, persuasive effectiveness, debate-structural argument recognition, value-laden argument assessment, or format/circuit-conditioned quality norms.",
+    "construct_depth": "FOLIO probes deductive validity rigorously, with reasoning depth modal at 4 and a diverse AST distribution [Q60, Q61], and provides a clean expert/non-expert performance gap demonstrating the construct is meaningfully measured [Q111]. However, the construct it probes deeply is *not* the construct the deployment needs. The benchmark provides no probing of inductive reasoning, evidence credibility, warrant-claim coherence in hedged empirical claims, or pluralistic argument quality. The depth of FOLIO's measurement on deductive validity does not compensate for the breadth gap across the deployment's required constructs.",
+    "supplementation_needed": "Substantial supplementation is required across nearly every dimension. For input ontology (IO) and input content (IC): supplement with debate-specific corpora such as DebateSum [WEB-21] and OpenDebateEvidence [WEB-22] for evidence-card content, and develop NSDA-format-specific argument-type taxonomies covering DAs, CPs, kritiks, T shells, theory, and impact calculus. For output ontology (OO) and output form (OF): construct a multi-dimensional rubric with separate sub-scores (evidence, logic, relevance, persuasion), qualitative rationale generation, and pairwise comparison structures, drawing on DebateBench [WEB-28], IBM ArgQ pairwise datasets [WEB-24], and CompAQA [WEB-26]. For output content (OC): recruit a panel of NSDA-credentialed judges and coaches, stratified by format (Policy/LD/PF/Congressional) and circuit (lay/tech), to provide ground-truth annotations that reflect actual debate-community norms. Pair circuit-conditioned scoring with judge-paradigm metadata from Tabroom. Verify NSDA evidence-ethics policy compliance [NSDA verification gap noted in regional context]. FOLIO can be retained only as a narrow component sub-test for deductive-validity-specific capability, not as an end-to-end deployment proxy."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "FOLIO's taxonomy covers only formal deductive entailment and NL-FOL translation; the deployment requires evidentiary, value-laden, rhetorical, and debate-structural argument categories.",
+      "recommendation": "Construct a debate-specific argument-type taxonomy aligned to NSDA formats (Policy: DA/CP/T/K; LD: V/C framework, plans, kritiks, theory; PF: contention/weighing; Congressional: legislative advocacy/oratory). Use FOLIO only as a narrow sub-test for the deductive-validity component of the logical-structure sub-score, not as a primary evaluation."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "FOLIO content deliberately excludes normative contestation, evidentiary disputes, and value-laden claims — the highest-weight content types for the deployment.",
+      "recommendation": "Supplement with content drawn from OpenDebateEvidence [WEB-22] and DebateSum [WEB-21], which provide actual US competitive debate evidence with citation/author/recency metadata. Curate format-specific test sets covering current NSDA resolutions [WEB-18] across Policy, LD, PF, and Congressional, including value-laden LD topics and empirically contested PF topics."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "FOLIO's True/False/Unknown label space cannot represent the deployment's multi-dimensional sub-scores, qualitative feedback, pairwise rankings, or format/circuit-conditioned norms.",
+      "recommendation": "Design a four-sub-score rubric (evidence, logic, relevance, persuasion) plus pairwise comparative output, with quality bands conditioned on format (Policy/LD/PF/Congressional) and circuit (lay/national). Draw structural templates from DebateBench [WEB-28] and CompAQA [WEB-26]. Validate the taxonomy with NSDA coaches and TOC-circuit judges before deployment."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "FOLIO labels are theorem-prover outputs from CS/FOL-trained annotators; deployment correctness is defined by NSDA judges, TOC paradigms, and coaching rubrics — a categorically different community.",
+      "recommendation": "Recruit a stratified panel of debate-community annotators (NSDA-credentialed judges, active coaches, recent national-circuit competitors) to produce ground-truth scores on the deployment-specific rubric. Stratify by format and by lay vs. tech circuit. Use paradigm metadata from Tabroom to surface circuit-conditioned norms. Measure and report inter-rater agreement; expect lower kappa than FOLIO (consistent with [WEB-26]) and design aggregation to preserve circuit-level signal rather than averaging it away."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "FOLIO produces a single categorical label per example; the deployment requires multi-dimensional scores, free-text coaching rationales, and pairwise comparison outputs.",
+      "recommendation": "Design the evaluation harness to require structured multi-score output plus a free-text rationale per sub-score, plus a separate pairwise comparison subtask. Evaluate rationale quality with both automated metrics (faithfulness, citation correctness) and judge-panel review. FOLIO accuracy can be used only as an ancillary diagnostic for deductive-validity behavior, not as a deployment KPI."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "NSDA evidence-ethics rules and AI-generated content policies are deployment-critical but flagged [NEEDS VERIFICATION] in the regional context; current NSDA rulebook URLs were not retrieved.",
+      "recommendation": "Before deployment, retrieve current NSDA evidence-ethics rules and any state-level AI policies (e.g., Ohio SDA policy [WEB-30]). Build evidence-quality scoring criteria to align with NSDA standards on cutting, citing, and contextualizing evidence, and include explicit detection of AI-generated content per state-level prohibitions."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_ontology",
+    "input_content",
+    "output_ontology",
+    "output_content",
+    "output_form"
+  ],
+  "strongest_dimensions": [
+    "input_form"
+  ]
+}

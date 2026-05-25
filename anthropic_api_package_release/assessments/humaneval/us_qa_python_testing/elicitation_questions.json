@@ -1,0 +1,17 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "HumanEval focuses on generating implementations from docstrings, but your tool runs in the opposite direction — generating tests from existing implementations. Does your deployment need the model to handle specific categories of Python code that might be underrepresented in standard interview-style problems, such as class methods and object state, async functions, decorators, third-party library calls (e.g., pandas, NumPy, requests), or functions with side effects like I/O and database writes?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "OO",
+    "question": "For your QA engineers, what makes a generated test 'correct'? For example, is a test suite that achieves high line coverage but misses semantically important edge cases acceptable? Would a test that passes on the current implementation but fails to catch an obvious off-by-one regression be scored as good or bad? Understanding how you define test quality will clarify whether pass/fail unit-test metrics from HumanEval align with your evaluation needs."
+  },
+  {
+    "id": "Q3",
+    "dimension": "IC",
+    "question": "HumanEval problems are self-contained, pure functions with no external dependencies. Does the production code your users submit tend to have external dependencies, mutable global state, or complex input types (e.g., custom dataclasses, database cursors, file handles) that would require mocking or fixtures — complexity absent from benchmark-style problems?"
+  }
+]

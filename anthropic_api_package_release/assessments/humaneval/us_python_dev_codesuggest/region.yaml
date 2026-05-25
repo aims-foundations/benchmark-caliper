@@ -1,0 +1,391 @@
+name: US Professional Software Developers — Python IDE Code Suggestion (HumanEval
+  Assessment)
+abbreviation: us_python_ide_dev
+assessment_context:
+  benchmark: humaneval
+  deployment_product: IDE code suggestion feature (text-to-Python function completion)
+  vendor_location: United States
+  primary_evaluation_criterion: Functional correctness via user test-suite passage
+    (pass/fail oracle)
+target_population:
+  description: 'Professional software developers based in the United States using
+    an IDE code suggestion tool that generates Python function implementations. The
+    population is defined by role and tool usage, not by sub-national geography or
+    demographic group. Primary variation is along two axes: (1) technical domain of
+    the codebase (fintech, healthtech, ML/data pipelines, general-purpose), and (2)
+    code pattern type (standalone algorithmic, library-grounded, class-method, async/await).'
+  geography: United States (no meaningful sub-national variation identified)
+  role: Professional software developers
+  language_of_use: English (natural language prompts/docstrings); Python (code output)
+  key_enterprise_segments:
+  - Fintech (financial data processing, payment systems, trading infrastructure)
+  - Healthtech (EHR integrations, clinical data pipelines, HIPAA-adjacent tooling)
+  - ML/Data pipelines (model training orchestration, feature engineering, ETL)
+languages:
+  natural_language: English (American)
+  programming_language: Python 3.x
+  dialects_or_variants: None — population is monolingual English and uses standard
+    Python. Minor variation in docstring verbosity and style by developer seniority.
+  note: All prompts and docstrings are in American English. No NLP localization concerns.
+    Python version variation (3.8 vs 3.10 vs 3.12) may affect async syntax and type
+    annotation idioms; benchmark was designed against Python 3 without version-pinning.
+writing_systems:
+  scripts:
+  - ASCII / UTF-8 (Python source and docstrings)
+  note: No script mismatch. Identifier naming conventions (PEP 8 snake_case) and docstring
+    formats (Google, NumPy, reStructuredText) are the relevant variation axes, not
+    script.
+developer_population_profile:
+  estimated_us_professional_python_developers: '[NOT FOUND — JetBrains State of Developer
+    Ecosystem 2024 reports Python is now used by more than half of all programmers
+    globally (Source: JetBrains DevEcosystem 2024 — [|https://www.jetbrains.com/lp/devecosystem-2024/|]),
+    and the 2024 Stack Overflow Developer Survey (65,000+ respondents) lists Python
+    at 51% overall language usage (Source: Stack Overflow Developer Survey 2024 —
+    [|https://survey.stackoverflow.co/2024/technology|]). No US-specific professional
+    Python headcount figure was found in either source.]'
+  python_as_primary_language_share_us: '86% of respondents to the 2024 PSF/JetBrains
+    Python Developers Survey (30,000+ respondents globally, collected Oct–Nov 2024)
+    consider Python their main language. (Source: Python Developers Survey 2024 —
+    [|https://lp.jetbrains.com/python-developers-survey-2024/|]; corroborated by goodfirms.co
+    analysis — [|https://www.goodfirms.co/app-development-software/blog/pycharm-vs-vscode-most-popular-python-ide|]).
+    Note: this figure is a global survey of self-identified Python developers, not
+    a US-specific subset.'
+  ide_adoption_rates: 'VS Code is the dominant IDE overall: the 2023 Stack Overflow
+    Developer Survey found 74% of professional developers use VS Code (Source: Stack
+    Overflow Developer Survey 2023 — [|https://survey.stackoverflow.co/2023|]); the
+    2025 Stack Overflow survey confirms Visual Studio and VS Code retained their top
+    spots for the fourth consecutive year (Source: Stack Overflow Developer Survey
+    2025 — [|https://survey.stackoverflow.co/2025|]). PyCharm and VS Code are described
+    as the two most popular IDEs specifically for Python development; no precise split
+    percentage for Python-specific professional use in the US was found in either
+    the 2024 PSF survey or JetBrains DevEcosystem 2024 summary pages.'
+  enterprise_vs_individual_split: '[NEEDS VERIFICATION — deferred: below search budget;
+    no US-specific enterprise vs. SMB vs. solo breakdown found in searched sources]'
+  seniority_distribution: '[NEEDS VERIFICATION — deferred: below search budget; likely
+    unsearchable at US Python-specific granularity]'
+technical_domain_segments:
+  fintech:
+    description: Developers building financial data processing, payment, trading,
+      or risk systems. Codebases typically involve pandas/NumPy for numeric computation,
+      proprietary ORM layers, strict type-checking, and regulatory audit requirements.
+    dominant_libraries:
+    - pandas
+    - NumPy
+    - SQLAlchemy
+    - boto3
+    - pydantic
+    key_conventions: Decimal precision handling, idempotent transaction logic, audit-log
+      patterns
+    regulatory_context: '[NEEDS VERIFICATION — deferred: low impact for scoring relative
+      to benchmark coverage gaps already documented; SOX, PCI-DSS, SEC Rule 17a-4
+      are well-known standards but their specific implications for LLM-generated code
+      require expert elicitation rather than web search]'
+    benchmark_coverage_note: HumanEval contains zero fintech-domain problems; no basis
+      for predictive validity in this segment
+  healthtech:
+    description: Developers building EHR integrations, clinical data pipelines, patient-facing
+      applications, or medical device software. Codebases involve FHIR/HL7 parsers,
+      de-identification logic, and strict PHI-handling conventions.
+    dominant_libraries:
+    - fhir.resources
+    - pandas
+    - SQLAlchemy
+    - requests
+    - boto3
+    key_conventions: PHI field masking, audit logging, deterministic de-identification,
+      HL7/FHIR schema adherence
+    regulatory_context: '[NEEDS VERIFICATION — deferred: HIPAA Security Rule and FDA
+      SaMD guidance are established standards; their specific implications for LLM-generated
+      code patterns require expert/legal elicitation rather than web search]'
+    benchmark_coverage_note: HumanEval contains zero healthtech-domain problems; no
+      basis for predictive validity in this segment
+  ml_data_pipelines:
+    description: Developers building model training pipelines, feature stores, ETL
+      jobs, and inference services. Codebases involve NumPy/pandas transformations,
+      framework-specific patterns (PyTorch, TensorFlow, scikit-learn), and orchestration
+      tools.
+    dominant_libraries:
+    - pandas
+    - NumPy
+    - scikit-learn
+    - PyTorch
+    - TensorFlow
+    - boto3
+    - Apache Beam / Spark (PySpark)
+    key_conventions: Vectorized operation idioms, reproducibility seeds, shape-assertion
+      patterns, pipeline DAG structure
+    regulatory_context: '[NEEDS VERIFICATION — deferred: SR 11-7 is a known Fed guidance
+      document; its coding implications require domain expert elicitation]'
+    benchmark_coverage_note: 'DS-1000 (ICML 2023) partially covers this segment with
+      1,000 problems across NumPy, Pandas, TensorFlow, PyTorch, SciPy, Scikit-learn,
+      and Matplotlib, sourced from StackOverflow. Best public model (Codex-002) achieved
+      43.3% accuracy at time of publication, indicating substantial headroom. (Source:
+      DS-1000 paper — [|https://arxiv.org/abs/2211.11501|]; DS-1000 project page —
+      [|https://ds1000-code-gen.github.io/|]). Note: DS-1000 covers data science library
+      calls but does not cover pipeline orchestration, AWS SDK (boto3), or PySpark
+      patterns relevant to the ML pipeline segment.'
+  general_purpose_algorithmic:
+    description: Domain-neutral utility code, scripting, and algorithmic tasks. Closest
+      to HumanEval's problem distribution. Confirmed by elicitation as a meaningful
+      minority use case.
+    dominant_libraries:
+    - standard library
+    - itertools
+    - collections
+    - typing
+    benchmark_coverage_note: HumanEval covers this segment well; highest expected
+      benchmark-to-deployment validity
+code_pattern_taxonomy:
+  standalone_algorithmic:
+    deployment_frequency: Meaningful minority — confirmed by elicitation
+    humaneval_coverage: Strong — 164 problems, all standalone algorithmic functions
+    validity_assessment: Highest validity segment; benchmark scores most predictive
+      here
+  library_grounded_synthesis:
+    deployment_frequency: Majority use case — confirmed by elicitation
+    dominant_libraries_in_deployment:
+    - pandas
+    - NumPy
+    - requests
+    - boto3
+    humaneval_coverage: None — benchmark contains zero library-call problems
+    validity_assessment: Full gap; benchmark scores not predictive for this pattern
+      type
+    candidate_supplement_benchmarks: 'DS-1000 (ICML 2023): 1,000 problems across 7
+      data science libraries (NumPy, Pandas, TensorFlow, PyTorch, SciPy, Scikit-learn,
+      Matplotlib), sourced from StackOverflow; uses multi-criteria evaluation (functional
+      correctness + surface-form API constraints); evaluation error rate 1.8% on Codex-002
+      solutions. Hosted on HuggingFace as of April 2024. (Source: [|https://arxiv.org/abs/2211.11501|];
+      [|https://github.com/xlang-ai/DS-1000|]). DSCodeBench (2025): a newer successor
+      covering 10 libraries including LightGBM, Seaborn, and Keras, with stronger
+      test suites (avg 200 tests vs DS-1000''s 2.1); best model GPT-4o achieves pass@1
+      of 0.202, indicating significant difficulty headroom. (Source: [|https://arxiv.org/abs/2505.15621|]).
+      BigCodeBench (ICLR 2025): 1,140 Python tasks requiring multiple function calls
+      across diverse libraries; accepted as ICLR 2025 Oral; 163+ models evaluated
+      on leaderboard. (Source: [|https://arxiv.org/abs/2406.15877|]; [|https://github.com/bigcode-project/bigcodebench|]).
+      Note: none of these cover AWS boto3 or fintech/healthtech domain libraries.'
+  class_method_synthesis:
+    deployment_frequency: Common — confirmed by elicitation as majority pattern alongside
+      library calls
+    humaneval_coverage: None — benchmark restricted to module-level standalone functions
+    validity_assessment: Full gap
+    candidate_supplement_benchmarks: 'OOP benchmark (ACL Findings 2024): 431 Python
+      programs covering OOP concepts including classes and encapsulation methods;
+      evaluates 23 LLMs; finds that all models perform significantly worse on OOP
+      than on HumanEval/MBPP functional-programming tasks, with code-specialized models
+      (e.g. WizardCoder) lagging general models (e.g. ChatGPT) on OOP. (Source: [|https://arxiv.org/abs/2401.06628|];
+      [|https://aclanthology.org/2024.findings-acl.808/|]). ClassEval (2023): manually-crafted
+      class-level code generation benchmark; LLMs perform significantly worse on class-level
+      than function-level tasks. (Source: referenced in [|https://arxiv.org/html/2504.15564v1|]).
+      These benchmarks confirm the OOP gap as a genuine model weakness, not just a
+      benchmark coverage gap.'
+  async_await_io:
+    deployment_frequency: Common — confirmed by elicitation
+    humaneval_coverage: None — no async/await problems exist in HumanEval
+    validity_assessment: Full gap
+    candidate_supplement_benchmarks: '[NOT FOUND — no dedicated Python async/await
+      correctness evaluation benchmark was identified in search results. SWE-bench
+      instances may incidentally include async patterns (drawn from 12 real Python
+      repos), but no async-specific subset is documented. This remains an unaddressed
+      evaluation gap. The JetBrains State of Python 2025 notes async/await as a growing
+      area of Python development (Source: [|https://blog.jetbrains.com/pycharm/2025/08/the-state-of-python-2025/|]).]'
+  repository_level_context_grounded:
+    deployment_frequency: Dominant real-world mode — confirmed by elicitation as the
+      most important capability gap
+    humaneval_coverage: None — all problems are context-free single-docstring prompts
+    validity_assessment: Structural mismatch; benchmark cannot exercise retrieval
+      and grounding over project-internal types, ORM models, helper modules
+    candidate_supplement_benchmarks: 'SWE-bench Verified (2024): 500 human-validated
+      samples drawn from real GitHub issues across 12 open-source Python repositories;
+      each sample includes a codebase, issue statement, and FAIL_TO_PASS unit tests;
+      screened by 93 experienced Python developers in collaboration with OpenAI; supersedes
+      original SWE-bench and SWE-bench Lite. As of August 2024, GPT-4o resolves 33.2%
+      of samples on best scaffold. (Source: OpenAI SWE-bench Verified announcement
+      — [|https://openai.com/index/introducing-swe-bench-verified/|]; SWE-bench GitHub
+      — [|https://github.com/swe-bench/SWE-bench|]). CrossCodeEval (NeurIPS 2023):
+      multilingual cross-file code completion benchmark requiring generation that
+      leverages context spanning multiple files; covers Python, Java, TypeScript,
+      C#; drawn from permissively licensed GitHub repos with minimal pre-training
+      overlap; demonstrates that cross-file context significantly improves LLM performance
+      even zero-shot. (Source: emergentmind summary — [|https://www.emergentmind.com/topics/crosscodeeval-benchmark|];
+      paper — [|https://arxiv.org/pdf/2310.11248|]). RepoBench (ICLR 2024): benchmarks
+      repository-level code auto-completion for Python and Java with cross-file dependency
+      masking settings. (Source: [|https://github.com/Leolty/repobench|]). Note: SWE-bench
+      Verified is the most deployment-relevant of these, but covers bug-fix patch
+      generation rather than function completion; CrossCodeEval and RepoBench more
+      closely mirror inline completion scenarios.'
+correctness_dimensions:
+  primary:
+    name: Functional correctness (test-suite passage)
+    benchmark_alignment: Strong — HumanEval pass@k metric directly mirrors deployment's
+      test-suite oracle
+    deployment_oracle: User's own project test suite (not benchmark-provided tests)
+  secondary_enterprise:
+  - name: Security hygiene
+    sub_dimensions:
+    - eval() usage
+    - shell injection patterns
+    - SQL injection patterns
+    - hardcoded secrets / credentials
+    - insecure cryptographic configurations
+    benchmark_alignment: Partial — HumanEval appendix covers RSA key length and AES
+      ECB mode only; eval, injection, and hardcoded-secret patterns are absent
+    candidate_supplement_benchmarks: 'PurpleLlama CyberSecEval (Meta, Dec 2023) and
+      CyberSecEval 2 (Apr 2024): comprehensive benchmarks evaluating LLMs'' propensity
+      to generate insecure code across many languages including Python; covers insecure
+      code generation (autocomplete style) and prompt injection; open-sourced at [|https://github.com/meta-llama/PurpleLlama/tree/main/CybersecurityBenchmarks|].
+      Note: CyberSecEval uses autocomplete-style generation similar to IDE deployment.
+      A known limitation is that original CyberSecEval prompts include artifacts (insecure-by-design
+      cues in identifiers/comments) addressed in the refined Instruct Prime variant.
+      (Source: CyberSecEval paper — [|https://arxiv.org/pdf/2312.04724|]; CyberSecEval
+      2 — [|https://arxiv.org/pdf/2404.13161|]). SecurityEval: Python-focused dataset
+      with 130 samples covering 75 CWE vulnerability types; limited to Python but
+      with broad CWE coverage. (Source: referenced in [|https://arxiv.org/html/2511.03898v1|]).
+      CWEval (2025): outcome-driven evaluation framework assessing both functionality
+      and security simultaneously with high-quality task specifications; designed
+      to address CyberSecEval and SecurityEval specification weaknesses. (Source:
+      [|https://arxiv.org/pdf/2501.08200|]). Key deployment-relevant finding: studies
+      with hand-written tests found ~40% of GitHub Copilot code completions were vulnerable;
+      user studies indicate developers may accept buggy LLM code up to 10% more than
+      they write themselves. (Source: CyberSecEval paper — [|https://arxiv.org/pdf/2312.04724|]).'
+  - name: Style conformance
+    sub_dimensions:
+    - PEP 8 compliance
+    - type annotation coverage
+    - codebase-local naming conventions
+    - docstring format consistency
+    benchmark_alignment: None — HumanEval has no style scoring dimension
+    candidate_supplement_benchmarks: '[NOT FOUND — no Python-specific style conformance
+      or PEP 8 evaluation benchmark was identified in searches. This remains an unaddressed
+      evaluation gap; linting-integrated frameworks (e.g., integrating flake8/ruff
+      into test harnesses) exist as tooling but not as published benchmarks with scored
+      model comparisons.]'
+  - name: Performance
+    deployment_relevance: Occasionally raised but rarely blocks acceptance — lower
+      priority
+    benchmark_alignment: None — HumanEval has no performance dimension
+infrastructure_and_deployment_notes:
+  interface_type: IDE plugin / inline code suggestion (not chat or web interface)
+  interaction_latency_sensitivity: High — IDE completions are expected near-real-time;
+    evaluation latency is not a HumanEval concern but matters for production deployment
+    decisions
+  execution_environment: Developer local machine or cloud dev environment; test execution
+    runs in the user's project virtualenv with project-specific dependencies installed
+  python_version_distribution: '[NEEDS VERIFICATION — deferred: below remaining search
+    budget; the 2024 PSF survey collects version adoption data but specific enterprise-segment
+    breakdown not accessible from summary pages]'
+  package_manager_ecosystem: 'pip and conda are the dominant package managers among
+    Python developers broadly; the 2024 PSF/JetBrains Python Developers Survey (30,000+
+    respondents) notes uv (released Feb 2024) reached 11% adoption in its first year,
+    signaling rapid ecosystem shift. (Source: Python Developers Survey 2024 — [|https://lp.jetbrains.com/python-developers-survey-2024/|]).
+    Enterprise segments typically use conda for data science/ML (dependency isolation)
+    and pip/poetry for web/fintech; uv adoption in enterprise is nascent but growing.'
+  ci_cd_integration: Test suites typically integrated into CI/CD pipelines (GitHub
+    Actions, Jenkins, CircleCI); the deployment oracle is the same test runner used
+    in CI
+  ide_platform_distribution: 'VS Code is the dominant IDE across all developers (74%
+    of professional developers per 2023 Stack Overflow survey; top position maintained
+    through 2025 per 2025 survey). PyCharm and VS Code are the two leading Python-specific
+    IDEs; the 2024 PSF survey notes 42% of Python developers use three or more IDEs/editors
+    simultaneously. Precise VS Code vs. PyCharm split for US enterprise Python developers
+    is not publicly broken out. (Source: Stack Overflow 2023 — [|https://survey.stackoverflow.co/2023|];
+    Stack Overflow 2025 — [|https://survey.stackoverflow.co/2025|]; Python Developers
+    Survey 2024 — [|https://lp.jetbrains.com/python-developers-survey-2024/|]).'
+regulatory_and_compliance_context:
+  us_federal:
+    data_protection: '[NEEDS VERIFICATION — deferred: NIST AI RMF and FTC guidance
+      on AI are established frameworks; their specific implications for AI-generated
+      code liability require legal/policy expert elicitation rather than web search]'
+    sector_specific: '[NEEDS VERIFICATION — deferred: SOX, HIPAA Security Rule, FDA
+      SaMD guidance are established; coding implications require domain expert elicitation]'
+  code_licensing: '[NEEDS VERIFICATION — deferred: below search budget; US copyright
+    law as applied to AI-generated code is an active legal area; known that litigation
+    (e.g., GitHub Copilot class action) was ongoing as of knowledge cutoff but resolution
+    status not searched]'
+  enterprise_procurement: '[NEEDS VERIFICATION — deferred: below search budget; likely
+    requires review of enterprise software procurement documentation rather than a
+    web search yielding stable facts]'
+cultural_and_professional_norms_notes: 'US professional software development culture
+  emphasizes test-driven development, code review, and CI/CD discipline — all of which
+  align with HumanEval''s functional-correctness oracle. Enterprise engineering cultures
+  (particularly in fintech and healthtech) add strong expectations around security
+  hygiene, auditability, and style consistency enforced via linters and pre-commit
+  hooks. The developer population is technically sophisticated, will actively scrutinize
+  suggestions, and is unlikely to accept completions that fail obvious style or security
+  checks even if they pass unit tests. Over-reliance risk (accepting plausible-looking
+  but incorrect completions) is a documented concern in the HumanEval paper and is
+  relevant to enterprise adoption. Surveys indicate around 44% of professional developers
+  were using AI coding tools daily by 2024, with positive sentiment declining from
+  70%+ in 2023–2024 to 60% in 2025, suggesting increasing critical scrutiny of LLM
+  code suggestions. (Source: JetBrains State of Python 2025 — [|https://blog.jetbrains.com/pycharm/2025/08/the-state-of-python-2025/|]).'
+benchmark_validity_summary:
+  strongest_validity_segment: Standalone algorithmic function synthesis (domain-neutral,
+    module-level, no external dependencies) — minority of deployment volume
+  weakest_validity_segments:
+  - Repository-level context-grounded completions — dominant real-world mode, zero
+    benchmark coverage
+  - Library-grounded synthesis (pandas, NumPy, boto3) — majority use case, zero benchmark
+    coverage
+  - Domain-specific code (fintech, healthtech, ML pipelines) — major enterprise segments,
+    zero benchmark coverage
+  partial_validity_segments:
+  - Security hygiene — benchmark covers narrow cryptographic anti-patterns only; shell
+    injection, eval, hardcoded secrets absent
+  recommended_supplement_search_targets:
+  - DS-1000 (library-grounded data science code generation — ICML 2023, 1,000 problems,
+    7 libraries) — [|https://arxiv.org/abs/2211.11501|]
+  - DSCodeBench (library-grounded data science code generation — 2025, 1,000 problems,
+    10 libraries, stronger test suites than DS-1000) — [|https://arxiv.org/abs/2505.15621|]
+  - BigCodeBench (diverse library function calls — ICLR 2025 Oral, 1,140 problems)
+    — [|https://arxiv.org/abs/2406.15877|]
+  - SWE-bench Verified (repository-level GitHub issue resolution — 500 human-validated
+    Python problems) — [|https://openai.com/index/introducing-swe-bench-verified/|]
+  - CrossCodeEval (cross-file code completion — NeurIPS 2023, Python/Java/TypeScript/C#)
+    — [|https://arxiv.org/pdf/2310.11248|]
+  - RepoBench (repository-level code auto-completion — ICLR 2024, Python/Java) — [|https://github.com/Leolty/repobench|]
+  - OOP benchmark (class-method synthesis — ACL Findings 2024, 431 Python OOP programs)
+    — [|https://arxiv.org/abs/2401.06628|]
+  - ClassEval (class-level code generation benchmark, 2023)
+  - PurpleLlama CyberSecEval / CyberSecEval 2 (security hygiene — Meta, 2023/2024)
+    — [|https://arxiv.org/pdf/2312.04724|]
+  - CWEval (functionality + security simultaneous evaluation — 2025) — [|https://arxiv.org/pdf/2501.08200|]
+  - Domain-specific Python code generation evaluations for fintech, healthtech, ML
+    pipelines (no confirmed benchmarks found)
+net_new_fields:
+  oop_gap_empirical_evidence: 'The OOP benchmark (ACL Findings 2024) evaluated 23
+    LLMs on 431 Python OOP programs and found all models perform significantly worse
+    on class-level OOP tasks than on HumanEval/MBPP functional-programming tasks.
+    Code-specialized models like WizardCoder lag behind general models like ChatGPT
+    on OOP, confirming the OOP coverage gap is not merely a benchmark omission but
+    reflects a genuine model capability weakness. (Source: [|https://arxiv.org/abs/2401.06628|]).
+    Directly relevant to scoring the class_method_synthesis gap dimension.'
+  security_copilot_vulnerability_rate: 'An empirical study cited in the CyberSecEval
+    paper (Meta, Dec 2023) found approximately 40% of GitHub Copilot code suggestions
+    were vulnerable; a separate user study found developers accept buggy LLM-generated
+    code up to 10% more often than they write it themselves. (Source: [|https://arxiv.org/pdf/2312.04724|]).
+    Relevant to enterprise deployment risk assessment and over-reliance concerns.'
+  repomaster_eval_humaneval_gap: 'RepoMasterEval (2024), a repository-level code completion
+    benchmark using mutation testing, found that GPT-4 achieved high scores on HumanEval
+    but performance dropped significantly on RepoMasterEval, providing direct empirical
+    evidence of the HumanEval-to-deployment validity gap for repository-level completions.
+    (Source: [|https://arxiv.org/pdf/2408.03519|]). Directly supports the repository_level_context_grounded
+    gap severity assessment.'
+  ds_1000_test_case_limitation: 'A known limitation of DS-1000 is that it averages
+    only 2.1 test cases per problem (compared to HumanEval''s 7.7), making its correctness
+    oracle weaker. DSCodeBench (2025) addresses this with ~200 tests per problem but
+    is not yet as widely adopted. (Source: DSCodeBench paper — [|https://arxiv.org/abs/2505.15621|]).
+    Relevant to deciding whether DS-1000 is a sufficient supplement for library-grounded
+    synthesis validation.'
+  python_github_most_used_language_2024: 'GitHub announced in November 2024 that Python
+    is now the most used language on GitHub, surpassing JavaScript, driven by AI,
+    data science, and non-traditional software development activity. (Source: JetBrains
+    State of Python 2024 blog — [|https://blog.jetbrains.com/pycharm/2024/12/the-state-of-python/|]).
+    Context for the scale and diversity of the deployment population.'
+  ai_coding_tool_adoption_2024: 'Approximately 44% of professional developers used
+    AI coding tools daily by 2024 (up from ~70% planning to use in 2023); positive
+    sentiment toward AI tools declined from 70%+ in 2023–2024 to 60% in 2025, with
+    45% of 2024 Stack Overflow survey respondents saying AI tools struggle with complex
+    tasks. (Source: JetBrains State of Python 2025 — [|https://blog.jetbrains.com/pycharm/2025/08/the-state-of-python-2025/|];
+    Stack Overflow Developer Survey 2024 — [|https://survey.stackoverflow.co/2024/|]).
+    Relevant to over-reliance risk calibration: increasing adoption combined with
+    declining trust suggests developers are becoming more critical evaluators of suggestions.'

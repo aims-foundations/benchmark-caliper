@@ -1,0 +1,1 @@
+We are a US consulting firm evaluating whether an LLM can help American management consultants build persuasive business cases. The system should assemble evidence, structure arguments, anticipate counterarguments, and tailor reasoning to executive audiences. We need to evaluate the LLM's reasoning capabilities for argument construction in a business context.

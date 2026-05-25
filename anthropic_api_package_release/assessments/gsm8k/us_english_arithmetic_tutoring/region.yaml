@@ -1,0 +1,476 @@
+name: US Elementary/Middle School Arithmetic Tutoring — Grade 3–6 Diagnostic Module
+abbreviation: US-ELEM-DIAG-36
+deployment_context:
+  description: A US edtech tutoring module that receives a grade-school arithmetic
+    word problem paired with a student's step-by-step worked solution and produces
+    a diagnostic explanation identifying where and why errors occurred. The LLM acts
+    in a diagnostic role, not a problem-solving role.
+  benchmark_being_assessed: GSM8K (Grade School Math 8.5K)
+  assessment_goal: Determine whether GSM8K is a valid evaluation instrument for an
+    LLM that must diagnose student reasoning errors, locate the earliest error, flag
+    independent downstream errors, and generate teacher-register explanations.
+target_population:
+  primary_users: US elementary and middle school students in grades 3–6 (approximately
+    ages 8–12), submitting step-by-step arithmetic solutions either handwritten and
+    transcribed or typed directly.
+  institutional_context: US K–12 public and private schools operating under Common
+    Core State Standards for Mathematics (CCSS-M) or state-level standards closely
+    aligned to Common Core.
+  geographic_scope: United States; sub-national variation across states with different
+    CCSS-M adoption levels noted below.
+  language: English only (monolingual deployment; no multilingual or code-switching
+    considerations).
+  grade_band: Grades 3 through 6 (third through sixth grade). Grade-level norms are
+    operationally distinct within this band and must be tracked separately.
+curriculum_alignment:
+  governing_standards: Common Core State Standards for Mathematics (CCSS-M)
+  ccss_adoption_status: '41 states, DC, 4 territories, and DoDEA have formally adopted
+    CCSS. Of the 46 states that adopted in full or modified form during the initial
+    rollout, approximately 24 have since repealed, revised, or edited parts of the
+    standards; 4 states (Arizona, Oklahoma, Indiana, South Carolina) have withdrawn
+    entirely. However, many states that formally repealed CCSS replaced them with
+    near-identical renamed standards (e.g., Kentucky''s ''Kentucky Academic Standards'',
+    Arizona''s ''College and Career Ready Standards''). Florida and Oklahoma are among
+    the clearest full-departure cases. The practical implication for deployment is
+    that CCSS-M-aligned instruction covers a substantial majority of the US student
+    population even where standards have been formally renamed.
+
+    Sources: Common Core State Standards Initiative — [|https://www.thecorestandards.org/standards-in-your-state/|];
+    World Population Review CCSS 2026 — [|https://worldpopulationreview.com/state-rankings/common-core-states|];
+    Wikipedia CCSS by State — [|https://en.wikipedia.org/wiki/Common_Core_implementation_by_state|];
+    The 74 (Aug 2025) — [|https://www.the74million.org/article/some-15-years-after-disastrous-debut-common-core-math-endures-in-many-states/|]'
+  grade_level_benchmarks:
+    grade_3: Multiplication and division within 100; fractions as parts of a whole;
+      area models introduced; measurement in US customary units (inches, feet, yards).
+    grade_4: Multi-digit multiplication; long division with remainders; fraction equivalence
+      and ordering; adding/subtracting fractions with like denominators; unit conversion
+      within the same measurement system.
+    grade_5: Multiplication and division of fractions; decimal operations; volume;
+      order of operations (no exponents); improper fractions accepted as final answers.
+    grade_6: Ratios and proportional reasoning; division of fractions by fractions;
+      negative numbers introduced; multi-step word problems with mixed operations.
+    note: 'Grade-level acceptability norms for intermediate steps differ: e.g., leaving
+      an answer as an improper fraction is acceptable in grade 5 but may be flagged
+      as incomplete in grade 3. Rounding conventions and place-value expectations
+      also differ across grades.'
+  high_frequency_error_types_by_curriculum:
+    fraction_decimal_confusion: Grades 3–5; mixing fraction and decimal representations
+      mid-solution.
+    unit_conversion_slips: Grades 3–5; errors converting inches to feet, cups to quarts,
+      and other US customary unit pairs.
+    place_value_carrying_borrowing: Grades 3–4; misapplied carrying in addition and
+      borrowing in subtraction.
+    common_core_phrasing_misread: All grades; confusing 'how many more' (difference/subtraction)
+      with 'how many total' (sum/addition) due to CCSS-M problem phrasing conventions.
+    order_of_operations: Grades 5–6; incorrect sequencing of multiplication/division
+      before addition/subtraction in multi-operation expressions.
+    misapplied_operation: All grades; selecting multiplication when division is required
+      (or vice versa) based on misinterpretation of the problem's grouping structure.
+input_distribution:
+  description: Student-authored step-by-step arithmetic work, which is structurally
+    and linguistically distinct from the clean professionally authored prose in GSM8K.
+  notation_forms_present:
+  - Vertical arithmetic algorithms with carry marks and crossing-out (borrowing notation)
+  - Partial products displayed as intermediate sub-computations
+  - Partial-quotients division (a CCSS-M–promoted long-division strategy)
+  - Area model representations for multiplication and division
+  - Number bond diagrams (CCSS-M early-grades strategy)
+  - Scratch work interspersed with final answer steps
+  - 'Remainder notation: ''r'' followed by a numeral (e.g., ''14 r 2'')'
+  - Arrow notation to show transformations or carry flow
+  - 'Informal natural-language phrasing: ''I did 5 times 3'', ''b/c'', ''bc'' for
+    ''because'''
+  input_form_contrast_with_gsm8k: GSM8K inputs are well-formed prose sentences written
+    by professional contractors or generated by GPT-3. Deployment inputs are noisy,
+    student-register, quasi-structured text with domain-specific notation that has
+    no representation in GSM8K's input distribution.
+  known_absent_from_gsm8k:
+  - Carry marks and crossing-out in vertical algorithms
+  - Area model notation
+  - Partial-quotients division layout
+  - Number bonds
+  - Student abbreviations and informal phrasing
+  - Scratch work mixed with final-answer steps
+output_requirements:
+  required_output_structure:
+    earliest_error_location: The system must identify the single earliest step where
+      an error occurs, since later errors may cascade from it.
+    independent_downstream_errors: Errors that are not caused by the earliest error
+      but occur independently in later steps must also be flagged.
+    error_type_classification: Each flagged error must be assigned to one of the diagnostic
+      categories below.
+    explanation_register: Explanations must be written in classroom-teacher register,
+      concrete and student-facing (e.g., 'you multiplied when you needed to divide
+      because the problem is asking how many groups'), not abstract or symbolic.
+  error_taxonomy:
+    misapplied_operation: Correct numbers used but wrong arithmetic operation selected.
+    arithmetic_slip: Correct operation and setup but numerical computation error.
+    wrong_problem_setup_or_misread: Misinterpretation of problem text leading to incorrect
+      equation construction.
+    incomplete_reasoning_chain: Work stops before reaching a final answer, or an intermediate
+      step is skipped without justification.
+    us_curriculum_specific_subtypes:
+    - Fraction/decimal confusion
+    - US customary unit conversion error (inches/feet, cups/quarts, ounces/pounds)
+    - Place value error (carrying or borrowing)
+    - Common Core phrasing misread ('how many more' vs. 'how many total')
+    - Order of operations error
+  output_form_contrast_with_gsm8k: GSM8K outputs a binary correct/incorrect label
+    based solely on final numerical answer. Deployment output requires free-form structured
+    diagnostic text with error location, error type, and teacher-register natural
+    language explanation — entirely outside GSM8K's evaluation mechanism.
+ground_truth_and_annotation:
+  ground_truth_source: Internal team of former US elementary and middle school teachers,
+    supplemented by curriculum specialists for edge cases. Symbolic/numerical checkers
+    used only as a sanity check, not for pedagogical judgment.
+  grade_level_sensitivity: 'Ground truth judgments are grade-differentiated: what
+    counts as an acceptable intermediate step or final answer form varies by grade
+    level within the 3–6 band.'
+  contrast_with_gsm8k_annotation: GSM8K labels are generated by comparing final numerical
+    answers among freelance contractors with no domain educator involvement, no grade-level
+    differentiation, and no pedagogical acceptability criteria. The annotator populations
+    and judgment criteria are fundamentally mismatched.
+  inter_annotator_agreement: '[NEEDS VERIFICATION — deferred: below search budget;
+    internal deployment team figures not publicly searchable. Requires direct elicitation
+    from the deployment team.]'
+  gsm8k_estimated_error_rate: ~1.7% of GSM8K problems estimated to contain breaking
+    errors or ambiguities based on contractor agreement checks; a larger fraction
+    may contain subtle errors (per paper).
+us_conventions_and_units:
+  numeric_format: 'Standard US conventions: period as decimal separator, comma as
+    thousands separator.'
+  currency: US dollars and cents.
+  measurement_system: US customary units (inches, feet, yards, miles; fluid ounces,
+    cups, pints, quarts, gallons; ounces, pounds; Fahrenheit for temperature).
+  high_frequency_unit_pairs_in_deployment:
+  - inches ↔ feet
+  - cups ↔ quarts
+  - ounces ↔ pounds
+  gsm8k_unit_coverage: '[NOT FOUND — searched for systematic analysis of GSM8K problems
+    involving US customary unit conversions at grades 3–6 difficulty; no published
+    quantitative breakdown of unit-conversion problem frequency in GSM8K was located.
+    The GSM8K paper itself provides no problem-type taxonomy. This slot requires manual
+    audit of the GSM8K problem set.]'
+benchmark_validity_gaps:
+  io_gap:
+    priority: HIGH
+    description: GSM8K has no error-type taxonomy. Its labels are strictly binary
+      (correct/incorrect final answer). The deployment requires diagnosing at least
+      five distinct error categories plus US-curriculum-specific subtypes. This gap
+      is complete and unmitigable within GSM8K.
+    web_search_targets:
+    - Math word problem benchmark annotated student error categories misapplied operation
+      arithmetic slip US Common Core grades 3–6
+    - MathBench MATH error analysis ASDiv MAWPS annotated error types elementary
+    - ASSISTments student error corpus annotated grade school arithmetic
+    net_new_alternatives_found: 'Several adjacent benchmarks exist but none fully
+      resolves the IO gap for this deployment. ASDiv (2,305 problems, grade-level
+      annotated, 24 problem-type categories including addition/subtraction/multiplication/division
+      variants) is the closest available resource with problem-type taxonomy and grade-level
+      metadata, but it labels problem types, not student error types. Source: ACL
+      Anthology — [|https://aclanthology.org/2020.acl-main.92.pdf|]. The MaE (Math
+      Misconceptions and Errors) dataset contains 220 diagnostic examples across 55
+      middle-school algebra misconceptions, annotated by math learning researchers,
+      and directly targets AI-based misconception diagnosis; however it covers algebra
+      (middle school) not arithmetic (grades 3–6). Source: GitHub — [|https://github.com/nancyotero-projects/math-misconceptions|].
+      MR-GSM8K (3,000 instances) reframes GSM8K as a meta-reasoning task requiring
+      error localization, first-error-step identification, and error reason generation
+      — the closest structural match to the deployment''s output ontology among GSM8K-family
+      benchmarks — but uses LLM-generated (not student-authored) solutions and lacks
+      grade differentiation or US-curriculum error subtypes. Source: GitHub — [|https://github.com/JIA-Lab-research/MR-GSM8K|];
+      ICLR 2025 slides — [|https://iclr.cc/media/iclr-2025/Slides/29086.pdf|].'
+  ic_gap:
+    priority: HIGH
+    description: GSM8K inputs are professionally authored clean prose; deployment
+      inputs are student-authored noisy text with carry marks, area models, partial-quotients
+      notation, number bonds, and informal language. No overlap in input distribution.
+    web_search_targets:
+    - Student math work corpus dataset carry marks area models partial quotients Common
+      Core elementary
+    - ASSISTments Khan Academy annotated student solution corpus grade 3–6
+    - Error-annotated student arithmetic work NLP dataset
+    net_new_resources_found: 'DrawEduMath (NAACL 2025) is the most directly relevant
+      dataset: 2,030 images of US K-12 students'' handwritten math responses (grades
+      2 through high school) sourced from the ASSISTments platform, with teacher-authored
+      free-form descriptions and 11,661 QA pairs covering problem-solving strategies
+      and error identification. Problems are drawn from CCSS-aligned OERs (Eureka
+      Math, Open Up Resources, Illustrative Math). This dataset addresses the IC gap
+      for a vision-based deployment; for the text-only deployment described here,
+      it partially addresses the gap via its teacher annotation layer. Critically,
+      a 2026 follow-up study of 11 VLMs found that models perform significantly worse
+      on student work containing errors than on correct work, and that models ''misdiagnose
+      errors'' — directly confirming the IC/IO validity concern. Sources: DrawEduMath
+      paper — [|https://arxiv.org/abs/2501.14877|]; DrawEduMath benchmark site — [|https://drawedumath.org/|];
+      2026 follow-up preprint — [|https://arxiv.org/pdf/2603.00925|]. The ASSISTments
+      2009–2010 dataset (large-scale middle-school student interaction logs with correct/incorrect
+      labels and knowledge component tags) is widely cited but provides binary correctness
+      signals only, not free-form step-level error annotations. Source: IEEE DataPort
+      — [|https://ieee-dataport.org/documents/assistments-dataset-2009-2010|]. A separate
+      stepwise verification dataset (Daheim et al., 2024) contains ~1,000 student
+      math reasoning chains with the first error step annotated by teachers, released
+      with the ''Verify-then-Generate'' tutoring framework — this is the closest text-format
+      resource for earliest-error annotation. Source: arXiv — [|https://arxiv.org/pdf/2407.09136|].'
+  if_gap:
+    priority: MODERATE
+    description: Both benchmark and deployment are English text-only, limiting gross
+      modality mismatch. However, student work includes quasi-structured notation
+      (vertical algorithms, area models) meaningfully different from GSM8K's well-formed
+      prose sentences.
+    web_search_targets:
+    - NLP parsing quasi-structured student arithmetic notation vertical algorithm
+      area model text representation
+  oo_gap:
+    priority: HIGH
+    description: GSM8K's output ontology is binary correct/incorrect. The deployment
+      requires structured output identifying earliest error location, independent
+      downstream errors, error type classification, and teacher-register free-form
+      explanation. GSM8K's scoring function cannot evaluate any component of this
+      output.
+    web_search_targets:
+    - Math error diagnosis benchmark LLM step-level error localization student reasoning
+      diagnostic NLP educational AI
+    - Structured error diagnosis evaluation framework elementary math tutoring
+    net_new_benchmarks_found: 'ProcessBench (Qwen, 2024) is a human-annotated benchmark
+      for identifying the earliest erroneous step in math reasoning, containing 3,400
+      test cases across four difficulty levels including a GSM8K subset (400 cases).
+      Each test case contains a step-by-step solution with error location annotated
+      by multiple human experts. This directly addresses the OO gap''s earliest-error-location
+      dimension, though solutions are LLM-generated (not student-authored) and there
+      is no teacher-register explanation evaluation. Source: arXiv — [|https://arxiv.org/pdf/2412.06559|];
+      HuggingFace dataset — [|https://huggingface.co/datasets/Qwen/ProcessBench|].
+      MR-GSM8K evaluates three sub-tasks: determining solution correctness, identifying
+      the first error step, and providing error reasons — but top LLMs (>80% GSM8K
+      accuracy) collapse to MR-Scores <0.02 on error localization, confirming that
+      strong GSM8K performance does not transfer to diagnostic tasks. Source: GitHub
+      — [|https://github.com/JIA-Lab-research/MR-GSM8K|]. The BEA 2025 Shared Task
+      evaluated AI tutor responses across four dimensions: Mistake Identification,
+      Mistake Location, Providing Guidance, and Actionability — the most structurally
+      aligned published evaluation framework to the deployment''s output ontology.
+      Source: arXiv — [|https://arxiv.org/pdf/2505.18549|].'
+  oc_gap:
+    priority: HIGH
+    description: GSM8K ground truth is final numerical correctness judged by freelance
+      contractors. Deployment ground truth is grade-differentiated pedagogical judgment
+      by domain educators. Annotator population, judgment type, and grade-level sensitivity
+      are all mismatched.
+    web_search_targets:
+    - Math benchmark annotation teacher-validated ground truth elementary school curriculum
+      specialist Common Core aligned dataset
+    - Grade-level rubric intermediate step acceptability US Common Core grades 3–6
+      dataset
+    net_new_resources_found: 'A JEDM-published dataset of 8,307 open-ended math problems
+      with 193,187 student responses evaluated by 1,296 mathematics teachers on a
+      5-point scale with free-text feedback provides evidence that teacher-validated,
+      feedback-annotated student math corpora exist at scale — this is structurally
+      closer to the deployment''s ground truth model than GSM8K''s contractor-correctness
+      labels. Source: JEDM — [|https://jedm.educationaldatamining.org/index.php/JEDM/article/download/858/258|].
+      DrawEduMath''s teacher QA annotation layer (11,661 pairs from practicing educators
+      describing student work and identifying errors) is the closest publicly available
+      teacher-validated ground truth for student-authored work. Source: DrawEduMath
+      — [|https://drawedumath.org/|].'
+  of_gap:
+    priority: MODERATE
+    description: GSM8K produces a binary label or ranked candidate list. Deployment
+      requires free-form diagnostic text in classroom-teacher register. No NLG evaluation
+      mechanism for explanation quality, register, or pedagogical accuracy exists
+      in GSM8K.
+    web_search_targets:
+    - Educational AI explanation quality evaluation teacher register NLG rubric math
+      tutoring diagnostic explanation
+    - Teacher-facing explanation quality studies MathQA explanation corpora educational
+      NLP
+    net_new_evaluation_frameworks_found: 'MathTutorBench (2025) benchmarks open-ended
+      pedagogical capabilities of LLM tutors and explicitly notes that general-purpose
+      NLG metrics (BLEU, BERTScore) do not capture pedagogical value and are insufficient
+      for educational evaluation. It uses rubric-based or learned scoring and calls
+      the absence of unified pedagogical evaluation metrics a key open problem. Source:
+      arXiv — [|https://arxiv.org/html/2502.18940v1|]. A 2024 taxonomy paper (''Unifying
+      AI Tutor Evaluation'') similarly identifies the lack of a unified evaluation
+      taxonomy for pedagogical AI as a field-wide gap, noting that standard NLG metrics
+      can be easily gamed by trivial responses. Source: arXiv — [|https://arxiv.org/html/2412.09416v1|].
+      TutorBench uses an LLM-judge with rubric criteria achieving F1=0.82 versus human
+      expert F1=0.91 across 321 criteria, suggesting LLM-as-judge is a viable but
+      imperfect proxy for pedagogical quality evaluation. Source: Scale AI preprint
+      — [|https://static.scale.com/uploads/654197dc94d34f66c0f5184e/TutorBench%20(1).pdf|].
+      The BEA shared tasks series specifically benchmarks teacher-register response
+      generation and assessment in educational dialogues. Source: cited in MathTutorBench
+      — [|https://arxiv.org/html/2502.18940v1|].'
+flagged_gaps_for_downstream_search:
+- gap_id: 1
+  topic: Error taxonomy absent from GSM8K
+  search_query: math word problem benchmark annotated student error categories misapplied
+    operation arithmetic slip US Common Core grades 3-6 ASDiv MAWPS MathBench
+  search_status: SEARCHED — partial resolution. ASDiv provides problem-type taxonomy
+    (not student error types). MaE dataset provides misconception taxonomy for algebra,
+    not grades 3–6 arithmetic. MR-GSM8K provides error-reason generation as a task
+    but uses LLM-generated solutions. No benchmark with a student-error taxonomy aligned
+    to CCSS-M grades 3–6 arithmetic was found.
+- gap_id: 2
+  topic: Student-work input distribution (noisy, notational)
+  search_query: student math solution corpus dataset annotated carry marks area models
+    partial quotients Common Core elementary ASSISTments Khan Academy
+  search_status: SEARCHED — DrawEduMath is the strongest match (2,030 handwritten
+    student math images from ASSISTments, CCSS-aligned, teacher-annotated). For text-only
+    deployment, the Daheim et al. (2024) ~1K stepwise solution dataset with first-error
+    teacher annotation is the closest text-format resource. Neither covers carry marks
+    or area model notation in text form.
+- gap_id: 3
+  topic: Grade-level pedagogical norms for acceptability of intermediate steps
+  search_query: US Common Core grade-level math rubric benchmark grades 3-6 acceptable
+    intermediate steps improper fractions rounding pedagogical standards NLP dataset
+  search_status: 'NOT SEARCHED — deferred: below remaining search budget. ASDiv provides
+    grade-level annotations but not pedagogical acceptability norms for intermediate
+    steps. This slot likely requires expert elicitation, not web search.'
+- gap_id: 4
+  topic: Diagnostic explanation quality evaluation (teacher-register NLG)
+  search_query: educational AI diagnostic explanation quality evaluation teacher register
+    NLG rubric elementary math tutoring assessment human judgment
+  search_status: 'SEARCHED — MathTutorBench, TutorBench, BEA 2025 Shared Task, and
+    the AI Tutor Evaluation Taxonomy paper all confirm the gap: no standard rubric
+    for teacher-register diagnostic explanation quality exists. Best available proxies
+    are LLM-judge with rubric criteria (TutorBench, F1=0.82) and BEA shared task multi-dimensional
+    evaluation (Mistake Identification, Mistake Location, Providing Guidance, Actionability).'
+- gap_id: 5
+  topic: US customary unit conversion coverage in GSM8K
+  search_query: GSM8K unit conversion problems analysis inches feet cups quarts grade
+    school math word problems US curriculum coverage quantitative
+  search_status: NOT FOUND — no published systematic analysis of unit-conversion problem
+    frequency in GSM8K was located. Requires manual audit of the GSM8K problem set.
+- gap_id: 6
+  topic: Common Core–specific problem phrasing in GSM8K
+  search_query: GSM8K Common Core phrasing how many more how many total linguistic
+    analysis grade school math word problem US curriculum frequency
+  search_status: 'NOT SEARCHED — deferred: below remaining search budget. Likely requires
+    direct corpus analysis of GSM8K problem text.'
+infrastructure_and_access_notes:
+  deployment_modality: Web or app-based tutoring interface; text input (typed or transcribed
+    handwritten work).
+  language_model_role: Diagnostic reasoning over student-submitted solution text;
+    not generative problem-solving.
+  input_preprocessing_requirement: System must correctly parse non-standard student
+    notation (carry marks, area models, 'r' for remainder, informal phrasing) without
+    flagging valid unconventional notation as mathematical errors.
+  device_context: 'Chromebooks are the dominant device in US K-12 education: 93% of
+    US school districts planned Chromebook purchases in 2025 (up from 84% in 2023),
+    and Chromebooks hold 60.1% of the global education device market. iPads remain
+    a significant presence particularly in elementary grades (one survey found 78%
+    of elementary students regularly use tablets; another found iPads are favored
+    in lower elementary while Chromebooks predominate from grade 2 upward in 1:1 programs).
+    88% of public schools reported a 1-to-1 computing program in 2024–25. The practical
+    device landscape for grades 3–6 is: Chromebooks (dominant at district scale),
+    iPads (common in lower elementary), and some Windows laptops/desktops. All are
+    browser-capable, supporting text-based web app deployments. Sources: About Chromebooks
+    2026 — [|https://www.aboutchromebooks.com/chromebooks-in-schools-statistics/|];
+    EdTech Update / Front Row Education survey — [|https://www.edtechupdate.com/chromebook/ipad/survey/|];
+    NCES School Pulse Panel 2025 — [|https://ies.ed.gov/learn/press-release/more-half-public-|];
+    Monster Math blog citing CoSN 2024 — [|https://www.monstermath.app/blog/how-many-us-schools-use-online-learning-2026|]'
+  accessibility_considerations: '[NEEDS VERIFICATION — deferred: likely unsearchable
+    (deployment-specific design decision). Whether OCR/handwriting recognition preprocessing
+    is in scope depends on the specific deployment system architecture, not publicly
+    documented industry norms. Requires direct elicitation from the deployment team.
+    Note: DrawEduMath (2025) demonstrates that VLMs underperform on handwritten student
+    math work containing errors even after images are redrawn to be clean and legible,
+    suggesting that handwriting-to-text preprocessing would not fully resolve the
+    IC gap for error-containing student work — source: [|https://arxiv.org/pdf/2603.00925|].]'
+cultural_and_pedagogical_norms: '- US Common Core–aligned instruction emphasizes conceptual
+  understanding alongside procedural fluency; multiple solution strategies (area models,
+  partial quotients, number bonds) are explicitly taught and must be recognized as
+  valid.
+
+  - Teacher-register explanation is concrete, student-facing, and ties the error to
+  the problem''s meaning (e.g., ''the problem is asking how many groups, so you need
+  to divide, not multiply'') rather than citing abstract rules.
+
+  - Grade-level progression is operationally significant: the same intermediate step
+  (e.g., expressing an answer as an improper fraction) may be acceptable at one grade
+  and flagged at another.
+
+  - US customary units (not metric) are the default in grades 3–6 word problems, and
+  unit conversion within the customary system is a high-frequency curricular topic
+  and error source.
+
+  - Standardized test phrasing conventions (from SBAC, PARCC, and state assessments)
+  influence problem language norms beyond just CCSS-M textbooks.
+
+  - Student informal language (''I did 5 times 3'', ''b/c'') and non-standard but
+  mathematically valid notation must not be penalized as errors by the diagnostic
+  system.'
+net_new_fields:
+  critical_empirical_finding_error_localization:
+    finding: Top LLMs that achieve >80% accuracy on GSM8K (a problem-solving task)
+      collapse to MR-Scores <0.02 on error localization tasks in MR-GSM8K — a near-zero
+      performance level. This is direct empirical evidence that GSM8K performance
+      does not generalize to the diagnostic meta-reasoning capability the deployment
+      requires, and that the gap is not merely structural but measurable and severe.
+    source: MR-GSM8K benchmark results — [|https://github.com/JIA-Lab-research/MR-GSM8K|];
+      EmergentMind summary — [|https://www.emergentmind.com/topics/gsm8k|]
+    validity_dimension: OO
+    impact: 'HIGH — directly quantifies the OO gap: a model that scores well on GSM8K
+      will not reliably perform the deployment''s core diagnostic function.'
+  critical_empirical_finding_student_work_error_detection:
+    finding: A 2026 study of 11 VLMs on DrawEduMath found that models perform significantly
+      worse on student work containing errors than on correct student work, and that
+      models 'misdiagnose errors' — i.e., they fail specifically where the deployment
+      most needs them to succeed. Performance on error-identification questions was
+      sometimes barely above chance for some models.
+    source: The Aftermath of DrawEduMath (2026 preprint) — [|https://arxiv.org/pdf/2603.00925|]
+    validity_dimension: IC, OO
+    impact: HIGH — confirms the IC and OO validity concerns empirically using real
+      student work from an ASSISTments platform similar to the deployment context.
+  processbench_relevance:
+    description: ProcessBench (Qwen, 2024) is a human-annotated benchmark for earliest-error-step
+      identification in math reasoning with 400 GSM8K-level test cases. Each case
+      has a step-by-step solution with error location annotated by multiple human
+      experts. It is the most structurally aligned publicly available benchmark for
+      the deployment's earliest-error-location requirement, though it uses LLM-generated
+      (not student-authored) solutions and has no teacher-register explanation evaluation
+      or US-curriculum error subtypes.
+    source: ProcessBench paper — [|https://arxiv.org/pdf/2412.06559|]; HuggingFace
+      — [|https://huggingface.co/datasets/Qwen/ProcessBench|]
+    validity_dimension: OO
+    recommendation: ProcessBench's GSM8K subset could supplement GSM8K as a diagnostic
+      benchmark for the error-location sub-task, but does not substitute for teacher-annotated
+      student-work datasets.
+  bea2025_shared_task_relevance:
+    description: 'The BEA 2025 Shared Task evaluated AI tutor responses across four
+      dimensions directly matching the deployment''s output structure: Mistake Identification,
+      Mistake Location, Providing Guidance, and Actionability. This is the most operationally
+      aligned published evaluation framework for the deployment''s OF and OO requirements.'
+    source: BEA 2025 Shared Task submission — [|https://arxiv.org/pdf/2505.18549|]
+    validity_dimension: OF, OO
+    recommendation: The BEA 2025 evaluation protocol (or its rubric dimensions) should
+      be considered as a supplementary evaluation framework alongside any benchmark
+      used for this deployment.
+  mathtutorbench_of_gap_evidence:
+    description: MathTutorBench (2025) and the 2024 AI Tutor Evaluation Taxonomy paper
+      both identify the absence of a standard pedagogical explanation quality metric
+      as a field-wide open problem, and explicitly document that generic NLG metrics
+      (BLEU, BERTScore) fail to capture pedagogical value and can be gamed by trivial
+      responses. This confirms the OF gap is not just deployment-specific but reflects
+      a broader measurement limitation in the field.
+    source: MathTutorBench — [|https://arxiv.org/html/2502.18940v1|]; AI Tutor Evaluation
+      Taxonomy — [|https://arxiv.org/html/2412.09416v1|]
+    validity_dimension: OF
+    impact: MODERATE — confirms that no off-the-shelf NLG metric can substitute for
+      human judgment in evaluating teacher-register diagnostic explanations.
+  asdiv_partial_io_gap_mitigation:
+    description: ASDiv (Academia Sinica Diverse MWP Dataset, 2,305 problems) annotates
+      each problem with problem type (24 categories covering elementary arithmetic
+      operations) and grade level, making it the most structured publicly available
+      MWP corpus for problem-type taxonomy. It does not annotate student error types
+      but its problem-type categories (addition, subtraction, multiplication, division
+      variants) map approximately onto the deployment's 'misapplied operation' error
+      type. It does not cover US customary unit conversions or CCSS-M-specific phrasing
+      systematically.
+    source: ASDiv paper — [|https://arxiv.org/abs/2106.15772|]; ACL Anthology — [|https://aclanthology.org/2020.acl-main.92.pdf|]
+    validity_dimension: IO
+    impact: LOW-MODERATE — useful for problem-type coverage analysis but does not
+      resolve the IO gap.
+  ccss_sub_national_variation_caveat: CCSS-M adoption figures are national aggregates.
+    The deployment may encounter students in non-CCSS states (notably Florida, Oklahoma,
+    Indiana, South Carolina, and Texas which never adopted) where instructional strategies
+    and problem phrasing conventions differ from CCSS-M norms. The diagnostic system's
+    reliance on CCSS-M-specific strategies (area models, partial quotients, number
+    bonds) as valid notation may not align with instruction in these states. The deployment
+    team should verify whether the tutoring module is intended for deployment in non-CCSS
+    states and, if so, expand the valid-notation list accordingly.

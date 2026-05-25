@@ -1,0 +1,441 @@
+# Culture-Agnostic Validity Gradation Experiment — Assessment Definitions
+#
+# 3 benchmarks × 2 triplets × 3 fit levels = 18 assessments.
+# Population is held constant (US, English-speaking) across all assessments
+# so validity variation is driven entirely by use-case alignment.
+#
+# Each entry has:
+#   slug:                  {benchmark}_{triplet}_{fit}
+#   benchmark:             GSM8K | HumanEval | FOLIO
+#   paper_id:              ArXiv ID for downloading the paper PDF
+#   hf_dataset:            HuggingFace dataset ID
+#   triplet:               depth | format | scope | output_eval | reasoning | structure
+#   fit:                   great | ok | terrible
+#   gradient_rationale:    why this triplet creates a validity gradient
+#   deployment_description: what the pipeline receives as the use-case input
+#   persona_context:       additional context for the simulated user subagent
+
+benchmarks:
+  gsm8k:
+    paper_arxiv: "2110.14168"
+    hf_dataset: "openai/gsm8k"
+    domain: "Grade-school math word problems requiring multi-step arithmetic reasoning"
+
+  humaneval:
+    paper_arxiv: "2107.03374"
+    hf_dataset: "openai/openai_humaneval"
+    domain: "Python function generation from docstrings, verified by automated test suites"
+
+  folio:
+    paper_arxiv: "2209.00840"
+    hf_dataset: "yale-nlp/FOLIO"
+    domain: "First-order logic natural language inference — given premises, classify whether a conclusion is True, False, or Unknown"
+
+assessments:
+  # ===========================================================================
+  # GSM8K — Triplet 1: Construct Depth Gradient
+  # ===========================================================================
+  # GSM8K measures multi-step arithmetic reasoning at a grade-school level.
+  # Great = exact construct at exact depth. Ok = related quantitative reasoning
+  # at different complexity. Terrible = entirely different construct (statistics).
+
+  - slug: gsm8k_depth_great
+    benchmark: gsm8k
+    triplet: depth
+    fit: great
+    deployment_description: >
+      We are building a homework-checking feature for a US K-8 math tutoring
+      platform. Students type in or receive arithmetic word problems through the
+      platform's text interface, and our LLM checks whether their final
+      numerical answer is correct. We want to evaluate the LLM's ability to
+      solve multi-step arithmetic word problems (addition, subtraction,
+      multiplication, division, fractions, percentages) before deploying this
+      feature to American elementary and middle school students.
+    persona_context: >
+      You are an edtech product manager at a US company building a
+      homework-checking feature for grades 3–8. Students interact through a
+      text-based interface, typing problems and answers. Your users are American
+      children and their parents. You care about arithmetic word problems:
+      addition, subtraction, multiplication, division, fractions, percentages,
+      and multi-step problems. Your system outputs correct/incorrect plus the
+      right answer.
+
+  - slug: gsm8k_depth_ok
+    benchmark: gsm8k
+    triplet: depth
+    fit: ok
+    deployment_description: >
+      We are a US fintech startup building a personal finance chatbot that helps
+      American adults with everyday money math: splitting bills, comparing loan
+      APRs, calculating how long to pay off credit card balances, and budgeting
+      across expense categories. Users type natural language questions about
+      their finances. We want to evaluate whether an LLM can handle the
+      quantitative reasoning these queries require before deploying the chatbot.
+    persona_context: >
+      You are a product lead at a US fintech startup. Your chatbot helps
+      American adults with everyday money math: splitting bills, comparing loan
+      APRs, calculating credit card payoff timelines, budgeting across expense
+      categories. Users type natural language questions. You need the LLM to get
+      the numbers right, but the problems are open-ended, involve real financial
+      products, and sometimes require domain knowledge (compound interest,
+      amortization) beyond basic arithmetic.
+
+  - slug: gsm8k_depth_terrible
+    benchmark: gsm8k
+    triplet: depth
+    fit: terrible
+    deployment_description: >
+      We are a US data science consultancy evaluating whether an LLM can serve
+      as an automated statistical analysis assistant for American data analysts.
+      The tool will help analysts perform regression modeling, hypothesis
+      testing, ANOVA, experimental design, and interpretation of statistical
+      results. Users paste datasets and ask analytical questions. We need to
+      evaluate the LLM's quantitative reasoning capabilities before deployment.
+    persona_context: >
+      You are a technical director at a US data science consultancy. You want to
+      evaluate an LLM for a tool that assists American analysts with regression
+      modeling, hypothesis testing, ANOVA, experimental design, and interpreting
+      p-values. Users paste datasets and ask analytical questions. Outputs
+      include statistical test selections, code generation, and interpretation
+      of results. The reasoning is quantitative but the construct is
+      fundamentally different from arithmetic word problems.
+
+  # ===========================================================================
+  # GSM8K — Triplet 2: Task Format Gradient
+  # ===========================================================================
+  # GSM8K's task structure is: read a word problem, produce a final numerical
+  # answer. Great = mirrors this exactly. Ok = same domain but inverted task
+  # direction (diagnosing errors). Terrible = reversed pipeline (generating
+  # problems instead of solving them).
+
+  - slug: gsm8k_format_great
+    benchmark: gsm8k
+    triplet: format
+    fit: great
+    deployment_description: >
+      We are a US edtech company building an auto-grading system for American
+      schools. Teachers assign arithmetic word problems and students submit
+      numerical answers through our text-based platform. Our LLM independently
+      solves the same problem and compares its answer to the student's
+      submission. We need to evaluate whether the LLM reliably produces correct
+      final numerical answers to arithmetic word problems.
+    persona_context: >
+      You are an engineering lead at a US edtech company building an auto-grader
+      for American schools. Teachers assign arithmetic word problems; students
+      submit numerical answers through a text interface; your system checks
+      whether the answer is correct. You need the LLM to solve the same problem
+      independently and compare. Input is a word problem, output is a number.
+
+  - slug: gsm8k_format_ok
+    benchmark: gsm8k
+    triplet: format
+    fit: ok
+    deployment_description: >
+      We are a US edtech company building a tutoring module for American
+      students. When a student gets an arithmetic word problem wrong, our system
+      should identify where in their worked solution the error occurred and
+      explain the mistake. The system receives the original word problem plus
+      the student's step-by-step work (which may contain errors), and produces a
+      diagnostic explanation. We want to evaluate the LLM's ability to analyze
+      and diagnose errors in arithmetic reasoning.
+    persona_context: >
+      You are a learning scientist at a US edtech company, building a tutoring
+      module. When a student gets a problem wrong, the system should identify
+      where in their worked solution the error occurred and explain the mistake.
+      Input is a word problem plus a student's (possibly incorrect) step-by-step
+      work. Output is a diagnostic explanation. The domain is the same as
+      standard arithmetic word problems but the task direction is inverted —
+      analyzing solutions rather than producing them.
+
+  - slug: gsm8k_format_terrible
+    benchmark: gsm8k
+    triplet: format
+    fit: terrible
+    deployment_description: >
+      We are a US edtech company building a tool for American teachers to
+      generate novel math word problems. Teachers specify a topic (e.g.,
+      multi-step fractions), grade level, and difficulty, and the system
+      produces original assessment items complete with verified solutions and
+      distractor answer choices for multiple-choice format. We need to evaluate
+      the LLM's ability to generate pedagogically appropriate, mathematically
+      accurate assessment content aligned to Common Core standards.
+    persona_context: >
+      You are a curriculum designer at a US edtech company. You want the LLM to
+      generate novel math word problems aligned to Common Core standards for
+      specific grade levels, complete with verified solutions and distractor
+      answer choices. Teachers specify a topic and difficulty; the system
+      produces assessment items. The domain is arithmetic word problems but the
+      task is generative rather than discriminative, and correctness means
+      pedagogical appropriateness plus mathematical accuracy of the generated
+      content.
+
+  # ===========================================================================
+  # HumanEval — Triplet 1: Construct Scope Gradient
+  # ===========================================================================
+  # HumanEval measures producing a single correct Python function from a
+  # self-contained spec. Great = that task verbatim. Ok = still Python
+  # function-level but test generation instead of implementation. Terrible =
+  # multi-language system design.
+
+  - slug: humaneval_scope_great
+    benchmark: humaneval
+    triplet: scope
+    fit: great
+    deployment_description: >
+      We are a US developer tools company building an inline code completion
+      feature. When an American software engineer writes a Python docstring or
+      function signature in their IDE, our tool autocompletes the function body.
+      We need to evaluate whether the LLM can generate correct, self-contained
+      Python functions from natural language specifications. Correctness is
+      verified by automated test suites.
+    persona_context: >
+      You are a product engineer at a US developer tools company. Your feature
+      autocompletes Python functions when a developer writes a docstring or
+      function signature. The user is an American software engineer working in a
+      standard Python environment. You need the LLM to produce a correct,
+      self-contained function body. Correctness is verified by automated test
+      suites.
+
+  - slug: humaneval_scope_ok
+    benchmark: humaneval
+    triplet: scope
+    fit: ok
+    deployment_description: >
+      We are a US software company building a tool that automatically generates
+      unit tests for existing Python functions. Given a function's signature,
+      docstring, and source code, the tool produces test cases that exercise the
+      function's behavior, including edge cases. Our users are American QA
+      engineers. We need to evaluate the LLM's ability to comprehend existing
+      code and produce meaningful tests.
+    persona_context: >
+      You are a QA tools lead at a US software company. Your tool takes existing
+      Python functions (with signatures, docstrings, and source) and generates
+      unit tests for them. Your users are American QA engineers. The system must
+      understand what the function does, identify edge cases, and produce test
+      code that exercises them. The domain is still Python function-level
+      reasoning, but the task requires comprehension of existing code rather
+      than generation from specification, and the output is tests rather than
+      implementations.
+
+  - slug: humaneval_scope_terrible
+    benchmark: humaneval
+    triplet: scope
+    fit: terrible
+    deployment_description: >
+      We are a US enterprise software company evaluating whether an LLM can
+      generate full-stack web application scaffolding from high-level
+      requirements documents. Given a requirements spec, the system should
+      produce database schemas, API route definitions, frontend component stubs,
+      and deployment configurations. Our users are American software architects.
+      We need to evaluate the LLM's code generation capabilities for this
+      multi-layer task.
+    persona_context: >
+      You are a platform architect at a US enterprise software company. You want
+      to evaluate an LLM for a tool that takes high-level requirements documents
+      and generates project scaffolding: database schemas, API route
+      definitions, frontend component stubs, deployment configurations. Your
+      users are American software architects. The task involves multiple
+      languages, frameworks, and abstraction layers simultaneously — it shares
+      the keyword "code generation" but the construct is system design, not
+      function-level correctness.
+
+  # ===========================================================================
+  # HumanEval — Triplet 2: Output Evaluation Gradient
+  # ===========================================================================
+  # HumanEval's scoring is binary pass/fail against automated tests. Great =
+  # exactly that. Ok = code correctness but for bug detection/fix (different
+  # evaluation criterion). Terrible = generating natural language docs from code.
+
+  - slug: humaneval_output_eval_great
+    benchmark: humaneval
+    triplet: output_eval
+    fit: great
+    deployment_description: >
+      We are a US IDE vendor building a code suggestion feature for American
+      developers. The tool proposes Python function implementations that are
+      validated by running the user's test suite. We care about functional
+      correctness: does the generated code compile, run, and pass all tests? We
+      need to evaluate the LLM's ability to produce functionally correct Python
+      code.
+    persona_context: >
+      You are a product manager at a US IDE vendor. Your code suggestion feature
+      proposes Python function implementations that are validated by running the
+      user's test suite. You care about functional correctness: does the
+      generated code pass all tests? Your users are American developers who
+      expect suggestions to compile and run correctly.
+
+  - slug: humaneval_output_eval_ok
+    benchmark: humaneval
+    triplet: output_eval
+    fit: ok
+    deployment_description: >
+      We are a US code review platform building a feature that scans existing
+      Python codebases, identifies likely bugs, and suggests fixes for American
+      development teams doing code review. The system reads existing code,
+      detects defects (logic errors, off-by-one bugs, null reference issues),
+      and proposes corrections. We need to evaluate the LLM's ability to
+      understand and reason about existing code.
+    persona_context: >
+      You are a tools engineer at a US code review platform. Your feature scans
+      existing Python codebases, identifies likely bugs, and suggests fixes.
+      Your users are American development teams doing code review. The system
+      must read and understand existing code, detect defects, and propose
+      corrections — the evaluation criterion is "did it find the right bug and
+      suggest a valid fix" rather than "did it generate passing code from
+      scratch."
+
+  - slug: humaneval_output_eval_terrible
+    benchmark: humaneval
+    triplet: output_eval
+    fit: terrible
+    deployment_description: >
+      We are a US software company evaluating whether an LLM can generate
+      accurate API documentation from Python source code. Given a Python module,
+      the system should produce well-structured reference documentation:
+      function descriptions, parameter explanations, return value
+      specifications, and usage examples. Our audience is American developers
+      consuming the documentation. We need to evaluate the LLM's ability to
+      produce accurate technical prose from code.
+    persona_context: >
+      You are leading a technical writing initiative at a US software company.
+      You want an LLM to read Python source code and generate accurate,
+      well-structured API documentation for American developer audiences.
+      Output is natural language (prose descriptions, parameter explanations,
+      usage examples), not code. Correctness means factual accuracy and
+      completeness of the documentation, not functional code behavior.
+
+  # ===========================================================================
+  # FOLIO — Triplet 1: Reasoning Type Gradient
+  # ===========================================================================
+  # FOLIO tests deductive validity of arguments in controlled natural language.
+  # Great = checking deductive validity. Ok = logical analysis over
+  # semi-structured real-world text. Terrible = generating persuasive arguments.
+
+  - slug: folio_reasoning_great
+    benchmark: folio
+    triplet: reasoning
+    fit: great
+    deployment_description: >
+      We are building an automated logic-checking tool for undergraduate formal
+      reasoning courses at a US university. The tool receives a set of premises
+      and a conclusion expressed in controlled natural language and determines
+      whether the argument is logically valid, invalid, or indeterminate. Our
+      users are American undergraduates taking introductory logic courses. We
+      need to evaluate the LLM's deductive reasoning capabilities.
+    persona_context: >
+      You are a computer science instructor at a US university. You are building
+      a tool for your undergraduate formal logic course that checks whether
+      students' deductive arguments are logically valid. Input is a set of
+      premises and a conclusion in controlled natural language. The system
+      classifies the argument as valid, invalid, or indeterminate. Your students
+      are American undergraduates taking introductory logic.
+
+  - slug: folio_reasoning_ok
+    benchmark: folio
+    triplet: reasoning
+    fit: ok
+    deployment_description: >
+      We are a US engineering firm building a tool that identifies logical
+      inconsistencies across technical specification documents for American
+      systems engineers. The tool analyzes structured requirements and design
+      documents to find contradictions — for example, requirements that
+      contradict each other or conditions that can never be jointly satisfied.
+      We need to evaluate the LLM's ability to perform logical analysis over
+      semi-structured technical prose.
+    persona_context: >
+      You are a product lead at a US engineering firm. Your tool analyzes
+      structured technical specifications to identify logical inconsistencies —
+      requirements that contradict each other, conditions that cannot be jointly
+      satisfied, or implicit assumptions that conflict. The reasoning is still
+      logical analysis, but premises are embedded in semi-structured technical
+      prose, may be implicit or ambiguous, and the practical consequences of
+      inconsistency matter as much as formal validity. Your users are American
+      systems engineers.
+
+  - slug: folio_reasoning_terrible
+    benchmark: folio
+    triplet: reasoning
+    fit: terrible
+    deployment_description: >
+      We are a US consulting firm evaluating whether an LLM can help American
+      management consultants build persuasive business cases. The system should
+      assemble evidence, structure arguments, anticipate counterarguments, and
+      tailor reasoning to executive audiences. We need to evaluate the LLM's
+      reasoning capabilities for argument construction in a business context.
+    persona_context: >
+      You are a knowledge management director at a US consulting firm. You want
+      an LLM that helps American management consultants build persuasive
+      business cases: assembling evidence, structuring arguments, anticipating
+      counterarguments, and tailoring reasoning to executive audiences. Logical
+      soundness matters, but so does rhetorical strategy, evidence selection,
+      audience modeling, and narrative structure — the task is argument
+      construction for persuasion, not argument verification for correctness.
+
+  # ===========================================================================
+  # FOLIO — Triplet 2: Task Structure Gradient
+  # ===========================================================================
+  # FOLIO's task is classification (true/false/unknown). Great = classification
+  # labels. Ok = reasoning trace explanation (generative output). Terrible =
+  # informal argument evaluation in naturalistic discourse.
+
+  - slug: folio_structure_great
+    benchmark: folio
+    triplet: structure
+    fit: great
+    deployment_description: >
+      We are a US AI research lab evaluating LLM reasoning capabilities. We
+      want to test whether the model can correctly classify the logical
+      relationship (entailment, contradiction, or neutral) between a set of
+      premises and a conclusion expressed in formal logical statements. Input is
+      structured premise-conclusion pairs. Output is a categorical label. Our
+      evaluation metric is classification accuracy.
+    persona_context: >
+      You are a research engineer at a US AI lab evaluating LLM reasoning
+      capabilities. You want to test whether the model can correctly classify
+      the logical relationship (entailment, contradiction, or neutral) between
+      premises and a conclusion in formal logical statements. Input is
+      structured premise-conclusion pairs. Output is a categorical label. Your
+      evaluation is accuracy on classification.
+
+  - slug: folio_structure_ok
+    benchmark: folio
+    triplet: structure
+    fit: ok
+    deployment_description: >
+      We are a US educational platform building a tool for American logic
+      students. The tool should not only determine whether a logical argument is
+      valid but also explain why — producing step-by-step reasoning traces that
+      students can follow. We need to evaluate the LLM's ability to both
+      perform logical reasoning and articulate its reasoning process in a
+      pedagogically clear way.
+    persona_context: >
+      You are an instructional designer at a US educational platform. You want
+      an LLM that not only determines whether a logical argument is valid but
+      also explains why — producing step-by-step reasoning traces that American
+      logic students can follow. The underlying logical content is the same, but
+      the output is a structured natural language explanation rather than a
+      categorical label, and quality is measured by pedagogical clarity and
+      logical correctness of the explanation, not just label accuracy.
+
+  - slug: folio_structure_terrible
+    benchmark: folio
+    triplet: structure
+    fit: terrible
+    deployment_description: >
+      We are a US debate coaching platform evaluating whether an LLM can assess
+      the strength of informal, real-world arguments made by American high
+      school students in competitive debate contexts. Arguments involve
+      empirical claims, value judgments, rhetorical moves, and evidence of
+      varying quality. The system should assess argument strength holistically —
+      including logical validity, evidence quality, relevance, and persuasive
+      effectiveness.
+    persona_context: >
+      You are a program director at a US debate coaching platform. You want an
+      LLM that evaluates the strength of informal, real-world arguments made by
+      American high school debaters in competitive contexts. Arguments involve
+      empirical claims, value judgments, rhetorical moves, and evidence of
+      varying quality. The system must assess argument strength holistically —
+      not just logical validity but also evidence quality, relevance, and
+      persuasive effectiveness. The task shares the word "argument" with formal
+      logic but the construct is informal argumentation in naturalistic
+      discourse.

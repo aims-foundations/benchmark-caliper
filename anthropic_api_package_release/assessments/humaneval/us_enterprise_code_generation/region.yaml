@@ -1,0 +1,583 @@
+name: US Enterprise Software Architects — Full-Stack Scaffolding Generation
+abbreviation: US-ESA-SCAFFOLD
+assessment_context:
+  benchmark: humaneval
+  deployment_use_case: LLM evaluation for generating complete full-stack web application
+    scaffolding (database schemas, API routes, frontend component stubs, deployment
+    configurations) from multi-page semi-structured requirements documents (Confluence/PRDs).
+  evaluating_organization_type: US enterprise software company (internal AI capability
+    evaluation)
+  primary_region: United States
+  sub_national_scope: No formal sub-national boundary; user population is implicitly
+    concentrated in US tech-industry hubs (e.g., San Francisco Bay Area, Seattle,
+    New York, Austin, Boston). Remote/distributed teams also represented.
+target_population:
+  description: American software architects and senior engineers employed at a US
+    enterprise software company who are evaluating LLM-generated full-stack scaffolding.
+    They are the end-users and primary graders of model output. They possess strong
+    technical expertise across multiple layers of a modern web stack and grade outputs
+    against an internal architecture guide rather than purely algorithmic correctness.
+  occupation_cohort: Software architects and senior software engineers
+  seniority_level: Senior / Staff / Principal (architecture-decision makers)
+  organizational_role: Primary consumers and evaluators of LLM-generated scaffolding;
+    authors and custodians of the internal architecture guide used as the grading
+    rubric
+  team_context: Enterprise software product teams; evaluation context is pre-deployment
+    capability assessment, not production use
+languages:
+  primary:
+  - English (US)
+  code_languages:
+  - Python (FastAPI, SQLAlchemy, Pydantic)
+  - SQL (PostgreSQL dialect)
+  - TypeScript / JavaScript (React, Next.js, Angular)
+  - Java (Spring Boot)
+  - YAML (Docker Compose, Kubernetes manifests)
+  - HCL (Terraform)
+  - Bash / shell (CI/CD scripts)
+  natural_language_input_form: English-language semi-structured PRD / Confluence documents
+    (3–10 pages, consistent headings but variable prose)
+writing_systems:
+  scripts:
+  - Latin (ASCII + Unicode; standard US English prose and code)
+  note: All specification inputs and expected outputs are in US English / standard
+    ASCII-compatible code. No CJK, RTL, or special-script handling required. Tokenization
+    challenges are code-specific (e.g., camelCase, snake_case, kebab-case identifiers)
+    rather than script-level.
+technical_literacy:
+  general_literacy: Near-universal among target population (professional engineers)
+  code_literacy: Expert — primary graders are software architects fluent in multiple
+    languages and frameworks
+  ai_tool_familiarity: 'High and broadly confirmed. Stack Overflow''s 2025 Developer
+    Survey reports 80% of developers now use AI tools in their workflows, with experienced
+    developers showing the highest distrust of output accuracy (only 2.6% ''highly
+    trust'' AI output), suggesting widespread familiarity paired with critical evaluation
+    posture — well-matched to an architect-grader cohort. Gartner (July 2025) predicts
+    90% of enterprise software engineers will use AI code assistants by 2028, up from
+    under 14% in early 2024, confirming rapid adoption trajectory.
+
+    Sources: Stack Overflow Developer Survey 2025 — [|https://survey.stackoverflow.co/2025/ai|];
+    Gartner press release July 2025 — [|https://www.gartner.com/en/newsroom/press-releases/2025-07-01-gartner-identifies-the-top-strategic-trends-in-software-engineering-for-2025-and-beyond|]'
+  note: 'Population is not a lay-user cohort; all output evaluation is conducted by
+    domain experts capable of identifying syntactic, semantic, and architectural errors.
+    Per Stack Overflow 2025, experienced developers show the highest rate of AI output
+    distrust (20% ''highly distrust''), reinforcing that architect-graders in this
+    cohort will apply rigorous verification. Source: Stack Overflow Developer Survey
+    2025 — [|https://survey.stackoverflow.co/2025/ai|]'
+technology_stack:
+  primary_stack:
+    backend_framework: FastAPI (Python)
+    orm: SQLAlchemy
+    schema_validation: Pydantic
+    database: PostgreSQL
+    frontend_framework: React / Next.js
+    language: TypeScript
+  secondary_stack:
+    backend_framework: Spring Boot (Java)
+    database: MySQL
+    frontend_framework: Angular
+    language: TypeScript / Java
+  deployment_targets:
+    containerization: Docker (Docker Compose for local dev)
+    orchestration: Kubernetes
+    cloud_provider: AWS
+    iac_tooling: Terraform (occasional use)
+  auxiliary_tooling:
+    api_style: REST (primary); GraphQL (mentioned as possibility)
+    ci_cd: '[NEEDS VERIFICATION — deferred: below search budget; internal toolchain
+      (GitHub Actions, Jenkins, CircleCI, or similar) not specified in elicitation
+      and not searchable without org-specific context]'
+    linting_formatting: '[NEEDS VERIFICATION — deferred: below search budget; likely
+      unsearchable (internal convention); Black/ESLint/Prettier/Checkstyle are the
+      dominant tools in the relevant ecosystem but specific org selection not confirmable]'
+    testing_frameworks: '[NEEDS VERIFICATION — deferred: below search budget; pytest,
+      Jest, and JUnit are the de-facto standards for FastAPI/React/Spring Boot respectively
+      but org-specific confirmation requires stakeholder elicitation]'
+artifact_layers_under_evaluation:
+  layer_priority: All four layers required; database schema and API routes are highest
+    priority due to refactoring cost
+  layers:
+  - layer: Database schema
+    artifact_types:
+    - SQL DDL (PostgreSQL)
+    - SQLAlchemy ORM models
+    - MySQL DDL (secondary stack)
+    criticality: HIGHEST — hardest to refactor post-generation
+  - layer: API routes
+    artifact_types:
+    - FastAPI route handlers
+    - Pydantic request/response schemas
+    - Spring Boot controllers and DTOs
+    criticality: HIGHEST — hardest to refactor post-generation
+  - layer: Frontend component stubs
+    artifact_types:
+    - React/Next.js components (TypeScript)
+    - Angular components (TypeScript)
+    criticality: HIGH — required for end-to-end scaffolding value proposition
+  - layer: Deployment configuration
+    artifact_types:
+    - Dockerfile
+    - Docker Compose YAML
+    - Kubernetes manifests (YAML)
+    - Terraform modules (HCL)
+    criticality: HIGH — required for end-to-end scaffolding value proposition; Terraform
+      use is occasional
+input_specification_format:
+  document_type: Confluence pages or PRD documents
+  typical_length_pages: 3–10 pages
+  structure: Semi-structured with consistent headings (business context, user stories,
+    data entities, API expectations, non-functional requirements) and variable prose
+    under each section
+  prompt_strategy: 'Currently: full document in a single prompt. Explored: section-by-section
+    prompting for larger specs'
+  note: 'This input format is categorically different from HumanEval''s short single-paragraph
+    docstrings. Long-context handling and structured document parsing are central
+    evaluation concerns. LongCodeBench (2025) documents dramatic performance degradation
+    from 29% to 3% for Claude 3.5 Sonnet as context length increases within coding
+    tasks, confirming the input-form gap is quantitatively severe.
+
+    Source: LongCodeBench arXiv 2025 — [|https://arxiv.org/pdf/2505.07897|]'
+correctness_model:
+  grading_approach: Rubric-based expert review (not binary unit-test pass/fail)
+  rubric_source: Internal architecture guide maintained by the organization
+  correctness_layers:
+  - layer: Syntactic / lint correctness
+    description: Output must parse/compile and pass relevant linters without errors
+  - layer: Requirements completeness
+    description: All entities, endpoints, and flows named in the PRD must be present
+  - layer: Architectural convention adherence
+    description: Output must conform to internal naming conventions, folder structure,
+      auth middleware patterns, and error handling patterns as specified in the architecture
+      guide
+  - layer: Multi-file coherence
+    description: Schema entities must match API models must match frontend prop types;
+      import graphs must be consistent across generated files
+  multiple_valid_designs: true
+  grading_note: Multiple valid architectural designs are acceptable provided they
+    satisfy the rubric. The rubric, not a single reference solution, is the ground
+    truth.
+infrastructure_notes:
+  development_environment: Laptops/workstations with high-speed corporate network
+    access; cloud IDE or local IDE (VS Code, IntelliJ) assumed
+  internet_access: '[NEEDS VERIFICATION — deferred: likely unsearchable (internal
+    IT policy); unrestricted corporate internet access is the US enterprise tech-industry
+    norm but VPN/proxy configuration is org-specific and not publicly verifiable]'
+  llm_access_mode: API-based LLM access (single-prompt, full-document context window);
+    section-by-section prompting explored as alternative
+  context_window_requirements: 'Large context window required (3–10 page PRDs); exact
+    token counts depend on document verbosity — [NEEDS VERIFICATION — deferred: below
+    search budget; average token count per enterprise spec is not published in any
+    accessible benchmark; rough estimate is 2,000–8,000 tokens per page at typical
+    PRD prose density, placing full-document prompts in the 6,000–80,000 token range]'
+  output_size: 'Multi-file project tree; estimated total output size per scaffolding
+    generation [NEEDS VERIFICATION — deferred: below search budget; no published benchmark
+    measures total token output for full-stack scaffolding; empirical measurement
+    against org''s own PRD corpus is the recommended path]'
+organizational_and_process_notes:
+  evaluation_workflow: Architects review LLM-generated scaffolding against internal
+    architecture guide; evaluation is conducted as a capability assessment prior to
+    deciding whether to integrate LLM scaffolding into the development workflow
+  architecture_guide_status: Codified internal document; serves as grading rubric
+  internal_conventions_examples:
+  - Naming conventions (file names, variable names, endpoint path patterns)
+  - Folder/module structure
+  - Auth middleware placement and patterns
+  - Error handling conventions
+  - ORM relationship patterns
+  - API versioning conventions
+  specific_conventions: '[NEEDS VERIFICATION — deferred: likely unsearchable (internal
+    to organization); exact convention details require stakeholder / expert elicitation
+    and are not publicly available]'
+cultural_norms_notes: 'Population is US-based professional software engineers operating
+  in an enterprise software product context. Relevant norms include:
+
+  - English as the exclusive working language for both natural language (specifications,
+  comments) and code conventions.
+
+  - Strong preference for explicit documentation and typed interfaces (TypeScript,
+  Pydantic, OpenAPI specs).
+
+  - Convention-over-configuration culture: internal architecture guides are treated
+  as authoritative, reducing tolerance for creative deviation from established patterns.
+
+  - Expectation of code reviewability: generated scaffolding must be legible to senior
+  engineers, not just functionally correct.
+
+  - Security and compliance sensitivity typical of enterprise software contexts (auth
+  patterns, secrets management, data access controls).
+
+  - US enterprise software industry norms around code ownership, IP, and third-party
+  dependency choices may influence acceptable library selections in generated scaffolding.
+
+  - Notable population-specific caution signal: Stack Overflow 2025 survey finds 76%
+  of developers show resistance specifically to AI for high-responsibility systemic
+  tasks like ''Deployment and monitoring'' (76% don''t plan to use AI) and ''Project
+  planning'' (69%), directly relevant to the scaffolding deployment config and architecture
+  layers. Source: Stack Overflow Developer Survey 2025 — [|https://survey.stackoverflow.co/2025/ai|]'
+domain_specific_notes:
+  architecture_patterns: RESTful API design with layered architecture (controller/service/repository
+    or equivalent). FastAPI dependency injection pattern; SQLAlchemy declarative ORM
+    models; Pydantic v2 schema validation; Spring Boot @RestController + @Service
+    + JPA Repository pattern.
+  security_patterns: 'Auth middleware (JWT or OAuth2 assumed but [NEEDS VERIFICATION
+    — deferred: low impact for scoring; specific auth standard not specified in elicitation
+    and is org-internal]); secrets management (AWS Secrets Manager or similar [NEEDS
+    VERIFICATION — deferred: low impact for scoring]); input validation via Pydantic/DTO
+    layer.'
+  database_conventions: 'PostgreSQL as primary; Alembic migration tooling likely [NEEDS
+    VERIFICATION — deferred: low impact for scoring; Alembic is the standard migration
+    tool for SQLAlchemy but org-specific confirmation requires stakeholder elicitation];
+    MySQL for secondary Spring Boot stack.'
+  deployment_conventions: 'Docker multi-stage builds expected; Kubernetes manifests
+    (Deployments, Services, ConfigMaps, Secrets); Terraform for AWS infrastructure
+    provisioning (VPC, EKS, RDS patterns assumed [NEEDS VERIFICATION — deferred: low
+    impact for scoring]).
+
+
+    Net-new IaC finding: Two dedicated benchmarks now exist for NL-to-IaC evaluation.
+    IaC-Eval (Kon et al. 2024) covers Terraform/HCL generation against AWS services,
+    using OPA Rego intent specifications for correctness validation beyond syntax.
+    DPIaC-Eval (2025) adds 153 real-world AWS tasks with deployability, intent-matching,
+    and security dimensions; it finds mainstream LLMs achieve only ~50% success even
+    on simplest scenarios, and that 42.7% of syntactically correct templates fail
+    actual deployment. Multi-IaC-Eval (arXiv 2409) covers CloudFormation, Terraform,
+    and CDK. These benchmarks are directly relevant as supplementary evaluation candidates
+    for the deployment config layer.
+
+    Sources: IaC-Eval — [|https://medium.com/gft-engineering/evaluating-llms-for-infrastructure-as-code-9f8b9ac4ca33|];
+    DPIaC-Eval arXiv 2506.05623 — [|https://arxiv.org/html/2506.05623v1|]; Multi-IaC-Eval
+    arXiv 2509.05303 — [|https://arxiv.org/pdf/2509.05303|]'
+  non_functional_requirements: NFRs (SLA constraints, performance targets, compliance
+    requirements) appear in PRD sections; LLM must surface these in generated scaffolding
+    (e.g., connection pooling config, rate limiting middleware, CORS settings).
+  frontend_conventions: 'Next.js App Router or Pages Router [NEEDS VERIFICATION —
+    deferred: low impact for scoring; specific routing paradigm not confirmed]; TypeScript
+    strict mode assumed; component stub conventions (prop interfaces, placeholder
+    return JSX) [NEEDS VERIFICATION — deferred: low impact for scoring].'
+benchmark_population_match:
+  geographic_match: Exact — HumanEval is US/Anglophone-origin; deployment population
+    is US-based.
+  language_match: Partial — English NL match is exact; HumanEval covers only Python,
+    while deployment requires Python, SQL, TypeScript, Java, YAML, HCL.
+  occupational_match: Poor — HumanEval's implicit target is competitive programmers
+    / interview candidates; deployment population is senior enterprise architects
+    evaluating multi-layer scaffolding.
+  task_match: Very poor — HumanEval covers only isolated single-function Python synthesis;
+    deployment requires multi-artifact, multi-language, multi-layer, rubric-graded
+    scaffolding generation.
+  input_form_match: Very poor — HumanEval inputs are short docstrings (~1–5 sentences);
+    deployment inputs are 3–10 page semi-structured PRDs.
+  output_form_match: Poor — HumanEval outputs are single Python functions evaluated
+    by binary unit tests; deployment outputs are multi-file project trees graded by
+    rubric.
+flagged_gaps_for_web_search:
+- gap_id: 1
+  label: Multi-artifact / multi-language code generation benchmarks
+  search_targets:
+  - SWE-bench
+  - CoderEval
+  - DevEval
+  - APIBench
+  - RepoEval
+  - Spider (SQL)
+  - multi-artifact scaffolding evaluation LLM
+  priority: HIGH
+  resolution_status: RESOLVED
+  findings: 'Several repository-level and multi-stage benchmarks now exist that partially
+    address this gap, though none cover the full four-layer enterprise scaffolding
+    profile:
+
+
+    1. SWE-bench (Jimenez et al. 2024): 2,294 GitHub issue-PR pairs from 12 Python
+    repositories; evaluates multi-file patch generation against execution-based validation.
+    Highly cited as the de-facto standard for repository-level coding agents. Caveat:
+    limited to Python bug-fixing, not scaffolding generation from requirements. Current
+    SOTA achieves ~75% on SWE-bench Verified (GPT-5). Source: SWE-bench ICLR 2024
+    — [|https://arxiv.org/pdf/2310.06770|]; emergentmind SWE-bench+ overview — [|https://www.emergentmind.com/topics/swe-bench-3b86a734-b378-4ee6-bcaf-640949ed7afb|]
+
+
+    2. SWE-bench++ (arXiv 2512.17419): Scalable pipeline generating 11,133 instances
+    from 3,971 repositories across 11 languages including TypeScript, Java, and Go;
+    addresses Python-centrism of original. Relevant for multi-language coverage but
+    still issue-resolution-oriented, not scaffolding-from-spec. Source: arXiv 2512.17419
+    — [|https://arxiv.org/pdf/2512.17419|]
+
+
+    3. DevEval (ACL 2024 Findings): 1,825-sample repository-level code generation
+    benchmark with comprehensive annotations (natural language requirements, original
+    repos, ground-truth dependencies); proposes Recall@k for dependency accuracy alongside
+    Pass@k. Closer to real-world repo structure than HumanEval but still Python-centric
+    and does not cover IaC or frontend stubs. Source: ACL Anthology 2024 — [|https://aclanthology.org/2024.findings-acl.214.pdf|];
+    arXiv 2405.19856 — [|https://arxiv.org/pdf/2405.19856|]
+
+
+    4. DevBench (arXiv 2403.08604): Evaluates LLMs across the full software development
+    lifecycle — software design, environment setup, implementation, acceptance testing,
+    and unit testing — across four programming languages. Empirical studies show GPT-4-Turbo
+    fails to solve DevBench challenges, revealing LLM struggles with complex repository
+    structures. Most aligned with the multi-stage nature of the scaffolding task.
+    Source: arXiv 2403.08604 — [|https://arxiv.org/abs/2403.08604|]
+
+
+    5. FrontendBench (arXiv 2506.13832): Specialized benchmark for front-end code
+    generation emphasizing user interactivity and dynamic behavior; addresses gap
+    in frontend evaluation not covered by general code benchmarks. Source: arXiv 2506.13832
+    — [|https://arxiv.org/html/2506.13832v2|]
+
+
+    Critical gap remaining: No benchmark covers the composite four-layer scaffolding
+    profile (DB schema + API routes + frontend stubs + IaC) generated from multi-page
+    PRD-style inputs. DevBench is the closest candidate but lacks IaC and framework-specific
+    (FastAPI/Spring Boot) coverage.'
+- gap_id: 2
+  label: Rubric-based architectural correctness evaluation frameworks
+  search_targets:
+  - LLM-as-judge code quality rubric
+  - CodeScore
+  - enterprise code review automated evaluation
+  - architectural convention adherence LLM assessment
+  priority: HIGH
+  resolution_status: RESOLVED
+  findings: 'Rubric-based LLM-as-judge evaluation is now a well-established methodology,
+    with multiple validated frameworks:
+
+
+    1. Prometheus / Prometheus 2 (Kim et al. 2023/2024): Open-source evaluator LMs
+    specialized in rubric-conditioned scoring. Prometheus 2 supports both pointwise
+    and pairwise ranking with user-defined evaluation criteria, achieving highest
+    correlation with human and GPT-4 judgments among open evaluator models across
+    four direct-assessment and four pairwise-ranking benchmarks. Directly applicable
+    as a judge model if the org''s architecture guide is encoded as a structured rubric.
+    Source: arXiv 2405.01535 — [|https://arxiv.org/abs/2405.01535|]; GitHub prometheus-eval
+    — [|https://github.com/prometheus-eval/prometheus-eval|]
+
+
+    2. TRACE framework (arXiv 2603.24586): Identifies 35 significant misalignment
+    sources between LLM judges and human developers across code quality dimensions.
+    Finds LLM judges are biased toward longer code explanations while humans prefer
+    shorter ones — a validity concern for automated rubric scoring of enterprise scaffolding.
+    Source: arXiv 2603.24586 — [|https://arxiv.org/pdf/2603.24586|]
+
+
+    3. Research consensus (2024–2026): Anthropic''s guidance for coding agents explicitly
+    recommends combining unit tests for correctness with LLM rubrics for overall code
+    or interaction quality. Rubrics improve reliability when the task is open-ended
+    and the rubric is explicit, criterion-separated, and calibrated. Source: Medium
+    rubric-based evals analysis — [|https://medium.com/@adnanmasood/rubric-based-evals-llm-as-a-judge-methodologies-and-empirical-validation-in-domain-context-71936b989e80|]
+
+
+    Key caveat: No existing rubric-based framework has been validated specifically
+    for enterprise architectural convention adherence (naming conventions, folder
+    structure, auth patterns). The org would need to encode its internal architecture
+    guide as a structured Prometheus-style rubric and validate judge calibration against
+    a small human-annotated gold set before using automated scoring.'
+- gap_id: 3
+  label: Long-context document-to-code generation benchmarks
+  search_targets:
+  - PRD to code generation benchmark
+  - requirements document code generation LLM
+  - long-context code generation evaluation user stories specification
+  priority: HIGH
+  resolution_status: PARTIALLY RESOLVED
+  findings: 'No benchmark specifically evaluates code generation from multi-page PRD/Confluence-style
+    documents. Relevant findings:
+
+
+    1. LongCodeBench (arXiv 2505.07897, 2025): Evaluates coding LLMs at up to 1M-token
+    context windows on real-world codebase comprehension and bug-fixing tasks. Documents
+    dramatic performance degradation — Claude 3.5 Sonnet drops from 29% to 3% as context
+    length increases in coding tasks. Covers code comprehension and completion, not
+    spec-to-scaffolding generation. Source: arXiv 2505.07897 — [|https://arxiv.org/pdf/2505.07897|]
+
+
+    2. LoCoBench (arXiv 2509.09614): Long-context code benchmark; explicitly notes
+    that existing benchmarks ''primarily emphasize code completion and comprehension
+    tasks rather than complex software development workflows.'' Confirms the spec-to-code
+    gap. Source: arXiv 2509.09614 — [|https://arxiv.org/pdf/2509.09614|]
+
+
+    3. DevBench''s software design stage involves reading structured requirements
+    and generating multi-file implementations, making it the closest available analog
+    to the PRD-to-scaffolding workflow, but inputs are not 3–10 page semi-structured
+    documents. Source: arXiv 2403.08604 — [|https://arxiv.org/abs/2403.08604|]
+
+
+    Conclusion: No PRD-to-code benchmark exists. This is a confirmed evaluation gap.
+    The performance degradation data from LongCodeBench (29%→3% for Claude 3.5 Sonnet)
+    provides strong quantitative justification for flagging long-context input form
+    as a high-severity validity concern.'
+- gap_id: 4
+  label: FastAPI / Spring Boot / SQLAlchemy / Pydantic framework-specific evaluation
+  search_targets:
+  - FastAPI code generation benchmark
+  - SQLAlchemy ORM generation LLM
+  - Spring Boot code generation evaluation
+  - framework-specific LLM code quality
+  priority: HIGH
+  resolution_status: NOT FOUND — searched via general repository-level benchmark literature
+    (SWE-bench, DevEval, DevBench surveys); no benchmark specifically targeting FastAPI,
+    SQLAlchemy, Pydantic, or Spring Boot idiom generation was identified. This remains
+    a confirmed gap. Framework-specific evaluation would require custom benchmark
+    construction using org-internal PRDs and architecture guide as ground truth.
+- gap_id: 5
+  label: Multi-file project coherence evaluation
+  search_targets:
+  - multi-file code generation coherence evaluation
+  - repository-level LLM code generation
+  - cross-file consistency benchmark
+  - SWE-bench RepoEval import graph coherence
+  priority: HIGH
+  resolution_status: PARTIALLY RESOLVED
+  findings: 'Repository-level benchmarks (SWE-bench, DevEval) implicitly require cross-file
+    consistency but do not explicitly score it as a distinct dimension. DevEval introduces
+    Recall@k for dependency accuracy (measuring whether generated code correctly invokes
+    elements defined in the repository), which is the closest published metric to
+    import-graph coherence. However, no benchmark explicitly scores entity-model alignment
+    across DB schema, API models, and frontend prop types as required by the enterprise
+    scaffolding task. DevBench''s ''implementation'' stage evaluates multi-file output
+    against acceptance and unit tests, providing an execution-based proxy for coherence
+    but not a dedicated cross-layer consistency metric.
+
+    Sources: DevEval arXiv 2405.19856 — [|https://arxiv.org/pdf/2405.19856|]; DevBench
+    arXiv 2403.08604 — [|https://arxiv.org/abs/2403.08604|]
+
+
+    Conclusion: Cross-layer type consistency (schema ↔ API model ↔ frontend props)
+    remains an unmet evaluation need. Recommendation: custom coherence checks (e.g.,
+    automated schema diffing across generated artifact layers) would need to be implemented
+    as part of a bespoke evaluation harness.'
+- gap_id: 6
+  label: Deployment configuration / IaC generation correctness
+  search_targets:
+  - Dockerfile generation LLM benchmark
+  - Kubernetes manifest generation evaluation
+  - Terraform IaC generation correctness
+  - OPA Checkov static analysis IaC LLM
+  - infrastructure-as-code benchmark
+  priority: HIGH
+  resolution_status: RESOLVED
+  findings: 'IaC generation evaluation is now an active research area with dedicated
+    benchmarks:
+
+
+    1. IaC-Eval (Kon et al. 2024): First dedicated Terraform/HCL benchmark; uses OPA
+    Rego intent specifications for correctness validation beyond syntax; covers wide
+    range of AWS services. State-of-the-art models achieve <20% pass@1 on compositional
+    IaC requirements. Source: IaC-Eval description — [|https://medium.com/gft-engineering/evaluating-llms-for-infrastructure-as-code-9f8b9ac4ca33|]
+
+
+    2. DPIaC-Eval (arXiv 2506.05623, 2025): 153 real-world AWS infrastructure tasks;
+    validates across syntax correctness, deployability, user intent matching, and
+    security. Finds 42.7% of syntactically correct templates fail deployment, and
+    mainstream LLMs achieve only ~50% on simplest scenarios. Source: arXiv 2506.05623
+    — [|https://arxiv.org/html/2506.05623v1|]
+
+
+    3. Multi-IaC-Eval (arXiv 2509.05303): Covers CloudFormation, Terraform, and CDK;
+    uses CFN-Lint and Checkov for static analysis validation. Syntactic pass rates
+    exceed 95% for top models but semantic/deployability accuracy remains a key gap.
+    Source: arXiv 2509.05303 — [|https://arxiv.org/pdf/2509.05303|]
+
+
+    4. TerraFormer (arXiv 2601.08734, 2026): Addresses IaC mutation (modifying existing
+    configs via NL) in addition to generation; notes real-world IaC is rarely shared
+    publicly, limiting LLM domain-specific training. Source: arXiv 2601.08734 — [|https://arxiv.org/html/2601.08734v1|]
+
+
+    Key validity concern: LLM IaC generation performance on real-world compositional
+    requirements (VPC + EKS + RDS patterns, as assumed for this deployment) is documented
+    to be substantially lower than on simple isolated resource tasks. IaC-Eval and
+    DPIaC-Eval are directly usable as supplementary benchmarks for the deployment
+    configuration layer.'
+- gap_id: 7
+  label: Current market share and usage statistics for tech-hub concentration and
+    enterprise LLM adoption
+  search_targets:
+  - enterprise software architect LLM adoption rate US 2024
+  - LLM code generation enterprise survey
+  - US tech hub remote work distribution software engineers
+  priority: LOW
+  resolution_status: RESOLVED
+  findings: 'AI tool adoption in the enterprise software engineering cohort is now
+    well-documented:
+
+    - Stack Overflow 2025 Developer Survey: 80% of developers use AI tools in workflows;
+    trust in AI accuracy has fallen to 29% (from 40% prior years); experienced developers
+    show highest distrust rate (20% ''highly distrust''). Source: [|https://survey.stackoverflow.co/2025/ai|]
+
+    - Gartner (July 2025): Predicts 90% of enterprise software engineers will use
+    AI code assistants by 2028, up from <14% in early 2024. Source: [|https://www.gartner.com/en/newsroom/press-releases/2025-07-01-gartner-identifies-the-top-strategic-trends-in-software-engineering-for-2025-and-beyond|]
+
+    - Menlo Ventures 2025: Enterprise generative AI spend reached $37B in 2025 (3.2x
+    YoY); code generation is described as ''AI''s first breakout use case.'' Anthropic
+    holds ~40% of enterprise LLM spend for 2025, with Claude Sonnet models preferred
+    by professional developers (45% usage). Source: [|https://menlovc.com/perspective/2025-the-state-of-generative-ai-in-the-enterprise/|]
+
+    - Full-stack developers lead AI coding tool adoption at 32.1%. Source: secondtalent.com
+    AI coding stats — [|https://www.secondtalent.com/resources/ai-coding-assistant-statistics/|]'
+net_new_fields:
+  enterprise_ai_adoption_risk_signal:
+    label: Enterprise AI code review burden finding
+    finding: 'Analysis of telemetry from 10,000+ developers across 1,255 teams finds
+      that AI-assisted developers merge 98% more PRs but PR review time increases
+      91%, with a 322% increase in privilege escalation paths and 153% increase in
+      architectural flaws in AI-generated code. This ''AI productivity paradox'' directly
+      affects the validity assessment: architects evaluating LLM scaffolding in this
+      deployment will likely encounter not just functional errors but architectural
+      flaw patterns that automated scanners miss.'
+    validity_dimension: OC — Output Content
+    source: Faros.ai enterprise AI coding adoption analysis 2025 — [|https://www.faros.ai/blog/enterprise-ai-coding-assistant-adoption-scaling-guide|]
+  iac_generation_performance_baseline:
+    label: Quantitative IaC generation performance floor
+    finding: State-of-the-art LLMs achieve less than 20% pass@1 on compositional IaC
+      requirements (IaC-Eval), and only ~50% success on the simplest DPIaC-Eval scenarios.
+      42.7% of syntactically correct Terraform/CloudFormation templates fail actual
+      deployment validation. This provides a quantitative performance floor for the
+      deployment configuration layer that is materially lower than pass rates on Python
+      coding tasks.
+    validity_dimension: OO — Output Ontology
+    sources: IaC-Eval — [|https://medium.com/gft-engineering/evaluating-llms-for-infrastructure-as-code-9f8b9ac4ca33|];
+      DPIaC-Eval arXiv 2506.05623 — [|https://arxiv.org/html/2506.05623v1|]
+  long_context_code_degradation_quantitative:
+    label: Quantitative long-context code performance degradation
+    finding: LongCodeBench (2025) documents Claude 3.5 Sonnet dropping from 29% to
+      3% accuracy as context length increases on coding tasks. This quantitative degradation
+      rate is directly relevant to the deployment's 3–10 page PRD inputs and confirms
+      that HumanEval short-docstring performance is not a valid predictor of PRD-length
+      input performance.
+    validity_dimension: IF — Input Form
+    source: LongCodeBench arXiv 2505.07897 — [|https://arxiv.org/pdf/2505.07897|]
+  devbench_multi_stage_relevance:
+    label: DevBench as nearest available multi-stage analog
+    finding: DevBench (Li et al. 2024, arXiv 2403.08604) is the closest publicly available
+      benchmark to the deployment's multi-stage scaffolding task, covering software
+      design, environment setup, implementation, acceptance testing, and unit testing
+      across four programming languages. Empirical studies show current LLMs including
+      GPT-4-Turbo fail to solve DevBench challenges, with models struggling specifically
+      with complex repository structures and compilation management — directly relevant
+      failure modes for the scaffolding use case.
+    validity_dimension: IO — Input Ontology
+    source: DevBench arXiv 2403.08604 — [|https://arxiv.org/abs/2403.08604|]
+  prometheus2_rubric_judge_applicability:
+    label: Prometheus 2 as candidate rubric judge for architectural conventions
+    finding: Prometheus 2 (Kim et al. 2024, arXiv 2405.01535) is an open-source evaluator
+      LM supporting user-defined evaluation criteria in both pointwise and pairwise
+      formats, achieving the highest human-agreement scores among open evaluator models.
+      It can in principle be applied to score LLM scaffolding against a structured
+      encoding of the org's internal architecture guide. However, TRACE research (arXiv
+      2603.24586) identifies 35 LLM-judge / human-developer misalignment sources,
+      requiring calibration against human-annotated gold examples before automated
+      scoring can be trusted for architectural convention adherence.
+    validity_dimension: OO — Output Ontology
+    sources: Prometheus 2 arXiv 2405.01535 — [|https://arxiv.org/abs/2405.01535|];
+      TRACE arXiv 2603.24586 — [|https://arxiv.org/pdf/2603.24586|]
+  developer_resistance_to_ai_on_deployment_tasks:
+    label: Developer resistance to AI on high-responsibility deployment and architecture
+      tasks
+    finding: Stack Overflow 2025 Developer Survey reports that 76% of developers do
+      not plan to use AI for 'Deployment and monitoring' tasks, and 69% do not plan
+      to use AI for 'Project planning.' This resistance is highest among experienced
+      developers and directly reflects the population likely to be evaluating scaffolding
+      outputs for deployment configuration correctness in the enterprise target cohort.
+    validity_dimension: OC — Output Content
+    source: Stack Overflow Developer Survey 2025 — [|https://survey.stackoverflow.co/2025/ai|]

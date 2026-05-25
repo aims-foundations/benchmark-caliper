@@ -1,0 +1,5 @@
+{
+  "Q1": "Yes, our three categories map cleanly onto True/False/Unknown \u2014 we treat entailment as True, contradiction as False, and neutral as Unknown. We don't need to distinguish between different flavors of 'unknown' (e.g., insufficient info vs. open-world); a single neutral bucket is sufficient for our accuracy metric.",
+  "Q2": "We're primarily interested in broad coverage of classical deductive FOL \u2014 quantifiers, negation, conditionals, and multi-step chains. Temporal, modal, arithmetic, and probabilistic reasoning are out of scope for this particular evaluation; we may build separate suites for those later.",
+  "Q3": "We're presenting premises and conclusions in formal logical notation, but realistically the models will also benefit from any accompanying natural language. We haven't fully committed \u2014 we're considering both pure-symbolic and hybrid (NL + FOL) presentations to see how the model handles each, since real reasoning use cases often involve both."
+}

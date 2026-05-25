@@ -1,0 +1,17 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "HumanEval covers general algorithmic and string-manipulation problems comparable to software interview questions. Does your deployment also need to handle domain-specific completion patterns your users frequently write — for example, data science workflows (pandas/numpy), web framework boilerplate (Django/Flask route handlers), async/await patterns, or type-annotated code with complex signatures? Or is general-purpose algorithmic correctness the primary concern?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "OO",
+    "question": "HumanEval scores completions by pass/fail on unit tests, treating any function that passes all tests as equally correct. In your deployment, do you also care about output qualities beyond test-passing — such as idiomatic Python style, efficiency, use of standard library over custom implementations, or avoiding deprecated patterns? Would your users consider two passing solutions meaningfully different in quality?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "IC",
+    "question": "HumanEval problems use self-contained docstrings with no external dependencies. In practice, your users' docstrings likely reference internal APIs, third-party libraries, or project-specific conventions. How often do your users write completions that depend on imported modules or project context beyond the function signature itself — and does your evaluation need to reflect that real-world complexity?"
+  }
+]

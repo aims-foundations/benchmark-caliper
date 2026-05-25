@@ -1,0 +1,17 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "FOLIO covers first-order logic deductive reasoning broadly, but introductory undergraduate logic courses vary in scope. Does your course focus primarily on propositional logic, predicate/first-order logic, or a mix? Are modal logic, temporal reasoning, or probabilistic arguments in scope, or strictly classical deductive logic?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "OO",
+    "question": "Your tool outputs one of three labels — valid, invalid, or indeterminate. In formal logic instruction, 'indeterminate' can mean different things: insufficient premises to decide, a conclusion that is neither entailed nor contradicted, or a genuinely undecidable formula. Which of these senses does your course use, and does your grading rubric treat them as distinct categories or collapse some together?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "IC",
+    "question": "Undergraduate logic homework problems often use highly stylized, instructor-crafted premise sets with controlled vocabulary, while FOLIO examples were authored by expert annotators who may have used more naturalistic or varied sentence structures. Are your students' problems drawn from a specific textbook or problem set with a constrained syntactic style — for example, Hurley, Copi, or a custom course packet — that might differ from the sentence patterns the benchmark was built on?"
+  }
+]

@@ -1,0 +1,22 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "FOLIO uses self-contained logical puzzles with explicitly stated premises in plain narrative prose. Your documents are technical specifications — do they typically contain implicit assumptions (e.g., engineering conventions, standards like MIL-STD or IEEE that are referenced but not restated), or are all relevant premises always spelled out explicitly within the document set being analyzed?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "IC",
+    "question": "FOLIO's reasoning problems are crafted to be logically clean and unambiguous. In your specification documents, do contradictions tend to be crisp logical negations (e.g., 'shall operate above 100°C' vs. 'shall not exceed 80°C'), or are they often latent — requiring domain knowledge about physical constraints, system interfaces, or engineering tolerances to recognize as contradictions at all?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "OO",
+    "question": "FOLIO scores outputs as a three-way label: True, False, or Uncertain. In your deployment, when the tool flags a potential inconsistency, does it need to produce a binary contradiction-detected/not-detected decision, a confidence-graded finding, or a natural-language explanation of why two requirements conflict? Would 'Uncertain' be an actionable output for your engineers, or would it be treated as a failure mode?"
+  },
+  {
+    "id": "Q4",
+    "dimension": "OF",
+    "question": "FOLIO evaluates single conclusion–premise set pairs in isolation. Does your tool need to reason across multiple documents simultaneously — for example, detecting a contradiction between a system-level requirement document and a subsystem interface control document — or is each analysis bounded to a single document at a time?"
+  }
+]

@@ -1,0 +1,266 @@
+name: US High School Competitive Debate — Argument Quality Assessment
+abbreviation: us_hs_debate
+deployment_context:
+  platform_type: Debate coaching platform (US-based, interscholastic)
+  primary_use_case: LLM-based scoring of argument quality and delivery of qualitative
+    coaching feedback for high school competitive debaters
+  user_roles:
+  - Student debaters (primary end users receiving scores and feedback)
+  - Debate coaches (defining rubrics, interpreting output, calibrating platform standards)
+  - Tournament judges (implicit quality-norm setters via circuit paradigms)
+  interaction_mode: Text-based input (speech transcripts or written cases) and text-based
+    output (sub-scores + qualitative coaching rationales)
+target_population:
+  description: United States high school students competing in NSDA-sanctioned and
+    independent interscholastic debate. Students range across all four major competitive
+    formats — Policy, Lincoln-Douglas (LD), Public Forum (PF), and Congressional Debate
+    — and compete at both local/regional circuit events and national-circuit bid tournaments
+    (TOC, NSDA Nationals). Quality standards are defined externally by NSDA norms,
+    TOC circuit paradigms, and coaching staff rubrics rather than by the platform
+    itself.
+  country: United States
+  sub_national_scope: Significant sub-national variation by regional circuit (e.g.,
+    Texas lay circuits, California national-circuit hubs, Midwest lay circuits); see
+    circuit_variation below.
+  age_band: Approximately 14–18 years old (grades 9–12)
+  approximate_student_population: '[NEEDS VERIFICATION — total NSDA-registered high
+    school debaters, broken down by format]'
+  approximate_school_programs: '[NEEDS VERIFICATION — number of active high school
+    debate programs in the US]'
+languages:
+  primary: English (American)
+  register_variation: 'Significant register variation by format and circuit: spread/fast
+    delivery in tech-circuit Policy and LD; conversational oratory register in Congressional;
+    persuasive public rhetoric register in lay PF'
+  technical_vocabulary:
+  - 'Debate-format-specific jargon: disadvantage (DA), counterplan (CP), kritik (K),
+    link, impact, turn, solvency, flow, shell, off-case, on-case, topicality (T),
+    framework (FW), value/criterion (VC), contention, plan text, net benefit, permutation,
+    burden of proof, fiat'
+  - 'Evidence-handling terminology: card, cut card, tag, cite, warrant, extend, miscut,
+    out-of-context evidence, recency'
+  - 'Circuit/community terminology: TOC, bid, octafinals, NSDA, lay judge, tech judge,
+    paradigm, flow, judge philosophy'
+  minority_or_secondary_languages: None applicable to this deployment population
+  note: All input and output is English text. No multilingual, RTL, or script considerations
+    apply. Speech-to-text preprocessing may be relevant if audio is used as input,
+    but current scope is text-only.
+debate_formats:
+  policy:
+    description: Two-person teams debate a yearly national resolution (typically a
+      federal government policy action). Rounds involve a case structure with plan,
+      advantages, disadvantages, counterplans, and topicality arguments. National
+      circuit is characterized by rapid delivery (spreading) and dense technical flows.
+    typical_round_duration_minutes: '[NEEDS VERIFICATION]'
+    speech_structure: '[NEEDS VERIFICATION — standard 1AC/1NC/2AC/2NC/1NR/1AR/2NR/2AR
+      speech order and times]'
+    argument_types_central:
+    - Disadvantages (DAs)
+    - Counterplans (CPs)
+    - Topicality (T)
+    - Kritiks (Ks)
+    - Solvency arguments
+    - Impact calculus
+    quality_norm_axis: Strongly tech-circuit on national circuit; some local circuits
+      remain flow-heavy but not speed-focused
+  lincoln_douglas:
+    description: Individual one-on-one debate on a bi-monthly NSDA resolution, typically
+      framed as a value/criterion dispute. National-circuit LD has shifted significantly
+      toward policy-style argumentation including plans, counterplans, and kritiks.
+    typical_round_duration_minutes: '[NEEDS VERIFICATION]'
+    speech_structure: '[NEEDS VERIFICATION — standard AC/NC/1AR/NR/2AR speech order
+      and times]'
+    argument_types_central:
+    - Value/criterion framework disputes
+    - Contention-level offense
+    - Plans and counterplans (national circuit)
+    - Kritiks (national circuit)
+    - Theory arguments
+    - Philosophical/normative framework debates
+    quality_norm_axis: 'Bimodal: lay/traditional LD rewards rhetoric and clarity;
+      national-circuit LD rewards technical flow and speed'
+  public_forum:
+    description: Two-person teams debate a monthly NSDA resolution, typically a current-events
+      policy or evaluative topic. Historically lay-oriented with emphasis on persuasion
+      and accessible argument; national circuit has grown more technical.
+    typical_round_duration_minutes: '[NEEDS VERIFICATION]'
+    speech_structure: '[NEEDS VERIFICATION — standard PF speech order including summary,
+      final focus, crossfire]'
+    argument_types_central:
+    - Contentions with empirical evidence
+    - Rebuttal and refutation
+    - Weighing (magnitude, probability, timeframe)
+    - Summary/final focus collapse strategy
+    quality_norm_axis: Local/lay circuits strongly weight clarity, rhetoric, and accessibility;
+      national circuit increasingly rewards technical evidence battles and flow
+  congressional:
+    description: Simulated legislative session format where students give prepared
+      speeches on legislation, respond to questions, and are ranked by a presiding
+      officer and judges on persuasiveness, research quality, and oratory. Less head-to-head
+      adversarial structure than other formats.
+    argument_types_central:
+    - Legislative advocacy (pro/con positions)
+    - Refutation and response to prior speakers
+    - Rhetorical effectiveness and oratory
+    - Research quality and evidence citation
+    quality_norm_axis: Strongly oratory/rhetoric-weighted; less circuit variation
+      than Policy or LD
+circuit_variation:
+  description: The US high school debate community is not uniform. Quality standards
+    vary substantially by geographic circuit and by whether a tournament is on the
+    'national circuit' (TOC bid events, prestigious invitationals) versus local/regional
+    circuits.
+  national_circuit:
+    description: TOC bid tournaments and major invitationals drawing national-caliber
+      competitors. Judges are typically experienced coaches or former debaters who
+      value technical argumentation, speed, flow, and dense evidence engagement.
+    key_quality_norms:
+    - Technical flowing accuracy
+    - Speed (spreading) tolerance in Policy and LD
+    - Evidence quality and warrants
+    - Impact calculus precision
+    - Argument layering and prioritization
+    representative_tournaments: '[NEEDS VERIFICATION — list of current major TOC bid
+      tournaments by format]'
+  local_and_regional_circuits:
+    description: District, regional, and invitational tournaments served by lay judges
+      (community volunteers, parents, non-debate coaches). Quality standards emphasize
+      clarity, rhetoric, accessibility, and persuasive effectiveness over technical
+      flow.
+    key_quality_norms:
+    - Clarity of delivery and organization
+    - Persuasive rhetoric and storytelling
+    - Accessibility of arguments (avoiding jargon)
+    - Confidence and presentation style
+    notable_examples: Texas lay PF circuit is a frequently cited example of a regional
+      circuit with strongly lay-judge norms; similar dynamics exist in many Midwest
+      and Southeast state circuits
+  nsda_nationals:
+    description: NSDA National Championship, the largest competitive debate tournament
+      in the US, with state-qualifying requirements. Mix of lay and experienced judges;
+      NSDA maintains official rules and guidelines.
+    notes: '[NEEDS VERIFICATION — current NSDA Nationals structure, qualifying requirements,
+      and judging standards by format]'
+argument_quality_dimensions:
+  description: Per the elicitation, the system must produce separate sub-scores across
+    these dimensions plus qualitative coaching feedback. 'Strong' is defined by external
+    community standards (NSDA norms, TOC circuit paradigms, coaching staff rubrics).
+  dimensions:
+  - name: Evidence quality
+    weight: Highest (per elicitation)
+    components:
+    - Source credibility and authority
+    - Recency of evidence
+    - Contextual integrity (card not miscut or out-of-context)
+    - Warrant clarity (does the evidence actually support the claim)
+    - Cherry-picking detection
+  - name: Logical structure and warrant quality
+    weight: High
+    components:
+    - Claim-warrant-impact structure
+    - Inferential validity (deductive and inductive)
+    - Argument completeness (no missing warrants)
+    - Internal consistency
+  - name: Relevance and responsiveness
+    weight: High
+    components:
+    - On-topic relevance to the resolution
+    - Direct responsiveness to opponent's arguments
+    - Burden fulfillment
+    - Clash quality in rebuttal
+  - name: Persuasive effectiveness
+    weight: Format/circuit-conditioned
+    components:
+    - Rhetorical clarity and organization
+    - Impact framing and weighing
+    - Narrative coherence
+    - Accessibility to the judging audience
+  output_types_required:
+  - Separate sub-scores per dimension
+  - Qualitative coaching feedback explaining weaknesses
+  - Pairwise comparison scores for rebuttal practice
+  - Format-conditioned and circuit-conditioned scoring norms
+normative_standards:
+  nsda:
+    description: National Speech and Debate Association — sets official rules, event
+      structures, and ethical guidelines for all four formats
+    relevant_documents: '[NEEDS VERIFICATION — current NSDA rulebooks and evidence
+      ethics standards by format]'
+    evidence_ethics_policy: '[NEEDS VERIFICATION — NSDA evidence ethics rules, including
+      standards for cutting, citing, and representing evidence]'
+  toc:
+    description: Tournament of Champions (hosted by University of Kentucky) — the
+      most prestigious US high school debate tournament; TOC bid qualification structures
+      the national-circuit competitive calendar
+    bid_structure: '[NEEDS VERIFICATION — current TOC bid levels and qualifying tournament
+      list by format]'
+  judge_paradigms:
+    description: Individual judges publish paradigms stating their preferences, which
+      function as the operative quality-norm document for a given round. Paradigms
+      vary on speed tolerance, argument type preferences, evidence standards, and
+      voting issues.
+    platforms: '[NEEDS VERIFICATION — current paradigm-hosting platforms, e.g., Tabroom.com,
+      Judge Philosophies database]'
+  coaching_rubrics:
+    description: Coaching staff at individual programs may define internal rubrics
+      that supplement NSDA and circuit norms. These are the proximate quality-standard
+      setters for the platform's coaching feedback function.
+infrastructure_and_access:
+  platform_delivery: US-based SaaS debate coaching platform; end users access via
+    web browser or app on school-issued or personal devices
+  device_context: Mix of school-issued Chromebooks/laptops and personal smartphones/tablets;
+    connectivity generally reliable in school settings
+  input_pipeline: Text-based (written cases, typed flows, speech transcripts); no
+    audio/video processing in current scope
+  school_technology_access: '[NEEDS VERIFICATION — proportion of US high school debate
+    programs with reliable broadband and device access; digital divide considerations
+    for under-resourced programs]'
+  data_privacy_considerations: Students are minors (under 18); FERPA and COPPA compliance
+    required for any student data handling
+  applicable_regulations: '[NEEDS VERIFICATION — current FERPA/COPPA requirements
+    applicable to ed-tech platforms handling minor student data, plus any state-level
+    student privacy laws such as SOPIPA or state equivalents]'
+content_considerations:
+  topic_volatility: Debate resolutions address current-events policy and normative
+    questions that may be politically or socially sensitive (e.g., immigration, criminal
+    justice, healthcare, foreign policy, environmental regulation). The system must
+    assess argument quality without taking sides on contested value questions.
+  value_pluralism: LD and Congressional debates explicitly center on normatively contested
+    premises where reasonable people disagree. The system must score argument structure
+    and warrant quality independently of whether the system 'agrees' with the underlying
+    value claim.
+  empirical_contestation: PF and Policy debates frequently involve disputed empirical
+    claims (e.g., economic impact estimates, scientific consensus questions, statistical
+    projections). Evidence credibility assessment must be calibrated to distinguish
+    genuine expert disagreement from misrepresented or cherry-picked evidence.
+  age_appropriateness: All content involves high school students (minors). Feedback
+    must be constructively framed for educational development contexts.
+  current_resolution_topics: '[NEEDS VERIFICATION — current NSDA Policy, LD, PF, and
+    Congressional topics for the active competitive season]'
+population_specific_notes: '- The quality-defining community for this deployment is
+  not the platform itself but the external NSDA/TOC/coaching ecosystem; benchmark
+  annotator populations (e.g., FOL-trained CS students or NLP researchers) are categorically
+  mismatched to this community.
+
+  - Circuit-level adaptation is a strong desideratum per the elicitation: a single
+  universal scoring standard will systematically mis-score arguments evaluated against
+  lay vs. tech norms.
+
+  - Evidence quality assessment (card quality, recency, contextualization) is the
+  highest-weight sub-dimension and is the farthest from any existing logical reasoning
+  benchmark''s coverage.
+
+  - Debate-specific structural argument types (DAs, CPs, kritiks, T shells, theory
+  arguments) constitute a first-class argument ontology with no representation in
+  standard NLI or argument mining benchmarks.
+
+  - Pairwise rebuttal comparison is a structural requirement not met by any standalone
+  argument scoring benchmark; this is a near-unique deployment requirement.
+
+  - Congressional debate has a meaningfully different quality ontology from the other
+  three formats (oratory-focused, less adversarial, no flowing) and may require a
+  partially separate evaluation approach.
+
+  - Student development trajectory matters: coaching feedback should be calibrated
+  to student skill level (novice vs. varsity), which may require the platform to track
+  student baseline and adapt feedback accordingly.'

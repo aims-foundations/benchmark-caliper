@@ -1,0 +1,44 @@
+## Use Case
+A US edtech company is deploying an LLM-powered tool that helps American K–8 teachers generate novel math word problems aligned to specific Common Core State Standards (CCSS). Teachers specify a standard (e.g., 4.NF.A.2), grade level, and difficulty; the system produces a complete multiple-choice assessment item with a verified correct answer and pedagogically grounded distractor choices. The benchmark under consideration (GSM8K) is being evaluated for its validity as a measure of this system's capabilities.
+
+## Target Population
+**Primary end users:** K–8 classroom teachers in the United States, spanning urban, suburban, and rural settings, including teachers serving multilingual learners (English Language Learners) and students from lower-income backgrounds. **Secondary end users (indirect):** Students in grades K–8 whose assessments are built from generated content. No specific sub-national geographic restriction, but content must be inclusive across US regional and demographic contexts.
+
+## Elicitation Responses
+
+Q1 [IO]: GSM8K covers grade school math word problems broadly, but your teachers need to generate items aligned to specific Common Core domains (e.g., Operations & Algebraic Thinking, Number & Operations—Fractions, Ratios & Proportional Relationships). Does your system need to be evaluated on its ability to generate problems that map to specific Common Core standards or clusters, or is general grade-level math accuracy sufficient?
+A1: Common Core alignment is essential and non-negotiable. Teachers select specific standards at the standard-cluster level (e.g., 4.NF.A.2, 6.RP.A.3), and generated items must genuinely target that standard's specific skill. General grade-level accuracy is insufficient; the system must be evaluated on whether outputs correctly operationalize the requested CCSS standard, since teachers use these items for targeted formative assessment.
+
+Q2 [OO]: GSM8K scores answers as correct or incorrect based on a single numeric answer. Your deployment requires evaluating generated problems on multiple pedagogical dimensions — mathematical accuracy of the solution, appropriateness of distractors, alignment to a specified grade level, and Common Core standard coverage. Which of these dimensions matter most for your evaluation, and does 'correct' mean something beyond arithmetic accuracy in your context?
+A2: All four dimensions matter, with a clear hierarchy. Mathematical solution accuracy is a hard prerequisite — a failing item is simply discarded. Distractor plausibility (grounded in specific, predictable student misconceptions) and CCSS standard alignment are the primary differentiators of pedagogical value. Grade-level appropriateness of language and context is also critical. "Correct" means the entire item package is classroom-ready, not merely that the arithmetic answer is accurate.
+
+Q3 [IC]: GSM8K word problems use real-world contexts drawn from US everyday life, but your teachers may serve students from diverse communities across the US — urban, rural, multilingual learners, or specific demographic groups. Are there contexts or cultural references that would be inappropriate or inaccessible for your target student populations, or requirements that problems reflect inclusive, culturally responsive scenarios?
+A3: Cultural inclusivity is a real requirement. Problems must use contexts accessible across urban, rural, and suburban settings, avoid culturally narrow references (assumed family structures, regionally specific foods, particular sports), use low-idiom language to support multilingual learners, and include diverse names in scenarios. Content involving money must be handled sensitively to avoid stigmatizing students from lower-income households.
+
+Q4 [OF]: GSM8K benchmarks free-form solution generation, but your deployment requires a structured output package: a problem stem, a verified correct answer, and plausible distractor choices. Does your evaluation need to assess the quality of the full multiple-choice item (including distractor design and plausibility), or only whether the underlying math is solved correctly?
+A4: Evaluation must cover the full multiple-choice item package. Distractor quality is identified as the hardest and most critical component — valid distractors must reflect specific, predictable student errors (e.g., adding numerators and denominators independently when adding fractions) rather than arbitrary wrong numbers. An item with implausible distractors or accidentally correct distractors fails regardless of the accuracy of the solution. GSM8K's free-form, numeric-answer scoring does not capture this dimension at all.
+
+## Dimension Priority Weights
+
+| Dimension | Priority | Rationale |
+|-----------|----------|-----------|
+| IO | HIGH | GSM8K's problem categories are not organized by CCSS standards or clusters, and the deployment requires evaluating coverage of specific, named standards (e.g., 4.NF.A.2); the ontological mismatch is direct and consequential. |
+| IC | HIGH | Teachers require culturally inclusive, low-idiom, regionally neutral problem contexts accessible to multilingual learners and students from diverse socioeconomic backgrounds — dimensions GSM8K was not designed to ensure. |
+| IF | LOWER | Both benchmark and deployment are text-only in English, with no modality mismatch. |
+| OO | HIGH | GSM8K's single binary correct/incorrect scoring against a numeric answer is categorically misaligned with the deployment's multi-dimensional output rubric (solution accuracy, distractor plausibility, standard alignment, grade-level language appropriateness). |
+| OC | HIGH | GSM8K ground-truth labels cover only final numeric answers; there are no labels for distractor quality, misconception grounding, or CCSS standard fidelity — meaning large portions of the deployment's "correct" construct are entirely unlabeled. |
+| OF | HIGH | GSM8K evaluates free-form solution generation; the deployment requires structured MCQ output (stem + verified answer + misconception-grounded distractors), and distractor quality is explicitly identified as the hardest unsolved evaluation challenge. |
+
+## Flagged Gaps
+
+1. **CCSS standard-level coverage mapping:** GSM8K has no documented mapping to Common Core State Standards domains, clusters, or individual standards. Downstream search should investigate whether any published benchmark (e.g., MATH, MathBench, state assessment item banks) provides CCSS-aligned problem tagging at the standard level.
+
+2. **Distractor-quality evaluation criteria:** No established benchmark metric exists within GSM8K for evaluating whether distractor choices reflect documented student misconceptions. Search should investigate whether educational measurement literature or edtech-specific benchmarks (e.g., ASSISTments, Khan Academy item banks) have rubrics or datasets for MCQ distractor plausibility grounded in misconception research.
+
+3. **Multilingual learner (ELL) linguistic accessibility:** GSM8K's linguistic diversity refers to varied problem phrasing across items, not simplified register for ELL students. Search should investigate whether readability or lexical complexity standards for math word problems targeting ELL populations have been applied to any benchmark, or whether guidance from WIDA/CCSS-ELL frameworks is relevant.
+
+4. **Culturally inclusive math context audits:** GSM8K's source culture is flagged as "transferred from different cultural context" in the metadata, and the deployment explicitly requires culturally neutral, regionally inclusive US contexts. Search should investigate whether any cultural audit or bias review of GSM8K's real-world contexts has been published, and whether inclusive math problem design guidelines (e.g., from NCTM equity frameworks) exist.
+
+5. **Grade-band granularity:** GSM8K targets "grade school" broadly without tagging problems to specific grade levels or grade bands (e.g., K–2, 3–5, 6–8). The deployment requires grade-level-appropriate language and context. Search should identify whether any benchmark or item bank provides grade-level tagging granular enough to validate grade-differentiated generation.
+
+6. **Pedagogical accuracy of generated solutions (worked examples):** GSM8K evaluates correctness of a final numeric answer, not the quality or pedagogical clarity of the solution explanation. The deployment's "verified solutions" requirement implies step-level correctness and grade-appropriate reasoning chains. Search should investigate whether benchmarks for math solution explanation quality or step-level reasoning correctness (beyond final answer) exist.

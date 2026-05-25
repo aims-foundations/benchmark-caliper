@@ -1,0 +1,455 @@
+{
+  "benchmark": "folio",
+  "region": "US AI Research Lab — FOLIO FOL Reasoning Evaluation",
+  "dimensions": {
+    "input_ontology": {
+      "score": 5,
+      "justification": "FOLIO's taxonomy aligns precisely with the lab's stated scope of classical deductive FOL. The benchmark covers all standard FOL operators (negation, conjunction, disjunction, implication, universal and existential quantifiers, equality) [Q138], uses n-place predicates for expressivity [Q141], explicitly excludes temporal and modal logic as out-of-scope [Q139, Q140] — matching the lab's out-of-scope list exactly — and emphasizes multi-step reasoning depth (mode=4, 28.7% at depth ≥5) [Q60]. The two-task structure (NL reasoning + NL-FOL translation) [Q63, Q67] covers both the lab's primary classification task and a documented secondary interest. Dataset analysis confirms all core operators are present in actual data, including exclusive disjunction (⊕) and quantifiers [DATASET-D3, D9, D13]. One minor caveat: per-depth example counts at depth 6–7 are likely too small for reliable per-depth statistical inference [WEB-6], but this affects statistical power, not taxonomic coverage.",
+      "strengths": [
+        "Full classical FOL operator coverage verified in both documentation and sampled data",
+        "Explicit exclusion of out-of-scope sub-types (temporal, modal) matches the lab's scope precisely",
+        "Substantially deeper reasoning-chain coverage (28.7% at depth ≥5) than prior FOL benchmarks (RuleTaker, LogicNLI)",
+        "Multi-conclusion-per-premise design tests world-model consistency, not just isolated inference"
+      ],
+      "checklist_responses": {
+        "IO-1": "Lab requires classical deductive FOL: quantifiers, negation, conditionals, conjunction/disjunction, multi-step deduction. All confirmed present in FOLIO documentation [Q138] and sampled data [DATASET-D3, D9, D13].",
+        "IO-2": "No regionally-relevant categories omitted. The lab's in-scope list (classical deductive FOL) is precisely what FOLIO covers; out-of-scope items (temporal, modal, arithmetic, probabilistic) are explicitly excluded by FOLIO [Q139, Q140] and confirmed out-of-scope by the lab.",
+        "IO-3": "FOLIO does not include irrelevant categories beyond its declared scope; the NL-FOL translation secondary task is documented as a separate task with its own metrics [Q63, Q67, Q73-Q76], so it does not contaminate the primary classification metric.",
+        "IO-4": "No content-validity gaps in the taxonomy. Statistical-power concern at depth 6–7 is documented but is a sample-size issue, not a taxonomic gap [WEB-6]."
+      },
+      "evidence_quotes": [
+        "[Q138] 'We include the following operators: negation ¬, conjunction ∧, disjunction ∨, implication →, universal quantifier ∀, existential quantifier ∃, equal =.' (p.13)",
+        "[Q139] 'Following (Russell and Norvig, 2010), we consider temporal logic and modal logic as special-purpose logics.' (p.13)",
+        "[Q140] 'Consequently, they are beyond the scope of the definition of first-order logic used in our dataset.' (p.13)",
+        "[Q60] '28.7% of the examples need five or more depths of reasoning to infer the conclusions' (p.5)",
+        "[Q63] 'We define two new tasks based on FOLIO, natural language reasoning with first-order logic and NL-FOL translation.' (p.6)",
+        "[Q141] 'We use n-place predicates when applicable for the expressivity of the FOL formulas.' (p.13)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-6] FOLIO depth range 0–7, mode=4, 28.7% at depth ≥5 confirmed in EMNLP 2024 version"
+      ],
+      "evidence_dataset": [
+        "DATASET-D3: Exclusive disjunction (⊕) with universal quantifier observed in actual data",
+        "DATASET-D9: Multi-step chain with negation, implication, and disjunction confirms operator diversity",
+        "DATASET-D13: Negated conjunction in antecedent of implication; n-place predicate (BoundBy) confirmed",
+        "DATASET-D24: 9-premise multi-step chain confirms high-depth examples are present"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "Q138",
+          "DATASET-D3",
+          "DATASET-D9",
+          "DATASET-D13"
+        ],
+        "IO-2": [
+          "Q139",
+          "Q140"
+        ],
+        "IO-3": [
+          "Q63",
+          "Q73-Q76"
+        ],
+        "IO-4": [
+          "WEB-6"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Per-depth example counts at depth 6–7 in the test set not published; depth 6–7 subsets likely single-digit counts"
+      ],
+      "requires_expert_verification": []
+    },
+    "input_content": {
+      "score": 4,
+      "justification": "Input content is well-aligned for the lab's expert evaluator population in a US research lab context. FOLIO content consists of logically structured fictional stories with no consumer-facing cultural-loading concerns, expert-annotated by CS students/researchers [Q16, Q31] with explicit bias-screening (race, ethnicity, gender, sexuality, nationality, class, religion excluded) [Q47, Q127] and factual accuracy review [Q126]. The 4,351-word vocabulary spans diverse real-world topics [Q62], confirmed empirically across astronomy, geography, biology, economics, and media in the sample [DATASET-D13, D26, D28]. The primary concerns are (1) WikiLogic real-world entity references may overlap with LLM pretraining data, creating a shortcut-reasoning confound [Q104, DATASET-D8, D10] — explicitly flagged in the paper; and (2) NL-layer typos and grammar issues observed in training data despite documented quality control [DATASET-D7, D27]. Neither concern is fatal for an expert evaluator population that can perform subcorpus-stratified analysis (HybLogic vs. WikiLogic) [Q102].",
+      "strengths": [
+        "Identity-based bias screening was performed and 39.2% of stories rewritten [Q48, Q127]",
+        "Broad topical coverage in sampled data confirms documented vocabulary breadth [DATASET-D13, D26, D28]",
+        "Expert annotation with FOL training reduces semantic-content noise [Q31]",
+        "Cultural loading is irrelevant to this expert US AI lab deployment per elicitation"
+      ],
+      "checklist_responses": {
+        "IC-1": "Lab deployment is a US AI research lab with English-only content and expert evaluators; no region-specific cultural/geographic/dialectal knowledge requirements [elicitation cultural_norms_notes]. FOLIO's Wikipedia-seeded content spans diverse topics but does not require non-Western knowledge.",
+        "IC-2": "FOLIO explicitly excludes identity-based biases [Q47, Q127]; content is logical-structure-focused rather than culturally normative. Alignment with US research lab context is strong.",
+        "IC-3": "WikiLogic references real-world entities (Oxford Circus, Michael O'Donnell, John Nash) [DATASET-D8, D10] — these are Western-centric but the deployment is US-based, so this is a population match. However, real-world entity references create a documented contamination/shortcut-reasoning confound [Q104].",
+        "IC-4": "Not applicable — expert AI researcher population in target context; regional annotator recruitment irrelevant per elicitation.",
+        "IC-5": "Content issues identified: (a) WikiLogic contamination risk [Q104], (b) typos and grammar issues in training data observed in sample [DATASET-D7, D27], (c) tautological premise in Example 13 [DATASET-D27]. None are fatal but introduce construct-irrelevant variance."
+      },
+      "evidence_quotes": [
+        "[Q47] 'Our dataset prioritizes realism and factual accuracy, steering clear of biases and stereotypes linked to identity markers like race, ethnicity, gender, sexuality, nationality, class, and religion.' (p.4)",
+        "[Q127] 'We took out stories that had strongly opinionated language and contained gender, racial, and classist biases.' (p.13)",
+        "[Q126] 'We rewrote those that are not reflective of well-established scientific, historical, or legal facts.' (p.13)",
+        "[Q62] 'our dataset has a vocabulary of 4,351 words, and the examples based on Wikipedia account for 74% of the total vocabulary' (p.5)",
+        "[Q104] 'since the examples in WikiLogic are created from scratch by humans, it is possible that LLMs have seen similar texts with similar logical patterns in the training data.' (p.8)",
+        "[Q48] 'we manually screened all stories and found that 39.2% of the stories suffer from at least one of these issues. We implemented a detailed protocol to rewrite these stories.' (p.4)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-5] 2025 study found annotation errors in FOLIO requiring a cleaned validation set"
+      ],
+      "evidence_dataset": [
+        "DATASET-D7: Double-negative NL premise with two typos ('offical', 'Lipstcks') — NL quality issue in training data",
+        "DATASET-D8: Real Wikipedia entity (Oxford Circus, John Nash) — WikiLogic contamination/shortcut risk",
+        "DATASET-D10: Real Wikipedia person (Michael O'Donnell) with falsifiable world-knowledge conclusion",
+        "DATASET-D13: Astronomy topic (PSO J318.5−22) — broad topical coverage confirmed",
+        "DATASET-D26: Non-Western name ('Ho') and ideologically loaded content used as logical material — within deductive scope",
+        "DATASET-D27: Tautological premise (p ∨ ¬p) with typos in NL"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "Q47"
+        ],
+        "IC-2": [
+          "Q47",
+          "Q127",
+          "Q126"
+        ],
+        "IC-3": [
+          "Q104",
+          "DATASET-D8",
+          "DATASET-D10"
+        ],
+        "IC-4": [],
+        "IC-5": [
+          "Q104",
+          "DATASET-D7",
+          "DATASET-D27",
+          "WEB-5"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Rate of NL quality issues across the full corpus cannot be estimated from 57-example sample",
+        "Whether lab uses cleaned (2025) or original FOLIO annotation set not specified"
+      ],
+      "requires_expert_verification": [
+        "Whether contamination from Wikipedia-seeded stories materially affects model rankings for the lab's specific model set"
+      ]
+    },
+    "input_form": {
+      "score": 3,
+      "justification": "This is the lab's highest-priority dimension and the analysis surfaces real concerns despite strong native-format alignment. FOLIO is fundamentally NL-first with parallel FOL annotations [Q64, Q65, Q37]; NL and FOL are designed to be logically and semantically equivalent [Q68], grammar-reviewed [Q49, Q50], and follow standard AI/education FOL syntax [Q52]. The parallel structure is empirically confirmed at sentence-level granularity [DATASET-D1, D2], and documented NL conventions (exclusive vs. inclusive disjunction, quantifier phrasing) are followed [DATASET-D3, D11]. This strongly supports NL-only and hybrid NL+FOL evaluation modes. However, three concerns reduce the score: (1) The paper explicitly documents that input format materially affects performance — adding FOL helps GPT-4 but hurts GPT-3.5 [Q162, Q163] — meaning a pure-symbolic regime is poorly matched to FOLIO's documented score distributions; this is the live unresolved decision flagged by the lab. (2) Dataset analysis reveals concrete NL-FOL alignment failures: a direct negation drop creating semantic contradiction [DATASET-D17], an entity-name mismatch (John/Jim) [DATASET-D16], unbalanced parentheses in multiple FOL formulas [DATASET-D14, D15, D20, D21], and FOL over-specification (double existential where single suffices) [DATASET-D6]. (3) Subcorpus AST diversity differs (WikiLogic: 53; HybLogic: 33) [Q106], affecting structural variety in the symbolic layer.",
+      "strengths": [
+        "Complete NL/FOL parallel annotation enables both NL-only and hybrid input modes out-of-the-box [DATASET-D1, D2]",
+        "Documented NL conventions (⊕ for exclusive disjunction, ∨ for inclusive) consistently applied [DATASET-D3, D11]",
+        "Standard AI/education FOL syntax (Russell & Norvig) used [Q52], aligning with lab researcher familiarity",
+        "Grammar-reviewed NL with explicit ambiguity reduction protocols [Q49, Q50, Q51]"
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal-distribution mismatch is the central concern. FOLIO's documented scores derive from NL-first presentation [Q64]; paper explicitly shows FOL-only and NL+FOL settings produce different results across models [Q162, Q163]. Pure-symbolic regime will not generalize to/from FOLIO's documented score distributions; hybrid NL+FOL is well-supported.",
+        "IF-2": "Lab infrastructure (Python tooling, OpenAI API, standard NLP stack) fully supports all input formats; no infrastructure mismatch [elicitation infrastructure_notes].",
+        "IF-3": "Domain-specific form differences relevant to the lab's pipeline: (a) NL/FOL semantic alignment failures observed in sample [DATASET-D17], (b) syntactic errors in FOL [DATASET-D14, D15, D20, D21], (c) entity-name inconsistencies [DATASET-D16], (d) FOL over-specification of existentials [DATASET-D6]. These corrupt any FOL-only or hybrid presentation that relies on FOL fidelity.",
+        "IF-4": "Form mismatches that would harm external validity: (1) pure-symbolic regime is weakly aligned with FOLIO's NL-first design and validation; (2) NL/FOL annotation errors in the data create input-signal noise that may differentially affect hybrid vs. NL-only conditions; (3) AST diversity differs between subcorpora [Q106]."
+      },
+      "evidence_quotes": [
+        "[Q64] 'Each natural language (NL) story S in FOLIO consists of n premises... and m conclusions' (p.6)",
+        "[Q65] 'All NL stories are annotated with parallel FOL stories SF' (p.6)",
+        "[Q68] 'each of the NL sentence pi or hi and the parallel FOL formula pfi or hfi should be logically and semantically equivalent.' (p.6)",
+        "[Q52] 'We adopt the FOL definitions and syntax most widely used in the AI community (Russell and Norvig, 2010).' (p.5)",
+        "[Q162] 'the performance slightly increases in the NL+FOL setting for GPT-4 while GPT-3.5 performs worse in both the NL+FOL and the FOL-only settings.' (p.15)",
+        "[Q163] 'FOL always serves as additional useful information for GPT-4, but not for GPT-3.5 regardless of whether FOL is concatenated with NL.' (p.15)",
+        "[Q106] 'WikiLogic has 53 ASTs while HybLogic has 33.' (p.8)",
+        "[Q49] 'All the sentences are first checked with a grammar checking tool, Grammarly.' (p.4)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-2] ProverQA (ICLR 2025) — pure-symbolic-compatible alternative if lab pursues that regime",
+        "[WEB-1] ProntoQA — symbolic ontology-based alternative",
+        "[WEB-3] LogicGraph — depth-stratified symbolic FOL benchmark",
+        "[WEB-5] 2025 study identified annotation errors using Vampire prover, established cleaned set"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: Clean NL/FOL parallel at sentence level confirmed in actual data",
+        "DATASET-D2: Multi-premise per-sentence FOL granularity confirmed",
+        "DATASET-D3: NL 'either-or' → ⊕ convention applied correctly",
+        "DATASET-D11: NL 'but not both' → ⊕ confirmed",
+        "DATASET-D14: Missing closing parenthesis in FOL — syntactic error",
+        "DATASET-D15: Missing closing parenthesis in FOL — syntactic error",
+        "DATASET-D16: NL 'John' / FOL 'jim' name inconsistency",
+        "DATASET-D17: CRITICAL — NL negation 'does not invest' dropped in FOL; direct semantic contradiction",
+        "DATASET-D20: Unbalanced parenthesis in premises-FOL",
+        "DATASET-D21: Extra closing parenthesis in conclusion-FOL",
+        "DATASET-D6: FOL over-specifies existential (double ∃ where single suffices)"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q64",
+          "Q162",
+          "Q163",
+          "DATASET-D1"
+        ],
+        "IF-2": [],
+        "IF-3": [
+          "DATASET-D14",
+          "DATASET-D15",
+          "DATASET-D16",
+          "DATASET-D17",
+          "DATASET-D20",
+          "DATASET-D21",
+          "DATASET-D6"
+        ],
+        "IF-4": [
+          "Q162",
+          "Q163",
+          "Q106",
+          "WEB-5"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Rate of NL/FOL annotation errors across full corpus not quantified",
+        "Whether the Stanford CS221 inference engine successfully resolved FOL syntactic errors via the Python parser bridge, or whether they propagated to label errors",
+        "How pure-symbolic FOL-only presentation would interact with the observed FOL annotation errors"
+      ],
+      "requires_expert_verification": [
+        "Whether the lab should use the original FOLIO dataset or the 2025 cleaned validation set",
+        "Whether observed FOL annotation errors are present in the test split (not accessible via HuggingFace)"
+      ]
+    },
+    "output_ontology": {
+      "score": 5,
+      "justification": "Output ontology is an exact match for the lab's deployment. FOLIO's three-way labels (True, False, Unknown) [Q36, Q66] map cleanly to the lab's three categories (entailment, contradiction, neutral) per elicitation Q1, with no sub-distinctions needed. The taxonomy is grounded in objective FOL inference rather than annotator subjectivity [Q2, Q70]. The label distribution in the test set is near-balanced (87 True / 78 False / 61 Unknown, 38.5% majority baseline) [Q94]. Dataset analysis confirms the Unknown label is used with logical precision rather than as a catch-all — complementary conclusions ('Harry is cool' and 'Harry is not cool') are both correctly labeled Uncertain when premises underdetermine them [DATASET-D19]. The only minor concern is the HuggingFace dataset uses the string 'Uncertain' rather than 'Unknown' [DATASET-D2], requiring a trivial string normalization. Temporal/modal exclusions [Q139, Q140] match the lab's out-of-scope list exactly.",
+      "strengths": [
+        "Three-way label maps directly to lab's entailment/contradiction/neutral with no residual ambiguity (confirmed by elicitation Q1)",
+        "Ground truth determined by automated FOL inference engine, not annotator agreement [Q2, Q70]",
+        "Near-balanced label distribution in test set [Q94]",
+        "Empirical verification that Unknown reflects logical underdetermination [DATASET-D19]"
+      ],
+      "checklist_responses": {
+        "OO-1": "Output categories (True/False/Unknown) are precisely relevant to the lab's three-way classification regime; elicitation Q1 confirmed clean mapping.",
+        "OO-2": "No missing regional categories. The lab confirmed no finer-grained distinctions within Unknown are needed.",
+        "OO-3": "No categories encode non-regional or value-laden assumptions; labels are anchored in formal logical validity [Q2, Q137].",
+        "OO-4": "No stakeholder-driven redesign needed; taxonomy is formally objective.",
+        "OO-5": "No taxonomy issues. Minor implementation note: HF label string is 'Uncertain' not 'Unknown' [DATASET-D2] — string normalization only. 5% of conclusions have complex syntactic structure posing comprehension challenges [Q120] but this is a difficulty property, not a taxonomy issue."
+      },
+      "evidence_quotes": [
+        "[Q36] 'Each of the stories is composed of several premises and conclusions with truth values of True, False, or Unknown' (p.4)",
+        "[Q66] 'Given P and H, the goal is to determine the truth values of the conclusions: \"True\", \"False\" or \"Unknown\", based on FOL reasoning.' (p.6)",
+        "[Q70] 'the premises and conclusions are set up in such a way to ensure that the inference engine always returns an answer given enough resources' (p.6)",
+        "[Q2] 'The logical correctness of the premises and conclusions is ensured by their FOL annotations, which are automatically verified by an FOL inference engine.' (p.1)",
+        "[Q94] 'The majority baseline of our dataset is 38.5% since in our test set, there are 87, 78 and 61 examples with labels of true, false and unknown respectively.' (p.7)",
+        "[Q137] 'FOL has no ambiguity while ambiguity can occur at various levels of NLP.' (p.13)"
+      ],
+      "evidence_web_sources": [],
+      "evidence_dataset": [
+        "DATASET-D19: Complementary conclusions both labeled Uncertain confirms Unknown reflects logical underdetermination, not difficulty",
+        "DATASET-D23: Conclusion introducing predicate absent from premises correctly labeled Uncertain",
+        "DATASET-D28: Unrelated conclusion correctly labeled Uncertain — exemplifies Unknown semantics",
+        "DATASET-D2: HF dataset uses 'Uncertain' label string vs. paper's 'Unknown' — implementation note"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q36",
+          "Q66"
+        ],
+        "OO-2": [
+          "Q66"
+        ],
+        "OO-3": [
+          "Q2",
+          "Q137"
+        ],
+        "OO-4": [
+          "Q70"
+        ],
+        "OO-5": [
+          "Q120",
+          "DATASET-D2"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": []
+    },
+    "output_content": {
+      "score": 4,
+      "justification": "Output content (label correctness) is anchored in objective formal logical validity rather than annotator subjectivity, eliminating most convergent-validity concerns for the primary task [Q2, Q57, Q153]. A rigorous multi-stage QA process was used: NL quality review separated from FOL quality review [Q29, Q124, Q125], standardized FOL annotation protocol [Q54, Q143-Q146], commonsense premises explicitly added at alignment stage [Q55], and 39.2% of stories rewritten in QA [Q48]. Expert/non-expert accuracy gap (95.98% vs. 61.82%) [Q111] confirms the task genuinely requires FOL expertise and the labels are not noise. However, dataset analysis surfaces concrete label-correctness concerns: (1) a direct NL/FOL semantic contradiction in Example 57 (negation dropped) [DATASET-D17] means the label may be computed from incorrect FOL; (2) syntactic errors in FOL formulas [DATASET-D14, D15, D20, D21] could corrupt inference engine output; (3) FOL over-specification (double existential) [DATASET-D6] and atypical formulations [DATASET-D25] suggest annotation-protocol inconsistencies. A 2025 study using the Vampire prover identified errors requiring a cleaned validation set [WEB-5]. Annotator demographics beyond English proficiency and FOL training are not documented [Q122, Q123] — relevant if this were a subjective task, but largely moot here since labels are inference-engine-derived.",
+      "strengths": [
+        "Labels objectively determined by automated FOL inference engine, not subjective judgment [Q2, Q153]",
+        "Rigorous multi-stage QA pipeline with role-separated expert review [Q29, Q124, Q125]",
+        "Standardized FOL annotation protocol to minimize translation inconsistencies [Q54, Q143-Q146]",
+        "Expert human ceiling (95.98%) provides meaningful upper bound [Q111]"
+      ],
+      "checklist_responses": {
+        "OC-1": "Ground truth reflects formal logical validity rather than stakeholder perspective; the lab's expert population is precisely the population whose judgments the FOL-engine-derived labels approximate [Q2, Q111].",
+        "OC-2": "Minimal disagreement risk: ground truth is mechanically derived from FOL premises, and the lab's expert population shares the source culture (FOL-trained CS researchers). Expert annotators achieved 95.98% on FOLIO [Q111].",
+        "OC-3": "Annotator demographics partially documented: native/near-native English, CS students/researchers with formal FOL education [Q27, Q28, Q122, Q123]. Gender, racial, and institutional diversity NOT documented — INSUFFICIENT DOCUMENTATION, but largely moot given objective grounding.",
+        "OC-4": "Not needed — labels are inference-engine-derived; regional annotator pool re-annotation would not change formal-logical ground truth.",
+        "OC-5": "Aggregation methods not relevant — single ground-truth label per conclusion derived from FOL prover, not majority vote.",
+        "OC-6": "Label issues identified: (1) NL/FOL semantic mismatch in Example 57 [DATASET-D17] — if label was computed from FOL, it may not match what NL premises imply; (2) syntactic errors in FOL [DATASET-D14, D15, D20, D21] may have corrupted inference engine output or required manual override; (3) 2025 study found errors warranting cleaning [WEB-5]."
+      },
+      "evidence_quotes": [
+        "[Q2] 'The logical correctness of the premises and conclusions is ensured by their FOL annotations, which are automatically verified by an FOL inference engine.' (p.1)",
+        "[Q29] 'At the NL quality check stage, only annotators who are experts in natural language processing or computational linguistics are involved. For the FOL quality check, only annotators who are experts in first-order logic are involved.' (p.4)",
+        "[Q54] 'we design an annotation protocol for FOL translation in order to ensure that our FOL translations are as consistent as possible across all examples in our dataset.' (p.5)",
+        "[Q53] 'In preliminary investigations, we found that the human-written FOL formulas suffer from FOL consistency issues, which necessitates an additional round of quality control for FOL formulas.' (p.5)",
+        "[Q48] '39.2% of the stories suffer from at least one of these issues. We implemented a detailed protocol to rewrite these stories.' (p.4)",
+        "[Q111] 'Expert annotations achieve an accuracy of 95.98% while non-expert annotations achieves 61.82%, with a gap of 34.16%.' (p.9)",
+        "[Q122] 'Our annotators are either college or graduate students who are native English speakers or possess near-native proficiency in English.' (p.12)",
+        "[Q153] 'the theorem prover outputs whether the conclusions are True / False / Unknown, based on the premises.' (p.14)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-5] 2025 study using Vampire theorem prover found annotation errors in public FOLIO, established cleaned validation set; auto-formalization baseline 86.70% on cleaned set"
+      ],
+      "evidence_dataset": [
+        "DATASET-D17: CRITICAL — NL 'does not invest' / FOL 'InvestInRegularly(matt, ...)' direct semantic contradiction",
+        "DATASET-D14: Syntactic error (missing parenthesis) in FOL formula",
+        "DATASET-D15: Syntactic error (missing parenthesis) in FOL formula",
+        "DATASET-D16: Entity name inconsistency (John in NL, jim in FOL)",
+        "DATASET-D20: Unbalanced parenthesis in FOL",
+        "DATASET-D21: Extra closing parenthesis in FOL",
+        "DATASET-D6: FOL over-specifies 'some' as double existential",
+        "DATASET-D25: Conditional inside existential scope — atypical FOL formulation",
+        "DATASET-D12: Predicate typo 'StongNationalCurrency' consistent in premises and conclusion"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q2",
+          "Q111"
+        ],
+        "OC-2": [
+          "Q2",
+          "Q111"
+        ],
+        "OC-3": [
+          "Q27",
+          "Q28",
+          "Q122",
+          "Q123"
+        ],
+        "OC-4": [
+          "Q2",
+          "Q153"
+        ],
+        "OC-5": [
+          "Q70"
+        ],
+        "OC-6": [
+          "DATASET-D17",
+          "DATASET-D14",
+          "DATASET-D15",
+          "DATASET-D20",
+          "DATASET-D21",
+          "WEB-5"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Rate of label-corruption due to NL/FOL annotation errors across the full corpus",
+        "Whether the inference engine produced labels using corrected FOL (post-QA) or whether visible FOL errors in the HF data correspond to label-affecting errors",
+        "Annotator demographics beyond English proficiency and FOL training"
+      ],
+      "requires_expert_verification": [
+        "Whether lab uses original or 2025-cleaned FOLIO annotations",
+        "Sample-based audit of label correctness against an independent FOL prover (e.g., Vampire or Prover9) to estimate label-noise rate"
+      ]
+    },
+    "output_form": {
+      "score": 4,
+      "justification": "Output form aligns well for the primary task: classification accuracy on three-way categorical labels [Q80] matches the lab's exact intended metric. Premise ordering has been verified not to be exploitable as a positional heuristic [Q158, Q159, Q160], reinforcing metric robustness. For the secondary NL-FOL translation task, both Syntactic Validity (SynV) [Q73, Q74] and Inference Engine Execution Accuracy (ExcAcc) [Q75, Q76] are defined separately, supporting clean task separation. However, three concerns prevent a 5: (1) The original GPT-4 ceiling (53.1% on HybLogic) [Q20] is now substantially closed by neuro-symbolic pipelines (LLM-ARC 88.32% vs. human 95.98%) [WEB-4], creating a discriminability bifurcation between standard prompting and neuro-symbolic regimes — ceiling concern is reduced but remains live for standard prompting [WEB-4]. (2) Systematic label-class asymmetry: accuracy on False/Unknown is 54.0% few-shot vs. 61.9% fine-tuning, much lower than True [Q155, Q156, Q157] — the lab must account for this when interpreting aggregate accuracy. (3) Test split is not present in the HuggingFace dataset [DATASET concern 4]; only train (1,001) + validation (203) are available, reducing statistical power for primary evaluations on the documented test split (226 examples).",
+      "strengths": [
+        "Classification accuracy metric is an exact match for lab's intended evaluation regime [Q80]",
+        "Premise-ordering robustness empirically verified [Q158-Q160]",
+        "Separate SynV and ExcAcc metrics enable clean task separation for NL-FOL translation [Q73-Q76]",
+        "Human expert ceiling (95.98%) provides interpretable upper bound [Q111, Q113]"
+      ],
+      "checklist_responses": {
+        "OF-1": "Output modality matches exactly: categorical three-way label for primary task [Q80]; SynV/ExcAcc for secondary translation task [Q73-Q76]. Both align with lab's stated metrics.",
+        "OF-2": "Not applicable — no speech-based output requirements in this deployment.",
+        "OF-3": "Not applicable — expert evaluator population in well-resourced lab environment.",
+        "OF-4": "Form mismatches: (a) HF dataset lacks test split [DATASET concern 4]; primary documented performance comparisons reference the unavailable 226-example test set, so lab must obtain it from FOLIO GitHub or use validation set with reduced power (n=203). (b) Ceiling concern is partially resolved for neuro-symbolic pipelines [WEB-4] but remains live for standard prompting baselines on frontier models (GPT-4o, Claude 3.5, Gemini 1.5) which are not publicly documented [WEB-4]. (c) Systematic label-class asymmetry [Q155-Q157] means aggregate accuracy can mislead — per-class reporting is needed."
+      },
+      "evidence_quotes": [
+        "[Q80] 'We use accuracy for evaluating logical reasoning performance.' (p.6)",
+        "[Q73] 'Two metrics are adopted to evaluate NL-FOL translation... Syntactic validity (SynV)' (p.6)",
+        "[Q75] 'Inference Engine execution accuracy (ExcAcc).' (p.6)",
+        "[Q158] 'we shuffle the input premises to evaluate models.' (p.15)",
+        "[Q160] 'the ordering of premises in FOLIO examples does not yield significant information about the label' (p.15)",
+        "[Q156] 'The accuracy on examples with False or Unknown conclusions is 61.9% with fine-tuning and 54.0% with few-shot prompting.' (p.15)",
+        "[Q155] 'LLMs are significantly better at making the correct predictions for conclusions with labels of True than the conclusions with labels of False or Unknown.' (p.15)",
+        "[Q20] 'the most capable publicly available LLM so far achieves only 53.1% on the stories written in a hybrid manner, which is slightly better than random.' (p.2)",
+        "[Q113] 'The expert and GPT-4 gap is 31.82%, suggesting significant room for model improvement.' (p.9)",
+        "[Q96] 'The syntactic validity scores are around 93% with both GPT-3.5-Turbo and GPT-4.' (p.8)",
+        "[Q97] 'GPT-3.5-Turbo and GPT-4 are not yet good at translating an NL story to a logically or semantically similar FOL counterpart' (p.8)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-4] LLM-ARC neuro-symbolic system achieves 88.32% on FOLIO validation (2024 SotA)",
+        "[WEB-5] Auto-formalization agent 86.70% on cleaned FOLIO vs. 73.89% CoT baseline",
+        "[WEB-9] LogiConBench designed to remain discriminative when existing benchmarks saturate"
+      ],
+      "evidence_dataset": [
+        "HF Metadata observation: only train (1001) and validation (203) splits available; documented 226-example test split absent — reduces statistical power for replicating documented baselines"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q80",
+          "Q73",
+          "Q75"
+        ],
+        "OF-2": [],
+        "OF-3": [],
+        "OF-4": [
+          "Q20",
+          "Q156",
+          "WEB-4",
+          "WEB-5"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Vanilla prompting baselines for GPT-4o, Claude 3.5, Gemini 1.5 on FOLIO not publicly documented [WEB-4]",
+        "Per-depth example counts at depth 6–7 — likely too small for reliable per-depth accuracy estimates [WEB-6]",
+        "Test set availability via HuggingFace — must be sourced from GitHub"
+      ],
+      "requires_expert_verification": [
+        "Whether the lab's specific evaluation paradigm (standard prompting vs. neuro-symbolic) maintains discriminability for its target frontier-model set",
+        "Statistical power analysis for per-depth and per-label-class metrics on the lab's chosen evaluation split"
+      ]
+    }
+  },
+  "overall_summary": "FOLIO is a strongly aligned benchmark for the US AI research lab's classical FOL reasoning evaluation, with five of six validity dimensions scoring 4–5. Input ontology and output ontology are exact matches: FOLIO's classical FOL operator coverage [Q138] and explicit temporal/modal exclusions [Q139, Q140] correspond precisely to the lab's in-scope and out-of-scope reasoning types, and the True/False/Unknown taxonomy maps cleanly onto entailment/contradiction/neutral per elicitation Q1. Output content is anchored in objective FOL-inference-derived labels [Q2, Q153], sidestepping most annotator-subjectivity concerns. The primary live concern, consistent with the lab's HIGH priority on input form, is the unresolved choice between pure-symbolic and hybrid NL+FOL presentation — FOLIO was designed and validated for NL-first presentation, and the paper itself documents that input format materially affects model scores [Q162, Q163]. Dataset analysis surfaces concrete annotation quality concerns: a direct NL/FOL semantic contradiction (Example 57, negation dropped) [DATASET-D17], multiple syntactic errors in FOL formulas, entity-name inconsistencies, and FOL over-specification patterns — corroborated by an independent 2025 study using the Vampire prover that established a cleaned validation set [WEB-5]. Output-form concerns are moderate: the HuggingFace dataset lacks the documented test split, the original GPT-4 ceiling has been substantially closed by neuro-symbolic pipelines (88.32% SotA) [WEB-4], and systematic label-class asymmetry [Q155-Q157] means aggregate accuracy can mislead without per-class reporting.",
+  "risk_assessment": "low",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "For this lab's deployment, FOLIO provides a high-fidelity evaluation of classical first-order logic reasoning capability — specifically deductive entailment over premise-conclusion pairs with quantifiers, negation, conditionals, conjunction/disjunction, and multi-step chains (mode-4 depth, 28.7% at depth ≥5). The input_ontology (score 5) and output_ontology (score 5) dimensions show exact construct alignment, and output_content (score 4) confirms labels are anchored in objective FOL inference rather than subjective judgment. The benchmark cleanly supports the lab's three-way accuracy metric.",
+    "construct_depth": "Construct depth is strong for the primary classification task and weaker for the symbolic-input regime. The NL-first design [Q64-Q68], NL-FOL alignment conventions [Q130-Q133], and per-sentence parallel annotation [DATASET-D1, D2] provide rich signal for hybrid evaluation. However, three depth limitations apply: (1) per-depth statistical power is limited at depth 6–7 (likely single-digit test examples) [WEB-6], (2) WikiLogic real-world entity references create a documented shortcut-reasoning confound [Q104, DATASET-D8, D10] — subcorpus-stratified analysis is needed, and (3) approximately 1–5% of sampled examples show NL/FOL annotation defects that may corrupt training signal for the secondary translation task [DATASET-D14-D17, D20-D21].",
+    "supplementation_needed": "For the lab's specific use case: (1) If pursuing pure-symbolic evaluation (the input_form score-3 concern), supplement FOLIO with ProverQA [WEB-2] or LogicGraph [WEB-3], which are designed for symbolic-input regimes with depth stratification. (2) Verify whether to use the original or 2025-cleaned FOLIO annotations [WEB-5] — this directly affects output_content reliability. (3) Source the 226-example test split from FOLIO GitHub rather than HuggingFace (test split missing from HF). (4) Run subcorpus-stratified analysis (WikiLogic vs. HybLogic) to disentangle contamination effects from genuine deductive capability. (5) For frontier-model discriminability (output_form), supplement with LogiConBench [WEB-9] if FOLIO appears saturated under neuro-symbolic pipelines."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_form",
+      "gap": "FOLIO is NL-first; pure-symbolic regime is weakly aligned with documented score distributions, and NL/FOL annotation errors observed in sample data corrupt FOL-only and hybrid signals",
+      "recommendation": "Restrict primary FOLIO evaluation to NL-only or hybrid NL+FOL conditions. For pure-symbolic evaluation, use ProverQA (ICLR 2025) or LogicGraph as primary; treat FOLIO FOL-only as ablation only. Apply the 2025 Vampire-cleaned annotation set (or equivalent QA pass) before any FOL-input experiments."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Direct NL/FOL semantic contradictions and syntactic errors observed in sampled training data; 2025 study confirmed corpus-wide annotation errors warranting cleaning",
+      "recommendation": "Use the 2025 cleaned FOLIO validation set (or run an independent Vampire/Prover9 pass to identify and exclude examples with corrupted FOL or NL/FOL mismatches). Report results on both cleaned and original annotation sets to allow comparison with published baselines."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "HuggingFace dataset lacks the documented 226-example test split; using only validation (n=203) reduces statistical power for per-depth and per-label-class analyses",
+      "recommendation": "Source the 226-example test split directly from the FOLIO GitHub repository. Report per-label-class accuracy (True / False / Unknown) separately given the documented systematic asymmetry [Q155-Q157], and treat per-depth scores at depth 6–7 as indicative only due to small subset sizes."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "Standard-prompting ceiling for frontier models (GPT-4o, Claude 3.5, Gemini 1.5) on FOLIO is not publicly documented; neuro-symbolic SotA is 88.32% vs. human 95.98%, leaving discriminability uncertain for frontier prompting",
+      "recommendation": "Before deploying FOLIO as a discriminative benchmark, run a calibration pass on the lab's target frontier models with the lab's chosen prompting strategy. If ceiling effects emerge, supplement with LogicGraph or LogiConBench for harder depth tiers."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "WikiLogic real-world entity references create contamination/shortcut-reasoning confound; HybLogic vs. WikiLogic subcorpus tag is not in the HuggingFace schema",
+      "recommendation": "Cross-reference the FOLIO GitHub repository to tag each example with its subcorpus origin. Report HybLogic and WikiLogic accuracies separately to disentangle genuine deductive capability from world-knowledge shortcuts."
+    },
+    {
+      "dimension": "input_ontology",
+      "gap": "Per-depth example counts at depth 6–7 are likely single-digit in the test set, limiting statistical reliability of per-depth performance estimates",
+      "recommendation": "When reporting per-depth performance, aggregate to depth bands (0–3, 4–5, 6+) rather than per-depth points, and provide confidence intervals. For finer-grained depth analysis, supplement with ProverQA which provides 500 examples per difficulty band."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_form"
+  ],
+  "strongest_dimensions": [
+    "input_ontology",
+    "output_ontology",
+    "output_content"
+  ]
+}

@@ -1,0 +1,11 @@
+- name: gsm8k
+- full_name: GSM8K
+- year: 2021
+- domain: Evaluates multi-step mathematical reasoning abilities of language models using grade school math word problems. The benchmark assesses robustness and linguistic diversity in elementary mathematical problem-solving.
+- languages: English
+- primary_region: United States
+- porting_strategy: none
+- input_modalities: text
+- output_modalities: text, label
+- brief_description: GSM8K is a curated dataset of 8.5K high-quality grade school math word problems with natural language solutions. Designed to have high linguistic diversity while relying on elementary math concepts, it reveals critical weaknesses in large language models' multi-step reasoning. The paper proposes training verifiers to judge solution correctness rather than relying purely on generative methods.
+- source_culture: transferred from different cultural context

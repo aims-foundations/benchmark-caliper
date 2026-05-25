@@ -1,0 +1,475 @@
+name: 'US K–8 Edtech: CCSS-Aligned Math Assessment Item Generation'
+abbreviation: US_K8_CCSS_MCQ
+deployment_context:
+  country: United States
+  sector: K–12 education technology
+  deployment_type: LLM-powered math assessment item generation tool
+  primary_users: K–8 classroom teachers in US public and private schools, spanning
+    urban, suburban, and rural settings
+  secondary_users: K–8 students (grades K–8) whose formative assessments are built
+    from generated content
+  geographic_scope: National (no sub-national restriction); content must be inclusive
+    across all US regional and demographic contexts
+  use_case_summary: Teachers specify a CCSS standard (e.g., 4.NF.A.2), grade level,
+    and difficulty; the system generates a complete multiple-choice assessment item
+    with a verified correct answer and misconception-grounded distractor choices for
+    use in targeted formative assessment.
+target_population_profile:
+  teacher_characteristics:
+    grade_bands_served:
+    - K–2
+    - 3–5
+    - 6–8
+    settings:
+    - urban
+    - suburban
+    - rural
+    student_populations_served:
+    - General education students
+    - English Language Learners (ELL/multilingual learners)
+    - Students from lower-income households
+    - Students from diverse racial and ethnic backgrounds
+    pedagogical_role: Formative assessment design; teachers use generated items for
+      targeted skill diagnosis, not summative grading
+    assumed_content_knowledge: Grade-level math content familiarity; not assumed to
+      have psychometric or item-writing expertise
+  student_characteristics:
+    age_range_approx: 5–14 years
+    grade_range: K–8
+    linguistic_diversity: Significant ELL population; low-idiom, plain-language problem
+      stems required
+    socioeconomic_diversity: Includes students from lower-income households; money-related
+      problem contexts require sensitivity
+    cultural_diversity: Broad US demographic diversity; regionally neutral, culturally
+      inclusive contexts required
+curriculum_framework:
+  primary_standard: Common Core State Standards for Mathematics (CCSS-M)
+  standard_adoption_status: '41 states, DC, four territories, and the Department of
+    Defense Education Activity (DoDEA) have adopted CCSS as of 2025. Four states never
+    adopted CCSS at all: Alaska, Nebraska, Texas, and Virginia. States that formally
+    repealed and replaced CCSS include Florida (adopted Florida''s B.E.S.T. Standards),
+    Indiana (Indiana Academic Standards), Oklahoma, South Carolina, and Tennessee
+    (Tennessee Academic Standards). Many other states adopted CCSS but subsequently
+    renamed or modestly revised their standards while retaining the core framework.
+    Source: Common Core State Standards Initiative — [|https://www.thecorestandards.org/standards-in-your-state/|];
+    LegalClarity state-by-state analysis (Dec 2025) — [|https://legalclarity.org/what-states-use-common-core-state-standards/|].
+
+    CAVEAT: For a national deployment, this means CCSS-tagged items will not directly
+    align to the official standards documents in Texas, Virginia, Alaska, Nebraska,
+    Florida, Indiana, Oklahoma, South Carolina, and Tennessee. Parallel coverage or
+    explicit mapping to Texas TEKS and Virginia SOL is required for full national
+    reach (see alternative_frameworks_in_scope).'
+  relevant_domains_by_grade_band:
+    K–2:
+    - Counting & Cardinality (CC)
+    - Operations & Algebraic Thinking (OA)
+    - Number & Operations in Base Ten (NBT)
+    - Measurement & Data (MD)
+    - Geometry (G)
+    3–5:
+    - Operations & Algebraic Thinking (OA)
+    - Number & Operations in Base Ten (NBT)
+    - Number & Operations—Fractions (NF)
+    - Measurement & Data (MD)
+    - Geometry (G)
+    6–8:
+    - Ratios & Proportional Relationships (RP)
+    - The Number System (NS)
+    - Expressions & Equations (EE)
+    - Functions (F)
+    - Statistics & Probability (SP)
+    - Geometry (G)
+  example_target_standards:
+  - 4.NF.A.2
+  - 6.RP.A.3
+  - 3.OA.A.1
+  - 5.NF.B.4
+  standard_granularity_required: Standard-cluster level (e.g., 4.NF.A.2), not domain-level
+  ccss_alignment_in_gsm8k: NOT PRESENT — GSM8K contains no CCSS tagging at domain,
+    cluster, or standard level; this is a fundamental ontological gap
+  alternative_frameworks_in_scope: 'Texas uses the Texas Essential Knowledge and Skills
+    (TEKS) for mathematics, and Virginia uses the Virginia Standards of Learning (SOL)
+    — both of which are entirely distinct frameworks from CCSS-M and were never aligned
+    to it. Alaska, Nebraska, Oklahoma, South Carolina, Indiana, Florida, and Tennessee
+    also use state-specific frameworks that, while sometimes CCSS-derived, are officially
+    separate documents. For a national K–8 deployment, the tool should either (a)
+    restrict its marketing scope to CCSS-adopting states or (b) implement parallel
+    standard-tagging pipelines for TEKS and Virginia SOL at minimum, as Texas and
+    Virginia together represent a large share of total US K–8 enrollment. Source:
+    LegalClarity state standards map (Dec 2025) — [|https://legalclarity.org/what-states-use-common-core-state-standards/|].'
+languages:
+  primary: English (American English)
+  register_requirements: Low-idiom, plain-language register for ELL accessibility;
+    lexical complexity norms for math word problems targeting multilingual learners
+  ell_frameworks_relevant:
+  - 'WIDA English Language Development Standards Framework, 2020 Edition (current
+    version — released December 2020 by the WIDA Consortium; being implemented across
+    36 states, DC, and four territories as of 2024; supersedes 2012 Edition). Source:
+    WIDA official release — [|https://wida.wisc.edu/resources/wida-english-language-development-standards-framework-2020-edition|];
+    WIDA implementation study May 2024 — [|https://wida.wisc.edu/resources/examination-current-implementation-status-wida-english-language-development-standards|]'
+  - CCSS-ELL language standards
+  - 'WIDA 2020 Edition organizes ELD standards around six grade bands (K–1, 2–3, 4–5,
+    6–8, 9–10, 11–12) with grade-band-specific Language Expectations and Proficiency
+    Level Descriptors — directly relevant to K–8 grade-band differentiation requirements
+    of this deployment. Source: WIDA ELD Standards Framework 2020 — [|https://wida.wisc.edu/resources/wida-english-language-development-standards-framework-2020-edition|]'
+  script: Latin alphabet
+  modality: Text-only; no audio, image, or symbol-only modality required
+  gsm8k_language_match: Full match on language and modality — lowest-risk validity
+    dimension
+output_format_requirements:
+  item_package_components:
+  - Problem stem (grade-appropriate language, culturally inclusive context)
+  - Verified correct answer (mathematically accurate, clearly labeled)
+  - Distractor choices (typically 3, grounded in specific documented student misconceptions)
+  - 'Optional: worked solution explanation (step-level, grade-appropriate reasoning
+    chain)'
+  distractor_design_standard: Distractors must reflect specific, predictable student
+    errors (e.g., adding numerators and denominators independently when adding fractions
+    for 4.NF.A.2); arbitrary wrong numbers are not acceptable
+  item_format: Multiple-choice (MCQ)
+  gsm8k_output_format_match: CATEGORICAL MISMATCH — GSM8K evaluates free-form natural
+    language solution generation scored by final numeric answer only; structured MCQ
+    output (stem + answer + misconception-grounded distractors) is entirely outside
+    GSM8K's evaluation scope
+  misconception_research_sources: 'Multiple active NLP research efforts address automated
+    math MCQ distractor generation grounded in student misconceptions, but no single
+    authoritative database covers all CCSS standards.
+
+    - DiVERT (arXiv 2406.19356, 2024): distractor generation using variational error
+    representations for math MCQs — [|https://arxiv.org/abs/2406.19356|]
+
+    - Overgenerate-and-rank (arXiv 2405.05144, 2024): ranks generated distractors
+    by predicted student selection likelihood; human-authored distractors still outperform
+    generated ones — [|https://arxiv.org/abs/2405.05144|]
+
+    - ACL 2025 paper on plausible distractor generation via student-choice prediction
+    — [|https://aclanthology.org/2025.acl-long.1154.pdf|]
+
+    - ASSISTments platform contains grade-level math MCQ items with student response
+    data usable for misconception modeling but is not a public benchmark with CCSS-level
+    distractor annotations.
+
+    The research consensus is that crafting misconception-grounded distractors remains
+    a labor-intensive, hard-to-automate task; LLM-generated distractors are systematically
+    rated lower than human-authored ones by teachers. Source: Overgenerate-and-rank
+    study — [|https://arxiv.org/abs/2405.05144|]'
+evaluation_rubric:
+  dimension_hierarchy:
+  - rank: 1
+    dimension: Mathematical solution accuracy
+    description: Hard prerequisite; items with incorrect solutions are discarded
+    gsm8k_coverage: Direct — GSM8K measures this dimension via final numeric answer
+      correctness
+    priority: HARD GATE
+  - rank: 2
+    dimension: Distractor plausibility and misconception grounding
+    description: Each distractor must reflect a specific, documented student error;
+      implausible or accidentally correct distractors fail the item
+    gsm8k_coverage: NOT COVERED — no metric or label in GSM8K addresses MCQ distractor
+      quality
+    priority: HIGH
+  - rank: 3
+    dimension: CCSS standard alignment
+    description: Generated item must genuinely target the specified standard's specific
+      skill, not merely grade-level math broadly
+    gsm8k_coverage: NOT COVERED — GSM8K has no CCSS taxonomy
+    priority: HIGH
+  - rank: 4
+    dimension: Grade-level language appropriateness
+    description: Problem stem vocabulary, sentence complexity, and context must be
+      appropriate for the specified grade band
+    gsm8k_coverage: NOT COVERED — GSM8K provides no grade-level tagging or age-appropriate
+      language validation
+    priority: HIGH
+  - rank: 5
+    dimension: Cultural inclusivity
+    description: Contexts must be accessible across urban/suburban/rural settings,
+      low-idiom for ELL students, diverse names, no income-stigmatizing money contexts
+    gsm8k_coverage: NOT COVERED — GSM8K has no documented inclusivity guidelines or
+      cultural audit
+    priority: HIGH
+  classroom_readiness_definition: 'An item is ''correct'' only if the entire MCQ package
+    is classroom-ready: mathematically accurate, CCSS-aligned, grade-appropriate language,
+    plausible misconception-grounded distractors, and culturally inclusive context'
+  gsm8k_construct_coverage: GSM8K captures only the hard-gate prerequisite dimension
+    (mathematical accuracy); the large majority of the deployment's evaluation construct
+    is entirely unmeasured by the benchmark
+cultural_inclusivity_requirements:
+  required: true
+  guidelines:
+  - Contexts must be accessible across urban, suburban, and rural US settings
+  - 'Avoid culturally narrow references: assumed family structures, regionally specific
+    foods, particular sports with uneven US cultural distribution'
+  - Use low-idiom language to support multilingual learners
+  - Include diverse names in problem scenarios
+  - Handle money contexts sensitively to avoid stigmatizing students from lower-income
+    households
+  - Avoid references that presuppose particular household income levels or material
+    circumstances
+  relevant_equity_frameworks:
+  - NCTM Principles to Actions equity framework (2014)
+  - 'NCTM Catalyzing Change series: Catalyzing Change in High School Mathematics (2018);
+    Catalyzing Change in Middle School Mathematics (2020); Catalyzing Change in Early
+    Childhood and Elementary Mathematics (2020). The series provides equity-centered
+    guidance on instructional practices, equitable structures, and positive mathematical
+    identity development. Source: NCTM official series page — [|https://www.nctm.org/change/|];
+    NCTM Early Childhood volume — [|https://www.amazon.com/Catalyzing-Change-Childhood-Elementary-Mathematics/dp/1680540424|]'
+  - 'NEEDS VERIFICATION — deferred: below search budget — confirm whether any NCTM
+    publication specifically addresses word problem design guidelines for cultural
+    inclusivity (vs. broader equity in instruction); likely requires direct examination
+    of NCTM publications or expert elicitation'
+  - WIDA English Language Development Standards, 2020 Edition (for ELL accessibility)
+    — [|https://wida.wisc.edu/resources/wida-english-language-development-standards-framework-2020-edition|]
+  - 'No published cultural audit of K–8 math word problem datasets was found in searches.
+    The EDUMATH project (arXiv 2510.06965) includes an ''Educational Appropriateness''
+    criterion evaluated by teachers, which is the closest analogue identified, but
+    does not constitute a systematic cultural bias audit. Source: EDUMATH paper —
+    [|https://arxiv.org/abs/2510.06965|]'
+  gsm8k_inclusivity_coverage: NOT DOCUMENTED — GSM8K contractor guidelines addressed
+    template reuse and solution descriptiveness but contain no documented inclusivity
+    constraints; GPT-3-seeded problem generation introduces uncharacterized cultural
+    influence
+grade_band_infrastructure:
+  grade_bands:
+  - K–2
+  - 3–5
+  - 6–8
+  grade_level_tagging_in_gsm8k: NOT PRESENT — GSM8K treats all problems as undifferentiated
+    'grade school math' with no grade-level or grade-band annotation
+  readability_standards_relevant:
+  - 'NEEDS VERIFICATION — deferred: below search budget — Flesch-Kincaid or Lexile
+    grade-band targets for K–2, 3–5, 6–8 math word problems; these targets exist in
+    readability literature but no single authoritative source specifically for math
+    word problem stems was identified in searches'
+  - 'WIDA 2020 Edition provides grade-band-specific Proficiency Level Descriptors
+    organized around six grade bands (K–1, 2–3, 4–5, 6–8, 9–10, 11–12) for mathematics
+    contexts, directly applicable to lexical complexity calibration by grade band
+    for multilingual learners. Source: WIDA ELD Standards 2020 — [|https://wida.wisc.edu/resources/wida-english-language-development-standards-framework-2020-edition|]'
+  difficulty_calibration: Teachers specify difficulty at item-generation time; system
+    must honor grade-band-appropriate difficulty, not just broad 'grade school' difficulty
+    range
+  existing_grade_tagged_item_banks: 'Multiple CCSS-aligned, grade-tagged item banks
+    exist and are usable as evaluation references:
+
+    - Smarter Balanced Assessment Consortium: maintains an open interim item bank
+    (grade 3–8 and high school) aligned to CCSS, publicly accessible; items are grade-tagged
+    and CCSS-standard-tagged. Source: Smarter Balanced resources — [|https://smarterbalanced.org/|];
+    California Dept of Education Smarter Balanced resources — [|https://www.cde.ca.gov/ta/tg/sa/smarterbalresources.asp|]
+
+    - PARCC/New Meridian item bank: 10,000+ grade-level, CCSS-tagged items (grades
+    3–11); managed by New Meridian since 2017; states may license items. Released
+    PARCC items include scoring rubrics, answer keys, and standards alignment metadata.
+    Source: EdWeek PARCC/Smarter Balanced explainer — [|https://www.edweek.org/teaching-learning/big-things-you-need-to-know-now-about-the-parcc-and-smarter-balanced-tests/2019/01|];
+    released items archive — [|https://gotestprep.com/parcc-released-items/|]
+
+    - EDUMATH dataset (arXiv 2510.06965, Oct 2024): first teacher-annotated dataset
+    specifically for standards-aligned educational MWP generation, including a Standards
+    Alignment annotation criterion; directly relevant as an evaluation reference for
+    this deployment. Source — [|https://arxiv.org/abs/2510.06965|]
+
+    CAVEAT: Smarter Balanced and PARCC banks are designed for summative assessment
+    and may not include the misconception-grounded distractor documentation required
+    for formative assessment use in this deployment.'
+benchmark_validity_summary:
+  benchmark: GSM8K
+  overall_validity_assessment: LOW — GSM8K measures only the hard-gate prerequisite
+    (multi-step arithmetic accuracy) of a five-dimension evaluation construct; four
+    of five dimensions (CCSS alignment, distractor quality, grade-level language,
+    cultural inclusivity) are entirely outside the benchmark's scope
+  dimensions_covered:
+  - Mathematical solution accuracy (partial — numeric answer only, no step-level quality)
+  dimensions_not_covered:
+  - CCSS standard-level alignment
+  - Distractor plausibility and misconception grounding
+  - Grade-level language appropriateness (K–2 vs. 3–5 vs. 6–8)
+  - Cultural inclusivity and ELL accessibility
+  - Structured MCQ output format quality
+  priority_gaps:
+  - gap: CCSS standard-level coverage mapping
+    priority: HIGH
+    web_search_target: CCSS-aligned math word problem benchmark standard-level tagging
+      4.NF.A.2 6.RP.A.3 evaluation MATH MathBench state item banks
+    search_finding: 'No existing LLM benchmark provides CCSS standard-cluster-level
+      tagging. The closest identified resource is EDUMATH (arXiv 2510.06965, Oct 2024),
+      which is the first teacher-annotated dataset for standards-aligned educational
+      MWP generation and introduces a Standards Alignment evaluation criterion assessed
+      by real teachers. Smarter Balanced and PARCC released item banks provide CCSS-tagged
+      items at the standard level and can serve as evaluation reference corpora, though
+      they were not designed as LLM benchmarks. Source: EDUMATH — [|https://arxiv.org/abs/2510.06965|]'
+  - gap: Distractor-quality evaluation criteria grounded in student misconceptions
+    priority: HIGH
+    web_search_target: MCQ distractor quality evaluation rubric student misconceptions
+      math formative assessment benchmark ASSISTments Khan Academy item banks
+    search_finding: 'Active NLP research area as of 2024–2025 but no standardized
+      benchmark or rubric is established. Key papers: DiVERT (arXiv 2406.19356) models
+      distractor generation via variational error representations; overgenerate-and-rank
+      (arXiv 2405.05144) trains a ranking model on student response data and confirms
+      human-authored distractors still outperform LLM-generated ones; ACL 2025 (aclanthology.org/2025.acl-long.1154)
+      proposes a pairwise rubric assessing conceptual misunderstanding targeting,
+      similarity to correct answer, and intuitive appeal. None of these constitute
+      a deployed benchmark. Sources: [|https://arxiv.org/abs/2405.05144|]; [|https://arxiv.org/abs/2406.19356|];
+      [|https://aclanthology.org/2025.acl-long.1154.pdf|]'
+  - gap: Multilingual learner (ELL) linguistic accessibility standards for math word
+      problems
+    priority: HIGH
+    web_search_target: readability lexical complexity math word problems ELL multilingual
+      learners WIDA CCSS-ELL grade band benchmark
+    search_finding: 'WIDA 2020 Edition (current framework) provides grade-band-specific
+      Proficiency Level Descriptors and Language Expectations for mathematics contexts
+      across six grade bands including the K–8 bands relevant to this deployment.
+      These constitute the authoritative US standard for ELL language calibration.
+      However, no published benchmark or dataset for math word problems specifically
+      validated against WIDA Proficiency Level Descriptors was identified. Source:
+      WIDA ELD Standards 2020 — [|https://wida.wisc.edu/resources/wida-english-language-development-standards-framework-2020-edition|]'
+  - gap: Culturally inclusive math context audit and design guidelines
+    priority: HIGH
+    web_search_target: culturally inclusive math word problems cultural audit bias
+      review NCTM equity guidelines grade school benchmark design
+    search_finding: 'No published cultural audit of K–8 math word problem datasets
+      was found. EDUMATH (arXiv 2510.06965) evaluates ''Educational Appropriateness''
+      via teacher annotation, which partially addresses this gap, but is not a systematic
+      cultural inclusivity audit. NCTM Catalyzing Change series (2018–2020) provides
+      equity-centered instructional guidance but does not publish a word-problem-specific
+      design checklist. This gap appears to require stakeholder/expert elicitation
+      rather than a searchable resource. Source: EDUMATH — [|https://arxiv.org/abs/2510.06965|];
+      NCTM Catalyzing Change — [|https://www.nctm.org/change/|]'
+  - gap: Grade-band granularity tagging for grade-level-appropriate item generation
+    priority: HIGH
+    web_search_target: math word problem dataset grade-level tagging K-8 grade band
+      Smarter Balanced PARCC item bank difficulty annotation
+    search_finding: 'Smarter Balanced and PARCC item banks provide grade-level-tagged,
+      CCSS-aligned items (grades 3–8) and are publicly accessible or licensable. Smarter
+      Balanced''s open interim item bank is built to the same specifications as the
+      summative assessment and is explicitly grade-tagged. These are the highest-quality
+      available reference corpora for grade-band validation. EDUMATH (2024) also annotates
+      MWPs by grade level. No purpose-built LLM benchmark with K–8 grade-band tagging
+      exists. Sources: Smarter Balanced — [|https://smarterbalanced.org/|]; PARCC/New
+      Meridian released items — [|https://gotestprep.com/parcc-released-items/|];
+      EDUMATH — [|https://arxiv.org/abs/2510.06965|]'
+  - gap: Pedagogical accuracy of solution explanations (step-level quality beyond
+      final answer)
+    priority: MEDIUM
+    web_search_target: math solution explanation quality evaluation step-level correctness
+      benchmark pedagogical reasoning chain scoring grade school
+    search_finding: 'NEEDS VERIFICATION — deferred: below search budget. The EDUMATH
+      paper evaluates ''Solvability'' and ''Accuracy'' as separate criteria (adapted
+      from Christ et al. 2024), which partially addresses step-level quality, but
+      full pedagogical quality of solution explanations (grade-appropriate reasoning
+      chains) was not the focus of any identified benchmark.'
+regulatory_and_policy_context:
+  data_privacy: 'FERPA, COPPA (Children''s Online Privacy Protection Act, applicable
+    given K–8 student ages), and state Student Online Personal Information Protection
+    Act (SOPIPA)-type statutes are all potentially applicable. A 2025 Oregon Department
+    of Education guidance document explicitly identifies FERPA, COPPA, and state-equivalent
+    statutes as governing AI tools processing student data, noting that AI systems
+    trained on student data containing PII may have difficulty complying with FERPA''s
+    de-identification standard. Deployments generating assessment content involving
+    student interaction data should conduct a privacy impact assessment under FERPA/COPPA
+    before launch. Source: Oregon DOE AI Guidance (March 2025) — [|https://www.oregon.gov/ode/educator-resources/teachingcontent/Documents/Developing%20Policy%20and%20Protocols%20for%20the%20use%20of%20Generative%20AI%20in%20K-12%20Classrooms_March%202025.pdf|]
+
+    CAVEAT: Whether the item-generation tool itself (as distinct from student response
+    collection) triggers FERPA/COPPA depends on whether personally identifiable student
+    information is processed; this requires legal review specific to the deployment
+    architecture.'
+  accessibility_requirements: 'NEEDS VERIFICATION — deferred: below search budget
+    — confirm whether WCAG 2.1 AA or Section 508 applies to the edtech platform deploying
+    this tool in school contexts. Section 508 applies to federal agencies and federally
+    funded programs; whether it directly binds a private edtech vendor in school contexts
+    depends on the funding structure of the school district. This requires legal review.'
+  ccss_adoption_map: '41 states, DC, four territories, and DoDEA have adopted CCSS-M.
+    Four states (Alaska, Nebraska, Texas, Virginia) never adopted CCSS. States that
+    formally repealed and replaced CCSS include Florida (B.E.S.T. Standards), Indiana
+    (Indiana Academic Standards), Oklahoma, South Carolina, and Tennessee (Tennessee
+    Academic Standards). Many additional states renamed or revised their standards
+    while retaining the CCSS core framework. For national deployment, the tool''s
+    CCSS branding will not match official state framework names in approximately 9
+    states, representing a meaningful share of national K–8 enrollment. Sources: CCSS
+    Initiative state map — [|https://www.thecorestandards.org/standards-in-your-state/|];
+    Wikipedia CCSS by state (Jan 2026) — [|https://en.wikipedia.org/wiki/Common_Core_implementation_by_state|];
+    LegalClarity (Dec 2025) — [|https://legalclarity.org/what-states-use-common-core-state-standards/|]'
+  ai_in_education_policy: 'The US Department of Education issued a Dear Colleague
+    Letter (DCL) on July 22, 2025 providing guidance on responsible AI integration
+    in education and confirming that existing formula and discretionary federal education
+    grant funds may be used to support AI initiatives complying with applicable statutory
+    frameworks. This follows the March 2025 Executive Order on ''Advancing Artificial
+    Intelligence Education for American Youth.'' The guidance permits AI tutoring
+    systems and AI-generated instructional materials but does not establish specific
+    disclosure requirements or validity standards for AI-generated formative assessment
+    items. No federal standard specifically governing AI-generated assessment content
+    validity was identified. State-level AI guidance is proliferating rapidly (e.g.,
+    Alabama June 2024, New Mexico May 2025, Missouri 2025–26) but focuses on responsible
+    use principles rather than psychometric validity standards for AI-generated items.
+    Source: US DOE Dear Colleague Letter July 2025 — [|https://www.ed.gov/about/news/press-release/us-department-of-education-issues-guidance-artificial-intelligence-use-schools-proposes-additional-supplemental-priority|];
+    state AI guidance inventory — [|https://www.aiforeducation.io/ai-resources/state-ai-guidance|]'
+infrastructure_notes: Deployment is a web-based or integrated edtech platform accessed
+  by classroom teachers on school-issued or personal devices. No modality mismatch
+  with GSM8K (both text-only English). Infrastructure risk is low for the benchmark
+  validity assessment; primary validity concerns are pedagogical and curricular, not
+  infrastructural.
+domain_specific_notes: '- CCSS-M is the authoritative curriculum framework; standard-level
+  alignment (not domain-level) is non-negotiable for the deployment use case.
+
+  - Formative assessment item design is a specialized psychometric sub-domain; distractor
+  construction grounded in misconception research (e.g., fraction arithmetic errors,
+  place-value confusion) is distinct from general math problem generation.
+
+  - ELL accessibility is a legal and ethical requirement in US public schools under
+  Title III of ESEA/ESSA; low-idiom language is not merely a preference.
+
+  - Cultural responsiveness in math contexts is supported by NCTM equity frameworks
+  and is increasingly a district-level procurement requirement.
+
+  - Grade-band differentiation (K–2, 3–5, 6–8) reflects real developmental differences
+  in reading level, abstract reasoning, and CCSS domain progression that a single
+  ''grade school math'' benchmark cannot capture.
+
+  - Money-related problem contexts are pervasive in grade school math word problems;
+  sensitivity guidelines are needed to avoid reinforcing income-related stigma for
+  students from lower-income households.
+
+  '
+net_new_fields:
+  closest_analogous_benchmark_identified:
+    name: 'EDUMATH: Generating Standards-aligned Educational Math Word Problems'
+    arxiv_id: '2410.06965'
+    url: '[|https://arxiv.org/abs/2510.06965|]'
+    year: 2024
+    relevance: 'EDUMATH is the closest identified benchmark/dataset to this deployment''s
+      evaluation construct. It is the first teacher-annotated dataset for standards-aligned
+      K–12 educational MWP generation, evaluating LLMs on four criteria: Solvability,
+      Accuracy, Educational Appropriateness, and Standards Alignment (a new criterion
+      introduced by this work). It uses a joint human expert-LLM judge approach to
+      evaluate over 11,000 generated MWPs and includes an in-classroom student study.
+      Critically, EDUMATH explicitly finds a performance gap between open and closed
+      LLMs on the standards-alignment criterion, directly informing the ontological
+      gap identified in this assessment.'
+    key_limitation: EDUMATH does not evaluate MCQ distractor quality or misconception
+      grounding — it targets MWP generation, not full MCQ item package generation.
+      It also does not specifically target K–2 grade-band language calibration.
+  automated_distractor_generation_research_landscape:
+    summary: 'As of 2024–2025, automated math MCQ distractor generation is an active
+      NLP research area but has no established benchmark. Three key 2024 papers (DiVERT
+      arXiv 2406.19356, overgenerate-and-rank arXiv 2405.05144, and a concept-map
+      approach arXiv 2505.02850) collectively establish that: (1) human-authored distractors
+      consistently outperform LLM-generated ones in teacher evaluations; (2) effective
+      distractors require deep knowledge of common student errors that LLMs do not
+      reliably encode; and (3) the most promising approaches use student response
+      data to rank generated distractors by predicted selection likelihood.'
+    implication_for_assessment: 'The absence of a benchmark and the consistent finding
+      that LLM-generated distractors lag behind human-authored ones is itself a high-impact
+      finding for this deployment''s validity assessment. It implies that the distractor-quality
+      dimension (ranked #2 in the deployment''s evaluation hierarchy) cannot be reliably
+      measured by any existing automated benchmark and will require human teacher
+      evaluation as the gold standard. Sources: [|https://arxiv.org/abs/2405.05144|];
+      [|https://arxiv.org/abs/2406.19356|]; [|https://arxiv.org/abs/2505.02850|]'
+  wida_2020_grade_band_relevance:
+    summary: The current WIDA ELD Standards Framework (2020 Edition, released December
+      2020, in implementation across 36 states and DC as of 2024) organizes language
+      development expectations around six grade bands including K–1, 2–3, 4–5, and
+      6–8 — directly corresponding to the K–2, 3–5, and 6–8 bands used in this deployment.
+      The framework provides Language Expectations specific to mathematics content
+      areas at each grade band, making it the most directly applicable US standard
+      for calibrating ELL-accessible language in generated math word problems by grade
+      band.
+    source: WIDA ELD Standards Framework 2020 — [|https://wida.wisc.edu/resources/wida-english-language-development-standards-framework-2020-edition|];
+      WIDA implementation study (May 2024) — [|https://wida.wisc.edu/resources/examination-current-implementation-status-wida-english-language-development-standards|]

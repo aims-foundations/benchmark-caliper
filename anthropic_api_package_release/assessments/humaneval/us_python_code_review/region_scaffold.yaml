@@ -1,0 +1,314 @@
+name: US Professional Software Development Teams — Code Review / Bug Localization
+abbreviation: US-SWE-CODE-REVIEW
+deployment_context:
+  description: A US-based code review platform deploying an LLM to scan existing Python
+    codebases, localize bugs (logic errors, off-by-one, null dereferences), and propose
+    concrete diffs that developers can accept or reject during code review.
+  platform_type: Code review SaaS — integrated LLM assistant surfacing diff suggestions
+    inline during pull request or code review workflows.
+  user_role: Professional software developers on American development teams, acting
+    as code reviewers who accept or reject proposed fixes.
+  geography: United States
+  sub_national_variation: Not a primary concern; the relevant heterogeneity is codebase
+    style, framework diversity, and documentation quality rather than geography or
+    demographics.
+target_population:
+  primary_users: Professional software engineers (SWEs) on US-based development teams,
+    ranging from individual contributors performing code review to senior engineers
+    evaluating semantic correctness and convention adherence of proposed diffs.
+  relevant_heterogeneity:
+  - Codebase style variation (Google-style, PEP 8-strict, legacy pre-PEP8, auto-formatted)
+  - Framework diversity (Django, Flask, SQLAlchemy, NumPy/pandas, internal utility
+    layers)
+  - Documentation density (well-docstringed libraries vs. sparsely or misleadingly
+    documented legacy code)
+  - Code quality spectrum (greenfield clean code vs. decade-old internal utilities
+    with cryptic naming)
+  - Team size and review process maturity (formal PR gates vs. informal review)
+  excluded_variation: Sub-national, demographic, linguistic, and literacy variation
+    is not a primary assessment concern for this deployment.
+languages:
+  programming:
+  - Python (primary — all deployment inputs are Python source code)
+  - Python 3.x mainstream (Django, Flask, SQLAlchemy, NumPy, pandas, Celery, pytest
+    ecosystems)
+  - Python 2.x legacy (present in older internal utilities; EOL but still encountered
+    in customer repos)
+  natural_language:
+  - English (primary — code comments, docstrings, variable names, PR descriptions)
+  documentation_quality_spectrum:
+    well_documented: Clean docstrings, type annotations, inline comments — rare in
+      legacy code, common in public-facing libraries
+    sparsely_documented: Minimal or absent docstrings, single-letter variable names,
+      terse inline comments
+    misleadingly_documented: Stale docstrings that no longer match implementation,
+      comments describing removed behavior, misleading parameter descriptions — common
+      in long-lived internal utilities
+frameworks_and_libraries:
+  web_frameworks:
+  - Django (ORM, views, middleware, signals, migrations)
+  - Flask (routing, request context, blueprints, application factory pattern)
+  - FastAPI (async handlers, Pydantic models)
+  data_and_orm:
+  - SQLAlchemy (session management, relationship loading strategies, query construction)
+  - Django ORM (QuerySet chaining, prefetch_related, select_related, F/Q expressions)
+  - Alembic (migration scripts)
+  scientific_and_data:
+  - NumPy (broadcasting, indexing, dtype coercion, vectorized operations)
+  - pandas (DataFrame/Series operations, apply chains, groupby, merge/join semantics)
+  - SciPy
+  infrastructure_and_utilities:
+  - Celery (task definitions, retry logic, chord/group patterns)
+  - Redis (cache patterns, pub/sub)
+  - boto3 / AWS SDK patterns
+  - Internal utility wrappers (proprietary, undocumented, idiosyncratic)
+  testing:
+  - pytest
+  - unittest
+  - coverage.py
+  note: Customer repos typically combine several of these in a single codebase. Framework-specific
+    bug patterns (e.g., SQLAlchemy N+1, Django ORM lazy-load outside session, NumPy
+    shape mismatch) are the primary defect classes; none appear in HumanEval.
+task_taxonomy:
+  primary_tasks:
+  - task: Bug localization
+    description: Identifying the specific line or range of lines in existing code
+      where a defect occurs.
+    in_scope: true
+    humaneval_coverage: None — HumanEval contains no tasks requiring localization
+      within existing code.
+  - task: Diff generation
+    description: Generating a minimal, targeted corrective patch that a reviewer can
+      accept or reject as a unified diff.
+    in_scope: true
+    humaneval_coverage: None — HumanEval produces complete standalone function bodies
+      from scratch, not targeted diffs against buggy code.
+  - task: Code understanding (prerequisite)
+    description: Reading and comprehending existing, potentially framework-specific,
+      sparsely documented code without relying on a clean natural-language spec.
+    in_scope: true
+    humaneval_coverage: Indirect — HumanEval evaluates code generation from clean
+      docstrings, not comprehension of underdocumented existing code.
+  secondary_tasks:
+  - task: Bug classification / triage
+    description: Labeling the bug type (logic error, off-by-one, null dereference,
+      etc.) to aid developer triage.
+    in_scope: true
+    required: false
+    humaneval_coverage: None.
+  out_of_scope_tasks:
+  - Pure code generation from scratch (docstring-to-function synthesis — the only
+    task HumanEval measures)
+  - Full-program synthesis from stdin/stdout specifications
+  - Docstring generation from code bodies
+output_success_criteria:
+  primary_criterion: Human reviewer acceptance — the correct defect was localized
+    and the proposed fix is something the reviewer would merge.
+  secondary_criterion: Semantic safety — the fix does not change unintended semantics,
+    mask the underlying bug, or introduce new defects.
+  tertiary_criterion: Convention adherence — the fix respects codebase style, naming
+    conventions, and idiomatic patterns.
+  explicitly_excluded_criteria:
+  - Unit test pass/fail — existing tests are often absent, incomplete, or unreliable
+    in customer repos.
+  - BLEU or token-match scores against a reference solution.
+  edge_cases:
+  - A fix that passes existing tests may still be rejected if it masks the real bug
+    or violates conventions.
+  - A fix with no test coverage may be accepted as correct if reviewers sign off.
+  - Semantics-preserving refactors that incidentally pass tests are not considered
+    correct fixes.
+  humaneval_alignment: Fundamental mismatch — HumanEval's sole success criterion is
+    unit-test pass/fail on freshly generated code. The deployment requires a multi-component
+    human judgment not captured by any HumanEval metric.
+input_characteristics:
+  input_type: Existing, potentially buggy Python source code — not clean docstring
+    specifications.
+  documentation_conditions:
+  - Absent docstrings (function body only, no specification)
+  - Stale docstrings (describe removed or changed behavior)
+  - Misleading inline comments (copied from elsewhere, incorrect assertions)
+  - Cryptic variable and function names (single-letter vars, abbreviations, legacy
+    naming)
+  code_quality_conditions:
+  - Logic errors (incorrect conditional branching, wrong operator precedence)
+  - Off-by-one errors (loop bounds, slice indices, pagination offsets)
+  - Null / None dereferences (missing guard clauses, unchecked Optional returns)
+  - Framework misuse (SQLAlchemy session lifecycle errors, Django ORM N+1, NumPy broadcasting
+    mismatches)
+  - Legacy patterns (Python 2-style idioms in nominally Python 3 codebases, deprecated
+    API calls)
+  context_window_considerations: Real-world function bodies and their calling context
+    (imports, class definitions, related methods) may be substantially longer than
+    HumanEval's average problem size, stressing models on long-context reasoning.
+  humaneval_alignment: Fundamental mismatch — HumanEval inputs are clean, hand-written,
+    accurate docstrings with correct function signatures. No HumanEval problem simulates
+    absent, stale, or misleading documentation.
+ground_truth_and_annotation:
+  ground_truth_source: Professional software developer acceptance judgment — not automated
+    unit test execution.
+  annotator_profile: Experienced US-based software engineers performing code review
+    in production workflows.
+  annotation_scheme_gaps:
+  - HumanEval ground truth is automated unit-test pass/fail by benchmark authors —
+    not professional developer judgment.
+  - HumanEval's only human-labeled subset is docstring generation grades (1,640 items,
+    single model configuration, single temperature) — not representative of bug-fix
+    evaluation.
+  - No documented inter-annotator agreement procedure for code-fix acceptability in
+    HumanEval or its derivatives.
+  - No annotation of semantic preservation, convention adherence, or bug-masking risk.
+  label_reliability_risks:
+  - Underspecified prompts in HumanEval already cause valid solutions to be wrongly
+    penalized by unit tests — a known reliability problem that is amplified in the
+    deployment setting.
+  - Customer codebases may have tests that are themselves buggy or that fail to cover
+    the defective path.
+  - Developer acceptance is subjective and team-convention-dependent — no universal
+    ground truth exists.
+benchmark_validity_summary:
+  benchmark: HumanEval
+  overall_alignment: Poor — HumanEval was designed to measure a fundamentally different
+    task (docstring-to-function synthesis) with a fundamentally different success
+    criterion (unit-test pass/fail). The deployment's core tasks (bug localization,
+    diff generation) are entirely absent from the benchmark's task ontology.
+  dimension_assessments:
+  - dimension: Input Ontology (IO)
+    priority: HIGH
+    alignment: None
+    notes: HumanEval contains exclusively docstring-to-function generation tasks.
+      Bug localization and diff generation against existing buggy code are absent.
+  - dimension: Input Content (IC)
+    priority: HIGH
+    alignment: None
+    notes: HumanEval problems are algorithm/interview-style with clean specs. No Django,
+      Flask, SQLAlchemy, NumPy/pandas, or legacy-with-sparse-docs instances exist.
+  - dimension: Input Form (IF)
+    priority: LOWER
+    alignment: Partial
+    notes: Both are plain-text Python. Mismatch is content-level (absent/stale docstrings)
+      rather than modality-level.
+  - dimension: Output Ontology (OO)
+    priority: HIGH
+    alignment: None
+    notes: HumanEval uses binary unit-test pass/fail. Deployment requires multi-component
+      human reviewer judgment (localization accuracy + semantic safety + convention
+      adherence).
+  - dimension: Output Content (OC)
+    priority: HIGH
+    alignment: None
+    notes: HumanEval annotations are benchmark-author-written unit tests. Deployment
+      ground truth is professional developer acceptance of bug-fix diffs.
+  - dimension: Output Form (OF)
+    priority: MODERATE
+    alignment: Partial
+    notes: Both involve Python code output. HumanEval produces complete standalone
+      functions; deployment requires targeted diffs with line-range localization metadata
+      — structurally divergent.
+alternative_benchmarks_to_investigate:
+  bug_localization_and_repair:
+  - name: SWE-bench / SWE-bench Lite
+    relevance: Real GitHub issues requiring localization and patch generation in real
+      Python repos
+    coverage_notes: '[NEEDS VERIFICATION — confirm whether SWE-bench tasks include
+      framework-heavy repos (Django, NumPy) and how ground truth is defined]'
+  - name: BugsInPy
+    relevance: Curated real Python bugs from open-source projects with reproducible
+      test failures
+    coverage_notes: '[NEEDS VERIFICATION — confirm framework coverage, documentation
+      sparsity conditions, and whether human-reviewer acceptance has been assessed]'
+  - name: Defects4J
+    relevance: Widely used Java defect benchmark; Python equivalent coverage unclear
+    coverage_notes: '[NEEDS VERIFICATION — check for Python port or equivalent; Java-centric
+      may limit direct applicability]'
+  - name: CodeFlaws
+    relevance: Codeforces-sourced C program bugs; relevance to Python framework code
+      limited
+    coverage_notes: '[NEEDS VERIFICATION — confirm Python and real-world framework
+      coverage]'
+  - name: HumanEval-Fix / EvalPlus repair variants
+    relevance: Extensions of HumanEval designed for bug-repair evaluation
+    coverage_notes: '[NEEDS VERIFICATION — confirm whether these cover bug localization
+      (not just fix generation), and whether inputs include sparsely documented code]'
+  human_reviewer_acceptance_benchmarks:
+  - name: '[NEEDS VERIFICATION — search for any benchmark using merge-acceptance rate
+      or developer preference as ground truth for code fixes]'
+    relevance: Direct analog to deployment's primary success criterion
+    coverage_notes: '[NEEDS VERIFICATION]'
+  framework_specific_python_benchmarks:
+  - name: '[NEEDS VERIFICATION — search for Django ORM bug benchmarks, SQLAlchemy
+      defect datasets, NumPy broadcasting error benchmarks]'
+    relevance: Covers the actual defect classes most common in customer repos
+    coverage_notes: '[NEEDS VERIFICATION]'
+  sparse_documentation_benchmarks:
+  - name: '[NEEDS VERIFICATION — search for code understanding benchmarks that deliberately
+      use stale, absent, or misleading inline documentation as an input condition]'
+    relevance: Directly tests the model's ability to reason from code rather than
+      spec — the primary real-world condition identified by the user
+    coverage_notes: '[NEEDS VERIFICATION]'
+flagged_gaps_for_web_search:
+- gap_id: 1
+  topic: Bug localization as a task type in existing benchmarks
+  search_target: HumanEval-Fix bug localization benchmark SWE-bench Defects4J code
+    repair Python evaluation localization accuracy
+- gap_id: 2
+  topic: Buggy-code-as-input benchmarks with real-world Python
+  search_target: BugsInPy SWE-bench Lite CodeFlaws automated program repair benchmark
+    Python real-world codebase evaluation 2023 2024
+- gap_id: 3
+  topic: Framework-specific Python bug patterns in benchmarks
+  search_target: Django Flask SQLAlchemy NumPy pandas bug benchmark defect dataset
+    Python framework-specific evaluation
+- gap_id: 4
+  topic: Human reviewer acceptance as ground truth for code repair
+  search_target: code repair benchmark human reviewer acceptance merge rate developer
+    preference pull request evaluation ground truth 2022 2023 2024
+- gap_id: 5
+  topic: Sparse or misleading documentation as deliberate input condition
+  search_target: code benchmark stale docstrings absent documentation misleading comments
+    code understanding evaluation robustness
+- gap_id: 6
+  topic: Semantic preservation and convention adherence as scoring dimensions
+  search_target: code fix correctness semantic preservation convention adherence scoring
+    benchmark automated program repair evaluation metric
+- gap_id: 7
+  topic: Diff / unified patch output format evaluation
+  search_target: code repair diff output format evaluation unified patch generation
+    benchmark line range localization scoring 2022 2023 2024
+- gap_id: 8
+  topic: Test-free correctness assessment for bug fixes
+  search_target: code repair evaluation without unit tests test-free bug fix correctness
+    sparse test coverage benchmark assessment
+infrastructure_and_deployment_notes:
+  interface: Integrated into code review tooling (e.g., GitHub PR comments, GitLab
+    MR suggestions, or dedicated review platform UI); output is a proposed diff, not
+    a full code file.
+  latency_requirements: '[NEEDS VERIFICATION — typical SLA for inline code review
+    suggestions in CI/CD-integrated platforms]'
+  input_size_constraints: Real-world function bodies with their calling context (imports,
+    class hierarchy, related methods) may be 100–1000+ lines; substantially larger
+    than HumanEval's average prompt size.
+  output_format_requirements: Unified diff format (or equivalent line-range replacement)
+    with localization metadata (file path, line range, bug type label). Complete function
+    regeneration is not an acceptable output form.
+  trust_model: Developer retains accept/reject control over every suggested fix; the
+    system is advisory, not autonomous.
+  security_considerations: Customer codebases may contain proprietary logic, credentials
+    in comments, and sensitive business logic — privacy and confidentiality constraints
+    on what context can be sent to an LLM API are significant. [NEEDS VERIFICATION
+    — typical enterprise data handling requirements for code review SaaS platforms
+    in the US]
+regulatory_and_professional_context:
+  applicable_us_standards: '[NEEDS VERIFICATION — relevant NIST software security
+    standards (e.g., NIST SSDF), SOC 2 requirements for SaaS platforms processing
+    customer code]'
+  intellectual_property_considerations: Generated diffs potentially raise questions
+    about IP ownership and license compliance when the model has been trained on open-source
+    code. [NEEDS VERIFICATION — current US legal status of AI-generated code suggestions
+    as of assessment date]
+  professional_norms: US software engineering teams operate under implicit or explicit
+    code style guides (PEP 8, Google Python Style Guide, Black formatting), security
+    review checklists (OWASP, internal threat models), and semantic versioning conventions
+    — none of which are represented in HumanEval's evaluation criteria.
+  developer_acceptance_standards: A fix must be idiomatic, minimal, non-breaking,
+    and convention-consistent to be merged; test passage is necessary but not sufficient.

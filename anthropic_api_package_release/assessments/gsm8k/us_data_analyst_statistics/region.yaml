@@ -1,0 +1,456 @@
+name: US Professional Data Science Consultancy — Statistical Analysis Assistant
+abbreviation: US-DataSci-StatAssist
+assessment_context:
+  benchmark: GSM8K (Grade School Math 8K)
+  benchmark_domain: Mathematical reasoning — grade school arithmetic word problems
+  deployment_use_case: LLM-powered automated statistical analysis assistant for professional
+    data analysts and applied statisticians at a US consultancy, supporting regression
+    modeling, hypothesis testing, ANOVA, experimental design, and interpretation of
+    statistical software outputs.
+  overall_validity_concern: 'Severe construct mismatch across all major dimensions:
+    GSM8K tests elementary arithmetic reasoning via child-oriented narrative word
+    problems scored by binary exact-match, while the deployment requires graduate-level
+    statistical reasoning over semi-structured professional inputs evaluated by methodological
+    soundness.'
+deployment_population:
+  geography: United States (nationally scoped; no sub-national variation identified
+    as relevant)
+  organizational_context: Private-sector data science consultancy environment; analysts
+    serve external clients across multiple industry verticals
+  occupation: Professional data analysts and applied statisticians
+  educational_background: Quantitatively trained professionals; expected to hold at
+    minimum a bachelor's degree in statistics, mathematics, computer science, economics,
+    or a related field; many likely hold graduate degrees
+  professional_tools:
+  - R
+  - Python (statsmodels, scipy, pandas, numpy)
+  - standard statistical software output formats (lm(), glm(), summary.aov(), etc.)
+  language: English — technical/domain-specific register (dense professional jargon,
+    not conversational or elementary)
+  demographic_specifics: No age-band, gender, or ethnicity constraints specified;
+    cohort defined by occupational role and technical training rather than demographic
+    characteristics
+language_and_register:
+  primary_language: English (en)
+  register: Technical professional — graduate-level statistical discourse
+  vocabulary_profile:
+    representative_terms:
+    - heteroscedasticity
+    - multicollinearity
+    - VIF (Variance Inflation Factor)
+    - Type III Sums of Squares
+    - Welch correction
+    - post-hoc corrections (Tukey HSD, Bonferroni)
+    - random effects / mixed models
+    - residual diagnostics
+    - Cook's distance
+    - confidence interval interpretation
+    - p-value interpretation under NHST
+    - effect size (Cohen's d, eta-squared, omega-squared)
+    - power analysis / sample size calculation
+    - log-transformation
+    - interaction terms
+    - overdispersion
+    - Bayesian credible intervals
+    note: Vocabulary bears no resemblance to GSM8K's child-oriented narrative scenarios.
+      All terms listed above are absent from GSM8K's input and output distributions.
+  input_format_profile:
+    primary_formats:
+    - Plain-text statistical queries in professional English prose
+    - Pasted CSV snippets or tabular data previews
+    - R software output blocks (e.g., lm(), summary.lm(), anova(), confint() output)
+    - Python software output blocks (e.g., statsmodels OLS summary tables, scipy t-test
+      results)
+    - Summary statistics tables (mean, SD, n, range, skewness, kurtosis)
+    - Correlation matrices
+    - Residual plot descriptions or numeric residual vectors
+    note: Inputs are semi-structured to structured, not plain narrative prose. GSM8K
+      contains no analogues to any of these formats.
+task_taxonomy:
+  note: Derived from elicitation responses; represents the actual task distribution
+    the deployment must cover. GSM8K covers none of these categories.
+  core_categories:
+  - category: Regression diagnostics
+    subtasks:
+    - Heteroscedasticity detection and interpretation (Breusch-Pagan, White test)
+    - Multicollinearity diagnosis (VIF interpretation, condition indices)
+    - Residual analysis (normality, independence, outlier identification)
+    - Cook's distance and leverage point interpretation
+    - Model fit assessment (R-squared, adjusted R-squared, AIC/BIC)
+    gsm8k_coverage: none
+  - category: Hypothesis testing under violated assumptions
+    subtasks:
+    - Test selection given non-normality (parametric vs. non-parametric alternatives)
+    - Welch t-test selection under unequal variances
+    - Robust standard error methods
+    - Assumption testing (Shapiro-Wilk, Levene, Bartlett)
+    gsm8k_coverage: none
+  - category: ANOVA and post-hoc testing
+    subtasks:
+    - One-way and factorial ANOVA interpretation
+    - Type I / Type II / Type III Sums of Squares selection
+    - Post-hoc corrections (Tukey HSD, Bonferroni, Holm, Dunnett)
+    - Repeated-measures ANOVA and sphericity (Mauchly's test, Greenhouse-Geisser correction)
+    - Mixed-model ANOVA
+    gsm8k_coverage: none
+  - category: Experimental design
+    subtasks:
+    - Randomization and control group design
+    - Factorial and block designs
+    - Confound identification and covariate selection
+    - Repeated-measures vs. between-subjects design tradeoffs
+    gsm8k_coverage: none
+  - category: Power analysis and sample size calculation
+    subtasks:
+    - A priori power analysis for specified effect size and alpha
+    - Post-hoc power calculation interpretation
+    - Sample size determination for regression, t-tests, ANOVA
+    - Effect size estimation (Cohen's d, f, eta-squared)
+    gsm8k_coverage: none
+  - category: Interpretation of statistical software outputs
+    subtasks:
+    - Reading and interpreting R lm() / glm() summary output
+    - Reading Python statsmodels OLS result tables
+    - Coefficient interpretation (unstandardized, standardized, interaction terms)
+    - p-value and confidence interval interpretation
+    - Model comparison outputs
+    gsm8k_coverage: none
+  - category: Modeling choice under methodological pluralism
+    subtasks:
+    - Variable selection strategies (stepwise, LASSO, domain-driven)
+    - Log or other transformation decisions for skewed variables
+    - Fixed vs. random effects model selection
+    - Outlier handling strategies
+    - Missing data treatment (listwise deletion, multiple imputation)
+    gsm8k_coverage: none
+  - category: Narrow computational subtasks (exact-match appropriate)
+    subtasks:
+    - Computing a test statistic from supplied data
+    - Calculating degrees of freedom
+    - Standard error computation
+    - Effect size calculation from provided means and SDs
+    gsm8k_coverage: partial — GSM8K arithmetic covers numeric computation only at
+      elementary level; these subtasks require graduate-level formulas
+    note: User confirmed these subtasks warrant exact-match numeric correctness scoring,
+      unlike the majority of deployment tasks
+evaluation_requirements:
+  scoring_regime_needed: 'Hybrid: rubric-based methodological soundness scoring for
+    open-ended analytical tasks; exact-match numeric correctness for narrow computational
+    subtasks'
+  methodological_pluralism: Many valid modeling choices produce legitimately different
+    but equally defensible outputs; evaluation must reward reasoning quality, not
+    just numeric agreement with a single reference
+  gsm8k_scoring_compatibility: None — binary exact-match against a single numeric
+    answer is structurally incompatible with the deployment's primary task distribution
+  annotator_requirements: Ground-truth labels require practicing statisticians or
+    applied data scientists; crowdworker annotation without domain expertise (as in
+    GSM8K) is insufficient for this deployment
+  candidate_alternative_benchmarks_to_investigate:
+  - 'StatQA (Zhu et al., NeurIPS 2024) — CONFIRMED EXTANT. 11,623 examples evaluating
+    LLM proficiency in specialized statistical tasks, particularly hypothesis testing
+    method selection and applicability assessment. Even GPT-4o achieves only 64.83%
+    best performance, indicating significant headroom. Focuses on tabular data, column
+    identification, method selection, and hypothesis testing — directly relevant to
+    deployment IO and IC gaps. Source: StatQA GitHub [|https://github.com/HKUSTDial/StatQA|];
+    paper [|https://arxiv.org/abs/2406.07815|]'
+  - 'DS-1000 (Lai et al., ICML 2023) — CONFIRMED EXTANT. Code generation benchmark
+    of 1,000 data science problems spanning seven Python libraries (NumPy, Pandas,
+    Matplotlib, Scikit-learn, SciPy, TensorFlow, PyTorch), sourced from StackOverflow.
+    Evaluates functional code correctness via execution-based multi-criteria metrics.
+    Covers practical Python data science tasks but focuses on code generation rather
+    than natural-language statistical reasoning or R-output interpretation; lacks
+    ANOVA/regression diagnostics reasoning items. Partial relevance to IF and IC gaps.
+    Source: DS-1000 site [|https://ds1000-code-gen.github.io/|]; paper [|https://arxiv.org/abs/2211.11501|]'
+  - 'MATH dataset (Hendrycks et al., NeurIPS 2021) — CONFIRMED: too focused on pure
+    mathematics, NOT applied statistics. 12,500 competition-level mathematics problems
+    spanning Prealgebra, Algebra, Number Theory, Counting and Probability, Geometry,
+    Intermediate Algebra, and Precalculus — no applied statistics categories. Does
+    not cover regression diagnostics, hypothesis testing, ANOVA, or statistical software
+    interpretation. Confirms scaffold assessment. Source: arXiv [|https://arxiv.org/abs/2103.03874|];
+    GitHub [|https://github.com/hendrycks/math|]'
+  - 'StatEval (Lu et al., arXiv Oct 2025) — NET NEW. First comprehensive benchmark
+    dedicated to formal statistical reasoning: 13,817 foundational problems covering
+    undergraduate and graduate curricula plus 2,374 research-level proof tasks from
+    leading journals. Covers probability theory, inference, regression, Bayesian analysis,
+    and multivariate methods. Noted gap: theoretical statistical inference focus may
+    not cover applied/practical consulting tasks (R/Python software output interpretation).
+    Source: arXiv [|https://arxiv.org/abs/2510.09517|]; project site [|https://stateval.github.io/|]'
+  - 'StatLLM (Song et al., 2025/2026) — NET NEW. Dataset for evaluating LLM performance
+    in statistical analysis, with human expert evaluation scores assessing correctness,
+    effectiveness, readability, executability, and output accuracy of LLM-generated
+    statistical code in SAS and R. Directly relevant to OC dimension (expert annotators).
+    Benchmarks for SAS and R remain underrepresented generally. Source: Nature Scientific
+    Data [|https://www.nature.com/articles/s41597-026-06731-4|]; PubMed Central [|https://pmc.ncbi.nlm.nih.gov/articles/PMC12987956/|]'
+  - 'DSCodeBench (Ouyang et al., AAAI 2026) — NET NEW. Realistic benchmark for data
+    science code generation grounded in real workflows, with comprehensive test suites
+    averaging 200 test cases per problem vs DS-1000''s 2.1. Best LLM (GPT-4o) achieves
+    pass@1 of 0.392. More realistic than DS-1000 for deployment-like scenarios but
+    still code-generation focused rather than natural-language statistical reasoning.
+    Source: arXiv [|https://www.arxiv.org/abs/2505.15621|]'
+  - Any benchmark specifically covering R/Python statistical software output interpretation
+    — NOT FOUND in dedicated form. StatLLM covers R/SAS code generation with human
+    evaluation; no benchmark found that specifically tests natural-language interpretation
+    of pre-existing lm()/statsmodels output blocks as the deployment requires. This
+    remains a confirmed gap.
+infrastructure_and_access_context:
+  deployment_modality: Text-based LLM interface, likely web application or API integration
+    within a consultancy toolchain
+  input_delivery: Users paste content directly into the system; inputs are self-service
+    and professionally authored
+  internet_connectivity: 'High-reliability broadband expected in professional US office/remote
+    work setting. [NEEDS VERIFICATION — deferred: below search budget; confirmed directionally
+    by general knowledge of US enterprise IT; low impact for scoring given geography
+    and sector]'
+  device_profile: 'Desktop or laptop workstations; professional computing environment.
+    [NEEDS VERIFICATION — deferred: likely unsearchable (lived practice); low impact
+    for scoring given professional US consultancy context with no mobile-first signal
+    in elicitation]'
+  software_ecosystem_integration: '[NEEDS VERIFICATION — deferred: likely unsearchable
+    (deployment-specific implementation detail not documented online); would require
+    direct stakeholder elicitation to determine IDE/Jupyter/RStudio integration specifics]'
+regulatory_and_institutional_context:
+  applicable_data_privacy_regulations: 'No single comprehensive US federal data privacy
+    law exists; the US relies on a patchwork of sector-specific federal laws (HIPAA
+    for healthcare, GLBA for financial institutions, COPPA for children''s data) and
+    state-level comprehensive privacy laws. As of 2026, 20 US states have enacted
+    comprehensive consumer privacy laws, with California''s CCPA/CPRA the most expansive.
+    Key deployment-relevant risks: (1) If consultancy clients include healthcare data,
+    HIPAA governs protected health information; (2) If financial sector clients are
+    involved, GLBA applies; (3) Connecticut''s amended CTDPA (effective July 1, 2026)
+    requires data controllers to disclose whether personal data is used to train LLMs.
+    The CPPA (California) approved regulations in September 2025 covering cybersecurity
+    audits, risk assessments, and automated decision-making technology (ADMT). No
+    single federal LLM-specific data regulation exists as of May 2026. This patchwork
+    structure means that a nationally-scoped consultancy must manage multi-state compliance
+    obligations, and client data pasted into LLM prompts may trigger obligations under
+    the applicable state law for the client''s jurisdiction.
+
+    Source: DLA Piper Data Protection Laws of the World (US) — [|https://www.dlapiperdataprotection.com/?c=US|];
+    Shumaker Law (Connecticut CTDPA LLM amendment) — [|https://www.shumaker.com/insight/the-patchwork-of-data-privacy-laws-recent-developments-and-implications/|]'
+  professional_standards_bodies: 'The American Statistical Association (ASA) Ethical
+    Guidelines for Statistical Practice are the primary professional standards framework.
+    As of October 2025, the ASA''s Committee on Professional Ethics issued a call
+    for input for a periodic review update; the committee will work on updates in
+    2026 with release expected in early 2027. No current ASA-issued guidance specifically
+    addressing AI- or LLM-assisted statistical analysis was found as of the search
+    date (May 2025). The existing ASA Ethical Guidelines cover responsibilities in
+    data collection, analysis, and reporting but predate widespread LLM deployment
+    in statistical practice. This means no binding professional-body constraint specific
+    to LLM-assisted statistics currently exists, though the forthcoming update may
+    introduce one.
+
+    Source: Amstat News (ASA Ethics Committee call for input, Oct 2025) — [|https://magazine.amstat.org/blog/2025/10/01/apertus-llm-data-for-good/|]'
+  liability_context: 'Consultancy context implies professional liability for analytical
+    recommendations; errors in statistical guidance may have downstream consequences
+    for client deliverables. [NEEDS VERIFICATION — deferred: assessment of whether
+    this materially affects rubric stringency thresholds is a legal/professional judgment
+    not searchable online; requires stakeholder or legal counsel input. Direction
+    of effect is clear — professional liability context raises the bar for acceptable
+    error rates — but specific quantification is not web-resolvable.]'
+  client_sector_variation: '[NEEDS VERIFICATION — deferred: the specific client sectors
+    served by the unnamed consultancy are not publicly documented; requires direct
+    stakeholder elicitation. However, the regulatory framework note above captures
+    the key sector-specific constraints (HIPAA for healthcare, GLBA for finance) that
+    would apply if those sectors are represented in the client base.]'
+dimension_priority_weights:
+  input_ontology:
+    priority: HIGH
+    rationale: GSM8K's task taxonomy is limited to elementary arithmetic; deployment
+      requires an entirely different taxonomy (regression diagnostics, ANOVA, power
+      analysis, assumption testing) that is structurally absent from the benchmark.
+  input_content:
+    priority: HIGH
+    rationale: GSM8K instances are child-oriented narrative word problems authored
+      by crowdworkers; deployment inputs are tabular data, software output blocks,
+      and jargon-dense professional queries with no content overlap.
+  input_form:
+    priority: MODERATE
+    rationale: Both benchmark and deployment are English text-only, limiting the worst-case
+      mismatch; however, deployment requires parsing semi-structured tabular and software-output
+      content that is entirely outside GSM8K's plain-prose distribution.
+  output_ontology:
+    priority: HIGH
+    rationale: GSM8K uses binary exact-match against a single numeric answer; deployment
+      requires evaluation of multi-path methodologically defensible reasoning where
+      multiple correct outputs exist.
+  output_content:
+    priority: HIGH
+    rationale: GSM8K ground truths were produced by crowdworkers for elementary arithmetic
+      correctness; deployment ground truths require expert statistical judgment with
+      legitimate pluralism — annotator populations are entirely unrepresentative.
+  output_form:
+    priority: MODERATE
+    rationale: Both use text output; however, GSM8K rewards terse numeric answers
+      while deployment requires open-ended methodological recommendations, diagnostic
+      narratives, and software-output interpretations.
+flagged_gaps_for_web_search:
+- gap_id: 1
+  dimension: input_ontology
+  description: 'Missing statistical reasoning categories: regression diagnostics,
+    ANOVA post-hoc testing, power analysis, Bayesian vs. frequentist reasoning'
+  search_target: LLM benchmark advanced statistical reasoning regression diagnostics
+    ANOVA hypothesis testing power analysis evaluation suite
+  resolution_status: 'RESOLVED — multiple benchmarks now exist covering parts of this
+    gap: StatQA (NeurIPS 2024) covers hypothesis testing method selection; StatEval
+    (Oct 2025) covers formal statistical inference including regression and Bayesian
+    analysis at undergraduate/graduate level; StatLLM (2025/2026) covers statistical
+    software tasks with expert evaluation. No single benchmark fully covers the deployment''s
+    applied consulting task profile (regression diagnostics + ANOVA + power analysis
+    + software output interpretation combined). The gap is partially but not fully
+    closed.'
+- gap_id: 2
+  dimension: input_content / input_form
+  description: No GSM8K items involve structured or semi-structured data (CSV, dataframes,
+    R/Python software output blocks)
+  search_target: LLM evaluation benchmark tabular data statistical software output
+    R Python statsmodels lm() interpretation parsing
+  resolution_status: PARTIALLY RESOLVED — StatQA uses tabular data as input context
+    for hypothesis testing tasks. DS-1000 and DSCodeBench use realistic Python data
+    science contexts. StatLLM covers R and SAS code generation evaluated by human
+    experts. However, no benchmark specifically tests natural-language interpretation
+    of pre-existing R lm() or Python statsmodels output blocks (as opposed to generating
+    code that produces such outputs). This specific format gap remains unaddressed.
+- gap_id: 3
+  dimension: output_ontology
+  description: 'Multi-valid-answer evaluation protocols: GSM8K binary scoring is incompatible
+    with methodological pluralism in applied statistics'
+  search_target: rubric-based LLM evaluation multi-valid-answer statistical reasoning
+    scoring framework StatQA DS-1000 applied data science benchmark expert panel scoring
+  resolution_status: PARTIALLY RESOLVED — StatLLM explicitly uses human expert evaluation
+    scores for correctness, effectiveness, readability, executability, and output
+    accuracy — a multi-criterion rubric approach directly relevant to deployment OC
+    needs. StatEval proposes a 'robust evaluation framework tailored to both computational
+    and proof-based tasks.' However, StatEval's binary LLM-as-judge scoring has been
+    noted as 'unsuitable for complex statistical tasks.' The gap is reduced but no
+    benchmark has fully solved multi-valid-answer rubric scoring for methodological
+    pluralism in applied consulting contexts.
+- gap_id: 4
+  dimension: input_content
+  description: 'Domain-jargon grounding: GSM8K contains no instances with professional
+    statistical vocabulary (VIF, heteroscedasticity, Type III SS, random effects)'
+  search_target: LLM benchmark domain-specific statistical jargon VIF heteroscedasticity
+    professional data science evaluation coverage
+  resolution_status: PARTIALLY RESOLVED — StatQA's 11,623 examples use domain-specific
+    statistical terminology by design, as it targets specialized statistical task
+    applicability. StatEval covers graduate-level statistical vocabulary across inference,
+    regression, and Bayesian domains. Neither benchmark's vocabulary coverage for
+    applied consulting-level jargon (VIF, Type III SS, Cook's distance) has been explicitly
+    verified from searches.
+- gap_id: 5
+  dimension: output_content
+  description: 'Expert annotator representativeness: GSM8K labels produced by crowdworkers;
+    deployment needs practicing statisticians or data scientists as ground-truth annotators'
+  search_target: LLM benchmark expert annotators practicing statisticians data scientists
+    ground truth statistical reasoning evaluation inter-rater agreement
+  resolution_status: PARTIALLY RESOLVED — StatLLM explicitly uses human expert evaluation
+    scores for LLM-generated statistical code, providing the only confirmed example
+    of a statistical analysis benchmark with expert (rather than crowdworker) annotation.
+    StatQA uses an automated synthesis pipeline with prerequisite checks rather than
+    human experts. StatEval uses human-in-the-loop validation for problem extraction.
+    No benchmark found that uses practicing applied statisticians as annotators for
+    open-ended methodological reasoning tasks of the type the deployment requires.
+- gap_id: 6
+  dimension: output_ontology / output_form
+  description: 'Hybrid exact-match and open-ended evaluation: deployment has narrow
+    computational subtasks (exact-match appropriate) alongside open-ended methodological
+    reasoning tasks'
+  search_target: hybrid benchmark exact-match open-ended evaluation computational
+    statistical reasoning LLM mixed scoring rubric
+  resolution_status: PARTIALLY RESOLVED — StatEval proposes a 'robust evaluation framework
+    tailored to both computational and proof-based tasks, enabling fine-grained assessment
+    of reasoning ability,' which is directionally aligned with the hybrid need. StatLLM's
+    multi-criterion expert scoring (correctness, effectiveness, readability, executability,
+    output accuracy) represents a mixed approach. No benchmark found that explicitly
+    defines separate scoring regimes for computational vs. methodological subtasks
+    within a single evaluation.
+- gap_id: 7
+  dimension: regulatory_and_institutional_context
+  description: Professional liability and data privacy implications of LLM-assisted
+    statistical analysis in a consultancy context where client datasets may be pasted
+    into prompts
+  search_target: LLM use policy US data science consultancy ASA guidelines AI statistical
+    analysis liability data privacy client data
+  resolution_status: 'RESOLVED — see regulatory_and_institutional_context section.
+    Key findings: (1) No ASA AI-specific guidelines yet; ethics update due early 2027.
+    (2) US has no federal omnibus data privacy law; sector-specific laws (HIPAA, GLBA)
+    apply depending on client industry. (3) 20 state comprehensive privacy laws active
+    as of 2026; Connecticut specifically added LLM training disclosure requirements
+    effective July 1, 2026. (4) California CPPA approved ADMT regulations September
+    2025.'
+net_new_fields:
+  benchmark_landscape_update:
+    summary: A cluster of statistical reasoning and data science benchmarks has emerged
+      (2024–2026) that collectively address several of the deployment's IO/IC/OC gaps
+      unmet by GSM8K. None individually matches the deployment profile, but the combination
+      provides candidate components for a tailored evaluation suite.
+    key_benchmarks:
+    - name: StatQA
+      year: 2024
+      venue: NeurIPS 2024
+      size: 11,623 examples
+      scope: 'Hypothesis testing method selection and applicability assessment, column
+        identification, tabular data input. GPT-4o best performance: 64.83%.'
+      deployment_relevance: High for IO (hypothesis testing) and IC (tabular input
+        format); lower for regression diagnostics, ANOVA, power analysis.
+      url: '[|https://arxiv.org/abs/2406.07815|]'
+      github: '[|https://github.com/HKUSTDial/StatQA|]'
+    - name: StatEval
+      year: 2025
+      venue: arXiv preprint (October 2025)
+      size: 13,817 foundational problems + 2,374 research-level proof tasks
+      scope: First comprehensive benchmark for formal statistical reasoning spanning
+        undergraduate/graduate curricula and research-level inference, regression,
+        Bayesian analysis, multivariate methods. Multi-agent pipeline with human-in-the-loop
+        validation.
+      deployment_relevance: High for IO (regression, Bayesian, inference) and OO (fine-grained
+        reasoning framework); theoretical focus may underrepresent applied consulting
+        tasks and R/Python software output interpretation.
+      url: '[|https://arxiv.org/abs/2510.09517|]'
+      project_site: '[|https://stateval.github.io/|]'
+    - name: StatLLM
+      year: 2025/2026
+      venue: Nature Scientific Data (2026)
+      size: Statistical analysis tasks in SAS and R with human expert evaluation scores
+      scope: LLM-generated statistical code evaluated by human experts on correctness,
+        effectiveness, readability, executability, and output accuracy across SAS
+        and R.
+      deployment_relevance: High for OC (expert annotators) and partial for IF (R
+        output); covers code generation rather than natural-language output interpretation.
+        Benchmarks for SAS/R remain underrepresented.
+      url: '[|https://www.nature.com/articles/s41597-026-06731-4|]'
+    - name: DS-1000
+      year: 2023
+      venue: ICML 2023
+      size: 1,000 problems
+      scope: Data science code generation across 7 Python libraries (NumPy, Pandas,
+        Matplotlib, Scikit-learn, SciPy, TensorFlow, PyTorch), execution-based evaluation.
+      deployment_relevance: Moderate for IC (realistic Python data science contexts)
+        and IF (structured data); focused on code generation not statistical reasoning
+        or natural-language output interpretation.
+      url: '[|https://arxiv.org/abs/2211.11501|]'
+    confirmed_remaining_gap: No benchmark found specifically testing natural-language
+      interpretation of pre-existing R lm()/statsmodels output blocks — the primary
+      input modality for this deployment. Statistical problems account for less than
+      3% of recent reasoning benchmarks overall (StatEval, citing Paster et al. 2025
+      — [|https://arxiv.org/abs/2510.09517|]).
+  asa_ethics_update_timeline:
+    note: 'The ASA''s Committee on Professional Ethics issued a call for input in
+      October 2025 for a periodic review of the ASA Ethical Guidelines for Statistical
+      Practice, with the update expected in early 2027. No AI/LLM-specific professional
+      guidance from the ASA is currently in force. This is a forward-looking risk:
+      evaluation rubrics designed now may need to be revisited once the updated guidelines
+      are published.'
+    source: '[|https://magazine.amstat.org/blog/2025/10/01/apertus-llm-data-for-good/|]'
+  us_llm_data_privacy_landscape_2026:
+    note: As of May 2026, 20 US states have comprehensive consumer privacy laws. No
+      federal omnibus data privacy law exists. The most material new development for
+      LLM deployments is Connecticut's Senate Bill 1295 (enacted June 25, 2025), which
+      amends the CTDPA to require disclosure when personal data is used to train LLMs,
+      effective July 1, 2026. A nationally-scoped consultancy that handles client
+      data across states must treat the patchwork of CCPA/CPRA (California), HIPAA
+      (healthcare), GLBA (finance), and applicable state laws as the operative constraint
+      framework. The California CPPA also approved automated decision-making technology
+      (ADMT) regulations in September 2025, which may apply to LLM-assisted analytical
+      recommendations.
+    source_1: '[|https://www.dlapiperdataprotection.com/?c=US|]'
+    source_2: '[|https://www.shumaker.com/insight/the-patchwork-of-data-privacy-laws-recent-developments-and-implications/|]'

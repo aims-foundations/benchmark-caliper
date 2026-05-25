@@ -1,0 +1,397 @@
+{
+  "benchmark": "humaneval",
+  "region": "US Professional Software Developers — Python IDE Code Suggestion (HumanEval Assessment)",
+  "dimensions": {
+    "input_ontology": {
+      "score": 2,
+      "justification": "HumanEval's task taxonomy is explicitly bounded to standalone function synthesis assessing 'language comprehension, reasoning, algorithms, and simple mathematics' [Q22], with the authors themselves acknowledging that 'Python code found on GitHub contains class implementations, configuration files, scripts, and even files used to store data. This code is seemingly unrelated to synthesizing functions from docstrings' [Q48]. Empirical dataset profiling confirms this gap is total: across 40 sampled problems, the only imports are stdlib (`typing`, `math`), with zero examples involving classes, async/await, third-party libraries, or cross-file context. Per elicitation, library-grounded synthesis, class-method synthesis, async/await, and repository-context completions are the majority deployment use cases — all categorically absent from the benchmark. Because IO is HIGH priority and the omissions cover the dominant deployment categories, this dimension scores 2 (significant concerns with multiple concrete violations). Strengths in standalone algorithmic coverage prevent a score of 1.",
+      "strengths": [
+        "Provides well-distributed coverage of standalone algorithmic sub-categories (string manipulation, list ops, math, parsing) — the 'meaningful minority baseline' confirmed in elicitation [DATASET-D3, DATASET-D7, DATASET-D11]",
+        "Tasks explicitly assess 'language comprehension, reasoning, algorithms, and simple mathematics' [Q22], which maps cleanly onto the general-purpose algorithmic deployment segment"
+      ],
+      "checklist_responses": {
+        "IO-1": "Elicitation identifies four required categories: standalone algorithmic (minority), library-grounded synthesis (majority), class-method synthesis (common), async/await (common), and repository-level context-grounded completion (dominant real-world mode).",
+        "IO-2": "Confirmed omissions across multiple critical categories. The benchmark covers only standalone function synthesis [Q1, Q22]; it omits library-grounded calls (zero pandas/NumPy/boto3 across sample [DATASET-D20, DATASET-D21]), class-method synthesis (no `class` definitions observed [DATASET-D6, DATASET-D9]), async/await patterns (no `async def` observed [DATASET-D5, DATASET-D19]), and repository-level context (every prompt is self-contained [DATASET-D1, DATASET-D12]). The paper itself flags the distribution mismatch with real Python code [Q48].",
+        "IO-3": "Some interview-puzzle problems (Tribonacci, Collatz, hungry rabbit narratives) represent recreational mathematics that probes algorithmic cleverness rather than professional software engineering judgment [DATASET-D14, DATASET-D23, DATASET-D26]. These are not strictly irrelevant — they exercise reasoning — but they consume evaluation weight that does not transfer to enterprise code patterns.",
+        "IO-4": "Content validity is materially harmed: the elicitation-confirmed dominant deployment categories (library-grounded, class-method, async, repo-context) are entirely absent. Empirical evidence from OOP benchmark [WEB-13] and RepoMasterEval [WEB-27] indicates these gaps reflect genuine model capability differences, not just benchmark omissions, so the missing coverage is consequential."
+      },
+      "evidence_quotes": [
+        "[Q22] 'Programming tasks in the HumanEval dataset assess language comprehension, reasoning, algorithms, and simple mathematics.' (p.4)",
+        "[Q48] 'Python code found on GitHub contains class implementations, configuration files, scripts, and even files used to store data. This code is seemingly unrelated to synthesizing functions from docstrings, and we hypothesize that the distribution mismatch reduces HumanEval performance.' (p.7)",
+        "[Q60] 'For this reason, functions from tracing tended to be the building blocks of command-line utilities.' (p.8)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-13] OOP benchmark (ACL Findings 2024) — all 23 evaluated LLMs perform significantly worse on class-level OOP tasks than on HumanEval/MBPP",
+        "[WEB-27] RepoMasterEval — GPT-4 scores drop significantly from HumanEval to repository-level benchmark, confirming the validity gap is empirical not theoretical",
+        "[WEB-7] DS-1000 — library-grounded data science problems exist as a supplementation target"
+      ],
+      "evidence_dataset": [
+        "DATASET-D20: Only stdlib `math` imported across 40 examples — zero third-party library imports confirms library-grounded gap",
+        "DATASET-D6: HumanEval/42 `def incr_list(l: list):` — standalone module-level function; no class context anywhere in sample",
+        "DATASET-D5: HumanEval/38 synchronous string function; no async/await construct in any of 40 examples",
+        "DATASET-D1: HumanEval/0 fully self-contained docstring; no project-internal types or cross-file references"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "WEB-7",
+          "WEB-13",
+          "WEB-17"
+        ],
+        "IO-2": [
+          "Q1",
+          "Q22",
+          "Q48",
+          "DATASET-D20",
+          "DATASET-D6",
+          "DATASET-D5",
+          "DATASET-D1"
+        ],
+        "IO-3": [
+          "DATASET-D14",
+          "DATASET-D23",
+          "DATASET-D26"
+        ],
+        "IO-4": [
+          "Q48",
+          "WEB-13",
+          "WEB-27"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether the remaining 124 unsampled problems contain any class, async, or third-party-library examples (sample of 40 found none, strongly suggesting no but not conclusive)"
+      ],
+      "requires_expert_verification": []
+    },
+    "input_content": {
+      "score": 2,
+      "justification": "HumanEval problems are deliberately context-free, hand-written, and domain-neutral [Q14, Q21], a design choice motivated by contamination avoidance that conflicts directly with the deployment's content needs. The elicitation answer to Q3 was explicit: 'Most real completions reference project-internal types, helper modules, ORM models, and domain-specific conventions across fintech, healthtech, and ML/data pipeline codebases. The function's meaning is often only recoverable from surrounding files.' Dataset profiling confirms zero domain-specific content: no Decimal arithmetic, no PHI patterns, no DataFrame operations, no FHIR/HL7 structures across 40 examples. Two minor locale-specific assumptions (European comma-decimal in HumanEval/137, US-only mm-dd-yyyy date in HumanEval/124) are noted but minor relative to the structural gap. Because IC is HIGH priority and the structural context-mismatch is total, this scores 2.",
+      "strengths": [
+        "Hand-written problems avoid training-data contamination [Q14, Q21], making benchmark scores interpretable as genuine capability signals within the standalone algorithmic slice",
+        "Self-contained docstrings provide clean, interpretable test items where success/failure can be unambiguously attributed [DATASET-D24, DATASET-D25]",
+        "Content is written in standard American English with no localization barriers for the US developer population"
+      ],
+      "checklist_responses": {
+        "IC-1": "Inputs require minimal region-specific knowledge — content is domain-neutral algorithmic puzzles in American English. Two minor exceptions: HumanEval/137 assumes European comma-as-decimal convention [DATASET-D15, DATASET-D38], and HumanEval/124 enforces US-centric mm-dd-yyyy format while marking ISO 8601 as invalid [DATASET-D37].",
+        "IC-2": "Content is generally culturally compatible with the US deployment context. The benchmark is silent on enterprise domain conventions (fintech Decimal precision, healthtech PHI handling, ML pipeline patterns) but does not contain content that conflicts with US developer culture.",
+        "IC-3": "Western-specific knowledge requirements are minimal; the benchmark is closer to culturally neutral than Western-biased. The mm-dd-yyyy date format assumption in HumanEval/124 [DATASET-D37] is a US convention but penalizes the ISO 8601 international standard.",
+        "IC-4": "Not applicable in the cultural sense — the deployment population is US developers and the content language matches. The relevant 'representativeness' concern is domain coverage (fintech/healthtech/ML), which is documented as absent.",
+        "IC-5": "Content validity is harmed via construct underrepresentation: the dominant content type (project-embedded, library-using, domain-specific code) has zero benchmark coverage [DATASET-D20, DATASET-D2]. The paper acknowledges underspecified prompts [Q63] and lower-quality docstrings [Q83] as known content issues."
+      },
+      "evidence_quotes": [
+        "[Q14] 'Though not a guarantee for problem novelty, all problems were hand-written and not programmatically copied from existing sources.' (p.3)",
+        "[Q21] 'It is important for these tasks to be hand-written, since our models are trained on a large fraction of GitHub, which already contains solutions to problems from a variety of sources.' (p.4)",
+        "[Q63] 'Some prompts underspecify the function that is implemented, in which case a perfectly valid solution may be wrongly penalized by the unit test.' (p.8)",
+        "[Q83] 'docstrings in our dataset may be lower quality because developers tend to devote less time to writing docstrings' (p.9)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-17] SWE-bench Verified — 500 human-validated repository-level Python problems addressing the project-context gap",
+        "[WEB-20] CrossCodeEval — cross-file code completion benchmark targeting the project-context gap directly",
+        "[WEB-23] CyberSecEval finding: ~40% of GitHub Copilot suggestions vulnerable — confirms domain context matters for safe deployment"
+      ],
+      "evidence_dataset": [
+        "DATASET-D2: HumanEval/3 fintech-adjacent bank account problem uses raw integer arithmetic, not Decimal or pandas — domain idioms absent",
+        "DATASET-D22: HumanEval/67 fruit basket arithmetic — whimsical narrative entirely disconnected from enterprise contexts",
+        "DATASET-D15: HumanEval/137 comma-as-decimal-separator — European locale convention embedded in benchmark",
+        "DATASET-D37: HumanEval/124 ISO 8601 date marked invalid — US-centric mm-dd-yyyy preference encoded",
+        "DATASET-D20: zero third-party imports in 40 examples — content gap confirmed empirically"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "DATASET-D15",
+          "DATASET-D38",
+          "DATASET-D37"
+        ],
+        "IC-2": [
+          "DATASET-D2",
+          "DATASET-D22"
+        ],
+        "IC-3": [
+          "DATASET-D37"
+        ],
+        "IC-4": [
+          "DATASET-D20"
+        ],
+        "IC-5": [
+          "Q63",
+          "Q83",
+          "DATASET-D20",
+          "DATASET-D2"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether any of the unsampled 124 problems incidentally reference domain-specific content that would partially close the gap"
+      ],
+      "requires_expert_verification": []
+    },
+    "input_form": {
+      "score": 5,
+      "justification": "The input form is a near-exact match. Both the benchmark and the deployment present an English natural-language docstring plus a Python function signature as input, expecting a Python function body as output. Each HumanEval prompt 'consist[s] of a header, a signature, and a docstring' [Q28], identical to the IDE deployment scenario. Stop sequences (`\\\\nclass`, `\\\\ndef`, etc.) [Q29] mirror typical IDE completion truncation. Dataset profiling confirms every sampled example follows this structure [DATASET-D1, DATASET-D21]. IF is correctly flagged LOWER priority in elicitation — no modality, encoding, or representation gap exists.",
+      "strengths": [
+        "Prompt structure (docstring + typed signature) is structurally identical to IDE completion input [Q28, DATASET-D1]",
+        "Stop sequence handling [Q29] approximates IDE completion truncation",
+        "Standard American English natural-language prompts match deployment population language",
+        "Modern Python idioms (typing module, type annotations) are present [DATASET-D21]"
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal distributions match: both contexts are UTF-8 Python source with English docstrings. No resolution, sampling rate, or sensor-parameter analogue exists for this domain.",
+        "IF-2": "US developer infrastructure (VS Code, PyCharm, modern Python 3.x) [WEB-5, WEB-6] fully supports the benchmark's input format. No infrastructure mismatch.",
+        "IF-3": "Both benchmark and deployment are text-to-Python-code. The benchmark's filtering of files with line length >100 or >1000 [Q24] is a training-data choice, not an evaluation-input mismatch.",
+        "IF-4": "No form mismatches identified that would harm external validity along the input-form axis."
+      },
+      "evidence_quotes": [
+        "[Q28] 'To compute pass@k, we assemble each HumanEval problem into a prompt consisting of a header, a signature, and a docstring' (p.4)",
+        "[Q29] 'We sample tokens from Codex until we encounter one of the following stop sequences: \\nclass, \\ndef, \\n#, \\nif, or \\nprint' (p.4)",
+        "[Q20] 'Each problem includes a function signature, docstring, body, and several unit tests' (p.4)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-5] VS Code dominant IDE (74% of professional developers) — supports docstring+signature completion format",
+        "[WEB-6] Stack Overflow 2025 — VS Code and Visual Studio retain top spots"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: HumanEval/0 typed signature + docstring format matches IDE deployment structure exactly",
+        "DATASET-D21: HumanEval/11 `from typing import List` — modern Python 3.x idiom consistent with deployment context"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q28",
+          "DATASET-D1"
+        ],
+        "IF-2": [
+          "WEB-5",
+          "WEB-6"
+        ],
+        "IF-3": [
+          "Q24",
+          "Q28"
+        ],
+        "IF-4": [
+          "Q28",
+          "Q29"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": []
+    },
+    "output_ontology": {
+      "score": 3,
+      "justification": "The primary output ontology — binary pass/fail on unit tests [Q77] — aligns well with the deployment's primary correctness criterion (user test-suite passage). The paper makes a principled case for functional correctness over match-based metrics [Q10, Q40], and test-driven development [Q12] mirrors enterprise CI/CD practice. However, elicitation A2 confirms that enterprise customers additionally care about security hygiene (eval, shell injection, hardcoded secrets) and style conformance (PEP 8, type annotations) as secondary acceptance criteria. The benchmark's scored ontology entirely omits these: cryptographic anti-patterns are explored only in the appendix [Q204-Q210], not as scored categories, and style/security are not scored at all. The paper acknowledges that test suites have 'limited but targeted coverage' [Q129] and that pass/fail misses intent misalignment [Q160, Q165]. Score 3 reflects strong primary-axis alignment but a confirmed secondary-axis gap that matters for enterprise deployment (OO is MODERATE priority).",
+      "strengths": [
+        "Pass/fail unit-test oracle [Q77] aligns precisely with the deployment's primary validation criterion",
+        "Functional correctness over BLEU/match metrics [Q10, Q40] reflects principled measurement of the construct most relevant to deployment",
+        "Test-driven development framing [Q12] mirrors US enterprise CI/CD culture",
+        "Paper explicitly identifies intent misalignment [Q160, Q165] and over-reliance [Q99, Q100] as failure modes relevant to enterprise deployment risk"
+      ],
+      "checklist_responses": {
+        "OO-1": "Primary label space (pass/fail) is regionally relevant — US enterprise CI/CD is test-driven [Q12]. Cryptographic anti-pattern thresholds (RSA <2048 bits, AES ECB mode) [Q208, Q209] reflect 'consensus among cryptography experts' [Q210] valid in the US context.",
+        "OO-2": "Confirmed missing categories: security hygiene beyond appendix-level cryptography (eval, shell injection, SQL injection, hardcoded secrets), style conformance (PEP 8, type annotations), and performance constraints. Elicitation A2 identifies these as enterprise acceptance criteria not captured by pass/fail.",
+        "OO-3": "No categories encode non-US values. The RSA/AES thresholds [Q208-Q210] are technical consensus standards, not culturally specific.",
+        "OO-4": "Stakeholder-driven taxonomy redesign would benefit deployment use: adding security hygiene checks (informed by CyberSecEval [WEB-23, WEB-24] or CWEval [WEB-26]) and style/lint scoring would address documented enterprise needs.",
+        "OO-5": "Structural validity is partially harmed: pass/fail correctly represents one axis of the construct but the paper itself notes match-based metrics 'are unable to account for the large and complex space of programs functionally equivalent to a reference solution' [Q10] and test suites have 'limited but targeted coverage' [Q129]. The benchmark cannot score security or style dimensions that matter to deployment."
+      },
+      "evidence_quotes": [
+        "[Q77] 'When we benchmark our code generation models, we measure pass@k on the HumanEval dataset, where correctness is defined by passing a set of unit tests.' (p.9)",
+        "[Q10] 'match-based metrics are unable to account for the large and complex space of programs functionally equivalent to a reference solution.' (p.2)",
+        "[Q12] 'A framework known as test-driven development dictates that software requirements be converted into test cases before any implementation begins, and success is defined by a program that passes these tests.' (p.2)",
+        "[Q129] 'Human developers often write test suites with limited but targeted coverage, but this does not always work well against an algorithm' (p.14)",
+        "[Q160] 'predictions that the model will complete confused code with confused code, insecure code with insecure code... regardless of the model's capability to produce secure, unbiased, and high-quality code.' (p.26)",
+        "[Q208] 'RSA keys were considered improperly configured if they were shorter than 2048 bits.' (p.32)",
+        "[Q210] 'we chose these two tests to evaluate as targets because there is consensus among cryptography experts that these configurations generally should not be used' (p.32)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-23] CyberSecEval — comprehensive insecure-code generation benchmark addressing security hygiene gap (~40% Copilot vulnerability finding)",
+        "[WEB-26] CWEval — outcome-driven simultaneous functionality + security evaluation",
+        "[WEB-24] CyberSecEval 2 — updated security benchmark with Instruct Prime variant"
+      ],
+      "evidence_dataset": [
+        "DATASET-D36: HumanEval/3 deterministic `assert candidate(...) == True` — pass/fail oracle matches CI test execution model",
+        "DATASET-D31: HumanEval/38 test harness concerned only with functional correctness; no security dimension evaluated",
+        "DATASET-D10: HumanEval/95 purely functional assertion; no security or style context"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q12",
+          "Q77",
+          "Q208",
+          "Q210"
+        ],
+        "OO-2": [
+          "Q129",
+          "DATASET-D31",
+          "DATASET-D10"
+        ],
+        "OO-3": [
+          "Q210"
+        ],
+        "OO-4": [
+          "WEB-23",
+          "WEB-26",
+          "WEB-24"
+        ],
+        "OO-5": [
+          "Q10",
+          "Q129",
+          "Q160"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": [
+        "Whether specific enterprise procurement criteria (e.g., SOC 2, FedRAMP-relevant security checks) translate into scoring requirements beyond what CyberSecEval covers"
+      ]
+    },
+    "output_content": {
+      "score": 4,
+      "justification": "Label correctness for the primary unit-test oracle is objective and not culturally contingent — a function either passes the tests or it does not, and annotator representativeness is largely irrelevant for executable verification. OC is correctly weighted LOWER in elicitation. The paper is sparse on annotator demographics for docstring evaluation [Q79] and alignment bug introduction [Q167], but for the dominant pass/fail labels this is not a validity concern. Minor concerns: HumanEval/124 enforces a US-centric date format as ground truth [DATASET-D37], the paper acknowledges some prompts are underspecified leading to 'wrongly penalized' valid solutions [Q63], and some test suites have weak edge-case coverage [DATASET-D18, DATASET-D19]. These are noise-level concerns relative to the dimension's overall robustness.",
+      "strengths": [
+        "Unit-test labels are objective and executable [Q77, DATASET-D36] — not subject to cultural annotator disagreement",
+        "Cryptographic thresholds grounded in expert consensus [Q210] rather than annotator judgment",
+        "Deterministic oracle [DATASET-D36, DATASET-D31] means inter-annotator agreement is structurally guaranteed for pass/fail"
+      ],
+      "checklist_responses": {
+        "OC-1": "Ground truth labels (pass/fail on unit tests) reflect objective execution outcomes, not stakeholder perspective. They align with US enterprise expectations of test-driven correctness.",
+        "OC-2": "Minimal annotator-population disagreement risk for pass/fail labels. The docstring-evaluation labels [Q79] involve subjective human grading but are not the primary benchmark metric.",
+        "OC-3": "Annotator demographics are not documented in the paper for any annotation task. For pass/fail this is acceptable; for docstring grading (1640 problems hand-graded) [Q79] it is a documentation gap but does not materially affect deployment validity since deployment uses pass/fail.",
+        "OC-4": "Re-annotation not needed for primary metric. Two specific labels could be revisited: HumanEval/124 ISO 8601 marked invalid [DATASET-D37] and HumanEval/137 comma-decimal convention [DATASET-D38] embed locale assumptions, but these are isolated cases.",
+        "OC-5": "Aggregation is mechanical (test passage) — no minority-perspective erasure risk.",
+        "OC-6": "Convergent and external validity for label correctness are largely preserved. The acknowledged underspecification issue [Q63] introduces noise but applies equally to deployment, where the user's own tests are the oracle."
+      },
+      "evidence_quotes": [
+        "[Q77] 'correctness is defined by passing a set of unit tests.' (p.9)",
+        "[Q63] 'Some prompts underspecify the function that is implemented, in which case a perfectly valid solution may be wrongly penalized by the unit test.' (p.8)",
+        "[Q79] 'Due to the time consuming nature of this process, we only grade 10 samples per problem, for a total of 1640 problems, from Codex-D-12B at temperature 0.8.' (p.9)",
+        "[Q210] 'there is consensus among cryptography experts that these configurations generally should not be used' (p.32)"
+      ],
+      "evidence_web_sources": [],
+      "evidence_dataset": [
+        "DATASET-D36: HumanEval/3 deterministic assertion — objective oracle",
+        "DATASET-D37: HumanEval/124 ISO 8601 date marked invalid — locale-specific label assumption",
+        "DATASET-D18: HumanEval/104 includes `assert True` placeholder — sparse edge-case coverage in some problems",
+        "DATASET-D19: HumanEval/105 `assert True` placeholder contributes nothing to oracle coverage"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q77",
+          "DATASET-D36"
+        ],
+        "OC-2": [
+          "Q77",
+          "Q79"
+        ],
+        "OC-3": [
+          "Q79",
+          "Q167"
+        ],
+        "OC-4": [
+          "DATASET-D37",
+          "DATASET-D38"
+        ],
+        "OC-5": [
+          "Q77"
+        ],
+        "OC-6": [
+          "Q63",
+          "DATASET-D18",
+          "DATASET-D19"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Annotator demographics for docstring evaluation [Q79] are undocumented; not material for pass/fail deployment use"
+      ],
+      "requires_expert_verification": []
+    },
+    "output_form": {
+      "score": 5,
+      "justification": "Output form is an exact match. The benchmark produces Python code evaluated by test execution [Q77, Q15], identical to the deployment's IDE-suggested function bodies validated by the user's own test suite. The pass@k metric [Q15, Q17] is correctly formalized with an unbiased estimator. Temperature optimization for k [Q34] provides useful guidance for deployment configuration choices. Stop-sequence handling [Q29] approximates IDE truncation. OF is LOWER priority and shows no mismatch.",
+      "strengths": [
+        "Python source code output evaluated by test execution [Q77] — identical modality to deployment",
+        "Unbiased pass@k estimator [Q15] correctly handles sampling variance, supporting reliable measurement",
+        "Temperature-by-k optimization [Q34] provides actionable guidance for IDE deployment sampling configuration",
+        "Single-sample selection heuristics [Q37, Q38, Q39] explicitly address the IDE-autocomplete deployment scenario"
+      ],
+      "checklist_responses": {
+        "OF-1": "Output modality (Python code) exactly matches IDE deployment needs.",
+        "OF-2": "Not applicable — no speech output requirement in this deployment.",
+        "OF-3": "Not applicable — target population is professional software developers; literacy is not a constraint.",
+        "OF-4": "No form mismatches identified."
+      },
+      "evidence_quotes": [
+        "[Q15] 'To evaluate pass@k, we generate n ≥ k samples per task (in this paper, we use n = 200 and k ≤ 100), count the number of correct samples c ≤ n which pass unit tests, and calculate the unbiased estimator.' (p.3)",
+        "[Q38] 'when the model is used as an autocomplete tool where a user provides a prompt, we do not have unit tests, but would like to return only a single completion to the user for evaluation so as to not overwhelm them.' (p.5)",
+        "[Q34] 'for a 679M parameter model, the optimal temperature for pass@1 is T* = 0.2 and the optimal temperature for pass@100 is T* = 0.8.' (p.5)"
+      ],
+      "evidence_web_sources": [],
+      "evidence_dataset": [
+        "DATASET-D36: HumanEval/3 executable assertion-based oracle matches CI test-suite execution model",
+        "DATASET-D31: HumanEval/38 executable test harness with deterministic verdicts"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q15",
+          "Q77",
+          "DATASET-D36"
+        ],
+        "OF-2": [],
+        "OF-3": [],
+        "OF-4": [
+          "Q15",
+          "Q38"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": []
+    }
+  },
+  "overall_summary": "HumanEval has strong validity for the narrow slice of the US IDE deployment that matches its design — standalone algorithmic Python function synthesis from self-contained docstrings — and the input-form and output-form axes match the deployment exactly. However, the two HIGH-priority dimensions for this deployment (Input Ontology and Input Content) show substantial structural gaps. Elicitation responses and empirical dataset profiling converge on the same finding: library-grounded synthesis, class-method synthesis, async/await patterns, and repository-level context-grounded completions — confirmed as the majority real-world use cases — have zero coverage in the benchmark. The paper itself acknowledges this distribution mismatch [Q48]. The secondary correctness axes (security hygiene, style conformance) that enterprise customers care about per elicitation are also absent from the scored ontology, though the primary pass/fail oracle aligns well with US test-driven development practice. Empirical evidence from RepoMasterEval [WEB-27] and the OOP benchmark [WEB-13] confirms these are real model-capability gaps, not just benchmark omissions — meaning HumanEval scores will systematically overestimate model utility for the deployment.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "HumanEval reliably measures a model's ability to synthesize standalone, module-level Python functions from self-contained English docstrings using only standard-library constructs. For the deployment's general-purpose algorithmic minority use case it provides high-fidelity signal; the input-form and output-form alignment (dimensions IF=5, OF=5) ensure the measurement modality matches IDE completion exactly, and the pass/fail oracle (OO=3 with strong primary alignment) matches the deployment's CI test-suite validation paradigm.",
+    "construct_depth": "The benchmark probes the algorithmic-reasoning subcomponent of code synthesis deeply, including unbiased sampling estimators [Q15], temperature-by-k optimization [Q34], and single-sample selection heuristics for autocomplete deployment [Q38]. However, depth is bounded by the input ontology (IO=2): performance on chained reasoning degrades exponentially [Q90, Q93], higher-level specifications are not supported [Q88], and the construct of 'professional Python code completion' is materially underrepresented — the benchmark cannot probe library-call correctness, class-hierarchy reasoning, async I/O, or cross-file context retrieval at all.",
+    "supplementation_needed": "For valid deployment-level assessment, HumanEval scores must be supplemented across four axes: (1) library-grounded synthesis via DS-1000 [WEB-7], BigCodeBench [WEB-11], or DSCodeBench [WEB-10] to address the IO/IC gap on third-party library calls; (2) repository-level context via SWE-bench Verified [WEB-17], CrossCodeEval [WEB-20], or RepoBench [WEB-21] to address the dominant deployment mode flagged in elicitation Q3; (3) class-method synthesis via OOP benchmark [WEB-13] or ClassEval to address the elicitation-confirmed class-hierarchy gap; (4) security hygiene via CyberSecEval [WEB-23] or CWEval [WEB-26] to address the elicitation A2 enterprise concerns. Async/await and domain-specific (fintech/healthtech/ML pipeline) evaluations have no public benchmark coverage identified and would require custom evaluation development."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "Zero benchmark coverage of library-grounded synthesis (pandas, NumPy, requests, boto3), the majority deployment use case per elicitation A1, confirmed empirically [DATASET-D20]",
+      "recommendation": "Supplement HumanEval with DS-1000 [WEB-7] (1,000 problems across 7 data science libraries) and BigCodeBench [WEB-11] (1,140 tasks requiring multi-library function calls). Report scores side-by-side rather than substituting; the combined score is more deployment-predictive than either alone."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "All benchmark problems are context-free; the dominant real-world completion mode involves project-internal types, ORM models, and helper modules per elicitation A3",
+      "recommendation": "Add SWE-bench Verified [WEB-17] for repository-level evaluation and CrossCodeEval [WEB-20] for cross-file completion. Treat HumanEval pass@1 as a lower-bound 'algorithmic competence' floor and SWE-bench/CrossCodeEval scores as the deployment-relevant ceiling."
+    },
+    {
+      "dimension": "input_ontology",
+      "gap": "Zero coverage of class-method synthesis, despite elicitation confirming class hierarchies as a common deployment pattern; OOP benchmark [WEB-13] shows this is a genuine model weakness",
+      "recommendation": "Add the OOP benchmark (ACL Findings 2024) [WEB-13] and ClassEval to the evaluation suite. Expect substantially lower scores than HumanEval and weight them more heavily for enterprise codebases that are heavily class-based."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "Security hygiene (eval, shell injection, SQL injection, hardcoded secrets) and style conformance are enterprise acceptance criteria per elicitation A2 but absent from the scored output ontology; only RSA/AES patterns appear in appendix [Q204-Q210]",
+      "recommendation": "Add CyberSecEval [WEB-23] / CyberSecEval 2 [WEB-24] for security hygiene and CWEval [WEB-26] for simultaneous functionality+security evaluation. For style, integrate ruff/flake8/mypy checks into a custom test harness since no published style benchmark was identified."
+    },
+    {
+      "dimension": "input_ontology",
+      "gap": "No async/await pattern coverage despite elicitation confirming async I/O as a common deployment scenario; no public benchmark identified",
+      "recommendation": "Develop a custom async-Python evaluation suite covering FastAPI handlers, asyncio.gather patterns, async context managers, and async generators. Until that exists, treat HumanEval as silent on async correctness and supplement with code review of async completions in production."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "Zero domain-specific content for fintech, healthtech, or ML pipeline codebases — major enterprise segments confirmed in deployment context",
+      "recommendation": "Commission domain-specific micro-benchmarks: fintech (Decimal arithmetic, idempotency patterns, audit logging), healthtech (FHIR/HL7 parsing, PHI de-identification), and ML pipelines (pandas vectorization, shape assertions, reproducibility seeds). DS-1000 partially covers ML pipelines but does not cover boto3 orchestration, PySpark, or domain-regulated patterns."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_ontology",
+    "input_content"
+  ],
+  "strongest_dimensions": [
+    "input_form",
+    "output_form",
+    "output_content"
+  ]
+}

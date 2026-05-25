@@ -1,0 +1,504 @@
+name: US Defense and High-Reliability Systems Engineers
+abbreviation: us-defense-syseng
+assessment_context:
+  benchmark: FOLIO
+  tool_description: LLM-powered logical inconsistency detection tool for technical
+    specification documents (SRDs, subsystem specs, ICDs), producing natural-language
+    explanations with confidence grading.
+  deployment_country: United States
+  deployment_sector: Defense, aerospace, and complex infrastructure engineering
+target_population:
+  description: United States-based systems engineers working on defense and/or high-reliability
+    engineering programs. Likely concentrated in the aerospace, defense, and complex
+    critical infrastructure sectors. Users are domain experts who will critically
+    evaluate tool outputs against a high bar for actionability. They interact with
+    the tool in a professional capacity, reviewing hundreds of requirements across
+    multiple document types.
+  occupational_role: Systems engineer (including sub-specialties such as requirements
+    engineer, ICD author, integration and test engineer, chief engineer)
+  employment_context: Defense primes, Tier 1 and Tier 2 contractors, government agencies
+    (e.g., DoD program offices, NASA), and regulated infrastructure operators
+  sub_national_variation: None relevant — professional norms, standards vocabulary,
+    and document conventions are nationally uniform for this cohort; no regional linguistic
+    or cultural scoping required.
+  linguistic_profile:
+    primary_language: English (American)
+    register: Formal technical English; normalized requirements-language register
+      ('shall', 'should', 'is required to') per MIL-STD, IEEE, and INCOSE conventions
+    dialect_variation: None relevant
+    non_english_exposure: Minimal for tool interaction; some engineers may reference
+      translated allied-nation specs in multinational programs, but primary tool inputs
+      are English-language documents
+professional_standards_environment:
+  key_standards_frameworks:
+  - MIL-STD-499 (Systems Engineering)
+  - MIL-STD-810 (Environmental Engineering)
+  - MIL-STD-461 (EMC requirements)
+  - IEEE 15288 (Systems and Software Engineering — System Life Cycle Processes)
+  - INCOSE Systems Engineering Handbook
+  - Interface Control Document (ICD) conventions per applicable program/agency
+  standards_reference_note: Engineers routinely cite standards by number without restating
+    content. A tool operating in this environment must recognize that a requirement
+    like 'shall comply with MIL-STD-461F' carries implicit constraints that are not
+    spelled out in the document under analysis.
+  regulatory_regime: 'Primary acquisition regulation is the Defense Federal Acquisition
+    Regulation Supplement (DFARS). The CMMC (Cybersecurity Maturity Model Certification)
+    program — finalized via two rules: the CMMC Program Rule (32 C.F.R. Part 170,
+    effective December 16, 2024) and the CMMC Clause Rule (DFARS amendment, effective
+    November 10, 2025) — governs cybersecurity obligations for DoD contractors handling
+    FCI or CUI. Any tool that processes, stores, or transmits CUI on contractor information
+    systems must comply with NIST SP 800-171 (CMMC Level 2) or NIST SP 800-172 (CMMC
+    Level 3, for high-value CUI). CMMC is being phased into contracts over three years
+    starting November 10, 2025, with full applicability by November 9, 2028. Specification
+    documents in scope for the tool are very likely to constitute CUI (technical weapon
+    system data is a named CUI category), triggering at minimum CMMC Level 2 obligations.
+
+    Sources: CMMC Program Rule Federal Register [|https://www.federalregister.gov/documents/2024/10/15/2024-22905/cybersecurity-maturity-model-certification-cmmc-program|];
+    CMMC Clause Rule summary — Crowell & Moring [|https://www.crowell.com/en/insights/client-alerts/finally-the-cmmc-final-rule-dod-completes-cmmc-rulemaking-ushering-in-new-era-in-dod-cybersecurity|]'
+  classification_handling: 'Defense specification documents (SRDs, ICDs, subsystem
+    specs) are most commonly Controlled Unclassified Information (CUI) — specifically
+    Controlled Defense Information (CDI), a CUI subset. Some program-level specifications
+    may be classified. CUI handling requires compliance with NIST SP 800-171 as mandated
+    by DFARS 252.204-7012 and, under the new CMMC framework effective November 2025,
+    CMMC Level 2 certification for contractor information systems. Classified documents
+    are subject to additional handling restrictions outside the CMMC framework and
+    would typically require accredited classified processing environments, making
+    cloud-based LLM inference impermissible for those documents.
+
+    Source: DFARS 252.204-7012 and CMMC Clause Rule — Davis Wright Tremaine summary
+    [|https://www.dwt.com/blogs/privacy--security-law-blog/2025/09/defense-department-cybersecurity-cmmc-final-rule|]'
+  export_control_relevance: 'ITAR (22 C.F.R. Parts 120-130, administered by State/DDTC)
+    and EAR (15 C.F.R. Parts 730-774, administered by Commerce/BIS) both apply to
+    technical data embedded in defense specification documents. ITAR''s ''deemed export''
+    rule can apply when foreign nationals have potential access to ITAR-controlled
+    technical data — including through administrative access to cloud infrastructure
+    processing that data during LLM inference. Standard commercial cloud LLM APIs
+    are therefore legally risky for ITAR-controlled specification content unless the
+    cloud provider operates a FedRAMP High or ITAR-specific enclave with documented
+    U.S.-person-only infrastructure staffing. AI-generated outputs that synthesize
+    ITAR/EAR-controlled technical data may themselves be subject to export controls
+    regardless of whether the input documents are marked. No authoritative DDTC or
+    BIS guidance specific to LLM inference pipelines had been issued as of the search
+    date; this is an active policy gap.
+
+    Sources: Kiteworks ITAR/AI analysis [|https://www.kiteworks.com/regulatory-compliance/itar-ai-agents-compliance-gap/|];
+    Just Security AI export control analysis [|https://www.justsecurity.org/126643/ai-model-outputs-export-control/|]'
+document_types_in_scope:
+  primary_inputs:
+  - System Requirements Documents (SRDs / SRS)
+  - Subsystem specifications
+  - Interface Control Documents (ICDs)
+  - System-of-Systems specifications
+  - Concept of Operations (ConOps) documents
+  document_characteristics:
+    length: Multi-section, multi-thousand-word documents; individual specs may range
+      from dozens to hundreds of pages
+    cross_reference_density: High — requirements routinely reference other documents,
+      standards, and parent/derived requirement identifiers
+    vocabulary_register: Normalized modal language ('shall', 'should', 'will', 'is
+      required to'); tolerance expressions; unit conventions; interface parameter
+      tables
+    implicit_premise_prevalence: Pervasive — MIL-STD and IEEE references, unit and
+      tolerance conventions, bus protocol assumptions, and interface norms are treated
+      as shared background knowledge and not restated
+  token_length_estimates: 'A 250-page technical specification in structured text format
+    can exceed 60,000 tokens. Using the approximation of ~1.35 tokens per word for
+    technical documentation, a 50,000-word SRD/ICD pair yields roughly 67,500 tokens;
+    a more typical 20,000-word pair yields ~27,000 tokens. These estimates place multi-document
+    analysis well into the 32K–128K+ token range, requiring models with large context
+    windows. Note that even models advertising 128K-token windows may show degraded
+    reasoning quality at long contexts — research in 2025 found that accuracy nosedived
+    from ~95% to ~60% for several frontier models as input length grew. RAG (retrieval-augmented
+    generation) architectures may be needed to manage the largest document pairs.
+
+    Sources: Token estimation heuristics — DevToolKit.cloud [|https://www.devtoolkit.cloud/blog/llm-context-windows-explained-why-size-matters|];
+    Long-context accuracy degradation — ByteByteGo citing Chroma 2025 research [|https://blog.bytebytego.com/p/a-guide-to-context-engineering-for|]'
+  cross_document_reasoning_note: The primary use case is tracing a requirement in
+    a system-level SRD against a constraint in a subsystem spec or ICD. Within-document
+    inconsistencies are a secondary use case.
+contradiction_taxonomy:
+  crisp_contradictions:
+    description: Explicit numeric conflicts (e.g., temperature bound stated as ≤ 70°C
+      in one document and ≥ 85°C minimum operating temp in another)
+    deployment_priority: Lower — these are detectable without deep domain reasoning
+      and are often caught by manual review
+  latent_contradictions:
+    description: Conflicts that require domain knowledge to recognize — e.g., a timing
+      requirement incompatible with a bus bandwidth specification, or a power dissipation
+      assumption that violates a thermal budget stated in a separate subsystem spec
+    deployment_priority: High — these represent the highest-value targets and the
+      hardest benchmark gap; FOLIO has no analog
+    example_domains:
+    - Thermal budgets vs. power dissipation assumptions
+    - Timing margins vs. bus bandwidth constraints
+    - Signal integrity requirements vs. connector pin-count allocations
+    - Mass/volume allocations across subsystem specs
+    - Software timing requirements vs. hardware interrupt latency specs
+output_requirements:
+  required_output_form: Natural-language explanation citing the specific requirements
+    involved, the conflict mechanism, and a confidence grade
+  bare_classification_acceptability: Not acceptable — True/False/Unknown labels without
+    explanation are explicitly non-actionable for this population
+  uncertain_handling: An 'Uncertain' or low-confidence finding is acceptable only
+    if accompanied by a statement of what additional information (e.g., which referenced
+    standard's content, what interface parameter) would resolve the ambiguity. An
+    unexplained 'Uncertain' is treated as a tool failure.
+  triage_function: 'Confidence grading serves a triage function: engineers reviewing
+    hundreds of requirements need to prioritize high-confidence findings for immediate
+    action and lower-confidence findings for expert review.'
+user_expertise_profile:
+  domain_expertise_level: High — users hold engineering degrees and have deep working
+    knowledge of the standards, physical constraints, and interface conventions relevant
+    to their programs
+  logical_reasoning_familiarity: High for engineering reasoning; not necessarily high
+    for formal first-order logic notation or academic NLI framing
+  tolerance_for_false_positives: Low — spurious contradiction flags erode trust and
+    increase review burden; users will critically evaluate every finding
+  tolerance_for_false_negatives: Very low in safety-critical contexts — a missed latent
+    contradiction in a defense or aerospace program can have severe downstream consequences
+  evaluation_bar: Users will compare tool outputs against their own expert judgment;
+    tool credibility depends on producing actionable, traceable, technically accurate
+    explanations
+infrastructure_and_deployment_notes:
+  interface_modality: Text-only; no image, audio, or multimodal inputs relevant
+  document_ingestion: Multi-document simultaneous context is the primary architectural
+    requirement; single-document analysis is a subset case
+  connectivity_environment: 'For documents classified as CUI or higher, deployment
+    environments in cleared defense contractor facilities typically prefer or require
+    on-premises or private-cloud architectures. Standard commercial cloud APIs are
+    legally problematic for ITAR-controlled technical data unless hosted in a FedRAMP
+    High or ITAR-specific enclave with U.S.-person-only infrastructure staffing. Air-gapped
+    environments are standard for classified work. Unclassified/public-domain specifications
+    may be compatible with commercial cloud deployment, but program offices routinely
+    treat all program-specific specs as CUI by default, creating broad on-premises
+    pressure.
+
+    Sources: ITAR cloud enclave requirements — Kiteworks [|https://www.kiteworks.com/regulatory-compliance/itar-ai-agents-compliance-gap/|];
+    CMMC contractor system obligations — Holland & Knight [|https://www.hklaw.com/en/insights/publications/2025/11/cmmc-regulations-key-questions-and-answers-for-defense-contractors|]'
+  llm_deployment_model: 'On-premises or FedRAMP High / IL4-IL6 accredited private-cloud
+    deployment is required for any specification content classified as CUI or ITAR-controlled.
+    CMMC Level 2 requires that contractor information systems processing CUI meet
+    NIST SP 800-171 controls, and CMMC Level 3 (for high-value CUI) requires a DoD-conducted
+    assessment — both effectively preclude standard commercial LLM APIs for in-scope
+    documents. Military technology manufacturers that have deferred CMMC compliance
+    risk losing contract eligibility; C3PAO certification typically takes 9–18 months.
+    FedRAMP High or equivalent government-compliance certification from the LLM provider
+    is the minimum bar for cloud deployment of a tool ingesting CUI.
+
+    Sources: CMMC military tech compliance analysis — Kiteworks [|https://www.kiteworks.com/cmmc-compliance/military-technology-contractors/|];
+    CMMC Level structure — Davis Wright Tremaine [|https://www.dwt.com/blogs/privacy--security-law-blog/2025/09/defense-department-cybersecurity-cmmc-final-rule|]'
+  context_window_requirements: 'Large — multi-section technical documents require
+    context windows well beyond typical benchmark story lengths. A 250-page technical
+    specification in structured text can exceed 60,000 tokens; a typical SRD+ICD pair
+    of ~20,000 words totals roughly 27,000 tokens. Multi-document simultaneous analysis
+    of three or more documents can plausibly exceed 100,000–150,000 tokens. Models
+    must support at minimum 128K-token windows for the primary use case, and RAG architectures
+    may be required for the largest document sets. Effective reasoning quality — not
+    just technical context support — at these lengths is a separate and harder requirement;
+    recent benchmarks show quality degradation well before the advertised context
+    limit is reached.
+
+    Sources: 250-page spec token estimate — DevToolKit.cloud [|https://www.devtoolkit.cloud/blog/llm-context-windows-explained-why-size-matters|];
+    Quality degradation at long contexts — ByteByteGo [|https://blog.bytebytego.com/p/a-guide-to-context-engineering-for|]'
+benchmark_validity_considerations:
+  dimension_priority_weights:
+    IO:
+      priority: HIGH
+      rationale: 'FOLIO''s closed-world, fully explicit premise sets are structurally
+        opposite to the deployment''s core challenge: implicit premises drawn from
+        referenced standards and shared engineering conventions.'
+    IC:
+      priority: HIGH
+      rationale: FOLIO's domain-neutral, logically clean puzzles do not probe the
+        physics- and systems-engineering-grounded inference (thermal, timing, bandwidth)
+        that represents the deployment's highest-value targets.
+    IF:
+      priority: LOWER
+      rationale: 'Both benchmark and deployment are text-only English; no modality
+        or script mismatch. Minor mismatch in text length and register (FOLIO: short,
+        ambiguity-free narratives; deployment: long-form normalized requirements language).'
+    OO:
+      priority: HIGH
+      rationale: 'FOLIO''s three-way label taxonomy is fundamentally misaligned with
+        the deployment''s required output: a natural-language explanation of the conflict
+        mechanism paired with a confidence grade.'
+    OC:
+      priority: MODERATE
+      rationale: FOLIO annotators are CS students with FOL expertise, not systems
+        engineers. Ground-truth labels reflect logical provability from stated premises,
+        not whether a practicing engineer would recognize a latent domain-convention
+        conflict.
+    OF:
+      priority: HIGH
+      rationale: FOLIO evaluates isolated single-premise-set/conclusion pairs. The
+        deployment's primary use case — cross-document reasoning across multiple long-form
+        technical documents simultaneously — has no analog in the benchmark.
+  flagged_gaps_for_web_search:
+  - gap_id: 1
+    label: Implicit-premise reasoning
+    description: FOLIO contains no examples where relevant premises must be inferred
+      from external standards or domain conventions. The deployment's core difficulty
+      is exactly this open-world inference.
+    search_targets:
+    - open-world NLI benchmark implicit premise legal regulatory technical document
+    - statutory reference reasoning benchmark NLI law
+    - requirement traceability NLP implicit assumption detection
+    search_findings: 'The closest existing benchmarks involve legal document NLI rather
+      than technical specification reasoning. ContractNLI (Koreeda & Manning, 2021)
+      is a document-level NLI benchmark for contract review that explicitly involves
+      ''implicit knowledge and defaults'' and cross-section dependency — the closest
+      structural analog found. LawngNLI (arXiv 2212.03222) provides long-premise NLI
+      from U.S. legal opinions. LegalBench (HazyResearch) includes contract_nli tasks.
+      These legal-domain benchmarks share the structural feature of implicit domain-convention
+      premises but differ in domain from defense engineering. No benchmark was found
+      that specifically targets open-world implicit-premise inference in the MIL-STD/IEEE
+      technical specification register. This is a confirmed gap with no off-the-shelf
+      substitute.
+
+      Sources: ContractNLI overview — EmergentMind [|https://www.emergentmind.com/topics/contractnli|];
+      LawngNLI — arXiv [|https://arxiv.org/abs/2212.03222|]; LegalBench — GitHub [|https://github.com/HazyResearch/legalbench|]'
+  - gap_id: 2
+    label: Domain-specific latent contradiction detection
+    description: FOLIO's puzzles are deliberately domain-neutral and logically clean.
+      No evidence exists in the metadata that it probes the kind of multi-hop, physics-
+      or systems-engineering-grounded inference (thermal budgets, timing margins,
+      bandwidth constraints) that represents the deployment's highest-value targets.
+    search_targets:
+    - engineering domain reasoning benchmark systems requirements NLP
+    - ScienceQA technical specification contradiction detection
+    - FOLIO accuracy correlation engineering reasoning
+    search_findings: 'Two adjacent lines of work were found but neither directly fills
+      the gap. (1) A 2025 arXiv paper (arXiv 2503.14130) introduces a small dataset
+      for LLM-based requirement verification in early space mission design (lunar
+      base, Hubble Space Telescope), using Capella MBSE models. It demonstrates LLM-based
+      requirement satisfaction checking achieving 100% precision on two architectures,
+      but the dataset is tiny and focuses on satisfaction rather than cross-document
+      contradiction. The paper explicitly notes ''benchmarking is difficult due to
+      the lack of standardized datasets.'' (2) A SAT-solver-based approach for consistency
+      checking in DO-178C aviation high-level requirements (arXiv 1510.02669) formalizes
+      requirements into logical expressions, but is not an NLP/LLM benchmark. SysMBench
+      (arXiv 2508.03215) benchmarks SysML model generation from NL requirements but
+      not contradiction detection. No benchmark was found that probes latent physics/engineering
+      constraint contradictions across multi-document defense specifications. This
+      is a confirmed full gap.
+
+      Sources: Space mission requirement verification dataset — arXiv [|https://arxiv.org/abs/2503.14130|];
+      SAT-solver avionics requirements — arXiv [|https://arxiv.org/abs/1510.02669|];
+      SysMBench — arXiv [|https://arxiv.org/abs/2508.03215|]'
+  - gap_id: 3
+    label: Cross-document multi-context reasoning
+    description: FOLIO is structurally a single-context benchmark. The deployment's
+      central requirement — tracing a requirement in a system spec against a constraint
+      buried in an ICD — has no analog in FOLIO.
+    search_targets:
+    - multi-document NLI long-context consistency benchmark
+    - cross-document reasoning QASPER contract requirements traceability
+    - SCROLLS long-context NLI evaluation
+    search_findings: 'Several benchmarks now target multi-document and long-context
+      reasoning, but none are specific to engineering specification cross-document
+      consistency. DocNLI (Yin et al., 2021) and ConTRoL (Liu et al., 2020) provide
+      document-length NLI. MDBench (arXiv 2506.14927) is a new synthetic multi-document
+      reasoning benchmark specifically designed to evaluate reasoning characteristics
+      prominent in multi-document settings, noting ''a scarcity of benchmarks that
+      rigorously examine the specific reasoning characteristics'' of this setting.
+      LongBench v2 (arXiv 2412.15204) covers multi-document tasks with median 54K-word
+      contexts. PRELUDE (arXiv 2508.09848) requires aggregating evidence scattered
+      across long contexts with global dependencies. These benchmarks are useful proxies
+      for long-context cross-document reasoning capability, but none involve engineering
+      specification documents, requirements-language register, or cross-document contradiction
+      detection specifically. They can be used as partial proxies for OF-dimension
+      assessment.
+
+      Sources: MDBench — arXiv [|https://arxiv.org/abs/2506.14927|]; LongBench v2
+      — arXiv [|https://arxiv.org/abs/2412.15204|]; PRELUDE — arXiv [|https://arxiv.org/abs/2508.09848|]'
+  - gap_id: 4
+    label: Natural-language explanation quality vs. classification accuracy
+    description: FOLIO measures only classification accuracy. The deployment requires
+      fluent, technically accurate explanations of conflict mechanisms suitable for
+      expert review.
+    search_targets:
+    - LLM contradiction explanation quality evaluation natural language rationale
+    - correlation FOLIO classification accuracy explanation generation quality
+    - NLI explanation faithfulness evaluation benchmark
+    search_findings: 'Active research area but no FOLIO-specific correlation study
+      found. Key relevant work: (1) FaithLM (arXiv 2402.04678) proposes an evaluator
+      to quantify faithfulness of natural-language explanations from LLMs and shows
+      iterative optimization can improve alignment. (2) A causal diagnosticity framework
+      (arXiv 2502.18848) finds that ''all tested faithfulness metrics often fail to
+      surpass a random baseline,'' flagging a fundamental measurement challenge for
+      explanation quality. (3) ''Faithfulness Tests for Natural Language Explanations''
+      (Atanasova et al., ACL 2023) and ''The Probabilities Also Matter'' (Siegel et
+      al., ACL 2024) represent current methodological state-of-the-art for evaluating
+      NLI rationale faithfulness. (4) A 2025 arXiv paper introduces reconciliatory
+      explanation generation for contradictions across 18 LLMs, finding ''most models
+      achieve limited success'' — directly relevant to the deployment''s explanation
+      requirement. No study specifically correlates FOLIO classification accuracy
+      with explanation generation quality. This remains a full gap; the broader faithfulness
+      literature confirms that high classification accuracy does not imply faithful
+      or high-quality explanations.
+
+      Sources: FaithLM — arXiv [|https://arxiv.org/abs/2402.04678|]; Causal faithfulness
+      diagnostics — arXiv [|https://arxiv.org/abs/2502.18848|]; Contradiction explanation
+      generation — arXiv [|https://arxiv.org/abs/2603.22735|]'
+  - gap_id: 5
+    label: MIL-STD / IEEE / requirements-language vocabulary
+    description: FOLIO vocabulary is general-purpose narrative English. Defense and
+      aerospace specifications use a stylized, normalized register with modal verbs
+      and standards identifiers.
+    search_targets:
+    - requirements language NLP benchmark NASA DoD INCOSE
+    - shall should specification reasoning evaluation NLP
+    - systems engineering NLP dataset requirements verification
+    search_findings: 'No dedicated benchmark for MIL-STD/IEEE requirements-language
+      NLP was found. Adjacent work includes: (1) An IEEE RE 2023 paper on ''Inconsistency
+      Detection in Natural Language Requirements using ChatGPT'' (cited in practitioner
+      blog, source: medium.com/@dsobczynski88). (2) Domain-adapted language models
+      SpaceBERT and AeroBERT are cited as early NLP work for aerospace/space requirements
+      but do not constitute contradiction-detection benchmarks. (3) The INCOSE Guide
+      to Writing Requirements provides the normative ''shall/should'' framework but
+      has no associated NLP evaluation dataset. (4) GPT-4.0 has been evaluated for
+      inconsistency detection in regulatory documents (arXiv 2412.20602), showing
+      effectiveness on artificially injected contradictions in building regulations,
+      but not defense specifications. The ''shall/should'' modal distinction is well-documented
+      in IEEE 15288 and INCOSE standards but is absent from all NLP benchmarks found.
+      This is a confirmed full gap.
+
+      Sources: NLP requirements inconsistency ChatGPT — IEEE RE 2023 (cited in [|https://medium.com/@dsobczynski88/applying-nlp-and-ai-to-improve-quality-of-software-requirement-statements-using-incose-guide-to-bd57ce2db14f|]);
+      GPT-4 regulatory inconsistency — arXiv [|https://arxiv.org/abs/2412.20602|];
+      Space mission requirements NLP — arXiv [|https://arxiv.org/abs/2503.14130|]'
+  - gap_id: 6
+    label: Confidence calibration and actionable uncertainty
+    description: FOLIO's Unknown label reflects formal undecidability, not the deployment's
+      notion of uncertainty (missing referenced standard content, unresolved interface
+      parameter). No mechanism to assess whether uncertainty outputs are accompanied
+      by resolution guidance.
+    search_targets:
+    - LLM calibration uncertainty explanation benchmark
+    - confidence grading natural language generation evaluation
+    - actionable uncertainty NLI output requirements engineering
+    search_findings: '[NEEDS VERIFICATION — deferred: below search budget; the faithfulness
+      literature searched under gap_id 4 partially addresses this — the finding that
+      LLM explanations are often unfaithful to actual model reasoning implies that
+      confidence grades may also be poorly calibrated — but no benchmark specifically
+      evaluating actionable uncertainty explanations in an engineering context was
+      found.]'
+  - gap_id: 7
+    label: Long-form document input handling (multi-section, multi-thousand-word specifications)
+    description: FOLIO documents reasoning depth up to seven hops and readability
+      distribution, but examples are short self-contained stories. No evaluation of
+      long-context or multi-section document inputs exists.
+    search_targets:
+    - long-context NLI reasoning benchmark multi-section document consistency LLM
+      evaluation SCROLLS
+    search_findings: See gap_id 3 findings. Long-context benchmarks (LongBench v2,
+      PRELUDE, MDBench) exist and are relevant proxies but none target engineering
+      specification documents. The token-length analysis in infrastructure_and_deployment_notes
+      above confirms that multi-document SRD+ICD pairs will routinely require 27K–100K+
+      token windows, placing them in a regime where current LLMs show documented accuracy
+      degradation.
+cultural_and_professional_norms_notes: '- Engineers in this cohort are trained to
+  treat ''shall'' as a binding contractual requirement and ''should'' as a recommendation;
+  the tool must respect this modal distinction in its reasoning and outputs.
+
+  - Program-specific terminology and acronym conventions vary by platform and prime
+  contractor; the tool must handle undefined acronyms gracefully.
+
+  - Defense program culture values traceability: every finding should cite specific
+  requirement identifiers (e.g., ''REQ-SYS-0042 in the SRD conflicts with ICD-PWR-007
+  Section 3.2.1'').
+
+  - Engineers are skeptical of AI-generated outputs and will not adopt tools that
+  produce unexplained or poorly-calibrated results; trust is earned incrementally.
+
+  - Organizational security culture may create friction for cloud-based tool deployment;
+  on-premises or air-gapped deployment preferences are common in cleared facilities.'
+domain_specific_assessment_notes: '- The benchmark (FOLIO) was designed for closed-world,
+  domain-neutral logical reasoning. Its structural assumptions are nearly the inverse
+  of this deployment''s requirements on all high-priority dimensions (IO, IC, OO,
+  OF).
+
+  - FOLIO accuracy scores should be treated as a weak lower-bound proxy for general
+  logical reasoning capability, not as a predictive measure of deployment performance.
+
+  - Supplementary benchmarks targeting implicit-premise reasoning, long-context consistency,
+  and natural-language explanation quality are needed to fill the gap. The closest
+  available proxies identified by search are: ContractNLI and LawngNLI for implicit-premise
+  document NLI (legal domain); MDBench and LongBench v2 for multi-document long-context
+  reasoning; and the contradiction explanation generation literature (arXiv 2603.22735)
+  for output quality evaluation.
+
+  - No benchmark was found that directly targets latent contradiction detection in
+  defense/aerospace engineering specification documents. The space-mission requirement
+  verification dataset (arXiv 2503.14130) is the nearest domain-adjacent work but
+  is small and not focused on cross-document contradictions.
+
+  - Any evaluation of this tool must ultimately include domain-expert review by practicing
+  systems engineers who can assess whether latent contradictions are correctly identified
+  and whether explanations are technically accurate and actionable.
+
+  - The CMMC/CUI/ITAR regulatory environment (resolved above) materially constrains
+  deployment architecture: on-premises or FedRAMP High cloud deployment is the practical
+  requirement for this cohort, ruling out standard commercial LLM API access for the
+  documents in scope.'
+net_new_fields:
+  adjacent_benchmarks_identified:
+  - name: ContractNLI
+    relevance_dimension: IO, IC
+    description: Document-level NLI benchmark for contract review; involves implicit
+      knowledge and defaults, cross-section dependency, and dense cross-referencing.
+      Closest structural analog to implicit-premise reasoning in technical specifications,
+      though in a legal rather than engineering domain.
+    source: 'EmergentMind overview — [|https://www.emergentmind.com/topics/contractnli|];
+      original paper: Koreeda & Manning, 2021'
+  - name: LawngNLI
+    relevance_dimension: IF, OF
+    description: Long-premise NLI from U.S. legal opinions; premises are especially
+      long and multigranular, providing a proxy for long-context NLI performance.
+      Labels derived from negation-based contradiction and similarity-based neutralization
+      algorithms, validated at 88.8% accuracy.
+    source: arXiv — [|https://arxiv.org/abs/2212.03222|]
+  - name: MDBench
+    relevance_dimension: OF
+    description: Synthetic multi-document reasoning benchmark (2025) specifically
+      targeting reasoning characteristics prominent in multi-document settings, with
+      built-in validity checks for inconsistent examples. A useful proxy for the deployment's
+      cross-document reasoning requirement.
+    source: arXiv — [|https://arxiv.org/abs/2506.14927|]
+  - name: Space Mission Requirement Verification Dataset
+    relevance_dimension: IC
+    description: Small dataset (lunar base design + Hubble Space Telescope) for LLM-based
+      requirement verification using Capella MBSE models; achieves 100% precision
+      on two architectures. Closest domain-adjacent benchmark found, but covers satisfaction
+      checking rather than cross-document contradiction detection, and lacks scale.
+    source: arXiv 2503.14130 — [|https://arxiv.org/abs/2503.14130|]
+  - name: LongBench v2
+    relevance_dimension: OF
+    description: Long-context multitask benchmark with median 54K-word documents;
+      human experts achieve only 53.7% accuracy, and the best models reach ~57.7%
+      with extended reasoning. Useful for assessing whether a model can reliably reason
+      across document lengths typical of multi-document SRD+ICD analysis.
+    source: arXiv 2412.15204 — [|https://arxiv.org/abs/2412.15204|]
+  explanation_faithfulness_research_note: 'Current research (ACL 2023, ACL 2024, arXiv
+    2502.18848) shows that LLM natural-language explanations are frequently unfaithful
+    to the model''s actual reasoning, and that all tested faithfulness metrics often
+    fail to surpass a random baseline. This is a direct validity concern for the deployment''s
+    core requirement: confident-seeming natural-language explanations of contradiction
+    mechanisms may not reflect the model''s actual inferential path. Human expert
+    validation by practicing systems engineers is not merely preferable but methodologically
+    necessary for any deployment evaluation.
+
+    Sources: Causal faithfulness diagnostics — arXiv [|https://arxiv.org/abs/2502.18848|];
+    ACL 2024 faithfulness trends — LG AI Research [|https://www.lgresearch.ai/blog/view?seq=485|]'
+  requirements_nlp_benchmarking_gap_note: 'As of the search date (May 2025), no standardized
+    NLP benchmark dataset exists specifically for defense or aerospace requirements-language
+    reasoning (''shall''/''should'' modal semantics, MIL-STD/IEEE implicit premise
+    resolution, cross-ICD contradiction detection). This was independently confirmed
+    by the space mission requirement verification paper (arXiv 2503.14130), which
+    notes ''benchmarking is difficult due to the lack of standardized datasets.''
+    This gap is itself an important finding for the assessment: FOLIO''s inadequacy
+    as a proxy cannot be remedied by substituting an existing engineering-domain benchmark,
+    because no such benchmark exists. Evaluation must rely on human expert review
+    and purpose-built test suites constructed from real or synthetic defense specification
+    documents.
+
+    Source: arXiv 2503.14130 — [|https://arxiv.org/abs/2503.14130|]'

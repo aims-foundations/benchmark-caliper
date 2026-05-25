@@ -1,0 +1,246 @@
+name: US Undergraduate Introductory Logic Course — Automated Validity Checker
+abbreviation: us_undergrad_intro_logic
+benchmark: folio
+assessment_slug: us-undergrad-intro-logic_folio
+population:
+  description: 'US university undergraduates enrolled in introductory formal reasoning
+    or symbolic logic courses. Students have no assumed prior background in formal
+    logic. They interact with the system through a logic-checking tool that accepts
+    natural-language arguments and returns one of three classification labels: valid,
+    invalid, or indeterminate. The tool is intended as a pedagogical aid aligned to
+    a specific course rubric.'
+  institution_type: US four-year university (undergraduate)
+  course_context: Introductory formal logic / critical reasoning course, modeled on
+    Hurley's Concise Introduction to Logic. First half covers propositional logic
+    (connectives, truth tables, basic argument forms); second half covers first-order
+    predicate logic (quantifiers, basic predicate structure). Strictly classical deductive
+    logic throughout; modal, temporal, and probabilistic reasoning are not in scope.
+  prior_domain_knowledge: None assumed. Students are novice-level reasoners encountering
+    formal logic for the first time. They are not expected to know FOL notation, proof
+    theory, or technical semantics.
+  role_in_system: End users submitting natural-language logic problems drawn from
+    a course packet; receiving automated validity classifications as feedback or grading
+    support.
+  demographic_variation: Not a primary concern. The population is functionally uniform
+    in language (English, monolingual academic register) and educational context.
+    No sub-national, ethnic, or socioeconomic segmentation is identified as salient
+    for this assessment.
+language:
+  primary: English
+  variant: US academic English
+  script: Standard Latin alphabet
+  register_notes: Dominant input register is syntactically controlled, pedagogically
+    stylized English derived from Hurley-style course-packet templates (e.g., 'All
+    A are B,' 'If P then Q,' 'Some A is not B'). Natural-language paraphrases are
+    introduced later in the course but remain a secondary register. FOLIO's naturalistic,
+    annotator-composed prose is a distinct and more varied register than the deployment's
+    primary input style.
+  nli_tooling_availability: Strong — English is the dominant language for NLP/NLI
+    tooling; no resource gaps.
+input_ontology:
+  logical_scope:
+    propositional_logic: First-half course content. Connectives (negation, conjunction,
+      disjunction, conditional, biconditional), truth tables, basic valid argument
+      forms (modus ponens, modus tollens, hypothetical syllogism, disjunctive syllogism,
+      etc.). No quantifiers.
+    first_order_predicate_logic: Second-half course content. Universal and existential
+      quantifiers, basic predicate structure, syllogistic forms, combinations of quantifiers
+      with connectives. Matches FOLIO's primary logical scope.
+    excluded: Modal logic, temporal logic, probabilistic reasoning, inductive reasoning,
+      informal fallacies (unless recast as formal arguments).
+  folio_coverage_of_propositional_logic: '[NEEDS VERIFICATION — FOLIO documentation
+    does not describe a quantifier-free or propositional-only subset; the entire dataset
+    appears built around predicate-level FOL structures. Verify whether any FOLIO
+    examples are quantifier-free.]'
+  reasoning_depth_profile: Introductory course problems are typically shallow (1–3
+    reasoning steps). FOLIO's design peaks at 4-step reasoning depth with 28.7% of
+    examples requiring 5+ steps — substantially deeper than the deployment target.
+    This mismatch may inflate apparent difficulty relative to course-representative
+    inputs.
+  template_style_coverage_in_folio: '[NEEDS VERIFICATION — Investigate whether FOLIO''s
+    HybLogic pipeline or any related FOL benchmark explicitly samples from formal-logic
+    textbook problem styles resembling Hurley-style templates.]'
+output_ontology:
+  deployment_label_schema:
+    valid: Premises deductively entail the conclusion.
+    invalid: 'Premises entail the negation of the conclusion. Strict definition: not
+      merely failure to entail, but positive entailment of the negation.'
+    indeterminate: Premises are consistent with both the conclusion and its negation
+      — neither entailment nor contradiction. Undecidable formulas are not in scope.
+  folio_label_schema:
+    'True': Conclusion follows from premises (inference engine returns True).
+    'False': Inference engine returns False — semantics of 'False' label not explicitly
+      documented as distinguishing 'negation provably entailed' from 'conclusion merely
+      fails to follow'.
+    Unknown: Inference engine returns neither True nor False given the premises.
+  label_mapping_concerns:
+    valid_to_True: Conceptually aligned. Both require deductive entailment of the
+      conclusion from premises.
+    invalid_to_False: 'PARTIAL ALIGNMENT — The course''s ''invalid'' strictly requires
+      premises to entail the negation of the conclusion. FOLIO''s ''False'' label
+      may or may not preserve this distinction. [NEEDS VERIFICATION — Confirm FOLIO''s
+      exact annotation protocol for the False category: does the FOL prover confirm
+      entailment of the negation, or merely the absence of entailment of the conclusion?]'
+    indeterminate_to_Unknown: Conceptual alignment is plausible. FOLIO's Unknown is
+      defined as the inference engine returning neither True nor False. The course's
+      indeterminate is defined as premises consistent with both conclusion and its
+      negation. [NEEDS VERIFICATION — Determine whether FOLIO's Unknown category ever
+      includes undecidable formulas, and whether the deployment's exclusion of undecidability
+      creates a residual mismatch.]
+  label_distribution_in_folio_test_set:
+    'True': 87
+    'False': 78
+    Unknown: 61
+    majority_baseline_pct: 38.5
+    unknown_share_pct: '[NEEDS VERIFICATION — confirm computed share ~27% and whether
+      this matches the course''s expected indeterminate problem rate]'
+  model_performance_on_false_and_unknown: FOLIO confusion matrix analysis shows False
+    and Unknown accuracy at only 61.9% (fine-tuning) and 54.0% (few-shot prompting)
+    — substantially below True accuracy. This is a high-priority reliability concern
+    for the deployment's indeterminate and invalid categories.
+input_content:
+  deployment_source: Custom course packet modeled on Hurley's Concise Introduction
+    to Logic. Problems feature heavily templated sentence forms (e.g., 'All A are
+    B,' 'If P then Q,' 'Some A is not B'). Natural-language paraphrases appear later
+    in the term but are secondary.
+  folio_source_pipelines:
+    WikiLogic: Annotators wrote original stories from scratch using Wikipedia pages
+      as creative seeds, explicitly without templates. Yields naturalistic, topic-diverse
+      prose — substantially different register from Hurley-style templates.
+    HybLogic: Syllogistic logical templates were generated and instantiated with human-authored
+      natural-language fillers. Logically closer in spirit to course-packet forms
+      but still uses naturalistic prose instantiation rather than bare syntactic templates.
+  register_mismatch_severity: HIGH — FOLIO explicitly avoided bare template-style
+    generation (WikiLogic pipeline) and adds epistemic qualifiers to generalizations
+    and naturalistic disjunction phrasing — all differing from deployment's unqualified
+    Hurley-style templates.
+  potential_llm_training_data_overlap: WikiLogic examples may overlap with LLM pretraining
+    data, which could inflate apparent model performance on those examples relative
+    to held-out course-packet inputs.
+input_form:
+  modality: Text only
+  script: Standard Latin alphabet
+  format: Structured natural-language premises and conclusions
+  language_naturalness: 'FOLIO: grammar-checked, naturalness-reviewed by English Literature
+    annotators, NL ambiguity minimized. Deployment: syntactically controlled pedagogical
+    templates, not naturalistic prose.'
+  modality_mismatch: None — both benchmark and deployment are text-only English. Surface-form
+    concern is register (naturalistic prose vs. pedagogical templates), not modality.
+  readability_complexity: '[NEEDS VERIFICATION — FOLIO uses Dale-Chall readability
+    formula; verify mean readability score and compare to expected complexity of introductory
+    course-packet problems, which are likely simpler.]'
+output_form:
+  deployment_output: 'Categorical label from fixed three-item set: valid / invalid
+    / indeterminate'
+  folio_primary_metric: Accuracy (categorical label from True / False / Unknown)
+  form_match: Well-matched — both benchmark and deployment produce a single categorical
+    label from a fixed small set. Output form is not a priority concern.
+  secondary_folio_metrics: NL-FOL translation metrics (SynV, ExcAcc) — not relevant
+    to the deployment's primary reasoning task evaluation.
+  primary_evaluation_metric: Accuracy, reported per label class (critical given label
+    imbalance and known model bias toward True predictions)
+output_content:
+  folio_annotation_quality: Expert-annotated by CS undergraduate and graduate students
+    and senior researchers with formal FOL training. Six-stage annotation process,
+    980 person-hours. Separate NL and FOL expert quality checks. All labels FOL-engine
+    verified. Expert human accuracy 95.98%.
+  label_reliability_strengths: Strong for True (valid) cases where entailment is clear.
+    FOL-engine verification provides proof-theoretic grounding.
+  label_reliability_concerns: The strict deployment definition of 'invalid' (entailment
+    of negation) may not be preserved in FOLIO's False label. [NEEDS VERIFICATION
+    — see output_ontology.label_mapping_concerns.invalid_to_False]
+  annotator_population_match: FOLIO annotators are expert FOL-trained academics, appropriate
+    for generating reliable ground-truth labels. They do not represent the novice-student
+    production norms of the deployment population, but this is expected and not a
+    concern for ground-truth label quality.
+  premise_ordering_bias: Confirmed absent — shuffling premises changes accuracy by
+    less than 1%, indicating no spurious ordering cues in FOLIO labels.
+pedagogical_context:
+  textbook_reference: Hurley, P. J., Concise Introduction to Logic (various editions)
+  typical_problem_forms:
+  - All A are B.
+  - Some A is not B.
+  - If P then Q.
+  - Either P or Q.
+  - No A is B.
+  - Some A is B.
+  - P if and only if Q.
+  rubric_definitions:
+    valid: Premises deductively entail the conclusion; truth of premises guarantees
+      truth of conclusion.
+    invalid: Premises entail the negation of the conclusion (not merely failure to
+      entail — positive entailment of negation required).
+    indeterminate: Premises are consistent with both the conclusion and its negation;
+      no entailment in either direction.
+  course_structure_implications_for_benchmark: The course's first half (propositional
+    logic) is not covered by FOLIO's documented scope. Benchmark results will be informative
+    only for the second half (FOL). A tool assessment using FOLIO alone will systematically
+    undertest propositional-logic performance.
+flagged_verification_targets:
+- id: FV1
+  priority: HIGH
+  label: FOLIO False-label annotation protocol
+  question: Does FOLIO's 'False' label strictly require that the FOL prover confirms
+    entailment of the negation of the conclusion, or can it also apply when the conclusion
+    merely fails to follow (negation-as-failure)? Verify the exact proving pipeline
+    semantics for the False label.
+  search_target: FOLIO false label annotation protocol entailment negation vs failure
+    to entail FOL prover semantics
+- id: FV2
+  priority: HIGH
+  label: FOLIO propositional logic coverage
+  question: What proportion of FOLIO examples are quantifier-free or propositional-only?
+    Is there any documented propositional subset or split?
+  search_target: FOLIO propositional logic subset quantifier-free examples benchmark
+    coverage
+- id: FV3
+  priority: HIGH
+  label: Hurley-style template register in FOL benchmarks
+  question: Does FOLIO or any related FOL benchmark explicitly sample from formal-logic
+    textbook problem styles (Hurley-style bare templates)? Are there supplementary
+    datasets that better represent this register?
+  search_target: FOL benchmark textbook-style templated sentences Hurley logic course
+    evaluation
+- id: FV4
+  priority: MODERATE
+  label: FOLIO Unknown/indeterminate class distribution and course base rate
+  question: Confirm FOLIO Unknown class share (~27% of test set). Investigate whether
+    the course's expected indeterminate problem distribution differs substantially,
+    and whether this mismatch would distort accuracy metrics for the indeterminate
+    category.
+  search_target: FOLIO unknown indeterminate class distribution base rate logic benchmark
+    three-way classification
+- id: FV5
+  priority: MODERATE
+  label: FOLIO Unknown label and undecidability
+  question: Does FOLIO's Unknown category ever include undecidable formulas? The course
+    explicitly excludes undecidable cases from its indeterminate category; any residual
+    inclusion in FOLIO could introduce label misalignment.
+  search_target: FOLIO unknown label undecidable formulas inference engine semantics
+- id: FV6
+  priority: LOWER
+  label: FOLIO Dale-Chall readability score vs. course-packet complexity
+  question: What is the mean Dale-Chall readability score for FOLIO examples, and
+    how does it compare to the expected reading complexity of introductory logic course-packet
+    problems?
+  search_target: FOLIO Dale-Chall readability score distribution introductory logic
+    textbook complexity
+dimension_priority_summary:
+  IC: HIGH — Register mismatch between FOLIO's naturalistic annotator-composed prose
+    and the deployment's Hurley-style syntactically controlled templates is the primary
+    input-content concern. May inflate or deflate apparent model capability on course-representative
+    inputs.
+  OO: HIGH — FOLIO's True/False/Unknown schema does not map straightforwardly onto
+    the course's valid/invalid/indeterminate rubric, particularly for 'invalid' (strict
+    entailment-of-negation requirement). Label-mapping ambiguity must be resolved
+    before benchmark scores can be interpreted.
+  IO: MODERATE — FOLIO's FOL scope aligns with the course's second half, but the complete
+    absence of a propositional-only subset creates a systematic coverage gap for the
+    first half of the course.
+  OC: MODERATE — Expert annotation quality is high, but even individually correct
+    FOLIO labels may be systematically misaligned with the course rubric's stricter
+    'invalid' definition.
+  IF: LOWER — No modality or script mismatch; both are English text, standard Latin
+    alphabet.
+  OF: LOWER — Both benchmark and deployment use a fixed categorical label from a small
+    set; output form is well-matched.

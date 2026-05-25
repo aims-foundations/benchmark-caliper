@@ -1,0 +1,1 @@
+We are a US educational platform building a tool for American logic students. The tool should not only determine whether a logical argument is valid but also explain why — producing step-by-step reasoning traces that students can follow. We need to evaluate the LLM's ability to both perform logical reasoning and articulate its reasoning process in a pedagogically clear way.

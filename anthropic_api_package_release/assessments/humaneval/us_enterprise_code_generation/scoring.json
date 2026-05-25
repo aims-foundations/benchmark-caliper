@@ -1,0 +1,416 @@
+{
+  "benchmark": "humaneval",
+  "region": "US Enterprise Software Architects — Full-Stack Scaffolding Generation",
+  "dimensions": {
+    "input_ontology": {
+      "score": 1,
+      "justification": "HumanEval's task taxonomy is confined entirely to standalone Python function synthesis assessing 'language comprehension, reasoning, algorithms, and simple mathematics' [Q22]. The deployment requires four structurally distinct artifact categories (DB schema, API routes, frontend stubs, IaC) that are wholly absent from the benchmark. The paper itself acknowledges that GitHub code includes 'class implementations, configuration files, scripts, and even files used to store data' that are underrepresented [Q48], and that current synthesis capabilities only address 'tightly specified, constrained problem instances' [Q151]. Empirical sampling confirms zero examples of SQL, ORM, REST, frontend, or IaC content across the dataset.",
+      "strengths": [
+        "The benchmark does test isolated Python function synthesis with typed signatures, which corresponds to one narrow sub-component (utility helper functions inside FastAPI/SQLAlchemy code) of the broader scaffolding task [Q22, DATASET-D2]."
+      ],
+      "checklist_responses": {
+        "IO-1": "Required categories for the deployment: (a) SQL DDL / SQLAlchemy ORM model generation, (b) FastAPI/Spring Boot route handlers with Pydantic/DTO schemas, (c) React/Next.js/Angular component stubs in TypeScript, (d) Dockerfile/Kubernetes/Terraform IaC. None of these are represented in the benchmark's taxonomy.",
+        "IO-2": "Yes — the benchmark omits all four deployment-required categories. The paper explicitly scopes itself to 'producing functionally correct code bodies from natural language docstrings' [Q130] and characterizes coverage as algorithms/math [Q22]. Empirical sampling found 0/40 examples covering any required category.",
+        "IO-3": "Yes — competitive-programming puzzle problems (Tribonacci sequences, palindromic 'flying objects', polynomial root finding) consume the entire taxonomy without bearing on enterprise scaffolding. Appendix-D extensions to bias [Q185-Q188] and cryptographic API misuse [Q204-Q205] are partially relevant (security patterns) but still confined to single-function Python.",
+        "IO-4": "Gaps that harm content validity: complete absence of multi-artifact scaffolding, no framework-idiom categories, no IaC categories, no cross-layer entity-modeling tasks. DevBench [WEB-12] is the nearest available analog and itself reveals LLMs fail repository-level multi-stage tasks."
+      },
+      "evidence_quotes": [
+        "[Q22] 'Programming tasks in the HumanEval dataset assess language comprehension, reasoning, algorithms, and simple mathematics.' (p.4)",
+        "[Q46] 'Most of the APPS tests problems are not formulated as single-function synthesis tasks, but rather as full-program synthesis...in contrast to the main Codex training data.' (p.6)",
+        "[Q48] 'Python code found on GitHub contains class implementations, configuration files, scripts, and even files used to store data. This code is seemingly unrelated to synthesizing functions from docstrings, and we hypothesize that the distribution mismatch reduces HumanEval performance.' (p.7)",
+        "[Q130] 'We investigated whether it was possible to train large language models to produce functionally correct code bodies from natural language docstrings.' (p.14)",
+        "[Q151] 'The current capabilities of synthesis methodologies are only able to tackle tightly specified, constrained problem instances or narrow tasks.' (p.25)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-12] DevBench evaluates full software-development lifecycle across four languages and is the nearest multi-stage analog; current LLMs fail its challenges",
+        "[WEB-13] FrontendBench targets front-end code generation — a category absent from HumanEval"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: HumanEval/61 bracket-matching algorithm — no enterprise artifact",
+        "DATASET-D3: HumanEval/130 Tribonacci sequence — competitive-programming math",
+        "DATASET-D8: HumanEval/3 bank-balance simulation is closest to a 'business' domain yet still pure algorithm with no ORM/API content",
+        "DATASET-D22: HumanEval/72 whimsical 'will it fly' puzzle illustrates the puzzle register"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "DATASET-D1",
+          "DATASET-D8"
+        ],
+        "IO-2": [
+          "Q22",
+          "Q130",
+          "DATASET-D1",
+          "DATASET-D3"
+        ],
+        "IO-3": [
+          "Q22",
+          "DATASET-D22",
+          "DATASET-D3"
+        ],
+        "IO-4": [
+          "Q48",
+          "Q151",
+          "WEB-12",
+          "WEB-13"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether the 124 unsampled problems contain any framework-idiom content (highly unlikely given paper documentation, but not exhaustively confirmed)."
+      ],
+      "requires_expert_verification": [
+        "Confirmation from the organization's architects that all four artifact layers are required, and that the rubric scope cannot be reduced to a single layer where HumanEval has more applicability."
+      ]
+    },
+    "input_content": {
+      "score": 2,
+      "justification": "Content is hand-written algorithmic/interview-style problems [Q14, Q19, Q131] sourced from no enterprise-development context. Training data is GitHub Python at large [Q23, Q25], and the Codex-S fine-tune adds competitive-programming and CI-traced functions [Q52, Q55] — none of which encode FastAPI/SQLAlchemy/Pydantic/Spring Boot idioms, business data models, compliance constraints, or SLA requirements. The natural language *register* is US English [DATASET-D7] which matches the deployment, and typed Python signatures appear [DATASET-D2, DATASET-D6] — narrow points of contact. The security probe content [Q206] is operationally grounded but still single-function. No content addresses the deployment's PRD-embedded business context, non-functional requirements, or convention encoding.",
+      "strengths": [
+        "All docstrings are in standard US English, matching the deployment's exclusive working language [DATASET-D7].",
+        "Some problems use modern typed Python signatures (List[float], etc.) consistent with Pydantic/FastAPI typing expectations [DATASET-D2, DATASET-D6].",
+        "Security probe content [Q206] adds a small amount of operational vulnerability-pattern content relevant to enterprise security review."
+      ],
+      "checklist_responses": {
+        "IC-1": "The deployment requires enterprise-software cultural knowledge (FastAPI conventions, Spring Boot annotations, Kubernetes manifest structure, AWS IaC patterns), not regional/dialectal cultural knowledge in the traditional sense. The benchmark's content does not encode any of this enterprise-stack knowledge [Q22, DATASET-D4].",
+        "IC-2": "The puzzle/whimsical register ('will it fly', musical-note parsing, fruit-distribution word problems) is categorically different from enterprise-development prose [DATASET-D22, DATASET-D6, DATASET-D21]. Geographically the benchmark is US/Anglophone-origin which matches the target population.",
+        "IC-3": "Western-specific knowledge is not the main issue; the issue is competitive-programming-specific framing. One observed locale artifact (comma-as-decimal in HumanEval/137 [DATASET-D11]) is European in origin but irrelevant to the deployment.",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — annotator demographics are not provided; the paper states 'there is unfortunately only limited research on the demographic distribution of Python users' [Q219]. Re-annotation would require org-internal architects (already available as the grading population).",
+        "IC-5": "Content harms validity by failing to probe framework idioms, business entity modeling, or compliance/SLA constraints; training-data quality issues are acknowledged [Q167] but do not bear directly on the deployment task."
+      },
+      "evidence_quotes": [
+        "[Q14] 'Though not a guarantee for problem novelty, all problems were hand-written and not programmatically copied from existing sources.' (p.3)",
+        "[Q23] 'Our training dataset was collected in May 2020 from 54 million public software repositories hosted on GitHub, containing 179 GB of unique Python files under 1 MB.' (p.4)",
+        "[Q52] 'We curated 10,000 problems in this way.' (p.7)",
+        "[Q167] 'The GitHub dataset contains plenty of poor-quality code...code that compiles and often runs without errors but gives an incorrect answer.' (p.27)",
+        "[Q206] 'We used 5 prompts across different libraries for RSA and AES based on Sonar Source's Python vulnerability database, and generated ~30k samples total.' (p.32)",
+        "[Q219] 'There is unfortunately only limited research on the demographic distribution of Python users.' (p.33)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-22] Enterprise AI-generated code shows 153% increase in architectural flaws — the content domain that HumanEval cannot evaluate is exactly the domain where production failures concentrate"
+      ],
+      "evidence_dataset": [
+        "DATASET-D7: HumanEval/124 date-validation docstring exemplifies clean US English prose register",
+        "DATASET-D2: typed signature `List[float]` consistent with Pydantic/FastAPI typing",
+        "DATASET-D22: 'will_it_fly' whimsical framing alien to enterprise context",
+        "DATASET-D21: fruit-distribution word problem unrelated to software-development register",
+        "DATASET-D11: comma-as-decimal European locale artifact (irrelevant minor finding)"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "Q22",
+          "DATASET-D4"
+        ],
+        "IC-2": [
+          "DATASET-D22",
+          "DATASET-D6",
+          "DATASET-D21"
+        ],
+        "IC-3": [
+          "DATASET-D11"
+        ],
+        "IC-4": [
+          "Q219"
+        ],
+        "IC-5": [
+          "Q167",
+          "WEB-22"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Annotator demographics and selection process for the 164 problems are not documented.",
+        "Whether any framework-specific patterns appear in the Codex-S 40k CI-traced functions (training-side, not in HumanEval test set)."
+      ],
+      "requires_expert_verification": [
+        "Architect-team review of whether the security probe content [Q206] has any reusable value for evaluating auth-middleware or secrets-handling correctness in the deployment."
+      ]
+    },
+    "input_form": {
+      "score": 1,
+      "justification": "HumanEval inputs are short single-paragraph docstrings averaging 7.7 tests per problem [Q20], assembled as 'a header, a signature, and a docstring' [Q28]. The deployment requires 3–10 page semi-structured PRDs with consistent headings and variable prose under each section. The paper itself explicitly acknowledges Codex 'struggles to parse through increasingly long and higher-level or system-level specifications' [Q88] and demonstrates exponential degradation with docstring complexity [Q90, Q93]. Empirical sampling confirms docstrings range from a single sentence [DATASET-D13, DATASET-D14] to ~15 lines maximum [DATASET-D7] — orders of magnitude shorter than a 3–10 page PRD. LongCodeBench [WEB-3] documents Claude 3.5 Sonnet dropping from 29% to 3% as context length increases on coding tasks, quantifying the severity of this mismatch.",
+      "strengths": [
+        "Input form within HumanEval is clean and parseable, making the benchmark easy to load and run as a lower-bound check for single-function Python utilities embedded within the deployment's broader output [DATASET-D1]."
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal-distribution mismatch is severe: short docstrings (~1 sentence to ~15 lines) vs. 3–10 page semi-structured PRDs with multi-section headings. The paper acknowledges this kind of long-specification handling is a known weakness [Q88].",
+        "IF-2": "Infrastructure question is largely inapplicable — both contexts use text. However, stop-sequence tuning ('\\nclass', '\\ndef', '\\n#', '\\nif', '\\nprint') [Q29] is configured for single-function termination and would need redesign for multi-file output.",
+        "IF-3": "Domain-specific form differences: HumanEval lacks structured-document parsing (headings, user-story templates, NFR tables); requires no long-context attention; provides no multi-section coherence test. LongCodeBench [WEB-3] is the closest published evidence base on long-context degradation. LoCoBench [WEB-18] explicitly notes existing benchmarks 'primarily emphasize code completion and comprehension tasks rather than complex software development workflows'.",
+        "IF-4": "External validity is severely harmed: short-docstring pass rates do not predict PRD-length input performance; quantified degradation rate (29%→3% [WEB-3]) provides empirical justification. The benchmark cannot surface context-length failure modes at all."
+      },
+      "evidence_quotes": [
+        "[Q20] 'Each problem includes a function signature, docstring, body, and several unit tests, with an average of 7.7 tests per problem.' (p.4)",
+        "[Q28] 'To compute pass@k, we assemble each HumanEval problem into a prompt consisting of a header, a signature, and a docstring.' (p.4)",
+        "[Q29] 'We sample tokens from Codex until we encounter one of the following stop sequences: \\nclass, \\ndef, \\n#, \\nif, or \\nprint.' (p.4)",
+        "[Q88] 'Codex struggles to parse through increasingly long and higher-level or system-level specifications.' (p.10)",
+        "[Q90] 'As the number of chained building blocks in the docstring increases, model performance decreases exponentially.' (p.10)",
+        "[Q93] 'With each additional component, pass rate drops by roughly a factor of 2-3.' (p.10)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-3] LongCodeBench documents Claude 3.5 Sonnet dropping from 29% to 3% as context length increases on coding tasks",
+        "[WEB-18] LoCoBench confirms existing benchmarks emphasize completion/comprehension rather than complex software-development workflows"
+      ],
+      "evidence_dataset": [
+        "DATASET-D13: HumanEval/42 single-sentence docstring 'Return list with elements incremented by 1.'",
+        "DATASET-D14: HumanEval/52 one-sentence docstring with no structured sections",
+        "DATASET-D7: HumanEval/124 — longest sampled docstring (~10 lines), still orders of magnitude shorter than a 3–10 page PRD"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q20",
+          "Q28",
+          "Q88",
+          "DATASET-D13",
+          "DATASET-D7"
+        ],
+        "IF-2": [
+          "Q29"
+        ],
+        "IF-3": [
+          "Q90",
+          "Q93",
+          "WEB-3",
+          "WEB-18"
+        ],
+        "IF-4": [
+          "Q88",
+          "WEB-3"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Exact token-count distribution of the org's PRD corpus is not measured (noted as [NEEDS VERIFICATION] in regional context)."
+      ],
+      "requires_expert_verification": [
+        "Architect-team measurement of typical PRD token counts on the org's actual document corpus to size context-window requirements precisely."
+      ]
+    },
+    "output_ontology": {
+      "score": 1,
+      "justification": "HumanEval's output ontology is binary functional correctness via unit tests [Q77]. The paper argues this is superior to BLEU-style match metrics [Q10, Q18, Q40] — a defensible position for algorithm problems — but explicitly acknowledges that 'evaluating code generation' for tightly specified tasks is different from broader qualitative metrics it can only prospectively describe [Q86, Q149], and that 'there is no similar way to evaluate docstring samples automatically' [Q78]. The deployment requires a four-layer rubric (syntactic/lint, requirements completeness, architectural convention adherence, multi-file coherence) — none of which can be expressed by pass/fail unit tests. Appendix-D specification attributes (variable interdependencies [Q153], temporal reasoning [Q154], concurrency [Q155]) and the security-probe ontology (RSA <2048 bits [Q208], AES ECB [Q209]) extend the schema slightly but remain incompatible with rubric-based architectural grading. Prometheus 2 [WEB-14] offers a candidate rubric-judge framework that the org would need to deploy separately.",
+      "strengths": [
+        "Pass/fail unit-test scoring provides a usable lower-bound signal for the 'syntactic/lint correctness' layer of the deployment rubric where Python utility functions are concerned [Q77, DATASET-D1].",
+        "The security probe ontology (RSA key length, AES mode) [Q208, Q209] provides a small precedent for adding programmatic correctness checks beyond unit tests, partially reusable for the deployment's security-pattern checks."
+      ],
+      "checklist_responses": {
+        "OO-1": "The deployment's label space (4-layer rubric with multiple valid designs) is fundamentally categorical/multi-dimensional. HumanEval's binary unit-test pass/fail label has minimal overlap.",
+        "OO-2": "Missing categories: syntactic/lint compliance scoring (not just execution), requirements-completeness coverage, architectural convention adherence (naming, folder structure, auth patterns), multi-file coherence (entity ↔ API ↔ frontend type alignment). Cross-layer consistency is unmeasurable [WEB-11, WEB-12].",
+        "OO-3": "The benchmark's ontology assumes a single correct behavioral contract per problem, which conflicts with the deployment's explicit acceptance of multiple valid architectural designs (correctness_model.multiple_valid_designs=true).",
+        "OO-4": "Stakeholder-driven redesign is required: the architecture guide must be encoded as a structured rubric (Prometheus 2-compatible [WEB-14]) and validated against human gold-annotated samples, with TRACE [WEB-16] biases addressed (LLM-judge preference for longer code, etc.).",
+        "OO-5": "Structural validity is harmed because the construct's structure (multi-dimensional architectural correctness) is collapsed to a single binary axis. Content validity is harmed by missing categories. External validity is harmed because HumanEval scores cannot predict rubric-based performance. IaC performance floors of <20% pass@1 [WEB-4] and ~50% on simplest scenarios [WEB-5] confirm that ontology gaps in HumanEval map to known LLM weakness areas."
+      },
+      "evidence_quotes": [
+        "[Q10] 'Match-based metrics are unable to account for the large and complex space of programs functionally equivalent to a reference solution.' (p.2)",
+        "[Q77] 'When we benchmark our code generation models, we measure pass@k on the HumanEval dataset, where correctness is defined by passing a set of unit tests.' (p.9)",
+        "[Q78] 'However, there is no similar way to evaluate docstring samples automatically.' (p.9)",
+        "[Q86] 'Many existing metrics measure performance in tightly specified, constrained problem instances...Therefore, we developed a set of qualitative metrics for measuring the capabilities of code generating models while controlling for the complexity and abstraction level of the specifications.' (p.10)",
+        "[Q149] 'Below we provide brief descriptions of such attributes and qualitative metrics, which are to be further discussed in a forthcoming paper.' (p.25)",
+        "[Q208] 'RSA keys were considered improperly configured if they were shorter than 2048 bits.' (p.32)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-4] IaC-Eval reports SOTA <20% pass@1 on compositional IaC requirements — output-ontology gap in HumanEval maps to known LLM weakness",
+        "[WEB-5] DPIaC-Eval finds 42.7% of syntactically correct templates fail deployment, demonstrating ontology layers HumanEval cannot capture",
+        "[WEB-11] DevEval introduces Recall@k for dependency accuracy alongside Pass@k — closest published metric to import-graph coherence",
+        "[WEB-12] DevBench covers full SDLC stages — illustrates richer output ontology the deployment requires",
+        "[WEB-14] Prometheus 2 supports user-defined rubric criteria in pointwise and pairwise formats",
+        "[WEB-16] TRACE identifies 35 LLM-judge / human-developer misalignment sources requiring calibration"
+      ],
+      "evidence_dataset": [
+        "DATASET-D16: random-input test harness exemplifies single-function functional-correctness ontology incompatible with architectural rubric scoring",
+        "DATASET-D15: trivial one-liner shows correctness collapses to behavioral output match — no architectural dimension scoreable"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q77",
+          "DATASET-D16"
+        ],
+        "OO-2": [
+          "Q78",
+          "WEB-11",
+          "WEB-12"
+        ],
+        "OO-3": [
+          "Q10",
+          "DATASET-D15"
+        ],
+        "OO-4": [
+          "WEB-14",
+          "WEB-16"
+        ],
+        "OO-5": [
+          "Q86",
+          "Q149",
+          "WEB-4",
+          "WEB-5"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether the architecture guide can be reduced to a rubric format compatible with Prometheus 2-style judging without losing fidelity."
+      ],
+      "requires_expert_verification": [
+        "Architect-team encoding of the internal architecture guide into a structured criterion-separated rubric.",
+        "Calibration of any rubric-judge model against human-annotated gold samples per TRACE recommendations [WEB-16]."
+      ]
+    },
+    "output_content": {
+      "score": 1,
+      "justification": "Ground-truth label provenance for HumanEval is sparse and inapplicable to the deployment. The paper provides no annotator demographics, no inter-annotator agreement, and only minimal documentation of who hand-wrote the problems. The only explicit human annotation activity is hand-grading 10 docstring samples per problem 'due to the time consuming nature of this process' [Q79]. Unit-test labels for the Codex-S competitive-programming subset were partially constructed from problem-statement examples rather than complete hidden suites [Q52], and the paper acknowledges 'human developers often write test suites with limited but targeted coverage' [Q129]. Alignment evaluations treat the model itself as the labeler [Q164]. For a deployment whose ground truth requires expert architectural judgment against an internal style guide written by senior architects, HumanEval's label provenance is entirely inapplicable. Empirical sampling further confirms vacuous filler assertions [DATASET-D17] and minor annotation quality issues [DATASET-D27] suggesting no formal multi-reviewer process.",
+      "strengths": [
+        "Unit-test labels in the sampled set generally cover edge cases (empty inputs, format violations, boundary conditions) [DATASET-D1, DATASET-D7], so where HumanEval is reused as a sub-component check for Python utility functions, the labels provide meaningful behavioral signal."
+      ],
+      "checklist_responses": {
+        "OC-1": "No — labels reflect algorithmic-correctness ground truth, not architectural-convention ground truth required by US enterprise architects [Q77, DATASET-D3].",
+        "OC-2": "Potential disagreement is total: HumanEval ground truth has no architectural-convention dimension to disagree about. A model passing all unit tests may still violate every internal convention. Faros.ai analysis [WEB-22] documents 153% increase in architectural flaws in AI-generated code — precisely the failure mode HumanEval cannot label.",
+        "OC-3": "INSUFFICIENT DOCUMENTATION — the paper provides no Datasheet, no Data Statement, no annotator demographics, no professional-background information, no inter-annotator agreement statistics. The paper itself notes limited research on Python-user demographics [Q219].",
+        "OC-4": "Re-annotation would require the org's own architects working from the internal architecture guide — effectively building a new benchmark, not relabeling HumanEval.",
+        "OC-5": "INSUFFICIENT DOCUMENTATION — no aggregation method is documented because labels are binary per-task and not aggregated across annotators.",
+        "OC-6": "Convergent validity and external validity are both violated: original labels do not correlate with regional/organizational stakeholder judgments because they probe a different construct entirely. Stack Overflow 2025 [WEB-1] also notes 76% of developers resist AI for 'deployment and monitoring' tasks — the very tasks HumanEval's labels cannot evaluate."
+      },
+      "evidence_quotes": [
+        "[Q52] 'Since complete test suites are often hidden, we created unit tests from examples found in the problem statements, or extracted additional test cases through submitting incorrect solutions.' (p.7)",
+        "[Q79] 'Due to the time consuming nature of this process, we only grade 10 samples per problem.' (p.9)",
+        "[Q129] 'Human developers often write test suites with limited but targeted coverage, but this does not always work well against an algorithm.' (p.14)",
+        "[Q164] 'We instruct the model to write correct code, and we assume the model could easily be fine-tuned to detect such an instruction.' (p.27)",
+        "[Q219] 'There is unfortunately only limited research on the demographic distribution of Python users.' (p.33)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-1] Stack Overflow 2025 — 76% of developers don't plan to use AI for deployment/monitoring; 69% don't plan to use AI for project planning — reflects target-cohort skepticism about LLM outputs in exactly the layers HumanEval cannot grade",
+        "[WEB-22] Faros.ai — 153% increase in architectural flaws in AI-generated code; 322% increase in privilege escalation paths"
+      ],
+      "evidence_dataset": [
+        "DATASET-D17: HumanEval/105 contains vacuous `assert True` filler assertions, inflating reported test-count and indicating no formal multi-reviewer process",
+        "DATASET-D27: HumanEval/66 has stray apostrophe in docstring — minor annotation-quality artifact",
+        "DATASET-D3: ground-truth label is exact floating-point output match — no code-quality dimension labeled"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q77",
+          "DATASET-D3"
+        ],
+        "OC-2": [
+          "WEB-22",
+          "DATASET-D17"
+        ],
+        "OC-3": [
+          "Q219"
+        ],
+        "OC-4": [],
+        "OC-5": [],
+        "OC-6": [
+          "Q129",
+          "Q164",
+          "WEB-1"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Who hand-wrote the 164 problems and what calibration process was applied is not documented.",
+        "Whether multiple reviewers assessed each problem is not documented.",
+        "Inter-annotator agreement for the docstring grading task is not reported."
+      ],
+      "requires_expert_verification": [
+        "Construction of a new gold-annotated sample set by the org's architects against the internal architecture guide if HumanEval-style labels are to be supplemented for the deployment."
+      ]
+    },
+    "output_form": {
+      "score": 2,
+      "justification": "HumanEval outputs are single Python function completions [Q2] evaluated by deterministic unit-test execution with nucleus sampling top_p=0.95 [Q30] and temperature optimized per k [Q34]. The deployment requires multi-file project trees spanning Python (FastAPI/SQLAlchemy/Pydantic), SQL, TypeScript (React/Angular), Java (Spring Boot), YAML (Docker/Kubernetes), and HCL (Terraform). Stop sequences are explicitly configured for single-function termination ('\\nclass', '\\ndef', etc.) [Q29], which would require complete redesign for multi-file output. The mean-log-probability sample-selection heuristic [Q39] is structurally closer to the deployment's single-completion API use case than to pass@k, so partial reusability exists for the autocomplete-style aspect. Empirical sampling confirms zero multi-file or non-Python outputs across the dataset.",
+      "strengths": [
+        "The text-in / code-out modality matches the deployment at the signal level [Q2].",
+        "Single-completion sample selection via mean log probability [Q39] is structurally aligned with the deployment's single-prompt LLM-API usage pattern.",
+        "Sandboxed execution infrastructure [Q8, DATASET-D1] is directly reusable for evaluating any Python sub-components in the deployment's output."
+      ],
+      "checklist_responses": {
+        "OF-1": "Partial match — both contexts output text-form code, but HumanEval is restricted to single-file single-function Python while the deployment requires multi-file, multi-language output trees [Q2 vs. deployment.artifact_layers_under_evaluation].",
+        "OF-2": "Not applicable — neither context involves speech output.",
+        "OF-3": "Not applicable — target population is professional engineers with expert technical literacy [regional context: technical_literacy].",
+        "OF-4": "External validity is moderately harmed: HumanEval cannot evaluate multi-file outputs, cross-language outputs (SQL, TypeScript, YAML, HCL), or structural properties (folder layout, import graph coherence). DevEval Recall@k [WEB-11] is the closest published metric for cross-file dependency accuracy. IaC-Eval [WEB-4] and Multi-IaC-Eval [WEB-6] cover the YAML/HCL output form HumanEval omits entirely."
+      },
+      "evidence_quotes": [
+        "[Q2] 'On HumanEval, a new evaluation set we release to measure functional correctness for synthesizing programs from docstrings, our model solves 28.8% of the problems.' (p.1)",
+        "[Q8] 'We discuss the sandbox environment we used to safely execute model-generated code.' (p.2)",
+        "[Q29] 'We sample tokens from Codex until we encounter one of the following stop sequences: \\nclass, \\ndef, \\n#, \\nif, or \\nprint.' (p.4)",
+        "[Q30] 'We use nucleus sampling (Holtzman et al., 2020) with top p = 0.95 for all sampling evaluation in this work.' (p.4)",
+        "[Q39] 'Choosing the sample with the highest mean token log probability outperforms evaluating a random sample.' (p.5)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-4] IaC-Eval provides Terraform/HCL output-form evaluation HumanEval lacks",
+        "[WEB-6] Multi-IaC-Eval covers CloudFormation, Terraform, and CDK output forms",
+        "[WEB-11] DevEval introduces Recall@k for dependency accuracy — closest published cross-file coherence metric",
+        "[WEB-13] FrontendBench covers front-end interactivity output forms"
+      ],
+      "evidence_dataset": [
+        "DATASET-D5: HumanEval/38 contains two functions in one file — closest the dataset comes to multi-function output, still single-file scope",
+        "DATASET-D9: HumanEval/95 entirely self-contained, no imports from other modules"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q2",
+          "Q29"
+        ],
+        "OF-2": [],
+        "OF-3": [],
+        "OF-4": [
+          "Q29",
+          "WEB-4",
+          "WEB-6",
+          "WEB-11"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether the org would treat partial-output reuse (e.g., extracting the Python-only sub-component score) as meaningful signal for any deployment decision."
+      ],
+      "requires_expert_verification": [
+        "Architect-team decision on whether multi-file coherence metrics (e.g., entity-name diffing across generated artifact layers) should be implemented as custom evaluation harnesses to supplement HumanEval-style execution checks."
+      ]
+    }
+  },
+  "overall_summary": "HumanEval is a foundational benchmark for isolated Python function synthesis evaluated by unit-test pass/fail. For the deployment use case — multi-page PRD-to-multi-file-scaffolding generation graded by an internal architecture rubric — the benchmark is fundamentally misaligned across all four user-flagged HIGH-priority dimensions (IO, IC, IF, OO, OC) and substantially misaligned on OF. Five of six dimensions score 1–2. The only points of genuine contact are: (a) US English natural-language register, (b) typed Python function signatures, (c) text-in/code-out modality, and (d) a usable sandboxed-execution infrastructure that can serve as a lower-bound check for Python utility sub-components inside larger scaffolding outputs. The paper itself acknowledges most of the relevant limitations — long-specification handling [Q88], absence of qualitative architectural metrics [Q86, Q149], lack of automatic docstring evaluation [Q78], and distribution mismatch with broader GitHub code [Q48]. Web research confirms dedicated benchmarks (DevBench, SWE-bench++, IaC-Eval, DPIaC-Eval, Multi-IaC-Eval, FrontendBench, LongCodeBench, Prometheus 2) now exist that cover most of the validity gaps individually, though none combines all four artifact layers required here.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "HumanEval measures a model's ability to synthesize a single self-contained Python function from a short docstring and have it pass a small set of unit tests on algorithmic/mathematical problems. For the deployment, this corresponds to at most one narrow sub-component of the broader scaffolding task: isolated Python utility functions that might appear inside FastAPI route handlers or SQLAlchemy model methods. The strongest dimension is Output Form (modality match) and the weakest are Input Ontology, Output Ontology, and Output Content (each scoring 1).",
+    "construct_depth": "The benchmark probes functional correctness at a behavioral-contract level only. It does not probe: (a) framework-idiom adherence (FastAPI dependency injection, SQLAlchemy declarative models, Pydantic v2 validation, Spring Boot annotations), (b) cross-file/cross-language coherence, (c) architectural-convention adherence against an internal style guide, (d) long-context document parsing, or (e) infrastructure-as-code generation. The paper explicitly defers richer specification attributes (variable interdependencies, temporal reasoning, concurrency) to future work [Q149]. Quantitative ceilings reported in the literature for the layers HumanEval omits are sobering: <20% pass@1 on compositional IaC [WEB-4], ~50% on simplest IaC scenarios with 42.7% deployment-failure rate among syntactically correct templates [WEB-5], and 29%→3% degradation as coding-task context length grows [WEB-3].",
+    "supplementation_needed": "Comprehensive supplementation is required: (1) DevBench [WEB-12] or SWE-bench++ [WEB-9] for multi-stage / multi-language repository-level coverage; (2) IaC-Eval [WEB-4] + DPIaC-Eval [WEB-5] + Multi-IaC-Eval [WEB-6] for the Dockerfile/Kubernetes/Terraform deployment-config layer; (3) FrontendBench [WEB-13] for React/Angular component-stub evaluation; (4) LongCodeBench [WEB-3] or LoCoBench [WEB-18] for long-context input form; (5) Prometheus 2 [WEB-14] as a rubric-judge framework with the org's architecture guide encoded as structured criteria, calibrated against a small human-annotated gold set per TRACE [WEB-16]; (6) a custom in-house harness for multi-file entity-name coherence (schema ↔ API model ↔ frontend prop types) since no public benchmark explicitly scores this. Framework-specific evaluation for FastAPI/SQLAlchemy/Pydantic/Spring Boot remains a confirmed gap (search gap 4 NOT FOUND) and requires custom benchmark construction using org-internal PRDs and the architecture guide as ground truth."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "No coverage of DB schema, API route, frontend stub, or IaC artifact categories.",
+      "recommendation": "Adopt DevBench [WEB-12] for multi-stage SDLC coverage and add IaC-Eval/DPIaC-Eval/Multi-IaC-Eval [WEB-4/5/6] for the deployment-config layer; build a small org-specific benchmark of PRD→scaffolding examples sampled from the internal architecture guide to cover FastAPI/SQLAlchemy/Pydantic/Spring Boot idioms."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "Absence of framework-idiomatic content, business entity models, and NFR/compliance constraints.",
+      "recommendation": "Construct an internal evaluation set from anonymized real PRDs paired with architect-approved scaffolding solutions; capture the full content register (business context, entity definitions, NFRs, auth/SLA constraints) that HumanEval omits."
+    },
+    {
+      "dimension": "input_form",
+      "gap": "Short docstrings cannot probe long-context PRD parsing (29%→3% Claude 3.5 Sonnet degradation [WEB-3]).",
+      "recommendation": "Add LongCodeBench [WEB-3] / LoCoBench [WEB-18] to the evaluation suite and measure typical PRD token counts on the org's actual document corpus to calibrate context-window sizing; compare full-document vs. section-by-section prompting empirically."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "Binary unit-test pass/fail cannot express the deployment's 4-layer rubric (syntactic/lint, requirements completeness, architectural convention adherence, multi-file coherence).",
+      "recommendation": "Encode the internal architecture guide as a structured Prometheus 2-compatible rubric [WEB-14], with criterion-separated scoring; calibrate the judge model against a small human-annotated gold set per TRACE recommendations [WEB-16]; complement with deterministic checks (linters, schema diffing) where possible."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "No annotator demographics, no inter-annotator agreement, no architectural-convention labels.",
+      "recommendation": "Recruit 2–3 senior architects from the target team to independently grade a sample of model outputs against the architecture guide; measure inter-annotator agreement to validate the rubric and identify ambiguous criteria before scaling."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "Single-file single-function output cannot evaluate multi-file project trees or cross-language coherence.",
+      "recommendation": "Build an in-house harness for multi-file coherence checks (entity-name diffing between DB schema, API model, frontend prop types; import-graph validation) since no public benchmark explicitly scores this; reuse DevEval's Recall@k [WEB-11] as a starting metric for cross-file dependency accuracy."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_ontology",
+    "output_ontology",
+    "output_content"
+  ],
+  "strongest_dimensions": [
+    "output_form"
+  ]
+}

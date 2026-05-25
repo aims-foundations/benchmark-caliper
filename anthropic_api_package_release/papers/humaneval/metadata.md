@@ -1,0 +1,11 @@
+- name: humaneval
+- full_name: HumanEval
+- year: 2021
+- domain: Evaluates the functional correctness of large language models in generating standalone Python functions from docstrings. Assesses language comprehension, algorithms, and simple mathematics through unit test validation.
+- languages: Python
+- primary_region: UNKNOWN
+- porting_strategy: none
+- input_modalities: text
+- output_modalities: code
+- brief_description: HumanEval is a dataset of 164 original programming problems with unit tests, designed to benchmark code generation models on their ability to synthesize correct Python functions from docstrings. Problems range from simple language comprehension tasks to algorithm implementations comparable to software interview questions. The benchmark uses functional correctness (unit test passing) as the primary evaluation metric rather than string matching or BLEU-style metrics.
+- source_culture: designed by target population

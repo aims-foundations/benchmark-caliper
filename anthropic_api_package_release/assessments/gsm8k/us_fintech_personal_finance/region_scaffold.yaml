@@ -1,0 +1,176 @@
+name: US Adult Personal Finance Chatbot Users
+abbreviation: US-PF
+deployment_context:
+  product_type: Personal finance chatbot (US fintech startup)
+  deployment_geography: United States (nationwide, no sub-national scoping specified)
+  target_population_description: English-speaking American adults who are financially
+    active and interact with a chatbot via typed natural language to perform everyday
+    money math. Users span a range of financial sophistication, from simple bill-splitting
+    queries to complex multi-step financial instrument calculations involving APR,
+    compound interest, amortization schedules, credit card payoff timelines, and credit
+    utilization ratios.
+  interaction_modality: Text-only, typed natural language input and output
+  primary_use_cases:
+  - APR comparisons across credit products
+  - Credit card payoff timeline estimation
+  - Amortization schedule calculation
+  - Compound interest computation
+  - Credit utilization ratio assessment
+  - Balance transfer cost/benefit analysis
+  - Bill splitting and simple budgeting percentages
+  query_mix_notes: Multi-step financially specific reasoning (APR, compound interest,
+    amortization, payoff timelines) accounts for approximately 40–50% of expected
+    queries and defines the product's core value proposition. Simpler calculations
+    (bill splitting, budgeting percentages) are present but are considered commoditized
+    features.
+languages:
+  primary: English (American)
+  variants_notes: Standard American English; users will embed consumer finance vocabulary
+    (APR, minimum payment, balance transfer, credit utilization) in natural language
+    queries. No non-English language support is described in the deployment scope.
+  financial_register: Consumer finance vernacular is central — users phrase queries
+    using industry-standard and colloquial terms interchangeably. Correct semantic
+    mapping of these terms to mathematical operations is a named deployment requirement.
+writing_systems:
+  scripts:
+  - Latin (ASCII + standard Unicode punctuation and numerals)
+  note: Text-only, standard English script. No CJK, RTL, or multi-script complexity.
+    Numerals, currency symbols ($), percentage signs, and decimal notation are standard.
+financial_literacy_context:
+  population_financial_literacy_level: '[NEEDS VERIFICATION — cite current US adult
+    financial literacy survey data, e.g. FINRA Foundation National Financial Capability
+    Study or OECD PISA financial literacy scores for US adults]'
+  known_conceptual_gaps: Research consistently documents that many US adults conflate
+    nominal and effective APR, underestimate compound interest effects, and misunderstand
+    minimum payment implications. These are named failure modes for the deployment.
+  domain_vocabulary_sensitivity: High — the user confirmed that misinterpreting APR
+    as a flat rate or confusing minimum payment with full payment constitutes a serious
+    deployment risk even when underlying arithmetic is trivial. Terminology grounding
+    is a distinct construct from arithmetic ability.
+  relevant_consumer_finance_context_notes: '[NEEDS VERIFICATION — check current US
+    credit card, mortgage, and personal loan usage statistics to characterize the
+    realistic query distribution; sources: Federal Reserve Consumer Credit report,
+    CFPB consumer data]'
+regulatory_and_institutional_context:
+  applicable_consumer_finance_regulation: '[NEEDS VERIFICATION — identify relevant
+    US federal and state regulations governing chatbot-provided financial guidance,
+    including potential Regulation Z (Truth in Lending Act) disclosure requirements,
+    CFPB guidance on AI/chatbot-based financial tools, and any applicable state money
+    transmission or financial advisory licensing rules]'
+  apr_disclosure_standards: '[NEEDS VERIFICATION — confirm whether TILA/Regulation
+    Z APR calculation conventions (e.g., compounding frequency assumptions) are legally
+    specified in ways that constrain correct chatbot answers]'
+  minimum_payment_formula_variation: Issuer-specific minimum payment formulas vary
+    and are not standardized by federal regulation. This creates legitimate answer
+    ranges that exact-match scoring cannot handle.
+  data_protection_regulation: '[NEEDS VERIFICATION — identify applicable federal and
+    state data privacy frameworks, e.g. FTC Act, state laws such as CCPA (if California
+    users are in scope), and any sector-specific financial data rules under GLBA]'
+infrastructure_and_access_notes:
+  internet_penetration_us_adults: '[NEEDS VERIFICATION]'
+  smartphone_vs_desktop_access: '[NEEDS VERIFICATION — check current US device split
+    for personal finance app/chatbot usage]'
+  digital_literacy_notes: Users are assumed to be digitally literate enough to engage
+    a text-based chatbot; the deployment does not target low-digital-literacy populations.
+  platform_delivery: Typed natural language chatbot interface; no voice, image, or
+    document modality described in the deployment scope.
+benchmark_domain_alignment:
+  benchmark: GSM8K (Grade School Math 8K)
+  benchmark_domain: Mathematical reasoning / grade-school word problems
+  deployment_domain: Consumer personal finance — multi-step quantitative reasoning
+    over financial instruments
+  domain_overlap_summary: GSM8K and the deployment share a text-in/text-out English
+    interface and require multi-step arithmetic reasoning. However, GSM8K is scoped
+    exclusively to grade-school arithmetic contexts (groceries, animals, household
+    items) with no financial instrument problem types. The 40–50% of deployment queries
+    that constitute the core value proposition (APR, amortization, compound interest,
+    payoff timelines) have zero representation in GSM8K.
+  terminology_coverage: None — GSM8K contains no consumer finance vocabulary. The
+    deployment requires that the evaluated model correctly map terms like 'APR,' 'credit
+    utilization,' 'balance transfer,' and 'minimum payment' to specific computations.
+  scoring_alignment: Misaligned — GSM8K uses binary exact-match scoring against a
+    single ground-truth number. A meaningful share of deployment queries (payoff timelines,
+    budgeting recommendations) have legitimate answer ranges depending on assumptions
+    such as compounding frequency and issuer-specific minimum payment formulas. Exact-match
+    scoring would misrepresent quality for these cases.
+answer_range_and_assumption_sensitivity:
+  overview: A structurally important characteristic of this deployment is that many
+    target queries do not have a single correct numeric answer. Answer legitimately
+    varies with compounding frequency assumptions, issuer-specific minimum payment
+    definitions, assumed interest accrual method, and user-specified vs. default parameters.
+  examples_of_assumption_sensitive_queries:
+  - Credit card payoff timeline (varies with compounding frequency and minimum payment
+    formula)
+  - Effective APR vs. nominal APR (varies with compounding convention)
+  - Amortization schedule total interest (varies with payment timing assumptions)
+  - Budgeting percentage recommendations (inherently ranges, not point estimates)
+  evaluation_implication: Benchmark scoring for this deployment requires either explicit
+    assumption-pinning in problem statements or tolerance-band / range-based acceptance
+    criteria. GSM8K's binary exact-match scheme does not accommodate this.
+  existing_frameworks_for_range_scoring: '[NEEDS VERIFICATION — search for evaluation
+    frameworks supporting tolerance bands, assumption-conditioned grading, or partial
+    credit in financial or mathematical reasoning benchmarks]'
+cultural_and_contextual_norms:
+  monetary_conventions: USD; decimal notation (e.g., $1,234.56); annual percentage
+    rate (APR) is the standard US consumer-facing interest rate disclosure unit under
+    TILA
+  institutional_norms: 'US-centric financial product structures: credit cards with
+    revolving balances, 30-year fixed-rate mortgages, employer-sponsored 401(k) accounts,
+    FICO-based credit scoring. Benchmark problem contexts should reflect these institutions.'
+  cultural_notes: No significant cross-cultural sensitivity flags for a US-nationwide
+    deployment of a personal finance chatbot. Users are expected to be familiar with
+    standard American financial product terminology.
+  source_culture_flag_from_benchmark: The benchmark metadata marks source culture
+    as 'transferred from different cultural context' despite listing United States
+    as the primary region. This should be investigated to determine whether any GSM8K
+    problems reflect non-US monetary conventions or institutional assumptions that
+    could introduce noise.
+population_specific_risk_notes:
+  terminology_misinterpretation_risk: HIGH — Named by the deployment team as a serious
+    failure mode. A model that interprets APR as a simple flat rate rather than an
+    annualized compounding rate, or that conflates minimum payment with full payoff
+    payment, produces financially harmful outputs even when its arithmetic is correct.
+  complexity_ceiling_risk: HIGH — GSM8K is capped at grade-school difficulty. Multi-step
+    compound interest calculations, multi-month amortization, and balance transfer
+    break-even analyses exceed this ceiling. GSM8K scores may be uninformative or
+    misleadingly optimistic for the deployment's hardest and most valuable query types.
+  exact_match_scoring_risk: HIGH — For assumption-sensitive queries, exact-match scoring
+    against a single reference answer penalizes correct responses that use different
+    but valid assumptions, and may reward numerically matching but reasoning-flawed
+    responses.
+  annotator_expertise_risk: MODERATE — Any downstream effort to construct a finance-specific
+    evaluation set requires annotators with demonstrated consumer finance expertise.
+    GSM8K's annotator pool (Upwork + Surge AI contractors) has no documented domain
+    expertise, and the benchmark's 1.7% disagreement rate cannot be extrapolated to
+    financial content.
+  label_quality_for_financial_queries: '[NEEDS VERIFICATION — identify existing finance-specific
+    LLM evaluation datasets and assess annotator qualification standards: FinQA, TAT-QA,
+    ConvFinQA, FiNLP challenge datasets]'
+flagged_gaps_for_web_search:
+- gap_id: 1
+  description: Missing financial-instrument problem types in GSM8K
+  search_target: financial reasoning benchmark LLM APR amortization compound interest
+    FinQA ConvFinQA TAT-QA personal finance evaluation dataset
+- gap_id: 2
+  description: Financial terminology comprehension as a distinct evaluation construct
+  search_target: financial terminology grounding LLM evaluation benchmark credit APR
+    minimum payment semantic understanding consumer finance
+- gap_id: 3
+  description: Range-based and assumption-sensitive answer evaluation frameworks
+  search_target: LLM math evaluation tolerance band range-based scoring assumption-conditioned
+    grading partial credit financial reasoning benchmark
+- gap_id: 4
+  description: GSM8K complexity ceiling and correlation with harder financial reasoning
+    performance
+  search_target: GSM8K ceiling effect correlation harder math benchmarks MATH dataset
+    financial multi-step reasoning LLM performance scaling
+- gap_id: 5
+  description: Source culture flag — whether any GSM8K problems reflect non-US monetary
+    conventions
+  search_target: GSM8K problem contexts non-US monetary conventions currency assumptions
+    dataset cultural provenance Upwork Surge AI contractor geography
+- gap_id: 6
+  description: US regulatory constraints on chatbot-provided financial calculations
+    (TILA, CFPB, Regulation Z)
+  search_target: CFPB AI chatbot financial guidance regulation Regulation Z APR disclosure
+    chatbot fintech compliance 2023 2024

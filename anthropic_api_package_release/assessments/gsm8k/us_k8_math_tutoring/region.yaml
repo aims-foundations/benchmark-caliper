@@ -1,0 +1,346 @@
+name: US K-8 Math Tutoring Platform — Homework Checker Deployment
+abbreviation: US-K8-MATH
+deployment_description: An LLM-powered homework-checker embedded in a US K-8 math
+  tutoring platform. The system receives arithmetic word problems as plain English
+  text and performs a binary correct/incorrect judgment on a student's submitted final
+  numerical answer. No partial credit, intermediate-step scoring, or written-reasoning
+  evaluation is required.
+target_population:
+  description: American elementary and middle school students in grades K-8, with
+    the highest-volume cohort in grades 3-6. Students access the platform nationwide
+    with no sub-national geographic targeting specified. Problems are authored to
+    US Common Core State Standards for Mathematics (CCSS-M) and use US customary units,
+    US dollar/cent currency, and culturally familiar American settings.
+  geography: United States (nationwide; no sub-national targeting)
+  grade_range: K-8 (grades K-2 present but lower volume; grades 3-6 highest volume;
+    grades 6-8 included for fractions, decimals, percentages, ratios)
+  age_band_approximate: Ages 5-14
+  institutional_context: Consumer-facing tutoring platform; not a single school district
+    or state system
+languages:
+  instruction_language: English (US)
+  other_languages_supported: None — platform is English-only
+  script: Latin alphabet
+curriculum_standards:
+  primary_standard: US Common Core State Standards for Mathematics (CCSS-M)
+  standard_body: National Governors Association / Council of Chief State School Officers
+  adoption_status: '41 states plus DC have currently adopted CCSS-M; 46 states initially
+    adopted but several have since repealed or replaced (Indiana, Arizona, Oklahoma,
+    South Carolina, Florida, Idaho among those that withdrew or renamed). Four states
+    never adopted at all: Texas, Virginia, Alaska, and Nebraska; Minnesota adopted
+    ELA only, not math. Several other states renamed or revised the standards while
+    retaining substantial alignment. For a nationwide consumer platform, the great
+    majority of students are in CCSS-M or CCSS-M-aligned states, but students in the
+    ~9 non-adopting/withdrawn states may encounter platform problems calibrated to
+    standards their state does not officially use. Sources: CCSS Initiative adoption
+    map — [|https://www.thecorestandards.org/standards-in-your-state/|]; World Population
+    Review 2026 — [|https://worldpopulationreview.com/state-rankings/common-core-states|];
+    Wikipedia CCSS implementation by state — [|https://en.wikipedia.org/wiki/Common_Core_implementation_by_state|]'
+  grade_band_topics:
+    K-2: Single-step whole-number arithmetic, counting, basic measurement concepts
+    3-4: Multi-step problems with four operations on multi-digit numbers, introduction
+      to fractions, US customary measurement
+    '5': Multi-step fractions, decimals, volume, continued measurement conversion
+    6-8: Ratios, percentages, proportional reasoning, basic statistics (mean/median
+      from small datasets), area and perimeter word problems, introduction to metric
+      exposure per CCSS-M
+problem_type_inventory:
+  core_operation_types:
+  - Addition, subtraction, multiplication, division on multi-digit whole numbers
+  - Multi-step combinations of the four operations
+  - Fraction arithmetic (addition, subtraction, multiplication, division)
+  - Decimal arithmetic
+  - Percentage calculations
+  - Ratio and proportion
+  measurement_and_geometry:
+  - US customary unit conversion (feet↔inches, cups↔gallons, pounds↔ounces, miles,
+    quarts, etc.)
+  - Area and perimeter word problems (rectangles, composite shapes)
+  - Basic volume word problems
+  - Metric unit exposure (limited, upper-grade CCSS-M mandated)
+  data_and_statistics:
+  - Mean calculation from small datasets
+  - Median calculation from small datasets
+  excluded_types:
+  - Formal geometry proofs
+  - Algebraic symbol manipulation beyond arithmetic reasoning
+  - Trigonometry or advanced statistics
+cultural_and_contextual_norms:
+  currency: 'US dollars and cents exclusively (symbol: $; denominations: pennies,
+    nickels, dimes, quarters, dollars)'
+  unit_system: US customary as primary; metric appears only where explicitly required
+    by upper-grade CCSS-M
+  cultural_settings_in_problems: 'American everyday contexts: school cafeterias, sports
+    practice, shopping, birthday parties, home improvement, US holidays, American
+    sports'
+  language_register: Plain American English appropriate for elementary/middle school
+    reading level
+  sensitivity_considerations: No politically sensitive content expected; student-age-appropriate
+    problem framing required; no religious or partisan content
+evaluation_task_structure:
+  input_format: Natural language arithmetic word problem presented as plain English
+    text
+  output_requirement: Binary correct/incorrect judgment on submitted final numerical
+    answer only
+  partial_credit: false
+  intermediate_step_evaluation: false
+  written_reasoning_evaluation: false
+  answer_format: Single numerical value (integer, decimal, or fraction as appropriate
+    to grade level)
+  scoring_convention: An unconventional solution method yielding the correct numerical
+    answer is scored as correct
+benchmark_alignment_summary:
+  benchmark: GSM8K (Grade School Math 8K, 2021)
+  primary_region_label: United States
+  language_match: Full — both deployment and benchmark are English-only
+  modality_match: Full — both are plain text word problems
+  output_schema_match: High — GSM8K uses binary correct/incorrect final-answer grading
+    identical to deployment requirement
+  curriculum_alignment_status: Partial — GSM8K targets grade school multi-step arithmetic
+    broadly but was not explicitly designed to CCSS-M; no documented taxonomy of subtopic
+    coverage
+  benchmark_saturation_note: 'As of 2025-2026, leading models achieve ~95%+ on GSM8K
+    (e.g., Gemini-2.5-Pro at 95.22%), indicating the benchmark may no longer reliably
+    differentiate strong from very strong LLMs for this deployment''s upper-grade
+    problems. Downstream scorers should note that near-ceiling performance does not
+    guarantee generalization to platform-specific subtopics (measurement conversion,
+    statistics, area/perimeter) absent from GSM8K. Source: GSM8K-V paper — [|https://arxiv.org/pdf/2509.25160|]'
+dimension_priority_weights:
+  IO:
+    priority: MODERATE
+    rationale: GSM8K covers core multi-step arithmetic well, but measurement conversions,
+      basic statistics (mean/median), and area/perimeter problems are not documented
+      as systematically represented and may be underrepresented.
+  IC:
+    priority: MODERATE
+    rationale: Platform uses US dollars, US customary units, and American cultural
+      settings exclusively. GSM8K carries a 'transferred from different cultural context'
+      metadata flag despite a US primary region label; contractor demographics and
+      nationality are undocumented, introducing non-trivial risk of non-US unit or
+      currency conventions in some problems.
+  IF:
+    priority: LOWER
+    rationale: Both benchmark and deployment are text-only English; no modality, script,
+      or language mismatch.
+  OO:
+    priority: LOWER
+    rationale: Deployment requires binary correct/incorrect final-answer checking;
+      GSM8K's verifier training signal is defined identically. Direct structural alignment.
+  OC:
+    priority: LOWER
+    rationale: Ground-truth labels are arithmetically verifiable numerical answers;
+      correctness is objective and not subject to cultural interpretation.
+  OF:
+    priority: LOWER
+    rationale: GSM8K produces a final numerical answer label mapping directly onto
+      the platform's binary answer-checking output; no format mismatch.
+flagged_gaps:
+- id: GAP-1
+  label: US customary unit conversion problems
+  description: US customary unit conversion problems (feet↔inches, cups↔gallons, pounds↔ounces)
+    appear regularly on the platform and are CCSS-M-aligned. GSM8K's paper does not
+    enumerate unit systems used, and contractor nationality is undocumented.
+  gap_type: partial
+  web_search_target: 'Multiple independent sources confirm GSM8K does include basic
+    measurement conversions as a content type (listed among ''percentages, fractions,
+    ratios, work rates, and basic measurement conversions''), and the standard version
+    is described as US-centric using ''names, currencies, and scenarios typical of
+    Western grade-school curricula.'' However, no systematic enumeration of how frequently
+    US customary unit conversion problems appear (vs. generic measurement) has been
+    published; the gap in documented frequency remains. Sources: Emergent Mind GSM8K
+    topic summary — [|https://www.emergentmind.com/topics/gsm8k-dataset-95a37205-4213-4591-900f-09ce82d0a123|]'
+- id: GAP-2
+  label: Basic statistics problems (mean/median)
+  description: Mean and median calculations from small datasets are part of the platform's
+    grades 6-8 problem set per CCSS-M. GSM8K does not document coverage of data/statistics
+    word problems; sample problems shown in the paper are all arithmetic-only.
+  gap_type: full
+  web_search_target: 'Confirmed full gap. Multiple independent sources consistently
+    characterize GSM8K''s mathematical content as ''elementary arithmetic (+, −, ×,
+    ÷)'' with no statistics component. One source explicitly lists GSM8K content as
+    ''percentages, fractions, ratios, work rates, and basic measurement conversions''
+    — mean/median are absent from all enumerations. Another source confirms ''no advanced
+    mathematics (no geometry, quadratics, combinatorics)'' with no statistics mentioned.
+    The HuggingFace official card states ''solutions primarily involve performing
+    a sequence of elementary calculations using basic arithmetic operations.'' No
+    source contradicts this: GSM8K has no documented statistics (mean/median) problems.
+    Sources: Emergent Mind GSM8K dataset — [|https://www.emergentmind.com/topics/gsm8k-dataset-95a37205-4213-4591-900f-09ce82d0a123|];
+    HuggingFace openai/gsm8k — [|https://huggingface.co/datasets/openai/gsm8k|]; Brenndoerfer
+    GSM8K analysis — [|https://mbrenndoerfer.com/writing/gsm8k-evaluating-mathematical-reasoning-language-models|]'
+- id: GAP-3
+  label: Area and perimeter word problems
+  description: The platform includes area and perimeter word problems regularly. GSM8K
+    does not enumerate geometry sub-skills; no paper evidence that area/perimeter
+    problems are systematically present.
+  gap_type: full
+  web_search_target: 'Confirmed full gap. Two independent sources explicitly state
+    GSM8K contains ''no advanced mathematics (no geometry, quadratics, combinatorics)''
+    and that ''success on this benchmark does not imply capability in algebra, geometry,
+    calculus, or advanced mathematical reasoning.'' The computational vocabulary is
+    described as ''addition, subtraction, multiplication, and division over natural
+    numbers.'' Area and perimeter are not mentioned in any enumeration of GSM8K subtopics.
+    Sources: Emergent Mind GSM8K dataset — [|https://www.emergentmind.com/topics/gsm8k-dataset-95a37205-4213-4591-900f-09ce82d0a123|];
+    Brenndoerfer GSM8K analysis — [|https://mbrenndoerfer.com/writing/gsm8k-evaluating-mathematical-reasoning-language-models|]'
+- id: GAP-4
+  label: US cultural context fidelity (currency, settings)
+  description: Despite US primary region label, GSM8K carries a 'transferred from
+    different cultural context' metadata flag. Contractor nationality is undocumented;
+    GPT-3 seed problems may carry non-US conventions. No explicit confirmation of
+    US dollar/cent usage or American cultural settings throughout the dataset.
+  gap_type: partial
+  web_search_target: 'Partially resolved. Multiple sources confirm that ''the standard
+    version is US-centric, using names, currencies, and scenarios typical of Western
+    grade-school curricula,'' and that GPT-3 seeds instructed workers to ''vary scenarios
+    (such as objects, activities, and measuring units).'' This supports a primarily
+    US-conventional framing. However, contractor nationality remains undocumented
+    in the original paper, and the ''transferred from different cultural context''
+    metadata flag is not contradicted. Recent cultural adaptation work (Tomar et al.,
+    2025) that created China/India/Japan/Korea/Africa variants confirms the original
+    is implicitly US/Western-anchored — but does not confirm strict US-dollar or US-customary-unit
+    usage throughout. The gap in documented systematic enforcement of US conventions
+    remains partial. Sources: Emergent Mind GSM8K dataset — [|https://www.emergentmind.com/topics/gsm8k-dataset-95a37205-4213-4591-900f-09ce82d0a123|]'
+- id: GAP-5
+  label: K-2 and early-grade arithmetic coverage
+  description: GSM8K's difficulty calibration emphasizes multi-step problems; the
+    paper estimates 80% solve rate would require ~10^16 parameters, indicating the
+    benchmark skews toward upper-elementary difficulty and likely underrepresents
+    K-2 single-step arithmetic.
+  gap_type: partial
+  web_search_target: 'Confirmed and sharpened. All independent sources consistently
+    report that GSM8K problems require between 2 and 8 steps to solve, with the lower
+    bound (2-step) described as ''direct arithmetic exercises where the challenge
+    is primarily parsing the linguistic description.'' Problems are described as solvable
+    by ''a bright middle school student'' and designed for ''moderate difficulty.''
+    A difficulty segmentation study found approximately equal subdivisions into easy
+    (<3 operations), medium (=3 operations), and hard (>3 operations) — meaning even
+    the easiest third of GSM8K requires at least 2 arithmetic operations. True K-2
+    single-step single-operation problems (e.g., ''5 + 3 = ?'') are absent by design.
+    Sources: HuggingFace openai/gsm8k — [|https://huggingface.co/datasets/openai/gsm8k|];
+    Emergent Mind GSM8K dataset — [|https://www.emergentmind.com/topics/gsm8k-dataset-95a37205-4213-4591-900f-09ce82d0a123|];
+    Brenndoerfer GSM8K analysis — [|https://mbrenndoerfer.com/writing/gsm8k-evaluating-mathematical-reasoning-language-models|]'
+- id: GAP-6
+  label: Grade-band difficulty distribution across K-8 span
+  description: 'GSM8K does not document the distribution of problems across grade-level
+    difficulty bands. Whether simpler (K-2) or more advanced (grades 6-8: ratios,
+    percentages, fractions) problems are proportionally represented relative to the
+    platform''s usage distribution is unknown.'
+  gap_type: partial
+  web_search_target: 'Partially resolved. One study (Li et al., 2023, cited in Emergent
+    Mind) provides a difficulty segmentation by operation count: approximately equal
+    thirds split into easy (<3 operations), medium (=3 operations), and hard (>3 operations).
+    This confirms a roughly uniform distribution across multi-step difficulty levels
+    within GSM8K''s range, but the range itself (2–8 steps) does not cover K-2 single-step
+    work. No source provides a mapping of GSM8K items to specific CCSS-M grade bands
+    (K-2, 3-4, 5, 6-8). The grade-band distribution gap therefore remains partially
+    unresolved at the CCSS-M granularity the platform uses. Sources: Emergent Mind
+    GSM8K dataset — [|https://www.emergentmind.com/topics/gsm8k-dataset-95a37205-4213-4591-900f-09ce82d0a123|]'
+infrastructure_notes:
+  deployment_modality: Text-based web/mobile platform; LLM receives word problem text
+    and student-submitted answer via API
+  input_channel: Text string (word problem prose) submitted programmatically
+  output_channel: Binary correct/incorrect label returned to platform UI
+  latency_requirements: '[NEEDS VERIFICATION — deferred: below search budget; low
+    impact for benchmark validity scoring — platform SLA is an operational requirement
+    not affecting benchmark fitness assessment]'
+  device_access_patterns: '[NEEDS VERIFICATION — deferred: below search budget; likely
+    unsearchable (platform-specific operational data); low impact for benchmark validity
+    scoring]'
+  internet_access_assumption: Students assumed to have reliable internet access to
+    use the platform; no offline-mode requirement documented
+regulatory_and_privacy_notes:
+  applicable_federal_law: 'COPPA (Children''s Online Privacy Protection Act) — platform
+    serves children under 13. COPPA applies to for-profit operators of online services
+    that direct services to children under 13 or knowingly collect personal information
+    from them, following a notice-and-consent model. Source: McDermott Law EdTech
+    Privacy overview — [|https://www.mcdermottlaw.com/insights/edtech-and-privacy-navigating-a-shifting-regulatory-landscape/|]'
+  applicable_state_laws: 'As of 2024, more than 40 states have passed student data
+    privacy laws imposing additional compliance requirements beyond federal law. California''s
+    SOPIPA (Student Online Personal Information Protection Act, effective 2016) is
+    the most widely copied model: it prohibits edtech companies from using K-12 student
+    data for commercial purposes, targeted advertising, or profiling, and applies
+    regardless of whether a formal school contract exists. At least 13 states have
+    passed SOPIPA-modeled laws (Illinois SOPPA, Colorado data-deletion mandate, etc.).
+    A nationwide consumer platform must track this patchwork across all states where
+    it serves students. Source: StudentDPA 2024 — [|https://studentdpa.com/blog/understanding-ferpa-coppa-state-privacy-laws-03202025|];
+    McDermott Law 2024 — [|https://www.mcdermottlaw.com/insights/edtech-and-privacy-navigating-a-shifting-regulatory-landscape/|];
+    Public Interest Privacy Center — [|https://publicinterestprivacy.org/resources/state-student-privacy/|]'
+  ferpa_applicability: 'FERPA applies directly to educational institutions receiving
+    federal funding, and indirectly to edtech vendors acting as ''school officials''
+    under a school contract. For a direct-to-consumer platform with no school contract,
+    FERPA''s school official exception does not apply and the platform is not directly
+    FERPA-liable; however, if schools recommend or mandate use, the US Department
+    of Education has clarified that such use must still comply with FERPA under the
+    school official exception. The platform''s consumer-facing mode means COPPA and
+    state student privacy laws (especially SOPIPA-type statutes) are the primary regulatory
+    obligations rather than FERPA directly. Source: iKeepSafe FERPA 101 — [|https://ikeepsafe.org/content/uploads/2017/01/FERPA-101-for-EdTech-iKeepSafe.pdf|];
+    Student Privacy Compass PTAC letter — [|https://studentprivacycompass.org/ptac1/|];
+    McDermott Law — [|https://www.mcdermottlaw.com/insights/edtech-and-privacy-navigating-a-shifting-regulatory-landscape/|]'
+  coppa_2_0_note: 'COPPA 2.0 passed the US Senate in July 2024 and would expand protections
+    to cover children up to age 16 (vs. current under-13 threshold) and strengthen
+    consent requirements. If enacted, it would broaden the platform''s compliance
+    obligations to cover the full K-8 student age range. This is pending as of May
+    2026. Source: McDermott Law EdTech Privacy overview — [|https://www.mcdermottlaw.com/insights/edtech-and-privacy-navigating-a-shifting-regulatory-landscape/|]'
+  data_handling_considerations: Student age population (under 13 cohort in K-5) triggers
+    heightened data protection obligations; benchmark evaluation data itself does
+    not involve student PII but deployment context requires COPPA-compliant data handling
+annotator_and_label_quality_notes:
+  gsm8k_label_error_rate: 1.7% documented disagreement rate among contractor re-solvers;
+    authors acknowledge possibly larger fraction of subtle errors
+  contractor_demographics: '[NEEDS VERIFICATION — deferred: likely unsearchable (platform-specific
+    internal data); Upwork and Surge AI contractor nationality, native language, and
+    familiarity with US Common Core are undocumented in the GSM8K paper and no external
+    source has surfaced this information]'
+  ccss_m_calibration: '[NEEDS VERIFICATION — deferred: likely unsearchable (no published
+    CCSS-M alignment audit of GSM8K exists); no documented assurance that GSM8K problems
+    were written to CCSS-M grade-level standards; alignment is incidental rather than
+    designed]'
+net_new_fields:
+  gsm8k_content_scope_confirmed:
+    value: 'GSM8K''s confirmed mathematical content scope is: percentages, fractions,
+      ratios, work rates, and basic measurement conversions — all within elementary
+      arithmetic (+, −, ×, ÷). Explicitly absent: geometry (including area/perimeter),
+      statistics (mean/median), quadratics, and combinatorics. This is confirmed by
+      multiple independent sources and is directly relevant to the validity assessment
+      for this deployment''s grades 6-8 geometry and statistics subtopics.'
+    source: Emergent Mind GSM8K dataset page — [|https://www.emergentmind.com/topics/gsm8k-dataset-95a37205-4213-4591-900f-09ce82d0a123|];
+      Brenndoerfer interactive GSM8K analysis — [|https://mbrenndoerfer.com/writing/gsm8k-evaluating-mathematical-reasoning-language-models|]
+  gsm8k_difficulty_step_distribution:
+    value: All GSM8K problems require 2–8 solution steps, with a difficulty segmentation
+      study finding approximately equal thirds in easy (<3 operations), medium (=3),
+      and hard (>3) categories. The minimum floor of 2 steps excludes true K-2 single-step
+      problems by design. The benchmark was designed for 'a bright middle school student,'
+      confirming the difficulty floor sits above K-2 CCSS-M level.
+    source: Li et al. 2023, cited in Emergent Mind GSM8K dataset — [|https://www.emergentmind.com/topics/gsm8k-dataset-95a37205-4213-4591-900f-09ce82d0a123|];
+      HuggingFace openai/gsm8k — [|https://huggingface.co/datasets/openai/gsm8k|]
+  gsm8k_benchmark_saturation_2025:
+    value: As of late 2025, leading LLMs have reached near-ceiling performance on
+      GSM8K (e.g., Gemini-2.5-Pro at 95.22% on text GSM8K). This saturation means
+      GSM8K is less discriminative at the high end of model capability for standard
+      arithmetic tasks, but the benchmark's value for this deployment context is in
+      confirming baseline competence on multi-step arithmetic — not frontier differentiation.
+      Saturation does not invalidate the benchmark for its intended deployment purpose
+      here.
+    source: GSM8K-V paper (arXiv 2509.25160) — [|https://arxiv.org/pdf/2509.25160|]
+  gsm8k_cultural_adaptation_work:
+    value: Recent work (Tomar et al., July 2025) created culturally adapted GSM8K
+      variants for China, India, Japan, Korea, and pan-Africa by replacing names,
+      currencies, foods, and activities while preserving identical numeric/logical
+      structure. This work confirms the original GSM8K is implicitly US/Western-anchored
+      (the 'default' from which other cultures are adaptations), supporting the IC
+      dimension assessment that GSM8K's cultural framing aligns with US deployment
+      context. However, this work does not audit whether all original problems use
+      strictly US dollar/cent or US customary units.
+    source: Emergent Mind GSM8K benchmark page — [|https://www.emergentmind.com/topics/gsm8k-dataset-95a37205-4213-4591-900f-09ce82d0a123|]
+  ccss_m_non_adopting_states:
+    value: 'Four states never adopted CCSS-M mathematics: Texas, Virginia, Alaska,
+      and Nebraska. Minnesota adopted ELA only, not mathematics. Several additional
+      states (Indiana, Arizona, Oklahoma, South Carolina, Florida, Idaho, New York)
+      have formally withdrawn or replaced CCSS-M, though many replacements are closely
+      aligned. For a nationwide platform, this means a non-trivial minority of students
+      (particularly in Texas, the second-largest state by student population) are
+      in states where CCSS-M is not the official standard. The platform''s CCSS-M
+      alignment may create a systematic curriculum mismatch for students in non-adopting
+      states, most significantly Texas.'
+    source: Wikipedia Common Core implementation by state — [|https://en.wikipedia.org/wiki/Common_Core_implementation_by_state|];
+      World Population Review Common Core States 2026 — [|https://worldpopulationreview.com/state-rankings/common-core-states|];
+      CCSS Initiative — [|https://www.thecorestandards.org/standards-in-your-state/|]

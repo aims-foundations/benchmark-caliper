@@ -1,0 +1,479 @@
+{
+  "benchmark": "folio",
+  "region": "US Defense and High-Reliability Systems Engineers",
+  "dimensions": {
+    "input_ontology": {
+      "score": 1,
+      "justification": "FOLIO's input ontology is structurally opposite to the deployment's core challenge. The benchmark is explicitly built around closed-world, fully-explicit premise sets where models 'decide the correctness of conclusions given a world defined by the premises' [Q15], and it explicitly excludes temporal and modal logics as 'beyond the scope' [Q139, Q140]. The deployment's central task — recognizing latent conflicts where one or both relevant premises live implicitly in referenced MIL-STD/IEEE standards or shared engineering conventions — has no corresponding category in FOLIO's taxonomy. Dataset analysis confirms this without exception: every sampled example provides a complete self-contained premise set with no implicit-premise inference required [DATASET-D1, D3, D5]. The deliberate exclusion of temporal/modal logic is particularly damaging since timing and conditional state requirements are first-class concerns in engineering specs. Cross-document/multi-context reasoning, the deployment's primary use case per Q4 elicitation, is also absent from FOLIO's task structure.",
+      "strengths": [
+        "Operator coverage is broad — negation, conjunction, inclusive/exclusive disjunction, implication, universal and existential quantifiers, and equality are all represented [Q138, DATASET-D12, D15], which provides at least minimal exposure to the logical structures (biconditionals, disjunctive requirements) that appear in specs.",
+        "Reasoning depth diversity is substantive: 28.7% of examples require 5+ hops [Q60], and the sample confirms multi-hop chains of 4–6 universal conditionals [DATASET-D13, D6], providing a lower-bound proxy for explicit-chain reasoning capability.",
+        "Includes both supervised fine-tuning and few-shot prompting evaluation regimes [Q82, Q88], plus advanced CoT/self-consistency/ToT and logic-specialized methods [Q90, Q91], which span the prompting strategies a deployment would likely use."
+      ],
+      "checklist_responses": {
+        "IO-1": "Required deployment categories per elicitation include: implicit-premise inference from referenced standards (Q1 elicitation), latent contradiction detection requiring domain reasoning (Q2 elicitation), cross-document conflict tracing (Q4 elicitation), and confidence-graded uncertainty with resolution paths (Q3 elicitation, Q6 gap). None of these are represented in FOLIO's two-task ontology of NL reasoning and NL-FOL translation [Q63].",
+        "IO-2": "FOLIO omits every high-priority deployment category. The benchmark defines closed-world reasoning over self-contained premises [Q15] and explicitly excludes temporal and modal logics [Q139, Q140] — directly relevant to timing and conditional-state requirements. Dataset sample confirms no example involves implicit-premise inference [DATASET-D1, D3, D5]. Confirmed external gap: no benchmark targets MIL-STD/IEEE implicit-premise reasoning [WEB-13 — space mission requirement verification paper notes 'benchmarking is difficult due to the lack of standardized datasets'].",
+        "IO-3": "The NL-FOL translation sub-task [Q67] and academic FOL-notation focus introduce categories not directly relevant to deployment, which targets natural-language explanation rather than FOL translation. Not fatal — accuracy on the NL reasoning sub-task can be reported in isolation — but consumes evaluation weight on a capability irrelevant to deployment value.",
+        "IO-4": "Category gaps harming content validity: (a) no open-world / implicit-premise category, (b) no cross-document reasoning category, (c) no temporal/modal logic category, (d) no actionable-uncertainty category (Unknown means formal undecidability [Q66], not 'what would resolve this'), (e) no domain-specific latent-contradiction category. Combined, these gaps represent construct underrepresentation of the deployment's primary tasks."
+      },
+      "evidence_quotes": [
+        "[Q15] 'We present a natural language reasoning dataset, FOLIO, with first-order logic reasoning problems which require the models to decide the correctness of conclusions given a world defined by the premises.' (p.1)",
+        "[Q139] 'Following (Russell and Norvig, 2010), we consider temporal logic and modal logic as special-purpose logics.' (p.13)",
+        "[Q140] 'Consequently, they are beyond the scope of the definition of first-order logic used in our dataset.' (p.13)",
+        "[Q60] '28.7% of the examples need five or more depths of reasoning to infer the conclusions' (p.5)",
+        "[Q63] 'We define two new tasks based on FOLIO, natural language reasoning with first-order logic and NL-FOL translation.' (p.6)",
+        "[Q66] 'Given P and H, the goal is to determine the truth values of the conclusions: True, False or Unknown, based on FOL reasoning.' (p.6)",
+        "[Q138] 'We include the following operators: negation ¬, conjunction ∧, disjunction ∨, implication →, universal quantifier ∀, existential quantifier ∃, equal =.' (p.13)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-13] No standardized NLP benchmark exists for defense/aerospace requirements-language reasoning; space mission paper explicitly notes the gap",
+        "[WEB-10] ContractNLI is the closest structural analog for implicit-premise document NLI, but in the legal domain rather than engineering"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: Two-premise closed-world syllogism with no external knowledge required — confirms structural pattern across sample",
+        "DATASET-D3: Programming scenario with all constraints explicitly stated — no implicit premise from external standard",
+        "DATASET-D5: Geopolitical facts restated as premises rather than assumed from world knowledge",
+        "DATASET-D13: Four chained universal conditionals demonstrate multi-hop closed-world inference (deployment-relevant strength for crisp contradictions)",
+        "DATASET-D21: Single 'event world' with all premises consolidated — confirms single-context structural unit"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "Q15",
+          "Q63",
+          "Q66"
+        ],
+        "IO-2": [
+          "Q15",
+          "Q139",
+          "Q140",
+          "WEB-13",
+          "DATASET-D1",
+          "DATASET-D3",
+          "DATASET-D5"
+        ],
+        "IO-3": [
+          "Q63",
+          "Q67"
+        ],
+        "IO-4": [
+          "Q15",
+          "Q66",
+          "Q139",
+          "Q140",
+          "WEB-10",
+          "WEB-13",
+          "DATASET-D21"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "No correlation study between FOLIO accuracy and capability on implicit-premise or cross-document benchmarks (e.g., ContractNLI, MDBench)."
+      ],
+      "requires_expert_verification": [
+        "Whether FOLIO's multi-hop chain coverage is a useful lower-bound proxy for engineering crisp-contradiction detection requires domain-expert validation against representative specs."
+      ]
+    },
+    "input_content": {
+      "score": 1,
+      "justification": "FOLIO's content is general-knowledge narrative prose drawn from Wikipedia seeds [Q34] and syllogism templates [Q42], with a vocabulary of 4,351 words [Q62] curated to avoid identity bias [Q47, Q127] and stay close to real-world facts [Q126]. Dataset analysis confirms zero engineering-domain content across the sampled 57 examples: topics span sports, consumer products, biology, film, pop culture, and policy [DATASET-D9, D10, D22, D23, D24], with no MIL-STD/IEEE vocabulary, no tolerance/timing/thermal/bandwidth content, and no requirements-language modal verbs ('shall'/'should'). This produces systematic construct-irrelevant variance relative to the deployment's highest-priority targets — latent contradictions in thermal budgets, timing margins, and bus bandwidth (elicitation Q2). Web search confirms no available benchmark targets this content register [WEB-13, WEB-22]. The WikiLogic contamination concern [Q104] further weakens the evidentiary value of FOLIO scores for novel technical content.",
+      "strengths": [
+        "Content is intentionally screened against identity bias [Q47, Q127], reducing one class of construct-irrelevant variance that could plausibly affect engineering-domain deployment.",
+        "Logical complexity and AST diversity are genuine — 4,351-word vocabulary, 28.7% of examples requiring 5+ hops [Q60, Q62] — providing a substantively non-trivial logical-reasoning probe even if domain-irrelevant.",
+        "Commonsense premises required for FOL reasoning are explicitly added as additional premises [Q55], demonstrating awareness of implicit-knowledge issues — though this is solved by elimination (making everything explicit) rather than by testing implicit-knowledge invocation, which is exactly what the deployment needs."
+      ],
+      "checklist_responses": {
+        "IC-1": "Deployment requires inputs in normalized requirements-language register with modal verbs ('shall', 'should'), standards identifiers (MIL-STD-461, IEEE 15288), tolerance expressions, and interface parameter conventions. FOLIO contains none of this register — every sample example is general-purpose narrative English [DATASET-D9, D10, D22].",
+        "IC-2": "Cultural alignment is partial — content is English-language and US-acceptable [DATASET-D11, D22, D26], but 'cultural fit' to the engineering professional culture is essentially zero: no examples involve the standards-driven, traceability-focused register engineers work in.",
+        "IC-3": "Inputs require general Western/Anglophone cultural knowledge (TikTok, Meta, Yale, Hong Kong references — [DATASET-D11, D22, D26]). This is compatible with US deployment at the surface level, but irrelevant to engineering content. WikiLogic contamination [Q104] is a confound: LLMs may answer from pretraining rather than logical inference.",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — no evidence of recruiting systems engineers as annotators or reviewers; benchmark used CS/NLP/FOL experts [Q29, Q124, Q125], not aerospace/defense practitioners. Regional expert recruitment would be needed.",
+        "IC-5": "Content issues harming content validity: (a) zero engineering-domain examples [DATASET-D9, D10, D22], (b) no normalized requirements-language register, (c) no MIL-STD/IEEE/INCOSE vocabulary, (d) Wikipedia contamination confound [Q104, DATASET-D26], (e) HybLogic template learnability [Q105] inflates measured performance on patterns absent from real specs."
+      },
+      "evidence_quotes": [
+        "[Q62] 'our dataset has a vocabulary of 4,351 words' (p.5)",
+        "[Q34] 'WikiLogic: annotation from scratch using Wikipedia articles as seeds.' (p.4)",
+        "[Q47] 'Our dataset prioritizes realism and factual accuracy, steering clear of biases and stereotypes linked to identity markers' (p.4)",
+        "[Q104] 'since the examples in WikiLogic are created from scratch by humans, it is possible that LLMs have seen similar texts with similar logical patterns in the training data.' (p.8)",
+        "[Q105] 'HybLogic is created from templates and some of the logical patterns can be learned during fine-tuning.' (p.8)",
+        "[Q55] 'we also add necessary commonsense knowledge in both the NL and FOL premises... We add such knowledge as additional premises at this stage.' (p.5)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-13] No NLP benchmark exists for defense/aerospace requirements-language content",
+        "[WEB-22] NLP requirements inconsistency work (IEEE RE 2023) confirms a gap in standardized benchmarks for INCOSE-style requirements",
+        "[WEB-23] GPT-4 has been tested on building-regulation contradictions but not defense specifications"
+      ],
+      "evidence_dataset": [
+        "DATASET-D9: Software/BFS scenario — closest to technical content but still fully domain-neutral, no MIL-STD/IEEE vocabulary",
+        "DATASET-D10: Aviation-adjacent (Boeing/Airbus) but no technical specifications or tolerances",
+        "DATASET-D22: Meta brand reference — contemporary social/consumer content",
+        "DATASET-D23: Political philosophy content — illustrates breadth-but-irrelevance of topic spread",
+        "DATASET-D24: Biology facts drawn from Wikipedia — illustrates contamination concern",
+        "DATASET-D26: Named individual likely Wikipedia-derived — contamination confound for LLM evaluation"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "DATASET-D9",
+          "DATASET-D10",
+          "DATASET-D22",
+          "WEB-22"
+        ],
+        "IC-2": [
+          "DATASET-D11",
+          "DATASET-D22",
+          "DATASET-D26"
+        ],
+        "IC-3": [
+          "Q104",
+          "DATASET-D24",
+          "DATASET-D26"
+        ],
+        "IC-4": [],
+        "IC-5": [
+          "Q104",
+          "Q105",
+          "DATASET-D9",
+          "DATASET-D10",
+          "DATASET-D22",
+          "WEB-13"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether the test split (226 examples, not publicly visible) contains any engineering-domain content — sample was train-only.",
+        "Whether full annotator pool includes anyone with systems-engineering background — documentation suggests no [Q108, Q122]."
+      ],
+      "requires_expert_verification": [
+        "Whether any FOLIO content patterns transfer at all to MIL-STD/IEEE requirements-language reasoning would require empirical testing with practicing systems engineers."
+      ]
+    },
+    "input_form": {
+      "score": 3,
+      "justification": "Input form is the one dimension where FOLIO partially aligns with the deployment. Both are text-only English [Q22, DATASET-D4, D8], with no modality or script mismatch. FOLIO's surface conventions are carefully standardized: 'either-or' for exclusive disjunction [Q130], 'A or B, or both' for inclusive [Q131], grammar-checked with Grammarly [Q49], reviewed for naturalness [Q50], and ambiguity actively eliminated [Q51]. However, two substantial form mismatches remain. First, FOLIO inputs are short self-contained narratives (sampled premises range from 2 to ~9 sentences, ~50–200 tokens [DATASET-D1, D2]), while deployment documents are multi-thousand-word, multi-section specs (20,000–250,000+ words; 27K–100K+ tokens [WEB-6, WEB-7]). Second, FOLIO's deliberate elimination of ambiguity [Q51] produces inputs cleaner than real specs, which contain modal verbs, cross-references, and tolerance expressions absent from FOLIO. Recent long-context research [WEB-7] shows accuracy degradation from ~95% to ~60% at long contexts — a regime FOLIO cannot probe. The form mismatch is real but not categorical, so the dimension scores higher than IO/IC/OO/OF.",
+      "strengths": [
+        "Text-only English with no modality mismatch [Q22, DATASET-D4, D8] — directly aligns with deployment's text-only English interface.",
+        "Russell & Norvig FOL syntax standard [Q52] is widely taught in CS curricula and would be familiar to engineering reviewers with formal training.",
+        "Premise ordering does not encode label information [Q158, Q159, Q160] — accuracy changes ~1% under shuffling — so the benchmark is robust to one class of input-form artifact.",
+        "Story-level train/val/test split [Q78, Q79] prevents premise leakage, supporting external validity for the form."
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal distributions partially match: both are text-only English, but FOLIO inputs are short stories (~50–200 tokens) [DATASET-D1, D2] while deployment requires multi-thousand-word, multi-section documents (27K–100K+ tokens per [WEB-6]). The benchmark does not exercise long-context capability at all.",
+        "IF-2": "Regional infrastructure supports text input trivially. No capture-specification mismatch. However, on-premises/FedRAMP High deployment constraints driven by CUI/ITAR [WEB-3, WEB-4, WEB-9] mean models with very large context windows may not be available in compliant deployment configurations.",
+        "IF-3": "Domain-specific form differences: (a) FOLIO eliminates NL ambiguity [Q51], deployment documents are full of modal verbs and conditional language; (b) FOLIO uses standardized either-or/inclusive-or conventions [Q130, Q131], deployment uses normalized 'shall/should' register; (c) FOLIO has parallel FOL annotations [Q65], deployment has no FOL parallel — engineers reason directly on NL.",
+        "IF-4": "Form mismatches harming external validity: (a) input length 2–3 orders of magnitude shorter than deployment [DATASET-D1, D2, WEB-6]; (b) ambiguity actively eliminated [Q51] whereas deployment must handle ambiguity; (c) no multi-document structural form; (d) no normalized requirements-language register."
+      },
+      "evidence_quotes": [
+        "[Q22] 'We use formal logic, i.e., FOL to ensure the logical validity of the examples written in NL' (p.2)",
+        "[Q49] 'All the sentences are first checked with a grammar checking tool, Grammarly.' (p.4)",
+        "[Q51] 'We also eliminate natural language ambiguity when it is possible.' (p.4)",
+        "[Q52] 'We adopt the FOL definitions and syntax most widely used in the AI community (Russell and Norvig, 2010).' (p.5)",
+        "[Q78] 'We split FOLIO by 70%/15%/15% split for the train/validation/test sets' (p.6)",
+        "[Q130] 'We always use either-or to express exclusive disjunction.' (p.13)",
+        "[Q158] 'we shuffle the input premises to evaluate models.' (p.15)",
+        "[Q159] 'accuracy increases or decreases by roughly 1% in most settings compared to our unshuffled premises.' (p.15)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-6] 250-page technical spec can exceed 60,000 tokens; ~20,000-word SRD+ICD pair yields ~27,000 tokens",
+        "[WEB-7] Long-context accuracy degrades from ~95% to ~60% on frontier models as input length grows",
+        "[WEB-17] LongBench v2 covers multi-document tasks with median 54K-word contexts as proxy for long-context evaluation"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: Two-sentence minimal premise set — represents lower bound of FOLIO input length",
+        "DATASET-D2: ~7-sentence, ~180-word premise set — upper end of FOLIO input length, orders of magnitude shorter than deployment documents",
+        "DATASET-D4: Clean English declarative prose with no ambiguity — confirms register difference from spec language",
+        "DATASET-D8: Unambiguous English prose — confirms Q51 ambiguity-elimination practice"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q22",
+          "WEB-6",
+          "DATASET-D1",
+          "DATASET-D2"
+        ],
+        "IF-2": [
+          "WEB-3",
+          "WEB-4",
+          "WEB-9"
+        ],
+        "IF-3": [
+          "Q51",
+          "Q65",
+          "Q130",
+          "Q131"
+        ],
+        "IF-4": [
+          "Q51",
+          "WEB-6",
+          "WEB-7",
+          "DATASET-D1",
+          "DATASET-D2"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "No data on FOLIO performance under controlled length perturbations (e.g., padding stories with distractor premises) — would be informative for length sensitivity."
+      ],
+      "requires_expert_verification": [
+        "Whether the elimination of ambiguity [Q51] makes FOLIO performance an upper bound on real-spec performance — domain experts could validate by reviewing model outputs on real specs."
+      ]
+    },
+    "output_ontology": {
+      "score": 1,
+      "justification": "FOLIO's output ontology — True/False/Unknown classification labels [Q36, Q66, Q94] — is fundamentally misaligned with deployment requirements. The deployment explicitly demands natural-language explanations of the conflict mechanism paired with a confidence grade [Q3 elicitation, output_requirements.required_output_form], with bare classification 'explicitly non-actionable' for engineers reviewing hundreds of requirements. Dataset analysis confirms every example has exactly one of three string labels with no explanation, rationale, or confidence field [DATASET-D11, D25]. Furthermore, FOLIO's 'Unknown' label denotes formal undecidability from stated premises [Q66, DATASET-D25] — a fundamentally different concept from the deployment's notion of actionable uncertainty, which requires a statement of what additional information (referenced standard content, interface parameter) would resolve the ambiguity. An unexplained 'Uncertain' is treated as a tool failure in this deployment [output_requirements.uncertain_handling]. The output taxonomy violates both structural validity (the construct's structure is misrepresented — actionable contradiction explanation is reduced to a 3-way classification) and content validity (missing categories: explanation quality, calibrated confidence, resolution paths).",
+      "strengths": [
+        "Three-way label structure (not binary) [Q36, DATASET-D14, D25] is preferable to a pure binary, since it minimally distinguishes 'definitively conflicts' from 'undetermined' — a partial echo of the deployment's triage need.",
+        "Labels are grounded in FOL semantics verified by an inference engine [Q2, Q57], so label correctness for the benchmark's intended construct is high.",
+        "FOL operator coverage is comprehensive [Q138] — negation, conjunctions, disjunctions, implication, quantifiers, equality — supporting unambiguous derivation of truth values [Q136, Q137]."
+      ],
+      "checklist_responses": {
+        "OO-1": "The True/False/Unknown taxonomy [Q66] is regionally relevant only in the most abstract sense (the labels themselves are not culturally biased). But for the deployment, the relevant 'output category' is structured natural-language explanation + confidence grade — a category entirely absent from FOLIO.",
+        "OO-2": "Missing categories specific to deployment: (a) natural-language explanation of conflict mechanism, (b) confidence grade for triage [output_requirements.triage_function], (c) resolution-path statement for uncertain findings, (d) traceability citation (REQ-IDs, document/section references) per cultural_and_professional_norms_notes. All four are essential to the deployment and none is in FOLIO's output ontology [DATASET-D11, D25].",
+        "OO-3": "The 'Unknown' label encodes a non-deployment assumption: closed-world formal undecidability [Q66, DATASET-D25]. This is the opposite of the deployment's actionable-uncertainty notion. Models optimized on FOLIO learn to recognize closed-world undecidability, not to articulate what missing information would resolve an open-world conflict [output_requirements.uncertain_handling].",
+        "OO-4": "Stakeholder-driven taxonomy redesign is necessary. The deployment requires a fundamentally different output schema (structured explanation + confidence + resolution path + traceability). FOLIO cannot be adapted by relabeling — the entire output structure must be replaced.",
+        "OO-5": "Taxonomy issues harming validity: (a) bare classification labels reduce a generative, explanatory task to a 3-way categorization [DATASET-D11]; (b) Unknown ≠ deployment's Uncertain [Q66, DATASET-D25]; (c) no confidence/calibration category [WEB-20 confirms calibration is a broader unresolved issue]; (d) no mechanism to assess explanation faithfulness [WEB-19, WEB-20, WEB-24]."
+      },
+      "evidence_quotes": [
+        "[Q36] 'Each of the stories is composed of several premises and conclusions with truth values of True, False, or Unknown' (p.4)",
+        "[Q66] 'Given P and H, the goal is to determine the truth values of the conclusions: True, False or Unknown, based on FOL reasoning.' (p.6)",
+        "[Q94] 'The majority baseline of our dataset is 38.5% since in our test set, there are 87, 78 and 61 examples with labels of true, false and unknown respectively.' (p.7)",
+        "[Q135] 'FOL enables deriving facts from other facts' (p.13)",
+        "[Q136] 'FOL, as a logical form, is a more explicit logical representation than its NL counterpart' (p.13)",
+        "[Q138] 'We include the following operators: negation ¬, conjunction ∧, disjunction ∨, implication →, universal quantifier ∀, existential quantifier ∃, equal =.' (p.13)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-19] FaithLM quantifies natural-language explanation faithfulness — directly relevant to deployment's explanation requirement, not addressed by FOLIO",
+        "[WEB-20] All tested faithfulness metrics often fail to surpass a random baseline — explanation quality measurement is unresolved",
+        "[WEB-21] Recent benchmark on reconciliatory contradiction explanation finds 'most models achieve limited success' across 18 LLMs",
+        "[WEB-24] ACL 2024 faithfulness research confirms LLM explanations frequently unfaithful to actual reasoning"
+      ],
+      "evidence_dataset": [
+        "DATASET-D11: Label 'False' stored as bare string; no explanation of why disjunctive conclusion fails",
+        "DATASET-D25: Uncertain label gives no indication of what would resolve the undecidability — confirms semantic mismatch with deployment's actionable uncertainty"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q66",
+          "DATASET-D11"
+        ],
+        "OO-2": [
+          "DATASET-D11",
+          "DATASET-D25"
+        ],
+        "OO-3": [
+          "Q66",
+          "DATASET-D25"
+        ],
+        "OO-4": [
+          "Q66",
+          "DATASET-D11"
+        ],
+        "OO-5": [
+          "DATASET-D11",
+          "DATASET-D25",
+          "WEB-19",
+          "WEB-20"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether composite metrics combining FOLIO accuracy with separately-measured explanation-quality scores correlate with deployment-task performance — no such study exists."
+      ],
+      "requires_expert_verification": [
+        "Definition of acceptable confidence-grade calibration in the deployment context (e.g., what 'high confidence' threshold maps to engineering action) requires program-office input."
+      ]
+    },
+    "output_content": {
+      "score": 2,
+      "justification": "FOLIO's ground-truth labels are derived from automated FOL inference engine verification [Q2, Q57] over annotations written by CS students/researchers with formal FOL training [Q31, Q108, Q122, Q123]. The human expert baseline (95.98% accuracy) versus non-expert (61.82%) [Q111] confirms labels reflect what is logically provable from stated premises by FOL-trained humans. For the deployment, this introduces two convergent-validity concerns. First, annotators have no documented systems-engineering, aerospace, or defense expertise [Q108, Q122] — the ground truth reflects logical provability, not whether a practicing engineer would recognize a latent domain-convention conflict. Second, dataset analysis surfaces tangible annotation quality issues in the small sample: name mismatches between NL and FOL [DATASET-D18], an NL/FOL semantic contradiction [DATASET-D17], and several FOL parenthesis errors [DATASET-D16, D27, D28]. With ~5 identifiable issues in a 57-example sample, the error rate may be non-trivial, weakening the evidentiary value of FOLIO accuracy scores as a deployment proxy. The dimension scores 2 (not 1) because labels are correct in the closed-world FOL sense — they are wrong as a proxy for engineering judgment, not internally inconsistent in their own taxonomy.",
+      "strengths": [
+        "Inference-engine verification of label correctness [Q2, Q57] provides strong intra-construct ground truth — labels are not subjective and have been programmatically checked.",
+        "Annotator selection criteria are explicit and rigorous: native or near-native English speakers with formal FOL coursework [Q26, Q27, Q28], multi-stage NL and FOL quality control by NLP/CL and FOL experts respectively [Q29, Q124, Q125].",
+        "Substantial annotation investment: 980 man-hours across six stages [Q32], with 39.2% of stories rewritten after review [Q48] — suggests strong internal quality discipline.",
+        "Three-way label distribution is reasonably balanced [Q94, DATASET-D14, D25] — models cannot trivially collapse to a binary classifier."
+      ],
+      "checklist_responses": {
+        "OC-1": "Labels reflect FOL-provability judgments by CS/FOL-expert annotators [Q108, Q122], not systems-engineering stakeholder perspectives. For deployment-relevant 'latent contradictions involving implicit domain constraints,' the labels do not encode the practicing engineer's judgment.",
+        "OC-2": "Likely substantial disagreement: a systems engineer reviewing a real spec would invoke MIL-STD/IEEE conventions and physical constraints not in the premise set. FOLIO annotators were instructed to add necessary commonsense as explicit premises [Q55] — solving the problem by elimination, not by testing implicit-knowledge invocation. Confirmed structural gap [WEB-13].",
+        "OC-3": "Documentation discloses annotator demographics: CS undergraduate/graduate students and researchers [Q16, Q31], native or near-native English [Q27], FOL coursework [Q28, Q123]. No aerospace/defense/ICD background documented. Datasheet-style disclosure is partial.",
+        "OC-4": "Re-annotation by representative regional pool (US-based practicing systems engineers) would be necessary to assess deployment validity but is impractical at FOLIO scale; the more economical path is a purpose-built test suite of real or synthetic defense spec contradictions reviewed by domain experts.",
+        "OC-5": "INSUFFICIENT DOCUMENTATION on aggregation. Paper does not describe inter-annotator agreement statistics by sub-population or whether minority-perspective disagreements were preserved; the FOL-verification step [Q57] arguably erases human disagreement entirely in favor of automated provability.",
+        "OC-6": "Label issues harming convergent/external validity: (a) annotator pool lacks deployment-domain expertise [Q108, Q122]; (b) labels reflect closed-world provability, not open-world engineering judgment [Q66]; (c) observable annotation errors in sample (NL/FOL mismatches, FOL parenthesis issues) [DATASET-D17, D18, D16, D27]; (d) Wikipedia contamination [Q104] confounds label-quality interpretation for LLM evaluation."
+      },
+      "evidence_quotes": [
+        "[Q2] 'The logical correctness of the premises and conclusions is ensured by their FOL annotations, which are automatically verified by an FOL inference engine.' (p.1)",
+        "[Q16] 'FOLIO is a high-quality and manually curated dataset, written by CS undergraduate and graduate students and researchers in academia and industry.' (p.2)",
+        "[Q31] 'All stories and FOL annotations in FOLIO are written and reviewed by expert annotators, including CS undergraduate and graduate students, and senior researchers' (p.4)",
+        "[Q48] '39.2% of the stories suffer from at least one of these issues. We implemented a detailed protocol to rewrite these stories.' (p.4)",
+        "[Q108] 'Our expert annotators are computer science college students familiar with FOL.' (p.9)",
+        "[Q111] 'Expert annotations achieve an accuracy of 95.98% while non-expert annotations achieves 61.82%' (p.9)",
+        "[Q122] 'Our annotators are either college or graduate students who are native English speakers' (p.12)",
+        "[Q124] 'At the NL quality check stage, only annotators who are experts in natural language processing or computational linguistics are involved.' (p.12)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-13] Space mission paper explicitly notes lack of standardized datasets for requirements verification — confirms no off-the-shelf engineer-annotated benchmark"
+      ],
+      "evidence_dataset": [
+        "DATASET-D14: Inference-engine-verified True label on 6-premise chain — confirms strong internal label quality for closed-world construct",
+        "DATASET-D16: FOL parenthesis error in Ex. 36 — annotation quality issue",
+        "DATASET-D17: NL says Matt 'does not invest' but FOL ground fact says InvestInRegularly(matt, publicStockMarket) — direct semantic mismatch",
+        "DATASET-D18: NL says 'John' but FOL says 'jim' — entity-name mismatch",
+        "DATASET-D27: Missing closing parenthesis in FOL — syntactic issue",
+        "DATASET-D28: Extra closing parenthesis in FOL — syntactic issue"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q108",
+          "Q122"
+        ],
+        "OC-2": [
+          "Q55",
+          "WEB-13"
+        ],
+        "OC-3": [
+          "Q16",
+          "Q27",
+          "Q28",
+          "Q108",
+          "Q122",
+          "Q123"
+        ],
+        "OC-4": [
+          "Q108",
+          "WEB-13"
+        ],
+        "OC-5": [],
+        "OC-6": [
+          "Q66",
+          "Q104",
+          "Q108",
+          "DATASET-D16",
+          "DATASET-D17",
+          "DATASET-D18",
+          "DATASET-D27"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Annotation error rate on full dataset (sample suggests ~5-9% of examples have issues; test split not inspected).",
+        "Inter-annotator agreement statistics are not reported in the documentation."
+      ],
+      "requires_expert_verification": [
+        "Whether a defense systems engineer would assign the same labels to FOLIO examples as the CS-trained annotators — informative for understanding the label-construct gap."
+      ]
+    },
+    "output_form": {
+      "score": 1,
+      "justification": "FOLIO's output form — accuracy on True/False/Unknown classification [Q80] plus SynV and ExcAcc for translation [Q73–Q76] — is fundamentally mismatched with deployment needs. The deployment requires structured natural-language explanations citing specific requirement IDs (e.g., 'REQ-SYS-0042 in the SRD conflicts with ICD-PWR-007 Section 3.2.1' per cultural_and_professional_norms_notes), a confidence grade for triage [output_requirements.triage_function], and resolution paths for uncertain findings — none of which FOLIO measures. Critically, FOLIO evaluates single isolated (premise_set, conclusion) pairs [DATASET-D21, D2], whereas the deployment's central use case is cross-document reasoning across multiple long-form documents simultaneously [Q4 elicitation, cross_document_reasoning_note]. There is no benchmark mechanism that probes multi-document context handling or traceability output. Auxiliary findings amplify the concern: GPT-4 is 31.82% below expert human accuracy [Q113], models systematically overpredict True [Q155, Q157] with False/Unknown accuracy only 54–62% [Q156], and performance degrades sharply beyond 3 reasoning hops [Q99] — all indicating that even the closed-world classification baseline is challenged, while the deployment requires capabilities entirely outside the benchmark's measurement apparatus. The authors themselves defer 'a more reliable metric' for translation to future work [Q77].",
+      "strengths": [
+        "Stability protocol — five randomly-sampled training sets with averaged accuracy [Q93] — produces robust point estimates rather than noisy single runs.",
+        "Premise-shuffling experiment confirms minimal label-order artifacts (~1% accuracy change) [Q158, Q159, Q160], so accuracy reflects reasoning rather than positional heuristics.",
+        "Story-level train/val/test split [Q78, Q79] prevents premise leakage, supporting external validity of the accuracy estimate within the benchmark's construct.",
+        "Reporting breakdowns by reasoning depth [Q99] and by sub-pipeline (WikiLogic vs. HybLogic) [Q102, Q105] provides diagnostic granularity useful for capability profiling."
+      ],
+      "checklist_responses": {
+        "OF-1": "Output modality mismatch is total. Deployment requires structured natural-language explanations + confidence grade + traceability citations [output_requirements]; FOLIO outputs a single label per example [Q80, DATASET-D11]. Single-context vs. multi-document mismatch [DATASET-D21, D2] is equally categorical.",
+        "OF-2": "Not applicable — deployment is text-only [infrastructure_and_deployment_notes.interface_modality]; no speech output requirement.",
+        "OF-3": "Not applicable — target users are professional engineers with high literacy in normalized requirements register; accessibility constraints are not the binding constraint here. The relevant accessibility analog is whether outputs are actionable for expert review, which they are not [DATASET-D11, D25].",
+        "OF-4": "Form mismatches harming external validity: (a) classification accuracy is the only metric [Q80], cannot assess explanation quality [WEB-19, WEB-20]; (b) no multi-document evaluation [DATASET-D21]; (c) no confidence-calibration metric; (d) no traceability/citation metric; (e) NL-FOL translation metrics SynV and ExcAcc are acknowledged as imperfect [Q77] and target a capability deployment does not need."
+      },
+      "evidence_quotes": [
+        "[Q80] 'We use accuracy for evaluating logical reasoning performance.' (p.6)",
+        "[Q73] 'Two metrics are adopted to evaluate NL-FOL translation... Syntactic validity (SynV).' (p.6)",
+        "[Q75] 'Inference Engine execution accuracy (ExcAcc).' (p.6)",
+        "[Q77] 'We leave for future work the design of a more reliable metric of NL-FOL translation.' (p.6)",
+        "[Q99] 'GPT-3.5 and GPT-4 both perform much better on examples with a 0 ∼ 3 reasoning depth, indicating that examples with a 4 ∼ 7 reasoning depth pose a challenge to the SoTA LMs.' (p.8)",
+        "[Q113] 'The expert and GPT-4 gap is 31.82%, suggesting significant room for model improvement.' (p.9)",
+        "[Q155] 'LLMs are significantly better at making the correct predictions for conclusions with labels of True than the conclusions with labels of False or Unknown.' (p.15)",
+        "[Q156] 'The accuracy on examples with False or Unknown conclusions is 61.9% with fine-tuning and 54.0% with few-shot prompting.' (p.15)",
+        "[Q158] 'we shuffle the input premises to evaluate models.' (p.15)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-16] MDBench targets multi-document reasoning — usable as supplementary proxy for cross-document deployment capability",
+        "[WEB-17] LongBench v2 covers multi-document tasks with median 54K-word contexts — partial proxy for OF gap",
+        "[WEB-19] FaithLM evaluates natural-language explanation faithfulness — capability FOLIO does not assess",
+        "[WEB-21] Reconciliatory contradiction explanation benchmark across 18 LLMs finds 'most models achieve limited success'"
+      ],
+      "evidence_dataset": [
+        "DATASET-D11: Single string label 'False' is the entire output — no explanation, no confidence, no citation",
+        "DATASET-D2: Single 'company world' premise block — no cross-document or multi-source structural form",
+        "DATASET-D21: Single 'event world' — confirms single-context structural unit, no cross-document analog",
+        "DATASET-D25: Uncertain label with no resolution path — confirms output-form gap for actionable uncertainty"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q80",
+          "DATASET-D11",
+          "DATASET-D21",
+          "DATASET-D2"
+        ],
+        "OF-2": [],
+        "OF-3": [
+          "DATASET-D11",
+          "DATASET-D25"
+        ],
+        "OF-4": [
+          "Q77",
+          "Q80",
+          "DATASET-D11",
+          "DATASET-D21",
+          "WEB-19",
+          "WEB-20"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Whether FOLIO accuracy correlates at all with explanation-quality or multi-document-reasoning capability — no such correlation study exists [gap_id 4]."
+      ],
+      "requires_expert_verification": [
+        "Whether MDBench or LongBench v2 scores serve as adequate supplementary proxies for the deployment's cross-document requirement requires domain validation."
+      ]
+    }
+  },
+  "overall_summary": "FOLIO is structurally misaligned with the US Defense and High-Reliability Systems Engineering deployment on five of the six validity dimensions. The benchmark probes closed-world, fully-explicit, domain-neutral, single-context logical reasoning, with bare True/False/Unknown classification scored by accuracy. The deployment requires open-world, implicit-premise, domain-grounded, cross-document contradiction detection with natural-language explanations, confidence grades, and resolution paths for uncertain findings. Input Ontology, Input Content, Output Ontology, and Output Form score 1 (major violations); Output Content scores 2 (labels correct for the closed-world construct but reflect FOL-provability rather than engineering judgment, plus tangible annotation errors observable in sample); only Input Form scores 3, since both benchmark and deployment are text-only English even though length and register differ substantially. FOLIO accuracy should be treated as a weak lower-bound proxy for general logical-reasoning capability — useful for filtering models that fail at multi-hop closed-world inference — but cannot serve as a predictive measure of deployment performance on any of the deployment's high-priority dimensions (IO, IC, OO, OF). The regulatory environment (CMMC, ITAR, CUI) adds an orthogonal deployment constraint that further restricts which models can be evaluated in compliant infrastructure.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "FOLIO measures a model's ability to perform closed-world, multi-hop deductive inference over fully-explicit narrative premises in English, classifying conclusions as True/False/Unknown by FOL semantics. It exercises broad logical-operator coverage (negation, conjunctions, disjunctions, implication, quantifiers, equality) and reasoning depths up to 7 hops. For the deployment, FOLIO can serve as a baseline filter on classical-logic competence — informative for the crisp-contradiction sub-task (explicit numeric conflicts), where Input Ontology's multi-hop closed-world chains are a useful lower-bound proxy.",
+    "construct_depth": "FOLIO probes its target construct (closed-world FOL reasoning) deeply: 1,430 inference-engine-verified examples, balanced True/False/Unknown distribution, 5+ hop reasoning in 28.7% of examples, broad AST diversity, and rigorous annotation QC. However, this depth does not extend to the deployment's high-priority constructs. Implicit-premise inference (IO-HIGH), latent domain contradictions (IC-HIGH), structured explanation + confidence (OO-HIGH), and cross-document reasoning (OF-HIGH) are not probed at any depth — they are absent from the benchmark's task taxonomy, content register, output schema, and evaluation apparatus. A model could achieve high FOLIO accuracy while failing completely on the deployment's primary use case.",
+    "supplementation_needed": "Substantial supplementation is required across IO, IC, OC, and OF. For implicit-premise document NLI (closest legal-domain analog): ContractNLI [WEB-10] and LawngNLI [WEB-11]. For multi-document long-context reasoning (OF gap): MDBench [WEB-16], LongBench v2 [WEB-17], and PRELUDE [WEB-18]. For explanation faithfulness (OO/OF gap): the FaithLM framework [WEB-19] and contradiction-explanation literature [WEB-21]. None of these proxies covers MIL-STD/IEEE requirements-language reasoning [WEB-13, WEB-22] — that gap can only be filled by a purpose-built test suite of real or synthetic defense specification contradictions, reviewed by practicing systems engineers, ideally constructed to exercise latent thermal/timing/bandwidth contradiction patterns. Human-expert validation is methodologically necessary rather than optional, given that LLM explanation faithfulness measurement is itself an unresolved research problem [WEB-20, WEB-24]."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "FOLIO has no task category for open-world / implicit-premise reasoning or cross-document tracing — directly opposite to the deployment's core challenge.",
+      "recommendation": "Construct a purpose-built test suite (~100–300 examples) of synthetic or de-classified defense spec excerpts where the relevant constraint lives in a referenced MIL-STD/IEEE/ICD section. Pair each example with a target finding written by a practicing systems engineer. Use FOLIO only as a baseline filter; do not treat FOLIO accuracy as evidence of deployment readiness."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "Zero engineering-domain vocabulary or 'shall/should' requirements-language register in FOLIO; systematic construct-irrelevant variance for the deployment.",
+      "recommendation": "Augment evaluation with a small, curated corpus of requirements-language examples drawn from publicly available NASA, INCOSE, or unclassified DoD specs, annotated for crisp and latent contradictions by systems engineers. Even 50–100 high-quality engineer-validated examples will provide more signal than FOLIO's 1,430 domain-neutral stories for the deployment-specific construct."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "Bare True/False/Unknown classification cannot capture the deployment's required output (NL explanation + confidence grade + resolution path).",
+      "recommendation": "Redesign the output schema for any deployment evaluation: require structured outputs with (a) NL conflict-mechanism explanation citing specific requirement IDs, (b) calibrated confidence grade for triage, and (c) for uncertain findings, an explicit statement of what missing information would resolve the ambiguity. Evaluate explanation quality using a faithfulness-aware protocol (e.g., FaithLM-style [WEB-19]) plus blind engineer review."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Annotators are CS/FOL experts, not systems engineers; ground-truth labels reflect closed-world provability rather than engineering domain judgment. Sample inspection also reveals scattered NL/FOL inconsistencies.",
+      "recommendation": "For the deployment's purpose-built test suite, recruit ≥3 practicing systems engineers per example for label consensus, retain dissent for ambiguous cases rather than aggregating it away, and explicitly capture whether the contradiction requires invocation of an implicit referenced-standard constraint. Treat FOLIO ground-truth as informative only for the closed-world sub-construct."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "FOLIO measures single-example classification accuracy with no mechanism for multi-document or long-context evaluation, no confidence-calibration metric, and no traceability-citation metric.",
+      "recommendation": "Add MDBench [WEB-16] and LongBench v2 [WEB-17] as supplementary cross-document/long-context proxies. Build a multi-document evaluation harness using SRD+ICD pairs (real or synthetic) where the contradiction spans documents; report not only accuracy but explanation quality, confidence calibration (e.g., ECE), and citation accuracy (correct REQ-IDs cited)."
+    },
+    {
+      "dimension": "input_form",
+      "gap": "FOLIO inputs are short ambiguity-free narratives (50–200 tokens); deployment inputs are 27K–100K+ token multi-section specifications where LLM reasoning quality is known to degrade.",
+      "recommendation": "Include explicit long-context stress tests in the deployment evaluation: replicate or extend the Chroma 2025-style length-degradation analysis [WEB-7] with representative spec documents to characterize the operating context-length envelope. Pair this with infrastructure planning (FedRAMP High / on-premises) per the CMMC/ITAR constraints [WEB-1, WEB-4]."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_ontology",
+    "input_content",
+    "output_ontology",
+    "output_form"
+  ],
+  "strongest_dimensions": [
+    "input_form",
+    "output_content"
+  ]
+}

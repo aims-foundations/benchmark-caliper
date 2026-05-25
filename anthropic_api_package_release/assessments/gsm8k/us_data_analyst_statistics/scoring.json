@@ -1,0 +1,399 @@
+{
+  "benchmark": "gsm8k",
+  "region": "US Professional Data Science Consultancy — Statistical Analysis Assistant",
+  "dimensions": {
+    "input_ontology": {
+      "score": 1,
+      "justification": "GSM8K's task taxonomy is restricted to elementary arithmetic word problems where 'solutions depend only on elementary concepts' [Q11], with difficulty arising from 'high diversity among problems' [Q10] rather than conceptual depth. The deployment requires an entirely different taxonomy — regression diagnostics, ANOVA, hypothesis testing under violated assumptions, power analysis, and methodological pluralism — none of which are represented in any sampled datapoint. Dataset analysis confirms zero coverage: the most 'statistically-flavored' item computes a simple arithmetic mean of three ages [DATASET-D6], and the most complex item is a one-variable linear equation [DATASET-D16]. The paper itself acknowledges the MATH dataset is 'significantly more complex' [Q20] than GSM8K, and offers only the hope — without evidence — that 'GSM8K supports the development of new methods that scale even better' [Q101]. For an IO-HIGH-priority deployment, this is a fundamental taxonomic mismatch.",
+      "strengths": [
+        "GSM8K does provide internal taxonomic structure (finetuning vs. verification methodology branches [Q27, Q30]) that, while not deployment-relevant, demonstrates methodological care in benchmark design.",
+        "The two-config structure (main and socratic) offers reasoning decomposition formats [DATASET-D17, DATASET-D18] that could superficially serve as scaffolds for multi-step diagnostic evaluation design — though the content gap dwarfs this structural similarity."
+      ],
+      "checklist_responses": {
+        "IO-1": "Deployment-required categories include regression diagnostics, hypothesis testing under violated assumptions, ANOVA with post-hoc corrections, experimental design, power analysis, statistical software output interpretation, and methodological pluralism modeling choices. None overlap with GSM8K's elementary arithmetic taxonomy.",
+        "IO-2": "GSM8K's taxonomy omits ALL regionally/deployment-relevant categories. Sampled items confirm only elementary arithmetic, ratios, simple interest, percentages, and one-variable algebra [DATASET-D4, D6, D9, D13, D14, D15, D16]. No statistical inference category exists [Q11].",
+        "IO-3": "GSM8K categories (grade school arithmetic narratives [Q1, Q8]) are not so much 'irrelevant' as taxonomically disjoint from the deployment. They do not actively introduce harmful content, but consume evaluation attention without yielding deployment-relevant signal.",
+        "IO-4": "Content validity is severely harmed: GSM8K performance carries no evidential weight about an LLM's ability to diagnose heteroscedasticity, interpret VIF, select between Welch and Student t-tests, or compute effect sizes. Candidate complementary benchmarks include StatQA [WEB-2], StatEval [WEB-7], and StatLLM [WEB-9], though none individually closes the full gap."
+      },
+      "evidence_quotes": [
+        "[Q11] 'GSM8K solutions depend only on elementary concepts, so achieving high test performance is a tractable goal.' (p.2)",
+        "[Q10] 'State-of-the-art language models struggle to achieve high performance on this dataset, primarily due to the high diversity among problems.' (p.2)",
+        "[Q20] 'The MATH dataset (Hendrycks et al., 2021) is larger and significantly more complex than GSM8K' (p.4)",
+        "[Q101] 'we hope GSM8K supports the development of new methods that scale even better.' (p.12)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-2] StatQA (NeurIPS 2024) — 11,623 examples covering hypothesis testing method selection",
+        "[WEB-7] StatEval (Oct 2025) — first comprehensive benchmark for formal statistical reasoning, including regression and Bayesian analysis",
+        "[WEB-9] StatLLM — statistical analysis tasks in SAS and R with human expert evaluation"
+      ],
+      "evidence_dataset": [
+        "DATASET-D6: 'calculate the average age of the three' — the most 'statistical' item is arithmetic mean of three given numbers, not inference",
+        "DATASET-D4: aquarium volume — most formula-heavy non-algebraic item, elementary geometry",
+        "DATASET-D9: 'Jim has 4 times as many Buicks as Fords' — most complex item is system reducible to single-variable algebra",
+        "DATASET-D16: 10N=6(N+8) — peak complexity is one-variable linear equation"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "DATASET-D6",
+          "DATASET-D4"
+        ],
+        "IO-2": [
+          "Q11",
+          "DATASET-D6",
+          "DATASET-D9",
+          "DATASET-D16"
+        ],
+        "IO-3": [
+          "Q1",
+          "Q11"
+        ],
+        "IO-4": [
+          "Q20",
+          "Q101",
+          "WEB-2",
+          "WEB-7",
+          "WEB-9"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "The full test split (1,319 items) was not sampled; though the sampled 80 items uniformly confirm the elementary scope documented in the paper."
+      ],
+      "requires_expert_verification": []
+    },
+    "input_content": {
+      "score": 1,
+      "justification": "GSM8K instances are child-oriented narrative scenarios authored by Upwork/Surge AI crowdworkers [Q103, Q104] involving 'quantities of food, animals, and everyday objects' [implied across Q128-Q136]. Dataset analysis confirms every sampled item is a domestic/consumer narrative — birthday piñatas [DATASET-D3], baseball cards [DATASET-D1], cupcakes [DATASET-D2], toy cars [DATASET-D8], babysitting savings [DATASET-D7]. No item contains professional statistical vocabulary (heteroscedasticity, VIF, Type III SS), tabular data, or software output. The deployment's input distribution — CSV snippets, R lm() output, statsmodels OLS tables, jargon-dense queries — is entirely disjoint. For an IC-HIGH-priority deployment, this is a categorical content mismatch.",
+      "strengths": [
+        "GSM8K demonstrates documented quality control on input authoring: pairwise similarity scoring prevented template reuse [Q113], and contractors were instructed to be descriptive and non-repetitive [Q112].",
+        "Inputs are 'high quality linguistically diverse' [Q1], which at least ensures lexical variety within the elementary-arithmetic domain — useful for evaluating linguistic robustness in that narrow scope."
+      ],
+      "checklist_responses": {
+        "IC-1": "Deployment inputs require professional statistical jargon and software-output literacy. GSM8K inputs require only everyday consumer/domestic vocabulary [DATASET-D1, D3, D7, D20]. The two distributions are lexically disjoint.",
+        "IC-2": "Not applicable in the traditional cultural sense. The mismatch is professional-register, not cross-cultural: GSM8K's child-oriented register is misaligned with the graduate-trained-analyst register, but not culturally inappropriate.",
+        "IC-3": "GSM8K does not require Western-specific cultural knowledge that would fail to transfer; the relevant gap is register and domain, not geography. Inputs use US-style consumer scenarios (dollars, baseball cards) consistent with the US deployment locale.",
+        "IC-4": "Regional annotators (practicing US statisticians) would unanimously identify GSM8K instances as outside the deployment's input distribution; no GSM8K item resembles a real consultancy query. StatQA [WEB-2] and StatLLM [WEB-9] use vocabulary closer to the deployment register, though only StatLLM uses expert annotators.",
+        "IC-5": "Content validity is severely harmed: the input distribution does not sample from the construct space (professional statistical queries) the deployment requires. Confirmed by dataset analysis — zero items contain statistical vocabulary across 80 sampled examples."
+      },
+      "evidence_quotes": [
+        "[Q1] 'we introduce GSM8K, a dataset of 8.5K high quality linguistically diverse grade school math word problems.' (p.1)",
+        "[Q103] 'We initially collected a starting set of a thousand problems and natural language solutions by hiring freelance contractors on Upwork' (p.15)",
+        "[Q104] 'We then worked with Surge AI (surgehq.ai), an NLP data labeling platform, to scale up our data collection.' (p.15)",
+        "[Q9] 'We designed this dataset to have high linguistic diversity while relying on relatively simple grade school math concepts.' (p.2)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-2] StatQA uses domain-specific statistical terminology by design for hypothesis testing applicability tasks",
+        "[WEB-9] StatLLM covers R and SAS statistical code, closer to deployment vocabulary"
+      ],
+      "evidence_dataset": [
+        "DATASET-D3: 'unicorn piñata for $13 ... bags of Reese's ... Snickers ... Skittles' — archetypal child-oriented consumer scenario, no professional vocabulary",
+        "DATASET-D1: baseball cards narrative — confirms domestic/recreational register",
+        "DATASET-D7: babysitting savings — confirms casual narrative register",
+        "DATASET-D20: 'Each bird eats 12 beetles per day, each snake eats 3 birds per day' — ecological chain, entirely non-statistical",
+        "DATASET-D2: cupcakes and classmates — school-lunch scenario, no quantitative professional register"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "DATASET-D1",
+          "DATASET-D3",
+          "DATASET-D7",
+          "DATASET-D20"
+        ],
+        "IC-2": [
+          "DATASET-D3"
+        ],
+        "IC-3": [
+          "DATASET-D3",
+          "DATASET-D7"
+        ],
+        "IC-4": [
+          "WEB-2",
+          "WEB-9"
+        ],
+        "IC-5": [
+          "Q1",
+          "Q9",
+          "DATASET-D2"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Annotator demographics, native languages, and statistical training of Upwork/Surge contractors are not documented in the paper."
+      ],
+      "requires_expert_verification": []
+    },
+    "input_form": {
+      "score": 2,
+      "justification": "Both GSM8K and the deployment are English text-only [Q32, DATASET-D1], which limits the worst-case form-level mismatch and was noted as a strength in dataset analysis. However, GSM8K's inputs are continuous narrative prose with quantitative information embedded in sentences [DATASET-D3, D5, D15], while the deployment requires parsing semi-structured content: CSV snippets, R lm() coefficient tables, statsmodels OLS output blocks, and correlation matrices. Dataset analysis confirms no sampled item contains tabular structure, column headers, or software-output formatting conventions. The benchmark-internal <<...>> calculator annotations [Q40, Q119, DATASET-D10, D14] are auto-generated training artifacts with no deployment analogue. For an IF-MODERATE-priority deployment, the shared text-English modality prevents a score of 1, but the semi-structured-input gap is substantial.",
+      "strengths": [
+        "Modality and language alignment: both benchmark and deployment are English plain text [Q32, DATASET-D1], eliminating script, language, or media mismatch as sources of construct-irrelevant variance.",
+        "Two-config structure offers reasoning-decomposition flexibility (main prose vs. socratic sub-question scaffolding) [DATASET-D17, D18], providing some adaptability for evaluation design."
+      ],
+      "checklist_responses": {
+        "IF-1": "Signal distributions partially align (English text), but diverge on structural form: GSM8K is continuous narrative prose [DATASET-D3]; deployment requires semi-structured/tabular inputs (R lm() output, CSV previews, statsmodels tables).",
+        "IF-2": "Regional infrastructure (US professional consultancy with broadband and desktop workstations) fully supports both text-input modalities. Not a limiting factor.",
+        "IF-3": "Domain-specific form differences are substantial: deployment inputs include software output blocks and tabular previews with specific formatting conventions (e.g., 'Coefficients: Estimate Std. Error t value Pr(>|t|)') entirely absent from GSM8K's narrative-prose distribution [DATASET-D5, D15].",
+        "IF-4": "External validity is harmed for semi-structured inputs. Models tuned on GSM8K's prose distribution have not been evaluated on parsing software-output formats. DS-1000 [WEB-4] and StatQA [WEB-2] offer partial coverage of structured input forms, but no benchmark specifically tests interpretation of pre-existing R/statsmodels output blocks."
+      },
+      "evidence_quotes": [
+        "[Q32] 'we focus attention on the space of natural language solutions, as this is a richer and more general solution format than pure mathematical expressions.' (p.5)",
+        "[Q9] 'We designed this dataset to have high linguistic diversity while relying on relatively simple grade school math concepts.' (p.2)",
+        "[Q40] 'we train all models to use a calculator by injecting calculation annotations into the training set.' (p.6)",
+        "[Q119] 'During training, there is no special distinction between the annotated tokens and the rest of the solution: they are all just tokens.' (p.17)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-4] DS-1000 uses realistic Python data science contexts including structured data",
+        "[WEB-2] StatQA uses tabular data as input context for hypothesis testing tasks"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: English plain-text narrative — confirms modality alignment with deployment",
+        "DATASET-D5: 'enough provisions in a castle to feed 300 people for 90 days' — quantitative info embedded in prose, not tabular",
+        "DATASET-D15: ratio '10:45' given in prose, not as a table or data structure",
+        "DATASET-D10: <<30/2=15>> calculator annotations embedded in every answer — benchmark-internal artifact with no deployment analogue"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q32",
+          "DATASET-D5",
+          "DATASET-D15"
+        ],
+        "IF-2": [
+          "DATASET-D1"
+        ],
+        "IF-3": [
+          "DATASET-D3",
+          "DATASET-D15"
+        ],
+        "IF-4": [
+          "Q9",
+          "WEB-4",
+          "WEB-2",
+          "DATASET-D10"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": []
+    },
+    "output_ontology": {
+      "score": 1,
+      "justification": "GSM8K's output ontology is binary exact-match against a single numeric answer: 'Training solutions are labeled as correct or incorrect based solely on whether they reach the correct final answer' [Q60]. Dataset analysis confirms every sampled item ends with '#### {single number}' [DATASET-D10, D12, D21, D23], with no concept of partial credit or methodological pluralism. The paper itself documents structural limitations: 'some solutions will reach the correct final answer using flawed reasoning, leading to false positives' [Q61], with visualized examples of both false negatives (correct reasoning marked wrong [Q153]) and false positives (wrong reasoning reaching right answer [Q154, Q155]). The deployment explicitly requires evaluation that rewards methodologically defensible reasoning even when final numbers differ (regression covariate selection, log-transformation choices, fixed vs. random effects). For an OO-HIGH-priority deployment, binary exact-match is structurally incompatible.",
+      "strengths": [
+        "The verifier output ontology is internally well-designed: 'Conditioned on the problem and a candidate solution, the verifier outputs the probability that the solution is correct' [Q59], with the token-level verifier acting as 'a token-level value function' [Q74] — providing some scalar reasoning-quality signal beyond pure final-answer matching.",
+        "The paper transparently documents failure modes of binary scoring (false positives and false negatives [Q61, Q153, Q154, Q155]), demonstrating awareness of the limits of exact-match correctness."
+      ],
+      "checklist_responses": {
+        "OO-1": "GSM8K's output labels are binary correct/incorrect against single numeric answers [Q60, DATASET-D10, D12]. The deployment requires multi-criterion rubric evaluation (methodological soundness, alternative valid pathways) — no overlap with GSM8K's output category structure.",
+        "OO-2": "Missing from GSM8K's taxonomy: partial credit, multi-valid-answer scoring, rubric-based methodological soundness, qualitative diagnostic quality. The deployment requires all of these. StatLLM's multi-criterion expert scoring (correctness, effectiveness, readability, executability, output accuracy) [WEB-9] is directionally closer.",
+        "OO-3": "GSM8K's binary exact-match does not encode non-regional values per se; it encodes an arithmetic-domain assumption (single correct answer exists) that does not hold in applied statistics where methodological pluralism is structurally unavoidable.",
+        "OO-4": "Stakeholder-driven taxonomy redesign is essentially required: the deployment needs a hybrid scoring regime (exact-match for narrow computational subtasks, rubric for open-ended methodological reasoning), and GSM8K's output ontology cannot be patched to accommodate this.",
+        "OO-5": "Structural validity is severely violated: GSM8K's output ontology cannot represent the construct (methodologically-defensible statistical reasoning) the deployment requires. Content validity also harmed: legitimate alternative-pathway answers would be marked incorrect."
+      },
+      "evidence_quotes": [
+        "[Q60] 'Training solutions are labeled as correct or incorrect based solely on whether they reach the correct final answer.' (p.7)",
+        "[Q61] 'In practice, some solutions will reach the correct final answer using flawed reasoning, leading to false positives.' (p.7)",
+        "[Q31] 'Verifiers are trained to judge the correctness of solutions, with the training signal determined solely by whether or not the solution reached the correct final answer.' (p.5)",
+        "[Q59] 'Conditioned on the problem and a candidate solution, the verifier outputs the probability that the solution is correct.' (p.7)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-9] StatLLM uses multi-criterion human expert scoring (correctness, effectiveness, readability, executability, output accuracy)",
+        "[WEB-7] StatEval proposes evaluation framework tailored to both computational and proof-based tasks"
+      ],
+      "evidence_dataset": [
+        "DATASET-D10: '#### 32' — single numeric label, no ambiguity, demonstrates binary scoring structure",
+        "DATASET-D12: algebraic system with single answer '#### 220' — no multi-valid pathway possible",
+        "DATASET-D21: 'Caleb spent ... $36 more on ice cream #### 36' — deterministic answer, no methodological choice",
+        "DATASET-D23: '#### 2290' — multi-step arithmetic but single deterministic ground truth"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q60",
+          "DATASET-D10",
+          "DATASET-D12"
+        ],
+        "OO-2": [
+          "Q60",
+          "WEB-9"
+        ],
+        "OO-3": [
+          "Q60"
+        ],
+        "OO-4": [
+          "WEB-9",
+          "WEB-7"
+        ],
+        "OO-5": [
+          "Q61",
+          "DATASET-D21",
+          "DATASET-D23"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": []
+    },
+    "output_content": {
+      "score": 1,
+      "justification": "GSM8K ground-truth labels were produced by Upwork/Surge AI contractors who re-solved problems and were checked for final-answer agreement [Q105, Q106], with a residual 1.7% disagreement rate [Q107] and acknowledgment that 'a larger percentage of problems contain subtle errors' [Q109]. Annotator demographics, statistical training, and educational backgrounds are NOT documented. Dataset analysis confirms ground-truth labels are single deterministic numerics [DATASET-D21, D22, D23] verifiable by anyone capable of basic arithmetic — no statistical expertise was required or present. The deployment explicitly requires ground truths reflecting expert statistical judgment with legitimate pluralism (e.g., adjudicating 'VIF threshold of 5 vs. 10', 'log-transformation given this skewness'). For an OC-HIGH-priority deployment, this annotator population is categorically unrepresentative. StatLLM [WEB-9] is the only confirmed statistical-domain benchmark using expert annotators.",
+      "strengths": [
+        "Documented quality control process: re-solving by independent contractors [Q105], disagreement-triggered repair/discard [Q106], and a second round of agreement checks measuring residual disagreement [Q107] — represents transparent annotation methodology even though the expertise level is unsuitable for the deployment.",
+        "Honest acknowledgment of annotation limitations: the paper notes 'a larger percentage of problems contain subtle errors' [Q109] and visualizes verifier failure modes [Q153, Q154, Q155] — demonstrates documentation transparency."
+      ],
+      "checklist_responses": {
+        "OC-1": "Ground truth labels reflect crowdworker-level arithmetic correctness judgments, not practicing-statistician methodological judgments. For the deployment domain, labels would fail to reflect expert stakeholder perspectives on questions like assumption-violation diagnosis or modeling-choice adjudication.",
+        "OC-2": "Significant disagreement would arise if regional experts (practicing US statisticians) were asked to re-annotate deployment-relevant content — but this is moot because GSM8K instances are not deployment-relevant content. The expertise mismatch is categorical: crowdworker arithmetic vs. expert statistical adjudication.",
+        "OC-3": "INSUFFICIENT DOCUMENTATION — the paper does not report annotator demographics, educational backgrounds, native languages, geographic locations, or whether contractors had mathematical training beyond grade-school level. A Datasheet entry covering these would be required to fully assess representativeness.",
+        "OC-4": "Re-annotation by representative regional annotators (practicing statisticians) is not feasible because the underlying instances are out-of-domain for the deployment. A new dataset is required rather than re-annotation. StatLLM [WEB-9] provides the only confirmed expert-annotated statistical benchmark exemplar.",
+        "OC-5": "Aggregation method (final-answer agreement check [Q106]) erases reasoning-quality variation entirely: solutions reaching the correct answer with flawed reasoning are labeled correct [Q61, Q154, Q155]. For the deployment domain, this would erase precisely the methodological-soundness signal that matters.",
+        "OC-6": "Convergent validity severely violated: labels do not correlate with expert-statistician judgments on the construct (methodological soundness). External validity violated: arithmetic-correctness judgments do not generalize to applied statistical adjudication."
+      },
+      "evidence_quotes": [
+        "[Q105] 'After collecting the full dataset, we asked workers to re-solve all problems, with no workers re-solving problems they originally wrote.' (p.15)",
+        "[Q106] 'We checked whether their final answers agreed with the original solutions, and any problems that produced disagreements were either repaired or discarded.' (p.15)",
+        "[Q107] '1.7% of problems still produce disagreements among contractors.' (p.15)",
+        "[Q109] 'It is possible that a larger percentage of problems contain subtle errors.' (p.15)",
+        "[Q61] 'some solutions will reach the correct final answer using flawed reasoning, leading to false positives.' (p.7)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-9] StatLLM uses human expert evaluation for statistical code — only confirmed expert-annotated statistical benchmark",
+        "[WEB-14] ASA Ethical Guidelines update expected early 2027 — no current AI-specific professional standards"
+      ],
+      "evidence_dataset": [
+        "DATASET-D21: '#### 36' — ground truth verifiable by elementary arithmetic, no statistical expertise required",
+        "DATASET-D22: '7 robots * $8.75 ... #### 80' — decimal arithmetic verifiable without domain expertise",
+        "DATASET-D23: '$960 + $931 + $399 = 2290 #### 2290' — multi-step arithmetic, no expert adjudication needed"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q105",
+          "Q106",
+          "DATASET-D21"
+        ],
+        "OC-2": [
+          "Q105",
+          "DATASET-D22"
+        ],
+        "OC-3": [],
+        "OC-4": [
+          "WEB-9"
+        ],
+        "OC-5": [
+          "Q106",
+          "Q61",
+          "DATASET-D23"
+        ],
+        "OC-6": [
+          "Q109",
+          "Q61"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Annotator demographics, educational backgrounds, native languages, and statistical training are not documented in the paper.",
+        "No formal inter-annotator agreement statistic (e.g., Cohen's kappa) is reported — only a final-answer disagreement rate."
+      ],
+      "requires_expert_verification": [
+        "Whether the forthcoming 2027 ASA Ethical Guidelines update [WEB-14] will impose specific expert-annotation requirements for LLM-assisted statistical analysis evaluations."
+      ]
+    },
+    "output_form": {
+      "score": 2,
+      "justification": "Both benchmark and deployment use English text output, limiting the worst-case form-level mismatch. GSM8K outputs are step-by-step natural language prose solutions [Q32, Q33, DATASET-D11, D14] terminating in a single numeric answer ('#### {number}') [DATASET-D10, D12, D21]. The step-by-step prose format has surface-level resemblance to the diagnostic narratives the deployment requires, and the socratic config [DATASET-D17, D18] adds explicit sub-question decomposition. However, the primary evaluation signal is exact-match against the terminal numeric answer at low temperature ('test@1' [Q29, Q46]) or best-of-N sampling [Q52], not the prose quality. The deployment requires open-ended methodological recommendations, diagnostic narratives, and software-output interpretations as the substantive output — not numeric finality. The token-level verifier visualization [Q147, Q148] demonstrates some capacity for reasoning-chain assessment, but remains anchored to binary numeric correctness. For an OF-MODERATE-priority deployment, the shared text modality prevents a score of 1, but the terse-numeric vs. open-ended-narrative mismatch is substantial.",
+      "strengths": [
+        "Natural-language solution format [Q32, Q33] enables models to 'develop verbal analytical skills and to produce solutions that are more readily interpretable by humans' [Q33] — a surface-level alignment with deployment's narrative-output requirement, even though the underlying scoring remains numeric.",
+        "Step-by-step prose chains with intermediate-step narration [DATASET-D11, D14] demonstrate extended reasoning-chain output rather than lookup-style answers, providing weak structural similarity to deployment diagnostic chains.",
+        "Token-level verifier provides per-token scoring visualization [Q147, Q148, Q149] — methodologically demonstrates that fine-grained reasoning-quality signals are possible, even if not primary in GSM8K scoring.",
+        "Socratic config [DATASET-D17, D18] offers explicit sub-question scaffolding that loosely maps onto multi-step diagnostic structure."
+      ],
+      "checklist_responses": {
+        "OF-1": "Output modality (English text) matches deployment needs. However, the output register (terse numeric finality after prose chain) does not match the deployment's open-ended methodological-recommendation register [Q29, Q46, DATASET-D10].",
+        "OF-2": "Not applicable — deployment is text-based; text-to-speech is not required.",
+        "OF-3": "Not applicable — deployment population is quantitatively trained professionals with high English literacy; accessibility requirements are not flagged.",
+        "OF-4": "External validity moderately harmed: GSM8K rewards terse numeric answers [Q29, Q46, Q52], whereas deployment requires open-ended diagnostic narratives. The natural-language solution format [Q32] partially aligns, but the scoring rubric does not. The drastic performance drop when models output direct answers without intermediate steps [Q57] suggests GSM8K does train extended-output behavior, mitigating some mismatch."
+      },
+      "evidence_quotes": [
+        "[Q29] 'At test time, we judge performance by autoregressively sampling a single low temperature solution and checking whether the final answer is correct.' (p.5)",
+        "[Q32] 'we focus attention on the space of natural language solutions, as this is a richer and more general solution format than pure mathematical expressions.' (p.5)",
+        "[Q33] 'this choice enables our models to develop verbal analytical skills and to produce solutions that are more readily interpretable by humans.' (p.5)",
+        "[Q57] 'If we instead finetune a 6B model to directly output the final answer without any intermediate steps, performance drops drastically from 20.6% to 5.2%.' (p.7)",
+        "[Q147] 'One benefit of the token-level verifiers is that these models become immediately interpretable' (p.21)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-9] StatLLM evaluates statistical code outputs with multi-criterion expert scoring — closer to deployment's open-ended-output evaluation needs"
+      ],
+      "evidence_dataset": [
+        "DATASET-D10: prose solution terminating in '#### 32' — extended reasoning chain anchored to single numeric finality",
+        "DATASET-D11: 'First calculate the volume of the aquarium...' — multi-step prose narration before single answer",
+        "DATASET-D14: six narrated arithmetic steps before '#### 7200' — confirms extended-output format",
+        "DATASET-D17: socratic sub-question scaffolding format with explicit reasoning labels"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q29",
+          "DATASET-D10"
+        ],
+        "OF-2": [],
+        "OF-3": [],
+        "OF-4": [
+          "Q29",
+          "Q32",
+          "Q52",
+          "Q57",
+          "WEB-9"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": []
+    }
+  },
+  "overall_summary": "GSM8K is fundamentally misaligned with the US Professional Data Science Consultancy deployment across all four HIGH-priority dimensions (IO, IC, OO, OC) and substantially misaligned on the two MODERATE-priority dimensions (IF, OF). The benchmark evaluates elementary arithmetic reasoning via child-oriented narrative word problems [Q11, DATASET-D1, D3] scored by binary exact-match against single numeric answers produced by crowdworkers [Q60, Q105, DATASET-D10, D21], while the deployment requires graduate-level statistical reasoning over semi-structured professional inputs evaluated by methodological soundness with expert-statistician ground truth. Dataset analysis of 80 sampled items unambiguously confirms zero coverage of statistical reasoning categories, zero professional vocabulary, zero tabular/software-output structure, and zero multi-valid-answer scoring. The only redeeming alignments are shared English-text modality and the natural-language solution format [Q32, Q33], which prevent the lowest possible scores on IF and OF but do not address the construct gap. The web research surfaced credible candidate benchmarks (StatQA [WEB-2], StatEval [WEB-7], StatLLM [WEB-9]) that collectively address parts of the gap, but none individually replaces GSM8K for this deployment's full task profile.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "GSM8K provides evidence about an LLM's ability to perform multi-step elementary arithmetic word problems in casual English prose, including parsing narrative quantitative information, executing sequential arithmetic, and producing extended reasoning chains [Q1, Q11, Q32]. For the target deployment, this measures, at best, a precondition for numerical computation in narrow computational subtasks (e.g., 'compute degrees of freedom given supplied data') — the only deployment task category for which GSM8K has any partial relevance per the elicitation taxonomy. No HIGH-priority dimension (IO, IC, OO, OC) is meaningfully addressed by this benchmark.",
+    "construct_depth": "GSM8K probes elementary arithmetic shallowly relative to deployment needs: maximum problem complexity in sampled items is one-variable algebra [DATASET-D9, D16] or simple interest [DATASET-D13]. No item touches distributional reasoning, inference, uncertainty quantification, model selection, or methodological pluralism. The benchmark itself acknowledges the MATH dataset is 'significantly more complex' [Q20], and even MATH has been confirmed by web research [WEB-5] to lack applied statistical categories. The construct depth for the deployment's primary tasks (regression diagnostics, ANOVA, power analysis, software output interpretation) is effectively zero.",
+    "supplementation_needed": "Substantial supplementation is required across all four HIGH-priority dimensions. For IO and IC, supplement with StatQA [WEB-2] (hypothesis testing method selection, 11,623 examples) and StatEval [WEB-7] (formal statistical reasoning including regression/Bayesian, 13,817+2,374 examples). For OC and OO, supplement with StatLLM [WEB-9] (expert-annotated multi-criterion scoring for R/SAS code). For IF, the specific gap of natural-language interpretation of pre-existing R lm()/statsmodels output blocks remains unaddressed by any extant benchmark and would require a bespoke evaluation set. A hybrid evaluation suite (computational subtasks scored exact-match; methodological reasoning scored by expert-rubric) is the recommended architecture, consistent with the user's elicitation response Q3."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "Zero coverage of deployment-required statistical reasoning categories (regression diagnostics, ANOVA, hypothesis testing under violated assumptions, power analysis, model selection under methodological pluralism).",
+      "recommendation": "Do not rely on GSM8K for statistical reasoning evaluation. Supplement with StatQA [WEB-2] for hypothesis testing method selection and StatEval [WEB-7] for formal statistical inference. Commission a bespoke evaluation set for applied consulting tasks (regression diagnostics + ANOVA post-hoc + power analysis) since no extant benchmark fully covers this combination."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "GSM8K instances contain zero professional statistical vocabulary and no software output or tabular content; vocabulary is entirely child-oriented narrative.",
+      "recommendation": "Build a deployment-specific evaluation corpus using realistic CSV snippets, R lm()/anova() output blocks, and Python statsmodels OLS tables, paired with analyst-style queries containing target vocabulary (heteroscedasticity, VIF, Type III SS, Cook's distance, random effects). Use StatLLM [WEB-9] as a reference for vocabulary-rich expert-annotated examples."
+    },
+    {
+      "dimension": "input_form",
+      "gap": "GSM8K is continuous narrative prose only; no benchmark exists (per WEB research) that specifically tests natural-language interpretation of pre-existing R/statsmodels output blocks.",
+      "recommendation": "Construct a custom evaluation set with paired (software-output block, analyst query, expert-annotated diagnostic narrative) triplets. Draw on DS-1000 [WEB-4] and DSCodeBench [WEB-11] for realistic structured-input formats, even though their primary task is code generation rather than output interpretation."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "Binary exact-match against single numeric answers is structurally incompatible with deployment's multi-valid-answer methodological-pluralism requirement.",
+      "recommendation": "Adopt a hybrid scoring regime as proposed in the elicitation: exact-match numeric correctness for narrow computational subtasks (test statistic computation, degrees of freedom), and rubric-based expert scoring (correctness, methodological soundness, alternative-pathway acceptability) for open-ended diagnostic tasks. Model the rubric on StatLLM's multi-criterion expert scoring [WEB-9]."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Ground-truth labels were produced by crowdworkers verifying arithmetic; deployment requires practicing-statistician adjudication of methodological choices. Annotator demographics not documented.",
+      "recommendation": "Recruit practicing applied statisticians or quantitatively trained PhDs as annotators for deployment-specific evaluation sets. Use a panel of ≥3 expert annotators per item with documented IAA (e.g., Krippendorff's alpha) on methodological-soundness ratings. Follow StatLLM's expert-evaluation precedent [WEB-9]."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "GSM8K rewards terse numeric finality; deployment requires open-ended diagnostic narratives and methodological recommendations.",
+      "recommendation": "Define output-form requirements for deployment evaluation as structured recommendations (diagnosis + reasoning + alternative-pathway disclosure + interpretation) rather than terminal numeric answers. Use rubric items that explicitly reward open-ended recommendation quality. Monitor for the forthcoming ASA Ethical Guidelines update [WEB-14] in 2027, which may add professional-standard constraints on AI-assisted recommendation outputs."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_ontology",
+    "input_content",
+    "output_ontology",
+    "output_content"
+  ],
+  "strongest_dimensions": [
+    "input_form",
+    "output_form"
+  ]
+}

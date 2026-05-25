@@ -1,0 +1,449 @@
+{
+  "benchmark": "gsm8k",
+  "region": "US K–8 Edtech: CCSS-Aligned Math Assessment Item Generation",
+  "dimensions": {
+    "input_ontology": {
+      "score": 2,
+      "justification": "GSM8K is described as an undifferentiated pool of 'grade school math word problems' with no CCSS, grade-band, or topical taxonomy [Q1, Q8, Q12]. The deployment requires standard-cluster-level alignment (e.g., 4.NF.A.2, 6.RP.A.3), which the elicitation marks as 'essential and non-negotiable' [HIGH priority]. Dataset sampling confirms the gap is structural, not a sampling artifact: problems clearly spanning 2nd-grade addition to 7th-grade simple interest and 6–8 algebra appear in the same pool without labels [DATASET-D3, D4, D5, D22, D28]. The benchmark does probe a broad range of arithmetic operations (fractions, ratios, percentages, simple algebra) [DATASET-D6, D7, D22], so partial construct coverage of the prerequisite 'multi-step arithmetic reasoning' dimension exists [Q10, Q11]. But for the deployment's required ontology — CCSS standard-cluster targeting and grade-band differentiation — the benchmark provides no validation signal whatsoever.",
+      "strengths": [
+        "Broad coverage of grade-school arithmetic operation types (four-function, fractions, percentages, ratios, rates, simple algebra) provides a partial proxy for multi-domain competence [DATASET-D6, D7, D22]",
+        "Multi-step reasoning is reliably represented across the sample, matching the deployment's hard-gate 'mathematical accuracy' prerequisite [Q10, DATASET-D1, D2, D23]"
+      ],
+      "checklist_responses": {
+        "IO-1": "The deployment requires categories defined by CCSS standard clusters (e.g., 4.NF.A.2 fractions, 6.RP.A.3 ratios/proportions, 3.OA.A.1 operations, 5.NF.B.4 fraction multiplication) and by grade band (K–2, 3–5, 6–8), per the elicitation and regional YAML.",
+        "IO-2": "Yes — GSM8K's taxonomy is a single undifferentiated 'grade school math' category [Q1, Q8, Q12]; no CCSS domain, cluster, or standard tags exist and no grade-level labels are present in any sampled datapoint [DATASET-D3, D4, D5, D7].",
+        "IO-3": "No clearly irrelevant categories are introduced — the benchmark stays within grade-school arithmetic — but the undifferentiated pool mixes 7th–8th grade algebraic content [DATASET-D4, D22] with 2nd–3rd grade arithmetic [DATASET-D28], introducing construct-irrelevant variance for any grade-band-specific evaluation.",
+        "IO-4": "Category gaps harming content validity: (1) no CCSS standard-cluster tagging; (2) no grade-band differentiation; (3) no separation between problem types relevant to specific CCSS domains (OA, NF, NBT, RP, EE, SP, G). These gaps are confirmed empirically across the sample [DATASET-D3, D4, D5, D7, D22]."
+      },
+      "evidence_quotes": [
+        "[Q1] 'we introduce GSM8K, a dataset of 8.5K high quality linguistically diverse grade school math word problems.' (p.1)",
+        "[Q8] 'We are releasing GSM8K, a dataset of 8.5K high quality problems at the grade school math level.' (p.2)",
+        "[Q11] 'GSM8K solutions depend only on elementary concepts, so achieving high test performance is a tractable goal.' (p.2)",
+        "[Q12] 'We present a curated dataset of 8.5K grade school math questions and natural language solutions, useful for probing the informal reasoning ability of large language models.' (p.2)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-10] EDUMATH (2024) is the first teacher-annotated dataset for standards-aligned MWP generation, introducing a Standards Alignment criterion — confirming no prior LLM benchmark provided CCSS-cluster-level tagging",
+        "[WEB-11] Smarter Balanced open interim item bank provides grade- and CCSS-standard-tagged items as an external reference corpus",
+        "[WEB-1] CCSS-M is the authoritative curriculum framework adopted by 41 states, DC, and DoDEA"
+      ],
+      "evidence_dataset": [
+        "DATASET-D3: castle/provisions inverse-proportion problem maps to 6–7.RP but is unlabeled — confirms CCSS gap",
+        "DATASET-D4: multi-variable algebraic system (Buicks/Fords/Chevys) maps to 6.EE/7.EE but appears untagged in the same pool as elementary problems",
+        "DATASET-D5: simple interest at 10% per annum maps to 7.RP.A.3 but is indistinguishable in the dataset from 2nd-grade addition",
+        "DATASET-D22: algebraic equation solving (10N=6(N+8)) consistent with 6–8 EE domain, untagged",
+        "DATASET-D28: simple 2-step arithmetic (field trip vans) sits in the same pool as 7th-grade problems with no grade tag"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "WEB-1",
+          "WEB-11"
+        ],
+        "IO-2": [
+          "Q1",
+          "Q8",
+          "Q12",
+          "DATASET-D3",
+          "DATASET-D4",
+          "DATASET-D5",
+          "DATASET-D7"
+        ],
+        "IO-3": [
+          "DATASET-D4",
+          "DATASET-D22",
+          "DATASET-D28"
+        ],
+        "IO-4": [
+          "Q1",
+          "WEB-10",
+          "DATASET-D3",
+          "DATASET-D4",
+          "DATASET-D5"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Distribution of GSM8K problems across implicit CCSS domains is unknown — would require automated or human CCSS tagging of the full 8.5K dataset to estimate per-standard coverage."
+      ],
+      "requires_expert_verification": [
+        "A K–8 math curriculum specialist should perform a CCSS-cluster mapping audit on a representative GSM8K sample to estimate which standards (if any) achieve adequate problem density for evaluation use."
+      ]
+    },
+    "input_content": {
+      "score": 2,
+      "justification": "GSM8K's documentation emphasizes 'linguistic diversity' as a design goal [Q9, Q112, Q113] but reports no demographic, geographic, or cultural composition of the contractor workforce, nor any inclusivity guidelines [Q103, Q104]. The GPT-3 seed-question process introduces an additional uncharacterized cultural influence [Q110, Q111]. The dataset analysis empirically confirms culturally narrow content the deployment explicitly forbids: American football scoring rules [DATASET-D9], US brand-name candy [DATASET-D8], beauty/modeling contests [DATASET-D10], and pervasive adult financial contexts (rent, real estate, car purchase, mall spending) that the deployment specifically flags as money-context sensitivity risks [DATASET-D11, D12, D13, D16]. A weight-loss framing also appears [DATASET-D20]. Some counterweight exists: diverse names appear naturally [DATASET-D24], and ~30–35% of sampled problems use culturally neutral contexts [DATASET-D26, D27, D31]. But this is incidental, not designed, and the deployment marks IC as HIGH priority requiring active inclusivity guidelines that GSM8K provably lacks.",
+      "strengths": [
+        "Linguistic diversity in problem phrasings was an explicit design goal, with anti-template-reuse feedback to contractors [Q9, Q112, Q113]",
+        "Diverse names (Kantana, Kimiko, Omi, Arlette, Amalie) appear naturally in some problems [DATASET-D24]",
+        "A meaningful subset (~30–35%) of problems use culturally neutral contexts (nature, weather, animals, school scenarios) that translate well across demographic groups [DATASET-D26, D27, D31]"
+      ],
+      "checklist_responses": {
+        "IC-1": "Yes — many problems require culturally specific US knowledge: American football scoring [DATASET-D9], US brand-name candy [DATASET-D8], and adult US consumer practices (mortgages, car depreciation, simple interest) [DATASET-D11, D12, D13]. The deployment explicitly forbids 'culturally narrow references' and 'particular sports with uneven US cultural distribution.'",
+        "IC-2": "Misaligned with deployment culture in multiple respects: adult financial contexts presuppose middle-class material conditions inappropriate for K–8 generally and stigmatizing for lower-income students [DATASET-D11, D12, D16]; gender-stereotyped beauty/modeling scenarios [DATASET-D10]; weight-loss framing potentially sensitive for adolescents [DATASET-D20].",
+        "IC-3": "Yes — American football scoring rules [DATASET-D9] and US-specific candy brands [DATASET-D8] require Western/US-mainstream cultural knowledge that ELL students and recent-immigrant families may lack. The deployment requires low-idiom language for multilingual learners (per WIDA 2020 [WEB-3]); GSM8K has no such design constraint documented [Q103, Q104, Q112].",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — the benchmark paper does not document recruitment of regional or demographically representative annotators; contractor workforce demographics, geographic background, and educational training are unreported [Q103, Q104]. A teacher/equity-expert review would be needed.",
+        "IC-5": "Content issues harming content validity: (a) pervasive adult financial contexts inappropriate for K–8 [DATASET-D11, D12, D13, D16]; (b) culturally narrow US-mainstream references (football, brand-name candy) [DATASET-D8, D9]; (c) gender-stereotyped contexts [DATASET-D10]; (d) potentially sensitive body-weight framing [DATASET-D20]; (e) no documented inclusivity audit or guidelines [Q103, Q104, Q112]."
+      },
+      "evidence_quotes": [
+        "[Q9] 'We designed this dataset to have high linguistic diversity while relying on relatively simple grade school math concepts.' (p.2)",
+        "[Q103] 'We initially collected a starting set of a thousand problems and natural language solutions by hiring freelance contractors on Upwork (upwork.com).' (p.15)",
+        "[Q104] 'We then worked with Surge AI (surgehq.ai), an NLP data labeling platform, to scale up our data collection.' (p.15)",
+        "[Q110] 'To assist contractors with writing questions, we provided seed questions automatically generated from a few-shot prompted 175B GPT-3 model.' (p.15)",
+        "[Q112] 'We instructed contractors to be as descriptive as possible in their solutions, and to not re-use problem settings or templates between different questions.' (p.15)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-3] WIDA 2020 ELD Standards provide grade-band-specific Language Expectations for ELL accessibility in mathematics contexts — the deployment's authoritative ELL language standard",
+        "[WEB-8] NCTM Catalyzing Change series provides equity-centered guidance relevant to culturally inclusive math instruction",
+        "[WEB-10] EDUMATH evaluates 'Educational Appropriateness' via teacher annotation — the closest analogue to a cultural-appropriateness check, which GSM8K lacks"
+      ],
+      "evidence_dataset": [
+        "DATASET-D8: US brand-name candy (Reese's, Snickers, Skittles) — culturally narrow consumer reference",
+        "DATASET-D9: American football touchdown/2-point-conversion scoring — requires specific US sports cultural knowledge",
+        "DATASET-D10: beauty and modeling contest with gendered shopping — gender-stereotyped, not culturally inclusive",
+        "DATASET-D11: $1000/month rent, car insurance, food budget — adult household finance, inappropriate for K–5 and stigmatizing for lower-income households",
+        "DATASET-D12: $333,200 property valuation — adult real estate, presupposes affluent ownership",
+        "DATASET-D13: $20K-$30K car negotiation — adult consumer context",
+        "DATASET-D16: mall spending $250, back-to-back movies — affluent leisure context",
+        "DATASET-D20: weight loss as primary problem context — potentially sensitive for K–8 body-image",
+        "DATASET-D24: Kimiko/Omi/Arlette names — partial, undesigned name diversity",
+        "DATASET-D26: dandelion puffs/family-sharing — culturally neutral",
+        "DATASET-D27: ecological chain (jaguars/snakes/birds/beetles) — culturally neutral"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "DATASET-D8",
+          "DATASET-D9",
+          "DATASET-D11",
+          "DATASET-D12",
+          "DATASET-D13"
+        ],
+        "IC-2": [
+          "DATASET-D10",
+          "DATASET-D11",
+          "DATASET-D16",
+          "DATASET-D20"
+        ],
+        "IC-3": [
+          "Q103",
+          "Q104",
+          "Q112",
+          "WEB-3",
+          "DATASET-D8",
+          "DATASET-D9"
+        ],
+        "IC-4": [
+          "Q103",
+          "Q104"
+        ],
+        "IC-5": [
+          "Q9",
+          "Q103",
+          "Q110",
+          "DATASET-D8",
+          "DATASET-D9",
+          "DATASET-D10",
+          "DATASET-D11",
+          "DATASET-D20"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Contractor demographics, geographic locations, and educational backgrounds are entirely undocumented [Q103, Q104]",
+        "GPT-3 seed-question cultural influence on the resulting problem distribution is uncharacterized [Q110]",
+        "No quantitative estimate of the prevalence of culturally narrow vs. neutral contexts across the full 8.5K dataset; the 80-example sample suggests ~25–30% adult/narrow contexts but this is not a comprehensive audit"
+      ],
+      "requires_expert_verification": [
+        "A K–8 equity/curriculum specialist should perform a systematic cultural inclusivity audit using NCTM equity guidance [WEB-8] and WIDA 2020 lexical-complexity criteria [WEB-3]",
+        "An ELL specialist should assess idiom density and lexical complexity of GSM8K problem stems against WIDA grade-band Proficiency Level Descriptors"
+      ]
+    },
+    "input_form": {
+      "score": 4,
+      "justification": "Input form is the lowest-risk dimension: GSM8K is English-language text-only [Q32, Q33], and the deployment is English-language text-only with Latin script. Solutions are presented as natural language prose with embedded calculator annotations [Q40, Q119, DATASET-D17], and the socratic config additionally scaffolds solutions as sub-question/answer pairs [DATASET-D18] — a form moderately closer to pedagogical worked examples. The only minor concern is that the calculator annotation tokens (`<<expr=result>>`) are training artifacts not present in natural classroom-ready worked examples [DATASET-D17], requiring preprocessing if GSM8K solutions are used as reference examples. There is no modality, script, or signal-distribution mismatch.",
+      "strengths": [
+        "Full language and modality match: English text-only on both sides [Q32, Q33]",
+        "Natural language solution format is interpretable and aligned with the deployment's worked-example needs [Q33, DATASET-D17]",
+        "Socratic config offers scaffolded sub-question format closer to pedagogical worked examples [DATASET-D18]"
+      ],
+      "checklist_responses": {
+        "IF-1": "No signal-distribution mismatch — both source and target are English natural-language text [Q32, Q33]. The deployment's regional YAML confirms 'Full match on language and modality — lowest-risk validity dimension.'",
+        "IF-2": "Yes — text-based web/edtech infrastructure is universally supported in US K–8 settings; no special capture specifications required.",
+        "IF-3": "One minor domain-specific form difference: calculator annotation tokens (`<<...=...>>`) are embedded in solutions [Q40, Q119, DATASET-D17] and would require stripping for use as natural classroom-ready worked examples.",
+        "IF-4": "No major form mismatches that harm external validity. Minor preprocessing required to strip calculator annotations if solutions are reused as instructional references [DATASET-D17]."
+      },
+      "evidence_quotes": [
+        "[Q32] 'First, we focus attention on the space of natural language solutions, as this is a richer and more general solution format than pure mathematical expressions.' (p.5)",
+        "[Q33] 'Moreover, this choice enables our models to develop verbal analytical skills and to produce solutions that are more readily interpretable by humans.' (p.5)",
+        "[Q40] 'To mitigate this issue, we train all models to use a calculator by injecting calculation annotations into the training set.' (p.6)",
+        "[Q119] 'During training, there is no special distinction between the annotated tokens and the rest of the solution: they are all just tokens.' (p.17)"
+      ],
+      "evidence_web_sources": [],
+      "evidence_dataset": [
+        "DATASET-D17: natural language solution with embedded `<<30/2=15>>` annotations — illustrates form artifact requiring preprocessing",
+        "DATASET-D18: socratic config breaks solution into explicit sub-question/answer pairs — closer to pedagogical scaffolding"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q32",
+          "Q33"
+        ],
+        "IF-2": [
+          "Q32"
+        ],
+        "IF-3": [
+          "Q40",
+          "Q119",
+          "DATASET-D17"
+        ],
+        "IF-4": [
+          "DATASET-D17"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": []
+    },
+    "output_ontology": {
+      "score": 1,
+      "justification": "GSM8K's output ontology is fundamentally and categorically misaligned with the deployment. Solutions are labeled correct/incorrect based solely on whether the final numeric answer matches [Q31, Q60], and the verifier outputs a scalar correctness probability [Q59]. The deployment requires a multi-dimensional output construct: (1) mathematical accuracy (hard gate), (2) distractor plausibility grounded in student misconceptions, (3) CCSS standard alignment, (4) grade-level language appropriateness, (5) cultural inclusivity — with the elicitation explicitly stating that 'correct' means a classroom-ready MCQ package, not arithmetic accuracy alone. Dataset analysis confirms every sampled example uses only the `#### N` numeric-answer convention with no MCQ structure, distractor choices, or misconception annotations [DATASET-D17, D7]. As the regional YAML notes, GSM8K covers only dimension 1 of a 5-dimension rubric, and elicitation marks OO as HIGH priority. Web evidence confirms no existing benchmark addresses CCSS-level alignment scoring [WEB-10] or distractor quality systematically [WEB-5, WEB-6, WEB-7].",
+      "strengths": [
+        "The single dimension GSM8K does score — mathematical accuracy via final numeric answer — directly maps to the deployment's hard-gate prerequisite [Q31, Q60]",
+        "Verifier framework allows ranked scoring of multiple candidates [Q3, Q68], which could in principle be repurposed if extended with pedagogical labels"
+      ],
+      "checklist_responses": {
+        "OO-1": "Output label categories are binary (correct/incorrect on final numeric answer) [Q31, Q60]. For the deployment, this captures only rank-1 (math accuracy) of a 5-dimension rubric and ignores ranks 2–5 (distractor plausibility, CCSS alignment, grade-level language, cultural inclusivity).",
+        "OO-2": "Missing categories specific to deployment: (a) CCSS standard-alignment labels [WEB-10], (b) distractor-quality labels [WEB-5, WEB-6, WEB-7], (c) grade-band-language labels [WEB-3], (d) cultural-inclusivity labels [WEB-8], (e) misconception-grounding labels. All five are entirely absent from GSM8K's label space.",
+        "OO-3": "The binary correct/incorrect schema does not encode non-regional values per se, but it encodes an assumption that mathematical correctness is the sole evaluation criterion — an assumption misaligned with the deployment's pedagogical 'classroom-ready' construct.",
+        "OO-4": "Stakeholder-driven taxonomy redesign is essential: the deployment requires labels for CCSS standard alignment, distractor plausibility, grade-level appropriateness, and cultural inclusivity — none of which GSM8K provides. EDUMATH [WEB-10] offers a closer (though still incomplete) starting point.",
+        "OO-5": "Taxonomy issues harming structural and content validity: (1) construct underrepresentation — 4 of 5 evaluation dimensions are entirely unmeasured; (2) the single measured dimension treats step-level reasoning quality as invisible (correct final answer can mask flawed reasoning, as the paper itself acknowledges [Q61]); (3) false positives via correct-answer-flawed-reasoning are documented but unaddressed [Q61, Q154]."
+      },
+      "evidence_quotes": [
+        "[Q31] 'Verifiers are trained to judge the correctness of solutions, with the training signal determined solely by whether or not the solution reached the correct final answer.' (p.5)",
+        "[Q59] 'Conditioned on the problem and a candidate solution, the verifier outputs the probability that the solution is correct.' (p.7)",
+        "[Q60] 'Training solutions are labeled as correct or incorrect based solely on whether they reach the correct final answer.' (p.7)",
+        "[Q61] 'In practice, some solutions will reach the correct final answer using flawed reasoning, leading to false positives.' (p.7)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-10] EDUMATH (2024) introduces a Standards Alignment evaluation criterion for MWP generation — confirms no prior benchmark addressed this label category",
+        "[WEB-5] DiVERT (2024) studies distractor generation via variational error representations — confirms distractor quality is an unsolved research dimension with no standard benchmark",
+        "[WEB-6] Overgenerate-and-rank (2024) finds human-authored distractors still outperform LLM-generated ones — confirms distractor plausibility cannot be evaluated by GSM8K-style metrics",
+        "[WEB-7] ACL 2025 distractor-rubric paper proposes pairwise rubric for misconception-targeting — none of these dimensions appear in GSM8K's label space"
+      ],
+      "evidence_dataset": [
+        "DATASET-D17: solution labeled only as `#### 32` — no CCSS, grade, distractor, or misconception annotation",
+        "DATASET-D7: solution labeled only as `#### 9` — confirms label schema is uniform across the dataset",
+        "DATASET-D33: example with potential internal reasoning inconsistency labeled only `96` — illustrates that label captures final answer, not reasoning quality"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q31",
+          "Q59",
+          "Q60"
+        ],
+        "OO-2": [
+          "WEB-10",
+          "WEB-5",
+          "WEB-6",
+          "WEB-7",
+          "WEB-3",
+          "WEB-8"
+        ],
+        "OO-3": [
+          "Q60"
+        ],
+        "OO-4": [
+          "WEB-10"
+        ],
+        "OO-5": [
+          "Q61",
+          "DATASET-D17",
+          "DATASET-D7",
+          "DATASET-D33"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": [
+        "Psychometric/assessment-design specialist should define an output-label schema covering CCSS alignment, distractor plausibility, grade-band language, and cultural inclusivity for the deployment's actual evaluation needs."
+      ]
+    },
+    "output_content": {
+      "score": 2,
+      "justification": "GSM8K's ground-truth labels are final numeric answers with a documented 1.7% disagreement rate among contractors interpreted as the breaking-error fraction [Q107, Q108], with subtler errors acknowledged as possible [Q109]. For arithmetic accuracy alone, label quality is reasonable. However, annotator demographics, geographic locations, native languages, and pedagogical training are entirely unreported [Q103, Q104], precluding any analysis of whether labels reflect regional stakeholder (US K–8 teacher) perspectives. Calculator annotations were auto-generated rather than human-labeled, with acknowledged imperfections [Q117, Q118, Q123]. Crucially, no labels exist for the deployment's primary pedagogical dimensions (distractor quality, CCSS alignment, grade-level language, cultural inclusivity), so for the bulk of the deployment's construct, label-content validity is not just weak — it is undefined. Dataset analysis spotted at least one likely internal inconsistency [DATASET-D33], consistent with the documented error rate but reducing confidence in the dataset as a pedagogical ground truth.",
+      "strengths": [
+        "Cross-contractor agreement check via re-solving with non-original workers provides reasonable arithmetic-accuracy label quality (~1.7% disagreement) [Q105, Q106, Q107]",
+        "Acknowledgment of label limitations (subtle errors possible, calculator imperfections) demonstrates documentation transparency [Q109, Q118, Q123]"
+      ],
+      "checklist_responses": {
+        "OC-1": "Partially — for arithmetic correctness only, labels are likely to align with US K–8 teacher judgments since arithmetic correctness is culturally invariant. For the pedagogical dimensions the deployment prioritizes (distractor quality, CCSS alignment, grade-level appropriateness, cultural inclusivity), no labels exist at all, so the question of regional alignment cannot be answered.",
+        "OC-2": "Cannot be assessed — annotator demographic, geographic, and pedagogical-training information is unreported [Q103, Q104]. Likely there is significant disagreement potential since labels were produced by general crowd contractors, not K–8 math teachers.",
+        "OC-3": "INSUFFICIENT DOCUMENTATION — the paper reports contractor sourcing platform (Upwork, Surge AI) [Q103, Q104] but provides no demographic, geographic, educational, or pedagogical-background information; no Datasheet or Data Statement is referenced.",
+        "OC-4": "Re-annotation by a representative US K–8 teacher pool would be valuable for two purposes: (a) verifying arithmetic correctness on grade-appropriate items, (b) producing the missing pedagogical labels (CCSS alignment, grade band, distractor candidates, inclusivity flags). The deployment YAML notes EDUMATH [WEB-10] as the closest precedent, which uses teacher annotators.",
+        "OC-5": "Aggregation method is binary agreement check between original-author solutions and re-solver solutions [Q105, Q106]. This binary check by design erases any minority interpretive perspective; no stratified analysis across annotator subgroups is reported [Q107, Q108].",
+        "OC-6": "Label issues harming convergent and external validity: (a) annotator demographics undocumented [Q103, Q104]; (b) labels cover only arithmetic correctness, not pedagogical dimensions central to deployment; (c) at least one potential internal inconsistency observed in sample [DATASET-D33]; (d) calculator annotations imperfect [Q117, Q118]; (e) binary aggregation erases interpretive disagreement [Q105–Q108]."
+      },
+      "evidence_quotes": [
+        "[Q105] 'After collecting the full dataset, we asked workers to re-solve all problems, with no workers re-solving problems they originally wrote.' (p.15)",
+        "[Q106] 'We checked whether their final answers agreed with the original solutions, and any problems that produced disagreements were either repaired or discarded.' (p.15)",
+        "[Q107] 'We then performed another round of agreement checks on a smaller subset of problems, finding that 1.7% of problems still produce disagreements among contractors.' (p.15)",
+        "[Q108] 'We estimate this to be the fraction of problems that contain breaking errors or ambiguities.' (p.15)",
+        "[Q109] 'It is possible that a larger percentage of problems contain subtle errors.' (p.15)",
+        "[Q117] 'The calculator annotations were not provided by human contractors: they were generated by a combination of hard-coded logic and a finetuned language model.' (p.17)",
+        "[Q118] 'The logic for auto-generating calculator annotations is imperfect.' (p.17)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-10] EDUMATH uses teacher annotators to produce pedagogical-quality labels (Solvability, Accuracy, Educational Appropriateness, Standards Alignment) — illustrates the kind of annotator pool the deployment requires that GSM8K lacks"
+      ],
+      "evidence_dataset": [
+        "DATASET-D33: question states 'two times' but solution treats it as 'four times'; label of 96 follows solution logic — likely subtle inconsistency consistent with the paper's acknowledgment of possible subtle errors [Q109]",
+        "DATASET-D17: full solution labeled only `#### 32` — confirms uniform binary-style labeling with no pedagogical metadata"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q60",
+          "Q105",
+          "Q106",
+          "WEB-10"
+        ],
+        "OC-2": [
+          "Q103",
+          "Q104"
+        ],
+        "OC-3": [
+          "Q103",
+          "Q104"
+        ],
+        "OC-4": [
+          "WEB-10"
+        ],
+        "OC-5": [
+          "Q105",
+          "Q106",
+          "Q107",
+          "Q108"
+        ],
+        "OC-6": [
+          "Q103",
+          "Q104",
+          "Q109",
+          "Q117",
+          "Q118",
+          "DATASET-D33"
+        ]
+      },
+      "confidence": "medium",
+      "information_gaps": [
+        "Contractor demographics, geography, native languages, and pedagogical training entirely undocumented [Q103, Q104]",
+        "No stratified agreement analysis across annotator subgroups [Q107]",
+        "Rate of subtle (non-breaking) errors in labels not quantified [Q109]"
+      ],
+      "requires_expert_verification": [
+        "Sample a stratified subset of GSM8K problems and have US K–8 math teachers re-evaluate (a) arithmetic accuracy, (b) age-appropriateness, (c) inferred CCSS alignment, and (d) cultural inclusivity to estimate the rate of latent labeling issues."
+      ]
+    },
+    "output_form": {
+      "score": 1,
+      "justification": "Output form is categorically misaligned with deployment. GSM8K evaluates free-form natural language solution generation scored by final numeric answer match [Q3, Q29, Q46], with metrics including test@1, test@N [Q52], majority voting [Q85, Q87], and verifier-based ranking [Q68]. The deployment requires a structured MCQ item package: problem stem + verified correct answer + 3 misconception-grounded distractors + optional worked solution [elicitation A4 and regional YAML]. Dataset analysis confirms zero MCQ structure in any sampled example [DATASET-D17, D7]. Distractor quality is identified by the elicitation as 'the hardest and most critical' evaluation challenge, and web evidence confirms it is an unsolved research problem with no standardized benchmark [WEB-5, WEB-6, WEB-7]. GSM8K provides no signal whatsoever about structured output quality, distractor plausibility, or misconception grounding. The mismatch is not a matter of degree but of category.",
+      "strengths": [
+        "Free-form natural language solution generation is a useful prerequisite capability for producing worked-solution explanations [Q32, Q33]",
+        "Step-by-step solution format with verifier-based ranking [Q68, Q147] is conceptually adaptable if extended with structured-output decoding"
+      ],
+      "checklist_responses": {
+        "OF-1": "Categorical mismatch — GSM8K outputs free-form solutions scored by final numeric answer [Q3, Q29, Q46]; deployment requires structured MCQ packages (stem + answer + distractors) [regional YAML, elicitation A4]. Dataset confirms uniform free-form solution format with no MCQ structure across all sampled examples [DATASET-D17, D7].",
+        "OF-2": "Not applicable — no speech-based output is required by either source or deployment; both are text-only.",
+        "OF-3": "Literacy requirements (low-idiom plain-language stems for ELL accessibility per WIDA 2020 [WEB-3]) are not addressed by GSM8K's output form, which has no readability or grade-band targeting metric.",
+        "OF-4": "Major form mismatches harming external validity: (a) free-form solution vs. required structured MCQ package; (b) numeric-answer-only scoring vs. multi-criterion pedagogical scoring; (c) no metric for distractor plausibility, which the elicitation marks as the hardest evaluation challenge and which web evidence [WEB-5, WEB-6, WEB-7] confirms is an unsolved area; (d) no readability or grade-band-appropriate-language metric."
+      },
+      "evidence_quotes": [
+        "[Q3] 'At test time, we generate many candidate solutions and select the one ranked highest by the verifier.' (p.1)",
+        "[Q29] 'At test time, we judge performance by autoregressively sampling a single low temperature solution and checking whether the final answer is correct.' (p.5)",
+        "[Q46] 'Test performance is determined by a single low temperature (T = 0) sample for each test problem.' (p.6)",
+        "[Q52] 'We use test@N to denote the percentage of problems solved correctly at least once when allowing the model to make N separate guesses for each problem.' (p.7)",
+        "[Q87] 'This voting process considers only the final answer reached by the individual solutions: the final answer selected is the one with the most votes.' (p.11)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-5] DiVERT distractor-generation research confirms distractor quality is an unsolved evaluation dimension not covered by any GSM8K-style metric",
+        "[WEB-6] Overgenerate-and-rank study confirms human-authored distractors outperform LLM-generated ones — distractor evaluation requires student-response data or expert teacher review",
+        "[WEB-7] ACL 2025 distractor-rubric paper proposes pairwise rubric (misconception targeting, similarity to correct answer, intuitive appeal) — none of these criteria appear in GSM8K's metrics",
+        "[WEB-3] WIDA 2020 ELD Standards provide grade-band readability/lexical-complexity targets that GSM8K's output metrics do not address"
+      ],
+      "evidence_dataset": [
+        "DATASET-D17: output format is natural language prose terminating in `#### 32` — no MCQ structure, no distractors",
+        "DATASET-D7: output schema uniformly `question + answer` with final numeric answer; confirms no MCQ structure exists in the data"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q3",
+          "Q29",
+          "Q46",
+          "DATASET-D17",
+          "DATASET-D7"
+        ],
+        "OF-2": [],
+        "OF-3": [
+          "WEB-3"
+        ],
+        "OF-4": [
+          "Q52",
+          "Q87",
+          "WEB-5",
+          "WEB-6",
+          "WEB-7",
+          "WEB-3"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": [
+        "Assessment-design specialist should specify the structured MCQ output schema and evaluation metrics (distractor plausibility scoring, misconception-grounding rubric, readability targets) that the deployment requires."
+      ]
+    }
+  },
+  "overall_summary": "GSM8K is a poor fit for the US K–8 CCSS-aligned MCQ item-generation deployment. The benchmark measures a single dimension — final-numeric-answer correctness on multi-step grade-school arithmetic word problems — and the deployment's elicitation explicitly identifies this as only the rank-1 hard-gate prerequisite of a five-dimension rubric. The remaining four dimensions (CCSS standard-cluster alignment, distractor plausibility grounded in student misconceptions, grade-level language appropriateness, cultural inclusivity) are entirely outside GSM8K's design scope, and dataset analysis confirms structural absence rather than sampling artifact: zero CCSS or grade tags, uniform free-form solution format with no MCQ structure, and substantial culturally narrow content (American football scoring, brand-name US candy, beauty contests, pervasive adult financial scenarios). Input form is the lone strong dimension (text-only English on both sides). Three dimensions (IO, IC, OC) score 2 reflecting partial coverage with major gaps; two dimensions (OO, OF) score 1 reflecting categorical mismatch. The benchmark is usable only as a screening filter for the hard-gate arithmetic-accuracy prerequisite and provides no signal about the deployment's primary pedagogical evaluation construct.",
+  "risk_assessment": "high",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "GSM8K provides a meaningful signal for one dimension of the deployment's evaluation hierarchy: multi-step arithmetic accuracy on grade-school-level math word problems. The benchmark's free-form natural-language-solution format with calculator-annotated step-by-step reasoning [Q32, Q33, Q40] is also a reasonable proxy for the underlying capability to produce worked-solution explanations. For the deployment's rank-1 'hard gate' of mathematical solution accuracy, GSM8K is a usable, if partial, screening filter — any model failing on GSM8K is likely to produce mathematically inaccurate items and should be excluded from further consideration.",
+    "construct_depth": "Construct depth is shallow for the deployment's actual evaluation needs. GSM8K probes arithmetic-accuracy capability across a broad range of operations (fractions, ratios, percentages, simple algebra) and multi-step reasoning depth (2–6+ steps) [DATASET-D1, D6, D22], so the depth of evidence within the arithmetic-accuracy dimension is reasonable. However, this is a single dimension of a five-dimension deployment construct: CCSS standard-cluster alignment (HIGH priority, rank 3), distractor plausibility (HIGH priority, rank 2), grade-level language appropriateness (HIGH priority, rank 4), and cultural inclusivity (HIGH priority, rank 5) are entirely unaddressed by any GSM8K metric, label, or design constraint. The construct depth in the dimensions that most differentiate pedagogical value is therefore zero.",
+    "supplementation_needed": "Substantial supplementation is required across four of the six validity dimensions. For input ontology (IO) and output ontology (OO): adopt or build a CCSS-standard-cluster-tagged evaluation corpus, using EDUMATH [WEB-10], Smarter Balanced [WEB-11], or PARCC/New Meridian [WEB-14] as reference banks. For input content (IC): commission a cultural-inclusivity audit aligned to NCTM equity guidance [WEB-8] and WIDA 2020 lexical-complexity targets [WEB-3]. For output content (OC) and output form (OF): build a teacher-evaluated MCQ-package evaluation pipeline addressing distractor plausibility, misconception grounding, and grade-band-appropriate language. Web evidence confirms distractor quality is an active but unsolved research area [WEB-5, WEB-6, WEB-7], and the deployment will likely require human teacher evaluation as the gold standard for the distractor-quality dimension."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "No CCSS standard-cluster or grade-band tagging exists in GSM8K; problems spanning K–2 through 6–8 are mixed in an undifferentiated pool [Q1, Q8, DATASET-D3, D4, D5, D28].",
+      "recommendation": "Construct a CCSS-tagged complement corpus by either (a) commissioning curriculum specialists to retroactively tag a stratified subset of GSM8K problems with CCSS standard clusters and grade bands, or (b) supplementing with EDUMATH [WEB-10], Smarter Balanced open interim item bank [WEB-11], or PARCC/New Meridian released items [WEB-14], all of which provide CCSS-tagged grade-leveled items. Treat GSM8K alone as insufficient for IO validation."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "Pervasive culturally narrow content (American football, US candy brands, beauty contests) and adult financial contexts (rent, real estate, car purchase) appear without inclusivity screening; contractor demographics undocumented [Q103, Q104, DATASET-D8, D9, D10, D11, D12].",
+      "recommendation": "Apply a cultural-inclusivity filter to GSM8K problems before any use as deployment evaluation reference: exclude adult-finance, sports-cultural, gender-stereotyped, and body-image contexts. Commission a teacher/equity-specialist audit using NCTM Catalyzing Change [WEB-8] equity guidance and WIDA 2020 [WEB-3] lexical-complexity criteria. Supplement with culturally inclusive item banks designed for diverse US K–8 populations."
+    },
+    {
+      "dimension": "output_ontology",
+      "gap": "GSM8K's binary correct/incorrect label on final numeric answer [Q31, Q60] covers only 1 of 5 deployment evaluation dimensions; distractor plausibility, CCSS alignment, grade-band language, and cultural inclusivity are entirely unlabeled.",
+      "recommendation": "Define a multi-criterion output rubric covering all five deployment dimensions, adapting EDUMATH's [WEB-10] four-criterion teacher-annotation framework (Solvability, Accuracy, Educational Appropriateness, Standards Alignment) and extending with distractor-quality criteria from the ACL 2025 distractor rubric [WEB-7] (misconception targeting, similarity to correct answer, intuitive appeal)."
+    },
+    {
+      "dimension": "output_form",
+      "gap": "GSM8K evaluates free-form natural-language-solution generation [Q3, Q29, Q46]; deployment requires structured MCQ package (stem + verified answer + 3 misconception-grounded distractors). Distractor-quality evaluation has no benchmark and is unsolved [WEB-5, WEB-6, WEB-7].",
+      "recommendation": "Build a teacher-in-the-loop evaluation pipeline for the MCQ-package output form. Use overgenerate-and-rank [WEB-6] approaches to surface distractor candidates and have US K–8 math teachers score them against a misconception-grounding rubric. Treat human teacher evaluation as the gold standard for distractor quality, as human-authored distractors consistently outperform LLM-generated ones in current research."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Annotator demographics, pedagogical training, and stratified agreement analysis entirely undocumented [Q103, Q104, Q107]; labels cover arithmetic correctness only with at least one subtle error observed in sample [Q109, DATASET-D33].",
+      "recommendation": "Recruit a representative US K–8 math teacher panel to re-annotate a stratified sample of GSM8K items for (a) arithmetic accuracy verification, (b) inferred CCSS standard cluster, (c) grade-band appropriateness, (d) cultural inclusivity flag. Use EDUMATH's [WEB-10] teacher-annotation methodology as a template. Report stratified inter-annotator agreement across teacher subgroups."
+    },
+    {
+      "dimension": "input_form",
+      "gap": "Calculator annotation tokens (`<<expr=result>>`) embedded in solutions [Q40, Q119, DATASET-D17] are training artifacts not present in natural classroom-ready worked examples.",
+      "recommendation": "Apply a simple preprocessing step to strip `<<...=...>>` tokens from GSM8K solutions before any use as instructional reference examples in the deployment pipeline. Validate that stripped solutions remain readable and pedagogically interpretable."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "output_ontology",
+    "output_form",
+    "input_ontology",
+    "input_content"
+  ],
+  "strongest_dimensions": [
+    "input_form"
+  ]
+}

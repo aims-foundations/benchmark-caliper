@@ -1,0 +1,393 @@
+{
+  "benchmark": "gsm8k",
+  "region": "US K-8 Math Tutoring Platform — Homework Checker Deployment",
+  "dimensions": {
+    "input_ontology": {
+      "score": 3,
+      "justification": "GSM8K's core taxonomy — multi-step arithmetic word problems using the four operations with fractions, percentages, and ratios — directly matches the platform's highest-volume grade 3-6 use case [Q1, Q11, Q19] and is empirically confirmed across the dataset sample (DATASET-D13, D17, D18, D21, D24). However, three platform-relevant categories are documented as absent or sparse: (a) US customary unit conversion problems are not documented in the paper and no conversion problem appeared in 80 sampled examples (DATASET-D31, D32 show only time/rate conversions, not in↔ft or oz↔lb); (b) basic statistics (mean/median from datasets) is confirmed absent in web research [WEB-5, WEB-7] and only a single embedded mean problem appeared in the sample (DATASET-D10); (c) area/perimeter geometry is confirmed absent per [WEB-5, WEB-7], with the sample showing volume and area-as-pricing (DATASET-D11, D12) but no perimeter problems. Additionally, the benchmark's 2–8 step difficulty floor [WEB-5, WEB-6] excludes true K-2 single-step arithmetic by design, leaving the platform's K-2 cohort untested. The benchmark also includes some algebra-required problems (DATASET-D16, D22) that exceed the platform's K-6 arithmetic scope, introducing minor construct-irrelevant variance. Given MODERATE priority and confirmed gaps on 3 of the user's explicitly flagged content types, partial alignment is the most defensible score.",
+      "strengths": [
+        "Core multi-step four-operations arithmetic at grades 3-6 difficulty is well represented (DATASET-D13, D24; Q19)",
+        "Fractions and percentages are present and match grades 4-6 content (DATASET-D17, D18, D21, D26)",
+        "Ratio and proportional reasoning problems cover grades 6-8 content (DATASET-D14, D15)",
+        "High linguistic diversity in problem framing reduces template-overfitting risk [Q9, Q10, Q113]"
+      ],
+      "checklist_responses": {
+        "IO-1": "Required categories per elicitation: multi-step four-operations arithmetic (grades 3-6), fractions/decimals/percentages/ratios (grades 4-8), US customary unit conversion, basic statistics (mean/median), area/perimeter word problems, and K-2 single-step arithmetic.",
+        "IO-2": "Yes. Three categories are omitted or sparsely represented: (a) US customary unit conversion — not documented in paper; absent from 80-example sample (DATASET-D31, D32 only show time conversions); (b) basic statistics (mean/median) — confirmed absent per [WEB-5, WEB-7]; only one embedded mean problem in sample (DATASET-D10); (c) area/perimeter — confirmed absent per [WEB-5, WEB-7]; sample shows volume/area-as-pricing only (DATASET-D11, D12), no perimeter. Additionally, K-2 single-step arithmetic is excluded by the 2-step minimum design floor [WEB-5, WEB-6].",
+        "IO-3": "Minor inclusion of algebra-required variable-equation problems (DATASET-D16, D22) that exceed the platform's stated K-8 arithmetic scope. Low-frequency but introduces some construct-irrelevant variance.",
+        "IO-4": "Documented gaps that harm content validity: K-2 single-step problems (full gap, by design [WEB-5, WEB-6]); statistics word problems (full gap [WEB-5, WEB-7]); perimeter problems (full gap [WEB-5, WEB-7]); US customary unit conversion (likely partial gap, unconfirmed at full-dataset scale). Strong coverage on core multi-step four-operations and fractions/percentages/ratios."
+      },
+      "evidence_quotes": [
+        "[Q1] 'we introduce GSM8K, a dataset of 8.5K high quality linguistically diverse grade school math word problems.' (p.1)",
+        "[Q11] 'GSM8K solutions depend only on elementary concepts, so achieving high test performance is a tractable goal.' (p.2)",
+        "[Q19] 'GSM8K is larger, provides natural language solutions, and consists of problems that on average require more steps to solve.' (p.4)",
+        "[Q48] 'a model with 10^16 parameters would be required to reach an 80% solve rate' (p.6)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-5] GSM8K content scope: 'percentages, fractions, ratios, work rates, and basic measurement conversions' with no geometry or statistics",
+        "[WEB-7] 'no advanced mathematics (no geometry, quadratics, combinatorics)'; no statistics mentioned",
+        "[WEB-6] Solutions 'primarily involve performing a sequence of elementary calculations using basic arithmetic operations'",
+        "[WEB-5] Difficulty segmentation: 2-8 steps with approximately equal thirds easy/medium/hard; minimum 2-step floor excludes K-2 single-step"
+      ],
+      "evidence_dataset": [
+        "DATASET-D13: 4-step multi-operation problem confirms grades 3-6 core coverage",
+        "DATASET-D10: only one mean/average problem in 80 examples; no median observed — confirms statistics gap",
+        "DATASET-D11, D12: volume and area-as-pricing present but no perimeter problems observed",
+        "DATASET-D31, D32: time conversions present but no US customary unit-to-unit conversions (in↔ft, oz↔lb)",
+        "DATASET-D16, D22: algebra-required variable problems exceed stated K-8 arithmetic scope"
+      ],
+      "evidence_map": {
+        "IO-1": [
+          "Q1",
+          "Q11"
+        ],
+        "IO-2": [
+          "WEB-5",
+          "WEB-7",
+          "WEB-6",
+          "DATASET-D10",
+          "DATASET-D11",
+          "DATASET-D12",
+          "DATASET-D31",
+          "DATASET-D32"
+        ],
+        "IO-3": [
+          "DATASET-D16",
+          "DATASET-D22"
+        ],
+        "IO-4": [
+          "WEB-5",
+          "WEB-6",
+          "WEB-7",
+          "Q48"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Frequency of US customary unit conversion problems in the full 8,500-problem corpus (sample of 80 found none, but small sample limits inference)",
+        "Whether any median/range/mode problems exist anywhere in the full dataset",
+        "Whether GSM8K problems have any incidental alignment to specific CCSS-M grade-level standards"
+      ],
+      "requires_expert_verification": [
+        "Full-dataset frequency audit of measurement conversion, statistics, and geometry sub-skills via keyword/semantic search",
+        "Mapping of GSM8K items to CCSS-M grade bands by a curriculum specialist"
+      ]
+    },
+    "input_content": {
+      "score": 4,
+      "justification": "Empirical sampling provides strong evidence that GSM8K's content predominantly matches the platform's US cultural context. Currency is consistently USD with decimal cents across the sample (DATASET-D1, D2, D3, D28, D29), including American-specific features like sales tax (DATASET-D3) and brand-name US candy (DATASET-D1). US customary units (feet, pounds, square feet) appear regularly (DATASET-D5, D6, D7, D12). American cultural settings dominate — football, malls, farmer's markets (DATASET-D4, D28). [WEB-5] confirms 'the standard version is US-centric, using names, currencies, and scenarios typical of Western grade-school curricula.' However, three concerns persist: (a) the paper does not document contractor nationality [Q103, Q104] and the YAML notes a 'transferred from different cultural context' metadata flag (GAP-4); (b) at least one observed problem uses kilograms exclusively (DATASET-D8), conflicting with the platform's US-customary-primary requirement; (c) occasional non-US names and settings appear (DATASET-D14 'castle provisions'; DATASET-D27 British names; DATASET-D15 Scandinavian names). Given MODERATE priority and that the dominant evidence supports US alignment with only minor inconsistencies, score 4 is appropriate.",
+      "strengths": [
+        "USD currency with decimal cents consistent throughout the sample (DATASET-D1, D2, D3, D28)",
+        "American retail and cultural settings dominate (mall, farmer's market, US football, brand-name candy) (DATASET-D1, D4, D28)",
+        "US customary units (feet, pounds, square feet) used in measurement problems (DATASET-D5, D6, D7, D12)",
+        "[WEB-5] independently confirms US-centric framing as the standard convention"
+      ],
+      "checklist_responses": {
+        "IC-1": "Yes — problems contain American cultural references (US football scoring, brand-name candy, mall/farmer's market settings) that benefit from US student familiarity (DATASET-D1, D4, D28). These are deployment-aligned rather than misaligned.",
+        "IC-2": "Yes, predominantly. [WEB-5] confirms US-centric framing; empirical sample shows USD throughout (DATASET-D1-D3, D28-D29) and US customary units (DATASET-D5-D7, D12). Minor inconsistencies: one kilogram problem (DATASET-D8) and occasional non-US names (DATASET-D27, D15).",
+        "IC-3": "No problematic Western-specific knowledge for a US deployment — Western framing IS the target context. Minor non-US-flavored items (castle setting DATASET-D14, British names DATASET-D27) may slightly reduce cultural familiarity but do not impede arithmetic skill assessment.",
+        "IC-4": "INSUFFICIENT DOCUMENTATION — contractor demographics not disclosed in the paper [Q103, Q104]; no published audit of US-conventions enforcement across the full 8,500 problems. Would require systematic regional annotator review.",
+        "IC-5": "Minor content issues: ~5-10% of sampled problems show non-US-flavored framing (kilograms, non-US names, non-American settings). The cumulative impact on construct validity is low given that arithmetic skill is unit-agnostic, but reduces 'culturally familiar American settings' fidelity claim modestly."
+      },
+      "evidence_quotes": [
+        "[Q7] 'Karl Cobbe... OpenAI' — US-based authoring organization (p.1)",
+        "[Q103] 'we initially collected a starting set of a thousand problems and natural language solutions by hiring freelance contractors on Upwork' (p.15)",
+        "[Q104] 'We then worked with Surge AI, an NLP data labeling platform, to scale up our data collection.' (p.15)",
+        "[Q110] 'we provided seed questions automatically generated from a few-shot prompted 175B GPT-3 model' (p.15)"
+      ],
+      "evidence_web_sources": [
+        "[WEB-5] 'the standard version is US-centric, using names, currencies, and scenarios typical of Western grade-school curricula'",
+        "[WEB-5] Recent cultural adaptation work (Tomar et al. 2025) created non-US variants, confirming original is implicitly US/Western-anchored"
+      ],
+      "evidence_dataset": [
+        "DATASET-D1: USD pricing with US brand-name candy (Reese's, Snickers, Skittles) at birthday party",
+        "DATASET-D3: USD with sales tax — characteristic American retail",
+        "DATASET-D4: American football scoring (touchdowns, 2-point conversions)",
+        "DATASET-D5, D6, D7, D12: US customary units (feet, pounds, sq ft) used consistently",
+        "DATASET-D8: kilograms used exclusively — inconsistent with platform's US-customary requirement",
+        "DATASET-D27: British names (Colin, Helen, Benedict) suggest possible non-US authorship",
+        "DATASET-D14: castle/provisions setting — not characteristically American",
+        "DATASET-D15: Scandinavian names, no currency denomination specified"
+      ],
+      "evidence_map": {
+        "IC-1": [
+          "DATASET-D1",
+          "DATASET-D4",
+          "DATASET-D28"
+        ],
+        "IC-2": [
+          "WEB-5",
+          "DATASET-D1",
+          "DATASET-D2",
+          "DATASET-D3",
+          "DATASET-D5",
+          "DATASET-D8",
+          "DATASET-D27"
+        ],
+        "IC-3": [
+          "DATASET-D14",
+          "DATASET-D27"
+        ],
+        "IC-4": [
+          "Q103",
+          "Q104"
+        ],
+        "IC-5": [
+          "DATASET-D8",
+          "DATASET-D15",
+          "DATASET-D27"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "Full-dataset frequency of non-US-flavored problems (sample suggests ~5-10% but n=80 too small for precision)",
+        "Whether kilogram or other metric-only problems appear in problem types not sampled",
+        "Contractor nationality and Common Core familiarity"
+      ],
+      "requires_expert_verification": [
+        "Systematic audit by US elementary curriculum specialist of cultural setting and unit-system consistency across the full 8,500-problem corpus",
+        "Confirmation that no benchmark problems use non-USD currency"
+      ]
+    },
+    "input_form": {
+      "score": 5,
+      "justification": "Full alignment on input form. Both benchmark and deployment are text-only English prose word problems [Q9, Q32], using the Latin alphabet, with no audio, image, or structured-data modality. The empirical sample confirms every problem is plain prose in American English. The platform's input channel (text string submitted via API) matches the benchmark format exactly. No infrastructure constraints, signal distribution differences, or script mismatches exist. This dimension was correctly marked LOWER priority in elicitation.",
+      "strengths": [
+        "Text-only English prose matches deployment input channel exactly (Q9, Q32)",
+        "Latin alphabet, US English register match platform requirements",
+        "No modality conversion or preprocessing needed",
+        "Calculator annotations are training-only and transparent to evaluation [Q117, Q119]"
+      ],
+      "checklist_responses": {
+        "IF-1": "Both source and target are plain English text strings [Q9, Q32]. No signal-distribution differences.",
+        "IF-2": "Yes — text-based web/mobile API channel requires no specialized infrastructure beyond standard internet access, which the deployment assumes.",
+        "IF-3": "No domain-specific form differences. The platform requires text-in/binary-out; the benchmark provides text-in with a clearly delimited final numerical answer.",
+        "IF-4": "No form mismatches identified."
+      },
+      "evidence_quotes": [
+        "[Q9] 'We designed this dataset to have high linguistic diversity while relying on relatively simple grade school math concepts.' (p.2)",
+        "[Q32] 'we focus attention on the space of natural language solutions, as this is a richer and more general solution format than pure mathematical expressions.' (p.5)",
+        "[Q56] 'it is important to allow the model to generate the full natural language solution before outputting a final answer' (p.7)"
+      ],
+      "evidence_web_sources": [],
+      "evidence_dataset": [
+        "DATASET-D13, D21, D22: all sampled problems are plain English prose with no embedded media or structured data"
+      ],
+      "evidence_map": {
+        "IF-1": [
+          "Q9",
+          "Q32"
+        ],
+        "IF-2": [
+          "Q9"
+        ],
+        "IF-3": [
+          "Q32",
+          "DATASET-D13"
+        ],
+        "IF-4": []
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": []
+    },
+    "output_ontology": {
+      "score": 5,
+      "justification": "GSM8K's output ontology — binary correct/incorrect judgment determined solely by whether the final numerical answer matches ground truth [Q31, Q60] — maps directly onto the deployment's stated requirement of 'binary correct/incorrect judgment on submitted final numerical answer only.' The decision rule is objective and culturally invariant: numerical equality. No categorical labels with cultural value-dependence are involved [Q60]. The elicitation explicitly confirms 'an unconventional solution method that yields the correct number is scored as correct,' which matches the benchmark's final-answer-only scoring [Q60, Q87]. No taxonomy redesign needed.",
+      "strengths": [
+        "Binary correct/incorrect decision rule is structurally identical to deployment requirement [Q31, Q60]",
+        "Decision boundary is objective numerical equality — culturally invariant",
+        "Sample confirms clean '#### N' final-answer delimiter format (DATASET-D13, D21, D22)",
+        "No partial-credit or step-scoring assumptions that would need to be stripped out"
+      ],
+      "checklist_responses": {
+        "OO-1": "Single binary label (correct/incorrect on final numerical answer) directly matches platform requirement [Q31, Q60].",
+        "OO-2": "No missing regional categories — the output space is a number, not a label set requiring regional taxonomy.",
+        "OO-3": "No culturally encoded categories — numerical equality is the sole decision rule [Q60].",
+        "OO-4": "No taxonomy redesign needed; benchmark structure already matches deployment.",
+        "OO-5": "No taxonomy issues identified."
+      },
+      "evidence_quotes": [
+        "[Q31] 'Verifiers are trained to judge the correctness of solutions, with the training signal determined solely by whether or not the solution reached the correct final answer.' (p.5)",
+        "[Q60] 'Training solutions are labeled as correct or incorrect based solely on whether they reach the correct final answer.' (p.7)",
+        "[Q87] 'This voting process considers only the final answer reached by the individual solutions' (p.11)"
+      ],
+      "evidence_web_sources": [],
+      "evidence_dataset": [
+        "DATASET-D13, D21, D22: '#### N' delimiter cleanly isolates the final numerical answer for binary matching"
+      ],
+      "evidence_map": {
+        "OO-1": [
+          "Q31",
+          "Q60"
+        ],
+        "OO-2": [
+          "Q60"
+        ],
+        "OO-3": [
+          "Q60"
+        ],
+        "OO-4": [
+          "Q60"
+        ],
+        "OO-5": [
+          "Q31",
+          "DATASET-D13"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": []
+    },
+    "output_content": {
+      "score": 4,
+      "justification": "Ground-truth labels are numerical answers verified by contractor re-solving with a documented 1.7% disagreement rate [Q107, Q108], which the authors acknowledge may understate the true subtle-error rate [Q109]. Because correctness is arithmetically verifiable, regional stakeholder disagreement is structurally minimal — a correct sum is correct regardless of cultural perspective. The dataset sample confirms label cleanliness in most cases (DATASET-D13, D21, D22), but DATASET-D23 illustrates the documented error pattern: 'every sixth customer' in the problem text, while the solution divides by 5 to reach label=10, an ambiguity that could cause a correctly-reasoning model to be marked wrong. This is consistent with the paper's documented 1.7% rate. The calculator annotation imperfection [Q118, Q123] is acknowledged but affects training/evaluation infrastructure rather than ground-truth labels. Contractor nationality remains undocumented [Q105], but for a numerical-equality decision rule, this matters less than for subjective tasks. Score 4 reflects strong label quality with documented minor error rate and no cultural-disagreement risk.",
+      "strengths": [
+        "Labels are arithmetically verifiable; correctness is objective [Q60]",
+        "Two-pass contractor re-solving validation with documented agreement rate [Q105, Q106, Q107]",
+        "Sample confirms clean numerical labels in most examples (DATASET-D13, D21, D22)",
+        "1.7% disagreement rate is low enough for a screening-tier benchmark [Q107]"
+      ],
+      "checklist_responses": {
+        "OC-1": "Ground-truth labels are numerical and arithmetically verifiable, so regional stakeholder agreement is essentially structural rather than perspectival.",
+        "OC-2": "Minimal potential disagreement — US Common Core teachers would converge on the same numerical answers as the original annotators for well-formed problems. Disagreement risk is concentrated in the ~1.7% of problems with breaking errors or ambiguities [Q107, Q108].",
+        "OC-3": "INSUFFICIENT DOCUMENTATION — contractor demographics (nationality, native language, CCSS-M familiarity) not disclosed [Q103, Q104, Q105]. For a numerical-equality task this is lower-stakes than for subjective labeling.",
+        "OC-4": "Re-annotation by US K-8 teachers would likely affect <2% of items; not necessary for the deployment but useful for high-stakes use.",
+        "OC-5": "No aggregation method that could erase minority perspectives — labels are single numerical values, not aggregated judgments.",
+        "OC-6": "Documented 1.7% disagreement rate [Q107] and acknowledged 'larger percentage may contain subtle errors' [Q109]; one such ambiguity observed empirically (DATASET-D23). Acceptable for screening-tier evaluation; users should be aware that 1-2% of failures may reflect label issues rather than model errors."
+      },
+      "evidence_quotes": [
+        "[Q105] 'After collecting the full dataset, we asked workers to re-solve all problems, with no workers re-solving problems they originally wrote.' (p.15)",
+        "[Q107] '1.7% of problems still produce disagreements among contractors.' (p.15)",
+        "[Q108] 'We estimate this to be the fraction of problems that contain breaking errors or ambiguities.' (p.15)",
+        "[Q109] 'It is possible that a larger percentage of problems contain subtle errors.' (p.15)",
+        "[Q123] 'the original version of our calculator, used for all results in this paper, had some minor implementation bugs.' (p.17)"
+      ],
+      "evidence_web_sources": [],
+      "evidence_dataset": [
+        "DATASET-D23: 'every sixth customer' but solution divides by 5 — illustrates documented ambiguity pattern",
+        "DATASET-D13, D21, D22: clean numerical labels in typical cases"
+      ],
+      "evidence_map": {
+        "OC-1": [
+          "Q60",
+          "Q108"
+        ],
+        "OC-2": [
+          "Q107",
+          "Q108",
+          "DATASET-D23"
+        ],
+        "OC-3": [
+          "Q103",
+          "Q104",
+          "Q105"
+        ],
+        "OC-4": [
+          "Q109"
+        ],
+        "OC-5": [
+          "Q60"
+        ],
+        "OC-6": [
+          "Q107",
+          "Q109",
+          "DATASET-D23"
+        ]
+      },
+      "confidence": "high",
+      "information_gaps": [
+        "True subtle-error rate beyond the documented 1.7% breaking-error rate",
+        "Contractor demographics and CCSS-M familiarity"
+      ],
+      "requires_expert_verification": [
+        "Targeted re-annotation of a sample by US elementary teachers to estimate CCSS-M-aligned label disagreement rate"
+      ]
+    },
+    "output_form": {
+      "score": 5,
+      "justification": "Full alignment. GSM8K's output form is a final numerical answer string evaluated via exact-match correctness [Q29, Q46], which maps directly onto the deployment's stated output_channel ('binary correct/incorrect label returned to platform UI') and answer_format ('single numerical value — integer, decimal, or fraction'). The dataset sample confirms clean '#### N' final-answer delimiters across all examined examples (DATASET-D13, D21, D22). No text-to-speech, multi-modal output, or accessibility transformations are needed. Literacy is presumed in the target K-8 student population reading word problems in English. No format mismatch exists.",
+      "strengths": [
+        "Final numerical answer with exact-match scoring matches deployment output schema exactly [Q29, Q46]",
+        "Clean '#### N' delimiter format across the sample (DATASET-D13, D21, D22)",
+        "No partial-credit or step-scoring that would need to be discarded",
+        "Text output channel matches platform UI requirement"
+      ],
+      "checklist_responses": {
+        "OF-1": "Text-based numerical output matches platform UI requirement (binary label returned via API).",
+        "OF-2": "Not applicable — deployment is text-based, not speech-based.",
+        "OF-3": "Target population (K-8 students using English-language platform) is assumed literate in US English; no accessibility transformation needed for benchmark evaluation purposes.",
+        "OF-4": "No form mismatches identified."
+      },
+      "evidence_quotes": [
+        "[Q29] 'we judge performance by autoregressively sampling a single low temperature solution and checking whether the final answer is correct.' (p.5)",
+        "[Q46] 'Test performance is determined by a single low temperature (T = 0) sample for each test problem.' (p.6)"
+      ],
+      "evidence_web_sources": [],
+      "evidence_dataset": [
+        "DATASET-D13, D21, D22: '#### N' delimiter cleanly maps to binary final-answer comparison"
+      ],
+      "evidence_map": {
+        "OF-1": [
+          "Q29",
+          "Q46",
+          "DATASET-D13"
+        ],
+        "OF-2": [],
+        "OF-3": [],
+        "OF-4": []
+      },
+      "confidence": "high",
+      "information_gaps": [],
+      "requires_expert_verification": []
+    }
+  },
+  "overall_summary": "GSM8K is well-suited as a screening-tier benchmark for the platform's core use case — multi-step arithmetic word problem checking for grades 3-6 students using US conventions — but has confirmed coverage gaps for several content types the platform serves regularly. The strongest alignment is on output structure (binary final-answer checking is structurally identical), input form (text-only English), and cultural framing (USD currency and American settings dominate empirically). The weakest alignment is in input ontology: US customary unit conversion problems were not observed in 80 sampled examples and are not documented in the paper; basic statistics (mean/median) is confirmed absent by multiple web sources and the sample; area/perimeter problems are confirmed absent (volume and area-as-pricing present but no perimeter); K-2 single-step arithmetic is excluded by the 2-step minimum design floor. These four gaps mean that strong GSM8K performance does not guarantee competence on roughly the lower-grade (K-2) and upper-grade-supplementary (statistics, perimeter, conversion) portions of the platform's content inventory. Additionally, benchmark saturation at ~95%+ for frontier models [WEB-4] further limits discrimination at the top end. For the platform's dominant grade 3-6 multi-step four-operations use case, GSM8K provides solid evaluation evidence; for the documented gap areas, supplementary evaluation is required.",
+  "risk_assessment": "medium",
+  "practical_guidance": {
+    "what_this_benchmark_measures": "GSM8K validly measures an LLM's ability to read American English arithmetic word problems and produce correct final numerical answers via multi-step reasoning involving the four operations, fractions, decimals, percentages, ratios, and rates — the platform's highest-volume grade 3-6 content (input_ontology, input_content, output_ontology, output_form all score 3-5). It also confirms baseline cultural framing (USD, US customary units, American settings) appropriate for the target population.",
+    "construct_depth": "Depth is high for multi-step four-operations arithmetic but shallow or absent for several CCSS-M content types the platform requires: US customary unit conversion (in↔ft, oz↔lb, cups↔gallons), basic statistics (mean/median from datasets), perimeter geometry, and K-2 single-step arithmetic. The benchmark provides strong signal on the platform's dominant use case (~60-70% of platform volume by elicited grade band) but limited signal on the remaining sub-domains. Saturation at ~95%+ further reduces discrimination among frontier models [WEB-4].",
+    "supplementation_needed": "(1) A CCSS-M-aligned measurement conversion test set to fill the input_ontology gap on US customary unit conversion. (2) A grades 6-8 statistics word problem set (mean/median/mode/range from small datasets) — fully absent per [WEB-5, WEB-7] and sample. (3) A perimeter-focused geometry word problem set to complement GSM8K's area/volume coverage. (4) A K-2 single-step arithmetic test set, as GSM8K's 2-step minimum excludes this band by design. (5) An ambiguity audit on the deployment-relevant subset to mitigate the documented 1.7% label-error rate impact on user-facing scoring."
+  },
+  "remediation_suggestions": [
+    {
+      "dimension": "input_ontology",
+      "gap": "US customary unit conversion problems (feet↔inches, cups↔gallons, pounds↔ounces) not observed in 80-example sample and not documented in the paper; CCSS-M-mandated for grades 4-5+",
+      "recommendation": "Construct a 100-200 problem supplementary test set of US customary unit conversion word problems aligned to CCSS-M grades 4-5 measurement standards. Evaluate the LLM on this set alongside GSM8K."
+    },
+    {
+      "dimension": "input_ontology",
+      "gap": "Basic statistics word problems (mean, median, mode, range from small datasets) are confirmed absent from GSM8K's documented content scope [WEB-5, WEB-7]; only one embedded mean problem in 80-example sample",
+      "recommendation": "Add a grades 6-8 statistics word problem evaluation set covering mean/median/mode/range from named small datasets to fill this full coverage gap before deploying for upper-grade students."
+    },
+    {
+      "dimension": "input_ontology",
+      "gap": "Perimeter word problems absent from sample; geometry confirmed not in GSM8K scope [WEB-5, WEB-7]",
+      "recommendation": "Supplement with a perimeter-focused word problem set for rectangles, composite shapes, and real-world contexts. GSM8K's volume/area-as-pricing problems do not substitute for perimeter reasoning."
+    },
+    {
+      "dimension": "input_ontology",
+      "gap": "K-2 single-step arithmetic is excluded by GSM8K's 2-step minimum design floor [WEB-5, WEB-6]; deployment serves K-2 students",
+      "recommendation": "Evaluate K-2 capability with a single-step single-operation word problem set if the platform applies the homework-checker to early-grade student submissions. GSM8K provides zero test coverage for this band."
+    },
+    {
+      "dimension": "input_content",
+      "gap": "Occasional non-US-flavored problems (kilograms only, non-US names, non-American settings) in roughly 5-10% of sample (DATASET-D8, D14, D15, D27); contractor nationality undocumented",
+      "recommendation": "Filter or flag benchmark items using metric-only units or non-US settings if strict US-context fidelity is required for reporting. Consider using one of the published cultural adaptations or running an automated keyword/unit filter."
+    },
+    {
+      "dimension": "output_content",
+      "gap": "Documented 1.7% label-disagreement rate [Q107] and acknowledged subtle-error possibility [Q109]; one ambiguity observed empirically (DATASET-D23)",
+      "recommendation": "Have US K-8 math teachers re-validate a sample of GSM8K items used in user-facing accuracy reporting, or restrict reported metrics to a curated subset where label quality has been re-confirmed."
+    }
+  ],
+  "highest_concern_dimensions": [
+    "input_ontology",
+    "input_content"
+  ],
+  "strongest_dimensions": [
+    "input_form",
+    "output_ontology",
+    "output_form"
+  ]
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "id": "Q1",
+    "dimension": "IO",
+    "question": "GSM8K covers grade school math word problems broadly, but your teachers need to generate items aligned to specific Common Core domains (e.g., Operations & Algebraic Thinking, Number & Operations—Fractions, Ratios & Proportional Relationships). Does your system need to be evaluated on its ability to generate problems that map to specific Common Core standards or clusters, or is general grade-level math accuracy sufficient?"
+  },
+  {
+    "id": "Q2",
+    "dimension": "OO",
+    "question": "GSM8K scores answers as correct or incorrect based on a single numeric answer. Your deployment requires evaluating generated problems on multiple pedagogical dimensions — mathematical accuracy of the solution, appropriateness of distractors, alignment to a specified grade level, and Common Core standard coverage. Which of these dimensions matter most for your evaluation, and does 'correct' mean something beyond arithmetic accuracy in your context?"
+  },
+  {
+    "id": "Q3",
+    "dimension": "IC",
+    "question": "GSM8K word problems use real-world contexts drawn from US everyday life, but your teachers may serve students from diverse communities across the US — urban, rural, multilingual learners, or specific demographic groups. Are there contexts or cultural references that would be inappropriate or inaccessible for your target student populations, or requirements that problems reflect inclusive, culturally responsive scenarios?"
+  },
+  {
+    "id": "Q4",
+    "dimension": "OF",
+    "question": "GSM8K benchmarks free-form solution generation, but your deployment requires a structured output package: a problem stem, a verified correct answer, and plausible distractor choices. Does your evaluation need to assess the quality of the full multiple-choice item (including distractor design and plausibility), or only whether the underlying math is solved correctly?"
+  }
+]

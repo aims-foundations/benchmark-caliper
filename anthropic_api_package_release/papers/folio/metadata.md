@@ -1,0 +1,11 @@
+- name: folio
+- full_name: FOLIO: Natural Language Reasoning with First-Order Logic
+- year: 2024
+- domain: Evaluates the complex logical reasoning capabilities of language models through first-order logic (FOL) deductive reasoning problems presented in natural language. The benchmark measures whether models can determine the correctness of conclusions given premises that define a logical world.
+- languages: English
+- primary_region: UNKNOWN
+- porting_strategy: none
+- input_modalities: text
+- output_modalities: label
+- brief_description: FOLIO is an expert-annotated dataset of 1,430 unique reasoning examples with 487 premise sets, designed to evaluate first-order logic reasoning in natural language. Each example includes both natural language premises and conclusions paired with formal FOL annotations automatically verified by an FOL inference engine. The dataset also introduces an NL-FOL translation task and benchmarks multiple language models, showing that even GPT-4 achieves only 53.1% accuracy on hybrid-written stories in few-shot settings.
+- source_culture: designed by target population
