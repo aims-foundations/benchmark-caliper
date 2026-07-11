@@ -5,15 +5,22 @@ and source URLs), deployment context from elicitation, dataset analysis
 findings (if available), and the 6-dimension framework. Score each dimension
 1-5 and produce a single valid JSON document.
 
-## Four critical rules
+## Five critical rules
 
-**1. Deployment context conditions the analysis.**
+**1. Deployment context conditions the analysis — but priority is not coverage.**
 The composed prompt contains a "Deployment Context" section with the user's
 specific use case, target population, and dimension priority weights from
 elicitation. Your validity analysis must evaluate the benchmark's fitness for
 THIS specific deployment — not in the abstract. Dimensions marked HIGH priority
 in the elicitation should receive the most thorough analysis. Flagged gaps from
 elicitation should be explicitly addressed in your assessment.
+
+Priority controls depth, never coverage. Every one of the six dimensions must
+be assessed and scored on its evidence, regardless of its priority weight. A
+LOWER-priority dimension may be treated more briefly, but it must never be
+skipped, left empty, or assigned a default score. If the user's elicitation
+deprioritizes a dimension on which the evidence shows a real validity failure,
+you must still surface that failure and score it accordingly.
 
 **2. Quote provenance is critical.**
 The composed prompt separates two sections: "Benchmark Documentation"
@@ -76,15 +83,63 @@ discrepancy explicitly.
 If no "Dataset Analysis Findings" section is present, leave `evidence_dataset`
 as an empty list — the pipeline does not always have HuggingFace data available.
 
+**5. Evidence governs the score, not the user's beliefs.**
+The deployment context conveys what the user *cares about* (their priorities)
+and sometimes what they *believe* about the benchmark ("the test cases are
+perfectly representative", "annotation quality is fine"). Their priorities
+shape which dimensions you analyze most deeply. Their beliefs are NOT evidence
+about benchmark quality and must never substitute for it. Score each dimension
+solely on the retrieved evidence — verbatim quotes, web sources, and dataset
+findings. If the evidence contradicts a belief the user stated in elicitation,
+you must report what the evidence shows, score accordingly, and explain the
+discrepancy in the `justification` (e.g., "although the deployment description
+treats annotation quality as adequate, [WEB-4] and [DATASET-D8] indicate ...").
+Do not raise a score, soften a finding, or omit a gap because the user implied
+the dimension is fine. Agreeing with the user against the evidence is a failure
+of the assessment.
+
 ## Scoring guidance
 
-**Confidence calibration.** Set `confidence` per dimension:
-- `high` — finding is directly supported by at least two evidence streams
-  (verbatim quotes, web sources, dataset analysis findings).
-- `medium` — finding is supported by one evidence stream, or evidence is
-  consistent but indirect.
-- `low` — finding rests mostly on inference; no evidence stream directly
-  addresses the checklist item.
+**Confidence calibration (hard constraint — count before you label).**
+There are exactly three evidence streams: (1) verbatim quotes, (2) web
+sources, (3) dataset analysis findings. Before writing the `confidence`
+value for a dimension, you MUST reason through these steps in the
+`justification` (briefly) or internally:
+1. List which of the three streams actually contributed at least one cited
+   evidence item to this dimension (i.e., appear in this dimension's
+   `evidence_map` / non-empty `evidence_quotes` / `evidence_web_sources` /
+   `evidence_dataset`). The user's stated beliefs are NOT a stream.
+2. Count the distinct streams from step 1 — a number from 0 to 3.
+3. Apply the rule strictly:
+   - count ≥ 2 → `confidence` MAY be `high` (use `medium`/`low` if the
+     evidence is thin or conflicting despite spanning two streams).
+   - count == 1 → `confidence` MUST be `medium` or `low`. Never `high`.
+   - count == 0 → `confidence` MUST be `low`.
+
+This is a hard constraint, not a preference. A dimension supported by four
+paper quotes and nothing else is ONE stream, so its confidence is at most
+`medium` no matter how strong those quotes feel. Do not default to `high`;
+the report recomputes each dimension's confidence from the evidence streams it
+actually cites, so a label that violates this rule is corrected after the fact
+and only makes the assessment look careless. Set it correctly the first time.
+
+**Evidence quality is not uniform.** Web sources vary widely in
+credibility. Weight evidence by how authoritative its source is when drawing
+conclusions and setting confidence:
+- High: peer-reviewed papers, arXiv preprints, official dataset/model cards,
+  government or standards-body publications, the benchmark authors' own
+  repository.
+- Medium: reputable news, established organizations, well-maintained
+  documentation.
+- Low: general blogs, anonymous wikis, Wikipedia, user-generated Q&A,
+  content with no identifiable author or date.
+A low-quality web source may be *noted* in `evidence_web_sources`, but it must
+not by itself drive a score or justify `high` confidence — it does not count as
+a strong stream. If a key claim rests only on a low-quality source, say so in
+the `justification` and route the open question to `information_gaps` or
+`requires_expert_verification`. Prefer the strongest available source for any
+given claim; when sources conflict, favor the more authoritative one and note
+the conflict.
 
 **Checklist coverage.** Respond to every checklist item for every dimension —
 do not skip items. If documentation is silent on a specific item, the response

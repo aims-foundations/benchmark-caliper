@@ -148,6 +148,8 @@ interface ScoredState {
   slug: string
   scoring: Record<string, unknown>
   rawText: string
+  // Carried so the score table can surface per-dimension priority weights.
+  elicitationSummary: string
   emailStatus?: {
     requested: boolean
     sent?: boolean
@@ -459,6 +461,7 @@ export function App() {
       slug,
       scoring: DEMO_SCORING,
       rawText: DEMO_RAW_TEXT,
+      elicitationSummary: DEMO_ELICITATION_SUMMARY,
     }
     enterScored(scored)
   }
@@ -589,12 +592,14 @@ export function App() {
     void handleAutoRun({
       runId: args.runId,
       slug: args.slug,
+      elicitationSummary: args.elicitationSummary,
     })
   }
 
   async function handleAutoRun(args: {
     runId: string
     slug: string
+    elicitationSummary: string
   }): Promise<void> {
     const events: PipelineEvent[] = []
     setPhase({
@@ -674,6 +679,7 @@ export function App() {
       scoring,
       rawText,
       emailStatus,
+      elicitationSummary: args.elicitationSummary,
     })
   }
 
@@ -1019,6 +1025,7 @@ export function App() {
       slug: base.slug,
       scoring,
       rawText,
+      elicitationSummary: base.elicitationSummary,
     })
   }
 
@@ -1162,8 +1169,10 @@ export function App() {
       {isDemo && phase.name !== 'scored' && (
         <div className="demo-banner" role="status">
           <p>
-            <strong>Demo mode.</strong> Replaying a cached expert assessment
-            (MathDial — India urban English tutoring). No Anthropic API calls
+            <strong>Demo mode.</strong> Replaying a cached assessment
+            (expert-elicited inputs) for MathDial — India urban English
+            tutoring. The scores are Claude Opus's, conditioned on an expert's
+            elicitation, not an expert's own scores. No Anthropic API calls
             are being made.
           </p>
           <button
@@ -1329,6 +1338,7 @@ export function App() {
           onStartOver={handleStartOver}
           onChangeKey={handleChangeKey}
           emailStatus={phase.state.emailStatus}
+          elicitationSummary={phase.state.elicitationSummary}
         />
       )}
 
@@ -1346,6 +1356,7 @@ export function App() {
           readOnly
           onStartOver={handleStartOver}
           onChangeKey={handleChangeKey}
+          elicitationSummary={phase.state.report.elicitation_summary}
         />
       )}
 

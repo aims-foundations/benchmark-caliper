@@ -1182,6 +1182,105 @@ code {
   font-size: 0.9rem;
 }
 
+.score-evidence a {
+  word-break: break-all;
+}
+
+/* ---------- score-table caveats & priority ---------- */
+
+.score-table-caveat {
+  margin: 0 0 0.5rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.priority-legend {
+  margin: 0 0 0.75rem;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--muted);
+  padding: 0.45rem 0.65rem;
+  background: var(--black-05, rgba(0, 0, 0, 0.04));
+  border-radius: var(--radius-sm);
+}
+
+/* Right-hand cluster in a dimension row: confidence chip + score. */
+.dim-tags {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.dim-confidence {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 0.12rem 0.45rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.dim-confidence[data-confidence='high'] {
+  background: #cce7df;
+  color: var(--palo-alto);
+}
+
+.dim-confidence[data-confidence='medium'] {
+  background: #fbe6c4;
+  color: #8a5800;
+}
+
+.dim-confidence[data-confidence='low'] {
+  background: var(--black-10);
+  color: var(--muted);
+}
+
+/* Priority badge beside the dimension name. */
+.dim-priority {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm);
+  vertical-align: middle;
+}
+
+.dim-priority[data-priority='HIGH'] {
+  background: #f6d9da;
+  color: #7a0a10;
+}
+
+.dim-priority[data-priority='MODERATE'] {
+  background: #fbe6c4;
+  color: #8a5800;
+}
+
+.dim-priority[data-priority='LOWER'] {
+  background: var(--black-10);
+  color: var(--muted);
+}
+
+/* De-emphasize lower-priority dimensions so a 5/5 there doesn't visually
+   outweigh a low score on a high-priority dimension. */
+.score-row[data-priority='LOWER'] details {
+  opacity: 0.82;
+}
+
+.confidence-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--muted);
+  border-left: 3px solid var(--black-20, rgba(0, 0, 0, 0.18));
+  padding-left: 0.6rem;
+}
+
 /* ---------- tab bar ---------- */
 
 .tab-bar {

@@ -620,6 +620,8 @@ export interface GalleryEntry {
 export interface GalleryReport extends GalleryEntry {
   scoring: Record<string, unknown>
   raw: string
+  /** Elicitation summary markdown; source of the priority-weights table. */
+  elicitation_summary?: string
 }
 
 /**
