@@ -1,0 +1,746 @@
+/* ============================================================
+   VERBATIM copy of web/app/redesign.css from aims-foundations/
+   aimslab (the main site). Do not hand-edit — re-copy the file
+   from the main site repo to pick up design changes. The app
+   provides --font-rd-sans / --font-roboto-mono and a small
+   Tailwind-utility shim in App.css.
+   ============================================================ */
+
+/* ---------------------------------------------------------------------------
+   Redesign prototype styles — scoped under .rd-root so nothing leaks into
+   the existing site. Design language modeled on digitaleconomy.stanford.edu:
+   flat full-width color bands, oversized light-weight grotesk display type,
+   a single warm accent color, serif card titles, mono pill buttons,
+   1px rules instead of shadows.
+--------------------------------------------------------------------------- */
+
+.rd-root {
+  /* palette */
+  --rd-warm: #f3efec;
+  --rd-warm-2: #f6f2ee;
+  --rd-beige: #f0e7de;
+  --rd-sage: #eaf1ed;
+  --rd-sage-dark: #d8e4dd;
+  --rd-cardinal: #8c1515;
+  --rd-accent: #e98300; /* Stanford poppy — the signature accent */
+  --rd-darkred: #401415;
+  --rd-dark: #0d0f0f;
+
+  --rd-grotesk: var(--font-rd-sans), "Helvetica Neue", Arial, sans-serif;
+  --rd-serif: "Times New Roman", Times, serif;
+  --rd-mono: var(--font-roboto-mono), ui-monospace, monospace;
+
+  font-family: var(--rd-grotesk);
+  color: #000;
+  background: var(--rd-warm);
+  line-height: 1.375;
+}
+
+/* ------------------------------------------------------------------ layout */
+
+.rd-container {
+  max-width: 1334px;
+  margin-inline: auto;
+  padding-inline: clamp(20px, 3.5vw, 50px);
+}
+
+.rd-band {
+  padding-block: clamp(56px, 8vw, 112px);
+}
+
+.rd-warm-band {
+  background: var(--rd-warm);
+  color: #000;
+}
+.rd-white-band {
+  background: #fff;
+  color: #000;
+}
+.rd-sage-band {
+  background: var(--rd-sage);
+  color: #000;
+}
+.rd-beige-band {
+  background: var(--rd-beige);
+  color: #000;
+}
+.rd-cardinal-band {
+  background: var(--rd-cardinal);
+  color: #fff;
+}
+.rd-darkred-band {
+  background: var(--rd-darkred);
+  color: #fff;
+}
+.rd-dark-band {
+  background: var(--rd-dark);
+  color: #fff;
+}
+
+/* -------------------------------------------------------------- typography */
+
+.rd-display {
+  font-weight: 300;
+  font-size: clamp(2.5rem, 7vw, 6.75rem);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+.rd-h2 {
+  font-weight: 300;
+  font-size: clamp(1.9rem, 3.8vw, 3.125rem);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+}
+
+/* Emphasized numbered section headings (01 Research, 02 Education, 03 …):
+   larger and a touch heavier than a standard h2 so the pillars stand out. */
+.rd-section-heading {
+  font-weight: 500;
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  letter-spacing: -0.025em;
+}
+
+.rd-h3 {
+  font-weight: 300;
+  font-size: clamp(1.35rem, 2.2vw, 1.875rem);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.rd-serif-title {
+  font-family: var(--rd-serif);
+  font-weight: 400;
+  font-size: 1.5rem;
+  line-height: 1.17;
+  letter-spacing: 0;
+}
+
+.rd-mono {
+  font-family: var(--rd-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.rd-lead {
+  font-weight: 300;
+  font-size: clamp(1.15rem, 1.8vw, 1.5rem);
+  line-height: 1.35;
+}
+
+/* ---------------------------------------------------------------- buttons */
+
+.rd-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 30px;
+  padding: 0.55rem 1.35rem;
+  font-family: var(--rd-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: #000;
+  color: #fff;
+  border: 1px solid #000;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease;
+}
+.rd-btn:hover {
+  background: var(--rd-cardinal);
+  border-color: var(--rd-cardinal);
+  color: #fff;
+}
+
+.rd-btn-ghost {
+  background: transparent;
+  color: inherit;
+  border-color: currentColor;
+}
+.rd-btn-ghost:hover {
+  background: #000;
+  border-color: #000;
+  color: #fff;
+}
+
+/* ghost variant for dark bands */
+.rd-btn-ghost-light {
+  background: transparent;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.7);
+}
+.rd-btn-ghost-light:hover {
+  background: #fff;
+  border-color: #fff;
+  color: #000;
+}
+
+.rd-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 30px;
+  padding: 0.3rem 0.8rem;
+  font-family: var(--rd-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--rd-warm);
+  color: #000;
+}
+
+/* ------------------------------------------------------------------ header */
+
+.rd-header {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  z-index: 60;
+  transform: translateY(0);
+  transition:
+    transform 0.3s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+}
+.rd-header--scrolled {
+  background: var(--rd-warm);
+  border-bottom-color: rgba(0, 0, 0, 0.12);
+}
+.rd-header--hidden {
+  transform: translateY(-100%);
+}
+
+.rd-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--rd-dark);
+  padding: 0.5rem 0.95rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+.rd-nav-link:hover {
+  color: #fff;
+  background: var(--rd-cardinal);
+}
+
+.rd-nav-caret {
+  transition: transform 0.2s ease;
+}
+
+.rd-nav-item {
+  position: relative;
+}
+/* Filled pill on the open dropdown parent — HAI-style active state */
+.rd-nav-item:hover > .rd-nav-link,
+.rd-nav-item:focus-within > .rd-nav-link {
+  color: #fff;
+  background: var(--rd-cardinal);
+}
+.rd-nav-item:hover > .rd-nav-link .rd-nav-caret,
+.rd-nav-item:focus-within > .rd-nav-link .rd-nav-caret {
+  transform: rotate(180deg);
+}
+
+/* Submenu as a rounded horizontal bar */
+.rd-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.35rem;
+  display: none;
+  gap: 0.25rem;
+  align-items: center;
+  white-space: nowrap;
+  background: var(--rd-warm-2);
+  border-radius: 9999px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+  z-index: 70;
+}
+.rd-nav-item:hover .rd-dropdown,
+.rd-nav-item:focus-within .rd-dropdown {
+  display: flex;
+}
+.rd-dropdown a {
+  display: inline-block;
+  padding: 0.5rem 1.05rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--rd-dark);
+  text-decoration: none;
+  border-radius: 9999px;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+.rd-dropdown a:hover {
+  background: rgba(0, 0, 0, 0.07);
+  color: var(--rd-cardinal);
+}
+
+.rd-wordmark {
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  transition: color 0.2s ease;
+}
+.rd-wordmark:hover {
+  color: var(--rd-cardinal);
+}
+
+/* -------------------------------------------------------------------- hero */
+
+.rd-hero {
+  padding-top: clamp(128px, 12vw, 160px);
+  padding-bottom: clamp(40px, 5vw, 64px);
+}
+
+.rd-word {
+  display: inline-block;
+  color: var(--rd-cardinal);
+  animation: rd-word-in 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes rd-word-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.55em);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rd-word {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------- entry cards */
+
+.rd-entry,
+.rd-glance {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid currentColor;
+  padding: clamp(26px, 3vw, 45px) clamp(22px, 2.6vw, 39px)
+    clamp(20px, 2vw, 27px);
+  min-height: 100%;
+  transition: background-color 0.3s ease;
+}
+
+/* Icon-link hub inside a glance card: bordered circular buttons that fill
+   with the accent on hover. */
+.rd-icon-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  color: rgba(0, 0, 0, 0.75);
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+.rd-icon-link:hover {
+  background: var(--rd-accent);
+  border-color: transparent;
+  color: #000;
+}
+
+/* Label tooltip that rises in above the icon on hover. */
+.rd-icon-tip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(5px);
+  white-space: nowrap;
+  background: #000;
+  color: #fff;
+  font-family: var(--rd-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 9px;
+  border-radius: 5px;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+  z-index: 5;
+}
+.rd-icon-link:hover .rd-icon-tip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.rd-entry:hover {
+  background: #fff;
+}
+.rd-entry .rd-entry-arrow {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+.rd-entry:hover .rd-entry-arrow {
+  background: var(--rd-accent);
+  color: #000;
+}
+
+.rd-entry-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  font-size: 0.9rem;
+  flex: none;
+}
+
+/* ----------------------------------------------------------------- teasers */
+
+.rd-tease {
+  display: block;
+  border-bottom: 1px solid currentColor;
+  padding: clamp(22px, 2.4vw, 33px) 20px;
+  transition: background-color 0.3s ease;
+}
+.rd-tease-list > .rd-tease:first-child {
+  border-top: 1px solid currentColor;
+}
+.rd-tease:hover {
+  background: var(--rd-warm-2);
+}
+
+/* ---------------------------------------------------------- showcase cards */
+/* Google Labs-style product cards: springy lift on hover (the overshoot
+   easing makes the settle-back bounce), description expands under the
+   title. Hover styles are gated on (hover: hover) so touch devices show
+   the description statically instead. */
+
+.rd-showcase {
+  transition: transform 0.55s cubic-bezier(0.3, 2.6, 0.4, 0.9);
+  will-change: transform;
+}
+
+.rd-showcase-overlay {
+  background: rgba(0, 0, 0, 0);
+  transition: background-color 0.3s ease;
+}
+
+.rd-showcase-desc {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.35s cubic-bezier(0.25, 1, 0.4, 1);
+}
+.rd-showcase-desc > div {
+  overflow: hidden;
+}
+.rd-showcase-desc p {
+  transition: opacity 0.28s ease;
+}
+
+@media (hover: hover) {
+  .rd-showcase:hover {
+    transform: translateY(-16px);
+  }
+  .rd-showcase:hover .rd-showcase-overlay {
+    background: rgba(0, 0, 0, 0.45);
+  }
+  .rd-showcase-desc {
+    grid-template-rows: 0fr;
+  }
+  .rd-showcase-desc p {
+    opacity: 0;
+  }
+  .rd-showcase:hover .rd-showcase-desc {
+    grid-template-rows: 1fr;
+  }
+  .rd-showcase:hover .rd-showcase-desc p {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rd-showcase,
+  .rd-showcase-desc,
+  .rd-showcase-desc p {
+    transition: none;
+  }
+  .rd-showcase:hover {
+    transform: none;
+  }
+}
+
+/* ------------------------------------------------------------- work cards */
+
+.rd-work-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  background: #fff;
+  padding: clamp(22px, 2.4vw, 34px);
+  height: 100%;
+  transition: background-color 0.3s ease;
+}
+.rd-work-card:hover {
+  background: var(--rd-sage-dark);
+}
+
+/* ---------------------------------------------------------- card carousel */
+/* Google Labs-style wheel carousel: cards sit on the rim of a large
+   invisible circle (transform-origin far below the card), so stepping
+   rotates the deck along a curve — the center card is upright and highest,
+   neighbors tilt outward and sink. Full-bleed; side cards clip at the
+   viewport edge. */
+
+.rd-carousel {
+  position: relative;
+  height: 700px;
+  overflow: hidden;
+}
+@media (max-width: 640px) {
+  .rd-carousel {
+    height: 660px;
+  }
+}
+
+.rd-carousel-item {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  width: min(345px, 80vw);
+  height: 575px;
+  margin-left: calc(min(345px, 80vw) / -2);
+  transform-origin: 50% 3400px;
+  transition: transform 0.7s cubic-bezier(0.3, 1, 0.4, 1);
+  will-change: transform;
+}
+.rd-carousel-item .rd-slide-card {
+  height: 100%;
+}
+
+/* While the deck is being dragged by trackpad, a short ease-out keeps the
+   motion fluid between wheel events without lagging behind the fingers the
+   way the full 0.7s step transition would. */
+.rd-carousel--sliding .rd-carousel-item {
+  transition: transform 0.18s ease-out;
+}
+
+.rd-carousel-arrows {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  z-index: 20;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rd-carousel-item {
+    transition: none;
+  }
+}
+
+.rd-slider-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  font-size: 1.05rem;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    opacity 0.25s ease;
+}
+.rd-slider-arrow:hover {
+  background: #fff;
+  color: #000;
+}
+
+/* Google Labs-style product card: rounded white card, inset rounded image
+   block on top, title + description + plain "Learn More" link below. */
+.rd-slide-card {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  color: #000;
+  border-radius: 28px;
+  padding: 16px 16px 26px;
+}
+.rd-slide-card-media {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--rd-warm-2);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+@media (hover: hover) {
+  .rd-slide-card {
+    transition: transform 0.35s cubic-bezier(0.25, 1, 0.4, 1);
+  }
+  .rd-slide-card:hover {
+    transform: translateY(-8px);
+  }
+}
+
+/* -------------------------------------------------------------- misc/links */
+
+.rd-arrow-link {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  transition: color 0.2s ease;
+}
+.rd-arrow-link:hover {
+  color: var(--rd-accent);
+}
+
+.rd-footer-link {
+  transition: opacity 0.2s ease;
+  opacity: 0.85;
+}
+.rd-footer-link:hover {
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------------------------------------------------------------------------
+   Subpage primitives — shared building blocks for the (site) children so
+   /research, /measurement-db, /about, etc. inherit the same design language
+   as the home page: warm bands, grotesk display type, flat 1px cards.
+--------------------------------------------------------------------------- */
+
+/* Page hero: warm band under the fixed header. Extra top padding clears the
+   translucent header; a hairline separates it from the first content band. */
+.rd-page-hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--rd-warm);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding-top: clamp(128px, 13vw, 168px);
+  padding-bottom: clamp(44px, 6vw, 72px);
+}
+
+/* Hero call-to-action buttons (directly under the header) read as a stable,
+   high-emphasis cardinal red with no hover state: the primary fills cardinal,
+   the secondary is a cardinal outline. */
+.rd-page-hero .rd-btn {
+  background: var(--rd-cardinal);
+  border-color: var(--rd-cardinal);
+  color: #fff;
+}
+.rd-page-hero .rd-btn:hover {
+  background: var(--rd-cardinal);
+  border-color: var(--rd-cardinal);
+  color: #fff;
+}
+.rd-page-hero .rd-btn-ghost {
+  background: transparent;
+  border-color: var(--rd-cardinal);
+  color: var(--rd-cardinal);
+}
+.rd-page-hero .rd-btn-ghost:hover {
+  background: transparent;
+  border-color: var(--rd-cardinal);
+  color: var(--rd-cardinal);
+}
+
+/* Display heading for subpage heroes — one notch below the home hero so the
+   homepage still reads as the largest type on the site. */
+.rd-page-title {
+  font-weight: 300;
+  font-size: clamp(2.35rem, 5.6vw, 4.5rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+/* Prose links inside body copy: cardinal underline that fills on hover. */
+.rd-prose a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(140, 21, 21, 0.35);
+  text-underline-offset: 3px;
+  transition: color 0.2s ease;
+}
+.rd-prose a:hover {
+  color: var(--rd-cardinal);
+  text-decoration-color: var(--rd-cardinal);
+}
+
+/* Flat bordered card — the workhorse for content tiles. 1px rule, no shadow,
+   warm hover wash like the home entry cards. */
+.rd-card {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  padding: clamp(22px, 2.4vw, 34px);
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
+}
+.rd-card:hover {
+  background: #fff;
+  border-color: rgba(0, 0, 0, 0.28);
+}
+
+/* Stat tile — big mono number over a small label. */
+.rd-stat {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.55);
+  padding: clamp(20px, 2.2vw, 30px);
+}
+.rd-stat-value {
+  font-family: var(--rd-mono);
+  font-weight: 300;
+  font-size: clamp(1.9rem, 3.2vw, 2.6rem);
+  line-height: 1;
+  color: var(--rd-cardinal);
+}
+.rd-stat-label {
+  margin-top: 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 300;
+  line-height: 1.4;
+  opacity: 0.75;
+}
+
+/* Divider rule matching the flat aesthetic. */
+.rd-rule {
+  border: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.14);
+}
+
+/* Bordered list rows (papers, links, news) — hairline separated, warm hover. */
+.rd-row {
+  display: block;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  padding: clamp(18px, 2vw, 26px) 0;
+  transition: background-color 0.25s ease;
+}
+.rd-row:hover {
+  background: var(--rd-warm-2);
+}

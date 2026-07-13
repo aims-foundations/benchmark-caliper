@@ -1123,9 +1123,36 @@ export function App() {
         ? 'session'
         : null
 
+  // .rd-root scopes the verbatim main-site stylesheet (aims-redesign.css),
+  // exactly as the main site's (site)/layout.tsx wraps its pages.
   return (
-    <>
+    <div className="rd-root">
       <SiteHeader />
+      {/* Full-bleed page hero using the main site's verbatim rd-page-hero /
+          rd-page-title / rd-lead / rd-btn classes: it runs under the fixed
+          transparent header, so the matrix motif shows through behind the
+          nav until the page scrolls. */}
+      <div className="rd-page-hero">
+        <MatrixBackdrop />
+        <header className="rd-container">
+          <p className="eyebrow">AIMS · Software &amp; Data</p>
+          <h1 className="rd-page-title">Benchmark Caliper.</h1>
+          <p className="tagline rd-lead">
+            Assess whether an AI benchmark applies to a different deployment
+            context.
+          </p>
+          <div className="hero-actions">
+            <a
+              className="rd-btn"
+              href="https://github.com/aims-foundations/benchmark-caliper"
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              View on GitHub
+            </a>
+          </div>
+        </header>
+      </div>
       <div className="app-shell">
       <GallerySidebar
         entries={galleryEntries}
@@ -1137,26 +1164,6 @@ export function App() {
         onAddBenchmark={handleAddBenchmark}
       />
       <main className="app">
-      <div className="hero">
-        <MatrixBackdrop />
-        <header>
-          <h1>Benchmark Caliper</h1>
-          <p className="tagline">
-            Assess whether an AI benchmark applies to a different deployment
-            context.
-          </p>
-          <div className="hero-actions">
-            <a
-              className="hero-cta"
-              href="https://github.com/aims-foundations/benchmark-caliper"
-              target="_blank"
-              rel="noreferrer noopener"
-            >
-              View on GitHub
-            </a>
-          </div>
-        </header>
-      </div>
 
       {phase.name === 'viewing-report' && (
         <ReportView
@@ -1409,6 +1416,6 @@ export function App() {
       </main>
       </div>
       <SiteFooter onPrivacyClick={() => setShowPrivacy(true)} />
-    </>
+    </div>
   )
 }

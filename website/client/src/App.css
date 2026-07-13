@@ -1,10 +1,54 @@
 /* ============================================================
-   Benchmark Caliper — AIMS-aligned design system
-   Stanford palette + typography, matched to aimslab.stanford.edu.
-   Light-only (the AIMS site has no dark mode).
+   Benchmark Caliper — AIMS redesign-aligned design system.
+   Ported from web/app/redesign.css in aims-foundations/aimslab:
+   warm flat color bands, light-weight grotesk display type,
+   cardinal + Stanford-poppy accents, mono pill buttons, 1px
+   rules instead of shadows. Light-only.
    ============================================================ */
 
+/* Google Sans Flex — the AIMS redesign grotesk. These are the LITERAL
+   woff2 files the live main site serves (downloaded from
+   aimslab.stanford.edu/_next/static/media/, produced by next/font), with
+   the same @font-face descriptors, so text renders identically — a
+   CDN-subsetted build of this variable font renders visibly heavier.
+   Vendored in src/fonts and bundled by Vite; served same-origin, the
+   strict CSP (`default-src 'self'`) holds and no third-party font request
+   ever leaves the page. Roboto Mono comes from @fontsource (main.tsx);
+   the main site also serves it as static 400/500/700 instances. */
+@font-face {
+  font-family: 'Google Sans Flex';
+  font-style: normal;
+  font-weight: 1 1000;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url('./fonts/google-sans-flex-latin.woff2') format('woff2');
+  unicode-range: U+??, U+131, U+152-153, U+2BB-2BC, U+2C6, U+2DA, U+2DC,
+    U+304, U+308, U+329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Google Sans Flex';
+  font-style: normal;
+  font-weight: 1 1000;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url('./fonts/google-sans-flex-latin-ext.woff2') format('woff2');
+  unicode-range: U+100-2BA, U+2BD-2C5, U+2C7-2CC, U+2CE-2D7, U+2DD-2FF,
+    U+304, U+308, U+329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 :root {
+  /* AIMS redesign palette (rd-*) */
+  --rd-warm: #f3efec;
+  --rd-warm-2: #f6f2ee;
+  --rd-beige: #f0e7de;
+  --rd-sage: #eaf1ed;
+  --rd-sage-dark: #d8e4dd;
+  --rd-darkred: #401415;
+  --rd-dark: #0d0f0f;
+
   /* Stanford primary palette */
   --cardinal: #8c1515;
   --digital-red: #b1040e;
@@ -30,23 +74,26 @@
   --poppy: #e98300;
 
   /* Semantic aliases */
-  --ink: var(--black);
+  --ink: #000;
   --muted: var(--cool-grey);
-  --line: var(--black-20);
+  --line: rgba(0, 0, 0, 0.12);
 
-  /* Radius */
+  /* Radius — the rd language is flat; radius survives only on chips/tags. */
   --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
+  --radius-md: 0;
+  --radius-lg: 0;
 
-  /* Layout — matches the AIMS header: min-h-11 brand + py-3 row. */
-  --site-header-h: 4.25rem;
+  /* Layout — logo (40px) + 1rem block padding + hairline. */
+  --site-header-h: 4.5625rem;
 
-  /* Typography — graceful fallbacks, no web-font fetch (keeps CSP intact) */
-  --font-sans: 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI',
-    Roboto, Helvetica, Arial, sans-serif;
-  --font-serif: 'Source Serif 4', Georgia, 'Iowan Old Style', Palatino,
-    'Times New Roman', serif;
+  /* Typography. The main site injects its faces via next/font variables;
+     aims-redesign.css builds --rd-grotesk / --rd-mono from these, so we
+     provide the same variables pointing at our self-hosted faces. */
+  --font-rd-sans: 'Google Sans Flex';
+  --font-roboto-mono: 'Roboto Mono';
+  --font-sans: 'Google Sans Flex', 'Helvetica Neue', Helvetica, Arial,
+    sans-serif;
+  --font-serif: 'Times New Roman', Times, serif;
   --font-mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Consolas,
     monospace;
 
@@ -54,14 +101,22 @@
 
   font-family: var(--font-sans);
   color: var(--ink);
-  background: var(--white);
-  line-height: 1.55;
+  background: var(--rd-warm);
+  line-height: 1.45;
 }
 
 body {
   margin: 0;
-  background-color: var(--white);
+  background-color: var(--rd-warm);
+  /* The main site's <body> carries Tailwind's `antialiased`. On macOS this
+     renders text visibly thinner; without it our identical fonts read as
+     "bolder" than the main site. */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+/* .rd-container, .rd-mono, .rd-page-hero, .rd-btn, band colors, and the
+   whole header/dropdown system come verbatim from aims-redesign.css. */
 
 *,
 *::before,
@@ -98,35 +153,22 @@ body {
 
 /* ---------- hero / header / brand ---------- */
 
-.hero {
-  position: relative;
-  overflow: hidden;
-  background: var(--white);
-  border-bottom: 1px solid var(--line);
-  /* Full-bleed band: span from the gallery sidebar's edge to the right
-     edge of the viewport. The sidebar is 17rem wide, so .app is centred
-     8.5rem to the right of the viewport centre — hence the +8.5rem. */
-  margin-left: calc(50% - 50vw + 8.5rem);
-  margin-right: calc(50% - 50vw + 8.5rem);
-  /* Cancel .app's 2.5rem top margin so the band sits flush with the
-     top of the page, aligned with the gallery sidebar. */
-  margin-top: -2.5rem;
-}
-
-/* Scoped to .hero — a bare `header` selector would also hit the
-   AIMS site header (<header class="site-header">) and break its layout. */
-.hero header {
+/* The hero band itself is the main site's .rd-page-hero (verbatim from
+   aims-redesign.css: warm band, hairline, big top padding clearing the
+   fixed transparent header). Scoped to the band — a bare `header`
+   selector would also hit the AIMS site header. The vertical padding
+   lives on the band, so the inner header only lays out its children
+   above the matrix backdrop. */
+.rd-page-hero header {
   position: relative;
   z-index: 1;
-  /* Constrain the title to the content column so it stays aligned with
-     the panels below, even though the hero band itself is full-bleed.
-     632px = .app max-width (680) − its 1.5rem×2 padding. */
-  max-width: 632px;
-  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  padding: 1.75rem 1.5rem 2rem;
+  gap: 0.5rem;
+}
+
+.rd-page-hero header h1 {
+  margin: 0;
 }
 
 .hero-actions {
@@ -134,27 +176,6 @@ body {
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 0.85rem;
-}
-
-.hero-cta {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.6rem 1.2rem;
-  background: var(--cardinal);
-  color: #fff;
-  border: 1px solid var(--cardinal);
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  font-size: 0.95rem;
-  text-decoration: none;
-  transition:
-    background 0.15s var(--ease-out),
-    border-color 0.15s var(--ease-out);
-}
-
-.hero-cta:hover {
-  background: var(--digital-red);
-  border-color: var(--digital-red);
 }
 
 /* ---------- matrix backdrop ---------- */
@@ -188,272 +209,156 @@ body {
   border-radius: 2px;
 }
 
-/* ---------- AIMS site header (ported from aims-foundations/aimslab) ---------- */
+/* ---------- AIMS site header ----------
+   Markup and styles come VERBATIM from the main site (rd-header.tsx +
+   aims-redesign.css). The rules below only supply what the main site
+   gets from Tailwind: a minimal utility shim with Tailwind's exact
+   values, preflight-equivalent element resets scoped to the ported
+   components, plus this app's "current page" marker. */
 
-.site-header {
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  border-bottom: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(4px);
+/* Tailwind-utility shim — exactly the classes the ported AIMS
+   components use. */
+.block {
+  display: block;
 }
-
-.site-header-shell {
-  max-width: 80rem;
-  margin: 0 auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-
-@media (min-width: 640px) {
-  .site-header-shell {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .site-header-shell {
-    padding-left: 2rem;
-    padding-right: 2rem;
-  }
-}
-
-.site-header-row {
+.flex {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
 }
-
-.site-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  min-height: 2.75rem;
-  flex-shrink: 0;
-  text-decoration: none;
+.inline-flex {
+  display: inline-flex;
 }
-
-.site-brand-mark {
-  font-size: 1.5rem;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-}
-
-.site-brand-tick {
-  width: 2px;
-  height: 22px;
-  border-radius: 9999px;
-  background: var(--cardinal);
-}
-
-.site-brand-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  line-height: 1;
-  white-space: nowrap;
-  color: var(--muted);
-}
-
-/* Desktop nav — hidden below the md breakpoint (768px) */
-.site-nav-desktop {
+.hidden {
   display: none;
 }
-
-@media (min-width: 768px) {
-  .site-nav-desktop {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-  }
+.flex-col {
+  flex-direction: column;
 }
-
-.site-navlink {
-  position: relative;
-  display: flex;
+.items-center {
   align-items: center;
-  gap: 0.25rem;
-  border-radius: 0.375rem;
-  padding: 0.375rem 0.75rem;
-  font: inherit;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--muted);
-  background: transparent;
-  border: none;
-  text-decoration: none;
-  cursor: pointer;
-  transition: color 0.15s ease;
 }
-
-.site-navlink:hover {
-  color: var(--ink);
-}
-
-.site-navlink.is-active {
-  color: var(--ink);
-}
-
-.site-navunderline {
-  position: absolute;
-  bottom: 0;
-  left: 0.75rem;
-  right: 0.75rem;
-  height: 2px;
-  background: var(--cardinal);
-}
-
-.site-navunderline.group {
-  right: 1.5rem;
-}
-
-.site-caret {
-  transition: transform 0.15s ease;
-}
-
-.site-caret.is-open {
-  transform: rotate(180deg);
-}
-
-.site-navgroup {
-  position: relative;
-}
-
-.site-navmenu {
-  position: absolute;
-  left: 0;
-  top: 100%;
-  z-index: 50;
-  min-width: 12rem;
-  border: 1px solid var(--line);
-  border-radius: 0.375rem;
-  background: #fff;
-  padding-top: 0.25rem;
-  padding-bottom: 0.25rem;
-  box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -4px rgba(0, 0, 0, 0.1);
-}
-
-.site-navmenu-item {
-  display: block;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--muted);
-  text-decoration: none;
-  transition:
-    background-color 0.15s ease,
-    color 0.15s ease;
-}
-
-.site-navmenu-item:hover {
-  background: var(--fog-light);
-  color: var(--ink);
-}
-
-.site-navmenu-item.is-active {
-  background: var(--fog-light);
-  color: var(--ink);
-}
-
-/* Mobile menu button — hidden at md+ */
-.site-menu-btn {
-  display: inline-flex;
-  align-items: center;
+.justify-center {
   justify-content: center;
-  min-height: 2.75rem;
-  min-width: 2.75rem;
-  border: none;
-  border-radius: 0.375rem;
-  background: var(--fog-light);
-  padding: 0.375rem 0.75rem;
-  font: inherit;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--ink);
-  cursor: pointer;
-  transition: background-color 0.15s ease;
 }
-
-.site-menu-btn:hover {
-  background: var(--fog);
+.justify-between {
+  justify-content: space-between;
 }
-
-@media (min-width: 768px) {
-  .site-menu-btn {
-    display: none;
-  }
+.gap-2 {
+  gap: 0.5rem;
 }
-
-/* Mobile menu panel — hidden at md+ */
-.site-mobile-menu {
-  border-top: 1px solid var(--line);
-  background: #fff;
-}
-
-@media (min-width: 768px) {
-  .site-mobile-menu {
-    display: none;
-  }
-}
-
-.site-mobile-menu .site-header-shell {
+.py-4 {
   padding-top: 1rem;
   padding-bottom: 1rem;
 }
-
-.site-mobile-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+.py-2 {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
-
-.site-mobile-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+.py-1\.5 {
+  padding-top: 0.375rem;
+  padding-bottom: 0.375rem;
 }
-
-.site-mobile-grouplabel {
-  margin: 0;
-  padding: 0.5rem 0.75rem 0.25rem;
-  font-size: 0.75rem;
+.pt-2 {
+  padding-top: 0.5rem;
+}
+.pb-1 {
+  padding-bottom: 0.25rem;
+}
+.pb-6 {
+  padding-bottom: 1.5rem;
+}
+.pl-4 {
+  padding-left: 1rem;
+}
+.text-lg {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+.font-light {
+  font-weight: 300;
+}
+.font-normal {
+  font-weight: 400;
+}
+.font-semibold {
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
-  color: var(--muted);
+}
+.opacity-60 {
+  opacity: 0.6;
+}
+.border-t {
+  border-top: 1px solid;
+}
+.border-black\/10 {
+  border-color: rgb(0 0 0 / 0.1);
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 
-.site-mobilelink {
-  display: block;
-  border-radius: 0.375rem;
-  padding: 0.75rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--ink);
+@media (min-width: 1024px) {
+  .lg\:flex {
+    display: flex;
+  }
+  .lg\:hidden {
+    display: none;
+  }
+}
+
+/* Preflight equivalents: the main site's Tailwind reset strips button
+   and anchor chrome; our global pill-button style would otherwise leak
+   into the ported header markup. */
+button.rd-nav-link {
+  background: transparent;
+  border: none;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+button.rd-mono {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+  font-weight: 400;
+}
+
+button.rd-mono:hover:not(:disabled) {
+  background: transparent;
+  color: var(--cardinal);
+}
+
+.rd-header a {
+  color: inherit;
   text-decoration: none;
-  transition: background-color 0.15s ease;
 }
 
-.site-mobilelink:hover {
-  background: var(--fog-light);
+a.rd-btn {
+  text-decoration: none;
 }
 
-.site-mobilelink.nested {
-  margin-left: 0.75rem;
+/* App-specific: mark Benchmark Caliper as the current page in both the
+   dropdown and the mobile menu. */
+.rd-dropdown a.is-current {
+  color: var(--cardinal);
+  font-weight: 600;
 }
 
-.site-mobilelink.is-active {
-  border-left: 2px solid var(--cardinal);
-  background: var(--fog-light);
+.rd-header nav a[aria-current='page'] {
+  color: var(--cardinal);
 }
-
 
 .eyebrow {
   font-family: var(--font-mono);
@@ -465,20 +370,12 @@ body {
   margin: 0;
 }
 
-.hero header h1 {
-  margin: 0;
-  font-family: var(--font-serif);
-  font-size: clamp(2rem, 4vw, 2.6rem);
-  font-weight: 400;
-  letter-spacing: -0.015em;
-  line-height: 1.12;
-  color: var(--ink);
-}
-
+/* The h1 uses the verbatim .rd-page-title and the tagline the verbatim
+   .rd-lead from aims-redesign.css; only measure and rhythm are local. */
 .tagline {
-  color: var(--muted);
-  margin: 0.25rem 0 0;
-  font-size: 1rem;
+  color: rgba(0, 0, 0, 0.75);
+  margin: 0.85rem 0 0;
+  max-width: 52ch;
 }
 
 /* ---------- gallery sidebar ---------- */
@@ -492,7 +389,7 @@ body {
   flex-direction: column;
   padding: 1.5rem 1rem;
   border-right: 1px solid var(--line);
-  background: var(--white);
+  background: var(--rd-warm-2);
   overflow: hidden;
 }
 
@@ -546,7 +443,7 @@ body {
 }
 
 .gallery-item:hover:not(:disabled) {
-  background: var(--fog-light);
+  background: var(--white);
 }
 
 .gallery-item:disabled {
@@ -557,7 +454,7 @@ body {
 .gallery-item.selected {
   border-color: var(--line);
   border-left-color: var(--cardinal);
-  background: var(--fog-light);
+  background: var(--white);
 }
 
 .gallery-item-name {
@@ -594,7 +491,7 @@ body {
 }
 
 .gallery-add:hover:not(:disabled) {
-  background: var(--fog-light);
+  background: var(--white);
   border-color: var(--cardinal);
   color: var(--ink);
 }
@@ -628,6 +525,8 @@ body {
 
 /* ---------- panels: form / result / status / error ---------- */
 
+/* Flat rd-card panels: 1px rule, no shadow; the border firms up on hover
+   the way the main site's cards do. */
 form,
 .result,
 .status,
@@ -636,20 +535,17 @@ form,
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
-  padding: 1.5rem;
+  padding: clamp(22px, 2.4vw, 30px);
   border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
   background: var(--white);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  transition: box-shadow 0.2s var(--ease-out);
+  transition: border-color 0.3s ease;
 }
 
-/* Panels gain depth on hover — the lift effect from the AIMS link cards. */
 form:hover,
 .result:hover,
 .status:hover,
 .progress:hover {
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.28);
 }
 
 h2 {
@@ -707,13 +603,14 @@ input[type='file'] {
 }
 
 input[type='file']::file-selector-button {
-  font: inherit;
-  font-weight: 600;
-  font-size: 0.9rem;
-  padding: 0.45rem 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.45rem 1rem;
   margin-right: 0.75rem;
   border: 1px solid var(--cardinal);
-  border-radius: var(--radius-md);
+  border-radius: 30px;
   background: var(--white);
   color: var(--cardinal);
   cursor: pointer;
@@ -778,28 +675,49 @@ input[type='file']::file-selector-button:hover {
 
 /* ---------- buttons ---------- */
 
+/* Default action buttons take the main site's .rd-btn shape: mono
+   uppercase pill, black fill, cardinal on hover. */
 button {
-  padding: 0.55rem 1.1rem;
-  border: 1px solid var(--cardinal);
-  background: var(--cardinal);
-  color: var(--white);
-  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 30px;
+  padding: 0.55rem 1.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: #000;
+  color: #fff;
+  border: 1px solid #000;
   cursor: pointer;
-  font: inherit;
-  font-weight: 600;
-  font-size: 0.95rem;
-  transition: background 0.15s var(--ease-out),
-    border-color 0.15s var(--ease-out);
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease;
 }
 
 button:hover:not(:disabled) {
-  background: var(--digital-red);
-  border-color: var(--digital-red);
+  background: var(--cardinal);
+  border-color: var(--cardinal);
 }
 
 button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+/* Utility buttons opt back out of the pill treatment. */
+button.link,
+button.tab,
+.gallery-item,
+.gallery-add,
+.restart-session {
+  font-family: var(--font-sans);
+  text-transform: none;
+  letter-spacing: normal;
+  border-radius: 0;
 }
 
 button.link {
@@ -809,6 +727,7 @@ button.link {
   text-decoration: underline;
   text-underline-offset: 0.15em;
   padding: 0;
+  font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
 }
@@ -1114,17 +1033,13 @@ code {
 
 .score-row details {
   border: 1px solid var(--line);
-  border-radius: var(--radius-md);
   padding: 0.6rem 0.85rem;
   background: var(--white);
-  transition: box-shadow 0.18s var(--ease-out),
-    transform 0.18s var(--ease-out), border-color 0.18s var(--ease-out);
+  transition: border-color 0.3s ease;
 }
 
 .score-row details:hover {
-  transform: translateY(-2px);
-  border-color: var(--black-30);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.28);
 }
 
 .score-row summary {
@@ -1323,9 +1238,7 @@ button.tab.active {
   padding: 1.75rem;
   border: 1px solid var(--line);
   border-top: 3px solid var(--cardinal);
-  border-radius: var(--radius-lg);
   background: var(--white);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .consent-gate h2 {
@@ -1359,9 +1272,7 @@ button.tab.active {
 /* "Document" panel: a colored title bar over a clean white content area. */
 .output-doc {
   border: 1px solid var(--line);
-  border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .output-doc-bar {
@@ -1444,207 +1355,131 @@ button.tab.active {
   max-width: 680px;
 }
 
-/* ---------- AIMS site footer (ported from aims-foundations/aimslab) ---------- */
+/* ---------- AIMS site footer (ported from redesign/rd-footer.tsx) ---------- */
 
-.site-footer {
-  background: var(--cardinal);
-  color: #fff;
-}
+/* .rd-darkred-band / .rd-dark-band come verbatim from aims-redesign.css. */
 
-.site-footer-shell {
-  max-width: 80rem;
-  margin: 0 auto;
-  padding: 3rem 1rem;
-}
-
-@media (min-width: 640px) {
-  .site-footer-shell {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .site-footer-shell {
-    padding-left: 2rem;
-    padding-right: 2rem;
-  }
-}
-
-.site-footer-grid {
+.rd-footer-grid {
   display: grid;
-  gap: 2.5rem;
+  gap: 3rem;
+  padding-block: 3.5rem;
 }
 
-@media (min-width: 640px) {
-  .site-footer-grid {
-    grid-template-columns: 1fr 1fr;
+@media (min-width: 768px) {
+  .rd-footer-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
-@media (min-width: 1024px) {
-  .site-footer-grid {
-    grid-template-columns: 1fr auto auto;
-    gap: 4rem;
-  }
+.rd-footer-brandcol {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-.site-footer-brandcol {
+.rd-footer-addr {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 300;
+  line-height: 1.6;
+  opacity: 0.85;
+}
+
+.rd-footer-col {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-@media (min-width: 640px) {
-  .site-footer-brandcol {
-    grid-column: span 2;
-  }
+.rd-footer-coltitle {
+  opacity: 0.6;
 }
 
-@media (min-width: 1024px) {
-  .site-footer-brandcol {
-    grid-column: auto;
-  }
-}
-
-.site-footer-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-}
-
-.site-footer-mark {
-  font-size: 1.25rem;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  color: #fff;
-}
-
-.site-footer-tick {
-  width: 2px;
-  height: 18px;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.4);
-}
-
-.site-footer-brandlabel {
-  font-size: 0.8125rem;
-  font-weight: 500;
-  line-height: 1;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.site-footer-desc {
-  margin: 0;
-  max-width: 36rem;
-  font-size: 0.875rem;
-  line-height: 1.625;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.site-footer-addr {
-  margin: 0;
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.6);
-  line-height: 1.25rem;
-}
-
-.site-footer-coltitle {
-  margin: 0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.5);
-  line-height: 1rem;
-}
-
-.site-footer-list {
+.rd-footer-list {
   list-style: none;
-  margin: 0.75rem 0 0;
+  margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.625rem;
   font-size: 0.875rem;
-  line-height: 1.25rem;
+  font-weight: 300;
 }
 
-.site-footer-link {
-  color: rgba(255, 255, 255, 0.8);
+.rd-footer-link {
+  color: inherit;
   text-decoration: none;
-  transition: color 0.15s ease;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
 }
 
-.site-footer-link:hover {
-  color: #fff;
+.rd-footer-link:hover {
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-.site-footer-bottom {
-  margin-top: 2.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-  padding-top: 1.5rem;
+.rd-footer-note {
+  margin: 0;
+  padding-top: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 300;
+  line-height: 1.6;
+  opacity: 0.6;
+}
+
+.rd-footer-underline {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.rd-footer-bottom {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  padding-block: 2rem;
 }
 
-@media (min-width: 640px) {
-  .site-footer-bottom {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-}
-
-.site-footer-legal {
+.rd-footer-inline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   column-gap: 1.5rem;
   row-gap: 0.5rem;
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.6);
-  line-height: 1rem;
+  font-weight: 300;
 }
 
-.site-footer-legal p {
+.rd-footer-inline.dim {
+  opacity: 0.7;
+}
+
+.rd-footer-copy {
   margin: 0;
+  font-size: 0.75rem;
+  font-weight: 300;
+  opacity: 0.6;
 }
 
-.site-footer-legal-link {
-  color: inherit;
-  text-decoration: none;
-  transition: color 0.15s ease;
-}
-
-.site-footer-legal-link:hover {
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.site-footer-privacy {
+/* The privacy button rides in the legal list; strip the global pill button
+   styling so it reads exactly like the sibling links. */
+.rd-footer-privacy {
   background: none;
   border: none;
+  border-radius: 0;
   padding: 0;
   font: inherit;
+  letter-spacing: normal;
+  text-transform: none;
   cursor: pointer;
 }
 
-.site-footer-social {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.site-footer-icon {
-  display: inline-flex;
-  color: rgba(255, 255, 255, 0.6);
-  transition: color 0.15s ease;
-}
-
-.site-footer-icon:hover {
-  color: #fff;
+.rd-footer-privacy:hover:not(:disabled) {
+  background: none;
+  border: none;
 }
 
 /* ---------- disclaimers / feedback ---------- */
@@ -1731,14 +1566,12 @@ button.tab.active {
   margin-top: 1rem;
   padding: 1rem 1.25rem;
   border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
   background: var(--white);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  transition: box-shadow 0.2s var(--ease-out);
+  transition: border-color 0.3s ease;
 }
 
 .feedback-section:hover {
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.28);
 }
 
 .feedback-section > summary {
@@ -1785,19 +1618,6 @@ button.tab.active {
 }
 
 /* ---------- responsive ---------- */
-
-/* Below this width the full-bleed band would overflow the sidebar / screen
-   edge, so collapse it back to the content column. */
-@media (max-width: 1100px) {
-  .hero {
-    margin-left: 0;
-    margin-right: 0;
-    margin-top: 0;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  }
-}
 
 @media (max-width: 800px) {
   .gallery-sidebar {

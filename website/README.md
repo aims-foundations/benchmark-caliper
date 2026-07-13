@@ -79,6 +79,26 @@ The site deploys as a single Docker service on Render. See [DEPLOYMENT.md](DEPLO
 
 ---
 
+## AIMS theme and navigation sync
+
+The client is styled to match the AIMS redesign (`web/app/redesign.css` in
+`aims-foundations/aimslab`): warm `#f3efec` bands, light-weight Google Sans
+Flex display type, cardinal accents, mono pill buttons, flat 1px-rule cards.
+Fonts are self-hosted (Roboto Mono via `@fontsource`, Google Sans Flex
+vendored in `client/src/fonts/`) so the strict CSP needs no third-party
+origins.
+
+The header's nav items are **not** hard-coded: the main site publishes its
+`primaryNavigation` at `https://aimslab.stanford.edu/nav.json` for exactly
+this purpose, and `SiteHeader.tsx` fetches it at runtime (same-origin under
+the proxy). When the main site's nav changes, this app's header follows
+automatically — the `NAV_FALLBACK` snapshot in `SiteHeader.tsx` only covers
+first paint, local dev, and direct-origin access, so refreshing it is nice to
+have, not required. The footer is a static port of the main site's `RdFooter`
+plus the in-app privacy-notice link required by [SECURITY.md](SECURITY.md).
+
+---
+
 ## Layout
 
 ```
