@@ -16,8 +16,9 @@ const completed: api.Review = {
   run_id: 'test-run', status: 'completed', message: 'Sample review complete.', model: 'gpt-6-luna', reasoning_effort: 'high',
   deployment: { task: '', users: '', inputs: '', outputs: '', success: '', constraints: '' },
   scope: { benchmarks: ['matharena'], items_per_table: 2, branches: { main: 'a' }, sample_only: true },
-  source_rows: 6, total: 4, processed: 4, complete: 0, unresolved: 4, errors: 0,
-  usage: { input_tokens: 100, output_tokens: 200 }, ranked_items: [], unresolved_items: [],
+  scoring_policy: { version: 2, neutral_score: 3, confidence_weights: { high: 1, medium: .6, low: .3, insufficient: 0 }, formula: 'test policy' },
+  source_rows: 6, total: 4, processed: 4, complete: 4, needs_review: 4, errors: 0,
+  usage: { input_tokens: 100, output_tokens: 200 }, ranked_items: [], failed_items: [],
 }
 
 beforeEach(() => {
@@ -36,17 +37,17 @@ it('collects deployment details, previews scope, and starts a paid review only o
   await user.click(screen.getByRole('button', { name: 'Continue to deployment' }))
   await user.click(screen.getByRole('button', { name: 'Use mathematics tutor example' }))
   await user.click(screen.getByRole('button', { name: 'Review sample and settings' }))
-  expect(screen.getByText('Up to 6 source rows')).toBeInTheDocument()
+  expect(screen.getByText(/Up to 6/)).toHaveTextContent('Up to 6 source rows')
   expect(api.startReview).not.toHaveBeenCalled()
   await user.click(screen.getByRole('button', { name: 'Start paid review' }))
   await screen.findByRole('heading', { name: 'Your sample review is ready' })
   expect(api.startReview).toHaveBeenCalledWith(expect.objectContaining({
-    items_per_table: 2, benchmarks: ['matharena', 'afrimedqa'],
+    items_per_table: 2, top_k: 30, benchmarks: ['matharena', 'afrimedqa'],
     deployment: expect.objectContaining({ task: expect.stringContaining('mathematics tutor') }),
   }), 'sk-test-private', '')
   expect(sessionStorage.getItem('item_review_run_v1')).not.toContain('sk-test-private')
   expect(localStorage.length).toBe(0)
-  expect(screen.getByText(/4 unresolved/)).toBeInTheDocument()
+  expect(screen.getByText('Low confidence or missing scores').parentElement).toHaveTextContent('4')
 })
 
 it('requires dataset access when the server has no Hugging Face token', async () => {

@@ -10,9 +10,9 @@ from openai import OpenAIError
 
 from .data import DATA_VERSION, fingerprint, iter_items
 from .judge import DEFAULT_MAX_OUTPUT_TOKENS, DEFAULT_REASONING_EFFORT, request_input
-from .scoring import Assessment, SCORING_VERSION
+from .scoring import Assessment, SCORING_VERSION, SCORING_POLICY
 
-DONE = {"complete", "unresolved", "preview"}
+DONE = {"complete", "preview"}
 
 
 def write_json(path: Path, value):
@@ -68,9 +68,9 @@ def read_state(path: Path, *, repair_tail=False):
 def ranked_items(path: Path, top_k: int) -> list[dict]:
     # Keep only top-k complete records in memory. Successful judgments are written
     # once per evidence hash; resume never repeats them.
-    best = heapq.nlargest(
+    best = heapq.nsmallest(
         top_k, (r for r in records(path) if r["status"] == "complete"),
-        key=lambda r: (r["overall_score"], r["evidence_hash"]),
+        key=lambda r: (-r["overall_score"], r["evidence_hash"]),
     )
     sources = {r["evidence_hash"]: {} for r in best}
     for record in records(path):
@@ -80,6 +80,8 @@ def ranked_items(path: Path, top_k: int) -> list[dict]:
     return [{
         "rank": rank, "evidence_hash": r["evidence_hash"],
         "overall_score": r["overall_score"], "assessment": r["assessment"],
+        "compatibility_score": r["compatibility_score"],
+        "scored_dimensions": r["scored_dimensions"], "needs_review": r["needs_review"],
         "evidence": r["evidence"], "sources": list(sources[r["evidence_hash"]].values()),
         "response_id": r.get("response_id"), "response_model": r.get("response_model"),
     } for rank, r in enumerate(best, 1)]
@@ -97,6 +99,7 @@ def run(inventory, deployment, prompt, output_dir, *, model,
         raise ValueError("A judge is required for a live run")
     config = {
         "format_version": 1, "data_version": DATA_VERSION, "scoring_version": SCORING_VERSION,
+        "scoring_policy": SCORING_POLICY,
         "inventory": inventory, "deployment": deployment, "model": model,
         "reasoning_effort": reasoning_effort, "max_output_tokens": max_output_tokens,
         "prompt": prompt, "output_schema": Assessment.model_json_schema(),
@@ -167,13 +170,15 @@ def run(inventory, deployment, prompt, output_dir, *, model,
             "missing_item_tables": inventory["missing_item_tables"],
             "limit_per_table": limit_per_table, "source_rows_seen": len(sources),
             "unique_scoring_inputs": len(statuses),
-            "complete": counts["complete"], "unresolved": counts["unresolved"],
+            "complete": counts["complete"],
+            "needs_review": sum(r.get("needs_review", False) for r in records(log_path) if r["status"] == "complete"),
             "errors": counts["error"], "previews": counts["preview"],
             "configured_scope_traversed": traversal_complete,
             "full_inventory_traversed": full_traversal,
-            "full_inventory_scored": full_traversal and not dry_run and not counts["error"] and not counts["unresolved"],
+            "full_inventory_scored": full_traversal and not dry_run and not counts["error"],
             "usage_all_attempts": usage, "fatal_error": fatal_error,
-            "ranking_scope": "Complete assessments only; unresolved and failed items are not ranked.",
+            "scoring_policy": SCORING_POLICY,
+            "ranking_scope": "All valid assessments, including partial evidence; failed calls are not ranked. Scores reflect confidence, not verified validity.",
         }
         write_json(output_dir / "ranked_items.json", ranked_items(log_path, top_k))
         write_json(output_dir / "summary.json", summary)

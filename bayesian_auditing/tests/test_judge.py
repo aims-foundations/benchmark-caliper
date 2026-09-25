@@ -9,11 +9,11 @@ from bayesian_auditing.judge import AsyncJudge, DEFAULT_MODEL, Judge
 from bayesian_auditing.scoring import DIMENSIONS
 
 
-@pytest.mark.parametrize("mode", ["complete", "unresolved", "malformed", "incomplete", "refusal"])
+@pytest.mark.parametrize("mode", ["complete", "partial", "malformed", "incomplete", "refusal"])
 @pytest.mark.parametrize("async_mode", [False, True])
 def test_real_sdk_request_and_response_contract(assessment_dict, mode, async_mode):
-    if mode == "unresolved":
-        assessment_dict["output_content"].update(score=None, information_gaps=["Reference missing"])
+    if mode == "partial":
+        assessment_dict["output_content"].update(score=None, confidence="insufficient", information_gaps=["Reference missing"])
     captured = []
 
     def respond(request):
@@ -49,6 +49,9 @@ def test_real_sdk_request_and_response_contract(assessment_dict, mode, async_mod
     assert set(request["text"]["format"]["schema"]["required"]) == set(DIMENSIONS)
     assert json.loads(request["input"])["deployment"] == "A text mathematics tutor"
     assert output["usage"]["output_tokens_details"]["reasoning_tokens"] == 30
-    assert output["status"] == (mode if mode in {"complete", "unresolved"} else "error")
+    assert output["status"] == ("complete" if mode in {"complete", "partial"} else "error")
     if mode == "complete":
         assert output["overall_score"] == pytest.approx(25 / 6)
+    if mode == "partial":
+        assert output["overall_score"] == 4
+        assert output["scored_dimensions"] == 5 and output["needs_review"]

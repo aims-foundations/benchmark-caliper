@@ -15,9 +15,14 @@ export interface Catalog {
 }
 export interface ReviewRequest { deployment: Deployment; benchmarks: string[]; items_per_table: number; top_k: number }
 export interface RunAccess { run_id: string; run_secret: string }
-export interface DimensionScore { score: number | null; justification: string; evidence: string[]; information_gaps: string[] }
+export type Confidence = 'high' | 'medium' | 'low' | 'insufficient'
+export interface DimensionScore {
+  score: number | null; confidence: Confidence; confidence_rationale: string
+  justification: string; evidence: string[]; information_gaps: string[]
+}
 export interface ReviewedItem {
   evidence_hash: string; rank?: number; status: string; overall_score?: number | null; error?: string
+  compatibility_score?: number | null; scored_dimensions?: number; needs_review?: boolean
   assessment?: Record<string, DimensionScore>
   evidence: { item: { content: string | null; grading_criterion: unknown }; [key: string]: unknown }
   sources: Array<{ repo: string; branch: string; commit: string; benchmark: string; items_path: string; item_id: string; row: number }>
@@ -26,8 +31,9 @@ export interface Review {
   run_id: string; status: 'preparing' | 'running' | 'completed' | 'cancelled' | 'failed'; message: string
   model: string; reasoning_effort: string; deployment: Deployment
   scope: { benchmarks: string[]; items_per_table: number; branches: Record<string, string>; sample_only: boolean }
-  source_rows: number; total: number; processed: number; complete: number; unresolved: number; errors: number
-  usage: Record<string, number>; ranked_items: ReviewedItem[]; unresolved_items: ReviewedItem[]
+  scoring_policy: { version: number; neutral_score: number; confidence_weights: Record<Confidence, number>; formula: string }
+  source_rows: number; total: number; processed: number; complete: number; needs_review: number; errors: number
+  usage: Record<string, number>; ranked_items: ReviewedItem[]; failed_items: ReviewedItem[]
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {

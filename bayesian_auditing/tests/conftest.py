@@ -70,5 +70,6 @@ def assessment_dict():
 
     return {name: {
         "score": score, "justification": "This dimension aligns with the described setting.",
+        "confidence": "high", "confidence_rationale": "The supplied text directly establishes this match.",
         "evidence": ["item.content and deployment: text mathematics"], "information_gaps": [],
     } for name, score in zip(DIMENSIONS, [5, 4, 5, 4, 4, 3])}

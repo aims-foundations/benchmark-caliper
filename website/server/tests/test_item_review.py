@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from openai import OpenAIError
 import pytest
 
-from bayesian_auditing.scoring import DIMENSIONS
+from bayesian_auditing.scoring import Assessment, DIMENSIONS, score_summary
 from website.server import app as app_module, db, item_review
 
 KEY = "sk-test-item-review-secret"
@@ -24,9 +24,11 @@ ITEM = {"evidence_hash": "item-a", "evidence": {"item": {"content": "1+1", "grad
 
 
 def assessment(score=4):
-    return {"status": "complete", "overall_score": score, "assessment": {
+    dimensions = {
         dimension: {"score": score, "justification": "Relevant to the described task.",
-                    "evidence": ["item.content: 1+1"], "information_gaps": []} for dimension in DIMENSIONS},
+                    "confidence": "high", "confidence_rationale": "Direct textual evidence.",
+                    "evidence": ["item.content: 1+1"], "information_gaps": []} for dimension in DIMENSIONS}
+    return {"status": "complete", **score_summary(Assessment.model_validate(dimensions)), "assessment": dimensions,
         "usage": {"input_tokens": 100, "output_tokens": 50, "output_tokens_details": {"reasoning_tokens": 20}}}
 
 
@@ -157,21 +159,26 @@ def test_cancellation_prevents_more_calls_and_duplicate_running_key(client, monk
     assert item_review.jobs[access["run_id"]].task.done()
 
 
-def test_unresolved_assessment_is_retained_but_not_ranked(client, monkeypatch):
+def test_partial_assessment_is_ranked_with_confidence_and_policy(client, monkeypatch):
     class UnknownJudge:
         def __init__(self, *args):
             pass
 
         async def __call__(self, _):
             result = assessment()
-            result.update(status="unresolved", overall_score=None)
-            result["assessment"]["output_content"].update(score=None, information_gaps=["Reference not available"])
+            result["assessment"]["output_content"].update(score=None, confidence="insufficient", information_gaps=["Reference not available"])
+            result.update(score_summary(Assessment.model_validate(result["assessment"])))
             return result
 
     monkeypatch.setattr(item_review, "AsyncJudge", UnknownJudge)
     result = finished(client, start(client)).json()
-    assert result["ranked_items"] == [] and result["unresolved"] == 2
-    assert len(result["unresolved_items"]) == 2
+    assert result["complete"] == result["needs_review"] == 2
+    assert len(result["ranked_items"]) == 2 and result["failed_items"] == []
+    assert result["scoring_policy"]["version"] == 2
+    for item in result["ranked_items"]:
+        assert item["overall_score"] == pytest.approx(23 / 6)
+        assert item["scored_dimensions"] == 5 and item["needs_review"]
+        assert item["assessment"]["output_content"]["confidence"] == "insufficient"
 
 
 def test_expired_review_is_removed(client):
@@ -181,6 +188,38 @@ def test_expired_review_is_removed(client):
     response = client.get(f"/api/item-review/runs/{access['run_id']}", headers={"X-Review-Token": access["run_secret"]})
     assert response.status_code == 404
     assert access["run_id"] not in item_review.jobs
+
+
+def test_ten_items_with_eight_partial_assessments_all_rank():
+    job = item_review.ReviewJob("fixture", "secret", "owner", item_review.ReviewRequest(**BODY))
+    for index in range(10):
+        result = assessment()
+        if index >= 2:
+            result["assessment"]["output_content"].update(
+                score=None, confidence="insufficient", information_gaps=["Reference not available"])
+            result.update(score_summary(Assessment.model_validate(result["assessment"])))
+        job.results.append({**copy.deepcopy(ITEM), **result, "evidence_hash": str(index)})
+    report = item_review.public_job(job)
+    assert report["complete"] == 10 and report["needs_review"] == 8
+    assert len(report["ranked_items"]) == 10
+    assert report["failed_items"] == []
+
+
+def test_invalid_response_stays_failed_and_has_no_invented_score(client, monkeypatch):
+    class InvalidJudge:
+        def __init__(self, *args):
+            pass
+
+        async def __call__(self, _):
+            return {"status": "error", "error": f"Bad provider output containing {KEY}"}
+
+    monkeypatch.setattr(item_review, "AsyncJudge", InvalidJudge)
+    response = finished(client, start(client))
+    report = response.json()
+    assert report["complete"] == 0 and report["errors"] == 2
+    assert len(report["failed_items"]) == 2 and report["ranked_items"] == []
+    assert all("overall_score" not in item for item in report["failed_items"])
+    assert KEY not in response.text
 
 
 def test_sample_uses_pinned_tables_and_preserves_duplicate_sources(monkeypatch):

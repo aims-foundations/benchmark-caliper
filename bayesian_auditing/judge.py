@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from .scoring import Assessment, overall_score
+from .scoring import Assessment, score_summary
 
 DEFAULT_MODEL = "gpt-6-luna"
 DEFAULT_REASONING_EFFORT = "high"
@@ -57,10 +57,9 @@ class Judge:
             assessment = Assessment.model_validate_json(response.output_text)
         except ValueError as exc:
             return {**result, "status": "error", "error": f"Invalid assessment or refusal: {exc}"}
-        score = overall_score(assessment)
         return {
-            **result, "status": "complete" if score is not None else "unresolved",
-            "assessment": assessment.model_dump(), "overall_score": score,
+            **result, "status": "complete", "assessment": assessment.model_dump(),
+            **score_summary(assessment),
         }
 
 

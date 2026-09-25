@@ -42,16 +42,41 @@ Shared scale: 1 = fundamental mismatch; 2 = substantial mismatch; 3 = partial
 alignment with meaningful limitations; 4 = strong alignment with minor
 limitations; 5 = strong alignment supported by available evidence. Use 2 and 4
 for cases between the dimension-specific anchors. Scores are ordinal judgments,
-not probabilities. Unknown is not a score of 3. A score of 5 requires positive
-evidence, not merely the absence of an obvious problem.
+not probabilities. Keep compatibility separate from confidence: a plausible
+match with weak support can have a high compatibility score and low confidence.
+Unknown is not a score of 3. A score of 5 requires positive evidence, not merely
+the absence of an obvious problem.
 
 For every dimension return:
-- score: an integer from 1 through 5, or null when evidence is insufficient;
+- score: an integer from 1 through 5 whenever the supplied evidence supports a
+  defensible estimate, including a clearly identified tentative inference. Use
+  null only when no defensible estimate is possible for this dimension;
+- confidence: high, medium, low, or insufficient, describing how strongly the
+  evidence supports this particular score, not the degree of compatibility:
+  high = direct, applicable evidence supports the rating with no material gap;
+  medium = relevant evidence supports the rating but a limited inference or gap
+  could change it; low = an estimate is possible but indirect evidence or a
+  major gap could substantially change it; insufficient = no defensible score;
+- confidence_rationale: one concise sentence identifying the evidence strength
+  and any uncertainty that could change the score. These labels are not
+  calibrated probabilities. Do not claim certainty from your own fluency;
 - justification: one or two concise sentences explaining the rating;
 - evidence: short quotations or precise field references from the supplied
   deployment and item_evidence that support the judgment;
 - information_gaps: the missing information, or [] when none is needed.
-A numerical score requires evidence. A null score requires an information gap.
+A numerical score requires evidence and high, medium, or low confidence. A null
+score requires insufficient confidence and an information gap. Do not discard a
+dimension merely because some details are missing: judge what the evidence
+supports and lower confidence where appropriate. Conversely, do not invent a
+numerical score just to fill the schema.
+
+For example, a text mathematics item may support a confident input-form match
+while its single-turn format only partly represents a conversational deployment.
+A reference answer plus an applicable grading rule may support a tentative
+output-content judgment even without external validation; state the unverified
+assumptions and lower confidence. The mere existence of an answer key is still
+not proof of correctness. If the answer or required media is absent and there
+is no other support for judging the reference, leave that dimension null.
 
 Use only the provided deployment and evidence. Do not invent deployment
 requirements, reference answers, cultural preferences, or benchmark properties.

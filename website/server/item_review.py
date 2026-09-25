@@ -23,6 +23,7 @@ from openai import AsyncOpenAI, AuthenticationError, RateLimitError, OpenAIError
 from pydantic import BaseModel, ConfigDict, Field
 
 from bayesian_auditing.data import iter_items
+from bayesian_auditing.scoring import SCORING_POLICY
 from bayesian_auditing.judge import (
     AsyncJudge, DEFAULT_MODEL, DEFAULT_REASONING_EFFORT, DEFAULT_MAX_OUTPUT_TOKENS, PROMPT_PATH,
 )
@@ -106,6 +107,7 @@ async def catalog(response: Response) -> dict:
     return {
         "model": DEFAULT_MODEL, "reasoning_effort": DEFAULT_REASONING_EFFORT,
         "max_output_tokens": DEFAULT_MAX_OUTPUT_TOKENS,
+        "scoring_policy": SCORING_POLICY,
         "branches": data["branches"], "requires_hf_token": not bool(get_token()),
         "max_items_per_table": 10,
         "benchmarks": [{"id": name, "name": BENCHMARK_NAMES[name],
@@ -122,13 +124,15 @@ def public_job(job: ReviewJob) -> dict:
         "run_id": job.run_id, "status": job.status, "message": job.message,
         "model": DEFAULT_MODEL, "reasoning_effort": DEFAULT_REASONING_EFFORT,
         "deployment": job.request.deployment.model_dump(),
+        "scoring_policy": SCORING_POLICY,
         "scope": {"benchmarks": job.request.benchmarks, "items_per_table": job.request.items_per_table,
                   "branches": inventory()["branches"], "sample_only": True},
         "source_rows": job.source_rows, "total": job.total, "processed": len(job.results),
-        "complete": counts["complete"], "unresolved": counts["unresolved"], "errors": counts["error"],
+        "complete": counts["complete"], "errors": counts["error"],
+        "needs_review": sum(item.get("needs_review", False) for item in ranked),
         "usage": dict(job.usage),
         "ranked_items": [{**item, "rank": n} for n, item in enumerate(ranked[:job.request.top_k], 1)],
-        "unresolved_items": [item for item in job.results if item["status"] != "complete"],
+        "failed_items": [item for item in job.results if item["status"] == "error"],
     }
 
 
@@ -219,7 +223,8 @@ async def evaluate(job: ReviewJob, api_key: str, hf_token: str | None) -> None:
                     # Keep actionable assessment fields; never expose SDK exceptions
                     # or raw provider responses, which can include credential text.
                     result = {**item, **{key: assessment[key] for key in (
-                        "status", "assessment", "overall_score", "response_model", "response_id"
+                        "status", "assessment", "overall_score", "response_model", "response_id",
+                        "compatibility_score", "scored_dimensions", "needs_review",
                     ) if key in assessment}}
                     if assessment["status"] == "error":
                         result["error"] = "The model did not return a complete, valid assessment."
@@ -230,7 +235,7 @@ async def evaluate(job: ReviewJob, api_key: str, hf_token: str | None) -> None:
                     job.usage["reasoning_tokens"] += (usage.get("output_tokens_details") or {}).get("reasoning_tokens", 0)
                     job.usage["cached_input_tokens"] += (usage.get("input_tokens_details") or {}).get("cached_tokens", 0)
             job.status = "completed"
-            job.message = "Sample review complete. Only items with six supported scores are ranked."
+            job.message = "Sample review complete. Valid assessments are ranked with confidence and evidence gaps shown."
     except asyncio.CancelledError:
         job.status, job.message = "cancelled", "Review stopped. Completed assessments are retained."
     except AuthenticationError:

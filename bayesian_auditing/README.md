@@ -92,12 +92,12 @@ validity score.
    traceable. Different grading criteria or context produce separate assessments.
 4. **Assess all six dimensions in one call.** The deployment description and
    evidence are sent with the readable [judging prompt](prompts/assess_item.md).
-   Every dimension returns a score, a short justification, evidence references,
-   and information gaps.
+   Every dimension returns a score (or an explicit unknown), confidence and its
+   rationale, a short justification, evidence references, and information gaps.
 5. **Validate and rank.** Python validates the structured response and computes
-   the equal-weight mean of the six scores. Only assessments with all six scores
-   enter the ranked list. Results retain the complete assessment and source
-   provenance for human review.
+   a confidence-adjusted mean across all six dimensions. Every valid assessment
+   enters the ranking, including those with missing evidence. Results retain the
+   original scores, confidence, gaps, and source provenance for human review.
 
 | Dimension | Item-level question |
 | --- | --- |
@@ -109,12 +109,39 @@ validity score.
 | Output form | Does the expected response format, modality, and language match? |
 
 Scores range from **1 (fundamental mismatch)** to **5 (strong, evidence-supported
-alignment)**, with dimension-specific anchors in the prompt. Missing evidence
-produces `null`, a recorded information gap, and an `unresolved` assessment. It is
-not treated as a neutral score or averaged away. A high overall mean can coexist
-with a low individual score; inspect all six dimensions before selecting tests.
-The mean is a ranking heuristic, not a probability or a validated measure of
-deployment safety. Equal means are ordered deterministically by evidence hash.
+alignment)**, with dimension-specific anchors in the prompt. Compatibility and
+confidence are separate judgments. The judge should make a defensible tentative
+estimate when possible, with low confidence and explicit assumptions. When no
+estimate is defensible, the score stays `null`, confidence is `insufficient`, and
+an information gap is required. A missing dimension no longer discards the item.
+
+Scoring version 2 uses a simple, inspectable policy:
+
+| Confidence | Meaning | Ranking weight |
+| --- | --- | --- |
+| High | Direct, applicable evidence; no material gap | 1.0 |
+| Medium | Relevant evidence with a limited inference or gap | 0.6 |
+| Low | Indirect evidence or a major gap could change the estimate | 0.3 |
+| Insufficient | No defensible score; stored score is `null` | 0.0 |
+
+For each known dimension, `adjusted = 3 + weight * (score - 3)`. A missing
+dimension contributes a neutral baseline of 3 **only to the ranking calculation**.
+`overall_score` is the equal-weight mean of all six adjusted contributions.
+`compatibility_score` is the unadjusted mean of the available scores;
+`scored_dimensions` records coverage. `needs_review` flags any low-confidence or
+missing dimension. The same summary is used in the CLI and hosted demo.
+
+For example, a low-confidence 5 contributes 3.6, while a high-confidence 5
+contributes 5. Five high-confidence 4s and one unknown yield an overall 3.83,
+an unadjusted mean of 4, and coverage of 5/6. Six unknowns yield a baseline of 3
+and no unadjusted mean. That baseline is **not evidence of compatibility** and can
+rank above a supported mismatch. Review the evidence before selecting tests.
+
+These weights are policy choices, not calibrated probabilities. Confidence is
+the judge's evidence-support assessment, not measured reliability. The mean is
+a demo ranking heuristic, not a validated validity or deployment-safety measure.
+High means can still hide individual mismatches. Ties use evidence hashes for
+deterministic ordering. Human-reviewed calibration is a later step.
 
 ## Traverse the full inventory
 
@@ -144,11 +171,12 @@ limit, and row limit. Changing `--top-k` is allowed and rebuilds the ranked outp
 without repeating completed judgments. Changed scoring settings need a new
 output folder. A preview cannot be resumed as a live run.
 
-Runs created with the earlier defaults can still be resumed with
-`--reasoning-effort low --max-output-tokens 3000`. Use a new output folder to
-assess those items with high effort.
+Scoring-version-1 runs cannot be resumed under this schema. Keep their exported
+files and use a new output folder for version 2; old results have no recorded
+confidence, so it must not be invented or silently backfilled. New judgments
+require new API calls.
 
-Completed and unresolved assessments are reused. Failed responses are retried
+Completed assessments, including partial-evidence ones, are reused. Failed responses are retried
 on resume. After the SDK's two retries, an API exception stops the run and saves
 partial results, avoiding repeated requests during an authentication or quota
 failure. Dataset read errors also stop the run. A partially written final JSONL
@@ -161,21 +189,22 @@ cause that request to be repeated. Use one process per output directory.
 | File | Contents |
 | --- | --- |
 | `run.json` | Deployment, pinned inventory, model settings, rubric, and output-schema snapshot. |
-| `assessments.jsonl` | Append-only assessments, unresolved items, errors, and duplicate source references. Previews include the exact request input. |
-| `ranked_items.json` | Up to `--top-k` complete assessments, ordered by mean score, with item evidence and all corresponding source references. |
-| `summary.json` | Counts, traversal status, unresolved/error totals, reported token usage across attempts, and any fatal error. |
+| `assessments.jsonl` | Append-only assessments with confidence, errors, and duplicate source references. Previews include the exact request input. |
+| `ranked_items.json` | Up to `--top-k` valid assessments ordered by adjusted score, with coverage, evidence, and all source references. |
+| `summary.json` | Counts, traversal status, items needing review, errors, scoring policy, reported token usage across attempts, and any fatal error. |
 
 Check `full_inventory_scored` before describing a result as a full ranking. It is
-false for limited previews, interrupted runs, missing tables, failed responses,
-or unresolved assessments. Here “full inventory” means the tables in the saved
+false for limited previews, interrupted runs, missing tables, or failed responses.
+It means all items have a valid assessment, not that all dimensions are known or
+confident; inspect `needs_review` and individual gaps. “Full inventory” means the tables in the saved
 inventory, which may itself contain a benchmark/branch filter. A partial ranked
 list is still saved for review, but omitted items could otherwise have ranked
 highly. Reported output tokens already include reasoning tokens; do not add
 them again when estimating cost. Usage may be unavailable for failed requests.
 
 The text demo records media references but does not download or inspect images,
-audio, or linked documents. Relevant dimensions must remain unresolved when
-those assets are necessary. No input text is silently truncated. An item that
+audio, or linked documents. Relevant dimensions remain unknown when those assets
+are necessary and no defensible inference is possible. No input text is silently truncated. An item that
 exceeds API limits will need explicit handling in a later iteration.
 
 ## Maintainer guide

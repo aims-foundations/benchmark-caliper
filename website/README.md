@@ -15,15 +15,27 @@ All routes work under the production `/benchmark-caliper` prefix.
 
 The new flow asks for an OpenAI key, collects six concrete deployment questions,
 shows the sample size before paid calls, and displays ranked items with all six
-validity scores, evidence, information gaps, and pinned source provenance. It
+validity judgments, per-dimension confidence and explanations, evidence,
+information gaps, and pinned source provenance. It
 uses the shared `bayesian_auditing` loader, rubric, schema, and arithmetic with
 GPT-6 Luna, high reasoning effort, and a 25,000-token ceiling. The initial
 questions are fixed and editable; they do not require an additional model call.
 
+Scoring version 2 keeps every valid assessment in the ranking, including items
+with partial evidence. High/medium/low confidence weights (1, 0.6, 0.3) pull
+scores toward a neutral baseline of 3; missing dimensions contribute that
+baseline without receiving an invented dimension score. Results show the
+adjusted ranking score, unadjusted mean, dimensions scored, and evidence gaps.
+The confidence labels and weights are not calibrated probabilities. See the
+[scoring policy](../bayesian_auditing/README.md#process-and-scoring) for details.
+The JSON download includes the policy and confidence explanations. Old reports
+have no recorded confidence; they require a new paid review to obtain it.
+
 For this first hosted demo, the catalog contains **MathArena and AfriMed-QA**,
 using three pinned item tables across both measurement-db branches. The user
 chooses 1–10 initial rows per table (2 by default), for at most 30 source rows.
-Identical evidence is assessed once. This is a deterministic sample, not a
+Identical evidence is assessed once, and the UI requests all ranked items in
+this bounded sample (up to 30). This is a deterministic sample, not a
 full-corpus search or a representative selection. Full traversal remains
 available through the [CLI](../bayesian_auditing/README.md).
 

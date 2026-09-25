@@ -5,14 +5,14 @@ import pytest
 
 from bayesian_auditing import runner
 from bayesian_auditing.judge import DEFAULT_MODEL
-from bayesian_auditing.scoring import Assessment, overall_score
+from bayesian_auditing.scoring import Assessment, score_summary
 
 
 def fake_judge(assessment_dict, calls):
     def assess(evidence):
         calls.append(evidence)
         assessment = Assessment.model_validate(assessment_dict)
-        return {"status": "complete", "overall_score": overall_score(assessment),
+        return {"status": "complete", **score_summary(assessment),
                 "assessment": assessment.model_dump(),
                 "usage": {"input_tokens": 10, "output_tokens": 20,
                           "output_tokens_details": {"reasoning_tokens": 5}}}
@@ -96,14 +96,21 @@ def test_api_failure_stops_and_is_retried_on_resume(corpus, assessment_dict, tmp
     assert summary["complete"] == 3
 
 
-def test_unresolved_items_are_saved_but_not_ranked(corpus, tmp_path):
+def test_partial_assessments_are_ranked_and_resume_without_rebilling(corpus, tmp_path, assessment_dict):
+    assessment_dict["output_content"].update(score=None, confidence="insufficient", information_gaps=["Missing reference"])
+    calls = []
     output = tmp_path / "results"
     summary = runner.run(corpus[0], "deployment", "rubric", output, model=DEFAULT_MODEL,
-                         judge=lambda _: {"status": "unresolved", "overall_score": None})
-    assert summary["unresolved"] == 3
+                         judge=fake_judge(assessment_dict, calls))
+    assert summary["complete"] == summary["needs_review"] == 3
     assert summary["full_inventory_traversed"] is True
-    assert summary["full_inventory_scored"] is False
-    assert json.loads((output / "ranked_items.json").read_text()) == []
+    assert summary["full_inventory_scored"] is True
+    ranked = json.loads((output / "ranked_items.json").read_text())
+    assert len(ranked) == 3
+    assert all(r["overall_score"] == 4 and r["scored_dimensions"] == 5 and r["needs_review"] for r in ranked)
+    runner.run(corpus[0], "deployment", "rubric", output, model=DEFAULT_MODEL,
+               judge=fake_judge(assessment_dict, calls), resume=True)
+    assert len(calls) == 3
 
 
 def test_data_failure_is_reported_in_summary(corpus, tmp_path, monkeypatch):
