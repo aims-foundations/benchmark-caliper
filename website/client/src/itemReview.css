@@ -11,6 +11,15 @@
 .evaluation-site .evaluation-intro { display: grid; grid-template-columns: 1.2fr 1fr; gap: 5rem; align-items: center; }
 .evaluation-site .evaluation-hero h1 { font-size: clamp(2.8rem, 5vw, 4.6rem); font-weight: 600; letter-spacing: -.045em; line-height: 1.02; margin: 1rem 0 1.3rem; }
 .evaluation-hero .rd-lead { max-width: 37rem; font-size: 1.15rem; line-height: 1.6; color: #48413b; }
+.evaluation-jump { display: inline-flex; align-items: center; gap: 1.2rem; color: var(--cardinal); font-weight: 550; margin-top: 1.5rem; text-decoration: none; }
+.evaluation-jump span { font-size: 1.4rem; }
+.evaluation-framework { padding: 2rem; background: #ffffff8c; border: 1px solid #ffffffb3; border-radius: 20px; }
+.evaluation-framework-grid { margin-top: 1.5rem; display: grid; gap: .6rem; }
+.evaluation-framework-row { display: grid; grid-template-columns: .7fr 1fr 1fr 1fr; gap: .4rem; align-items: center; }
+.evaluation-framework-row strong { font-size: .85rem; font-weight: 500; }
+.evaluation-framework-row span { padding: 1.4rem .3rem; text-align: center; background: #8c1515; border-radius: 8px; color: white; font-size: .78rem; }
+.evaluation-framework-row + .evaluation-framework-row span { background: #f0e1da; color: #652b23; }
+.evaluation-framework > p:last-child { color: var(--review-muted); font-size: .85rem; margin: 1.4rem 0 0; line-height: 1.7; }
 .evaluation-main { padding-top: 3.5rem; padding-bottom: 3rem; scroll-margin-top: 6rem; }
 .evaluation-section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
 .evaluation-section-heading h2 { font-size: 1.65rem; font-weight: 500; margin: 0; letter-spacing: -.03em; }
@@ -170,6 +179,7 @@
 
 @media (max-width: 1050px) {
   .evaluation-site .evaluation-intro { gap: 2rem; }
+  .evaluation-framework { padding: 1.3rem; }
   .review-layout { grid-template-columns: 11rem minmax(0, 1fr); gap: 1.5rem; }
   .review-example { align-items: flex-start; flex-direction: column; }
   .review-example button { max-width: none; }
@@ -178,6 +188,7 @@
 @media (max-width: 800px) {
   .evaluation-site .evaluation-hero { padding-top: calc(var(--site-header-h) + 2.5rem); padding-bottom: 3rem; }
   .evaluation-site .evaluation-intro, .evaluation-choices { grid-template-columns: 1fr; }
+  .evaluation-framework { max-width: 32rem; }
   .evaluation-choice { padding: 1.7rem; }
   .evaluation-section-heading { align-items: flex-start; flex-direction: column; gap: .5rem; }
   .review-hero-heading { display: block; }
@@ -190,6 +201,7 @@
   .item-review-main { padding-top: 1.5rem; }
 }
 @media (max-width: 500px) {
+  .evaluation-framework-row span { font-size: .7rem; padding: 1.2rem .2rem; }
   .evaluation-outcome div { grid-template-columns: 5rem 1fr; }
   .review-question { gap: .4rem; grid-template-columns: 1.3rem 1fr; }
   .review-question label { font-size: 1.15rem; }

@@ -2,7 +2,6 @@ import { App } from './App'
 import { ItemReview } from './itemReview/ItemReview'
 import { SiteHeader } from './components/SiteHeader'
 import { SiteFooter } from './components/SiteFooter'
-import { ValidityFramework } from './components/ValidityFramework'
 import { appPath, stripBasePath } from './paths'
 
 export function EvaluationSite() {
@@ -18,7 +17,15 @@ export function EvaluationSite() {
             <h1 className="rd-page-title">Find the Right Evaluation for Your Context.</h1>
             <p className="rd-lead">The framework characterizes benchmarks and individual test items with respect to the AI system, task, and deployment settings in which they are used.</p>
           </div>
-          <ValidityFramework />
+          <div className="evaluation-framework" aria-label="Six dimensions of validity">
+            <p className="eyebrow">Six perspectives on evaluation</p>
+            <div className="evaluation-framework-grid">
+              {['Input', 'Output'].map(side => <div key={side} className="evaluation-framework-row"><strong>{side}</strong>
+                {['Ontology', 'Content', 'Form'].map(dimension => <span key={dimension}>{dimension}</span>)}
+              </div>)}
+            </div>
+            <p>The task. The context. The format.<br />Considered on both sides of an interaction.</p>
+          </div>
         </header>
       </div>
       <main className="rd-container evaluation-main" id="choose-workflow">
