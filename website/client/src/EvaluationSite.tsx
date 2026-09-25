@@ -14,7 +14,7 @@ export function EvaluationSite() {
       <SiteHeader />
       <div className="rd-page-hero evaluation-hero">
         <header className="rd-container evaluation-intro">
-          <div className="evaluation-heading">
+          <div>
             <h1 className="rd-page-title">Find the Right Evaluation for Your Context.</h1>
             <p className="rd-lead">The framework characterizes benchmarks and individual test items with respect to the AI system, task, and deployment settings in which they are used.</p>
           </div>

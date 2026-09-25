@@ -9,21 +9,19 @@ const ROWS = [
 
 function FlowArrows() {
   return <div className="validity-flow-arrows" aria-hidden="true">
-    {[0, 1].map(index => <svg key={index} viewBox="0 0 40 24" focusable="false">
-      <path d="M1 12h30M24 5l11 7-11 7" />
-    </svg>)}
+    <svg viewBox="0 0 24 24" focusable="false"><path d="M12 2v16M6 13l6 6 6-6" /></svg>
   </div>
 }
 
 export function ValidityFramework() {
   return <figure className="validity-framework" aria-labelledby="validity-framework-title">
+    <h2 className="eyebrow" id="validity-framework-title">Validity Analysis Framework</h2>
     <div className="validity-flow-stack validity-flow-sources">
       <div className="validity-flow-card"><h3>Source evaluation</h3><p>A benchmark or individual test items</p></div>
       <div className="validity-flow-card"><h3>Deployment context</h3><p>The AI system, task, users, and setting</p></div>
     </div>
     <FlowArrows />
     <div className="validity-matrix">
-      <h2 id="validity-framework-title">Validity Analysis Framework</h2>
       <table aria-label="Six dimensions of validity">
         <thead><tr><td />{['Ontology', 'Content', 'Form'].map(name => <th key={name} scope="col">{name}</th>)}</tr></thead>
         <tbody>{ROWS.map(row => <tr key={row.name}>

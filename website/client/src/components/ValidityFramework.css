@@ -1,76 +1,37 @@
-/* Editable, accessible counterpart of the framework figure. At narrow widths
-   the same reading order becomes a vertical flow; the matrix keeps both axes. */
-.validity-framework {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 2rem minmax(0, 2.25fr) 2rem minmax(0, 1fr);
-  align-items: end;
-  gap: .6rem;
-  margin: 2.4rem 0 0;
-}
-
-.validity-flow-stack { display: grid; gap: .6rem; padding-bottom: 1.15rem; }
-.validity-flow-card {
-  min-height: 6.75rem;
-  padding: 1rem .8rem;
-  border: 1px solid #dec69f;
-  border-radius: 12px;
-  background: #fff7e9;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-.validity-flow-card h3 { margin: 0; font-size: 1.05rem; font-weight: 600; line-height: 1.25; letter-spacing: -.02em; color: #3d3021; }
-.validity-flow-card p { margin: .5rem 0 0; font-size: .8rem; line-height: 1.4; color: #665c4e; }
+/* Keep the diagram inside the original compact hero card. Its internal flow
+   is vertical at every size, so it never takes over the page layout. */
+.validity-framework { min-width: 0; margin: 0; padding: 2rem; background: #ffffff8c; border: 1px solid #ffffffb3; border-radius: 20px; }
+.evaluation-site .validity-framework > .eyebrow { margin-bottom: .8rem; font-family: var(--font-mono); font-weight: 400; }
+.validity-flow-stack { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+.validity-flow-card { padding: .7rem .55rem; border: 1px solid #dec69f; border-radius: 8px; background: #fff7e9; text-align: center; }
+.validity-flow-card h3 { margin: 0; font-size: .82rem; font-weight: 550; line-height: 1.3; letter-spacing: -.015em; color: #3d3021; }
+.validity-flow-card p { margin: .3rem 0 0; font-size: .72rem; line-height: 1.4; color: #665c4e; }
 .validity-flow-outcomes .validity-flow-card { background: #edf5eb; border-color: #aac1a3; }
 .validity-flow-outcomes h3 { color: #30482d; }
 .validity-flow-outcomes p { color: #54664e; }
+.validity-flow-arrows { display: flex; justify-content: center; margin: .35rem 0; }
+.validity-flow-arrows svg { display: block; width: 1.1rem; height: 1.1rem; fill: none; stroke: #62717a; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 
-.validity-flow-arrows { display: grid; grid-template-rows: 6.75rem 6.75rem; align-items: center; gap: .6rem; padding-bottom: 1.15rem; }
-.validity-flow-arrows svg { display: block; width: 100%; height: 1.5rem; fill: none; stroke: #62717a; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-
-.validity-matrix { min-width: 0; padding: 1.2rem .9rem .9rem; background: #f2f6fc; border: 1.5px solid #aabfdd; border-radius: 18px; }
-.validity-matrix h2 { color: #355b91; font-size: clamp(1.1rem, 1.8vw, 1.45rem); line-height: 1.2; letter-spacing: -.025em; font-weight: 600; text-align: center; margin: 0 0 .9rem; }
-.validity-matrix table { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: .3rem; }
-.validity-matrix th { color: #344358; font-size: .87rem; font-weight: 550; text-align: center; }
-.validity-matrix thead th { padding: 0 0 .35rem; }
-.validity-matrix thead td { width: 1.5rem; }
+.validity-matrix { min-width: 0; padding: .55rem .4rem .4rem; background: #f2f6fc; border: 1px solid #aabfdd; border-radius: 10px; }
+.validity-matrix table { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: .25rem; }
+.validity-matrix th { color: #344358; font-size: .77rem; font-weight: 550; text-align: center; }
+.validity-matrix thead th { padding: 0 0 .3rem; }
+.validity-matrix thead td { width: 1.2rem; }
 .validity-matrix tbody th { padding: 0; }
 .validity-matrix tbody th span { display: inline-block; writing-mode: vertical-rl; transform: rotate(180deg); }
-.validity-matrix tbody td { height: 6.75rem; padding: .65rem; background: #e0ebfa; color: #2b405e; border-radius: 8px; text-align: center; vertical-align: middle; font-size: clamp(.93rem, 1.45vw, 1.18rem); font-weight: 550; line-height: 1.3; letter-spacing: -.02em; }
+.validity-matrix tbody td { height: 4rem; padding: .5rem .3rem; background: #e0ebfa; color: #2b405e; border-radius: 6px; text-align: center; vertical-align: middle; font-size: .85rem; font-weight: 550; line-height: 1.35; letter-spacing: -.015em; }
 .validity-matrix tbody tr + tr td { background: #e8eff9; }
-.validity-framework figcaption { grid-column: 1 / -1; text-align: center; margin-top: .5rem; color: #665c53; font-size: .8rem; line-height: 1.5; }
+.validity-framework figcaption { color: var(--review-muted); font-size: .8rem; margin: 1rem 0 0; line-height: 1.6; }
 
-@media (max-width: 1050px) {
-  .validity-framework { grid-template-columns: minmax(0, 1fr) 1.3rem minmax(0, 2.25fr) 1.3rem minmax(0, 1fr); gap: .4rem; }
-  .validity-flow-card { padding: .8rem .6rem; }
-  .validity-flow-card h3 { font-size: .92rem; }
-  .validity-flow-card p { font-size: .72rem; }
-  .validity-matrix { padding-inline: .55rem; }
-  .validity-matrix tbody td { padding: .4rem; }
-}
-
-@media (max-width: 800px) {
-  .validity-framework { grid-template-columns: minmax(0, 1fr); gap: .75rem; max-width: 36rem; margin-inline: auto; }
-  .validity-flow-stack { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-bottom: 0; }
-  .validity-flow-card { min-height: 6rem; }
-  .validity-flow-arrows { display: flex; justify-content: center; padding: 0; height: 1.4rem; }
-  .validity-flow-arrows svg { width: 2rem; transform: rotate(90deg); }
-  .validity-flow-arrows svg + svg { display: none; }
-  .validity-matrix { padding: 1.1rem .65rem .65rem; }
-  .validity-matrix h2 { font-size: 1.3rem; }
-  .validity-matrix tbody td { font-size: 1rem; height: 6rem; }
-  .validity-flow-card h3 { font-size: 1rem; }
-  .validity-flow-card p { font-size: .78rem; }
-}
-
+@media (max-width: 1050px) { .validity-framework { padding: 1.3rem; } }
+@media (max-width: 800px) { .validity-framework { max-width: 32rem; width: 100%; } }
 @media (max-width: 400px) {
-  .validity-matrix { padding-inline: .3rem; }
-  .validity-matrix h2 { font-size: 1.1rem; }
-  .validity-matrix th { font-size: .74rem; }
-  .validity-matrix thead td { width: 1.2rem; }
-  .validity-matrix tbody td { padding: .35rem .25rem; font-size: .85rem; }
-  .validity-flow-card h3 { font-size: .9rem; }
-  .validity-flow-card p { font-size: .72rem; }
+  .validity-framework { padding: 1rem; }
+  .validity-flow-card { padding: .6rem .35rem; }
+  .validity-flow-card h3 { font-size: .76rem; }
+  .validity-flow-card p { font-size: .69rem; }
+  .validity-matrix { padding-inline: .2rem; }
+  .validity-matrix th { font-size: .68rem; }
+  .validity-matrix thead td { width: 1rem; }
+  .validity-matrix tbody td { font-size: .74rem; padding-inline: .15rem; }
 }
