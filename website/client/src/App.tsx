@@ -288,7 +288,7 @@ export function App() {
       typeof window !== 'undefined' &&
       stripBasePath(window.location.pathname).startsWith('/run/')
     ) {
-      window.history.replaceState(null, '', appPath('/'))
+      window.history.replaceState(null, '', appPath('/caliper'))
     }
     setIsDemo(false)
     setPhase({ name: 'idle' })
@@ -1142,6 +1142,7 @@ export function App() {
             context.
           </p>
           <div className="hero-actions">
+            <a className="rd-btn" href={appPath('/')}>Choose an evaluation</a>
             <a
               className="rd-btn"
               href="https://github.com/aims-foundations/benchmark-caliper"

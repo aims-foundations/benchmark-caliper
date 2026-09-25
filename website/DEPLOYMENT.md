@@ -4,6 +4,41 @@ This website is deployed as one backend web service. The container builds the
 Vite frontend and serves it from the FastAPI app, so Render only needs one
 service for the MVP.
 
+The same image now serves the workflow selector, `/caliper`, and `/items` under
+the existing `/benchmark-caliper` proxy. Existing `/run/{run_id}` links keep
+working. No second service or AIMS proxy change is required.
+
+## Item-review configuration
+
+The website's Python requirements include the shared OpenAI judge and dataset
+loader. Keep **one instance and one Uvicorn worker** for the in-memory item-review
+jobs. A restart clears in-flight jobs and their results; users can download JSON
+before restarting the service. The CLI's disk-based resume is separate.
+
+Set an optional `HF_TOKEN` secret in Render with read access to the gated
+`aims-foundations/measurement-db` dataset. If it is absent, the access form asks
+each user for an authorized Hugging Face read token. Do not put a maintainer's
+OpenAI key on the service: the new endpoint requires the caller's key.
+
+Only the three tables pinned in `website/server/item_review_inventory.json` are
+available in the hosted demo. Their dataset files download on first use and use
+the Hugging Face cache. No dataset content, provider keys, or local CLI run
+artifacts are bundled into the image. Results and deployment descriptions stay
+in process memory for one hour after a review ends; source dataset files may
+remain cached. The existing Caliper database and retention behavior are unchanged.
+
+After deploying, verify the chooser, both workflows, and the catalog:
+
+```bash
+curl -f https://aimslab.stanford.edu/benchmark-caliper/healthz
+curl -f https://aimslab.stanford.edu/benchmark-caliper/api/item-review/catalog
+```
+
+Open `/benchmark-caliper/`, `/benchmark-caliper/caliper`, and
+`/benchmark-caliper/items` in the browser. Run a small real assessment with your
+own key to validate account/model access and judge quality; automated tests use
+mocked OpenAI responses and do not establish scoring quality.
+
 ## Render
 
 The repo root ships a `render.yaml` Blueprint that captures the whole service

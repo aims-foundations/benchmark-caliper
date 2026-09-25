@@ -20,12 +20,14 @@ The analysis runs on the Anthropic API with cost-routed model selection — ligh
 | Component | Description |
 |-----------|-------------|
 | [`anthropic_api_package_release/`](anthropic_api_package_release/) | The validity-analysis pipeline. Run it from the command line to inspect the assessments from the paper, reproduce one, or analyze your own benchmark. See its [README](anthropic_api_package_release/README.md). |
-| [`website/`](website/) | A web interface to the pipeline: upload a paper, describe a deployment, and receive a validity report. See its [README](website/README.md). |
+| [`website/`](website/) | A shared starting page for Benchmark Caliper and goal-conditioned item review: analyze a benchmark paper or rank evaluation items for a deployment. See its [README](website/README.md). |
+| [`bayesian_auditing/`](bayesian_auditing/) | Goal-conditioned item review: use GPT-6 Luna to score measurement-db items on six validity dimensions and rank their deployment compatibility. See its [README](bayesian_auditing/README.md). |
 
 ## Repository structure
 
 ```
 benchmark-caliper/
+├── bayesian_auditing/               # Goal-conditioned validity scoring of items
 ├── anthropic_api_package_release/   # Validity-analysis pipeline
 │   ├── run_pipeline.py              # CLI entry point and orchestrator
 │   ├── run_expert_stage1.py         # Batch runner for expert assessments

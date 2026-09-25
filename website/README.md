@@ -1,6 +1,59 @@
 # Benchmark Caliper — Website
 
-A public-facing interface to the validity-analysis pipeline. Now live at <https://aimslab.stanford.edu/benchmark-caliper/>. The full 7-step flow works end-to-end, and the privacy infrastructure (consent gate, retention cron, export/delete) is in place. See [SECURITY.md](SECURITY.md) for the security posture.
+A public-facing interface to two evaluation workflows at <https://aimslab.stanford.edu/benchmark-caliper/>. The starting page lets users choose Benchmark Caliper or goal-conditioned item review. See [SECURITY.md](SECURITY.md) for how each flow handles data and keys.
+
+## Routes
+
+- `/` — workflow selection.
+- `/caliper` — the existing benchmark-paper analysis, using an Anthropic key.
+- `/items` — the new item-review demo, using an OpenAI key.
+- `/run/{run_id}` — existing Caliper report links, preserved.
+
+All routes work under the production `/benchmark-caliper` prefix.
+
+## Goal-conditioned item review
+
+The new flow asks for an OpenAI key, collects six concrete deployment questions,
+shows the sample size before paid calls, and displays ranked items with all six
+validity scores, evidence, information gaps, and pinned source provenance. It
+uses the shared `bayesian_auditing` loader, rubric, schema, and arithmetic with
+GPT-6 Luna, high reasoning effort, and a 25,000-token ceiling. The initial
+questions are fixed and editable; they do not require an additional model call.
+
+For this first hosted demo, the catalog contains **MathArena and AfriMed-QA**,
+using three pinned item tables across both measurement-db branches. The user
+chooses 1–10 initial rows per table (2 by default), for at most 30 source rows.
+Identical evidence is assessed once. This is a deterministic sample, not a
+full-corpus search or a representative selection. Full traversal remains
+available through the [CLI](../bayesian_auditing/README.md).
+
+The gated dataset requires Hugging Face access. Configure `HF_TOKEN` on the
+server, or enter an authorized read token in the demo's masked access field.
+The server never uses its own OpenAI key: each review requires the user's key.
+
+`server/item_review.py` provides a small in-memory background runner. The browser
+polls progress using a separate run secret and can stop a run or download its
+JSON results. This avoids keeping one HTTP request open across every item.
+Three active reviews are allowed per process, one per OpenAI key; each has a
+one-hour maximum duration. Completed/failed/cancelled results expire after one
+hour (checked each minute). Up to 30 runs are retained in memory. Keys and user
+content are not written to the Caliper database or CLI result files. Source
+Parquet files are cached by Hugging Face. Refreshing the same tab resumes polling;
+server restarts discard jobs and results. Cancelling stops further requests but
+cannot guarantee that a request already submitted to OpenAI is unbilled.
+
+The router and UI live in `server/item_review.py` and `client/src/itemReview/`;
+`client/src/EvaluationSite.tsx` chooses the workflow. The catalog inventory is
+`server/item_review_inventory.json`. To refresh it deliberately, run:
+
+```bash
+python -m bayesian_auditing inventory --benchmarks matharena afrimedqa \
+  --output website/server/item_review_inventory.json
+```
+
+The committed inventory contains paths and revisions only, not dataset items or
+credentials. Do not add arbitrary large benchmarks to this hosted sample without
+reviewing memory and cache-disk requirements.
 
 ---
 
@@ -28,7 +81,7 @@ A typical end-to-end run for a 20-page paper costs roughly $1.50–$2.50 of Anth
 
 ## Running it locally
 
-Requirements: Python 3.10+, Node 24+, an Anthropic API key.
+Requirements: Python 3.11+, Node 24+, and the API key for the selected workflow.
 
 ```bash
 # Terminal 1 — backend (run from the repository root)
@@ -69,7 +122,10 @@ cd website/client
 npm test
 ```
 
-All tests should pass (130 backend + 46 frontend = 176 total).
+Run the shared item judge tests with `python -m pytest bayesian_auditing/tests/`.
+Backend tests mock provider calls, including success, failures, cancellation,
+credential handling, retention, and per-run access control. Frontend tests cover
+both routing and the guided item-review flow.
 
 ---
 

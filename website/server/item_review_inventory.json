@@ -1,0 +1,34 @@
+{
+  "repo": "aims-foundations/measurement-db",
+  "branches": {
+    "main": "bc8204d811823da849c6686bf124d4ca9f82e4de",
+    "migration/tabular-builders-20260924": "f445a03d1ef23edafdf0d3bc2650843447ef8153"
+  },
+  "tables": [
+    {
+      "branch": "main",
+      "commit": "bc8204d811823da849c6686bf124d4ca9f82e4de",
+      "benchmark": "matharena",
+      "items_path": "matharena/items.parquet",
+      "benchmarks_path": "matharena/benchmarks.parquet",
+      "metadata_path": "matharena/metadata.yaml"
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "f445a03d1ef23edafdf0d3bc2650843447ef8153",
+      "benchmark": "afrimedqa",
+      "items_path": "afrimedqa/formatted_tables/items.parquet",
+      "benchmarks_path": "afrimedqa/formatted_tables/benchmarks.parquet",
+      "metadata_path": "afrimedqa/metadata.yaml"
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "f445a03d1ef23edafdf0d3bc2650843447ef8153",
+      "benchmark": "matharena",
+      "items_path": "matharena/items.parquet",
+      "benchmarks_path": "matharena/benchmarks.parquet",
+      "metadata_path": "matharena/metadata.yaml"
+    }
+  ],
+  "missing_item_tables": []
+}

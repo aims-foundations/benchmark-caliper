@@ -36,3 +36,7 @@ anthropic_api_package_release/**/__pycache__/
 
 # Docs we don't need in the image
 *.pdf
+
+# Local CLI runs can contain user deployment descriptions and judgments.
+bayesian_auditing/results/
+bayesian_auditing/tests/

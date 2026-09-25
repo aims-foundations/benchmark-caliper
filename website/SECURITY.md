@@ -6,6 +6,37 @@ This file documents the website's security posture **as actually implemented in 
 
 Items that depend on the deployed infrastructure (TLS, DNS, hosting accounts, monitoring) live in [Pre-launch verification](#pre-launch-verification) at the bottom — these must be checked off before a public domain is pointed at the service.
 
+## Item-review demo (`/items`)
+
+The sections below describe the existing Anthropic/Caliper workflow. The separate
+item-review workflow has the following implementation:
+
+- OpenAI and optional Hugging Face keys arrive in `X-OpenAI-Key` and
+  `X-HuggingFace-Key`, remain in the active task's memory, and are never stored in
+  browser storage, the database, CLI files, job results, or application logs.
+  The OpenAI client explicitly targets `https://api.openai.com/v1` with `store=False`.
+- Only an independently generated run secret authorizes polling and cancellation.
+  It travels in `X-Review-Token`; the browser keeps it in sessionStorage to allow
+  page refreshes. Job IDs alone cannot retrieve a deployment description/result.
+- Dataset access can use a server-managed `HF_TOKEN` or a user-supplied read token.
+  Dataset source files are cached by Hugging Face; deployment descriptions and
+  judgments are held only in process memory. Results expire one hour after a run
+  ends, with a minute-level cleanup timer. Restarts clear all jobs and results.
+- Requests accept only the fixed demo benchmarks and 1–10 rows per table. Three
+  jobs may run simultaneously, at most one per caller key; each runs for at most
+  one hour. At most 30 jobs are retained. User-supplied model IDs, paths, API base
+  URLs, and dataset repository IDs are not accepted by the web endpoint.
+- Provider exception bodies are not returned or logged. Model-generated content
+  is rendered as React text. Review endpoints use `Cache-Control: no-store`.
+- Stopping a job cancels the awaited request and prevents subsequent requests.
+  A request already sent to OpenAI may still incur a charge. No email is sent.
+
+Verification: `website/server/tests/test_item_review.py`,
+`website/client/src/itemReview/api.test.ts`, and `ItemReview.test.tsx` cover these
+boundaries. Shared synchronous/asynchronous judge requests are checked in
+`bayesian_auditing/tests/test_judge.py`. OpenAI's own API retention policies apply
+to submitted content; `store=False` is not a promise of zero provider retention.
+
 This file is paired with [DESIGN.md](DESIGN.md). Every privacy claim in DESIGN.md should map to a statement here.
 
 ---

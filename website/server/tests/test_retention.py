@@ -158,8 +158,8 @@ def test_aggregate_yesterday_counts_failed_steps(
 # ---------- prune_blobs ----------
 
 
-def _set_mtime(path: Path, days_ago: int) -> None:
-    target = time.time() - days_ago * 86400
+def _set_mtime(path: Path, days_ago: int, *, now: float | None = None) -> None:
+    target = (time.time() if now is None else now) - days_ago * 86400
     os.utime(path, (target, target))
 
 
@@ -280,9 +280,9 @@ def test_run_retention_end_to_end(fresh_db: tuple[Path, Path]) -> None:
     _seed_run(db_path, "old", today - timedelta(days=120))
     _seed_step(db_path, blob_root, run_id="old", step_name="0-slug",
                started_at=today - timedelta(days=120))
-    # Backdate the old blob's mtime so prune treats it as old
+    # Use the same clock as run_retention, independent of the actual test date.
     for f in blob_root.rglob("*.json"):
-        _set_mtime(f, days_ago=120)
+        _set_mtime(f, days_ago=120, now=today.timestamp())
 
     _seed_run(db_path, "y", yesterday)
     _seed_step(db_path, blob_root, run_id="y", step_name="0-slug",
