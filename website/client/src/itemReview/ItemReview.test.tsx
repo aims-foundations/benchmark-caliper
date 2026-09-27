@@ -19,9 +19,9 @@ const completed: api.Review = {
   scope: { benchmarks: ['matharena', 'coding', 'customer_support'], table_count: 4, source_rows: 1200, branches: { main: 'a', migration: 'b' }, sample_only: true,
     sampling: catalog.sampling, sample_max_items: 150 },
   sample_complete: true, prepared_benchmarks: 3, pagination: { page: 1, page_size: 20, total_pages: 1 },
-  scoring_policy: { version: 2, neutral_score: 3, confidence_weights: { high: 1, medium: .6, low: .3, insufficient: 0 }, formula: 'test policy' },
+  scoring_policy: { version: 5, formula: '1 + sum(confidence * (score - 1) for scored dimensions) / 6; no scored dimensions yields null' },
   source_rows: 6, total: 4, processed: 4, complete: 4, needs_review: 4, errors: 0,
-  usage: { input_tokens: 100, output_tokens: 200 }, ranked_items: [], failed_items: [],
+  ranked: 4, unranked: 0, usage: { input_tokens: 100, output_tokens: 200 }, ranked_items: [], unranked_items: [], failed_items: [],
 }
 
 beforeEach(() => {
@@ -57,7 +57,7 @@ it('explains the fixed broad sample and starts only on submission', async () => 
   }, 'sk-test-private')
   expect(sessionStorage.getItem('item_review_run_v1')).not.toContain('sk-test-private')
   expect(localStorage.length).toBe(0)
-  expect(screen.getByText('Low confidence or missing scores').parentElement).toHaveTextContent('4')
+  expect(screen.getByText('Evidence gaps or missing scores').parentElement).toHaveTextContent('4')
 })
 
 it('reports missing server dataset access without asking visitors for another key', async () => {

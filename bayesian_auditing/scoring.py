@@ -1,19 +1,21 @@
 """The output contract and ranking arithmetic. No LLM or network calls here."""
 
-from typing import Annotated, Literal
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-SCORING_VERSION = 2
-# Deliberately simple policy weights, not calibrated probabilities. Missing or
-# uncertain evidence pulls a judgment toward the neutral ranking baseline.
-CONFIDENCE_WEIGHTS = {"high": 1.0, "medium": 0.6, "low": 0.3, "insufficient": 0.0}
-NEUTRAL_SCORE = 3.0
+SCORING_VERSION = 5
 SCORING_POLICY = {
     "version": SCORING_VERSION,
-    "neutral_score": NEUTRAL_SCORE,
-    "confidence_weights": CONFIDENCE_WEIGHTS,
-    "formula": "mean(3 + confidence_weight * (score - 3)); missing scores contribute 3",
+    "formula": "1 + sum(confidence * (score - 1) for scored dimensions) / 6; no scored dimensions yields null",
+    "ranking_floor": 1,
+    "compatibility_formula": "mean(available dimension scores); no scored dimensions yields null",
+    "confidence_role": "discounts support above the ranking floor; never raises a dimension's contribution",
+    "confidence_scale": "self-reported evidence support from 0 to 1; null when no score is defensible",
+    "needs_review_rule": "any missing score or reported information gap",
+    "missing_dimensions": "contribute 1 to ranking only; excluded from compatibility mean; coverage reported separately",
+    "no_scored_dimensions": "unranked; retained with evidence gaps",
+    "interpretation": "conservative ranking heuristic, not a calibrated probability or statistical lower bound",
 }
 DIMENSIONS = (
     "input_ontology", "input_content", "input_form",
@@ -24,12 +26,14 @@ DIMENSIONS = (
 class DimensionScore(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    score: Annotated[int, Field(ge=1, le=5)] | None
-    confidence: Literal["high", "medium", "low", "insufficient"]
-    confidence_rationale: str
-    justification: str
+    # Structured outputs follow schema order: establish the evidence and gaps
+    # before generating the rating and its confidence judgment.
     evidence: list[str]
     information_gaps: list[str]
+    justification: str
+    score: Annotated[int, Field(ge=1, le=5)] | None
+    confidence: Annotated[float, Field(ge=0, le=1)] | None
+    confidence_rationale: str
 
     @model_validator(mode="after")
     def check_evidence(self):
@@ -43,8 +47,8 @@ class DimensionScore(BaseModel):
             raise ValueError("A null score must explain the missing evidence")
         if self.score is not None and not self.evidence:
             raise ValueError("A numerical score must identify supporting evidence")
-        if (self.score is None) != (self.confidence == "insufficient"):
-            raise ValueError("Only a null score must have insufficient confidence")
+        if (self.score is None) != (self.confidence is None):
+            raise ValueError("Score and confidence must either both be null or both be numerical")
         return self
 
 
@@ -59,15 +63,15 @@ class Assessment(BaseModel):
     output_form: DimensionScore
 
 
-def adjusted_score(dimension: DimensionScore) -> float:
-    if dimension.score is None:
-        return NEUTRAL_SCORE
-    return NEUTRAL_SCORE + CONFIDENCE_WEIGHTS[dimension.confidence] * (dimension.score - NEUTRAL_SCORE)
+def overall_score(assessment: Assessment) -> float | None:
+    """Discount support above 1, with all six dimensions equally represented.
 
-
-def overall_score(assessment: Assessment) -> float:
-    """All six dimensions contribute, including explicit neutral placeholders."""
-    return sum(adjusted_score(getattr(assessment, name)) for name in DIMENSIONS) / len(DIMENSIONS)
+    Missing dimensions contribute only the ranking floor, without imputing a
+    compatibility score. Entirely unscorable assessments remain unranked.
+    """
+    known = [getattr(assessment, name) for name in DIMENSIONS
+             if getattr(assessment, name).score is not None]
+    return 1 + sum(d.confidence * (d.score - 1) for d in known) / len(DIMENSIONS) if known else None
 
 
 def score_summary(assessment: Assessment) -> dict:
@@ -77,5 +81,5 @@ def score_summary(assessment: Assessment) -> dict:
         "overall_score": overall_score(assessment),
         "compatibility_score": sum(known) / len(known) if known else None,
         "scored_dimensions": len(known),
-        "needs_review": any(d.confidence in {"low", "insufficient"} for d in dimensions),
+        "needs_review": any(d.score is None or d.information_gaps for d in dimensions),
     }

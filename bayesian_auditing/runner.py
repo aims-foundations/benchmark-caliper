@@ -69,7 +69,7 @@ def ranked_items(path: Path, top_k: int) -> list[dict]:
     # Keep only top-k complete records in memory. Successful judgments are written
     # once per evidence hash; resume never repeats them.
     best = heapq.nsmallest(
-        top_k, (r for r in records(path) if r["status"] == "complete"),
+        top_k, (r for r in records(path) if r["status"] == "complete" and r["overall_score"] is not None),
         key=lambda r: (-r["overall_score"], r["evidence_hash"]),
     )
     sources = {r["evidence_hash"]: {} for r in best}
@@ -163,6 +163,7 @@ def run(inventory, deployment, prompt, output_dir, *, model,
     finally:
         _, _, sources, statuses, usage = read_state(log_path)
         counts = Counter(statuses.values())
+        unranked = sum(r["overall_score"] is None for r in records(log_path) if r["status"] == "complete")
         full_traversal = traversal_complete and limit_per_table is None and not inventory["missing_item_tables"]
         summary = {
             "state": "finished" if traversal_complete else "interrupted",
@@ -171,6 +172,7 @@ def run(inventory, deployment, prompt, output_dir, *, model,
             "limit_per_table": limit_per_table, "source_rows_seen": len(sources),
             "unique_scoring_inputs": len(statuses),
             "complete": counts["complete"],
+            "ranked": counts["complete"] - unranked, "unranked": unranked,
             "needs_review": sum(r.get("needs_review", False) for r in records(log_path) if r["status"] == "complete"),
             "errors": counts["error"], "previews": counts["preview"],
             "configured_scope_traversed": traversal_complete,
@@ -178,7 +180,7 @@ def run(inventory, deployment, prompt, output_dir, *, model,
             "full_inventory_scored": full_traversal and not dry_run and not counts["error"],
             "usage_all_attempts": usage, "fatal_error": fatal_error,
             "scoring_policy": SCORING_POLICY,
-            "ranking_scope": "All valid assessments, including partial evidence; failed calls are not ranked. Scores reflect confidence, not verified validity.",
+            "ranking_scope": "Confidence-adjusted support across all six dimensions: 1 + sum(confidence * (score - 1)) / 6. Missing dimensions contribute only the ranking floor of 1; the compatibility mean excludes them. Assessments with no scores remain in assessments.jsonl and are not ranked; failed calls are not ranked.",
         }
         write_json(output_dir / "ranked_items.json", ranked_items(log_path, top_k))
         write_json(output_dir / "summary.json", summary)

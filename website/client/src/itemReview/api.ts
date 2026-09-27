@@ -20,7 +20,9 @@ export interface Catalog {
 }
 export interface ReviewRequest { deployment: Deployment }
 export interface RunAccess { run_id: string; run_secret: string }
-export type Confidence = 'high' | 'medium' | 'low' | 'insufficient'
+export type LegacyConfidence = 'high' | 'medium' | 'low' | 'insufficient'
+// Earlier reports keep their original labels; new assessments use numbers.
+export type Confidence = number | null | LegacyConfidence
 export interface DimensionScore {
   score: number | null; confidence: Confidence; confidence_rationale: string
   justification: string; evidence: string[]; information_gaps: string[]
@@ -36,10 +38,13 @@ export interface Review {
   run_id: string; status: 'preparing' | 'running' | 'completed' | 'cancelled' | 'failed'; message: string
   model: string; reasoning_effort: string; deployment: Deployment
   scope: { benchmarks: string[]; table_count: number; source_rows: number; branches: Record<string, string>; sample_only: boolean; sampling: SamplingPolicy; sample_max_items: number }
-  scoring_policy: { version: number; neutral_score: number; confidence_weights: Record<Confidence, number>; formula: string }
+  scoring_policy: { version: number; formula: string; confidence_role?: string; confidence_scale?: string; needs_review_rule?: string;
+    ranking_floor?: number; compatibility_formula?: string; interpretation?: string;
+    missing_dimensions?: string; no_scored_dimensions?: string; neutral_score?: number; confidence_weights?: Record<LegacyConfidence, number> }
   source_rows: number; total: number; processed: number; complete: number; needs_review: number; errors: number
+  ranked?: number; unranked?: number
   sample_complete: boolean; prepared_benchmarks: number; pagination: { page: number; page_size: number; total_pages: number }
-  usage: Record<string, number>; ranked_items: ReviewedItem[]; failed_items: ReviewedItem[]
+  usage: Record<string, number>; ranked_items: ReviewedItem[]; unranked_items?: ReviewedItem[]; failed_items: ReviewedItem[]
 }
 
 async function fetchResponse(path: string, options: RequestInit = {}): Promise<Response> {

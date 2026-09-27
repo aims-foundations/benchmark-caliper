@@ -140,11 +140,11 @@ export function ItemReview() {
               aria-current={(access ? 3 : ['access', 'deployment', 'confirm'].indexOf(step)) === i ? 'step' : undefined}>
               <span>{String(i + 1).padStart(2, '0')}</span>{label}</li>)}
           </ol>
-          <div className="review-guide-note"><p className="eyebrow">The framework</p><strong>One item.<br />Six perspectives.</strong>
+          {!access && <div className="review-guide-note"><p className="eyebrow">The framework</p><strong>One item.<br />Six perspectives.</strong>
             <div className="review-guide-dimensions"><span>Input</span><span>Output</span><p>Ontology · Content · Form</p></div>
             <p>Every score includes a confidence judgment and the evidence behind it.</p>
             <small>GPT-6 Luna · High reasoning</small>
-          </div>
+          </div>}
         </aside>
         <div className="review-workspace" ref={workspace} tabIndex={-1}>
           {error && <div className="review-error" role="alert">{error}
@@ -211,7 +211,7 @@ export function ItemReview() {
               {review && review.status === 'preparing' && <><progress max={review.scope.source_rows || 1} value={review.source_rows} aria-label="Source rows considered for sampling" /><p>{review.prepared_benchmarks.toLocaleString()} of {review.scope.benchmarks.length.toLocaleString()} benchmark collections prepared · {review.source_rows.toLocaleString()} source rows considered · no model calls yet</p></>}
               {review && review.status !== 'preparing' && <><progress max={review.total || 1} value={review.processed} aria-label="Sampled items assessed" /><p>{review.processed.toLocaleString()} of {review.total.toLocaleString()} distinct sampled items assessed</p></>}
               {active ? <button type="button" className="secondary" onClick={() => void stop()} disabled={busy}>Stop review</button> : <button type="button" className="secondary" onClick={restart}>Start another review</button>}
-              {active && <p className="help">You can return in this tab while the review runs. Stopping prevents further calls; an in-flight request may still incur charges.</p>}
+              {active && <p className="help">Stopping cancels pending assessments. Requests already sent may still incur charges.</p>}
               {error && <button type="button" className="link" onClick={restart}>Forget this review and return to setup</button>}
             </section>
             {review && <Results review={review} run={access} onPageChange={setPage} />}

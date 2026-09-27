@@ -97,9 +97,10 @@ validity score.
    Every dimension returns a score (or an explicit unknown), confidence and its
    rationale, a short justification, evidence references, and information gaps.
 5. **Validate and rank.** Python validates the structured response and computes
-   a confidence-adjusted mean across all six dimensions. Every valid assessment
-   enters the ranking, including those with missing evidence. Results retain the
-   original scores, confidence, gaps, and source provenance for human review.
+   a confidence-adjusted ranking score and the original compatibility mean.
+   Partial assessments remain ranked with their dimension coverage shown;
+   assessments with no scores are retained without a rank. Results retain the
+   original numerical confidence, rationales, gaps, and source provenance.
 
 | Dimension | Item-level question |
 | --- | --- |
@@ -114,36 +115,74 @@ Scores range from **1 (fundamental mismatch)** to **5 (strong, evidence-supporte
 alignment)**, with dimension-specific anchors in the prompt. Compatibility and
 confidence are separate judgments. The judge should make a defensible tentative
 estimate when possible, with low confidence and explicit assumptions. When no
-estimate is defensible, the score stays `null`, confidence is `insufficient`, and
+estimate is defensible, both score and confidence stay `null`, and
 an information gap is required. A missing dimension no longer discards the item.
 
-Scoring version 2 uses a simple, inspectable policy:
+Scoring version 5 requests numerical confidence from 0 to 1 directly from the
+model. It describes how strongly the supplied evidence supports the particular
+compatibility score. Higher values indicate direct, applicable, consistent
+evidence with little material uncertainty; lower values indicate tentative
+support involving indirect evidence, conflicts, assumptions, or consequential
+gaps. The prompt asks the model to consider evidence relevance, completeness,
+consistency, and the importance of uncertainty for each dimension. It does not
+frame confidence as agreement with a reviewer, and does not assign numerical
+values to categorical labels. A null score has null confidence, distinct from
+a numerical confidence of zero. The UI shows numbers directly, without buckets.
 
-| Confidence | Meaning | Ranking weight |
-| --- | --- | --- |
-| High | Direct, applicable evidence; no material gap | 1.0 |
-| Medium | Relevant evidence with a limited inference or gap | 0.6 |
-| Low | Indirect evidence or a major gap could change the estimate | 0.3 |
-| Insufficient | No defensible score; stored score is `null` | 0.0 |
+The prompt and schema request evidence, dimension-specific information gaps,
+and a concise justification identifying material assumptions before the score
+and confidence. Each confidence rationale must link the number to that evidence
+and explain what could change the rating. A missing reference answer need not
+lower confidence in an independently assessable input format.
 
-For each known dimension, `adjusted = 3 + weight * (score - 3)`. A missing
-dimension contributes a neutral baseline of 3 **only to the ranking calculation**.
-`overall_score` is the equal-weight mean of all six adjusted contributions.
-`compatibility_score` is the unadjusted mean of the available scores;
-`scored_dimensions` records coverage. `needs_review` flags any low-confidence or
-missing dimension. The same summary is used in the CLI and hosted demo.
+`overall_score` is a conservative ranking score on a 1–5 scale. Each scored
+dimension contributes `1 + confidence * (score - 1)`, and each missing dimension
+contributes 1. Average these contributions over all six dimensions:
 
-For example, a low-confidence 5 contributes 3.6, while a high-confidence 5
-contributes 5. Five high-confidence 4s and one unknown yield an overall 3.83,
-an unadjusted mean of 4, and coverage of 5/6. Six unknowns yield a baseline of 3
-and no unadjusted mean. That baseline is **not evidence of compatibility** and can
-rank above a supported mismatch. Review the evidence before selecting tests.
+```text
+overall_score = 1 + sum(confidence * (score - 1) for scored dimensions) / 6
+```
 
-These weights are policy choices, not calibrated probabilities. Confidence is
-the judge's evidence-support assessment, not measured reliability. The mean is
-a demo ranking heuristic, not a validated validity or deployment-safety measure.
-High means can still hide individual mismatches. Ties use evidence hashes for
-deterministic ordering. Human-reviewed calibration is a later step.
+The floor of 1 represents no positive ranking support. It does not assign a
+compatibility judgment to missing dimensions: their original score and confidence
+remain `null`. If all dimensions are unknown, `overall_score` is also `null`,
+and the item is unranked. A scored item with zero confidence receives a ranking
+score of 1. Lower confidence never increases a contribution, and removing a
+score cannot improve the ranking score. All six dimensions retain equal weight;
+the denominator is not the sum of confidence values. Full confidence on all six
+dimensions recovers the original compatibility mean.
+
+`compatibility_score` is the unadjusted mean of available compatibility scores,
+shown alongside the ranking score. It excludes missing dimensions and is
+independent of confidence. `scored_dimensions` records coverage. `needs_review`
+flags any missing score or explicit information gap, including unverified material
+assumptions. It uses no confidence cutoff. The CLI and website share this arithmetic.
+
+For example, five scores of 4 at confidence 0.8 and one unknown yield a ranking
+score of 3.0, a compatibility mean of 4, and coverage of 5/6. A score of 5 at
+confidence 0.2 contributes 1.8, while a score of 4 at confidence 0.9 contributes
+3.7. A mismatch scored 1 contributes 1 at any confidence, so uncertainty never
+erases that weakness from the average.
+
+Six unknowns yield `null` for both scores and no rank. These assessments remain
+in the CLI assessment log and the website's `unranked_items` list, including its
+JSON download. `complete` counts all valid assessments; `ranked` and `unranked`
+distinguish score availability. Compare coverage and individual dimensions when
+interpreting the unadjusted mean.
+
+Confidence is the judge's evidence-support assessment, not a calibrated
+probability or measured reliability. The linear discount toward 1 is an explicit
+conservative ranking policy, not an expected compatibility score, statistical
+lower bound, or validated validity measure. An average can still hide individual
+mismatches. Ties use evidence hashes for deterministic ordering. Human-reviewed
+calibration and comparison of ranking policies are later steps.
+
+Existing report files are not rewritten. Version 2 used confidence weights and
+neutral placeholders; version 3 kept categorical confidence separate from the
+mean; version 4 used numerical confidence separate from the mean. The website
+preserves those reports' original scoring explanations. Resuming with a different
+scoring policy or prompt is rejected to prevent mixing methods. Use a new output
+directory for version 5.
 
 ## Traverse the full inventory
 
@@ -174,7 +213,7 @@ without repeating completed judgments. Changed scoring settings need a new
 output folder. A preview cannot be resumed as a live run.
 
 Scoring-version-1 runs cannot be resumed under this schema. Keep their exported
-files and use a new output folder for version 2; old results have no recorded
+files and use a new output folder for version 5; old results have no recorded
 confidence, so it must not be invented or silently backfilled. New judgments
 require new API calls.
 
@@ -192,13 +231,13 @@ cause that request to be repeated. Use one process per output directory.
 | --- | --- |
 | `run.json` | Deployment, pinned inventory, model settings, rubric, and output-schema snapshot. |
 | `assessments.jsonl` | Append-only assessments with confidence, errors, and duplicate source references. Previews include the exact request input. |
-| `ranked_items.json` | Up to `--top-k` valid assessments ordered by adjusted score, with coverage, evidence, and all source references. |
+| `ranked_items.json` | Up to `--top-k` assessments with at least one score, ordered by confidence-adjusted ranking score, with the original compatibility mean, coverage, confidence, evidence, and all source references. |
 | `summary.json` | Counts, traversal status, items needing review, errors, scoring policy, reported token usage across attempts, and any fatal error. |
 
-Check `full_inventory_scored` before describing a result as a full ranking. It is
+Check `full_inventory_scored` before describing a result as a completed assessment of the inventory. It is
 false for limited previews, interrupted runs, missing tables, or failed responses.
 It means all items have a valid assessment, not that all dimensions are known or
-confident; inspect `needs_review` and individual gaps. “Full inventory” means the tables in the saved
+confident or that every item has a rank; inspect `unranked`, `needs_review`, and individual gaps. “Full inventory” means the tables in the saved
 inventory, which may itself contain a benchmark/branch filter. A partial ranked
 list is still saved for review, but omitted items could otherwise have ranked
 highly. Reported output tokens already include reasoning tokens; do not add

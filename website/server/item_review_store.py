@@ -19,6 +19,7 @@ class ReviewStore:
         self.lock = RLock()
         self.counts = Counter()
         self.needs_review = 0
+        self.unranked = 0
         self.connection.executescript("""
             CREATE TABLE items (
                 id INTEGER PRIMARY KEY, evidence_hash TEXT UNIQUE NOT NULL,
@@ -32,6 +33,10 @@ class ReviewStore:
     @property
     def processed(self):
         return sum(self.counts.values())
+
+    @property
+    def ranked(self):
+        return self.counts["complete"] - self.unranked
 
     def add_source(self, evidence_hash, source):
         with self.lock, self.connection:
@@ -50,14 +55,16 @@ class ReviewStore:
                                     (record["evidence_hash"], record["status"], record.get("overall_score"), json.dumps(record)))
             self.counts[record["status"]] += 1
             self.needs_review += bool(record.get("needs_review"))
+            self.unranked += record["status"] == "complete" and record.get("overall_score") is None
 
-    def records(self, status, *, offset=0, limit=None, cutoff=None):
+    def records(self, status, *, offset=0, limit=None, cutoff=None, scored=None):
         """Read a page or stream every result; never load the whole ranking."""
         cutoff = self.processed if cutoff is None else cutoff
+        score_filter = "" if scored is None else ("AND score IS NOT NULL " if scored else "AND score IS NULL ")
         with self.lock:
             cursor = self.connection.execute(
                 "SELECT evidence_hash, record FROM items WHERE status = ? AND id <= ? "
-                "ORDER BY score DESC, evidence_hash LIMIT ? OFFSET ?",
+                + score_filter + "ORDER BY score DESC, evidence_hash LIMIT ? OFFSET ?",
                 (status, cutoff, -1 if limit is None else limit, offset),
             )
         try:
@@ -70,7 +77,7 @@ class ReviewStore:
                     sources = self.connection.execute("SELECT source FROM sources WHERE evidence_hash = ? ORDER BY rowid", (row[0],)).fetchall()
                 record = json.loads(row[1])
                 record["sources"] = [json.loads(source[0]) for source in sources]
-                if status == "complete":
+                if status == "complete" and record.get("overall_score") is not None:
                     rank += 1
                     record["rank"] = rank
                 yield record

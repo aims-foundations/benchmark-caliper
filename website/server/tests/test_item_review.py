@@ -38,7 +38,7 @@ def source_item(key="item-a", branch="main", content="1+1"):
 def assessment(score=4):
     dimensions = {
         dimension: {"score": score, "justification": "Relevant to the described task.",
-                    "confidence": "high", "confidence_rationale": "Direct textual evidence.",
+                    "confidence": 0.93, "confidence_rationale": "Direct textual evidence.",
                     "evidence": ["item.content: 1+1"], "information_gaps": []} for dimension in DIMENSIONS}
     return {"status": "complete", **score_summary(Assessment.model_validate(dimensions)), "assessment": dimensions,
         "usage": {"input_tokens": 100, "output_tokens": 50, "output_tokens_details": {"reasoning_tokens": 20}}}
@@ -115,7 +115,8 @@ def test_catalog_and_ranked_review(client, caplog):
     response = finished(client, access)
     result = response.json()
     assert result["status"] == "completed"
-    assert [row["overall_score"] for row in result["ranked_items"]] == [4, 3]
+    assert [row["overall_score"] for row in result["ranked_items"]] == pytest.approx([3.79, 2.86])
+    assert [row["compatibility_score"] for row in result["ranked_items"]] == [4, 3]
     assert result["processed"] == 2 and result["source_rows"] == 3
     assert result["scope"]["sample_only"] is True
     assert result["sample_complete"] is True
@@ -168,6 +169,13 @@ def test_provider_error_is_sanitized(client, monkeypatch):
 
 def test_cancellation_prevents_more_calls_and_duplicate_running_key(client, monkeypatch):
     calls = []
+    cancelled = []
+    started = Event()
+    monkeypatch.setattr(item_review, "REVIEW_CONCURRENCY", 3)
+
+    async def sample(job):
+        return iter([source_item(str(i), content=str(i)) for i in range(10)]), 10
+    monkeypatch.setattr(item_review, "review_items", sample)
 
     class SlowJudge:
         def __init__(self, *args):
@@ -175,18 +183,112 @@ def test_cancellation_prevents_more_calls_and_duplicate_running_key(client, monk
 
         async def __call__(self, evidence):
             calls.append(evidence)
-            await asyncio.sleep(100)
-            return assessment()
+            if len(calls) == 3:
+                started.set()
+            try:
+                await asyncio.Event().wait()
+            except asyncio.CancelledError:
+                cancelled.append(evidence)
+                raise
 
     monkeypatch.setattr(item_review, "AsyncJudge", SlowJudge)
     access = start(client)
+    assert started.wait(2), "The configured number of assessments should run together"
     duplicate = client.post("/api/item-review/runs", json=BODY, headers={"X-OpenAI-Key": KEY})
     assert duplicate.status_code == 429
     response = client.post(f"/api/item-review/runs/{access['run_id']}/cancel",
                            headers={"X-Review-Token": access["run_secret"]})
     assert response.json()["status"] == "cancelled"
-    assert len(calls) <= 1
+    assert len(calls) == len(cancelled) == 3
     assert item_review.jobs[access["run_id"]].task.done()
+
+
+def test_concurrency_is_bounded_and_live_ranking_ignores_completion_order(monkeypatch):
+    monkeypatch.setattr(item_review, "REVIEW_CONCURRENCY", 2)
+
+    async def check():
+        job = item_review.ReviewJob("test", "secret", "owner", item_review.ReviewRequest(**BODY), inventory=INVENTORY)
+        rows = [source_item("a", content="a"), source_item("a", "migration", "a"),
+                source_item("b", content="b"), source_item("c", content="c")]
+        entered = {key: asyncio.Event() for key in "abc"}
+        release = {key: asyncio.Event() for key in "abc"}
+        calls = []
+        active = peak = 0
+
+        async def judge(evidence):
+            nonlocal active, peak
+            key = evidence["item"]["content"]
+            calls.append(key)
+            active += 1
+            peak = max(peak, active)
+            entered[key].set()
+            try:
+                await release[key].wait()
+                return assessment({"a": 5, "b": 2, "c": 4}[key])
+            finally:
+                active -= 1
+
+        task = asyncio.create_task(item_review.assess_items(job, iter(rows), judge))
+        try:
+            await asyncio.wait_for(entered["b"].wait(), 2)
+            assert calls == ["a", "b"] and active == 2
+            release["b"].set()
+            await asyncio.wait_for(entered["c"].wait(), 2)
+            assert [row["evidence_hash"] for row in job.results.records("complete")] == ["b"]
+            release["a"].set()
+            release["c"].set()
+            await asyncio.wait_for(task, 2)
+            ranked = item_review.public_job(job)["ranked_items"]
+            assert [row["evidence_hash"] for row in ranked] == ["a", "c", "b"]
+            assert [row["rank"] for row in ranked] == [1, 2, 3]
+            assert len(ranked[0]["sources"]) == 2
+            assert calls == ["a", "b", "c"] and peak == 2 and active == 0
+            assert job.usage == {"input_tokens": 300, "output_tokens": 150, "reasoning_tokens": 60, "cached_input_tokens": 0}
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            job.results.close()
+
+    asyncio.run(check())
+
+
+def test_provider_failure_cancels_other_workers_and_retains_completed_results(monkeypatch):
+    monkeypatch.setattr(item_review, "REVIEW_CONCURRENCY", 3)
+
+    async def check():
+        job = item_review.ReviewJob("test", "secret", "owner", item_review.ReviewRequest(**BODY), inventory=INVENTORY)
+        rows = [source_item(str(i), content=str(i)) for i in range(10)]
+        waiting = asyncio.Event()
+        cancelled = []
+        calls = []
+
+        async def judge(evidence):
+            key = evidence["item"]["content"]
+            calls.append(key)
+            if key == "0":
+                return assessment()
+            if key == "1":
+                await waiting.wait()
+                raise OpenAIError("provider failure")
+            if key == "3":
+                waiting.set()
+            try:
+                await asyncio.Event().wait()
+            except asyncio.CancelledError:
+                cancelled.append(key)
+                raise
+
+        try:
+            with pytest.raises(OpenAIError):
+                await asyncio.wait_for(item_review.assess_items(job, iter(rows), judge), 2)
+            assert calls == ["0", "1", "2", "3"]
+            assert sorted(cancelled) == ["2", "3"]
+            assert job.results.processed == 1
+            assert next(job.results.records("complete"))["evidence_hash"] == "0"
+        finally:
+            job.results.close()
+
+    asyncio.run(check())
 
 
 def test_partial_assessment_is_ranked_with_confidence_and_policy(client, monkeypatch):
@@ -196,7 +298,7 @@ def test_partial_assessment_is_ranked_with_confidence_and_policy(client, monkeyp
 
         async def __call__(self, _):
             result = assessment()
-            result["assessment"]["output_content"].update(score=None, confidence="insufficient", information_gaps=["Reference not available"])
+            result["assessment"]["output_content"].update(score=None, confidence=None, information_gaps=["Reference not available"])
             result.update(score_summary(Assessment.model_validate(result["assessment"])))
             return result
 
@@ -204,11 +306,13 @@ def test_partial_assessment_is_ranked_with_confidence_and_policy(client, monkeyp
     result = finished(client, start(client)).json()
     assert result["complete"] == result["needs_review"] == 2
     assert len(result["ranked_items"]) == 2 and result["failed_items"] == []
-    assert result["scoring_policy"]["version"] == 2
+    assert result["scoring_policy"]["version"] == 5
+    assert "confidence_weights" not in result["scoring_policy"]
     for item in result["ranked_items"]:
-        assert item["overall_score"] == pytest.approx(23 / 6)
+        assert item["overall_score"] == pytest.approx(3.325)
+        assert item["compatibility_score"] == 4
         assert item["scored_dimensions"] == 5 and item["needs_review"]
-        assert item["assessment"]["output_content"]["confidence"] == "insufficient"
+        assert item["assessment"]["output_content"]["confidence"] is None
 
 
 def test_expired_review_is_removed(client):
@@ -229,7 +333,7 @@ def test_ten_items_with_eight_partial_assessments_all_rank():
         result = assessment()
         if index >= 2:
             result["assessment"]["output_content"].update(
-                score=None, confidence="insufficient", information_gaps=["Reference not available"])
+                score=None, confidence=None, information_gaps=["Reference not available"])
             result.update(score_summary(Assessment.model_validate(result["assessment"])))
         job.results.append({**copy.deepcopy(ITEM), **result, "evidence_hash": str(index)})
     report = item_review.public_job(job)
@@ -237,6 +341,42 @@ def test_ten_items_with_eight_partial_assessments_all_rank():
     assert len(report["ranked_items"]) == 10
     assert report["failed_items"] == []
     job.results.close()
+
+
+def test_pages_and_export_keep_unscorable_items_separate_from_ranks_and_errors(client, monkeypatch):
+    monkeypatch.setattr(item_review, "RESULTS_PAGE_SIZE", 3)
+    job = item_review.ReviewJob("fixture", "secret", "owner", item_review.ReviewRequest(**BODY))
+    item_review.jobs[job.run_id] = job
+    job.status, job.sample_complete, job.total = "completed", True, 9
+    job.finished_at = time.monotonic()
+    for index, score in enumerate([None, 2, "error", 5, None, 1, "error", 4, None]):
+        result = assessment(score if isinstance(score, int) else 4)
+        if score is None or score == 5:
+            for dimension in result["assessment"].values():
+                dimension.update(confidence=0.2 if score == 5 else None, score=score,
+                                 information_gaps=["Reference unavailable"])
+            result.update(score_summary(Assessment.model_validate(result["assessment"])))
+        if score == "error":
+            result = {"status": "error", "error": "Invalid assessment"}
+        job.results.append({**source_item(str(index)), **result})
+    headers = {"X-Review-Token": job.secret}
+    url = f"/api/item-review/runs/{job.run_id}"
+    pages = [client.get(url, params={"page": page}, headers=headers).json() for page in range(1, 4)]
+    report = pages[0]
+    assert (report["complete"], report["ranked"], report["unranked"], report["errors"]) == (7, 4, 3, 2)
+    assert [(len(p["ranked_items"]), len(p["unranked_items"]), len(p["failed_items"])) for p in pages] == [(3, 0, 0), (1, 2, 0), (0, 1, 2)]
+    exported = client.get(url + "/export", headers=headers).json()
+    for group in ("ranked_items", "unranked_items", "failed_items"):
+        assert exported[group] == [row for page in pages for row in page[group]]
+    assert [row["overall_score"] for row in exported["ranked_items"]] == pytest.approx([3.79, 1.93, 1.8, 1])
+    assert [row["compatibility_score"] for row in exported["ranked_items"]] == [4, 2, 5, 1]
+    assert exported["scoring_policy"]["version"] == 5
+    assert exported["scoring_policy"]["ranking_floor"] == 1
+    assert exported["ranked_items"][2]["assessment"]["input_form"]["confidence"] == 0.2
+    assert exported["ranked_items"][0]["assessment"]["input_form"]["confidence"] == 0.93
+    assert [row["rank"] for row in exported["ranked_items"]] == [1, 2, 3, 4]
+    assert all(row["overall_score"] is None and "rank" not in row for row in exported["unranked_items"])
+    assert exported["unranked_items"][0]["assessment"]["input_form"]["confidence"] is None
 
 
 def test_invalid_response_stays_failed_and_has_no_invented_score(client, monkeypatch):
@@ -268,7 +408,7 @@ def test_sample_review_crosses_result_page_size_and_exports_every_rank(client, m
 
         async def __call__(self, evidence):
             calls.append(evidence)
-            return assessment(5 if evidence["item"]["content"] == "last" else 3)
+            return assessment(5 if evidence["item"]["content"] == "last" else 1 + len(calls) % 4)
 
     async def sample(job):
         job.source_rows = 46
@@ -291,6 +431,10 @@ def test_sample_review_crosses_result_page_size_and_exports_every_rank(client, m
     exported = client.get(url + "/export", headers=headers).json()
     assert len(exported["ranked_items"]) == 45
     assert [item["rank"] for item in exported["ranked_items"]] == list(range(1, 46))
+    all_pages = first["ranked_items"] + second["ranked_items"] + third["ranked_items"]
+    assert all_pages == exported["ranked_items"]
+    scores = [item["overall_score"] for item in all_pages]
+    assert scores == sorted(scores, reverse=True)
     assert len(next(item for item in exported["ranked_items"] if item["evidence_hash"] == "0")["sources"]) == 2
     assert "pagination" not in exported
 

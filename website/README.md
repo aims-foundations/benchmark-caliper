@@ -21,15 +21,34 @@ uses the shared `bayesian_auditing` loader, rubric, schema, and arithmetic with
 GPT-6 Luna, high reasoning effort, and a 25,000-token ceiling. The initial
 questions are fixed and editable; they do not require an additional model call.
 
-Scoring version 2 keeps every valid assessment in the ranking, including items
-with partial evidence. High/medium/low confidence weights (1, 0.6, 0.3) pull
-scores toward a neutral baseline of 3; missing dimensions contribute that
-baseline without receiving an invented dimension score. Results show the
-adjusted ranking score, unadjusted mean, dimensions scored, and evidence gaps.
-The confidence labels and weights are not calibrated probabilities. See the
+Scoring version 5 ranks items by a confidence-adjusted score. Each scored
+dimension contributes `1 + confidence * (compatibility - 1)`, and missing
+dimensions contribute 1 to ranking only; the result averages all six contributions.
+This discounts uncertain positive support without raising low scores or dropping
+potential weaknesses from the average. The UI also shows the original mean of
+available compatibility scores, excluding missing dimensions.
+The model directly reports numerical confidence from 0 to 1 for each
+scored dimension, with a rationale. Confidence describes how strongly the
+supplied evidence supports that score, based on relevance, completeness,
+consistency, and remaining uncertainty. The prompt asks for evidence, specific
+information gaps, and material assumptions first, without referring to an
+independent reviewer. Confidence is displayed directly. A dimension with no
+defensible score keeps null score and confidence; the ranking floor is not an
+imputed compatibility score.
+The evidence-gap flag uses missing scores or listed gaps, not a confidence cutoff.
+Partial assessments remain ranked with coverage shown (for example, 5/6), and
+items with no scores remain available without a rank. Compare coverage when
+interpreting the compatibility mean. Confidence describes evidence support and
+is not a calibrated probability; the adjustment is a conservative ranking
+heuristic, not a statistical lower bound. See the
 [scoring policy](../bayesian_auditing/README.md#process-and-scoring) for details.
-The JSON download includes the policy and confidence explanations. Old reports
-have no recorded confidence; they require a new paid review to obtain it.
+The JSON download includes the policy, confidence explanations, and separate
+`ranked_items`, `unranked_items`, and `failed_items` lists. `complete` counts all
+valid assessments; `ranked` and `unranked` distinguish score availability.
+Existing version-2 and version-3 reports retain their categorical confidence
+labels and scoring explanations. Version-4 reports retain their numerical
+confidence and unadjusted ranking. Version-1
+reports have no recorded confidence and require a new review to obtain it.
 
 The catalog includes every available formatted `items.parquet` table from both
 measurement-db branches, pinned to the revisions in the inventory. The current
@@ -49,7 +68,11 @@ the UI disables new reviews and asks visitors to contact the site maintainer.
 The server never uses its own OpenAI key: each review requires the user's key.
 
 `server/item_review.py` prepares the complete sample before making model calls,
-then runs one sequential, cancellable assessment stream. The first preparation
+then assesses up to four items concurrently per review. Set the server environment
+variable `ITEM_REVIEW_CONCURRENCY` (1–16, default 4) to tune this limit; 1 restores
+sequential assessment. A fixed worker pool bounds in-flight requests and memory,
+deduplicates evidence before calls, and cancels all workers on stop or provider
+failure while retaining completed results. The first preparation
 scans all source rows without model calls, using a temporary SQLite index of hashes
 and source locations, keeping only the best 50 selection candidates in memory.
 Additional branch representatives are fetched through Parquet HTTP ranges if
@@ -74,7 +97,7 @@ Completed/failed/cancelled jobs and their result files expire after one hour
 An abrupt process kill can leave orphaned temporary files until the host cleans
 them up. The demo does not resume after server restarts; the [CLI](../bayesian_auditing/README.md)
 supports durable resume. Refreshing the same browser tab resumes polling a live
-job. Cancelling prevents further model calls; a request already sent may be billed.
+job. Cancelling prevents further model calls; requests already sent may be billed.
 
 The router and UI live in `server/item_review.py` and `client/src/itemReview/`;
 `client/src/EvaluationSite.tsx` chooses the workflow. The catalog inventory is

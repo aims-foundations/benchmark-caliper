@@ -22,6 +22,15 @@ reviews; visitors supply only their OpenAI API key. Missing server dataset
 credentials disable new reviews and show a message to contact the maintainer.
 Do not put a maintainer's OpenAI key on the service.
 
+Each review assesses up to four items concurrently. Optionally set
+`ITEM_REVIEW_CONCURRENCY` to an integer from 1 to 16 (default 4). With the existing
+three-review limit, the default allows at most 12 simultaneous item requests
+across the service. Lower the limit for constrained provider quotas; 1 restores
+sequential assessment. Provider retries stay bounded by the same worker pool.
+Concurrency does not change the sample or number of intended assessments, and
+does not accelerate initial sample preparation. Stopping a run cancels every
+worker; requests already sent may still be billed.
+
 The Blueprint declares `HF_TOKEN` with `sync: false`, so its value stays out of
 Git. For an existing service, add the secret under **Environment** in Render;
 updating the Blueprint alone does not populate a new `sync: false` variable.

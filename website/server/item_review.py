@@ -12,6 +12,7 @@ from contextlib import closing
 from dataclasses import dataclass, field
 import hashlib
 import json
+import os
 from pathlib import Path
 import secrets
 import time
@@ -40,6 +41,9 @@ MAX_ACTIVE = 3
 MAX_RETAINED = 30
 RETENTION_SECONDS = 3600
 RESULTS_PAGE_SIZE = 20
+REVIEW_CONCURRENCY = int(os.environ.get("ITEM_REVIEW_CONCURRENCY", "4"))
+if not 1 <= REVIEW_CONCURRENCY <= 16:
+    raise ValueError("ITEM_REVIEW_CONCURRENCY must be between 1 and 16")
 
 
 def inventory() -> dict:
@@ -137,12 +141,15 @@ def public_job(job: ReviewJob, page: int = 1, *, include_items: bool = True) -> 
     pages = max(1, (processed + RESULTS_PAGE_SIZE - 1) // RESULTS_PAGE_SIZE)
     page = min(page, pages)
     offset = (page - 1) * RESULTS_PAGE_SIZE
-    ranked, failed = [], []
+    ranked, unranked, failed = [], [], []
     if include_items:
-        if offset < counts["complete"]:
-            ranked = list(job.results.records("complete", offset=offset, limit=RESULTS_PAGE_SIZE))
+        if offset < job.results.ranked:
+            ranked = list(job.results.records("complete", scored=True, offset=offset, limit=RESULTS_PAGE_SIZE))
+        unranked = list(job.results.records("complete", scored=False,
+                                            offset=max(0, offset - job.results.ranked),
+                                            limit=RESULTS_PAGE_SIZE - len(ranked)))
         failed = list(job.results.records("error", offset=max(0, offset - counts["complete"]),
-                                          limit=RESULTS_PAGE_SIZE - len(ranked)))
+                                          limit=RESULTS_PAGE_SIZE - len(ranked) - len(unranked)))
     return {
         "run_id": job.run_id, "status": job.status, "message": job.message,
         "model": DEFAULT_MODEL, "reasoning_effort": DEFAULT_REASONING_EFFORT,
@@ -156,10 +163,11 @@ def public_job(job: ReviewJob, page: int = 1, *, include_items: bool = True) -> 
         "source_rows": job.source_rows, "total": job.total, "processed": processed,
         "sample_complete": job.sample_complete, "prepared_benchmarks": job.prepared_benchmarks,
         "complete": counts["complete"], "errors": counts["error"],
+        "ranked": job.results.ranked, "unranked": job.results.unranked,
         "needs_review": job.results.needs_review,
         "usage": dict(job.usage),
         "pagination": {"page": page, "page_size": RESULTS_PAGE_SIZE, "total_pages": pages},
-        "ranked_items": ranked, "failed_items": failed,
+        "ranked_items": ranked, "unranked_items": unranked, "failed_items": failed,
     }
 
 
@@ -207,16 +215,17 @@ async def export_review(run_id: str, x_review_token: Annotated[str | None, Heade
     job = authorize(run_id, x_review_token)
     snapshot = public_job(job, include_items=False)
     cutoff = snapshot["processed"]
-    for key in ("pagination", "ranked_items", "failed_items"):
+    for key in ("pagination", "ranked_items", "unranked_items", "failed_items"):
         snapshot.pop(key)
     job.downloads += 1
 
     async def content():
         try:
             yield json.dumps(snapshot)[:-1]
-            for status, key in (("complete", "ranked_items"), ("error", "failed_items")):
+            for status, key, scored in (("complete", "ranked_items", True),
+                                        ("complete", "unranked_items", False), ("error", "failed_items", None)):
                 yield f', "{key}": ['
-                with closing(job.results.records(status, cutoff=cutoff)) as records:
+                with closing(job.results.records(status, cutoff=cutoff, scored=scored)) as records:
                     for index, item in enumerate(records):
                         yield ("," if index else "") + json.dumps(item)
                 yield "]"
@@ -278,21 +287,26 @@ async def next_item(items):
         raise
 
 
-async def evaluate(job: ReviewJob, api_key: str) -> None:
-    items = None
-    try:
-        items, job.total = await review_items(job)
-        job.status, job.message = "running", "Assessing the selected sample."
-        async with AsyncOpenAI(api_key=api_key, base_url="https://api.openai.com/v1",
-                               max_retries=2, timeout=600) as client:
-            judge = AsyncJudge(client, job.request.deployment.describe(), PROMPT_PATH.read_text(encoding="utf-8"))
-            while (item := await next_item(items)) is not None:
+async def assess_items(job: ReviewJob, items, judge) -> None:
+    # Share the lazy iterator without overlapping its threaded reads. Reserve
+    # hashes before awaiting the judge so duplicate evidence is assessed once,
+    # even when its first assessment is still in flight.
+    read_lock = asyncio.Lock()
+    in_flight: set[str] = set()
+
+    async def worker():
+        while True:
+            async with read_lock:
+                item = await next_item(items)
+                if item is None:
+                    return
                 key = item["evidence_hash"]
                 for source in item["sources"]:
                     job.results.add_source(key, source)
-                if job.results.contains(key):
+                if key in in_flight or job.results.contains(key):
                     continue
-                job.message = f"Reviewing sampled items from {item['sources'][0]['benchmark']}."
+                in_flight.add(key)
+            try:
                 assessment = await judge(item["evidence"])
                 # Never retain raw model output or provider exception text.
                 result = {"evidence_hash": key, "evidence": item["evidence"], **{
@@ -308,9 +322,33 @@ async def evaluate(job: ReviewJob, api_key: str) -> None:
                     job.usage[field] += usage.get(field, 0)
                 job.usage["reasoning_tokens"] += (usage.get("output_tokens_details") or {}).get("reasoning_tokens", 0)
                 job.usage["cached_input_tokens"] += (usage.get("input_tokens_details") or {}).get("cached_tokens", 0)
+            finally:
+                in_flight.remove(key)
+
+    workers = [asyncio.create_task(worker()) for _ in range(REVIEW_CONCURRENCY)]
+    try:
+        await asyncio.gather(*workers)
+    finally:
+        # gather propagates the original provider error, but does not cancel
+        # siblings itself. Drain every worker before closing the client/iterator.
+        for task in workers:
+            if not task.done():
+                task.cancel()
+        await asyncio.gather(*workers, return_exceptions=True)
+
+
+async def evaluate(job: ReviewJob, api_key: str) -> None:
+    items = None
+    try:
+        items, job.total = await review_items(job)
+        job.status, job.message = "running", "Assessing the selected sample."
+        async with AsyncOpenAI(api_key=api_key, base_url="https://api.openai.com/v1",
+                               max_retries=2, timeout=600) as client:
+            judge = AsyncJudge(client, job.request.deployment.describe(), PROMPT_PATH.read_text(encoding="utf-8"))
+            await assess_items(job, items, judge)
         job.sample_complete = True
         job.status = "completed"
-        job.message = "The selected sample has been assessed. Rankings apply to this sample, with confidence and evidence gaps shown."
+        job.message = "The selected sample has been assessed."
     except asyncio.CancelledError:
         job.status, job.message = "cancelled", "Review stopped. Completed assessments are retained."
     except AuthenticationError:
