@@ -16,43 +16,56 @@ export function EvaluationSite() {
           <div>
             <h1 className="rd-page-title">Find the Right Evaluation for Your Context.</h1>
             <p className="rd-lead">The framework characterizes benchmarks and individual test items with respect to the AI system, task, and deployment settings in which they are used.</p>
+            <a className="rd-btn evaluation-hero-button" href="https://aimslab.stanford.edu/measurement-db">Explore the Measurement Data Bank</a>
           </div>
           <div className="evaluation-framework" aria-label="Six dimensions of validity">
-            <p className="eyebrow">Six perspectives on evaluation</p>
-            <div className="evaluation-framework-grid">
-              {['Input', 'Output'].map(side => <div key={side} className="evaluation-framework-row"><strong>{side}</strong>
-                {['Ontology', 'Content', 'Form'].map(dimension => <span key={dimension}>{dimension}</span>)}
-              </div>)}
+            <p className="eyebrow">Validity Analysis Framework</p>
+            <div className="evaluation-framework-flow">
+              <div className="evaluation-framework-endpoint">Deployment Context</div>
+              <svg className="evaluation-framework-arrow" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M1 8h13M9 3l5 5-5 5" /></svg>
+              <table className="evaluation-framework-grid" aria-label="Validity analysis framework">
+                <colgroup><col className="evaluation-framework-axis" /><col /><col /><col /></colgroup>
+                <thead>
+                  <tr><td />{['Ontology', 'Content', 'Form'].map(dimension => <th key={dimension} scope="col">{dimension}</th>)}</tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row"><span>Input</span></th>
+                    <td>Test Case<br />Coverage</td>
+                    <td>Test Case<br />Relevance</td>
+                    <td>Signal<br />Format</td>
+                  </tr>
+                  <tr>
+                    <th scope="row"><span>Label</span></th>
+                    <td>Label<br />Taxonomy</td>
+                    <td>Label<br />Agreement</td>
+                    <td>Output<br />Format</td>
+                  </tr>
+                </tbody>
+              </table>
+              <svg className="evaluation-framework-arrow" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M1 8h13M9 3l5 5-5 5" /></svg>
+              <div className="evaluation-framework-endpoint evaluation-framework-assessment">Validity Assessment</div>
             </div>
-            <p>The task. The context. The format.<br />Considered on both sides of an interaction.</p>
           </div>
         </header>
       </div>
       <main className="rd-container evaluation-main" id="choose-workflow">
-        <div className="evaluation-section-heading"><h2>Where would you like to start?</h2><p>Choose the question you want to answer.</p></div>
+        <div className="evaluation-section-heading"><h2>Research tools</h2><p>Context-specific validity analysis at the benchmark and item levels.</p></div>
         <div className="evaluation-choices">
         <article className="evaluation-choice">
-          <div className="evaluation-choice-top"><p className="eyebrow">Benchmark Caliper</p><span aria-hidden="true">01</span></div>
-          <h3>I have a benchmark.<br />Does it fit?</h3>
-          <p>Bring a benchmark paper and your deployment context. Examine what the benchmark measures and where its conclusions apply.</p>
-          <dl className="evaluation-outcome"><div><dt>You bring</dt><dd>A benchmark paper</dd></div><div><dt>You get</dt><dd>A six-dimension validity report</dd></div></dl>
-          <a className="rd-btn rd-btn--primary" href={appPath('/caliper')}>Evaluate a benchmark <span aria-hidden="true">↗</span></a>
-          <p className="evaluation-provider">Uses your Anthropic API key. A recorded demo is also available.</p>
+          <h3>Benchmark-level<br />validity analysis</h3>
+          <p>Analyze benchmark documentation to assess applicability to a specified AI system, task, and deployment context across six dimensions of validity.</p>
+          <dl className="evaluation-outcome"><div><dt>Input</dt><dd>Benchmark paper and deployment context</dd></div><div><dt>Output</dt><dd>Six-dimensional validity assessment</dd></div></dl>
+          <a className="evaluation-choice-link" href={appPath('/caliper')}>Analyze a benchmark <span aria-hidden="true">→</span></a>
         </article>
-        <article className="evaluation-choice evaluation-choice-items">
-          <div className="evaluation-choice-top"><p className="eyebrow">Goal-conditioned auditing <span className="review-badge">Demo</span></p><span aria-hidden="true">02</span></div>
-          <h3>I need relevant tests.<br />Where do I look?</h3>
-          <p>Describe your AI deployment. Explore individual evaluation items, ranked by compatibility with confidence and evidence you can inspect.</p>
-          <dl className="evaluation-outcome"><div><dt>You bring</dt><dd>An AI deployment in mind</dd></div><div><dt>You get</dt><dd>Ranked items with supporting evidence</dd></div></dl>
-          <a className="rd-btn rd-btn--primary" href={appPath('/items')}>Find relevant tests <span aria-hidden="true">↗</span></a>
-          <p className="evaluation-provider">Uses your OpenAI API key. First demo: a small measurement-db sample.</p>
+        <article className="evaluation-choice">
+          <h3>Goal-conditioned<br />item assessment <span className="review-badge">Demo</span></h3>
+          <p>Assess and rank evaluation items from the Measurement Data Bank according to their compatibility with a specified deployment context, with supporting evidence and assessment confidence.</p>
+          <dl className="evaluation-outcome"><div><dt>Input</dt><dd>Description of the AI system, task, and deployment context</dd></div><div><dt>Output</dt><dd>Ranked evaluation items with dimension-level assessments</dd></div></dl>
+          <a className="evaluation-choice-link" href={appPath('/items')}>Assess evaluation items <span aria-hidden="true">→</span></a>
         </article>
         </div>
       </main>
-      <section className="rd-container evaluation-note">
-        <p>Built on the six-dimensional validity framework.</p>
-        <a href="https://aimslab.stanford.edu/measurement-db">Explore the Measurement Data Bank <span aria-hidden="true">↗</span></a>
-      </section>
       <SiteFooter />
     </div>
   )

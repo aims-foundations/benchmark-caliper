@@ -1,4 +1,5 @@
-import { DIMENSIONS, type Confidence, type Review, type ReviewedItem } from './api'
+import { useState } from 'react'
+import { DIMENSIONS, getReviewExport, type Confidence, type Review, type ReviewedItem, type RunAccess } from './api'
 
 const CONFIDENCE_LABELS: Record<Confidence, string> = {
   high: 'High confidence', medium: 'Medium confidence', low: 'Low confidence', insufficient: 'Insufficient evidence',
@@ -62,21 +63,31 @@ function ItemCard({ item }: { item: ReviewedItem }) {
   </article>
 }
 
-function download(review: Review) {
-  const url = URL.createObjectURL(new Blob([JSON.stringify(review, null, 2)], { type: 'application/json' }))
+async function download(run: RunAccess) {
+  const url = URL.createObjectURL(await getReviewExport(run))
   const link = document.createElement('a')
   link.href = url
-  link.download = `item-review-${review.run_id}.json`
+  link.download = `item-review-${run.run_id}.json`
   link.click()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
-export function Results({ review }: { review: Review }) {
+export function Results({ review, run, onPageChange }: { review: Review; run: RunAccess; onPageChange: (page: number) => void }) {
+  const [downloading, setDownloading] = useState(false)
+  const [downloadError, setDownloadError] = useState('')
   const weights = review.scoring_policy.confidence_weights
+  async function downloadAll() {
+    setDownloading(true)
+    setDownloadError('')
+    try { await download(run) }
+    catch (e) { setDownloadError(e instanceof Error ? e.message : 'Could not download results. Please try again.') }
+    finally { setDownloading(false) }
+  }
   return <section className="review-results" aria-label="Review results">
     <div className="review-result-title"><div><p className="eyebrow">Your evidence shortlist</p><h2>Ranked evaluation items</h2></div>
-      <button type="button" className="secondary" onClick={() => download(review)}>Download results</button>
+      <button type="button" className="secondary" disabled={downloading} onClick={() => void downloadAll()}>{downloading ? 'Downloading…' : 'Download all results'}</button>
     </div>
+    {downloadError && <p className="review-error" role="alert">{downloadError}</p>}
     <div className="review-result-stats">
       <div><strong>{review.complete}</strong><span>Items ranked</span></div>
       <div><strong>{review.needs_review}</strong><span>Low confidence or missing scores</span></div>
@@ -87,12 +98,17 @@ export function Results({ review }: { review: Review }) {
       <p>The ranking score averages all six dimensions after pulling uncertain judgments toward a neutral baseline of {review.scoring_policy.neutral_score}. High, medium, and low confidence have weights of {weights.high}, {weights.medium}, and {weights.low}. A missing dimension contributes the baseline, while its actual score remains unknown.</p>
       <p>For example, a low-confidence 5 contributes 3.6. This is a transparent demo heuristic, not a calibrated probability or a verified validity measure. An item with no scorable evidence gets a neutral baseline, which can rank above an evidenced mismatch; it is not a recommendation. Inspect the evidence before choosing a test.</p>
     </details>
-    <p className="review-results-scope">{review.complete > 0 ? `Showing ${review.ranked_items.length} of ${review.complete} ranked items, highest score first.` : 'Assessed items will appear here as the review progresses.'} Results cover your selected sample only.</p>
+    <p className="review-results-scope">{review.complete > 0 ? `${review.complete.toLocaleString()} sampled items ranked, highest score first.` : 'Assessed items will appear here as the review progresses.'} {review.sample_complete ? 'The fixed sample is fully assessed.' : 'These are results from the part of the sample assessed so far.'} Rankings apply to this sample, not the complete catalog. The download includes every assessment available when requested.</p>
     {review.ranked_items.map(item => <ItemCard key={item.evidence_hash} item={item} />)}
     {review.failed_items.length > 0 && <section className="review-failed"><h2>Assessments that could not be completed</h2>
       <p>These calls did not produce a valid assessment. No score has been invented for them.</p>
       {review.failed_items.map(item => <ItemCard key={item.evidence_hash} item={item} />)}
     </section>}
+    {review.pagination.total_pages > 1 && <nav className="review-pagination" aria-label="Result pages">
+      <button type="button" className="secondary" disabled={review.pagination.page === 1} onClick={() => onPageChange(review.pagination.page - 1)}>Previous page</button>
+      <span>Page {review.pagination.page.toLocaleString()} of {review.pagination.total_pages.toLocaleString()}</span>
+      <button type="button" className="secondary" disabled={review.pagination.page === review.pagination.total_pages} onClick={() => onPageChange(review.pagination.page + 1)}>Next page</button>
+    </nav>}
     <p className="help">Reported usage: {(review.usage.input_tokens ?? 0).toLocaleString()} input tokens and {(review.usage.output_tokens ?? 0).toLocaleString()} output tokens, including internal reasoning.</p>
   </section>
 }

@@ -8,12 +8,17 @@ export const DIMENSIONS = [
 export interface Deployment {
   task: string; users: string; inputs: string; outputs: string; success: string; constraints: string
 }
+export interface SamplingPolicy {
+  version: number; method: string; seed: number; items_per_benchmark: number
+}
 export interface Catalog {
   model: string; reasoning_effort: string; max_output_tokens: number
-  branches: Record<string, string>; requires_hf_token: boolean; max_items_per_table: number
-  benchmarks: Array<{ id: string; name: string; table_count: number }>
+  branches: Record<string, string>; dataset_access_configured: boolean; table_count: number; source_rows: number
+  sampling: SamplingPolicy; sample_max_items: number
+  missing_item_tables: Array<{ branch: string; benchmark: string }>
+  benchmarks: Array<{ id: string; name: string; table_count: number; source_rows: number; sample_max_items: number }>
 }
-export interface ReviewRequest { deployment: Deployment; benchmarks: string[]; items_per_table: number; top_k: number }
+export interface ReviewRequest { deployment: Deployment }
 export interface RunAccess { run_id: string; run_secret: string }
 export type Confidence = 'high' | 'medium' | 'low' | 'insufficient'
 export interface DimensionScore {
@@ -30,30 +35,35 @@ export interface ReviewedItem {
 export interface Review {
   run_id: string; status: 'preparing' | 'running' | 'completed' | 'cancelled' | 'failed'; message: string
   model: string; reasoning_effort: string; deployment: Deployment
-  scope: { benchmarks: string[]; items_per_table: number; branches: Record<string, string>; sample_only: boolean }
+  scope: { benchmarks: string[]; table_count: number; source_rows: number; branches: Record<string, string>; sample_only: boolean; sampling: SamplingPolicy; sample_max_items: number }
   scoring_policy: { version: number; neutral_score: number; confidence_weights: Record<Confidence, number>; formula: string }
   source_rows: number; total: number; processed: number; complete: number; needs_review: number; errors: number
+  sample_complete: boolean; prepared_benchmarks: number; pagination: { page: number; page_size: number; total_pages: number }
   usage: Record<string, number>; ranked_items: ReviewedItem[]; failed_items: ReviewedItem[]
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function fetchResponse(path: string, options: RequestInit = {}): Promise<Response> {
   const response = await fetch(appPath(`/api/item-review${path}`), { cache: 'no-store', ...options })
   if (!response.ok) {
     const body = await response.json().catch(() => ({}))
     const message = typeof body.detail === 'string' ? body.detail : `Request failed (${response.status}). Check your entries and try again.`
     throw new Error(message)
   }
-  return response.json() as Promise<T>
+  return response
 }
 
+const request = async <T,>(path: string, options?: RequestInit): Promise<T> => (await fetchResponse(path, options)).json()
+
 export const getCatalog = (signal?: AbortSignal) => request<Catalog>('/catalog', { signal })
-export const startReview = (body: ReviewRequest, apiKey: string, hfToken: string) => request<RunAccess>('/runs', {
-  method: 'POST', headers: { 'Content-Type': 'application/json', 'X-OpenAI-Key': apiKey,
-    ...(hfToken ? { 'X-HuggingFace-Key': hfToken } : {}) }, body: JSON.stringify(body),
+export const startReview = (body: ReviewRequest, apiKey: string) => request<RunAccess>('/runs', {
+  method: 'POST', headers: { 'Content-Type': 'application/json', 'X-OpenAI-Key': apiKey }, body: JSON.stringify(body),
 })
-export const getReview = (run: RunAccess, signal?: AbortSignal) => request<Review>(`/runs/${run.run_id}`, {
+export const getReview = (run: RunAccess, page = 1, signal?: AbortSignal) => request<Review>(`/runs/${run.run_id}?page=${page}`, {
   headers: { 'X-Review-Token': run.run_secret }, signal,
 })
+export const getReviewExport = async (run: RunAccess) => (await fetchResponse(`/runs/${run.run_id}/export`, {
+  headers: { 'X-Review-Token': run.run_secret },
+})).blob()
 export const cancelReview = (run: RunAccess) => request<Review>(`/runs/${run.run_id}/cancel`, {
   method: 'POST', headers: { 'X-Review-Token': run.run_secret },
 })

@@ -35,10 +35,8 @@ export function ItemReview() {
   const [catalog, setCatalog] = useState<Catalog | null>(null)
   const [step, setStep] = useState<'access' | 'deployment' | 'confirm'>('access')
   const [apiKey, setApiKey] = useState('')
-  const [hfToken, setHfToken] = useState('')
   const [deployment, setDeployment] = useState<Deployment>(EMPTY)
-  const [benchmarks, setBenchmarks] = useState(['matharena', 'afrimedqa'])
-  const [limit, setLimit] = useState(2)
+  const [page, setPage] = useState(1)
   const [access, setAccess] = useState<RunAccess | null>(savedRun)
   const [review, setReview] = useState<Review | null>(null)
   const [error, setError] = useState('')
@@ -69,7 +67,7 @@ export function ItemReview() {
     let timer: ReturnType<typeof setTimeout>
     async function poll() {
       try {
-        const latest = await getReview(access!, controller.signal)
+        const latest = await getReview(access!, page, controller.signal)
         if (controller.signal.aborted) return
         setReview(latest)
         setError('')
@@ -83,11 +81,11 @@ export function ItemReview() {
     }
     void poll()
     return () => { controller.abort(); clearTimeout(timer) }
-  }, [access])
+  }, [access, page])
 
   function moveToDeployment(e: FormEvent) {
     e.preventDefault()
-    if (!apiKey.trim() || (catalog?.requires_hf_token && !hfToken.trim())) return
+    if (!apiKey.trim() || !catalog?.dataset_access_configured) return
     setError('')
     setStep('deployment')
   }
@@ -96,12 +94,12 @@ export function ItemReview() {
     setBusy(true)
     setError('')
     try {
-      const run = await startReview({ deployment, benchmarks, items_per_table: limit, top_k: 30 }, apiKey.trim(), hfToken.trim())
-      // Credentials stay in React memory only and are cleared once handed off.
+      const run = await startReview({ deployment }, apiKey.trim())
+      // The OpenAI key stays in React memory only and is cleared once handed off.
       setApiKey('')
-      setHfToken('')
       try { sessionStorage.setItem(RUN_STORAGE, JSON.stringify(run)) } catch { /* current tab still works */ }
       setAccess(run)
+      setPage(1)
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not start the review.') }
     finally { setBusy(false) }
   }
@@ -109,7 +107,7 @@ export function ItemReview() {
   async function stop() {
     if (!access) return
     setBusy(true)
-    try { setReview(await cancelReview(access)); setError('') }
+    try { setReview(await cancelReview(access)); setPage(1); setError('') }
     catch { setError('Could not confirm cancellation. The review may still be running; try Stop review again.') }
     finally { setBusy(false) }
   }
@@ -120,9 +118,9 @@ export function ItemReview() {
     setReview(null)
     setError('')
     setStep('access')
+    setPage(1)
   }
 
-  const maxRows = (catalog?.benchmarks.filter(b => benchmarks.includes(b.id)).reduce((total, b) => total + b.table_count, 0) ?? 0) * limit
   const active = access && (!review || ['preparing', 'running'].includes(review.status))
 
   return <div className="rd-root item-review-site">
@@ -156,18 +154,13 @@ export function ItemReview() {
 
           {!access && catalog && step === 'access' && <form onSubmit={moveToDeployment} className="review-panel">
             <p className="eyebrow">01 · Connect</p><h2>Connect your OpenAI API key</h2>
-            <p className="review-intro">Bring your own key to assess a small sample of evaluation items. You’ll choose the sample and confirm before any paid calls begin.</p>
+            <p className="review-intro">Bring your own key to assess a broad, reproducible sample against your deployment. You’ll review the sample design and confirm before any paid calls begin.</p>
+            {!catalog.dataset_access_configured && <div className="review-error" role="alert">Dataset access is not configured on this server. Please contact the site maintainer or try again later.</div>}
             <label className="review-field"><span>OpenAI API key</span><input type="password" autoComplete="off" spellCheck={false} maxLength={512}
               value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="sk-…" required /></label>
-            <details open={catalog.requires_hf_token} className="review-dataset-access"><summary>Hugging Face dataset access{catalog.requires_hf_token ? ' · required' : ' · optional override'}</summary>
-              <p>{catalog.requires_hf_token ? 'Enter a read token from a Hugging Face account with access to measurement-db.' : 'Dataset access is already configured. You can supply your own read token if needed.'}</p>
-              <p><a href="https://huggingface.co/datasets/aims-foundations/measurement-db" target="_blank" rel="noreferrer">Open measurement-db</a></p>
-              <label className="review-field"><span>Hugging Face read token</span><input type="password" autoComplete="off" spellCheck={false} maxLength={512}
-                value={hfToken} onChange={e => setHfToken(e.target.value)} placeholder="hf_…" required={catalog.requires_hf_token} /></label>
-            </details>
-            <div className="review-access-note"><strong>Your keys stay temporary.</strong><p>We send them to our backend and hold them in memory during your review. They are never saved to browser storage or our database.</p></div>
-            <p className="help">This demo uses text items from MathArena and AfriMed-QA. Starting a paid review sends your deployment description and item evidence to OpenAI.</p>
-            <button type="submit" disabled={!apiKey.trim() || (catalog.requires_hf_token && !hfToken.trim())}>Continue to deployment</button>
+            <div className="review-access-note"><strong>Your OpenAI key stays temporary.</strong><p>We send it to our backend and hold it in memory during your review. It is never saved to browser storage or our database.</p></div>
+            <p className="help">The sample draws from {catalog.benchmarks.length} benchmark collections across both measurement-db branches. Starting a paid review sends your deployment description and selected item evidence to OpenAI.</p>
+            <button type="submit" disabled={!apiKey.trim() || !catalog.dataset_access_configured}>Continue to deployment</button>
           </form>}
 
           {!access && catalog && step === 'deployment' && <form className="review-panel review-deployment" onSubmit={e => { e.preventDefault(); setStep('confirm') }}>
@@ -184,44 +177,49 @@ export function ItemReview() {
               </div>
             </div>)}</div>
             <p className="help">If a detail is unknown, say “unspecified.” The assessment will record the resulting uncertainty.</p>
-            <div className="review-actions"><button type="button" className="secondary" onClick={() => setStep('access')}>Back</button><button type="submit">Review sample and settings</button></div>
+            <div className="review-actions"><button type="button" className="secondary" onClick={() => setStep('access')}>Back</button><button type="submit">Review catalog and settings</button></div>
           </form>}
 
           {!access && catalog && step === 'confirm' && <section className="review-panel">
-            <p className="eyebrow">03 · Review and run</p><h2>Choose a small starting sample</h2>
-            <p className="review-intro">Try the workflow with a few items before a larger review. This demo takes the first items in each selected table; it does not search the full bank or provide a representative sample.</p>
-            <fieldset className="review-benchmarks"><legend>Evaluation items</legend>{catalog.benchmarks.map(b => <label className="checkbox" key={b.id}>
-              <input type="checkbox" checked={benchmarks.includes(b.id)} onChange={e => setBenchmarks(e.target.checked ? [...benchmarks, b.id] : benchmarks.filter(id => id !== b.id))} />
-              <span>{b.name} <small>({b.table_count} {b.table_count === 1 ? 'table' : 'tables'})</small></span>
-            </label>)}</fieldset>
-            <label className="review-field"><span>Items from each table</span><select value={limit} onChange={e => setLimit(Number(e.target.value))}>
-              {[1, 2, 5, 10].map(n => <option key={n} value={n}>{n}</option>)}
-            </select></label>
-            <div className="review-scope"><p className="eyebrow">Your sample</p><strong>Up to {maxRows} <span>source rows</span></strong><p>Duplicates with identical context are assessed once. All valid assessments appear in the ranking, with dimension scores, confidence, and evidence gaps.</p>
+            <p className="eyebrow">03 · Review and run</p><h2>Review a broad item sample</h2>
+            <p className="review-intro">The demo selects up to {catalog.sampling.items_per_benchmark} distinct items from every benchmark collection, then assesses each selected item across the six validity dimensions.</p>
+            <div className="review-scope"><p className="eyebrow">Included in your review</p><strong>Up to {catalog.sample_max_items.toLocaleString()} <span>items</span></strong>
+              <p>{catalog.benchmarks.length} benchmark collections · {catalog.table_count} item tables · {Object.keys(catalog.branches).length} branches</p>
+              <p>The fixed random seed makes the sample reproducible. Duplicate evidence gets one chance of selection and is assessed once, with every source preserved. Both branches contribute when a benchmark has distinct items in each.</p>
               <div className="review-run-facts"><span>GPT-6 Luna</span><span>High reasoning</span><span>One call per distinct item</span></div>
-              <p className="help">Both measurement-db branches are included. MathArena appears in both; AfriMed-QA is in the migration branch. Images and audio are not inspected.</p></div>
+              <p className="help">The full catalog contains {catalog.source_rows.toLocaleString()} source rows. The review uses selected item text, reference answers, and available metadata. Referenced images and audio are not inspected.</p></div>
+            <details><summary>Browse all {catalog.benchmarks.length} benchmark collections</summary>
+              <ul className="review-catalog">{catalog.benchmarks.map(b => <li key={b.id}><strong>{b.name}</strong><span>up to {b.sample_max_items} sampled · {b.source_rows.toLocaleString()} source rows</span></li>)}</ul>
+            </details>
+            <details><summary>How the sample is selected</summary>
+              <p>Each benchmark contributes up to {catalog.sampling.items_per_benchmark} distinct items, or all its items if fewer are available. Items are drawn from across the collection after identical evidence and context are combined.</p>
+              <p>We reserve a place for distinct evidence from each branch when available, then fill the remaining places randomly. Seed {catalog.sampling.seed} and the pinned dataset versions keep the selection consistent across deployment descriptions.</p>
+              <p>Sample preparation makes no model calls and is cached for later reviews. Rankings describe this sample and may miss rare item types in the full catalog.</p>
+            </details>
+            {catalog.missing_item_tables.length > 0 && <p className="help">{catalog.missing_item_tables.length} branch directories have no formatted item table and cannot supply items.</p>}
             <details><summary>Your deployment description</summary>{QUESTIONS.map(q => <section key={q.id}><h4>{q.title}</h4><p className="review-preserve">{deployment[q.id] || 'Unspecified'}</p></section>)}</details>
-            <p className="help">The review continues if this tab closes. Use Stop review to cancel. Results are held in server memory for one hour after completion and disappear on a server restart. Download the JSON to keep them.</p>
-            <p className="review-paid-note">API charges apply to your OpenAI key when you start.</p>
+            <p className="help">The review continues if this tab closes. Use Stop review to cancel. Results are kept in temporary server storage for one hour after completion and are discarded on a server restart. Download all results to keep them.</p>
+            <p className="review-paid-note">Starting authorizes paid model calls for the selected sample after preparation completes.</p>
             <div className="review-actions"><button type="button" className="secondary" onClick={() => setStep('deployment')} disabled={busy}>Edit deployment</button>
-              <button type="button" onClick={() => void start()} disabled={busy || benchmarks.length === 0}>{busy ? 'Starting…' : 'Start paid review'}</button></div>
+              <button type="button" onClick={() => void start()} disabled={busy || catalog.table_count === 0}>{busy ? 'Starting…' : 'Start sampled review'}</button></div>
           </section>}
 
           {access && <>
             <section className="review-panel review-progress" aria-live="polite"><p className="eyebrow">04 · Results</p>
-              <h2>{!review || review.status === 'preparing' ? 'Preparing your sample' : review.status === 'running' ? 'Reviewing evaluation items' : review.status === 'completed' ? 'Your sample review is ready' : review.status === 'cancelled' ? 'Review stopped' : 'Review interrupted'}</h2>
+              <h2>{!review || review.status === 'preparing' ? 'Preparing the item sample' : review.status === 'running' ? 'Reviewing sampled items' : review.status === 'completed' ? 'Your item review is ready' : review.status === 'cancelled' ? 'Review stopped' : 'Review interrupted'}</h2>
               <p className="review-intro">{review?.message || 'Connecting to your review…'}</p>
-              {review && <><progress max={review.total || 1} value={review.processed} aria-label="Items assessed" /><p>{review.processed} of {review.total} distinct items assessed · {review.source_rows} source rows</p></>}
+              {review && review.status === 'preparing' && <><progress max={review.scope.source_rows || 1} value={review.source_rows} aria-label="Source rows considered for sampling" /><p>{review.prepared_benchmarks.toLocaleString()} of {review.scope.benchmarks.length.toLocaleString()} benchmark collections prepared · {review.source_rows.toLocaleString()} source rows considered · no model calls yet</p></>}
+              {review && review.status !== 'preparing' && <><progress max={review.total || 1} value={review.processed} aria-label="Sampled items assessed" /><p>{review.processed.toLocaleString()} of {review.total.toLocaleString()} distinct sampled items assessed</p></>}
               {active ? <button type="button" className="secondary" onClick={() => void stop()} disabled={busy}>Stop review</button> : <button type="button" className="secondary" onClick={restart}>Start another review</button>}
               {active && <p className="help">You can return in this tab while the review runs. Stopping prevents further calls; an in-flight request may still incur charges.</p>}
               {error && <button type="button" className="link" onClick={restart}>Forget this review and return to setup</button>}
             </section>
-            {review && <Results review={review} />}
+            {review && <Results review={review} run={access} onPageChange={setPage} />}
           </>}
         </div>
       </div>
       <section className="review-privacy"><h2>Data and privacy</h2>
-        <p>OpenAI and Hugging Face keys are held in memory for the active review and are never saved to our database or browser storage. A separate temporary access token is stored in this tab so you can reload your results. Deployment answers and assessments are held in server memory for one hour after completion; source dataset files may be cached on the server. OpenAI processes the submitted text under its own API data policies.</p>
+        <p>Your OpenAI API key is held in memory for the active review and is never saved to our database or browser storage. A separate temporary access token is stored in this tab so you can reload your results. Deployment answers stay in server memory; assessment results use private temporary server files. These are deleted one hour after the review ends or during a normal server shutdown. Results cannot be resumed after a server restart. The reusable dataset sample and source metadata are cached separately, without your deployment answers or API key. OpenAI processes the submitted text under its own API data policies.</p>
       </section>
     </main><SiteFooter />
   </div>

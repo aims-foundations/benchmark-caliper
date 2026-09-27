@@ -210,7 +210,7 @@ app.add_middleware(
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=False,  # we never use cookies for auth
     allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type", "X-Anthropic-Key", "X-OpenAI-Key", "X-HuggingFace-Key", "X-Review-Token"],
+    allow_headers=["Content-Type", "X-Anthropic-Key", "X-OpenAI-Key", "X-Review-Token"],
 )
 app.include_router(item_review.router)
 

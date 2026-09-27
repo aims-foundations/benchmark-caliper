@@ -11,20 +11,26 @@ Items that depend on the deployed infrastructure (TLS, DNS, hosting accounts, mo
 The sections below describe the existing Anthropic/Caliper workflow. The separate
 item-review workflow has the following implementation:
 
-- OpenAI and optional Hugging Face keys arrive in `X-OpenAI-Key` and
-  `X-HuggingFace-Key`, remain in the active task's memory, and are never stored in
+- The user's OpenAI key arrives in `X-OpenAI-Key`, remains in the active task's
+  memory, and is never stored in
   browser storage, the database, CLI files, job results, or application logs.
   The OpenAI client explicitly targets `https://api.openai.com/v1` with `store=False`.
-- Only an independently generated run secret authorizes polling and cancellation.
+- Only an independently generated run secret authorizes polling, exports, and cancellation.
   It travels in `X-Review-Token`; the browser keeps it in sessionStorage to allow
   page refreshes. Job IDs alone cannot retrieve a deployment description/result.
-- Dataset access can use a server-managed `HF_TOKEN` or a user-supplied read token.
-  Dataset source files are cached by Hugging Face; deployment descriptions and
-  judgments are held only in process memory. Results expire one hour after a run
-  ends, with a minute-level cleanup timer. Restarts clear all jobs and results.
-- Requests accept only the fixed demo benchmarks and 1–10 rows per table. Three
-  jobs may run simultaneously, at most one per caller key; each runs for at most
-  one hour. At most 30 jobs are retained. User-supplied model IDs, paths, API base
+- Dataset access uses the server's `HF_TOKEN` or saved Hub login. No HF key is
+  accepted from visitors. Item tables are read through HTTP ranges and source
+  metadata may be cached. Deployment answers remain in process memory; assessments,
+  evidence, and provenance are stored in a private temporary SQLite directory.
+  Those files expire one hour after a run ends, with a minute-level cleanup timer,
+  and are removed on normal shutdown. An abrupt kill can leave orphaned files
+  until the host removes them. Jobs cannot resume after a restart.
+- Before model calls, requests use the pinned inventory to prepare a fixed sample
+  of up to 50 distinct items per benchmark collection. Selected dataset evidence
+  and provenance are cached in a private server directory, without deployment
+  answers or API keys. The reusable cache survives normal shutdown.
+  Three jobs may run simultaneously, at most one per caller key. At most 30 jobs
+  are retained. User-supplied model IDs, paths, API base
   URLs, and dataset repository IDs are not accepted by the web endpoint.
 - Provider exception bodies are not returned or logged. Model-generated content
   is rendered as React text. Review endpoints use `Cache-Control: no-store`.

@@ -5,9 +5,11 @@ deployment in a text file, assess evaluation items with **GPT-6 Luna**, and retu
 the highest-scoring items with six validity scores and supporting evidence.
 
 The [website](../website/README.md) also provides a guided demo at
-`/benchmark-caliper/items`, using this module's loader and judge with a small
-sample from both branches. This CLI supports the full saved inventory and
-disk-based resume.
+`/benchmark-caliper/items`, using this module's loader and judge with a fixed,
+reproducible sample of up to 50 distinct items from every benchmark collection
+across both branches. The website caches selected dataset evidence and uses
+temporary indexed result files. This CLI separately supports full traversal,
+user-selected limits, and disk-based resume after interruptions.
 
 The item-level rubric adapts Benchmark Caliper's
 [six-dimensional framework](../anthropic_api_package_release/framework.yaml).

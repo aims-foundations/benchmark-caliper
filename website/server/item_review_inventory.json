@@ -2,7 +2,7 @@
   "repo": "aims-foundations/measurement-db",
   "branches": {
     "main": "bc8204d811823da849c6686bf124d4ca9f82e4de",
-    "migration/tabular-builders-20260924": "f445a03d1ef23edafdf0d3bc2650843447ef8153"
+    "migration/tabular-builders-20260924": "582d3daea1f680311fa1d1be502ea206b2979371"
   },
   "tables": [
     {
@@ -11,23 +11,1070 @@
       "benchmark": "matharena",
       "items_path": "matharena/items.parquet",
       "benchmarks_path": "matharena/benchmarks.parquet",
-      "metadata_path": "matharena/metadata.yaml"
+      "metadata_path": "matharena/metadata.yaml",
+      "row_count": 1755
+    },
+    {
+      "branch": "main",
+      "commit": "bc8204d811823da849c6686bf124d4ca9f82e4de",
+      "benchmark": "mmdocrag",
+      "items_path": "mmdocrag/items.parquet",
+      "benchmarks_path": "mmdocrag/benchmarks.parquet",
+      "metadata_path": "mmdocrag/metadata.yaml",
+      "row_count": 2000
+    },
+    {
+      "branch": "main",
+      "commit": "bc8204d811823da849c6686bf124d4ca9f82e4de",
+      "benchmark": "multi_swebench",
+      "items_path": "multi_swebench/items.parquet",
+      "benchmarks_path": "multi_swebench/benchmarks.parquet",
+      "metadata_path": "multi_swebench/metadata.yaml",
+      "row_count": 2126
+    },
+    {
+      "branch": "main",
+      "commit": "bc8204d811823da849c6686bf124d4ca9f82e4de",
+      "benchmark": "real_webagents",
+      "items_path": "real_webagents/items.parquet",
+      "benchmarks_path": "real_webagents/benchmarks.parquet",
+      "metadata_path": "real_webagents/metadata.yaml",
+      "row_count": 233
+    },
+    {
+      "branch": "main",
+      "commit": "bc8204d811823da849c6686bf124d4ca9f82e4de",
+      "benchmark": "researchcodebench",
+      "items_path": "researchcodebench/items.parquet",
+      "benchmarks_path": "researchcodebench/benchmarks.parquet",
+      "metadata_path": "researchcodebench/metadata.yaml",
+      "row_count": 212
+    },
+    {
+      "branch": "main",
+      "commit": "bc8204d811823da849c6686bf124d4ca9f82e4de",
+      "benchmark": "swe_rebench",
+      "items_path": "swe_rebench/items.parquet",
+      "benchmarks_path": "swe_rebench/benchmarks.parquet",
+      "metadata_path": "swe_rebench/metadata.yaml",
+      "row_count": 6306
     },
     {
       "branch": "migration/tabular-builders-20260924",
-      "commit": "f445a03d1ef23edafdf0d3bc2650843447ef8153",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "abstract_reason",
+      "items_path": "abstract_reason/formatted_tables/items.parquet",
+      "benchmarks_path": "abstract_reason/formatted_tables/benchmarks.parquet",
+      "metadata_path": "abstract_reason/metadata.yaml",
+      "row_count": 9089
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "adaptivestep",
+      "items_path": "adaptivestep/formatted_tables/items.parquet",
+      "benchmarks_path": "adaptivestep/formatted_tables/benchmarks.parquet",
+      "metadata_path": "adaptivestep/metadata.yaml",
+      "row_count": 4525
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "advprompter",
+      "items_path": "advprompter/formatted_tables/items.parquet",
+      "benchmarks_path": "advprompter/formatted_tables/benchmarks.parquet",
+      "metadata_path": "advprompter/metadata.yaml",
+      "row_count": 50
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
       "benchmark": "afrimedqa",
       "items_path": "afrimedqa/formatted_tables/items.parquet",
       "benchmarks_path": "afrimedqa/formatted_tables/benchmarks.parquet",
-      "metadata_path": "afrimedqa/metadata.yaml"
+      "metadata_path": "afrimedqa/metadata.yaml",
+      "row_count": 42494
     },
     {
       "branch": "migration/tabular-builders-20260924",
-      "commit": "f445a03d1ef23edafdf0d3bc2650843447ef8153",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "agc_bench",
+      "items_path": "agc_bench/formatted_tables/items.parquet",
+      "benchmarks_path": "agc_bench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "agc_bench/metadata.yaml",
+      "row_count": 8600
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "agentdojo",
+      "items_path": "agentdojo/formatted_tables/items.parquet",
+      "benchmarks_path": "agentdojo/formatted_tables/benchmarks.parquet",
+      "metadata_path": "agentdojo/metadata.yaml",
+      "row_count": 1081
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "agentic_review_perturbation",
+      "items_path": "agentic_review_perturbation/formatted_tables/items.parquet",
+      "benchmarks_path": "agentic_review_perturbation/formatted_tables/benchmarks.parquet",
+      "metadata_path": "agentic_review_perturbation/metadata.yaml",
+      "row_count": 105
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "agi_elo",
+      "items_path": "agi_elo/formatted_tables/items.parquet",
+      "benchmarks_path": "agi_elo/formatted_tables/benchmarks.parquet",
+      "metadata_path": "agi_elo/metadata.yaml",
+      "row_count": 13953
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "ai2d_test",
+      "items_path": "ai2d_test/formatted_tables/items.parquet",
+      "benchmarks_path": "ai2d_test/formatted_tables/benchmarks.parquet",
+      "metadata_path": "ai2d_test/metadata.yaml",
+      "row_count": 3088
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "aider",
+      "items_path": "aider/formatted_tables/items.parquet",
+      "benchmarks_path": "aider/formatted_tables/benchmarks.parquet",
+      "metadata_path": "aider/metadata.yaml",
+      "row_count": 26
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "algotune",
+      "items_path": "algotune/formatted_tables/items.parquet",
+      "benchmarks_path": "algotune/formatted_tables/benchmarks.parquet",
+      "metadata_path": "algotune/metadata.yaml",
+      "row_count": 154
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "alignment_faking",
+      "items_path": "alignment_faking/formatted_tables/items.parquet",
+      "benchmarks_path": "alignment_faking/formatted_tables/benchmarks.parquet",
+      "metadata_path": "alignment_faking/metadata.yaml",
+      "row_count": 1464
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "alpacaeval",
+      "items_path": "alpacaeval/formatted_tables/items.parquet",
+      "benchmarks_path": "alpacaeval/formatted_tables/benchmarks.parquet",
+      "metadata_path": "alpacaeval/metadata.yaml",
+      "row_count": 805
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "alpha_sql",
+      "items_path": "alpha_sql/formatted_tables/items.parquet",
+      "benchmarks_path": "alpha_sql/formatted_tables/benchmarks.parquet",
+      "metadata_path": "alpha_sql/metadata.yaml",
+      "row_count": 1534
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "annotating_errors_wcf",
+      "items_path": "annotating_errors_wcf/formatted_tables/items.parquet",
+      "benchmarks_path": "annotating_errors_wcf/formatted_tables/benchmarks.parquet",
+      "metadata_path": "annotating_errors_wcf/metadata.yaml",
+      "row_count": 15344
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "appworld",
+      "items_path": "appworld/formatted_tables/items.parquet",
+      "benchmarks_path": "appworld/formatted_tables/benchmarks.parquet",
+      "metadata_path": "appworld/metadata.yaml",
+      "row_count": 585
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "arcagi",
+      "items_path": "arcagi/formatted_tables/items.parquet",
+      "benchmarks_path": "arcagi/formatted_tables/benchmarks.parquet",
+      "metadata_path": "arcagi/metadata.yaml",
+      "row_count": 526
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "atmossci_bench",
+      "items_path": "atmossci_bench/formatted_tables/items.parquet",
+      "benchmarks_path": "atmossci_bench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "atmossci_bench/metadata.yaml",
+      "row_count": 2802
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "auditing_sabotage_bench",
+      "items_path": "auditing_sabotage_bench/formatted_tables/items.parquet",
+      "benchmarks_path": "auditing_sabotage_bench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "auditing_sabotage_bench/metadata.yaml",
+      "row_count": 68
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "autoresearchbench",
+      "items_path": "autoresearchbench/formatted_tables/items.parquet",
+      "benchmarks_path": "autoresearchbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "autoresearchbench/metadata.yaml",
+      "row_count": 60
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "averimatec",
+      "items_path": "averimatec/formatted_tables/items.parquet",
+      "benchmarks_path": "averimatec/formatted_tables/benchmarks.parquet",
+      "metadata_path": "averimatec/metadata.yaml",
+      "row_count": 152
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "babilong",
+      "items_path": "babilong/formatted_tables/items.parquet",
+      "benchmarks_path": "babilong/formatted_tables/benchmarks.parquet",
+      "metadata_path": "babilong/metadata.yaml",
+      "row_count": 526202
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "bbq",
+      "items_path": "bbq/formatted_tables/items.parquet",
+      "benchmarks_path": "bbq/formatted_tables/benchmarks.parquet",
+      "metadata_path": "bbq/metadata.yaml",
+      "row_count": 204201
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "beavertails",
+      "items_path": "beavertails/formatted_tables/items.parquet",
+      "benchmarks_path": "beavertails/formatted_tables/benchmarks.parquet",
+      "metadata_path": "beavertails/metadata.yaml",
+      "row_count": 420
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "bedd_basalt",
+      "items_path": "bedd_basalt/formatted_tables/items.parquet",
+      "benchmarks_path": "bedd_basalt/formatted_tables/benchmarks.parquet",
+      "metadata_path": "bedd_basalt/metadata.yaml",
+      "row_count": 46266
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "benger",
+      "items_path": "benger/formatted_tables/items.parquet",
+      "benchmarks_path": "benger/formatted_tables/benchmarks.parquet",
+      "metadata_path": "benger/metadata.yaml",
+      "row_count": 760
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "bertaqa",
+      "items_path": "bertaqa/formatted_tables/items.parquet",
+      "benchmarks_path": "bertaqa/formatted_tables/benchmarks.parquet",
+      "metadata_path": "bertaqa/metadata.yaml",
+      "row_count": 51760
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "bigfinancebench",
+      "items_path": "bigfinancebench/formatted_tables/items.parquet",
+      "benchmarks_path": "bigfinancebench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "bigfinancebench/metadata.yaml",
+      "row_count": 600
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "biggen",
+      "items_path": "biggen/formatted_tables/items.parquet",
+      "benchmarks_path": "biggen/formatted_tables/benchmarks.parquet",
+      "metadata_path": "biggen/metadata.yaml",
+      "row_count": 4589
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "bird_sql",
+      "items_path": "bird_sql/formatted_tables/items.parquet",
+      "benchmarks_path": "bird_sql/formatted_tables/benchmarks.parquet",
+      "metadata_path": "bird_sql/metadata.yaml",
+      "row_count": 360
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "brace",
+      "items_path": "brace/formatted_tables/items.parquet",
+      "benchmarks_path": "brace/formatted_tables/benchmarks.parquet",
+      "metadata_path": "brace/metadata.yaml",
+      "row_count": 12631
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "bridging_gap",
+      "items_path": "bridging_gap/formatted_tables/items.parquet",
+      "benchmarks_path": "bridging_gap/formatted_tables/benchmarks.parquet",
+      "metadata_path": "bridging_gap/metadata.yaml",
+      "row_count": 132418
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "care_enzymes",
+      "items_path": "care_enzymes/formatted_tables/items.parquet",
+      "benchmarks_path": "care_enzymes/formatted_tables/benchmarks.parquet",
+      "metadata_path": "care_enzymes/metadata.yaml",
+      "row_count": 4136
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "causal_axioms",
+      "items_path": "causal_axioms/formatted_tables/items.parquet",
+      "benchmarks_path": "causal_axioms/formatted_tables/benchmarks.parquet",
+      "metadata_path": "causal_axioms/metadata.yaml",
+      "row_count": 4500
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "cellverse",
+      "items_path": "cellverse/formatted_tables/items.parquet",
+      "benchmarks_path": "cellverse/formatted_tables/benchmarks.parquet",
+      "metadata_path": "cellverse/metadata.yaml",
+      "row_count": 748
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "ceobench",
+      "items_path": "ceobench/formatted_tables/items.parquet",
+      "benchmarks_path": "ceobench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "ceobench/metadata.yaml",
+      "row_count": 3
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "ceval",
+      "items_path": "ceval/formatted_tables/items.parquet",
+      "benchmarks_path": "ceval/formatted_tables/benchmarks.parquet",
+      "metadata_path": "ceval/metadata.yaml",
+      "row_count": 13951
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "chartmuseum",
+      "items_path": "chartmuseum/formatted_tables/items.parquet",
+      "benchmarks_path": "chartmuseum/formatted_tables/benchmarks.parquet",
+      "metadata_path": "chartmuseum/metadata.yaml",
+      "row_count": 162
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "chatgpt_drift",
+      "items_path": "chatgpt_drift/formatted_tables/items.parquet",
+      "benchmarks_path": "chatgpt_drift/formatted_tables/benchmarks.parquet",
+      "metadata_path": "chatgpt_drift/metadata.yaml",
+      "row_count": 11479
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "chi_bench",
+      "items_path": "chi_bench/formatted_tables/items.parquet",
+      "benchmarks_path": "chi_bench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "chi_bench/metadata.yaml",
+      "row_count": 775
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "chipbench",
+      "items_path": "chipbench/formatted_tables/items.parquet",
+      "benchmarks_path": "chipbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "chipbench/metadata.yaml",
+      "row_count": 230
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "clasheval",
+      "items_path": "clasheval/formatted_tables/items.parquet",
+      "benchmarks_path": "clasheval/formatted_tables/benchmarks.parquet",
+      "metadata_path": "clasheval/metadata.yaml",
+      "row_count": 12495
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "classroom_ai",
+      "items_path": "classroom_ai/formatted_tables/items.parquet",
+      "benchmarks_path": "classroom_ai/formatted_tables/benchmarks.parquet",
+      "metadata_path": "classroom_ai/metadata.yaml",
+      "row_count": 734
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "cmmlu",
+      "items_path": "cmmlu/formatted_tables/items.parquet",
+      "benchmarks_path": "cmmlu/formatted_tables/benchmarks.parquet",
+      "metadata_path": "cmmlu/metadata.yaml",
+      "row_count": 23160
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "coffeebench",
+      "items_path": "coffeebench/formatted_tables/items.parquet",
+      "benchmarks_path": "coffeebench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "coffeebench/metadata.yaml",
+      "row_count": 1
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "complexbench",
+      "items_path": "complexbench/formatted_tables/items.parquet",
+      "benchmarks_path": "complexbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "complexbench/metadata.yaml",
+      "row_count": 1150
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "confagents",
+      "items_path": "confagents/formatted_tables/items.parquet",
+      "benchmarks_path": "confagents/formatted_tables/benchmarks.parquet",
+      "metadata_path": "confagents/metadata.yaml",
+      "row_count": 16
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "corebench",
+      "items_path": "corebench/formatted_tables/items.parquet",
+      "benchmarks_path": "corebench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "corebench/metadata.yaml",
+      "row_count": 270
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "critic_discernment_game",
+      "items_path": "critic_discernment_game/formatted_tables/items.parquet",
+      "benchmarks_path": "critic_discernment_game/formatted_tables/benchmarks.parquet",
+      "metadata_path": "critic_discernment_game/metadata.yaml",
+      "row_count": 1819
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "crow",
+      "items_path": "crow/formatted_tables/items.parquet",
+      "benchmarks_path": "crow/formatted_tables/benchmarks.parquet",
+      "metadata_path": "crow/metadata.yaml",
+      "row_count": 1984
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "cruxeval",
+      "items_path": "cruxeval/formatted_tables/items.parquet",
+      "benchmarks_path": "cruxeval/formatted_tables/benchmarks.parquet",
+      "metadata_path": "cruxeval/metadata.yaml",
+      "row_count": 4000
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "csedb",
+      "items_path": "csedb/formatted_tables/items.parquet",
+      "benchmarks_path": "csedb/formatted_tables/benchmarks.parquet",
+      "metadata_path": "csedb/metadata.yaml",
+      "row_count": 2069
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "cseo_bench",
+      "items_path": "cseo_bench/formatted_tables/items.parquet",
+      "benchmarks_path": "cseo_bench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "cseo_bench/metadata.yaml",
+      "row_count": 242265
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "das_med_hallucination",
+      "items_path": "das_med_hallucination/formatted_tables/items.parquet",
+      "benchmarks_path": "das_med_hallucination/formatted_tables/benchmarks.parquet",
+      "metadata_path": "das_med_hallucination/metadata.yaml",
+      "row_count": 108
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "data_juicer2",
+      "items_path": "data_juicer2/formatted_tables/items.parquet",
+      "benchmarks_path": "data_juicer2/formatted_tables/benchmarks.parquet",
+      "metadata_path": "data_juicer2/metadata.yaml",
+      "row_count": 12
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "dataclawbench",
+      "items_path": "dataclawbench/formatted_tables/items.parquet",
+      "benchmarks_path": "dataclawbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "dataclawbench/metadata.yaml",
+      "row_count": 492
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "dave",
+      "items_path": "dave/formatted_tables/items.parquet",
+      "benchmarks_path": "dave/formatted_tables/benchmarks.parquet",
+      "metadata_path": "dave/metadata.yaml",
+      "row_count": 3922
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "donotanswer",
+      "items_path": "donotanswer/formatted_tables/items.parquet",
+      "benchmarks_path": "donotanswer/formatted_tables/benchmarks.parquet",
+      "metadata_path": "donotanswer/metadata.yaml",
+      "row_count": 1876
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "editbench",
+      "items_path": "editbench/formatted_tables/items.parquet",
+      "benchmarks_path": "editbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "editbench/metadata.yaml",
+      "row_count": 540
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "engdesign",
+      "items_path": "engdesign/formatted_tables/items.parquet",
+      "benchmarks_path": "engdesign/formatted_tables/benchmarks.parquet",
+      "metadata_path": "engdesign/metadata.yaml",
+      "row_count": 101
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "engibench",
+      "items_path": "engibench/formatted_tables/items.parquet",
+      "benchmarks_path": "engibench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "engibench/metadata.yaml",
+      "row_count": 9
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "evouna",
+      "items_path": "evouna/formatted_tables/items.parquet",
+      "benchmarks_path": "evouna/formatted_tables/benchmarks.parquet",
+      "metadata_path": "evouna/metadata.yaml",
+      "row_count": 5609
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "fewshot_ttt_bbh",
+      "items_path": "fewshot_ttt_bbh/formatted_tables/items.parquet",
+      "benchmarks_path": "fewshot_ttt_bbh/formatted_tables/benchmarks.parquet",
+      "metadata_path": "fewshot_ttt_bbh/metadata.yaml",
+      "row_count": 1310
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "fgbench",
+      "items_path": "fgbench/formatted_tables/items.parquet",
+      "benchmarks_path": "fgbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "fgbench/metadata.yaml",
+      "row_count": 7146
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "financebench",
+      "items_path": "financebench/formatted_tables/items.parquet",
+      "benchmarks_path": "financebench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "financebench/metadata.yaml",
+      "row_count": 150
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "helm_afr",
+      "items_path": "helm_afr/formatted_tables/items.parquet",
+      "benchmarks_path": "helm_afr/formatted_tables/benchmarks.parquet",
+      "metadata_path": "helm_afr/metadata.yaml",
+      "row_count": 72223
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "helm_airbench",
+      "items_path": "helm_airbench/formatted_tables/items.parquet",
+      "benchmarks_path": "helm_airbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "helm_airbench/metadata.yaml",
+      "row_count": 7723
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "helm_anthropic_redteam",
+      "items_path": "helm_anthropic_redteam/formatted_tables/items.parquet",
+      "benchmarks_path": "helm_anthropic_redteam/formatted_tables/benchmarks.parquet",
+      "metadata_path": "helm_anthropic_redteam/metadata.yaml",
+      "row_count": 995
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "helm_bbq",
+      "items_path": "helm_bbq/formatted_tables/items.parquet",
+      "benchmarks_path": "helm_bbq/formatted_tables/benchmarks.parquet",
+      "metadata_path": "helm_bbq/metadata.yaml",
+      "row_count": 2000
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "helm_bold",
+      "items_path": "helm_bold/formatted_tables/items.parquet",
+      "benchmarks_path": "helm_bold/formatted_tables/benchmarks.parquet",
+      "metadata_path": "helm_bold/metadata.yaml",
+      "row_count": 2028
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "helm_cleva",
+      "items_path": "helm_cleva/formatted_tables/items.parquet",
+      "benchmarks_path": "helm_cleva/formatted_tables/benchmarks.parquet",
+      "metadata_path": "helm_cleva/metadata.yaml",
+      "row_count": 7536
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "helm_harmbench",
+      "items_path": "helm_harmbench/formatted_tables/items.parquet",
+      "benchmarks_path": "helm_harmbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "helm_harmbench/metadata.yaml",
+      "row_count": 403
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "helm_real_toxicity_prompts",
+      "items_path": "helm_real_toxicity_prompts/formatted_tables/items.parquet",
+      "benchmarks_path": "helm_real_toxicity_prompts/formatted_tables/benchmarks.parquet",
+      "metadata_path": "helm_real_toxicity_prompts/metadata.yaml",
+      "row_count": 2006
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "helm_simple_safety_tests",
+      "items_path": "helm_simple_safety_tests/formatted_tables/items.parquet",
+      "benchmarks_path": "helm_simple_safety_tests/formatted_tables/benchmarks.parquet",
+      "metadata_path": "helm_simple_safety_tests/metadata.yaml",
+      "row_count": 100
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "helm_thaiexam",
+      "items_path": "helm_thaiexam/formatted_tables/items.parquet",
+      "benchmarks_path": "helm_thaiexam/formatted_tables/benchmarks.parquet",
+      "metadata_path": "helm_thaiexam/metadata.yaml",
+      "row_count": 565
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "helm_xstest",
+      "items_path": "helm_xstest/formatted_tables/items.parquet",
+      "benchmarks_path": "helm_xstest/formatted_tables/benchmarks.parquet",
+      "metadata_path": "helm_xstest/metadata.yaml",
+      "row_count": 450
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "icpc2_code_selector",
+      "items_path": "icpc2_code_selector/formatted_tables/items.parquet",
+      "benchmarks_path": "icpc2_code_selector/formatted_tables/benchmarks.parquet",
+      "metadata_path": "icpc2_code_selector/metadata.yaml",
+      "row_count": 2175
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "ikp",
+      "items_path": "ikp/formatted_tables/items.parquet",
+      "benchmarks_path": "ikp/formatted_tables/benchmarks.parquet",
+      "metadata_path": "ikp/metadata.yaml",
+      "row_count": 1400
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "legal_rag_bench",
+      "items_path": "legal_rag_bench/formatted_tables/items.parquet",
+      "benchmarks_path": "legal_rag_bench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "legal_rag_bench/metadata.yaml",
+      "row_count": 300
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "llmail_inject",
+      "items_path": "llmail_inject/formatted_tables/items.parquet",
+      "benchmarks_path": "llmail_inject/formatted_tables/benchmarks.parquet",
+      "metadata_path": "llmail_inject/metadata.yaml",
+      "row_count": 207291
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
       "benchmark": "matharena",
       "items_path": "matharena/items.parquet",
       "benchmarks_path": "matharena/benchmarks.parquet",
-      "metadata_path": "matharena/metadata.yaml"
+      "metadata_path": "matharena/metadata.yaml",
+      "row_count": 1755
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "mathconstraint",
+      "items_path": "mathconstraint/formatted_tables/items.parquet",
+      "benchmarks_path": "mathconstraint/formatted_tables/benchmarks.parquet",
+      "metadata_path": "mathconstraint/metadata.yaml",
+      "row_count": 504
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "medhelm_ehr_sql",
+      "items_path": "medhelm_ehr_sql/formatted_tables/items.parquet",
+      "benchmarks_path": "medhelm_ehr_sql/formatted_tables/benchmarks.parquet",
+      "metadata_path": "medhelm_ehr_sql/metadata.yaml",
+      "row_count": 1000
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "medhelm_head_qa",
+      "items_path": "medhelm_head_qa/formatted_tables/items.parquet",
+      "benchmarks_path": "medhelm_head_qa/formatted_tables/benchmarks.parquet",
+      "metadata_path": "medhelm_head_qa/metadata.yaml",
+      "row_count": 1000
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "medhelm_med_mcqa",
+      "items_path": "medhelm_med_mcqa/formatted_tables/items.parquet",
+      "benchmarks_path": "medhelm_med_mcqa/formatted_tables/benchmarks.parquet",
+      "metadata_path": "medhelm_med_mcqa/metadata.yaml",
+      "row_count": 1000
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "medhelm_med_qa",
+      "items_path": "medhelm_med_qa/formatted_tables/items.parquet",
+      "benchmarks_path": "medhelm_med_qa/formatted_tables/benchmarks.parquet",
+      "metadata_path": "medhelm_med_qa/metadata.yaml",
+      "row_count": 1000
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "medhelm_medbullets",
+      "items_path": "medhelm_medbullets/formatted_tables/items.parquet",
+      "benchmarks_path": "medhelm_medbullets/formatted_tables/benchmarks.parquet",
+      "metadata_path": "medhelm_medbullets/metadata.yaml",
+      "row_count": 298
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "medhelm_medcalc_bench",
+      "items_path": "medhelm_medcalc_bench/formatted_tables/items.parquet",
+      "benchmarks_path": "medhelm_medcalc_bench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "medhelm_medcalc_bench/metadata.yaml",
+      "row_count": 992
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "medhelm_medec",
+      "items_path": "medhelm_medec/formatted_tables/items.parquet",
+      "benchmarks_path": "medhelm_medec/formatted_tables/benchmarks.parquet",
+      "metadata_path": "medhelm_medec/metadata.yaml",
+      "row_count": 597
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "medhelm_medhallu",
+      "items_path": "medhelm_medhallu/formatted_tables/items.parquet",
+      "benchmarks_path": "medhelm_medhallu/formatted_tables/benchmarks.parquet",
+      "metadata_path": "medhelm_medhallu/metadata.yaml",
+      "row_count": 2000
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "medhelm_pubmed_qa",
+      "items_path": "medhelm_pubmed_qa/formatted_tables/items.parquet",
+      "benchmarks_path": "medhelm_pubmed_qa/formatted_tables/benchmarks.parquet",
+      "metadata_path": "medhelm_pubmed_qa/metadata.yaml",
+      "row_count": 1500
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "medhelm_race_based_med",
+      "items_path": "medhelm_race_based_med/formatted_tables/items.parquet",
+      "benchmarks_path": "medhelm_race_based_med/formatted_tables/benchmarks.parquet",
+      "metadata_path": "medhelm_race_based_med/metadata.yaml",
+      "row_count": 167
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "mlrbench",
+      "items_path": "mlrbench/formatted_tables/items.parquet",
+      "benchmarks_path": "mlrbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "mlrbench/metadata.yaml",
+      "row_count": 5226
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "mmdocrag",
+      "items_path": "mmdocrag/items.parquet",
+      "benchmarks_path": "mmdocrag/benchmarks.parquet",
+      "metadata_path": "mmdocrag/metadata.yaml",
+      "row_count": 2000
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "multi_swebench",
+      "items_path": "multi_swebench/items.parquet",
+      "benchmarks_path": "multi_swebench/benchmarks.parquet",
+      "metadata_path": "multi_swebench/metadata.yaml",
+      "row_count": 2126
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "nester",
+      "items_path": "nester/formatted_tables/items.parquet",
+      "benchmarks_path": "nester/formatted_tables/benchmarks.parquet",
+      "metadata_path": "nester/metadata.yaml",
+      "row_count": 356
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "openbiorq",
+      "items_path": "openbiorq/formatted_tables/items.parquet",
+      "benchmarks_path": "openbiorq/formatted_tables/benchmarks.parquet",
+      "metadata_path": "openbiorq/metadata.yaml",
+      "row_count": 657
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "phyblock",
+      "items_path": "phyblock/formatted_tables/items.parquet",
+      "benchmarks_path": "phyblock/formatted_tables/benchmarks.parquet",
+      "metadata_path": "phyblock/metadata.yaml",
+      "row_count": 1362
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "proofaug",
+      "items_path": "proofaug/formatted_tables/items.parquet",
+      "benchmarks_path": "proofaug/formatted_tables/benchmarks.parquet",
+      "metadata_path": "proofaug/metadata.yaml",
+      "row_count": 244
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "prox",
+      "items_path": "prox/formatted_tables/items.parquet",
+      "benchmarks_path": "prox/formatted_tables/benchmarks.parquet",
+      "metadata_path": "prox/metadata.yaml",
+      "row_count": 12052
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "putnam_axiom",
+      "items_path": "putnam_axiom/formatted_tables/items.parquet",
+      "benchmarks_path": "putnam_axiom/formatted_tables/benchmarks.parquet",
+      "metadata_path": "putnam_axiom/metadata.yaml",
+      "row_count": 2500
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "real_webagents",
+      "items_path": "real_webagents/items.parquet",
+      "benchmarks_path": "real_webagents/benchmarks.parquet",
+      "metadata_path": "real_webagents/metadata.yaml",
+      "row_count": 233
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "researchcodebench",
+      "items_path": "researchcodebench/items.parquet",
+      "benchmarks_path": "researchcodebench/benchmarks.parquet",
+      "metadata_path": "researchcodebench/metadata.yaml",
+      "row_count": 212
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "revolve",
+      "items_path": "revolve/formatted_tables/items.parquet",
+      "benchmarks_path": "revolve/formatted_tables/benchmarks.parquet",
+      "metadata_path": "revolve/metadata.yaml",
+      "row_count": 310
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "risebench",
+      "items_path": "risebench/formatted_tables/items.parquet",
+      "benchmarks_path": "risebench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "risebench/metadata.yaml",
+      "row_count": 1080
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "safeagentbench",
+      "items_path": "safeagentbench/formatted_tables/items.parquet",
+      "benchmarks_path": "safeagentbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "safeagentbench/metadata.yaml",
+      "row_count": 665
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "scigym",
+      "items_path": "scigym/formatted_tables/items.parquet",
+      "benchmarks_path": "scigym/formatted_tables/benchmarks.parquet",
+      "metadata_path": "scigym/metadata.yaml",
+      "row_count": 959
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "software_world_models",
+      "items_path": "software_world_models/formatted_tables/items.parquet",
+      "benchmarks_path": "software_world_models/formatted_tables/benchmarks.parquet",
+      "metadata_path": "software_world_models/metadata.yaml",
+      "row_count": 434
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "svrpbench",
+      "items_path": "svrpbench/formatted_tables/items.parquet",
+      "benchmarks_path": "svrpbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "svrpbench/metadata.yaml",
+      "row_count": 40
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "swe_rebench",
+      "items_path": "swe_rebench/items.parquet",
+      "benchmarks_path": "swe_rebench/benchmarks.parquet",
+      "metadata_path": "swe_rebench/metadata.yaml",
+      "row_count": 6306
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "theagentcompany",
+      "items_path": "theagentcompany/formatted_tables/items.parquet",
+      "benchmarks_path": "theagentcompany/formatted_tables/benchmarks.parquet",
+      "metadata_path": "theagentcompany/metadata.yaml",
+      "row_count": 175
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "vl_rewardbench",
+      "items_path": "vl_rewardbench/formatted_tables/items.parquet",
+      "benchmarks_path": "vl_rewardbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "vl_rewardbench/metadata.yaml",
+      "row_count": 1532
+    },
+    {
+      "branch": "migration/tabular-builders-20260924",
+      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "benchmark": "workbench_revisited",
+      "items_path": "workbench_revisited/formatted_tables/items.parquet",
+      "benchmarks_path": "workbench_revisited/formatted_tables/benchmarks.parquet",
+      "metadata_path": "workbench_revisited/metadata.yaml",
+      "row_count": 690
     }
   ],
   "missing_item_tables": []

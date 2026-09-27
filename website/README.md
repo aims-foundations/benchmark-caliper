@@ -14,7 +14,7 @@ All routes work under the production `/benchmark-caliper` prefix.
 ## Goal-conditioned item review
 
 The new flow asks for an OpenAI key, collects six concrete deployment questions,
-shows the sample size before paid calls, and displays ranked items with all six
+shows the catalog and fixed sample size before paid calls, and displays ranked items with all six
 validity judgments, per-dimension confidence and explanations, evidence,
 information gaps, and pinned source provenance. It
 uses the shared `bayesian_auditing` loader, rubric, schema, and arithmetic with
@@ -31,41 +31,83 @@ The confidence labels and weights are not calibrated probabilities. See the
 The JSON download includes the policy and confidence explanations. Old reports
 have no recorded confidence; they require a new paid review to obtain it.
 
-For this first hosted demo, the catalog contains **MathArena and AfriMed-QA**,
-using three pinned item tables across both measurement-db branches. The user
-chooses 1–10 initial rows per table (2 by default), for at most 30 source rows.
-Identical evidence is assessed once, and the UI requests all ranked items in
-this bounded sample (up to 30). This is a deterministic sample, not a
-full-corpus search or a representative selection. Full traversal remains
-available through the [CLI](../bayesian_auditing/README.md).
+The catalog includes every available formatted `items.parquet` table from both
+measurement-db branches, pinned to the revisions in the inventory. The current
+snapshot has **113 benchmark collections, 119 tables, and 1,804,733 source rows**.
+The demo selects up to **50 distinct items per benchmark collection**, for at most
+**5,407 selected items** in this snapshot. A fixed seed makes selection independent
+of row order and deployment description. Duplicate evidence gets one selection
+opportunity, and all provenance is retained. When a benchmark has branch-exclusive
+evidence in both branches, at least one selected item comes from each. Rankings
+describe the selected sample. The text judge does not inspect referenced media assets.
+The mathematics tutor is an optional form example, not a restriction on deployment.
 
-The gated dataset requires Hugging Face access. Configure `HF_TOKEN` on the
-server, or enter an authorized read token in the demo's masked access field.
+The gated dataset requires Hugging Face access. Configure an authorized
+`HF_TOKEN` or Hub login on the server. Dataset access is managed by the server;
+visitors supply only their OpenAI API key. If the server credential is missing,
+the UI disables new reviews and asks visitors to contact the site maintainer.
 The server never uses its own OpenAI key: each review requires the user's key.
 
-`server/item_review.py` provides a small in-memory background runner. The browser
-polls progress using a separate run secret and can stop a run or download its
-JSON results. This avoids keeping one HTTP request open across every item.
-Three active reviews are allowed per process, one per OpenAI key; each has a
-one-hour maximum duration. Completed/failed/cancelled results expire after one
-hour (checked each minute). Up to 30 runs are retained in memory. Keys and user
-content are not written to the Caliper database or CLI result files. Source
-Parquet files are cached by Hugging Face. Refreshing the same tab resumes polling;
-server restarts discard jobs and results. Cancelling stops further requests but
-cannot guarantee that a request already submitted to OpenAI is unbilled.
+`server/item_review.py` prepares the complete sample before making model calls,
+then runs one sequential, cancellable assessment stream. The first preparation
+scans all source rows without model calls, using a temporary SQLite index of hashes
+and source locations, keeping only the best 50 selection candidates in memory.
+Additional branch representatives are fetched through Parquet HTTP ranges if
+needed. `bayesian_auditing/sampling.py` caches selected dataset evidence under
+`WEBSITE_DATA_DIR/item-review-samples/`, keyed by pinned inventory, seed, sample
+size, and loader/sampling versions. Later reviews reuse that sample. The cache
+contains no deployment answers or provider keys. Source metadata may also be cached.
+`server/item_review_store.py` stores assessments, evidence, and source references
+in a private temporary SQLite file, with indexes for deduplication and ranking.
+The deployment answers and OpenAI key remain in process memory. Raw provider
+responses are not retained. This keeps dataset loading and ranking independent
+of the available RAM, without adding a worker queue or persistent job service.
+
+The browser polls 20 results at a time; these are display pages, not review limits.
+The authenticated `/api/item-review/runs/{id}/export` route streams every assessment
+available when the download begins. A read failure stops preparation or assessment
+and preserves completed results; it does not silently skip a table or claim a
+complete sample. Exports include the sampling policy and pinned source revisions.
+Three reviews can run simultaneously, one per OpenAI key. Up to 30 jobs are retained.
+Completed/failed/cancelled jobs and their result files expire after one hour
+(checked each minute). A normal shutdown cancels jobs and deletes these files.
+An abrupt process kill can leave orphaned temporary files until the host cleans
+them up. The demo does not resume after server restarts; the [CLI](../bayesian_auditing/README.md)
+supports durable resume. Refreshing the same browser tab resumes polling a live
+job. Cancelling prevents further model calls; a request already sent may be billed.
 
 The router and UI live in `server/item_review.py` and `client/src/itemReview/`;
 `client/src/EvaluationSite.tsx` chooses the workflow. The catalog inventory is
 `server/item_review_inventory.json`. To refresh it deliberately, run:
 
 ```bash
-python -m bayesian_auditing inventory --benchmarks matharena afrimedqa \
-  --output website/server/item_review_inventory.json
+python -m website.server.item_review_catalog
 ```
 
-The committed inventory contains paths and revisions only, not dataset items or
-credentials. Do not add arbitrary large benchmarks to this hosted sample without
-reviewing memory and cache-disk requirements.
+The refresh command discovers both branches and reads Parquet footers to validate
+the required columns and record source-row counts. It saves only paths, revisions,
+and counts after all tables are inspected successfully. No item content or
+credentials are committed. Prepare the reusable sample without an OpenAI key with:
+
+```bash
+python -m website.server.item_review_sample
+```
+
+Preparation can take time on a cold cache. The cache is private to the server and
+can be regenerated; it survives normal shutdown. Temporary assessment files still
+expire after each review. Completion depends on provider quota, disk space, and
+the server staying alive.
+
+The sampling implementation is `bayesian_auditing/sampling.py`. It combines each
+collection's branches, deduplicates by the existing evidence fingerprint, and
+assigns each distinct input a SHA-256 priority derived from seed `20260925`, the
+collection name, and its fingerprint. It reserves one randomly chosen exclusive
+item per branch when available (otherwise a shared item), then fills to 50 by
+priority. Small collections contribute every distinct item. This balances
+collection coverage for the demo; it is not a sample proportional to catalog size
+or deployment workload. Source order and duplicate frequency do not affect selection.
+Changing a pinned revision or the sampling policy creates a new cache entry;
+changing deployment answers uses the same selected evidence with new judgments.
 
 ---
 

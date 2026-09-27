@@ -11,8 +11,8 @@ describe('Evaluation routes', () => {
   it('offers both workflows at the starting page', () => {
     window.history.replaceState(null, '', '/')
     render(<EvaluationSite />)
-    expect(screen.getByRole('link', { name: /evaluate a benchmark/i })).toHaveAttribute('href', '/caliper')
-    expect(screen.getByRole('link', { name: /find relevant tests/i })).toHaveAttribute('href', '/items')
+    expect(screen.getByRole('link', { name: /analyze a benchmark/i })).toHaveAttribute('href', '/caliper')
+    expect(screen.getByRole('link', { name: /assess evaluation items/i })).toHaveAttribute('href', '/items')
   })
 
   it.each(['/caliper', '/run/12345678-abcd-1234-abcd-123456789abc'])('preserves the existing workflow at %s', path => {

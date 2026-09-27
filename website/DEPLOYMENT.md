@@ -11,21 +11,43 @@ working. No second service or AIMS proxy change is required.
 ## Item-review configuration
 
 The website's Python requirements include the shared OpenAI judge and dataset
-loader. Keep **one instance and one Uvicorn worker** for the in-memory item-review
-jobs. A restart clears in-flight jobs and their results; users can download JSON
+loader. Keep **one instance and one Uvicorn worker** for the item-review jobs.
+Jobs and keys live in memory; results use private temporary SQLite files.
+A restart clears in-flight jobs and their results; users can download JSON
 before restarting the service. The CLI's disk-based resume is separate.
 
-Set an optional `HF_TOKEN` secret in Render with read access to the gated
-`aims-foundations/measurement-db` dataset. If it is absent, the access form asks
-each user for an authorized Hugging Face read token. Do not put a maintainer's
-OpenAI key on the service: the new endpoint requires the caller's key.
+Set the server's `HF_TOKEN` secret in Render with read access to the gated
+`aims-foundations/measurement-db` dataset. This is required for hosted item
+reviews; visitors supply only their OpenAI API key. Missing server dataset
+credentials disable new reviews and show a message to contact the maintainer.
+Do not put a maintainer's OpenAI key on the service.
 
-Only the three tables pinned in `website/server/item_review_inventory.json` are
-available in the hosted demo. Their dataset files download on first use and use
-the Hugging Face cache. No dataset content, provider keys, or local CLI run
-artifacts are bundled into the image. Results and deployment descriptions stay
-in process memory for one hour after a review ends; source dataset files may
-remain cached. The existing Caliper database and retention behavior are unchanged.
+The Blueprint declares `HF_TOKEN` with `sync: false`, so its value stays out of
+Git. For an existing service, add the secret under **Environment** in Render;
+updating the Blueprint alone does not populate a new `sync: false` variable.
+See [Render's secret configuration](https://render.com/docs/blueprint-spec#prompting-for-secret-values).
+The local machine's saved Hugging Face login is not bundled into the container.
+
+The hosted catalog uses all formatted item tables pinned in
+`website/server/item_review_inventory.json`. Refresh its revisions and row counts
+with `python -m website.server.item_review_catalog`. The demo selects up to 50
+distinct items per benchmark collection with a fixed seed. Prepare that cache
+with `python -m website.server.item_review_sample`; it is also prepared on demand
+before model calls. Item tables are read using HTTP ranges. Selected dataset
+evidence is cached in `WEBSITE_DATA_DIR/item-review-samples/`, with no provider keys
+or deployment descriptions. The first preparation needs temporary disk for a
+per-benchmark source index. No dataset content or local CLI artifacts are bundled
+into the image. Temporary assessment files expire one hour after a run ends and
+are deleted on normal shutdown. Provision writable disk for the reusable sample
+cache and temporary results. Reviews do not resume after a restart.
+The existing Caliper database and retention behavior are unchanged.
+
+Cold sample preparation can use several GB of RAM while decoding large Parquet
+row groups. On a small hosted service, prepare the sample on a machine with enough
+memory and privately copy the resulting `item-review-samples/` cache into the
+service's data directory before starting reviews. Use the same pinned inventory
+and sampling version. Cached reviews read only the selected items. Keep this
+gated dataset cache out of Git and public static assets.
 
 After deploying, verify the chooser, both workflows, and the catalog:
 
@@ -36,7 +58,8 @@ curl -f https://aimslab.stanford.edu/benchmark-caliper/api/item-review/catalog
 
 Open `/benchmark-caliper/`, `/benchmark-caliper/caliper`, and
 `/benchmark-caliper/items` in the browser. Run a small real assessment with your
-own key to validate account/model access and judge quality; automated tests use
+own key, stopping when enough items have been judged, to validate account/model
+access and judge quality; automated tests use
 mocked OpenAI responses and do not establish scoring quality.
 
 ## Render
@@ -46,9 +69,10 @@ The repo root ships a `render.yaml` Blueprint that captures the whole service
 
 1. In Render: **New > Blueprint**, pick the `validity-global-south` repo.
 2. Render reads `render.yaml` and proposes the `benchmark-caliper` web service.
-3. Fill in the three email values it asks for (left blank in the Blueprint):
-   `RESEND_API_KEY`, `RESEND_FROM`, `FEEDBACK_TO`. The app runs without them
-   (email falls back to a dry-run), so they can be added later.
+3. Set `HF_TOKEN` for item-review dataset access. The Blueprint also prompts for
+   the optional email values `RESEND_API_KEY`, `RESEND_FROM`, and `FEEDBACK_TO`.
+   The app runs without email credentials (email falls back to a dry-run), so
+   those can be added later.
 4. Apply. Render builds the `Dockerfile` and deploys.
 
 The Blueprint already sets these, so you do **not** type them by hand:
@@ -68,8 +92,8 @@ WEBSITE_ALLOWED_ORIGINS=https://aimslab.stanford.edu,https://benchmark-caliper.o
 ### Manual setup (if not using the Blueprint)
 
 Create a **Web Service** backed by the root `Dockerfile` with the same
-settings listed above, and set the same env vars (plus the optional email
-ones). Be sure to set the **Health Check Path** to `/healthz`.
+settings listed above, and set the same env vars, the `HF_TOKEN` secret, and any
+optional email credentials. Be sure to set the **Health Check Path** to `/healthz`.
 
 ### Data disk permissions
 

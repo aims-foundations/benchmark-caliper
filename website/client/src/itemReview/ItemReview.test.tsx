@@ -10,12 +10,15 @@ vi.mock('./api', async importOriginal => ({
 }))
 
 const catalog: api.Catalog = { model: 'gpt-6-luna', reasoning_effort: 'high', max_output_tokens: 25000,
-  requires_hf_token: false, max_items_per_table: 10, branches: { main: 'a', migration: 'b' },
-  benchmarks: [{ id: 'matharena', name: 'MathArena', table_count: 2 }, { id: 'afrimedqa', name: 'AfriMed-QA', table_count: 1 }] }
+  dataset_access_configured: true, table_count: 4, source_rows: 1200, missing_item_tables: [], branches: { main: 'a', migration: 'b' },
+  sampling: { version: 1, method: 'seeded_hash_with_branch_coverage', seed: 20260925, items_per_benchmark: 50 }, sample_max_items: 150,
+  benchmarks: [{ id: 'matharena', name: 'MathArena', table_count: 2, source_rows: 300, sample_max_items: 50 }, { id: 'coding', name: 'Coding', table_count: 1, source_rows: 500, sample_max_items: 50 }, { id: 'customer_support', name: 'Customer Support', table_count: 1, source_rows: 400, sample_max_items: 50 }] }
 const completed: api.Review = {
   run_id: 'test-run', status: 'completed', message: 'Sample review complete.', model: 'gpt-6-luna', reasoning_effort: 'high',
   deployment: { task: '', users: '', inputs: '', outputs: '', success: '', constraints: '' },
-  scope: { benchmarks: ['matharena'], items_per_table: 2, branches: { main: 'a' }, sample_only: true },
+  scope: { benchmarks: ['matharena', 'coding', 'customer_support'], table_count: 4, source_rows: 1200, branches: { main: 'a', migration: 'b' }, sample_only: true,
+    sampling: catalog.sampling, sample_max_items: 150 },
+  sample_complete: true, prepared_benchmarks: 3, pagination: { page: 1, page_size: 20, total_pages: 1 },
   scoring_policy: { version: 2, neutral_score: 3, confidence_weights: { high: 1, medium: .6, low: .3, insufficient: 0 }, formula: 'test policy' },
   source_rows: 6, total: 4, processed: 4, complete: 4, needs_review: 4, errors: 0,
   usage: { input_tokens: 100, output_tokens: 200 }, ranked_items: [], failed_items: [],
@@ -30,34 +33,42 @@ beforeEach(() => {
   vi.mocked(api.getReview).mockResolvedValue(completed)
 })
 
-it('collects deployment details, previews scope, and starts a paid review only on submission', async () => {
+it('explains the fixed broad sample and starts only on submission', async () => {
   const user = userEvent.setup()
   render(<ItemReview />)
   await user.type(await screen.findByLabelText('OpenAI API key'), 'sk-test-private')
+  expect(screen.queryByLabelText('Hugging Face read token')).not.toBeInTheDocument()
+  expect(screen.queryByText(/Hugging Face dataset access/)).not.toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: 'Continue to deployment' }))
   await user.click(screen.getByRole('button', { name: 'Use mathematics tutor example' }))
-  await user.click(screen.getByRole('button', { name: 'Review sample and settings' }))
-  expect(screen.getByText(/Up to 6/)).toHaveTextContent('Up to 6 source rows')
+  await user.click(screen.getByRole('button', { name: 'Review catalog and settings' }))
+  expect(screen.getByText(/Up to 150/)).toHaveTextContent('Up to 150 items')
+  expect(screen.getByText(/fixed random seed/)).toBeVisible()
+  expect(screen.getByText(/1,200/)).toHaveTextContent('1,200 source rows')
+  expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
+  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+  await user.click(screen.getByText('Browse all 3 benchmark collections'))
+  expect(screen.getByText('Customer Support')).toBeVisible()
   expect(api.startReview).not.toHaveBeenCalled()
-  await user.click(screen.getByRole('button', { name: 'Start paid review' }))
-  await screen.findByRole('heading', { name: 'Your sample review is ready' })
-  expect(api.startReview).toHaveBeenCalledWith(expect.objectContaining({
-    items_per_table: 2, top_k: 30, benchmarks: ['matharena', 'afrimedqa'],
+  await user.click(screen.getByRole('button', { name: 'Start sampled review' }))
+  await screen.findByRole('heading', { name: 'Your item review is ready' })
+  expect(api.startReview).toHaveBeenCalledWith({
     deployment: expect.objectContaining({ task: expect.stringContaining('mathematics tutor') }),
-  }), 'sk-test-private', '')
+  }, 'sk-test-private')
   expect(sessionStorage.getItem('item_review_run_v1')).not.toContain('sk-test-private')
   expect(localStorage.length).toBe(0)
   expect(screen.getByText('Low confidence or missing scores').parentElement).toHaveTextContent('4')
 })
 
-it('requires dataset access when the server has no Hugging Face token', async () => {
-  vi.mocked(api.getCatalog).mockResolvedValue({ ...catalog, requires_hf_token: true })
+it('reports missing server dataset access without asking visitors for another key', async () => {
+  vi.mocked(api.getCatalog).mockResolvedValue({ ...catalog, dataset_access_configured: false })
   const user = userEvent.setup()
   render(<ItemReview />)
   await user.type(await screen.findByLabelText('OpenAI API key'), 'sk-test-private')
+  expect(screen.getByRole('alert')).toHaveTextContent('Dataset access is not configured on this server.')
+  expect(screen.queryByLabelText('Hugging Face read token')).not.toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Continue to deployment' })).toBeDisabled()
-  await user.type(screen.getByLabelText('Hugging Face read token'), 'hf_test_private')
-  expect(screen.getByRole('button', { name: 'Continue to deployment' })).toBeEnabled()
+  expect(api.startReview).not.toHaveBeenCalled()
 })
 
 it('restores progress with a run token and supports stopping an active review', async () => {
@@ -66,7 +77,7 @@ it('restores progress with a run token and supports stopping an active review', 
   vi.mocked(api.cancelReview).mockResolvedValue({ ...completed, status: 'cancelled', processed: 1 })
   const user = userEvent.setup()
   render(<ItemReview />)
-  await screen.findByRole('heading', { name: 'Reviewing evaluation items' })
+  await screen.findByRole('heading', { name: 'Reviewing sampled items' })
   await user.click(screen.getByRole('button', { name: 'Stop review' }))
   await waitFor(() => expect(screen.getByRole('heading', { name: 'Review stopped' })).toBeInTheDocument())
   expect(api.cancelReview).toHaveBeenCalledWith({ run_id: 'test-run', run_secret: 'temporary-access' })

@@ -1,40 +1,49 @@
-"""Small, in-memory website jobs using the shared six-dimension item judge.
+"""Seeded sample reviews with temporary indexed results.
 
-Only source dataset downloads are cached on disk. Keys, deployment descriptions,
-and assessments remain in memory. A run secret protects polling/cancellation.
-The single-instance deployment deliberately uses no database or job queue here.
+Keys and deployment answers remain in memory. A run secret protects polling,
+downloads, and cancellation. No worker queue or durable resume is required.
 """
 
 from __future__ import annotations
 
 import asyncio
 from collections import Counter
+from contextlib import closing
 from dataclasses import dataclass, field
 import hashlib
 import json
 from pathlib import Path
 import secrets
 import time
+from threading import Event
 from typing import Annotated
 
-from fastapi import APIRouter, Header, HTTPException, Response
+from fastapi import APIRouter, Header, HTTPException, Query, Response
+from fastapi.responses import StreamingResponse
 from huggingface_hub import get_token
 from openai import AsyncOpenAI, AuthenticationError, RateLimitError, OpenAIError
 from pydantic import BaseModel, ConfigDict, Field
 
-from bayesian_auditing.data import iter_items
+from bayesian_auditing.sampling import (
+    SAMPLE_SIZE, iter_sample_items, prepare_samples, sample_upper_bound, sampling_policy,
+)
 from bayesian_auditing.scoring import SCORING_POLICY
 from bayesian_auditing.judge import (
     AsyncJudge, DEFAULT_MODEL, DEFAULT_REASONING_EFFORT, DEFAULT_MAX_OUTPUT_TOKENS, PROMPT_PATH,
 )
+from .item_review_store import ReviewStore
+from . import db
 
 router = APIRouter(prefix="/api/item-review", tags=["Item review"])
 INVENTORY_PATH = Path(__file__).with_name("item_review_inventory.json")
 MAX_ACTIVE = 3
 MAX_RETAINED = 30
 RETENTION_SECONDS = 3600
-MAX_RUN_SECONDS = 3600
-BENCHMARK_NAMES = {"matharena": "MathArena · mathematics", "afrimedqa": "AfriMed-QA · medical questions"}
+RESULTS_PAGE_SIZE = 20
+
+
+def inventory() -> dict:
+    return json.loads(INVENTORY_PATH.read_text(encoding="utf-8"))
 
 
 class Deployment(BaseModel):
@@ -56,9 +65,6 @@ class Deployment(BaseModel):
 class ReviewRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     deployment: Deployment
-    benchmarks: list[str] = Field(min_length=1, max_length=2)
-    items_per_table: int = Field(default=2, ge=1, le=10, strict=True)
-    top_k: int = Field(default=10, ge=1, le=30, strict=True)
 
 
 @dataclass
@@ -67,29 +73,30 @@ class ReviewJob:
     secret: str = field(repr=False)
     owner_hash: str = field(repr=False)
     request: ReviewRequest = field(repr=False)
+    inventory: dict = field(default_factory=lambda: inventory(), repr=False)
     created_at: float = field(default_factory=time.monotonic)
     finished_at: float | None = None
     task: asyncio.Task | None = field(default=None, repr=False)
     status: str = "preparing"
-    message: str = "Loading the selected sample from both dataset branches."
+    message: str = "Preparing the fixed sample from both dataset branches. No model calls yet."
     source_rows: int = 0
     total: int = 0
-    results: list[dict] = field(default_factory=list)
+    sample_complete: bool = False
+    prepared_benchmarks: int = 0
+    downloads: int = 0
+    results: ReviewStore = field(default_factory=ReviewStore, repr=False)
     usage: Counter = field(default_factory=Counter)
 
 
 jobs: dict[str, ReviewJob] = {}
 
 
-def inventory() -> dict:
-    return json.loads(INVENTORY_PATH.read_text(encoding="utf-8"))
-
-
 def sweep() -> None:
     now = time.monotonic()
     for run_id, job in list(jobs.items()):
-        if job.finished_at is not None and now - job.finished_at > RETENTION_SECONDS:
+        if job.finished_at is not None and not job.downloads and now - job.finished_at > RETENTION_SECONDS:
             jobs.pop(run_id, None)
+            job.results.close()
 
 
 async def shutdown() -> None:
@@ -97,6 +104,8 @@ async def shutdown() -> None:
     for task in tasks:
         task.cancel()
     await asyncio.gather(*tasks, return_exceptions=True)
+    for job in jobs.values():
+        job.results.close()
     jobs.clear()
 
 
@@ -104,35 +113,53 @@ async def shutdown() -> None:
 async def catalog(response: Response) -> dict:
     response.headers["Cache-Control"] = "no-store"
     data = inventory()
+    benchmarks = sorted({table["benchmark"] for table in data["tables"]})
     return {
         "model": DEFAULT_MODEL, "reasoning_effort": DEFAULT_REASONING_EFFORT,
         "max_output_tokens": DEFAULT_MAX_OUTPUT_TOKENS,
         "scoring_policy": SCORING_POLICY,
-        "branches": data["branches"], "requires_hf_token": not bool(get_token()),
-        "max_items_per_table": 10,
-        "benchmarks": [{"id": name, "name": BENCHMARK_NAMES[name],
-                        "table_count": sum(t["benchmark"] == name for t in data["tables"])}
-                       for name in BENCHMARK_NAMES],
+        "branches": data["branches"], "dataset_access_configured": bool(get_token()),
+        "table_count": len(data["tables"]),
+        "source_rows": sum(table["row_count"] for table in data["tables"]),
+        "sampling": sampling_policy(), "sample_max_items": sample_upper_bound(data),
+        "missing_item_tables": data["missing_item_tables"],
+        "benchmarks": [{"id": name, "name": name.replace("_", " ").title(),
+                        "table_count": sum(t["benchmark"] == name for t in data["tables"]),
+                        "source_rows": sum(t["row_count"] for t in data["tables"] if t["benchmark"] == name),
+                        "sample_max_items": min(SAMPLE_SIZE, sum(t["row_count"] for t in data["tables"] if t["benchmark"] == name))}
+                       for name in benchmarks],
     }
 
 
-def public_job(job: ReviewJob) -> dict:
-    counts = Counter(item["status"] for item in job.results)
-    ranked = sorted((item for item in job.results if item["status"] == "complete"),
-                    key=lambda item: (-item["overall_score"], item["evidence_hash"]))
+def public_job(job: ReviewJob, page: int = 1, *, include_items: bool = True) -> dict:
+    counts = job.results.counts
+    processed = job.results.processed
+    pages = max(1, (processed + RESULTS_PAGE_SIZE - 1) // RESULTS_PAGE_SIZE)
+    page = min(page, pages)
+    offset = (page - 1) * RESULTS_PAGE_SIZE
+    ranked, failed = [], []
+    if include_items:
+        if offset < counts["complete"]:
+            ranked = list(job.results.records("complete", offset=offset, limit=RESULTS_PAGE_SIZE))
+        failed = list(job.results.records("error", offset=max(0, offset - counts["complete"]),
+                                          limit=RESULTS_PAGE_SIZE - len(ranked)))
     return {
         "run_id": job.run_id, "status": job.status, "message": job.message,
         "model": DEFAULT_MODEL, "reasoning_effort": DEFAULT_REASONING_EFFORT,
         "deployment": job.request.deployment.model_dump(),
         "scoring_policy": SCORING_POLICY,
-        "scope": {"benchmarks": job.request.benchmarks, "items_per_table": job.request.items_per_table,
-                  "branches": inventory()["branches"], "sample_only": True},
-        "source_rows": job.source_rows, "total": job.total, "processed": len(job.results),
+        "scope": {"benchmarks": sorted({t["benchmark"] for t in job.inventory["tables"]}),
+                  "table_count": len(job.inventory["tables"]),
+                  "source_rows": sum(t["row_count"] for t in job.inventory["tables"]),
+                  "branches": job.inventory["branches"], "sample_only": True,
+                  "sampling": sampling_policy(), "sample_max_items": sample_upper_bound(job.inventory)},
+        "source_rows": job.source_rows, "total": job.total, "processed": processed,
+        "sample_complete": job.sample_complete, "prepared_benchmarks": job.prepared_benchmarks,
         "complete": counts["complete"], "errors": counts["error"],
-        "needs_review": sum(item.get("needs_review", False) for item in ranked),
+        "needs_review": job.results.needs_review,
         "usage": dict(job.usage),
-        "ranked_items": [{**item, "rank": n} for n, item in enumerate(ranked[:job.request.top_k], 1)],
-        "failed_items": [item for item in job.results if item["status"] == "error"],
+        "pagination": {"page": page, "page_size": RESULTS_PAGE_SIZE, "total_pages": pages},
+        "ranked_items": ranked, "failed_items": failed,
     }
 
 
@@ -146,17 +173,14 @@ def authorize(run_id: str, secret: str | None) -> ReviewJob:
 
 @router.post("/runs", status_code=202)
 async def start_review(body: ReviewRequest, response: Response,
-                       x_openai_key: Annotated[str | None, Header()] = None,
-                       x_huggingface_key: Annotated[str | None, Header()] = None) -> dict:
+                       x_openai_key: Annotated[str | None, Header()] = None) -> dict:
     response.headers["Cache-Control"] = "no-store"
     if not x_openai_key or not x_openai_key.strip():
         raise HTTPException(401, "An OpenAI API key is required.")
-    if len(x_openai_key) > 512 or (x_huggingface_key and len(x_huggingface_key) > 512):
+    if len(x_openai_key) > 512:
         raise HTTPException(400, "Invalid credential length.")
-    if set(body.benchmarks) - BENCHMARK_NAMES.keys() or len(set(body.benchmarks)) != len(body.benchmarks):
-        raise HTTPException(400, "Choose benchmarks from the demo catalog.")
-    if not x_huggingface_key and not get_token():
-        raise HTTPException(400, "Hugging Face access to measurement-db is required. Supply a read token.")
+    if not get_token():
+        raise HTTPException(503, "Dataset access is not configured on this server. Please contact the site maintainer or try again later.")
     sweep()
     owner = hashlib.sha256(x_openai_key.strip().encode()).hexdigest()
     active = [job for job in jobs.values() if job.finished_at is None]
@@ -166,15 +190,43 @@ async def start_review(body: ReviewRequest, response: Response,
         raise HTTPException(429, "The demo is at capacity. Please try again later.")
     job = ReviewJob(secrets.token_hex(16), secrets.token_urlsafe(32), owner, body)
     jobs[job.run_id] = job
-    job.task = asyncio.create_task(evaluate(job, x_openai_key.strip(), x_huggingface_key))
+    job.task = asyncio.create_task(evaluate(job, x_openai_key.strip()))
     return {"run_id": job.run_id, "run_secret": job.secret}
 
 
 @router.get("/runs/{run_id}")
 async def get_review(run_id: str, response: Response,
-               x_review_token: Annotated[str | None, Header()] = None) -> dict:
+               x_review_token: Annotated[str | None, Header()] = None,
+               page: Annotated[int, Query(ge=1)] = 1) -> dict:
     response.headers["Cache-Control"] = "no-store"
-    return public_job(authorize(run_id, x_review_token))
+    return public_job(authorize(run_id, x_review_token), page)
+
+
+@router.get("/runs/{run_id}/export")
+async def export_review(run_id: str, x_review_token: Annotated[str | None, Header()] = None):
+    job = authorize(run_id, x_review_token)
+    snapshot = public_job(job, include_items=False)
+    cutoff = snapshot["processed"]
+    for key in ("pagination", "ranked_items", "failed_items"):
+        snapshot.pop(key)
+    job.downloads += 1
+
+    async def content():
+        try:
+            yield json.dumps(snapshot)[:-1]
+            for status, key in (("complete", "ranked_items"), ("error", "failed_items")):
+                yield f', "{key}": ['
+                with closing(job.results.records(status, cutoff=cutoff)) as records:
+                    for index, item in enumerate(records):
+                        yield ("," if index else "") + json.dumps(item)
+                yield "]"
+            yield "}"
+        finally:
+            job.downloads -= 1
+
+    return StreamingResponse(content(), media_type="application/json", headers={
+        "Cache-Control": "no-store", "Content-Disposition": f'attachment; filename="item-review-{run_id}.json"',
+    })
 
 
 @router.post("/runs/{run_id}/cancel")
@@ -191,51 +243,74 @@ async def cancel_review(run_id: str, response: Response,
     return public_job(job)
 
 
-def load_sample(body: ReviewRequest, hf_token: str | None) -> tuple[int, list[dict]]:
-    data = inventory()
-    data["tables"] = [table for table in data["tables"] if table["benchmark"] in body.benchmarks]
-    unique: dict[str, dict] = {}
-    rows = 0
-    for item in iter_items(data, body.items_per_table, token=hf_token):
-        rows += 1
-        key = item["evidence_hash"]
-        if key not in unique:
-            unique[key] = {"evidence_hash": key, "evidence": item["evidence"], "sources": []}
-        unique[key]["sources"].append(item["source"])
-    return rows, list(unique.values())
+async def prepare_review(job):
+    cancelled = Event()
 
+    def progress(benchmark, completed, rows):
+        job.prepared_benchmarks = completed
+        job.source_rows = rows
+        job.message = f"Preparing sample from {benchmark}. No model calls yet."
 
-async def evaluate(job: ReviewJob, api_key: str, hf_token: str | None) -> None:
+    prepare = asyncio.create_task(asyncio.to_thread(
+        prepare_samples, job.inventory, db.DEFAULT_DB_PATH.parent / "item-review-samples",
+        token=get_token(), progress=progress, cancelled=cancelled,
+    ))
     try:
-        async with asyncio.timeout(MAX_RUN_SECONDS):
-            job.source_rows, items = await asyncio.to_thread(load_sample, job.request, hf_token)
-            hf_token = None
-            job.total = len(items)
-            if not items:
-                job.status, job.message = "failed", "The selected sample has no evaluation items."
-                return
-            job.status, job.message = "running", "Assessing all six validity dimensions for each item."
-            async with AsyncOpenAI(api_key=api_key, base_url="https://api.openai.com/v1",
-                                   max_retries=2, timeout=600) as client:
-                judge = AsyncJudge(client, job.request.deployment.describe(), PROMPT_PATH.read_text(encoding="utf-8"))
-                for item in items:
-                    assessment = await judge(item["evidence"])
-                    # Keep actionable assessment fields; never expose SDK exceptions
-                    # or raw provider responses, which can include credential text.
-                    result = {**item, **{key: assessment[key] for key in (
+        return await asyncio.shield(prepare)
+    except asyncio.CancelledError:
+        cancelled.set()
+        await asyncio.gather(prepare, return_exceptions=True)
+        raise
+
+
+async def review_items(job):
+    paths, total = await prepare_review(job)
+    return iter_sample_items(paths), total
+
+
+async def next_item(items):
+    # Wait for an in-flight read before closing its generator on cancellation.
+    read = asyncio.create_task(asyncio.to_thread(next, items, None))
+    try:
+        return await asyncio.shield(read)
+    except asyncio.CancelledError:
+        await read
+        raise
+
+
+async def evaluate(job: ReviewJob, api_key: str) -> None:
+    items = None
+    try:
+        items, job.total = await review_items(job)
+        job.status, job.message = "running", "Assessing the selected sample."
+        async with AsyncOpenAI(api_key=api_key, base_url="https://api.openai.com/v1",
+                               max_retries=2, timeout=600) as client:
+            judge = AsyncJudge(client, job.request.deployment.describe(), PROMPT_PATH.read_text(encoding="utf-8"))
+            while (item := await next_item(items)) is not None:
+                key = item["evidence_hash"]
+                for source in item["sources"]:
+                    job.results.add_source(key, source)
+                if job.results.contains(key):
+                    continue
+                job.message = f"Reviewing sampled items from {item['sources'][0]['benchmark']}."
+                assessment = await judge(item["evidence"])
+                # Never retain raw model output or provider exception text.
+                result = {"evidence_hash": key, "evidence": item["evidence"], **{
+                    field: assessment[field] for field in (
                         "status", "assessment", "overall_score", "response_model", "response_id",
                         "compatibility_score", "scored_dimensions", "needs_review",
-                    ) if key in assessment}}
-                    if assessment["status"] == "error":
-                        result["error"] = "The model did not return a complete, valid assessment."
-                    job.results.append(result)
-                    usage = assessment.get("usage") or {}
-                    for key in ("input_tokens", "output_tokens"):
-                        job.usage[key] += usage.get(key, 0)
-                    job.usage["reasoning_tokens"] += (usage.get("output_tokens_details") or {}).get("reasoning_tokens", 0)
-                    job.usage["cached_input_tokens"] += (usage.get("input_tokens_details") or {}).get("cached_tokens", 0)
-            job.status = "completed"
-            job.message = "Sample review complete. Valid assessments are ranked with confidence and evidence gaps shown."
+                    ) if field in assessment}}
+                if assessment["status"] == "error":
+                    result["error"] = "The model did not return a complete, valid assessment."
+                job.results.append(result)
+                usage = assessment.get("usage") or {}
+                for field in ("input_tokens", "output_tokens"):
+                    job.usage[field] += usage.get(field, 0)
+                job.usage["reasoning_tokens"] += (usage.get("output_tokens_details") or {}).get("reasoning_tokens", 0)
+                job.usage["cached_input_tokens"] += (usage.get("input_tokens_details") or {}).get("cached_tokens", 0)
+        job.sample_complete = True
+        job.status = "completed"
+        job.message = "The selected sample has been assessed. Rankings apply to this sample, with confidence and evidence gaps shown."
     except asyncio.CancelledError:
         job.status, job.message = "cancelled", "Review stopped. Completed assessments are retained."
     except AuthenticationError:
@@ -244,11 +319,11 @@ async def evaluate(job: ReviewJob, api_key: str, hf_token: str | None) -> None:
         job.status, job.message = "failed", "OpenAI reported a rate or quota limit. Completed assessments are retained."
     except OpenAIError:
         job.status, job.message = "failed", "The OpenAI request failed. Check model access and try again."
-    except TimeoutError:
-        job.status, job.message = "failed", "The review reached its one-hour time limit. Completed assessments are retained."
     except Exception:
         job.status = "failed"
-        job.message = "Could not finish the review. Check Hugging Face dataset access and try again."
+        job.message = "Could not load or process evaluation items. Please try again later or contact the site maintainer."
     finally:
-        api_key, hf_token = "", None
+        if hasattr(items, "close"):
+            items.close()
+        api_key = ""
         job.finished_at = time.monotonic()
