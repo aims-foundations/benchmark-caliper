@@ -87,6 +87,7 @@ class AnalysisJob:
     task: asyncio.Task | None = field(default=None, repr=False)
     provider_call: object | None = field(default=None, repr=False)
     provider_tasks: set = field(default_factory=set, repr=False)
+    provider_error: dict | None = None
     data_ready: bool = False
     stopped: Event = field(default_factory=Event, repr=False)
     owner_hash: str | None = field(default=None, repr=False)
@@ -199,6 +200,7 @@ def public_job(job: AnalysisJob, page: int = 1) -> dict:
         "usage": dict(job.usage), "model": dict(job.model), "scope": job.scope,
         "can_continue": job.checkpoint_seen and job.status in {"checkpoint", "cancelled", "failed"},
         "error": job.message if job.status == "failed" else None,
+        "provider_error": dict(job.provider_error) if job.status == "failed" and job.provider_error else None,
     }
 
 
@@ -262,7 +264,8 @@ def model_bridge(job: AnalysisJob, api_key: str):
 
     The worker blocks on the event loop's request. Cancellation cancels that
     request and signals the shared classifier to stop before another item.
-    Only this closure holds the credential; provider exception text is discarded.
+    Only this closure holds the credential. The client maps provider failures to
+    safe diagnostic messages; unrecognized exception details are discarded.
     """
     loop = asyncio.get_running_loop()
 
@@ -270,6 +273,12 @@ def model_bridge(job: AnalysisJob, api_key: str):
         # Reasoning and cached tokens are subsets of the billed totals.
         for key in job.usage:
             job.usage[key] += getattr(result, key)
+
+    def provider_failure(error):
+        # public_message is derived from an allowlisted code, never an SDK body.
+        message = error.public_message
+        job.provider_error = {"code": error.code, "status_code": error.status_code, "message": message}
+        return RuntimeError(message)
 
     async def request(arguments):
         task = asyncio.current_task()
@@ -285,9 +294,12 @@ def model_bridge(job: AnalysisJob, api_key: str):
                 raise
             except model_client.ModelResponseError as error:
                 record_usage(error.result)
-                raise RuntimeError("OpenAI returned no complete response. Retry with the same saved criteria.") from None
+                raise provider_failure(error) from None
+            except model_client.ModelRequestError as error:
+                raise provider_failure(error) from None
             except Exception:
-                raise RuntimeError("OpenAI request failed. Check key access, quota, and model availability.") from None
+                error = model_client.ModelRequestError(code="internal_error")
+                raise provider_failure(error) from None
             record_usage(result)
             return result.text.replace(api_key, "[redacted]")
         finally:
@@ -356,7 +368,9 @@ async def initialize(job: AnalysisJob, mode: str, api_key: str | None) -> None:
     except (item_analysis_source.DatasetAccessError, item_analysis_source.DatasetPreparationError) as error:
         job.status, job.message = "failed", str(error)
     except Exception:
-        job.status, job.message = "failed", "Could not prepare a valid specification. Check the example, model access, and API key, then start a new analysis."
+        job.status = "failed"
+        job.message = (job.provider_error["message"] if job.provider_error else
+                       "Could not prepare a valid specification. Check the example, model access, and API key, then start a new analysis.")
     finally:
         await drain_provider(job)
         api_key = None
@@ -387,7 +401,9 @@ async def classify_job(job: AnalysisJob, api_key: str) -> None:
         )
         await refresh_report(job)
         if execution["fatal_error"]:
-            job.status, job.message = "failed", "The model request failed. Check your API key, quota, or model access, then retry to resume saved progress."
+            job.status = "failed"
+            job.message = (job.provider_error["message"] if job.provider_error else
+                           "The model request failed. Retry to resume saved progress; if it persists, contact the website maintainer.")
         elif execution["full_dataset_complete"]:
             job.status, job.message = "complete", "Every item in this snapshot has a saved classification. Review the labels and export the results."
         elif job.scope == "pilot" and not execution["pending"]:
@@ -397,7 +413,9 @@ async def classify_job(job: AnalysisJob, api_key: str) -> None:
         else:
             job.status, job.message = "failed", "Some items still need valid classifications. Retry to resume; completed items are retained."
     except Exception:
-        job.status, job.message = "failed", "The analysis could not finish. Completed results are retained; retry with the same frozen specification."
+        job.status = "failed"
+        job.message = (job.provider_error["message"] if job.provider_error else
+                       "The analysis could not finish. Completed results are retained; retry with the same frozen specification.")
     finally:
         await drain_provider(job)
         api_key = ""
@@ -467,6 +485,7 @@ async def start_classification(run_id: str, body: Classification, response: Resp
         raise HTTPException(409, "Resume the full-snapshot phase to keep this run's scope consistent.")
     job.owner_hash = reserve_worker(api_key, job)
     job.stopped.clear()
+    job.provider_error = None
     job.scope = body.scope
     job.status = "running"
     job.message = "Classifying the first items for review." if body.scope == "pilot" else "Continuing across all items using the same classifier rules."

@@ -1,8 +1,10 @@
 """Exercise the real OpenAI adapter with SDK responses, without paid calls."""
 
 import asyncio
+import json
 from types import SimpleNamespace
 
+import httpx
 import openai
 import pytest
 
@@ -123,3 +125,96 @@ def test_cancellation_closes_async_client(monkeypatch):
     with pytest.raises(asyncio.CancelledError):
         call(True)
     assert client.closed
+
+
+def install_transport(monkeypatch, asynchronous, status, body):
+    """Exercise SDK serialization, HTTP exception parsing, and client cleanup."""
+    name = "AsyncOpenAI" if asynchronous else "OpenAI"
+    sdk_client = getattr(openai, name)
+    requests, transports = [], []
+
+    def respond(request):
+        requests.append(request)
+        return httpx.Response(status, json=body)
+
+    def factory(**kwargs):
+        transport = httpx.MockTransport(respond)
+        client = (httpx.AsyncClient(transport=transport) if asynchronous
+                  else httpx.Client(transport=transport))
+        transports.append(client)
+        return sdk_client(**kwargs, http_client=client)
+
+    monkeypatch.setattr(openai, name, factory)
+    return requests, transports
+
+
+@pytest.mark.parametrize("asynchronous", [False, True])
+@pytest.mark.parametrize("status,code,parameter,expected", [
+    (401, "invalid_api_key", None, "authentication"),
+    (404, "model_not_found", "model", "model_unavailable"),
+    (429, "insufficient_quota", None, "quota"),
+    (429, "rate_limit_exceeded", None, "rate_limit"),
+    (400, "unsupported_parameter", "reasoning.effort", "invalid_request"),
+    (400, "invalid_value", "service_tier", "invalid_request"),
+])
+def test_real_sdk_errors_keep_actionable_reason_without_provider_text(
+        monkeypatch, asynchronous, status, code, parameter, expected):
+    requests, transports = install_transport(monkeypatch, asynchronous, status, {
+        "error": {"message": "Sensitive upstream text private-test-key",
+                  "type": "invalid_request_error", "code": code, "param": parameter},
+    })
+    with pytest.raises(model_client.ModelRequestError) as raised:
+        call(asynchronous)
+    error = raised.value
+    assert error.code == expected
+    assert error.status_code == status
+    assert error.parameter == parameter
+    assert "private-test-key" not in str(error)
+    assert "Sensitive upstream text" not in str(error)
+    if expected == "invalid_request":
+        assert f"Rejected setting: {parameter}." in str(error)
+    assert len(requests) == 1  # No hidden SDK retry charges.
+    assert str(requests[0].url) == "https://api.openai.com/v1/responses"
+    payload = json.loads(requests[0].content)
+    assert payload["model"] == "gpt-6-luna"
+    assert payload["reasoning"] == {"effort": "low"}
+    assert payload["text"] == {"format": {"type": "json_object"}}
+    assert all(client.is_closed for client in transports)
+
+
+@pytest.mark.parametrize("asynchronous", [False, True])
+@pytest.mark.parametrize("parameter", [
+    "private-test-key", {"private-test-key": "secret"}, ["private-test-key"],
+])
+def test_real_sdk_untrusted_error_parameter_is_omitted(monkeypatch, asynchronous, parameter):
+    install_transport(monkeypatch, asynchronous, 400, {
+        "error": {"message": "private-test-key", "type": "invalid_request_error",
+                  "code": "unsupported_parameter", "param": parameter},
+    })
+    with pytest.raises(model_client.ModelRequestError) as raised:
+        call(asynchronous)
+    assert raised.value.code == "invalid_request"
+    assert raised.value.parameter is None
+    assert str(raised.value) == model_client.ERROR_MESSAGES["invalid_request"]
+    assert "private-test-key" not in str(raised.value)
+
+
+@pytest.mark.parametrize("asynchronous", [False, True])
+def test_real_sdk_output_limit_retains_usage_and_specific_error(monkeypatch, asynchronous):
+    requests, transports = install_transport(monkeypatch, asynchronous, 200, {
+        "id": "resp_test", "object": "response", "created_at": 1,
+        "status": "incomplete", "model": "gpt-6-luna", "output": [],
+        "incomplete_details": {"reason": "max_output_tokens"},
+        "usage": {"input_tokens": 120, "output_tokens": 4096, "total_tokens": 4216,
+                  "input_tokens_details": {"cached_tokens": 100},
+                  "output_tokens_details": {"reasoning_tokens": 4096}},
+    })
+    with pytest.raises(model_client.ModelResponseError) as raised:
+        call(asynchronous)
+    assert raised.value.code == "output_limit"
+    assert raised.value.result.input_tokens == 120
+    assert raised.value.result.output_tokens == 4096
+    assert raised.value.result.reasoning_tokens == 4096
+    assert "output token limit" in str(raised.value)
+    assert len(requests) == 1
+    assert all(client.is_closed for client in transports)

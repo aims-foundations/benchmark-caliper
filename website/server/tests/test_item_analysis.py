@@ -309,11 +309,53 @@ def test_provider_failure_is_sanitized_and_can_resume(client, monkeypatch, model
     failed = classify(client, access)
     assert failed["status"] == "failed" and failed["errors"] == 1
     assert KEY not in json.dumps(failed)
+    assert "arbitrary sensitive text" not in json.dumps(failed)
+    assert failed["provider_error"]["code"] == "internal_error"
+    assert failed["message"] == failed["provider_error"]["message"]
     directory = analysis.jobs[access["run_id"]].directory
     assert all(KEY not in path.read_text() for path in directory.iterdir() if path.is_file())
     monkeypatch.setattr(model_client, "call_text_async", original)
     finished = classify(client, access)
     assert finished["status"] == "complete" and finished["errors"] == 0
+    assert finished["provider_error"] is None
+    assert analysis.jobs[access["run_id"]].provider_error is None
+
+
+@pytest.mark.parametrize("mode", ["generate", "provided"])
+@pytest.mark.parametrize("code,status_code,parameter", [
+    ("authentication", 401, None),
+    ("model_unavailable", 404, "model"),
+    ("permission", 403, None),
+    ("quota", 429, None),
+    ("rate_limit", 429, None),
+    ("invalid_request", 400, "reasoning.effort"),
+])
+def test_safe_provider_diagnostics_reach_generation_and_classification(
+        client, monkeypatch, mode, code, status_code, parameter):
+    error = model_client.ModelRequestError(
+        f"Raw provider response contains {KEY} and confidential provider text",
+        code=code, status_code=status_code, parameter=parameter,
+    )
+
+    async def rejected(**arguments):
+        raise error
+
+    monkeypatch.setattr(model_client, "call_text_async", rejected)
+    access = start(client, mode=mode)
+    state = settled(client, access)
+    failed = classify(client, access) if mode == "provided" else state
+    assert failed["status"] == "failed"
+    assert failed["message"] == failed["error"] == error.public_message
+    assert failed["provider_error"] == {
+        "code": code, "status_code": status_code, "message": error.public_message,
+    }
+    assert KEY not in json.dumps(failed)
+    assert "confidential provider text" not in json.dumps(failed)
+    directory = analysis.jobs[access["run_id"]].directory
+    for path in directory.iterdir():
+        if path.is_file():
+            assert KEY not in path.read_text()
+            assert "confidential provider text" not in path.read_text()
 
 
 def test_incomplete_response_counts_billed_usage_without_saving_provider_text(client, monkeypatch):
@@ -331,6 +373,9 @@ def test_incomplete_response_counts_billed_usage_without_saving_provider_text(cl
     assert failed["usage"] == {"input_tokens": 100, "output_tokens": 30,
                                "cached_input_tokens": 20, "reasoning_tokens": 7}
     assert KEY not in json.dumps(failed)
+    assert "Incomplete response contains" not in json.dumps(failed)
+    assert failed["provider_error"]["code"] == "incomplete_response"
+    assert failed["message"] == failed["provider_error"]["message"]
     directory = analysis.jobs[access["run_id"]].directory
     assert all(KEY not in path.read_text() for path in directory.iterdir() if path.is_file())
 
