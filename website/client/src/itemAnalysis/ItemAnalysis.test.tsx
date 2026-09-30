@@ -12,6 +12,10 @@ vi.mock('./api', async original => ({ ...await original<typeof import('./api')>(
 const example = { id: 'illustrative', title: 'Exam preparation example', description: 'Authored examples for demonstrating the workflow.', item_count: 10,
   benchmark: 'illustrative', deployment: 'Hindi-medium exam preparation.', source_label: 'Illustrative teaching items', available: true, supplied_spec_available: true }
 const catalog: Catalog = { examples: [example], checkpoint_size: 100 }
+const mmlu = { ...example, id: 'mmlu', title: 'MMLU · Hindi-medium exam preparation', item_count: 14015, benchmark: 'mmlu',
+  description: 'MMLU items from measurement-db-pp.', source_label: 'measurement-db-pp · MMLU',
+  source_revision: '1234567890abcdef1234567890abcdef12345678',
+  source_url: 'https://huggingface.co/datasets/aims-foundations/measurement-db-pp/tree/1234567890abcdef1234567890abcdef12345678/mmlu' }
 const access = { run_id: 'run-123', run_secret: 'private-run-token' }
 const ready: AnalysisRun = {
   run_id: access.run_id, status: 'ready', message: 'Criteria are ready for inspection.', example,
@@ -29,6 +33,50 @@ beforeEach(() => {
   vi.mocked(api.getCatalog).mockResolvedValue(catalog)
   vi.mocked(api.createRun).mockResolvedValue({ ...ready, ...access })
   vi.mocked(api.getRun).mockResolvedValue(ready)
+})
+
+it('defaults to real MMLU and exposes the pinned dataset source', async () => {
+  // MMLU stays the default even if catalog ordering changes.
+  vi.mocked(api.getCatalog).mockResolvedValue({ ...catalog, examples: [example, mmlu] })
+  const user = userEvent.setup()
+  render(<ItemAnalysis />)
+  expect(await screen.findByRole('combobox', { name: 'Benchmark example' })).toHaveValue('mmlu')
+  expect(screen.getByText('14,015 items')).toBeVisible()
+  expect(screen.getByText(/Start with 100 items/)).toBeVisible()
+  await user.click(screen.getByText('Deployment context'))
+  expect(screen.getByRole('link', { name: /View dataset on Hugging Face/ })).toHaveAttribute('href', mmlu.source_url)
+  expect(screen.getByText('1234567890ab')).toHaveAttribute('title', mmlu.source_revision)
+  await user.click(screen.getByRole('radio', { name: /Use example criteria/ }))
+  await user.click(screen.getByRole('button', { name: /Load example criteria/ }))
+  expect(api.createRun).toHaveBeenCalledWith('mmlu', 'provided', '')
+})
+
+it('keeps unavailable MMLU selected and explains server access instead of silently substituting teaching items', async () => {
+  const unavailable_reason = 'The site maintainer must configure a Hugging Face token with access to measurement-db-pp.'
+  vi.mocked(api.getCatalog).mockResolvedValue({ ...catalog, examples: [{ ...mmlu, available: false, unavailable_reason }, example] })
+  const user = userEvent.setup()
+  render(<ItemAnalysis />)
+  const selector = await screen.findByRole('combobox', { name: 'Benchmark example' })
+  expect(selector).toHaveValue('mmlu')
+  expect(screen.getByText(unavailable_reason)).toBeVisible()
+  expect(screen.getByRole('button', { name: /Generate criteria with Sonnet/ })).toBeDisabled()
+  expect(screen.queryByLabelText('Anthropic API key')).not.toBeInTheDocument()
+  expect(screen.getByText(/No Hugging Face key is needed from visitors/)).toBeVisible()
+  expect(api.createRun).not.toHaveBeenCalled()
+  await user.selectOptions(selector, 'illustrative')
+  expect(screen.getByText('10 items')).toBeVisible()
+  await user.selectOptions(selector, 'mmlu')
+  expect(screen.getByText(unavailable_reason)).toBeVisible()
+})
+
+it('preserves dataset provenance when restoring a prepared MMLU run', async () => {
+  sessionStorage.setItem('item_analysis_run_v1', JSON.stringify(access))
+  vi.mocked(api.getRun).mockResolvedValue({ ...ready, example: mmlu, total: mmlu.item_count })
+  const user = userEvent.setup()
+  render(<ItemAnalysis />)
+  await user.click(await screen.findByText('Context and usage'))
+  expect(screen.getByRole('link', { name: /View dataset on Hugging Face/ })).toHaveAttribute('href', mmlu.source_url)
+  expect(screen.getByText('1234567890ab')).toHaveAttribute('title', mmlu.source_revision)
 })
 
 it('loads supplied criteria without a key and labels unscored illustrative items honestly', async () => {

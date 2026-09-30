@@ -6,6 +6,9 @@ export interface Example {
   benchmark: string
   deployment: string
   source_label: string
+  source_url?: string
+  source_revision?: string
+  unavailable_reason?: string
   available: boolean
   supplied_spec_available?: boolean
 }

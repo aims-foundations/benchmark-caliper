@@ -31,11 +31,10 @@ from starlette.background import BackgroundTask
 from anthropic_api_package_release.item_analysis import classify, generate, prepare, report
 from anthropic_api_package_release.item_analysis.data import file_sha256
 from anthropic_api_package_release.item_analysis.storage import check_prepared, read_json, write_json
-from . import anthropic_client, db
+from . import anthropic_client, db, item_analysis_source
 
 router = APIRouter(prefix="/api/item-analysis", tags=["Item analysis"])
 FIXTURE_PATH = Path(__file__).with_name("item_analysis_demo.json")
-DEFAULT_PREPARED_DIR = Path(__file__).resolve().parents[2] / "results/item_analysis/mmlu_demo"
 CHECKPOINT_SIZE = 100
 PAGE_SIZE = 20
 MAX_ACTIVE = 3
@@ -91,16 +90,21 @@ class AnalysisJob:
 jobs: dict[str, AnalysisJob] = {}
 
 
-def prepared_directory() -> Path:
-    return Path(os.environ.get("ITEM_ANALYSIS_PREPARED_DIR", str(DEFAULT_PREPARED_DIR))).expanduser()
+def prepared_directory() -> Path | None:
+    """Use a local snapshot only when an administrator explicitly configures it."""
+    configured = os.environ.get("ITEM_ANALYSIS_PREPARED_DIR", "").strip()
+    return Path(configured).expanduser() if configured else None
 
 
 def examples() -> list[dict]:
     fixture = read_json(FIXTURE_PATH)
-    entries = [{"id": "illustrative", **{key: fixture[key] for key in (
+    illustrative = {"id": "illustrative", **{key: fixture[key] for key in (
         "title", "description", "benchmark", "deployment", "source_label")},
-        "item_count": len(fixture["items"]), "available": True, "supplied_spec_available": True}]
+        "item_count": len(fixture["items"]), "available": True, "supplied_spec_available": True}
     directory = prepared_directory()
+    if directory is None:
+        return [item_analysis_source.source_entry(), illustrative]
+    entries = []
     # Source paths come only from server configuration, never HTTP parameters.
     try:
         dataset = read_json(directory / "dataset.json")
@@ -117,7 +121,7 @@ def examples() -> list[dict]:
             })
     except (OSError, ValueError, KeyError, TypeError):
         pass  # The bundled example remains runnable on a fresh checkout.
-    return entries
+    return [*entries, illustrative]
 
 
 def sweep() -> None:
@@ -194,13 +198,21 @@ def prepare_job(job: AnalysisJob, example_id: str) -> Path:
     """Prepare immutable inputs, returning the optional provided-spec location."""
     if example_id == "mmlu":
         source = prepared_directory()
-        check_prepared(source)
-        for name in PREPARED_FILES:
-            shutil.copyfile(source / name, job.directory / name)
-        supplied = source / "classifier_spec.original.json"
-        if supplied.is_file():
-            shutil.copyfile(supplied, job.directory / "provided_spec.json")
-        check_prepared(job.directory)
+        if source is None:
+            item_analysis_source.prepare_source(job.directory, stopped=job.stopped.is_set)
+        else:
+            try:
+                check_prepared(source)
+                for name in PREPARED_FILES:
+                    shutil.copyfile(source / name, job.directory / name)
+                supplied = source / "classifier_spec.original.json"
+                if supplied.is_file():
+                    shutil.copyfile(supplied, job.directory / "provided_spec.json")
+                check_prepared(job.directory)
+            except (OSError, ValueError, KeyError, TypeError):
+                raise item_analysis_source.DatasetPreparationError(
+                    "The configured MMLU snapshot could not be prepared. Ask the website administrator to check its files."
+                ) from None
     else:
         import pyarrow as pa
         import pyarrow.parquet as pq
@@ -227,6 +239,13 @@ def prepare_job(job: AnalysisJob, example_id: str) -> Path:
     write_json(job.directory / "evidence.json", evidence)
     dataset["evidence_sha256"] = file_sha256(job.directory / "evidence.json")
     write_json(job.directory / "dataset.json", dataset)
+    # Catalog counts describe the advertised source. A run always displays the
+    # exact snapshot and deployment that its frozen inputs actually contain.
+    job.example = {
+        **job.example, "benchmark": dataset["benchmark"],
+        "deployment": evidence["deployment"], "item_count": dataset["item_count"],
+        **{f"source_{key}": dataset["source"].get(key) for key in ("repo", "revision", "table", "sha256")},
+    }
     return job.directory / "provided_spec.json"
 
 
@@ -318,6 +337,8 @@ async def initialize(job: AnalysisJob, mode: str, api_key: str | None) -> None:
         write_json(job.directory / "specification.json", metadata)
         await refresh_report(job)
         job.status, job.message = "ready", "Review the classifier rules, then classify the first items."
+    except (item_analysis_source.DatasetAccessError, item_analysis_source.DatasetPreparationError) as error:
+        job.status, job.message = "failed", str(error)
     except Exception:
         job.status, job.message = "failed", "Could not prepare a valid specification. Check the example, model access, and API key, then start a new analysis."
     finally:
@@ -387,6 +408,8 @@ async def create_run(body: NewRun, response: Response,
     example = next((entry for entry in examples() if entry["id"] == body.example_id), None)
     if example is None:
         raise HTTPException(404, "This example is not configured on the server.")
+    if not example["available"]:
+        raise HTTPException(503, example.get("unavailable_reason") or "This dataset is currently unavailable. Try again later.")
     if body.specification_mode == "provided" and not example["supplied_spec_available"]:
         raise HTTPException(409, "This example requires generating a specification.")
     sweep()

@@ -84,6 +84,9 @@
 .ia-source { border-top: 1px solid var(--ia-rule); padding-top: .9rem; margin-top: 1.1rem; font-size: .78rem; color: var(--ia-muted); }
 .ia-source summary { color: #554537; }
 .ia-source p { max-width: 55rem; }
+.ia-dataset-source { display: flex; flex-wrap: wrap; gap: .4rem 1rem; align-items: baseline; }
+.ia-dataset-source a { color: var(--cardinal); }
+.ia-dataset-source code { font-size: .9em; }
 .ia-criteria { margin-block: 2.3rem; }
 .ia-criteria-list { border: 1px solid var(--ia-rule); border-radius: 9px; overflow: hidden; background: white; }
 .ia-criterion + .ia-criterion { border-top: 1px solid var(--ia-rule); }

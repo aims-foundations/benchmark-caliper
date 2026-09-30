@@ -5,7 +5,7 @@ import { appPath } from '../paths'
 import * as api from './api'
 import { Criteria } from './Criteria'
 import { Results } from './Results'
-import type { AnalysisRun, Artifact, Catalog, RunAccess, RunScope, SpecificationMode } from './types'
+import type { AnalysisRun, Artifact, Catalog, Example, RunAccess, RunScope, SpecificationMode } from './types'
 import './itemAnalysis.css'
 
 const STORAGE_KEY = 'item_analysis_run_v1'
@@ -32,6 +32,14 @@ function runTitle(run: AnalysisRun): string {
   return titles[run.status]
 }
 
+function DatasetSource({ example }: { example: Example }) {
+  if (!example.source_url && !example.source_revision) return null
+  return <p className="ia-dataset-source">
+    {example.source_url && <a href={example.source_url} target="_blank" rel="noreferrer">View dataset on Hugging Face ↗</a>}
+    {example.source_revision && <span>Snapshot <code title={example.source_revision}>{example.source_revision.slice(0, 12)}</code></span>}
+  </p>
+}
+
 export function ItemAnalysis() {
   const [catalog, setCatalog] = useState<Catalog | null>(null)
   const [exampleId, setExampleId] = useState('')
@@ -54,7 +62,9 @@ export function ItemAnalysis() {
     api.getCatalog(controller.signal).then(value => {
       if (controller.signal.aborted) return
       setCatalog(value)
-      setExampleId(current => current || value.examples.find(example => example.available)?.id || '')
+      // Keep MMLU visible even when server access needs attention; never silently
+      // replace the real benchmark with the small teaching example.
+      setExampleId(current => current || value.examples.find(example => example.id === 'mmlu')?.id || value.examples[0]?.id || '')
       setError('')
     }).catch(problem => { if (!controller.signal.aborted) setError(problem instanceof Error ? problem.message : 'Could not load the examples.') })
     return () => controller.abort()
@@ -91,7 +101,7 @@ export function ItemAnalysis() {
 
   async function start(event: FormEvent) {
     event.preventDefault()
-    if (busy || !exampleId || (mode === 'generate' && !apiKey.trim())) return
+    if (busy || !catalog?.examples.find(entry => entry.id === exampleId)?.available || (mode === 'generate' && !apiKey.trim())) return
     setBusy(true)
     setError('')
     try {
@@ -187,19 +197,20 @@ export function ItemAnalysis() {
         <p className="ia-eyebrow">Start with an example</p><h2>A benchmark. A real use case.</h2>
         <p className="ia-muted">Choose a prepared context to try the complete workflow.</p>
         <label className="ia-field"><span>Benchmark example</span><select value={exampleId} onChange={event => { setExampleId(event.target.value); setMode('generate') }}>
-          {catalog.examples.map(entry => <option key={entry.id} value={entry.id} disabled={!entry.available}>{entry.title}{!entry.available ? ' — unavailable' : ''}</option>)}
+          {catalog.examples.map(entry => <option key={entry.id} value={entry.id}>{entry.title}{!entry.available ? ' — unavailable' : ''}</option>)}
         </select></label>
         {example && <div className="ia-context"><div className="ia-context-top"><strong>{example.item_count.toLocaleString()} items</strong><span>{example.source_label}</span></div>
-          <p>{example.description}</p><details><summary>Deployment context</summary><p>{example.deployment}</p></details></div>}
-        <fieldset className="ia-mode"><legend>Classification criteria</legend>
+          <p>{example.description}</p><details><summary>Deployment context</summary><p>{example.deployment}</p><DatasetSource example={example} /></details></div>}
+        {example && !example.available && <p className="ia-error" role="status">{example.unavailable_reason || 'This dataset is not available on the server yet. The site maintainer needs to configure dataset access.'}</p>}
+        <fieldset className="ia-mode" disabled={!example?.available}><legend>Classification criteria</legend>
           <label><input type="radio" name="specification" value="generate" checked={mode === 'generate'} onChange={() => setMode('generate')} /><span><strong>Generate with Sonnet</strong><small>Create criteria from the assessment and dataset evidence.</small></span></label>
           <label><input type="radio" name="specification" value="provided" checked={mode === 'provided'} disabled={example?.supplied_spec_available === false} onChange={() => setMode('provided')} /><span><strong>Use example criteria</strong><small>Inspect the supplied specification without a model call.</small></span></label>
         </fieldset>
-        {mode === 'generate' && <KeyInput value={apiKey} onChange={setApiKey} />}
+        {mode === 'generate' && example?.available && <KeyInput value={apiKey} onChange={setApiKey} />}
         <button className="ia-primary" type="submit" disabled={busy || !example?.available || (mode === 'generate' && !apiKey.trim())}>
           {busy ? 'Starting…' : mode === 'generate' ? 'Generate criteria with Sonnet' : 'Load example criteria'}<span aria-hidden="true"> →</span>
         </button>
-        <p className="ia-small ia-cost-note">{mode === 'generate' ? 'Starts a paid Sonnet request. Item classification begins separately.' : 'No API key needed to inspect criteria and browse the items.'}</p>
+        <p className="ia-small ia-cost-note">{!example?.available ? 'Dataset access is managed by the website. No Hugging Face key is needed from visitors.' : mode === 'generate' ? 'Starts a paid Sonnet request. Item classification begins separately.' : 'No API key needed to inspect criteria and browse the items.'}</p>
       </form><aside className="ia-guide"><p className="ia-eyebrow">A closer reading</p>
         <div className="ia-guide-graphic" aria-hidden="true"><span className="ia-sheet"><i /><i /><i /></span><span className="ia-graphic-arrow">→</span><span className="ia-item-grid">{Array.from({ length: 9 }, (_, index) => <i key={index} />)}</span></div>
         <h3>From a finding<br />to a measured pattern.</h3><p>Caliper identifies possible validity issues. This analysis checks individual items to see how often each property appears.</p>
@@ -222,7 +233,7 @@ export function ItemAnalysis() {
             <button className="ia-text-button" onClick={reset} disabled={busy}>Start a new analysis</button>}
             {run.spec && <button className="ia-text-button" disabled={downloading !== null} onClick={() => void download('spec')}>Download criteria ↓</button>}</div>
           <details className="ia-source"><summary>Context and usage</summary><p>{run.example.deployment}</p>
-            <p>{run.example.description}</p><p className="ia-small">Model usage: {(run.usage?.input_tokens || 0).toLocaleString()} input tokens · {(run.usage?.output_tokens || 0).toLocaleString()} output tokens.</p></details>
+            <p>{run.example.description}</p><DatasetSource example={run.example} /><p className="ia-small">Model usage: {(run.usage?.input_tokens || 0).toLocaleString()} input tokens · {(run.usage?.output_tokens || 0).toLocaleString()} output tokens.</p></details>
         </section>
 
         {run.spec && <Criteria spec={run.spec} metadata={run.summary?.specification} />}

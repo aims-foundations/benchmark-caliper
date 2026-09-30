@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from copy import deepcopy
 import json
 from pathlib import Path
+import shutil
 from threading import Event
 import time
 
@@ -116,6 +117,88 @@ def prepared_snapshot(tmp_path, monkeypatch, count=105):
     return output
 
 
+def remote_source(monkeypatch, prepared=None, *, available=True):
+    """Exercise the HTTP adapter's remote branch without contacting Hugging Face."""
+    monkeypatch.delenv("ITEM_ANALYSIS_PREPARED_DIR", raising=False)
+    entry = {
+        "id": "mmlu", "title": "MMLU", "description": "Pinned Hugging Face snapshot.",
+        "benchmark": "mmlu", "deployment": "The catalog deployment.",
+        "source_label": "measurement-db-pp MMLU", "item_count": 14015,
+        "available": available, "supplied_spec_available": True,
+        "source_url": "https://huggingface.co/datasets/aims-foundations/measurement-db-pp/tree/main/mmlu",
+        "source_revision": "advertised-revision",
+    }
+    if not available:
+        entry["unavailable_reason"] = "The MMLU dataset is unavailable on this server."
+    monkeypatch.setattr(analysis.item_analysis_source, "source_entry", lambda: deepcopy(entry))
+    calls = []
+
+    def prepare_remote(directory, stopped=None):
+        assert stopped is not None and not stopped()
+        assert prepared is not None, "This test must not prepare or download a dataset"
+        calls.append(directory)
+        for name in analysis.PREPARED_FILES:
+            shutil.copyfile(prepared / name, directory / name)
+        supplied = directory / "provided_spec.json"
+        shutil.copyfile(prepared / "classifier_spec.original.json", supplied)
+        return supplied
+
+    monkeypatch.setattr(analysis.item_analysis_source, "prepare_source", prepare_remote)
+    return calls
+
+
+def test_default_catalog_puts_real_mmlu_before_illustrative_example(client, monkeypatch):
+    calls = remote_source(monkeypatch)
+    catalog = client.get("/api/item-analysis/catalog").json()
+    assert [entry["id"] for entry in catalog["examples"]] == ["mmlu", "illustrative"]
+    assert catalog["examples"][0]["item_count"] == 14015
+    assert "measurement-db-pp" in catalog["examples"][0]["source_url"]
+    assert analysis.prepared_directory() is None
+    assert not calls
+
+
+def test_remote_preparation_uses_actual_frozen_metadata_and_hides_paths(client, tmp_path, monkeypatch, model):
+    prepared = prepared_snapshot(tmp_path, monkeypatch)
+    calls = remote_source(monkeypatch, prepared)
+    access = start(client, example="mmlu")
+    ready = settled(client, access)
+    assert ready["status"] == "ready" and ready["total"] == 105
+    assert ready["example"]["item_count"] == 105
+    assert ready["example"]["deployment"] == read_json(prepared / "evidence.json")["deployment"]
+    assert ready["example"]["source_revision"] == "fixture"
+    assert ready["example"]["source_repo"] == "test-only"
+    assert len(ready["example"]["source_sha256"]) == 64
+    assert ready["processed"] == 0 and not model
+    directory = analysis.jobs[access["run_id"]].directory
+    assert calls == [directory]
+    assert "path" not in read_json(directory / "dataset.json")["source"]
+    assert "assessment_dir" not in read_json(directory / "evidence.json")
+
+
+@pytest.mark.parametrize("failure", ["DatasetAccessError", "DatasetPreparationError"])
+def test_dataset_failure_is_distinct_from_model_key_failure(client, monkeypatch, model, failure):
+    remote_source(monkeypatch)
+    message = "The MMLU source could not be loaded. Ask the website administrator to check dataset access."
+
+    def broken(*args, **kwargs):
+        raise getattr(analysis.item_analysis_source, failure)(message)
+
+    monkeypatch.setattr(analysis.item_analysis_source, "prepare_source", broken)
+    access = start(client, example="mmlu")
+    failed = settled(client, access)
+    assert failed["status"] == "failed" and failed["error"] == message
+    assert failed["items"] == [] and failed["processed"] == 0
+    assert "API key" not in failed["message"] and not model
+
+
+def test_unavailable_remote_source_cannot_start_a_run(client, monkeypatch, model):
+    calls = remote_source(monkeypatch, available=False)
+    response = client.post("/api/item-analysis/runs", json={"example_id": "mmlu", "specification_mode": "provided"})
+    assert response.status_code == 503
+    assert "dataset is unavailable" in response.json()["detail"]
+    assert not analysis.jobs and not calls and not model
+
+
 def test_bundled_example_always_available_and_no_predictions(client, model):
     catalog = client.get("/api/item-analysis/catalog")
     assert catalog.headers["cache-control"] == "no-store"
@@ -158,8 +241,11 @@ def test_real_pipeline_generates_or_imports_then_classifies_and_exports(client, 
     assert all(KEY not in path.read_text() for path in directory.iterdir() if path.is_file())
 
 
-def test_first_100_checkpoint_full_continuation_and_no_duplicate_calls(client, model, tmp_path, monkeypatch):
-    prepared_snapshot(tmp_path, monkeypatch, count=105)
+@pytest.mark.parametrize("source_kind", ["configured", "remote"])
+def test_first_100_checkpoint_full_continuation_and_no_duplicate_calls(client, model, tmp_path, monkeypatch, source_kind):
+    source = prepared_snapshot(tmp_path, monkeypatch, count=105)
+    if source_kind == "remote":
+        remote_source(monkeypatch, source)
     access = start(client, example="mmlu")
     assert settled(client, access)["status"] == "ready"
     assert client.post(url(access) + "/classify", json={"scope": "all"}, headers=headers(access, key=True)).status_code == 409

@@ -1,0 +1,147 @@
+{
+  "benchmark": "mmlu",
+  "deployment": "North India Hindi-medium competitive exam preparation (UPSC/SSC/banking) feedback app: graduate-level aspirant submits an MCQ response, AI returns a correct/incorrect verdict plus a substantive Hindi-language explanation; mobile/enterprise application context, up to ~10% English code-mixing tolerated.",
+  "dataset_profile": {
+    "columns": ["question", "subject", "choices", "answer"],
+    "modality": "text-only (no image/audio fields; single-turn MCQ prompt)",
+    "media_available": false,
+    "observed_categories": {
+      "subject_configs": "57 MMLU subject configs (e.g. high_school_government_and_politics, high_school_us_history, high_school_european_history, us_foreign_policy, professional_law, moral_scenarios, world_religions, global_facts, elementary_mathematics, high_school_mathematics, abstract_algebra, college_computer_science, high_school_biology, virology, professional_accounting, jurisprudence, security_studies, etc.)",
+      "answer_labels": ["A", "B", "C", "D"]
+    },
+    "notes": "answer is a ClassLabel(4) encoded 0-3 mapping to label_names ['A','B','C','D']; no rationale/explanation field exists anywhere in the schema (DA-report Concern 3, D1 schema citation). subject is MMLU's own 57-way taxonomy and does NOT correspond to the deployment's required category set (Indian Polity, Indian History, Current Affairs, etc.) - it is US/Western-curriculum-anchored, so it can only serve as a weak hint, not a ground-truth label, for IO.task_category. Language is English only (languages:[en], monolingual per DA-report Concern 2); no Devanagari/Hindi content in any sampled item."
+  },
+  "classifiers": [
+    {
+      "id": "IO.task_category",
+      "component": "input_ontology",
+      "operation": "assignment",
+      "applicable": true,
+      "na_reason": "",
+      "criterion": "Read the question and choices. Assign the SINGLE category that best describes what real-world knowledge/skill this item is actually testing, using the category_set below. This deployment is a Hindi-medium North India competitive-exam (UPSC/SSC/banking) prep app; the category_set is the deployment's required syllabus areas (per elicitation Q1/A1) plus an irrelevant_other bucket for content outside that syllabus (e.g. US-specific law, US history, Western moral philosophy). Use the item's actual content, not its MMLU subject label, to decide - MMLU's subject taxonomy is US-curriculum-anchored and does not map onto Indian exam categories.",
+      "category_set": [
+        "general_knowledge_india_centric",
+        "current_affairs",
+        "indian_history",
+        "indian_polity_constitution",
+        "mathematics_reasoning",
+        "hindi_language_proficiency",
+        "indian_geography",
+        "indian_economy",
+        "irrelevant_other"
+      ],
+      "label_source": "data_then_haiku",
+      "grounded_in": [
+        "scoring.json input_ontology.checklist_responses.IO-1 (required category list from elicitation)",
+        "scoring.json input_ontology.checklist_responses.IO-2/IO-3",
+        "DATASET-D1,D2,D3 (US govt/politics)",
+        "DATASET-D4,D5,D6 (US history)",
+        "DATASET-D12,D13,D14 (European history)",
+        "DATASET-D26,D27,D29,D30,D40 (math/CS/physics)",
+        "DA-report Concern 1 (zero Indian Polity/History/Geography coverage)"
+      ],
+      "example_items": [
+        "D1 (high_school_government_and_politics, label=A): 'The right of American citizens to petition the government... First Amendment' -> irrelevant_other (US constitutional content, no Indian Polity relevance)",
+        "D27 (high_school_mathematics, label=A): 'Juan rolls a fair regular octahedral die... probability that the product... is a multiple of 3?' -> mathematics_reasoning"
+      ],
+      "aggregate": "coverage_vs_required"
+    },
+    {
+      "id": "OO.output_category",
+      "component": "output_ontology",
+      "operation": "assignment",
+      "applicable": true,
+      "na_reason": "",
+      "criterion": "Read the question, choices, and correct answer. Classify what TYPE of answer construct this item's ground truth represents, using the category_set below. This matters because the deployment requires a verdict (sahi/galat) plus a substantive Hindi explanation (elicitation Q3/A3), and MMLU's uniform label-only A/B/C/D output structure (DA-report Concern 3) hides real variation in whether the underlying answer is an objective fact, a computed result, or a contestable normative/legal judgment anchored to a specific country's standards - which determines how safely the item's label can be reused as a verdict signal in this deployment.",
+      "category_set": [
+        "objective_stem_factual",
+        "quantitative_computation",
+        "us_normative_moral_judgment",
+        "us_legal_administrative_ruling",
+        "south_asian_religious_cultural",
+        "other_western_humanities"
+      ],
+      "label_source": "data_then_haiku",
+      "grounded_in": [
+        "scoring.json output_ontology.checklist_responses.OO-1/OO-3",
+        "DATASET-D18,D19 (moral_scenarios, explicit 'US 2020 moral standards')",
+        "DATASET-D10,D11,D33 (US tort/contract/product-liability law)",
+        "DATASET-D35,D36 (Jainism world_religions items)",
+        "DATASET-D26,D27,D30,D40 (culturally neutral STEM)"
+      ],
+      "example_items": [
+        "D18 (moral_scenarios, label=A): 'according to ordinary moral standards in the US as of 2020? ...The bomb shelter was filling up, but I made sure my grand piano got a spot.' -> us_normative_moral_judgment",
+        "D30 (abstract_algebra, label=A): 'Find the characteristic of the ring Z_3 x 3Z.' -> objective_stem_factual"
+      ],
+      "aggregate": "category_distribution"
+    },
+    {
+      "id": "OO.value_encoding",
+      "component": "output_ontology",
+      "operation": "flag",
+      "applicable": true,
+      "na_reason": "",
+      "criterion": "Positive (1) if the item's expected correct answer is only correct under a specific non-regional (US/Western) convention, norm, or institutional standard that would not hold, or would be contested, under Indian/North-Indian norms and conventions - e.g. answer keys anchored to 'US 2020 moral standards', US tort/product-liability doctrine, US CPA/bar-exam standards, US customary measurement units (miles, feet), or US administrative/legal structures. Negative (0) if the correct answer is convention-independent (e.g. pure mathematics, universally-agreed science fact) or already region-neutral.",
+      "positive_class": "encodes_non_regional_value_or_convention",
+      "label_source": "haiku",
+      "grounded_in": [
+        "scoring.json output_ontology.checklist_responses.OO-3",
+        "DATASET-D18,D19 (moral_scenarios US 2020 norms)",
+        "DATASET-D10,D11,D33 (US law)",
+        "DATASET-D25,D28 (US customary units, miles/feet)"
+      ],
+      "example_items": [
+        "D19 (moral_scenarios, label=B): 'according to ordinary moral standards in the US as of 2020? ...When I went through the road block I gave the policeman my brothers ID.' -> positive=1",
+        "D26 (elementary_mathematics, label=A): 'A zoo has 15 toucans and 60 parrots. What is the ratio...' -> positive=0"
+      ],
+      "aggregate": "prevalence"
+    },
+    {
+      "id": "IC.region_fit",
+      "component": "input_content",
+      "operation": "ordinal",
+      "applicable": true,
+      "na_reason": "",
+      "criterion": "Read the question and choices. Score how this item's specific content fits the North India Hindi-medium competitive-exam deployment: 1 if the item is India/North-India-relevant AND culturally appropriate for NCERT/UPSC-aligned exam prep (desirable); 2 if the item is region-neutral (no region-specific knowledge needed either way, e.g. pure math/STEM); 3 if answering correctly requires out-of-region (US/Western) knowledge the student would not have, OR the item's framing culturally clashes with the Indian/NCERT perspective (e.g. colonial historiography vs. nationalist historiography).",
+      "ordinal_anchors": {
+        "1": "Region-relevant & culturally appropriate (e.g. NCERT-aligned Indian science fact, Indian administrative/geographic content) - desirable",
+        "2": "Region-neutral - no India-specific or US-specific knowledge required (e.g. pure mathematics, algorithm complexity, general physics)",
+        "3": "Region-misaligned - requires out-of-region (US/Western) knowledge to answer, OR culturally clashes with the Indian/NCERT perspective - violation"
+      },
+      "label_source": "haiku",
+      "grounded_in": [
+        "scoring.json input_content.checklist_responses.IC-1/IC-2/IC-3",
+        "DATASET-D4,D5,D6,D12,D13,D14 (US/European history requiring Western knowledge)",
+        "DATASET-D15,D47 (colonial framing of 1857 uprising - cultural clash with NCERT/Bipin Chandra narrative)",
+        "DATASET-D26,D27,D29,D30,D40 (culturally neutral STEM)",
+        "DATASET-D41,D42 (NCERT-overlapping biology/virology facts)"
+      ],
+      "example_items": [
+        "D4 (high_school_us_history, label=B): 'John C. Calhoun, South Carolina Exposition and Protest, 1828...' -> 3 (requires US-specific historical knowledge, irrelevant to Indian History syllabus)",
+        "D42 (virology, label=A): 'Viruses have encouraged us to change our world... Eradicated smallpox' -> 1 (general science fact that overlaps with NCERT/Indian GK science curriculum)",
+        "D30 (abstract_algebra, label=A): 'Find the characteristic of the ring Z_3 x 3Z.' -> 2 (region-neutral pure mathematics)"
+      ],
+      "aggregate": "category_distribution"
+    },
+    {
+      "id": "OC.label_contestability",
+      "component": "output_content",
+      "operation": "flag",
+      "applicable": true,
+      "na_reason": "",
+      "criterion": "Positive (1) if a North Indian regional stakeholder (e.g. an NCERT-educated UPSC/SSC aspirant or a Hindi-medium educator) would plausibly dispute this item's designated ground-truth answer - for example because the answer key privileges a colonial/Western historiographic framing over the NCERT/Bipin Chandra nationalist narrative, or because the item's normative judgment is explicitly anchored to 'US 2020' moral/legal standards that differ from Indian norms. Negative (0) if the ground truth is objective/convention-independent and not subject to regional interpretive disagreement (e.g. mathematics, established scientific fact).",
+      "positive_class": "regional_stakeholder_would_dispute_label",
+      "label_source": "haiku",
+      "grounded_in": [
+        "scoring.json output_content.checklist_responses.OC-1/OC-2",
+        "DATASET-D15,D47 (1857 uprising, colonial-framed answer key vs. NCERT nationalist historiography)",
+        "DATASET-D18,D19 (moral_scenarios anchored to 'US 2020 moral standards')"
+      ],
+      "example_items": [
+        "D15 (high_school_world_history, label=B): '...the deed was done by a subject race - by black men who dared to shed the blood of their masters... William Howard Russell, My Indian Mutiny Diary, 1860' -> positive=1 (an NCERT/Bipin-Chandra-aligned stakeholder viewing 1857 as the First War of Independence would dispute a label validated against this colonial framing)",
+        "D30 (abstract_algebra, label=A): 'Find the characteristic of the ring Z_3 x 3Z.' -> positive=0 (mathematically objective, not open to regional dispute)"
+      ],
+      "aggregate": "prevalence"
+    }
+  ]
+}

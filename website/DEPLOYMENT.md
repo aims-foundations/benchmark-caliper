@@ -10,18 +10,25 @@ working. No second service or AIMS proxy change is required.
 
 ## Item-analysis configuration
 
-The `/item-analysis` demo includes a ten-item authored teaching example in the
-image. Visitors supply an Anthropic key for Sonnet specification generation and
-Haiku classification; loading the supplied example criteria requires no key.
+The `/item-analysis` demo defaults to the real 14,015-item MMLU snapshot at
+`aims-foundations/measurement-db-pp`, revision
+`cc796d3545a6bd2e78b5513c13e60a6913d01e3f`, table `mmlu/items.parquet`.
+Grant the server's `HF_TOKEN` read access to that repository. Its access can
+differ from the `measurement-db` repository used by the separate `/items` flow.
+The application downloads and verifies the table when preparing the first run;
+no manual dataset transfer is needed. The source is cached privately at
+`/data/item-analysis-sources/`. The original assessment and supplied classifier
+specification ship with the code; dataset rows stay out of Git and image layers.
 
-To offer MMLU as well, privately copy the prepared run's `dataset.json`,
-`profile.json`, `evidence.json`, `items.jsonl`, and optional
-`classifier_spec.original.json` into a directory on the persistent disk, then
-set `ITEM_ANALYSIS_PREPARED_DIR` to that directory. See the
-[preparation instructions](../anthropic_api_package_release/item_analysis/README.md).
-Local `results/` directories are excluded from the Docker image; pushing code
-does not publish the local MMLU snapshot. Keep dataset evidence out of Git and
-public static assets.
+Visitors supply an Anthropic key for Sonnet generation and Haiku classification.
+Loading the supplied MMLU criteria requires no visitor key, but does require
+server dataset access. An optional ten-item teaching example remains available
+and is explicitly illustrative. Access errors are shown without silently
+substituting teaching data.
+
+`ITEM_ANALYSIS_PREPARED_DIR` remains an optional override for a manually prepared
+snapshot. Leave it unset for direct Hugging Face loading. Local `results/`
+directories remain excluded from Docker.
 
 Use one instance and one worker. Each browser run copies the source inputs into
 a private directory. Jobs expire one hour after a phase ends and cannot resume
@@ -31,8 +38,8 @@ after a server restart. The live catalog shows which examples are configured:
 curl -f https://aimslab.stanford.edu/benchmark-caliper/api/item-analysis/catalog
 ```
 
-Verify `/benchmark-caliper/item-analysis`, load the teaching example's supplied
-criteria, and confirm that unclassified items are marked pending. This checks
+Verify `/benchmark-caliper/item-analysis`, load MMLU's supplied criteria, and
+confirm that all 14,015 items are available with unclassified items marked pending. This checks
 the deployed pipeline without paid calls. Generation and classification require
 a separate live test with a visitor's key.
 

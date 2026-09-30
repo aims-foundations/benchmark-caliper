@@ -18,9 +18,10 @@ Open `/item-analysis` for a browser demo of the shared
 [`item_analysis` pipeline](../anthropic_api_package_release/item_analysis/README.md).
 The page walks through three steps:
 
-1. Choose a dataset and its existing deployment assessment. The bundled ten-item
-   teaching example is explicitly illustrative; its assessment is authored for
-   the demo. A prepared MMLU snapshot appears when configured on the server.
+1. Start with MMLU and its original Hindi-medium exam-preparation assessment.
+   The website downloads all 14,015 items from the pinned
+   `aims-foundations/measurement-db-pp` snapshot on Hugging Face. The bundled
+   ten-item teaching example remains available as a separate illustrative option.
 2. Generate classifier instructions with Sonnet, or load the supplied example
    instructions without a model call. Review the deployment, decision rules,
    labels, and applicability before starting classification.
@@ -46,23 +47,36 @@ request and prevents new calls; a request already submitted may still be billed.
 
 ### Configure the MMLU example
 
-Prepare a dataset using the CLI instructions linked above, then optionally import
-the reviewed example specification:
+Set the server's `HF_TOKEN` to a Hugging Face credential with read access to
+`aims-foundations/measurement-db-pp`. Visitors supply only their Anthropic key;
+their browsers never receive the Hugging Face token. Missing access is displayed
+explicitly instead of silently selecting the teaching example.
 
-```bash
-python -m anthropic_api_package_release.item_analysis generate-spec \
-  --run-dir results/item_analysis/mmlu_demo --spec mmlu_classifier_spec.json
-```
+The default source is `mmlu/items.parquet` at revision
+`cc796d3545a6bd2e78b5513c13e60a6913d01e3f` (14,015 items). The server downloads
+and caches that table in `WEBSITE_DATA_DIR/item-analysis-sources/`, checks its
+SHA-256, row count, and columns, and uses the shared preparation step to profile
+and shuffle every item. The pinned source has exactly the same bytes as the
+previous locally prepared MMLU table. Source repository, revision, and checksum
+are recorded for every run. Updating the snapshot is a deliberate code change
+in `server/item_analysis_source.py`; a moving `main` branch cannot change an
+existing analysis.
 
-The website discovers `results/item_analysis/mmlu_demo` locally, or uses
-`ITEM_ANALYSIS_PREPARED_DIR=/absolute/path/to/prepared/run`. It copies the prepared
-inputs into an isolated directory for each browser run. Existing classifications
-are not imported. This keeps a website trial independent of the source run.
-In a container, mount the prepared directory and set this variable; local
-`results/` folders are excluded from the Docker build context. The teaching
-example is included in the image and needs no Hugging Face download.
+The cache contains source data only, survives normal shutdown, and is not
+committed to Git or bundled in the image. A cancelled preparation waits for the
+current download or preparation step to finish; no model calls begin afterward.
+The original Caliper assessment and supplied pilot specification are included
+with the code; generated specifications and model labels remain specific to each
+run.
 
-Implementation: `server/item_analysis.py` owns jobs, access control, and the
+For an explicitly prepared local snapshot, the optional
+`ITEM_ANALYSIS_PREPARED_DIR=/absolute/path/to/prepared/run` override still works.
+It replaces the default remote source and copies prepared inputs into each run;
+existing classifications are not imported. Local `results/` folders remain
+excluded from Docker. The teaching example needs no Hugging Face access.
+
+Implementation: `server/item_analysis_source.py` owns the pinned source and
+download; `server/item_analysis.py` owns jobs, access control, and the
 async Anthropic bridge. `client/src/itemAnalysis/` owns the page. Preparation,
 specification validation, classification, aggregation, and exports are reused
 from `anthropic_api_package_release/item_analysis/`. This workflow does not call
@@ -265,7 +279,7 @@ The item-analysis tests exercise generated and supplied criteria, checkpoint
 continuation, cancellation, exports, and authentication without paid model calls:
 
 ```bash
-python -m pytest website/server/tests/test_item_analysis.py anthropic_api_package_release/tests/test_item_analysis_*.py
+python -m pytest website/server/tests/test_item_analysis*.py anthropic_api_package_release/tests/test_item_analysis_*.py
 cd website/client
 npm test -- src/itemAnalysis src/EvaluationSite.test.tsx
 ```

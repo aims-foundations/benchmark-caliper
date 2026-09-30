@@ -57,8 +57,14 @@ pipeline, with the following boundaries:
   browser session storage, so refresh can reconnect without persisting a key.
 - Users choose server-configured examples. Requests cannot select filesystem
   paths, repositories, models, or provider URLs. The bundled teaching example is
-  labeled illustrative and contains no prerecorded model predictions. An
-  optional prepared snapshot is copied into an isolated run directory.
+  labeled illustrative and contains no prerecorded model predictions. MMLU is
+  downloaded from a fixed `measurement-db-pp` revision using server-managed
+  Hugging Face access, with checksum, row-count, and schema checks before use.
+  Its source table is cached in the private `item-analysis-sources/` directory,
+  which survives normal shutdown and contains no visitor keys or model labels.
+  Each run prepares all source items independently. An explicit local prepared
+  snapshot override remains supported. Dataset access failures do not silently
+  substitute illustrative items; the browser never receives the Hugging Face token.
 - Inputs, criteria, raw model outputs, and reports are held in a private run
   directory. Runs expire one hour after a phase ends, are swept each minute, and
   are removed on normal shutdown. A server restart loses the in-memory access
@@ -74,9 +80,10 @@ pipeline, with the following boundaries:
   Provider clients are closed after each call, including errors and cancellation.
 - Stop signals the shared classifier and cancels the awaited provider request.
   Workers are drained before removing their files. A request already submitted
-  may incur a charge. No email is collected or sent.
+  may incur a charge. During dataset preparation, stop waits for the current
+  download or preparation step before returning. No email is collected or sent.
 
-Verification: `server/tests/test_item_analysis.py`,
+Verification: `server/tests/test_item_analysis.py`, `server/tests/test_item_analysis_source.py`,
 `server/tests/test_anthropic_client.py`, and `client/src/itemAnalysis/*.test.*`.
 The model provider's own retention terms apply to submitted evidence.
 
