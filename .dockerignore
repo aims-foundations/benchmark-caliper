@@ -40,3 +40,4 @@ anthropic_api_package_release/**/__pycache__/
 # Local CLI runs can contain user deployment descriptions and judgments.
 bayesian_auditing/results/
 bayesian_auditing/tests/
+results/

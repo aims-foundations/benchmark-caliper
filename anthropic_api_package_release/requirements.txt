@@ -2,6 +2,7 @@ anthropic>=0.40.0
 pyyaml
 python-dotenv
 jsonschema
+pyarrow
 tqdm
 pypdf
 reportlab>=4.0

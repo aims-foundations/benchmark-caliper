@@ -1,5 +1,6 @@
 import { App } from './App'
 import { ItemReview } from './itemReview/ItemReview'
+import { ItemAnalysis } from './itemAnalysis/ItemAnalysis'
 import { SiteHeader } from './components/SiteHeader'
 import { SiteFooter } from './components/SiteFooter'
 import { appPath, stripBasePath } from './paths'
@@ -7,6 +8,7 @@ import { appPath, stripBasePath } from './paths'
 export function EvaluationSite() {
   const path = stripBasePath(window.location.pathname).replace(/\/+$/, '') || '/'
   if (path === '/items') return <ItemReview />
+  if (path === '/item-analysis') return <ItemAnalysis />
   if (path === '/caliper' || path.startsWith('/run/')) return <App />
   return (
     <div className="rd-root evaluation-site">
@@ -63,6 +65,12 @@ export function EvaluationSite() {
           <p>Assess and rank evaluation items from the Measurement Data Bank according to their compatibility with a specified deployment context, with supporting evidence and assessment confidence.</p>
           <dl className="evaluation-outcome"><div><dt>Input</dt><dd>Description of the AI system, task, and deployment context</dd></div><div><dt>Output</dt><dd>Ranked evaluation items with dimension-level assessments</dd></div></dl>
           <a className="evaluation-choice-link" href={appPath('/items')}>Assess evaluation items <span aria-hidden="true">→</span></a>
+        </article>
+        <article className="evaluation-choice">
+          <h3>Item-level<br />validity analysis <span className="review-badge">Demo</span></h3>
+          <p>Follow up on a benchmark assessment by examining individual questions. See how common each issue is and explore the items behind the findings.</p>
+          <dl className="evaluation-outcome"><div><dt>Input</dt><dd>Existing benchmark assessment and dataset</dd></div><div><dt>Output</dt><dd>Issue prevalence with inspectable items</dd></div></dl>
+          <a className="evaluation-choice-link" href={appPath('/item-analysis')}>Explore item analysis <span aria-hidden="true">→</span></a>
         </article>
         </div>
       </main>

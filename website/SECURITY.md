@@ -45,6 +45,41 @@ to submitted content; `store=False` is not a promise of zero provider retention.
 
 This file is paired with [DESIGN.md](DESIGN.md). Every privacy claim in DESIGN.md should map to a statement here.
 
+## Item-analysis demo (`/item-analysis`)
+
+This separate Anthropic workflow reuses the post-assessment item-analysis
+pipeline, with the following boundaries:
+
+- The API key travels in `X-Anthropic-Key`, stays in the active phase's memory,
+  and is not stored in browser storage, job artifacts, the database, or logs.
+  A separate random access secret in `X-Review-Token` authorizes polling,
+  cancellation, and downloads. Only the run ID and access secret are kept in
+  browser session storage, so refresh can reconnect without persisting a key.
+- Users choose server-configured examples. Requests cannot select filesystem
+  paths, repositories, models, or provider URLs. The bundled teaching example is
+  labeled illustrative and contains no prerecorded model predictions. An
+  optional prepared snapshot is copied into an isolated run directory.
+- Inputs, criteria, raw model outputs, and reports are held in a private run
+  directory. Runs expire one hour after a phase ends, are swept each minute, and
+  are removed on normal shutdown. A server restart loses the in-memory access
+  registry; an abrupt kill can leave files for host cleanup. This flow does not
+  use the original Caliper workflow's opt-in logging or 90-day retention.
+- Provider exception bodies are replaced with a fixed error before they reach
+  saved artifacts or responses. Model responses redact any occurrence of the
+  caller key; frontend rendering uses React text. Private responses and downloads
+  use `Cache-Control: no-store`. Download paths are a fixed allowlist.
+- At most three jobs can run concurrently, with one active phase per caller key,
+  and at most ten retained jobs. Classification pauses at 100 items before an
+  explicit full-snapshot continuation. Completed labels are reused on retry.
+  Provider clients are closed after each call, including errors and cancellation.
+- Stop signals the shared classifier and cancels the awaited provider request.
+  Workers are drained before removing their files. A request already submitted
+  may incur a charge. No email is collected or sent.
+
+Verification: `server/tests/test_item_analysis.py`,
+`server/tests/test_anthropic_client.py`, and `client/src/itemAnalysis/*.test.*`.
+The model provider's own retention terms apply to submitted evidence.
+
 ---
 
 ## 1. API key handling

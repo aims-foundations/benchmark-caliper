@@ -51,6 +51,7 @@ from . import (
     db,
     email_notify,
     gallery,
+    item_analysis,
     item_review,
     logging_gate,
     mock_anthropic,
@@ -189,6 +190,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         while True:
             await asyncio.sleep(60)
             item_review.sweep()
+            item_analysis.sweep()
 
     review_cleanup = asyncio.create_task(expire_reviews())
     try:
@@ -197,6 +199,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         review_cleanup.cancel()
         await asyncio.gather(review_cleanup, return_exceptions=True)
         await item_review.shutdown()
+        await item_analysis.shutdown()
 
 
 app = FastAPI(title="Benchmark Caliper", version="0.1.0", lifespan=lifespan)
@@ -213,6 +216,7 @@ app.add_middleware(
     allow_headers=["Content-Type", "X-Anthropic-Key", "X-OpenAI-Key", "X-Review-Token"],
 )
 app.include_router(item_review.router)
+app.include_router(item_analysis.router)
 
 
 # ---------- routes ----------

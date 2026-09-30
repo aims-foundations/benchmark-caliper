@@ -4,9 +4,37 @@ This website is deployed as one backend web service. The container builds the
 Vite frontend and serves it from the FastAPI app, so Render only needs one
 service for the MVP.
 
-The same image now serves the workflow selector, `/caliper`, and `/items` under
+The same image now serves the workflow selector, `/caliper`, `/items`, and `/item-analysis` under
 the existing `/benchmark-caliper` proxy. Existing `/run/{run_id}` links keep
 working. No second service or AIMS proxy change is required.
+
+## Item-analysis configuration
+
+The `/item-analysis` demo includes a ten-item authored teaching example in the
+image. Visitors supply an Anthropic key for Sonnet specification generation and
+Haiku classification; loading the supplied example criteria requires no key.
+
+To offer MMLU as well, privately copy the prepared run's `dataset.json`,
+`profile.json`, `evidence.json`, `items.jsonl`, and optional
+`classifier_spec.original.json` into a directory on the persistent disk, then
+set `ITEM_ANALYSIS_PREPARED_DIR` to that directory. See the
+[preparation instructions](../anthropic_api_package_release/item_analysis/README.md).
+Local `results/` directories are excluded from the Docker image; pushing code
+does not publish the local MMLU snapshot. Keep dataset evidence out of Git and
+public static assets.
+
+Use one instance and one worker. Each browser run copies the source inputs into
+a private directory. Jobs expire one hour after a phase ends and cannot resume
+after a server restart. The live catalog shows which examples are configured:
+
+```bash
+curl -f https://aimslab.stanford.edu/benchmark-caliper/api/item-analysis/catalog
+```
+
+Verify `/benchmark-caliper/item-analysis`, load the teaching example's supplied
+criteria, and confirm that unclassified items are marked pending. This checks
+the deployed pipeline without paid calls. Generation and classification require
+a separate live test with a visitor's key.
 
 ## Item-review configuration
 
@@ -76,7 +104,7 @@ mocked OpenAI responses and do not establish scoring quality.
 The repo root ships a `render.yaml` Blueprint that captures the whole service
 (Docker, persistent disk, health check, env vars). The easy path:
 
-1. In Render: **New > Blueprint**, pick the `validity-global-south` repo.
+1. In Render: **New > Blueprint**, pick the `aims-foundations/benchmark-caliper` repo.
 2. Render reads `render.yaml` and proposes the `benchmark-caliper` web service.
 3. Set `HF_TOKEN` for item-review dataset access. The Blueprint also prompts for
    the optional email values `RESEND_API_KEY`, `RESEND_FROM`, and `FEEDBACK_TO`.

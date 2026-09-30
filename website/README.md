@@ -1,15 +1,72 @@
 # Benchmark Caliper — Website
 
-A public-facing interface to two evaluation workflows at <https://aimslab.stanford.edu/benchmark-caliper/>. The starting page lets users choose Benchmark Caliper or goal-conditioned item review. See [SECURITY.md](SECURITY.md) for how each flow handles data and keys.
+A public-facing interface to three evaluation workflows at <https://aimslab.stanford.edu/benchmark-caliper/>. The starting page lets users choose Benchmark Caliper, goal-conditioned item review, or item-level validity analysis. See [SECURITY.md](SECURITY.md) for how each flow handles data and keys.
 
 ## Routes
 
 - `/` — workflow selection.
 - `/caliper` — the existing benchmark-paper analysis, using an Anthropic key.
 - `/items` — the new item-review demo, using an OpenAI key.
+- `/item-analysis` — post-assessment item analysis, using an Anthropic key.
 - `/run/{run_id}` — existing Caliper report links, preserved.
 
 All routes work under the production `/benchmark-caliper` prefix.
+
+## Item-level validity analysis
+
+Open `/item-analysis` for a browser demo of the shared
+[`item_analysis` pipeline](../anthropic_api_package_release/item_analysis/README.md).
+The page walks through three steps:
+
+1. Choose a dataset and its existing deployment assessment. The bundled ten-item
+   teaching example is explicitly illustrative; its assessment is authored for
+   the demo. A prepared MMLU snapshot appears when configured on the server.
+2. Generate classifier instructions with Sonnet, or load the supplied example
+   instructions without a model call. Review the deployment, decision rules,
+   labels, and applicability before starting classification.
+3. Classify the first 100 items with Haiku (all items for smaller datasets),
+   inspect the evidence, then explicitly continue through the full snapshot.
+   Completed items are reused on continuation or retry.
+
+The results show counts, percentages among known labels, unknowns, failures, and
+pending items. Expand individual items to inspect justifications and evidence.
+Download the specification, item CSV, summary JSON, HTML report, or blind human
+review worksheet. The original six-dimensional assessment remains visible;
+the demo does not turn item prevalence into new 1–5 scores. Criteria changes
+require a new run. The website does not automatically revise criteria or import
+completed human reviews; the CLI supports comparison with a completed worksheet.
+
+An Anthropic key is required for generation and classification. Loading supplied
+criteria and browsing the prepared evidence need no key. The key stays in memory;
+only the run ID and a separate access secret are kept in browser session storage.
+Refresh restores the active run, but a later phase may require entering the key
+again. Runs expire one hour after the last phase ends and do not survive a server
+restart. Download outputs before they expire. Stop cancels the current awaited
+request and prevents new calls; a request already submitted may still be billed.
+
+### Configure the MMLU example
+
+Prepare a dataset using the CLI instructions linked above, then optionally import
+the reviewed example specification:
+
+```bash
+python -m anthropic_api_package_release.item_analysis generate-spec \
+  --run-dir results/item_analysis/mmlu_demo --spec mmlu_classifier_spec.json
+```
+
+The website discovers `results/item_analysis/mmlu_demo` locally, or uses
+`ITEM_ANALYSIS_PREPARED_DIR=/absolute/path/to/prepared/run`. It copies the prepared
+inputs into an isolated directory for each browser run. Existing classifications
+are not imported. This keeps a website trial independent of the source run.
+In a container, mount the prepared directory and set this variable; local
+`results/` folders are excluded from the Docker build context. The teaching
+example is included in the image and needs no Hugging Face download.
+
+Implementation: `server/item_analysis.py` owns jobs, access control, and the
+async Anthropic bridge. `client/src/itemAnalysis/` owns the page. Preparation,
+specification validation, classification, aggregation, and exports are reused
+from `anthropic_api_package_release/item_analysis/`. This workflow does not call
+or modify `bayesian_auditing`.
 
 ## Goal-conditioned item review
 
@@ -178,7 +235,7 @@ Open <http://localhost:5173>. Vite proxies `/api/*` to <http://localhost:8000>.
 
 ### Free local dev (no Anthropic spend)
 
-For UI work and click-through testing without paying for API calls, set `MOCK_ANTHROPIC=1`. Every `call_text_async()` short-circuits to canned fixtures pulled from one already-paid assessment under `anthropic_api_package_release/assessments/`. Paste any string (e.g. `sk-ant-FAKE`) into the API-key field — the value is ignored.
+For the original `/caliper` workflow, UI work and click-through testing without paying for API calls can use `MOCK_ANTHROPIC=1`. Every `call_text_async()` short-circuits to canned fixtures pulled from one already-paid assessment under `anthropic_api_package_release/assessments/`. Paste any string (e.g. `sk-ant-FAKE`) into the API-key field — the value is ignored. These replay fixtures do not cover `/item-analysis`: use its supplied-criteria preview without a key, or its offline tests for the complete workflow.
 
 ```bash
 MOCK_ANTHROPIC=1 python3 -m uvicorn website.server.app:app --reload --port 8000
@@ -203,6 +260,15 @@ Run the shared item judge tests with `python -m pytest bayesian_auditing/tests/`
 Backend tests mock provider calls, including success, failures, cancellation,
 credential handling, retention, and per-run access control. Frontend tests cover
 both routing and the guided item-review flow.
+
+The item-analysis tests exercise generated and supplied criteria, checkpoint
+continuation, cancellation, exports, and authentication without paid model calls:
+
+```bash
+python -m pytest website/server/tests/test_item_analysis.py anthropic_api_package_release/tests/test_item_analysis_*.py
+cd website/client
+npm test -- src/itemAnalysis src/EvaluationSite.test.tsx
+```
 
 ---
 

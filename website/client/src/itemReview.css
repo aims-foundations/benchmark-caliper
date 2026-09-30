@@ -6,7 +6,7 @@
 .evaluation-site a:focus-visible, .item-review-site :is(a, button, summary, [tabindex="0"]):focus-visible { outline: 2px solid var(--cardinal); outline-offset: 4px; }
 .review-badge { display: inline-block; padding: .12rem .5rem; border-radius: 1rem; background: #fff9; border: 1px solid #8c151530; font-size: .6rem; letter-spacing: .07em; vertical-align: middle; margin-left: .35rem; }
 
-/* Start with the user's question, then explain the two outcomes. */
+/* Start with the user's question, then explain the available workflows. */
 .evaluation-site .evaluation-hero { background: #f0e7de; padding-top: clamp(112px, 9vw, 136px); padding-bottom: clamp(32px, 4vw, 52px); }
 /* Keep the headline aligned with the page while letting the diagram use the
    space toward the right edge on wide screens. */
@@ -46,7 +46,7 @@
 .evaluation-section-heading p { color: var(--review-muted); font-size: .9rem; margin: 0; }
 .evaluation-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; }
 /* Share content rows so headings, descriptions, inputs, outputs, and links
-   align across the pair, including when the longer text wraps. */
+   align across the cards, including when the longer text wraps. */
 .evaluation-choice { display: grid; grid-row: span 5; grid-template-rows: subgrid; row-gap: 0; min-width: 0; border: 1px solid var(--review-border); border-radius: 8px; padding: 2rem; background: white; }
 .evaluation-choice h3 { font-size: clamp(1.5rem, 2.25vw, 2rem); font-weight: 500; line-height: 1.18; letter-spacing: -.025em; margin: 0 0 1rem; }
 .evaluation-choice h3 .review-badge { font-family: var(--font-mono); font-weight: 400; text-transform: uppercase; color: var(--review-muted); background: transparent; border-color: var(--review-border); vertical-align: middle; }
@@ -57,6 +57,12 @@
 .evaluation-outcome dd { margin: 0; font-weight: 400; }
 .evaluation-choice-link { display: inline-flex; align-items: center; justify-self: start; gap: .65rem; min-height: 44px; margin-top: 1rem; color: var(--cardinal); font-size: .95rem; font-weight: 500; text-decoration: none; }
 .evaluation-choice-link:hover { color: #691010; text-decoration: underline; text-underline-offset: .2em; }
+@media (min-width: 1100px) {
+  .evaluation-choices { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .evaluation-choices { grid-template-columns: 1fr; }
+}
 
 /* A compact project header leaves the active question as the main focus. */
 .item-review-hero { background: #f0e7de; border-bottom: 1px solid #e2d8ce; padding: calc(var(--site-header-h) + 1.5rem) 0 2.3rem; }
@@ -208,7 +214,7 @@
   .review-dimension { padding: .8rem .65rem; }
 }
 @media (max-width: 800px) {
-  .evaluation-site .evaluation-intro, .evaluation-choices { grid-template-columns: 1fr; }
+  .evaluation-site .evaluation-intro { grid-template-columns: 1fr; }
   .evaluation-choice { padding: 1.5rem; }
   .evaluation-section-heading { align-items: flex-start; flex-direction: column; gap: .5rem; }
   .review-hero-heading { display: block; }
