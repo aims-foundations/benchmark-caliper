@@ -84,6 +84,12 @@ regional population as homogeneous or invent disagreement on its behalf.
 grounded_in must contain exact keys from the supplied evidence registry. Cite
 specific registry entries wherever possible, including the deployment basis
 and original finding; do not fabricate JSON paths or historical datapoint IDs.
+Copy grounded_in identifiers only from keys that actually exist in
+evidence_registry. Context fields such as dataset_profile.output_format,
+dataset_profile.modality, and dataset_profile.available_fields are not registry
+identifiers. Use profile facts to set applicability and criteria, but do not
+invent grounded_in citations for them. Check every slot's references before
+returning the specification.
 Applicable slots need at least one evidence reference. example_items is a list
 of short illustrative strings referring only to actual supplied items and
 their supplied IDs. Include an expected label and explanation when warranted;

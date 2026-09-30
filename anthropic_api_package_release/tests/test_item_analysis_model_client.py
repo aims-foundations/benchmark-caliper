@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import httpx
@@ -79,7 +80,8 @@ def test_luna_request_usage_and_client_cleanup(monkeypatch, asynchronous):
     assert constructed == [{"api_key": "private-test-key", "base_url": "https://api.openai.com/v1",
                             "timeout": 180.0, "max_retries": 0}]
     assert client.options == {
-        "model": "gpt-6-luna", "instructions": "Return rubric JSON.", "input": "An item.",
+        "model": "gpt-6-luna", "instructions": "Return rubric JSON.",
+        "input": "Return a JSON object.\n\nAn item.",
         "reasoning": {"effort": "low"}, "max_output_tokens": 4096,
         "text": {"format": {"type": "json_object"}}, "service_tier": "default", "store": False,
     }
@@ -127,7 +129,7 @@ def test_cancellation_closes_async_client(monkeypatch):
     assert client.closed
 
 
-def install_transport(monkeypatch, asynchronous, status, body):
+def install_transport(monkeypatch, asynchronous, status=200, body=None, *, handler=None):
     """Exercise SDK serialization, HTTP exception parsing, and client cleanup."""
     name = "AsyncOpenAI" if asynchronous else "OpenAI"
     sdk_client = getattr(openai, name)
@@ -135,7 +137,7 @@ def install_transport(monkeypatch, asynchronous, status, body):
 
     def respond(request):
         requests.append(request)
-        return httpx.Response(status, json=body)
+        return handler(request) if handler else httpx.Response(status, json=body)
 
     def factory(**kwargs):
         transport = httpx.MockTransport(respond)
@@ -216,5 +218,63 @@ def test_real_sdk_output_limit_retains_usage_and_specific_error(monkeypatch, asy
     assert raised.value.result.output_tokens == 4096
     assert raised.value.result.reasoning_tokens == 4096
     assert "output token limit" in str(raised.value)
+    assert len(requests) == 1
+    assert all(client.is_closed for client in transports)
+
+
+@pytest.mark.parametrize("asynchronous", [False, True])
+@pytest.mark.parametrize("stage", ["generation", "classification"])
+def test_json_mode_adds_input_instruction_for_both_pipeline_stages(
+        monkeypatch, tmp_path, asynchronous, stage):
+    from item_analysis import classify, generate
+
+    if stage == "generation":
+        monkeypatch.setattr(generate, "check_prepared", lambda _: {"benchmark": "fixture"})
+        monkeypatch.setattr(generate, "read_json", lambda path: (
+            {"deployment": "Exam preparation", "registry": {}}
+            if path.name == "evidence.json" else {}))
+        monkeypatch.setattr(generate, "read_items", lambda _: iter([]))
+        request = generate.generation_request(tmp_path)
+    else:
+        spec = json.loads((Path(__file__).parent / "fixtures" / "item_analysis_spec.json").read_text())
+        request = classify.classification_request(
+            {"item_id": "test", "content": "What is one plus one?", "reference_answer": "2"},
+            spec, "Exam preparation", classify.PROMPT_PATH.read_text())
+    assert "JSON" in request["system"]
+
+    def require_json_in_input(http_request):
+        payload = json.loads(http_request.content)
+        # Model the observed upstream gate: instructions alone do not satisfy
+        # JSON mode; require an explicit JSON instruction in the input message.
+        if "json" not in payload["input"].lower().split():
+            return httpx.Response(400, json={"error": {
+                "message": "Input messages must contain the word JSON.",
+                "type": "invalid_request_error", "code": None, "param": "input",
+            }})
+        return httpx.Response(200, json={
+            "id": "resp_test", "object": "response", "created_at": 1,
+            "status": "completed", "model": "gpt-6-luna",
+            "output": [{"id": "msg_test", "type": "message", "role": "assistant",
+                        "status": "completed", "content": [
+                            {"type": "output_text", "text": "{}", "annotations": []}]}],
+            "usage": {"input_tokens": 120, "output_tokens": 2, "total_tokens": 122,
+                      "input_tokens_details": {"cached_tokens": 0},
+                      "output_tokens_details": {"reasoning_tokens": 0}},
+        })
+
+    # The previous adapter passed this original user payload directly. Prove
+    # that system-only JSON instructions reproduce the HTTP 400 regression.
+    previous = httpx.Request("POST", "https://api.openai.com/v1/responses", json={
+        "instructions": request["system"], "input": request["user"],
+    })
+    assert require_json_in_input(previous).status_code == 400
+    requests, transports = install_transport(monkeypatch, asynchronous, handler=require_json_in_input)
+    arguments = {key: value for key, value in request.items() if key != "step"}
+    arguments["api_key"] = "private-test-key"
+    result = (asyncio.run(model_client.call_text_async(**arguments)) if asynchronous
+              else model_client.call_text(**arguments))
+    assert result.text == "{}"
+    sent = json.loads(requests[0].content)
+    assert sent["input"] == "Return a JSON object.\n\n" + request["user"]
     assert len(requests) == 1
     assert all(client.is_closed for client in transports)

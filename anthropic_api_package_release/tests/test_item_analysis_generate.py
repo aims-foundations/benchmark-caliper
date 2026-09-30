@@ -183,6 +183,36 @@ def test_bad_evidence_references_fail_after_one_repair_and_leave_no_spec(prepare
     assert not (prepared / "specification.json").exists()
 
 
+def test_one_repair_receives_all_invalid_source_references(prepared, peer_spec):
+    valid = generation_spec(peer_spec, prepared)
+    invalid = deepcopy(valid)
+    bad_sources = {
+        "OO.output_category": "dataset_profile.output_format",
+        "IC.region_fit": "dataset_profile.modality",
+        "OC.label_contestability": "dataset_profile.available_fields",
+    }
+    for classifier in invalid["classifiers"]:
+        if classifier["id"] in bad_sources:
+            classifier["grounded_in"].append(bad_sources[classifier["id"]])
+    calls = []
+
+    def repair(**request):
+        calls.append(request)
+        if len(calls) == 1:
+            return json.dumps(invalid)
+        assert len(calls) == 2
+        feedback = request["user"].split("Correct these structural errors and return the full JSON:\n", 1)[1]
+        for slot_id, source in bad_sources.items():
+            assert f"{slot_id}: unknown evidence identifiers: ['{source}']" in feedback
+        return json.dumps(valid)
+
+    result = generate_spec(prepared, call=repair)
+    assert len(calls) == 2
+    registry = read(prepared / "evidence.json")["registry"]
+    assert all(set(classifier["grounded_in"]) <= set(registry) for classifier in result["classifiers"])
+    assert read(prepared / "specification.json")["evidence_references_checked"]
+
+
 def test_peer_import_preserves_original_and_records_gate(prepared, peer_spec, tmp_path):
     supplied = tmp_path / "peer.json"
     supplied.write_text(json.dumps(peer_spec), encoding="utf-8")

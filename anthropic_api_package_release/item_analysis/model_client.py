@@ -104,7 +104,9 @@ def _options(*, model, reasoning_effort, system, user, max_tokens):
     return {
         "model": model,
         "instructions": system,
-        "input": user,
+        # JSON mode checks input messages separately from `instructions`.
+        # The serialized item/spec payload need not itself contain this word.
+        "input": "Return a JSON object.\n\n" + user,
         "reasoning": {"effort": reasoning_effort},
         "max_output_tokens": max_tokens,
         "text": {"format": {"type": "json_object"}},

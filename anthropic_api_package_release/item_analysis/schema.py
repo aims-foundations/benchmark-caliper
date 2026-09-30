@@ -167,6 +167,7 @@ def validate_spec(
             f"Specification benchmark {spec['benchmark']!r} does not match {benchmark!r}"
         )
     columns = _profile_columns(profile) if profile is not None else None
+    reference_errors = []
     for classifier in spec["classifiers"]:
         slot_id = classifier["id"]
         source = classifier["label_source"]
@@ -177,7 +178,11 @@ def validate_spec(
         if evidence is not None:
             missing_refs = sorted(set(classifier["grounded_in"]) - set(evidence))
             if missing_refs:
-                raise ValueError(f"{slot_id}: unknown evidence identifiers: {missing_refs}")
+                reference_errors.append(f"{slot_id}: unknown evidence identifiers: {missing_refs}")
+    if reference_errors:
+        # One structural repair must see every invalid reference, not just the
+        # first slot; all references remain subject to the same exact-key check.
+        raise ValueError("\n".join(reference_errors))
     result = deepcopy(spec)
     result["classifiers"] = [deepcopy(by_id[slot_id]) for slot_id in ROSTER]
     return result
