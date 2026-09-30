@@ -5,13 +5,15 @@ import json
 from pathlib import Path
 
 from .data import file_sha256, read_items
+from .model_client import MODEL_ID, PROVIDER, REASONING_EFFORT
 from .schema import SPEC_SCHEMA, apply_profile_gates, validate_spec
 from .storage import check_prepared, parse_response, read_json, run_lock, write_json
 
 PROMPT_PATH = Path(__file__).parent / "prompts" / "generate_spec.md"
 
 
-def generation_request(directory: Path, max_tokens=12000) -> dict:
+def generation_request(directory: Path, max_tokens=12000, *, model_id=MODEL_ID,
+                       reasoning_effort=REASONING_EFFORT) -> dict:
     dataset = check_prepared(directory)
     evidence = read_json(directory / "evidence.json")
     payload = {
@@ -22,9 +24,10 @@ def generation_request(directory: Path, max_tokens=12000) -> dict:
         "output_schema": SPEC_SCHEMA,
     }
     return {
-        "model": "sonnet", "system": PROMPT_PATH.read_text(encoding="utf-8"),
+        "model": model_id, "reasoning_effort": reasoning_effort,
+        "system": PROMPT_PATH.read_text(encoding="utf-8"),
         "user": json.dumps(payload, ensure_ascii=False, allow_nan=False),
-        "max_tokens": max_tokens, "step": "item_specification", "stream": False,
+        "max_tokens": max_tokens, "step": "item_specification",
     }
 
 
@@ -62,7 +65,8 @@ def _save_spec(directory, raw_spec, *, source, validate_references):
 
 
 def generate_spec(directory: Path, *, supplied: Path | None = None, dry_run=False,
-                  max_tokens=12000, call=None, model_id="sonnet") -> dict:
+                  max_tokens=12000, call=None, model_id=MODEL_ID, provider=PROVIDER,
+                  reasoning_effort=REASONING_EFFORT) -> dict:
     """At most one repair call for structural failures; never repair cultural judgments."""
     if max_tokens <= 0:
         raise ValueError("max_tokens must be positive")
@@ -72,16 +76,17 @@ def generate_spec(directory: Path, *, supplied: Path | None = None, dry_run=Fals
             raise ValueError("A specification already exists; prepare a new directory for changed criteria")
         if supplied is not None:
             if dry_run:
-                raise ValueError("Use --dry-run to preview Sonnet generation, or --spec to import; choose one")
+                raise ValueError("Use --dry-run to preview specification generation, or --spec to import; choose one")
             return _save_spec(directory, read_json(supplied), source={
                 "kind": "provided", "path": str(supplied.resolve()), "sha256": file_sha256(supplied),
             }, validate_references=False)
-        request = generation_request(directory, max_tokens)
+        request = generation_request(directory, max_tokens, model_id=model_id,
+                                     reasoning_effort=reasoning_effort)
         write_json(directory / "generation_request.json", request)
         if dry_run:
             return {"status": "preview", "request": "generation_request.json", "model_calls": 0}
         if call is None:
-            raise ValueError("Sonnet generation requires an API client; use --dry-run to inspect the request")
+            raise ValueError("Specification generation requires an API client; use --dry-run to inspect the request")
         attempts = []
         for attempt in range(2):
             current = dict(request)
@@ -98,7 +103,8 @@ def generate_spec(directory: Path, *, supplied: Path | None = None, dry_run=Fals
             entry = {"attempt": attempt + 1, "response": raw}
             try:
                 result = _save_spec(directory, parse_response(raw), source={
-                    "kind": "generated", "model": request["model"], "model_id": model_id,
+                    "kind": "generated", "provider": provider, "model": model_id,
+                    "model_id": model_id, "reasoning_effort": reasoning_effort,
                     "max_tokens": max_tokens,
                 }, validate_references=True)
             except ValueError as exc:
@@ -106,7 +112,7 @@ def generate_spec(directory: Path, *, supplied: Path | None = None, dry_run=Fals
                 attempts.append(entry)
                 write_json(directory / "generation_attempts.json", attempts)
                 if attempt:
-                    raise ValueError("Sonnet specification failed validation after one repair; inspect generation_attempts.json") from exc
+                    raise ValueError("Specification failed validation after one repair; inspect generation_attempts.json") from exc
             else:
                 attempts.append(entry)
                 write_json(directory / "generation_attempts.json", attempts)

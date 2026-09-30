@@ -242,11 +242,16 @@ def generate_report(run_dir: Path) -> dict:
         bool(items) and completed == len(items)
         and not any(classifier.get("invalid", 0) for classifier in classifiers)
     )
+    run_config = _read_json(run_dir / "run.json", {})
     summary = {
         "benchmark": spec.get("benchmark", dataset.get("benchmark")),
         "deployment": spec.get("deployment"),
         "original_deployment": evidence.get("deployment"),
         "specification": _read_json(run_dir / "specification.json", {}),
+        "classification": {
+            key: run_config.get(key)
+            for key in ("provider", "model_id", "reasoning_effort", "max_tokens")
+        } if run_config else None,
         "dataset": dataset,
         "total_items": len(items),
         "completed_items": completed,
@@ -309,6 +314,11 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}small{color:#465368
         f"<pre>{_escape(summary['original_deployment'] or 'Not supplied')}</pre></details>"
     )
     metadata = summary["specification"]
+    if summary.get("classification"):
+        parts.append(
+            "<details><summary>Classification model</summary>"
+            f"<pre>{_escape(summary['classification'])}</pre></details>"
+        )
     if metadata:
         parts.append(
             "<section><h2>Specification provenance</h2>"

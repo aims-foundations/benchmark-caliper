@@ -21,8 +21,8 @@ function restoreRun(): RunAccess | null {
 }
 
 function KeyInput({ value, onChange }: { value: string; onChange: (key: string) => void }) {
-  return <div className="ia-key"><label className="ia-field"><span>Anthropic API key</span>
-    <input type="password" autoComplete="off" spellCheck={false} maxLength={512} placeholder="sk-ant-…" value={value} onChange={event => onChange(event.target.value)} required />
+  return <div className="ia-key"><label className="ia-field"><span>OpenAI API key</span>
+    <input type="password" autoComplete="off" spellCheck={false} maxLength={512} placeholder="sk-…" value={value} onChange={event => onChange(event.target.value)} required />
   </label><p className="ia-small">Used for paid model calls. Kept in memory for this tab; re-enter it after a refresh.</p></div>
 }
 
@@ -203,18 +203,18 @@ export function ItemAnalysis() {
           <p>{example.description}</p><details><summary>Deployment context</summary><p>{example.deployment}</p><DatasetSource example={example} /></details></div>}
         {example && !example.available && <p className="ia-error" role="status">{example.unavailable_reason || 'This dataset is not available on the server yet. The site maintainer needs to configure dataset access.'}</p>}
         <fieldset className="ia-mode" disabled={!example?.available}><legend>Classification criteria</legend>
-          <label><input type="radio" name="specification" value="generate" checked={mode === 'generate'} onChange={() => setMode('generate')} /><span><strong>Generate with Sonnet</strong><small>Create criteria from the assessment and dataset evidence.</small></span></label>
+          <label><input type="radio" name="specification" value="generate" checked={mode === 'generate'} onChange={() => setMode('generate')} /><span><strong>Generate with GPT-6 Luna</strong><small>Create criteria from the assessment and dataset evidence.</small></span></label>
           <label><input type="radio" name="specification" value="provided" checked={mode === 'provided'} disabled={example?.supplied_spec_available === false} onChange={() => setMode('provided')} /><span><strong>Use example criteria</strong><small>Inspect the supplied specification without a model call.</small></span></label>
         </fieldset>
         {mode === 'generate' && example?.available && <KeyInput value={apiKey} onChange={setApiKey} />}
         <button className="ia-primary" type="submit" disabled={busy || !example?.available || (mode === 'generate' && !apiKey.trim())}>
-          {busy ? 'Starting…' : mode === 'generate' ? 'Generate criteria with Sonnet' : 'Load example criteria'}<span aria-hidden="true"> →</span>
+          {busy ? 'Starting…' : mode === 'generate' ? 'Generate criteria with GPT-6 Luna' : 'Load example criteria'}<span aria-hidden="true"> →</span>
         </button>
-        <p className="ia-small ia-cost-note">{!example?.available ? 'Dataset access is managed by the website. No Hugging Face key is needed from visitors.' : mode === 'generate' ? 'Starts a paid Sonnet request. Item classification begins separately.' : 'No API key needed to inspect criteria and browse the items.'}</p>
+        <p className="ia-small ia-cost-note">{!example?.available ? 'Dataset access is managed by the website. No Hugging Face key is needed from visitors.' : mode === 'generate' ? 'Starts a paid GPT-6 Luna request. Item classification begins separately.' : 'No API key needed to inspect criteria and browse the items.'}</p>
       </form><aside className="ia-guide"><p className="ia-eyebrow">A closer reading</p>
         <div className="ia-guide-graphic" aria-hidden="true"><span className="ia-sheet"><i /><i /><i /></span><span className="ia-graphic-arrow">→</span><span className="ia-item-grid">{Array.from({ length: 9 }, (_, index) => <i key={index} />)}</span></div>
         <h3>From a finding<br />to a measured pattern.</h3><p>Caliper identifies possible validity issues. This analysis checks individual items to see how often each property appears.</p>
-        <ol><li><strong>Write the questions</strong><span>Sonnet translates the original assessment into specific criteria.</span></li><li><strong>Read each item</strong><span>Haiku applies those criteria and records its evidence.</span></li><li><strong>Count and inspect</strong><span>Explore the distributions and review individual judgments.</span></li></ol>
+        <ol><li><strong>Write the questions</strong><span>GPT-6 Luna translates the original assessment into specific criteria.</span></li><li><strong>Read each item</strong><span>GPT-6 Luna applies those criteria and records its evidence.</span></li><li><strong>Count and inspect</strong><span>Explore the distributions and review individual judgments.</span></li></ol>
         <p className="ia-guide-note">{example && example.item_count <= 100 ? `Classify all ${example.item_count} example items, then inspect the judgments and export the results.` : 'Start with 100 items, review the results, then continue through the full snapshot.'}</p>
       </aside></div>}
 
@@ -233,7 +233,9 @@ export function ItemAnalysis() {
             <button className="ia-text-button" onClick={reset} disabled={busy}>Start a new analysis</button>}
             {run.spec && <button className="ia-text-button" disabled={downloading !== null} onClick={() => void download('spec')}>Download criteria ↓</button>}</div>
           <details className="ia-source"><summary>Context and usage</summary><p>{run.example.deployment}</p>
-            <p>{run.example.description}</p><DatasetSource example={run.example} /><p className="ia-small">Model usage: {(run.usage?.input_tokens || 0).toLocaleString()} input tokens · {(run.usage?.output_tokens || 0).toLocaleString()} output tokens.</p></details>
+            <p>{run.example.description}</p><DatasetSource example={run.example} />
+            {run.model && <p className="ia-small">Model: <code>{run.model.model_id}</code> · {run.model.provider} · {run.model.reasoning_effort} reasoning effort.</p>}
+            <p className="ia-small">Model usage: {(run.usage?.input_tokens || 0).toLocaleString()} input tokens · {(run.usage?.output_tokens || 0).toLocaleString()} output tokens.</p></details>
         </section>
 
         {run.spec && <Criteria spec={run.spec} metadata={run.summary?.specification} />}
@@ -241,15 +243,15 @@ export function ItemAnalysis() {
         {canClassify && <form className="ia-classify-panel" onSubmit={event => { event.preventDefault(); void classify(scope) }}>
           <div><p className="ia-eyebrow">{scope === 'all' ? 'Complete the snapshot' : 'Try the criteria'}</p>
             <h2>{scope === 'all' ? 'Ready to read the remaining items?' : `Classify ${pilotSize < run.total ? `the first ${pilotSize}` : `all ${pilotSize}`} items`}</h2>
-            <p className="ia-small">{scope === 'all' ? 'Continue with the same criteria. Completed judgments are preserved.' : pilotSize < run.total ? 'The run pauses after this pilot for your review.' : 'This small example fits in a single run.'} Up to {remaining.toLocaleString()} paid Haiku item requests; malformed responses may be retried.</p></div>
+            <p className="ia-small">{scope === 'all' ? 'Continue with the same criteria. Completed judgments are preserved.' : pilotSize < run.total ? 'The run pauses after this pilot for your review.' : 'This small example fits in a single run.'} Up to {remaining.toLocaleString()} paid GPT-6 Luna item requests; malformed responses may be retried.</p></div>
           <div><KeyInput value={apiKey} onChange={setApiKey} /><button type="submit" className="ia-primary" disabled={busy || !apiKey.trim()}>
-            {busy ? 'Starting…' : scope === 'all' ? 'Continue through all items' : ['cancelled', 'failed'].includes(run.status) ? 'Resume classification' : `Classify ${pilotSize} items with Haiku`}</button></div>
+            {busy ? 'Starting…' : scope === 'all' ? 'Continue through all items' : ['cancelled', 'failed'].includes(run.status) ? 'Resume classification' : `Classify ${pilotSize} items with GPT-6 Luna`}</button></div>
         </form>}
 
         {run.spec && <Results run={run} page={page} setPage={setPage} onDownload={artifact => void download(artifact)} downloading={downloading} pageLoading={pageLoading} />}
       </div>}
       <details className="ia-privacy" id="item-analysis-privacy" open={privacyOpen} onToggle={event => setPrivacyOpen(event.currentTarget.open)}><summary>About your key and this demo</summary>
-        <p>Your Anthropic key is sent to the server for model calls and held in memory while a phase runs. This page never writes it to browser storage. A run access token is kept in this tab’s session storage so you can refresh and return to the results.</p>
+        <p>Your OpenAI key is sent to the server for model calls and held in memory while a phase runs. This page never writes it to browser storage. A run access token is kept in this tab’s session storage so you can refresh and return to the results.</p>
         <p>Source items, criteria, and model judgments are kept privately for this run and expire one hour after it ends, or when the server restarts. Download the files you need before leaving. Example datasets are labelled with their source; illustrative items are for demonstrating the workflow.</p>
       </details>
     </main>

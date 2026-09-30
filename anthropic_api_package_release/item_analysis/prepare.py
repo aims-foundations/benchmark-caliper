@@ -13,7 +13,7 @@ REQUIRED_ASSESSMENT_FILES = (
 
 
 def evidence_registry(scoring: dict, documents: dict) -> dict:
-    """Use resolvable source IDs rather than ask Sonnet to invent citations."""
+    """Provide resolvable source IDs for generated classifier citations."""
     registry = dict(documents)
 
     def visit(value, pointer):

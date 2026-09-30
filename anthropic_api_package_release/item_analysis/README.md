@@ -5,8 +5,8 @@ benchmark for an existing Caliper deployment assessment. It runs after stage 7:
 
 ```text
 scoring.json + deployment + dataset profile + dataset-analysis findings
-  → Sonnet generates a classifier specification
-  → Haiku labels each item using the frozen specification
+  → GPT-6 Luna generates a classifier specification
+  → GPT-6 Luna labels each item using the frozen specification
   → Python counts labels and exports an HTML report and item-level CSV
 ```
 
@@ -63,15 +63,15 @@ the local file. Do not assign a guessed revision.
 
 ## Generate or import the specification
 
-Preview the full Sonnet request without API calls:
+Preview the full GPT-6 Luna request without API calls:
 
 ```bash
 python -m anthropic_api_package_release.item_analysis generate-spec \
   --run-dir results/item_analysis/mmlu --dry-run
 ```
 
-Then generate it with Sonnet. Live generation and classification require
-`ANTHROPIC_API_KEY` in the environment (or a local `.env`):
+Then generate it with GPT-6 Luna. Live generation and classification require
+`OPENAI_API_KEY` in the environment (or a local `.env`):
 
 ```bash
 python -m anthropic_api_package_release.item_analysis generate-spec \
@@ -99,9 +99,9 @@ python -m anthropic_api_package_release.item_analysis generate-spec \
 Choose either generation or import for one run directory. The original JSON is
 preserved next to the effective specification. Imported free-text citations and
 deployment paraphrases require human review; both original and specification
-deployments appear in the report. The first implementation uses Haiku for every
-applicable classifier; legacy `data_then_haiku`/valid `data_column` hints are
-normalized to `haiku` with an explicit adjustment record.
+deployments appear in the report. GPT-6 Luna evaluates every applicable
+classifier; legacy provider-specific labels and valid `data_column`
+hints are normalized to `model` with an explicit adjustment record.
 
 The fixed-MCQ rule follows `SPEC.md`: when every item has explicit choices,
 `OO.output_category` is N/A because answer representation is uniform. This
@@ -112,7 +112,7 @@ evidence. Those states are never counted as negative labels.
 
 ## Inspect 100 items, then complete every item
 
-First save the exact Haiku requests without scoring:
+First save the exact GPT-6 Luna requests without scoring:
 
 ```bash
 python -m anthropic_api_package_release.item_analysis classify \
@@ -131,7 +131,7 @@ the specified labels, evidence, and a justification. An invalid response gets
 one structural repair attempt, then becomes an error. Errors are never validity
 judgments. API exceptions stop the run instead of repeatedly consuming calls
 after an authentication, quota, or service failure. Successful results are
-flushed immediately; model usage and raw call traces are saved.
+flushed immediately; model usage and raw responses are saved.
 
 Inspect `report.html` and `items.csv`. **The program does not rewrite its own
 criteria after inspecting these results.** If the instructions or data adapter
@@ -146,15 +146,16 @@ python -m anthropic_api_package_release.item_analysis classify \
 This scores all remaining items and retries previous errors without repeating
 completed items. The default `--limit 100` is the review checkpoint; `--all` is
 the full-benchmark demo target. Only the limit can grow during continuation:
-changed data, assessment, criteria, prompt, model ID, or token settings require
-a new run directory. Use one process per directory; concurrent writers are
+changed data, assessment, criteria, prompt, provider, model ID, reasoning, or
+token settings require a new run directory. Use one process per directory; concurrent writers are
 rejected. A truncated final JSONL append is recoverable; other corruption fails.
 An interruption after an API response but before saving can repeat that call.
 
 The run is sequential. Use the checkpoint's actual elapsed time and recorded
-token usage to estimate a full run. The shared client's monetary estimates use
-its configured pricing table; token counts and call traces are the primary
-usage record.
+token usage to estimate a full run. The usage files record actual input and
+output tokens, including cached-input and reasoning-token breakdowns.
+These breakdowns are already included in the
+totals; do not add them twice. Monetary costs depend on current provider pricing.
 
 ## Report and human review
 
@@ -204,7 +205,7 @@ not proof of validity. Revalidate when model results or review labels change.
 | `classifier_spec.original.json`, `classifier_spec.json`, `specification.json` | Original/effective criteria, adjustments, hashes, and review notes |
 | `preview_requests.jsonl` | Exact classification requests; previews contain no labels |
 | `run.json`, `results.jsonl`, `execution.json` | Frozen settings, append-only results, progress/errors |
-| `traces/`, `usage_ledger.json`, `usage.json` | API call traces and accumulated usage |
+| `usage_ledger.json`, `usage.json` | Per-call usage and accumulated token totals |
 | `report.html`, `summary.json`, `items.csv` | Human and machine-readable analysis |
 | `review.csv`, `review_selection.json`, `review_comparison.json` | Independent review and agreement |
 
@@ -213,7 +214,11 @@ assessment. `schema.py` owns the fixed roster and contracts. `generate.py` and
 `classify.py` own the two model stages; their readable prompts are in `prompts/`.
 `report.py` performs deterministic aggregation and review comparison.
 `storage.py` provides hashes, atomic JSON writes, and the run lock. The CLI is
-in `__main__.py`. Model calls reuse the pipeline's existing `client.py`.
+in `__main__.py`. `model_client.py` provides isolated OpenAI Responses API
+clients with GPT-6 Luna and low reasoning effort for both model stages. The
+provider, exact model ID, and reasoning setting are recorded in each run; prior
+runs with different settings require a new directory. The original benchmark
+assessment pipeline is independent of this item-analysis client.
 
 Run the offline tests from the repository root:
 
@@ -225,4 +230,4 @@ Tests use local Parquet fixtures and injected model responses. They cover
 generation/repair, imported specifications, evidence preservation, label
 validation, random sampling, 100-to-all continuation, failures, unknowns,
 reporting, human review, and frozen-run integrity. They establish program
-behavior, not the quality of live Sonnet or Haiku judgments.
+behavior, not the quality of live GPT-6 Luna judgments.

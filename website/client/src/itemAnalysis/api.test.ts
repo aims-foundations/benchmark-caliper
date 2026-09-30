@@ -1,14 +1,14 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { AnalysisApiError, createRun, download, getRun } from './api'
+import { AnalysisApiError, classify, createRun, download, getRun } from './api'
 
 afterEach(() => vi.unstubAllGlobals())
 
 it('sends the API key in a header and keeps it outside the request body and URL', async () => {
   const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ run_id: 'test', run_secret: 'private' })))
   vi.stubGlobal('fetch', fetch)
-  await createRun('mmlu', 'generate', 'sk-ant-secret')
+  await createRun('mmlu', 'generate', 'sk-secret')
   expect(fetch).toHaveBeenCalledWith('/api/item-analysis/runs', expect.objectContaining({
-    method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Anthropic-Key': 'sk-ant-secret' },
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'X-OpenAI-Key': 'sk-secret' },
     body: JSON.stringify({ example_id: 'mmlu', specification_mode: 'generate' }),
   }))
 })
@@ -17,7 +17,18 @@ it('omits an API-key header for a supplied specification', async () => {
   const fetch = vi.fn().mockResolvedValue(new Response('{}'))
   vi.stubGlobal('fetch', fetch)
   await createRun('illustrative', 'provided', '')
-  expect(fetch.mock.calls[0][1].headers).not.toHaveProperty('X-Anthropic-Key')
+  expect(fetch.mock.calls[0][1].headers).not.toHaveProperty('X-OpenAI-Key')
+})
+
+it('classifies with the OpenAI key and run secret in headers', async () => {
+  const fetch = vi.fn().mockResolvedValue(new Response('{}'))
+  vi.stubGlobal('fetch', fetch)
+  await classify({ run_id: 'test', run_secret: 'private-run' }, 'pilot', 'sk-private')
+  expect(fetch).toHaveBeenCalledWith('/api/item-analysis/runs/test/classify', expect.objectContaining({
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Review-Token': 'private-run', 'X-OpenAI-Key': 'sk-private' },
+    body: JSON.stringify({ scope: 'pilot' }),
+  }))
 })
 
 it('downloads artifacts with the run secret in a header, never a URL', async () => {

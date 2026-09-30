@@ -34,7 +34,7 @@ authoritative. Their absence does not establish that a property is absent.
 
 For every classifier provide id, component, operation, applicable, na_reason,
 criterion, label_source, grounded_in, example_items, and aggregate. Set
-label_source to "haiku" for this release. Supply the operation-specific field
+label_source to "model" for this release. Supply the operation-specific field
 when applicable: category_set, ordinal_anchors, or positive_class.
 
 Write a criterion that another model can apply to one item without rediscovering

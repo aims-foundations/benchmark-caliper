@@ -47,14 +47,16 @@ This file is paired with [DESIGN.md](DESIGN.md). Every privacy claim in DESIGN.m
 
 ## Item-analysis demo (`/item-analysis`)
 
-This separate Anthropic workflow reuses the post-assessment item-analysis
+This separate OpenAI workflow reuses the post-assessment item-analysis
 pipeline, with the following boundaries:
 
-- The API key travels in `X-Anthropic-Key`, stays in the active phase's memory,
+- The API key travels in `X-OpenAI-Key`, stays in the active phase's memory,
   and is not stored in browser storage, job artifacts, the database, or logs.
   A separate random access secret in `X-Review-Token` authorizes polling,
   cancellation, and downloads. Only the run ID and access secret are kept in
   browser session storage, so refresh can reconnect without persisting a key.
+  The client targets `https://api.openai.com/v1` with `store=False`. Both stages
+  use GPT-6 Luna with low reasoning effort, recorded in each run.
 - Users choose server-configured examples. Requests cannot select filesystem
   paths, repositories, models, or provider URLs. The bundled teaching example is
   labeled illustrative and contains no prerecorded model predictions. MMLU is
@@ -84,8 +86,9 @@ pipeline, with the following boundaries:
   download or preparation step before returning. No email is collected or sent.
 
 Verification: `server/tests/test_item_analysis.py`, `server/tests/test_item_analysis_source.py`,
-`server/tests/test_anthropic_client.py`, and `client/src/itemAnalysis/*.test.*`.
-The model provider's own retention terms apply to submitted evidence.
+`../anthropic_api_package_release/tests/test_item_analysis_model_client.py`,
+and `client/src/itemAnalysis/*.test.*`. OpenAI's own retention terms apply to
+submitted evidence; `store=False` does not promise zero provider retention.
 
 ---
 

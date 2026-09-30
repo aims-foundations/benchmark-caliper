@@ -13,9 +13,9 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 import pytest
 
-from anthropic_api_package_release.item_analysis import prepare
+from anthropic_api_package_release.item_analysis import model_client, prepare
 from anthropic_api_package_release.item_analysis.storage import read_json, write_json
-from website.server import anthropic_client, db, item_analysis as analysis
+from website.server import db, item_analysis as analysis
 
 KEY = "sk-test-private-item-analysis-key"
 BODY = {"example_id": "illustrative", "specification_mode": "provided"}
@@ -28,8 +28,10 @@ def model(monkeypatch):
     async def fake_call(**arguments):
         assert arguments["api_key"] == KEY
         payload = json.loads(arguments["user"])
-        calls.append((arguments["family"], payload))
-        if arguments["family"] == "sonnet":
+        calls.append((arguments["model"], payload))
+        assert arguments["model"] == model_client.MODEL_ID
+        assert arguments["reasoning_effort"] == model_client.REASONING_EFFORT
+        if "item" not in payload:
             spec = read_json(analysis.FIXTURE_PATH)["classifier_spec"]
             spec["benchmark"], spec["deployment"] = payload["benchmark"], payload["deployment"]
             text = json.dumps(spec)
@@ -42,9 +44,10 @@ def model(monkeypatch):
             if payload["item"]["item_id"].endswith("01"):
                 labels["IC.region_fit"]["label"] = None
             text = json.dumps({"labels": labels})
-        return anthropic_client.CallResult(text, anthropic_client.MODELS[arguments["family"]], 100, 30, 1)
+        return model_client.CallResult(text, arguments["model"], 100, 30, 1,
+                                      cached_input_tokens=20, reasoning_tokens=7)
 
-    monkeypatch.setattr(anthropic_client, "call_text_async", fake_call)
+    monkeypatch.setattr(model_client, "call_text_async", fake_call)
     return calls
 
 
@@ -67,13 +70,13 @@ def client(tmp_path, monkeypatch, model):
 
 def start(client, *, example="illustrative", mode="provided"):
     response = client.post("/api/item-analysis/runs", json={"example_id": example, "specification_mode": mode},
-                           headers={"X-Anthropic-Key": KEY} if mode == "generate" else {})
+                           headers={"X-OpenAI-Key": KEY} if mode == "generate" else {})
     assert response.status_code == 202, response.text
     return response.json()
 
 
 def headers(access, *, key=False):
-    return {"X-Review-Token": access["run_secret"], **({"X-Anthropic-Key": KEY} if key else {})}
+    return {"X-Review-Token": access["run_secret"], **({"X-OpenAI-Key": KEY} if key else {})}
 
 
 def url(access):
@@ -220,15 +223,22 @@ def test_real_pipeline_generates_or_imports_then_classifies_and_exports(client, 
     access = start(client, mode=mode)
     ready = settled(client, access)
     assert ready["status"] == "ready"
+    expected_model = {"provider": "openai", "model_id": "gpt-6-luna", "reasoning_effort": "low"}
+    assert ready["model"] == access["model"] == expected_model
     assert ready["summary"]["specification"]["source"]["kind"] == ("generated" if mode == "generate" else "provided")
+    if mode == "generate":
+        source = ready["summary"]["specification"]["source"]
+        assert {key: source[key] for key in expected_model} == expected_model
     result = classify(client, access)
     assert result["status"] == "complete"
     assert result["complete"] == result["processed"] == result["total"] == 10
     assert result["errors"] == 0 and result["summary"]["complete_snapshot"]
     regional = next(c for c in result["summary"]["classifiers"] if c["id"] == "IC.region_fit")
     assert regional["unknown"] == 1 and regional["known"] == 9
-    assert result["usage"]["input_tokens"] == (1100 if mode == "generate" else 1000)
-    assert len([family for family, _ in model if family == "sonnet"]) == (mode == "generate")
+    call_count = 11 if mode == "generate" else 10
+    assert result["usage"] == {"input_tokens": 100 * call_count, "output_tokens": 30 * call_count,
+                               "cached_input_tokens": 20 * call_count, "reasoning_tokens": 7 * call_count}
+    assert sum("item" not in payload for _, payload in model) == (mode == "generate")
     for artifact, (filename, _) in analysis.ARTIFACTS.items():
         response = client.get(url(access) + f"/download/{artifact}", headers=headers(access))
         assert response.status_code == 200
@@ -238,6 +248,8 @@ def test_real_pipeline_generates_or_imports_then_classifies_and_exports(client, 
     assert "justification" not in worksheet and "Deterministic test" not in worksheet
     assert client.get(url(access) + "/download/evidence", headers=headers(access)).status_code == 404
     directory = analysis.jobs[access["run_id"]].directory
+    run = read_json(directory / "run.json")
+    assert {key: run[key] for key in expected_model} == expected_model
     assert all(KEY not in path.read_text() for path in directory.iterdir() if path.is_file())
 
 
@@ -252,11 +264,11 @@ def test_first_100_checkpoint_full_continuation_and_no_duplicate_calls(client, m
     pilot = classify(client, access)
     assert pilot["status"] == "checkpoint" and pilot["can_continue"]
     assert (pilot["processed"], pilot["total"]) == (100, 105)
-    first_ids = [payload["item"]["item_id"] for family, payload in model if family == "haiku"]
+    first_ids = [payload["item"]["item_id"] for _, payload in model if "item" in payload]
     assert len(first_ids) == len(set(first_ids)) == 100
     complete = classify(client, access, scope="all")
     assert complete["status"] == "complete" and complete["complete"] == 105
-    assert len([family for family, _ in model if family == "haiku"]) == 105
+    assert sum("item" in payload for _, payload in model) == 105
     page = client.get(url(access) + "?page=6", headers=headers(access)).json()
     assert page["pagination"] == {"page": 6, "page_size": 20, "total_pages": 6}
     assert len(page["items"]) == 5
@@ -265,8 +277,13 @@ def test_first_100_checkpoint_full_continuation_and_no_duplicate_calls(client, m
 
 def test_private_endpoints_and_keys_and_body_validation(client, model):
     assert client.post("/api/item-analysis/runs", json={**BODY, "specification_mode": "generate"}).status_code == 401
+    wrong_header = client.post("/api/item-analysis/runs", json={**BODY, "specification_mode": "generate"},
+                               headers={"X-Anthropic-Key": KEY})
+    assert wrong_header.status_code == 401
+    assert "OpenAI" in wrong_header.json()["detail"]
     assert not analysis.jobs and not model
-    for bad in ({**BODY, "input_path": "/etc/passwd"}, {**BODY, "example_id": "../secret"}):
+    for bad in ({**BODY, "input_path": "/etc/passwd"}, {**BODY, "example_id": "../secret"},
+                {**BODY, "model": "another-model"}):
         assert client.post("/api/item-analysis/runs", json=bad).status_code == 422
     access = start(client)
     settled(client, access)
@@ -275,37 +292,79 @@ def test_private_endpoints_and_keys_and_body_validation(client, model):
     for suffix, body in (("/cancel", {}), ("/classify", {"scope": "pilot"})):
         assert client.post(url(access) + suffix, json=body, headers={"X-Review-Token": "wrong"}).status_code == 404
     assert client.post(url(access) + "/classify", json={"scope": "pilot"}, headers=headers(access)).status_code == 401
+    assert client.post(url(access) + "/classify", json={"scope": "pilot"},
+                       headers={**headers(access), "X-Anthropic-Key": KEY}).status_code == 401
     assert not model
 
 
 def test_provider_failure_is_sanitized_and_can_resume(client, monkeypatch, model):
     access = start(client)
     settled(client, access)
-    original = anthropic_client.call_text_async
+    original = model_client.call_text_async
 
     async def broken(**arguments):
         raise ValueError(f"Provider error includes {KEY} and arbitrary sensitive text")
 
-    monkeypatch.setattr(anthropic_client, "call_text_async", broken)
+    monkeypatch.setattr(model_client, "call_text_async", broken)
     failed = classify(client, access)
     assert failed["status"] == "failed" and failed["errors"] == 1
     assert KEY not in json.dumps(failed)
     directory = analysis.jobs[access["run_id"]].directory
     assert all(KEY not in path.read_text() for path in directory.iterdir() if path.is_file())
-    monkeypatch.setattr(anthropic_client, "call_text_async", original)
+    monkeypatch.setattr(model_client, "call_text_async", original)
     finished = classify(client, access)
     assert finished["status"] == "complete" and finished["errors"] == 0
+
+
+def test_incomplete_response_counts_billed_usage_without_saving_provider_text(client, monkeypatch):
+    access = start(client)
+    settled(client, access)
+
+    async def incomplete(**arguments):
+        result = model_client.CallResult(KEY, arguments["model"], 100, 30, 1,
+                                         cached_input_tokens=20, reasoning_tokens=7)
+        raise model_client.ModelResponseError(f"Incomplete response contains {KEY}", result)
+
+    monkeypatch.setattr(model_client, "call_text_async", incomplete)
+    failed = classify(client, access)
+    assert failed["status"] == "failed" and failed["errors"] == 1
+    assert failed["usage"] == {"input_tokens": 100, "output_tokens": 30,
+                               "cached_input_tokens": 20, "reasoning_tokens": 7}
+    assert KEY not in json.dumps(failed)
+    directory = analysis.jobs[access["run_id"]].directory
+    assert all(KEY not in path.read_text() for path in directory.iterdir() if path.is_file())
+
+
+def test_model_echo_of_key_is_redacted_before_saving(client, monkeypatch, model):
+    access = start(client)
+    settled(client, access)
+    original = model_client.call_text_async
+
+    async def echo_key(**arguments):
+        result = await original(**arguments)
+        payload = json.loads(result.text)
+        for label in payload["labels"].values():
+            label["justification"] = f"The model echoed {KEY} in its explanation."
+        return model_client.CallResult(json.dumps(payload), result.model, result.input_tokens,
+                                       result.output_tokens, result.latency_ms)
+
+    monkeypatch.setattr(model_client, "call_text_async", echo_key)
+    complete = classify(client, access)
+    assert complete["status"] == "complete"
+    assert KEY not in json.dumps(complete) and "[redacted]" in json.dumps(complete)
+    directory = analysis.jobs[access["run_id"]].directory
+    assert all(KEY not in path.read_text() for path in directory.iterdir() if path.is_file())
 
 
 def test_cancel_stops_current_request_drains_thread_and_resumes(client, monkeypatch, model):
     access = start(client)
     settled(client, access)
-    original = anthropic_client.call_text_async
+    original = model_client.call_text_async
     started, cancelled = Event(), Event()
     calls = []
 
     async def blocked(**arguments):
-        calls.append(arguments["family"])
+        calls.append(arguments["model"])
         started.set()
         try:
             await asyncio.Event().wait()
@@ -313,17 +372,17 @@ def test_cancel_stops_current_request_drains_thread_and_resumes(client, monkeypa
             cancelled.set()
             raise
 
-    monkeypatch.setattr(anthropic_client, "call_text_async", blocked)
+    monkeypatch.setattr(model_client, "call_text_async", blocked)
     response = client.post(url(access) + "/classify", json={"scope": "pilot"}, headers=headers(access, key=True))
     assert response.status_code == 202
     assert started.wait(2)
-    duplicate = client.post("/api/item-analysis/runs", json={**BODY, "specification_mode": "generate"}, headers={"X-Anthropic-Key": KEY})
+    duplicate = client.post("/api/item-analysis/runs", json={**BODY, "specification_mode": "generate"}, headers={"X-OpenAI-Key": KEY})
     assert duplicate.status_code == 429
     stopped = client.post(url(access) + "/cancel", headers=headers(access)).json()
     assert stopped["status"] == "cancelled" and cancelled.is_set()
     assert analysis.jobs[access["run_id"]].task.done()
-    assert calls == ["haiku"]
-    monkeypatch.setattr(anthropic_client, "call_text_async", original)
+    assert calls == [model_client.MODEL_ID]
+    monkeypatch.setattr(model_client, "call_text_async", original)
     assert classify(client, access)["status"] == "complete"
 
 
@@ -338,7 +397,7 @@ def test_generation_can_be_cancelled_and_sweep_never_removes_live_worker(client,
             cancelled.set()
             raise
 
-    monkeypatch.setattr(anthropic_client, "call_text_async", blocked)
+    monkeypatch.setattr(model_client, "call_text_async", blocked)
     access = start(client, mode="generate")
     assert started.wait(2)
     job = analysis.jobs[access["run_id"]]
@@ -390,7 +449,7 @@ def test_cancellation_waits_for_async_provider_cleanup(client, monkeypatch):
             await asyncio.sleep(.05)
             cleaned.set()
 
-    monkeypatch.setattr(anthropic_client, "call_text_async", blocked)
+    monkeypatch.setattr(model_client, "call_text_async", blocked)
     assert client.post(url(access) + "/classify", json={"scope": "pilot"}, headers=headers(access, key=True)).status_code == 202
     assert started.wait(2)
     response = client.post(url(access) + "/cancel", headers=headers(access))
@@ -435,7 +494,7 @@ def test_phase_waits_for_downloads_and_only_immutable_spec_downloads_while_runni
         started.set()
         await asyncio.Event().wait()
 
-    monkeypatch.setattr(anthropic_client, "call_text_async", blocked)
+    monkeypatch.setattr(model_client, "call_text_async", blocked)
     assert client.post(url(access) + "/classify", json={"scope": "pilot"}, headers=headers(access, key=True)).status_code == 202
     assert started.wait(2)
     assert client.get(url(access) + "/download/items", headers=headers(access)).status_code == 409
@@ -447,14 +506,14 @@ def test_invalid_generated_spec_repairs_once_then_fails_without_classifying(clie
     calls = []
 
     async def invalid(**arguments):
-        calls.append(arguments["family"])
-        return anthropic_client.CallResult("{}", "fixture", 1, 1, 1)
+        calls.append(arguments["model"])
+        return model_client.CallResult("{}", "fixture", 1, 1, 1)
 
-    monkeypatch.setattr(anthropic_client, "call_text_async", invalid)
+    monkeypatch.setattr(model_client, "call_text_async", invalid)
     access = start(client, mode="generate")
     job = settled(client, access)
     assert job["status"] == "failed" and job["processed"] == 0
-    assert calls == ["sonnet", "sonnet"]
+    assert calls == [model_client.MODEL_ID, model_client.MODEL_ID]
     assert client.post(url(access) + "/classify", json={"scope": "pilot"}, headers=headers(access, key=True)).status_code == 409
 
 

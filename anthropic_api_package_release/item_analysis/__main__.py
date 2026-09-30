@@ -9,32 +9,57 @@ import sys
 
 from .classify import run
 from .generate import generate_spec
+from .model_client import MODEL_ID, PROVIDER, REASONING_EFFORT
 from .prepare import prepare
 from .report import compare_review, generate_report
-from .storage import check_prepared, read_json, run_lock
+from .storage import check_prepared, read_json, run_lock, write_json
 
 
 def _api(directory: Path):
-    # Loading the shared client also loads a local .env when python-dotenv is
-    # installed. Read-only commands and dry runs do not import the API SDK.
-    from .. import client
-
-    if not os.getenv("ANTHROPIC_API_KEY"):
-        raise ValueError("Set ANTHROPIC_API_KEY for live calls; --dry-run previews inputs without calls")
-    client.set_trace_dir(directory / "traces")
-    client.set_stream_default(False)
-    client.load_ledger(directory / "usage_ledger.json")
-    return client
-
-
-def _call_and_save(client, directory: Path, **request):
-    # Invoked only while the generation/classification command holds its lock.
-    # Persist after every call so interruption and continuation retain usage.
+    # Read-only commands and dry runs need neither credentials nor the API SDK.
     try:
-        return client.call(**request)
+        from dotenv import load_dotenv
+    except ImportError:
+        pass
+    else:
+        load_dotenv()
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError("Set OPENAI_API_KEY for live calls; --dry-run previews inputs without calls")
+    return partial(_call_and_save, directory, api_key)
+
+
+def _call_and_save(directory: Path, api_key: str, **request):
+    # Invoked only while the generation/classification command holds its lock.
+    # Persist billable usage even when a returned response is incomplete.
+    from . import model_client
+
+    step = request.pop("step")
+    result = None
+    try:
+        result = model_client.call_text(api_key=api_key, **request)
+        return result.text
+    except model_client.ModelResponseError as exc:
+        result = exc.result
+        raise
     finally:
-        client.save_ledger(directory / "usage_ledger.json")
-        client.dump_cost_ledger(directory / "usage.json")
+        if result is not None:
+            path = directory / "usage_ledger.json"
+            ledger = read_json(path) if path.exists() else []
+            counters = ("input_tokens", "output_tokens", "cached_input_tokens", "reasoning_tokens")
+            ledger.append({
+                "step": step, "provider": PROVIDER, "model": result.model,
+                "reasoning_effort": request["reasoning_effort"],
+                "latency_ms": result.latency_ms,
+                **{name: getattr(result, name, 0) for name in counters},
+            })
+            write_json(path, ledger)
+            write_json(directory / "usage.json", {
+                "provider": PROVIDER, "model": MODEL_ID, "reasoning_effort": REASONING_EFFORT,
+                "calls": len(ledger),
+                **{name: sum(entry.get(name, 0) for entry in ledger) for name in counters},
+                "note": "Cached input tokens are included in input_tokens; reasoning tokens are included in output_tokens.",
+            })
 
 
 def main(argv=None) -> int:
@@ -49,11 +74,11 @@ def main(argv=None) -> int:
     prep.add_argument("--source-repo", default="aims-foundations/measurement-db")
     prep.add_argument("--source-revision", help="Pinned source revision; inferred from an HF cache path when available")
     prep.add_argument("--source-table", help="Source table path in the dataset repository")
-    generate = commands.add_parser("generate-spec", help="Generate with Sonnet, or import a supplied classifier JSON")
+    generate = commands.add_parser("generate-spec", help="Generate with GPT-6 Luna, or import a supplied classifier JSON")
     generate.add_argument("--run-dir", type=Path, required=True)
     generate_mode = generate.add_mutually_exclusive_group()
-    generate_mode.add_argument("--spec", type=Path, help="Use an existing specification instead of calling Sonnet")
-    generate_mode.add_argument("--dry-run", action="store_true", help="Save the exact Sonnet request only")
+    generate_mode.add_argument("--spec", type=Path, help="Use an existing specification instead of calling the model")
+    generate_mode.add_argument("--dry-run", action="store_true", help="Save the exact generation request only")
     generate.add_argument("--max-output-tokens", type=int, default=12000)
     classify = commands.add_parser("classify", help="Classify the first 100 random items, or continue to all items")
     classify.add_argument("--run-dir", type=Path, required=True)
@@ -69,7 +94,7 @@ def main(argv=None) -> int:
     review.add_argument("--run-dir", type=Path, required=True)
     review.add_argument("--review", type=Path, required=True)
     args = parser.parse_args(argv)
-    client = None
+    call = None
     try:
         if args.command == "prepare":
             result = prepare(args.assessment_dir, args.items, args.output_dir, benchmark=args.benchmark,
@@ -77,11 +102,10 @@ def main(argv=None) -> int:
                              source_table=args.source_table)
         elif args.command == "generate-spec":
             if not args.spec and not args.dry_run:
-                client = _api(args.run_dir)
+                call = _api(args.run_dir)
             spec = generate_spec(args.run_dir, supplied=args.spec, dry_run=args.dry_run,
                                  max_tokens=args.max_output_tokens,
-                                 call=partial(_call_and_save, client, args.run_dir) if client else None,
-                                 model_id=client.MODELS["sonnet"] if client else "sonnet")
+                                 call=call)
             result = spec if args.dry_run else {
                 "benchmark": spec["benchmark"],
                 "applicable_classifiers": sum(c["applicable"] for c in spec["classifiers"]),
@@ -90,11 +114,10 @@ def main(argv=None) -> int:
             }
         elif args.command == "classify":
             if not args.dry_run:
-                client = _api(args.run_dir)
+                call = _api(args.run_dir)
             result = run(args.run_dir, limit=None if args.all else args.limit, resume=args.resume,
                          dry_run=args.dry_run, max_tokens=args.max_output_tokens,
-                         call=partial(_call_and_save, client, args.run_dir) if client else None,
-                         model_id=client.MODELS["haiku"] if client else "haiku")
+                         call=call)
             if not args.dry_run:
                 with run_lock(args.run_dir):
                     generate_report(args.run_dir)

@@ -24,14 +24,14 @@ const accessHeader = (run: RunAccess) => ({ 'X-Review-Token': run.run_secret })
 export const getCatalog = (signal?: AbortSignal) => json<Catalog>('/catalog', { signal })
 export const createRun = (exampleId: string, mode: SpecificationMode, apiKey: string) => json<AnalysisRun & RunAccess>('/runs', {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json', ...(apiKey ? { 'X-Anthropic-Key': apiKey } : {}) },
+  headers: { 'Content-Type': 'application/json', ...(apiKey ? { 'X-OpenAI-Key': apiKey } : {}) },
   body: JSON.stringify({ example_id: exampleId, specification_mode: mode }),
 })
 export const getRun = (run: RunAccess, page: number, signal?: AbortSignal) => json<AnalysisRun>(`${runPath(run)}?page=${page}`, {
   headers: accessHeader(run), signal,
 })
 export const classify = (run: RunAccess, scope: RunScope, apiKey: string) => json<AnalysisRun>(`${runPath(run)}/classify`, {
-  method: 'POST', headers: { ...accessHeader(run), 'X-Anthropic-Key': apiKey, 'Content-Type': 'application/json' },
+  method: 'POST', headers: { ...accessHeader(run), 'X-OpenAI-Key': apiKey, 'Content-Type': 'application/json' },
   body: JSON.stringify({ scope }),
 })
 export const cancelRun = (run: RunAccess) => json<AnalysisRun>(`${runPath(run)}/cancel`, {

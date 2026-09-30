@@ -73,9 +73,14 @@ def test_checkpoint_continues_to_all_without_repeating_completed_items(prepared)
     called_ids = [json.loads(request["user"])["item"]["item_id"] for request in judge.calls]
     assert len(set(called_ids)) == 5
     assert set(called_ids[:2]) == first_ids
-    assert all(request["model"] == "haiku" for request in judge.calls)
+    assert all(request["model"] == "test-model" for request in judge.calls)
+    assert all(request["reasoning_effort"] == "low" for request in judge.calls)
     summary = generate_report(prepared)
     assert summary["complete_snapshot"]
+    assert summary["classification"] == {
+        "provider": "openai", "model_id": "test-model", "reasoning_effort": "low", "max_tokens": 4096,
+    }
+    assert "test-model" in (prepared / "report.html").read_text()
     assert (prepared / "report.html").exists()
 
 
@@ -160,12 +165,16 @@ def test_null_is_completed_but_excluded_from_prevalence_denominator(prepared):
     assert all(c["unknown"] == 1 and c["known"] == 0 for c in summary["classifiers"] if c["applicable"])
 
 
-@pytest.mark.parametrize("change", ["model", "tokens", "spec", "dataset", "evidence"])
+@pytest.mark.parametrize("change", ["model", "provider", "reasoning", "tokens", "spec", "dataset", "evidence"])
 def test_changed_inputs_rejected_before_spending_resume_calls(prepared, change):
     run(prepared, limit=1, call=Judge(prepared), model_id="first-model")
     kwargs = {"model_id": "first-model"}
     if change == "model":
         kwargs["model_id"] = "different-model"
+    elif change == "provider":
+        kwargs["provider"] = "another-provider"
+    elif change == "reasoning":
+        kwargs["reasoning_effort"] = "high"
     elif change == "tokens":
         kwargs["max_tokens"] = 2000
     else:
@@ -233,22 +242,32 @@ def test_fenced_json_preserves_unicode_separators_in_evidence():
     assert parse_response(response) == value
 
 
-def test_full_namespace_cli_calls_shared_client_and_saves_usage(prepared, monkeypatch, capsys):
+def test_full_namespace_cli_calls_openai_adapter_and_saves_usage(prepared, monkeypatch, capsys):
     from anthropic_api_package_release.item_analysis import __main__ as cli
+    from anthropic_api_package_release.item_analysis import model_client
 
     judge = Judge(prepared)
-    client = SimpleNamespace(
-        MODELS={"haiku": "test-haiku"}, call=judge,
-        save_ledger=lambda path: path.write_text('{"ledger": true}'),
-        dump_cost_ledger=lambda path: path.write_text('{"usage": true}'),
-    )
-    monkeypatch.setattr(cli, "_api", lambda directory: client)
+
+    def fake_call(*, api_key, **request):
+        assert api_key == "test-openai-key"
+        assert "step" not in request
+        return SimpleNamespace(text=judge(**request), model=request["model"],
+                               input_tokens=120, output_tokens=30, cached_input_tokens=20,
+                               reasoning_tokens=10, latency_ms=1)
+
+    monkeypatch.setattr(model_client, "call_text", fake_call)
+    monkeypatch.setenv("OPENAI_API_KEY", "test-openai-key")
     assert cli.main(["classify", "--run-dir", str(prepared), "--limit", "1"]) == 0
-    assert (prepared / "usage.json").exists()
-    assert (prepared / "usage_ledger.json").exists()
-    assert read_json(prepared / "run.json")["model_id"] == "test-haiku"
+    assert read_json(prepared / "usage.json")["input_tokens"] == 120
+    assert read_json(prepared / "usage_ledger.json")[0]["step"] == "item_classification"
+    assert read_json(prepared / "run.json")["model_id"] == "gpt-6-luna"
     assert cli.main(["classify", "--run-dir", str(prepared), "--all", "--resume"]) == 0
     assert len(judge.calls) == 5
+    usage = read_json(prepared / "usage.json")
+    assert usage["input_tokens"] == 600 and usage["output_tokens"] == 150
+    assert usage["cached_input_tokens"] == 100 and usage["reasoning_tokens"] == 50
+    assert usage["calls"] == 5
+    assert "test-openai-key" not in (prepared / "usage_ledger.json").read_text()
     assert read_json(prepared / "summary.json")["complete_snapshot"]
     assert cli.main(["report", "--run-dir", str(prepared)]) == 0
     assert cli.main(["validate", "--run-dir", str(prepared), "--review", str(prepared / "review.csv")]) == 0
@@ -263,6 +282,40 @@ def test_cli_dry_run_never_configures_api(prepared, monkeypatch):
     monkeypatch.setattr(cli, "_api", unexpected)
     assert cli.main(["classify", "--run-dir", str(prepared), "--dry-run"]) == 0
     assert not (prepared / "run.json").exists()
+
+
+def test_cli_requires_openai_key_instead_of_legacy_provider_key(prepared, monkeypatch, capsys):
+    from anthropic_api_package_release.item_analysis import __main__ as cli
+
+    monkeypatch.setenv("OPENAI_API_KEY", "")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "legacy-test-key")
+    assert cli.main(["classify", "--run-dir", str(prepared), "--all"]) == 1
+    assert "Set OPENAI_API_KEY" in capsys.readouterr().err
+    assert not (prepared / "run.json").exists()
+
+
+def test_cli_records_billable_incomplete_response_before_stopping(prepared, monkeypatch):
+    from anthropic_api_package_release.item_analysis import __main__ as cli
+    from anthropic_api_package_release.item_analysis import model_client
+
+    calls = []
+
+    def incomplete(**request):
+        calls.append(request)
+        result = model_client.CallResult(
+            text="", model="gpt-6-luna", input_tokens=120, output_tokens=4096,
+            latency_ms=1, reasoning_tokens=4096,
+        )
+        raise model_client.ModelResponseError("OpenAI did not complete the response.", result)
+
+    monkeypatch.setattr(model_client, "call_text", incomplete)
+    monkeypatch.setenv("OPENAI_API_KEY", "test-openai-key")
+    assert cli.main(["classify", "--run-dir", str(prepared), "--all"]) == 1
+    assert len(calls) == 1
+    usage = read_json(prepared / "usage.json")
+    assert usage["calls"] == 1
+    assert usage["output_tokens"] == 4096 and usage["reasoning_tokens"] == 4096
+    assert read_json(prepared / "summary.json")["error_items"] == 1
 
 
 def test_report_rejects_mutated_specification_after_scoring(prepared):

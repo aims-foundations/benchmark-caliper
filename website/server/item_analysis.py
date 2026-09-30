@@ -2,7 +2,7 @@
 
 The CLI and website share preparation, specification generation, classification,
 and reports. Only this adapter knows about HTTP, BYOK credentials, and job life
-cycles. Model calls use the website client; credentials never enter saved inputs.
+cycles. Model calls use the shared OpenAI client; credentials never enter saved inputs.
 """
 
 from __future__ import annotations
@@ -28,10 +28,10 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict
 from starlette.background import BackgroundTask
 
-from anthropic_api_package_release.item_analysis import classify, generate, prepare, report
+from anthropic_api_package_release.item_analysis import classify, generate, model_client, prepare, report
 from anthropic_api_package_release.item_analysis.data import file_sha256
 from anthropic_api_package_release.item_analysis.storage import check_prepared, read_json, write_json
-from . import anthropic_client, db, item_analysis_source
+from . import db, item_analysis_source
 
 router = APIRouter(prefix="/api/item-analysis", tags=["Item analysis"])
 FIXTURE_PATH = Path(__file__).with_name("item_analysis_demo.json")
@@ -75,7 +75,15 @@ class AnalysisJob:
     total: int = 0
     scope: str | None = None
     results: dict = field(default_factory=dict, repr=False)
-    usage: dict = field(default_factory=lambda: {"input_tokens": 0, "output_tokens": 0})
+    model: dict = field(default_factory=lambda: {
+        "provider": model_client.PROVIDER,
+        "model_id": model_client.MODEL_ID,
+        "reasoning_effort": model_client.REASONING_EFFORT,
+    })
+    usage: dict = field(default_factory=lambda: {
+        "input_tokens": 0, "output_tokens": 0,
+        "cached_input_tokens": 0, "reasoning_tokens": 0,
+    })
     task: asyncio.Task | None = field(default=None, repr=False)
     provider_call: object | None = field(default=None, repr=False)
     provider_tasks: set = field(default_factory=set, repr=False)
@@ -152,7 +160,7 @@ def authorize(run_id: str, secret: str | None) -> AnalysisJob:
 
 def key_required(value: str | None) -> str:
     if not value or not value.strip():
-        raise HTTPException(401, "An Anthropic API key is required for model calls.")
+        raise HTTPException(401, "An OpenAI API key is required for model calls.")
     if len(value) > 512:
         raise HTTPException(400, "Invalid credential length.")
     return value.strip()
@@ -188,7 +196,7 @@ def public_job(job: AnalysisJob, page: int = 1) -> dict:
         "example": job.example, "spec": job.spec, "summary": job.summary,
         "processed": len(job.results), "total": job.total, "complete": complete, "errors": errors,
         "items": rows, "pagination": {"page": page, "page_size": PAGE_SIZE, "total_pages": pages},
-        "usage": dict(job.usage), "scope": job.scope,
+        "usage": dict(job.usage), "model": dict(job.model), "scope": job.scope,
         "can_continue": job.checkpoint_seen and job.status in {"checkpoint", "cancelled", "failed"},
         "error": job.message if job.status == "failed" else None,
     }
@@ -258,21 +266,29 @@ def model_bridge(job: AnalysisJob, api_key: str):
     """
     loop = asyncio.get_running_loop()
 
+    def record_usage(result):
+        # Reasoning and cached tokens are subsets of the billed totals.
+        for key in job.usage:
+            job.usage[key] += getattr(result, key)
+
     async def request(arguments):
         task = asyncio.current_task()
         job.provider_tasks.add(task)
         try:
             try:
-                result = await anthropic_client.call_text_async(
-                    api_key=api_key, family=arguments["model"], system=arguments["system"],
+                result = await model_client.call_text_async(
+                    api_key=api_key, model=arguments["model"], system=arguments["system"],
                     user=arguments["user"], max_tokens=arguments["max_tokens"],
+                    reasoning_effort=arguments["reasoning_effort"],
                 )
             except asyncio.CancelledError:
                 raise
+            except model_client.ModelResponseError as error:
+                record_usage(error.result)
+                raise RuntimeError("OpenAI returned no complete response. Retry with the same saved criteria.") from None
             except Exception:
-                raise RuntimeError("Anthropic request failed. Check key access, quota, and model availability.") from None
-            job.usage["input_tokens"] += result.input_tokens
-            job.usage["output_tokens"] += result.output_tokens
+                raise RuntimeError("OpenAI request failed. Check key access, quota, and model availability.") from None
+            record_usage(result)
             return result.text.replace(api_key, "[redacted]")
         finally:
             job.provider_tasks.discard(task)
@@ -325,12 +341,12 @@ async def initialize(job: AnalysisJob, mode: str, api_key: str | None) -> None:
         if job.stopped.is_set():
             return
         if mode == "generate":
-            job.status, job.message = "generating", "Sonnet is turning the assessment into item-level classification rules."
+            job.status, job.message = "generating", "GPT-6 Luna is turning the assessment into item-level classification rules."
         job.spec = await drained_thread(
             generate.generate_spec, job.directory,
             supplied=supplied if mode == "provided" else None,
             call=model_bridge(job, api_key) if api_key else None,
-            model_id=anthropic_client.MODELS["sonnet"],
+            **job.model,
         )
         metadata = read_json(job.directory / "specification.json")
         metadata.get("source", {}).pop("path", None)
@@ -366,7 +382,7 @@ async def classify_job(job: AnalysisJob, api_key: str) -> None:
         execution = await drained_thread(
             classify.run, job.directory, limit=CHECKPOINT_SIZE if job.scope == "pilot" else None,
             resume=(job.directory / "run.json").exists(), call=model_bridge(job, api_key),
-            model_id=anthropic_client.MODELS["haiku"], on_result=save_result,
+            **job.model, on_result=save_result,
             should_stop=job.stopped.is_set,
         )
         await refresh_report(job)
@@ -402,9 +418,9 @@ async def catalog(response: Response) -> dict:
 
 @router.post("/runs", status_code=202)
 async def create_run(body: NewRun, response: Response,
-                     x_anthropic_key: Annotated[str | None, Header()] = None) -> dict:
+                     x_openai_key: Annotated[str | None, Header()] = None) -> dict:
     response.headers["Cache-Control"] = "no-store"
-    api_key = key_required(x_anthropic_key) if body.specification_mode == "generate" else None
+    api_key = key_required(x_openai_key) if body.specification_mode == "generate" else None
     example = next((entry for entry in examples() if entry["id"] == body.example_id), None)
     if example is None:
         raise HTTPException(404, "This example is not configured on the server.")
@@ -437,10 +453,10 @@ async def get_run(run_id: str, response: Response,
 @router.post("/runs/{run_id}/classify", status_code=202)
 async def start_classification(run_id: str, body: Classification, response: Response,
                                x_review_token: Annotated[str | None, Header()] = None,
-                               x_anthropic_key: Annotated[str | None, Header()] = None) -> dict:
+                               x_openai_key: Annotated[str | None, Header()] = None) -> dict:
     response.headers["Cache-Control"] = "no-store"
     job = authorize(run_id, x_review_token)
-    api_key = key_required(x_anthropic_key)
+    api_key = key_required(x_openai_key)
     if job.downloads:
         raise HTTPException(409, "Wait for the artifact download to finish before starting another phase.")
     if job.spec is None or (job.task and not job.task.done()) or job.status == "complete":

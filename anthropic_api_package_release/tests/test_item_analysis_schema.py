@@ -113,7 +113,7 @@ def test_mcq_gate_and_execution_adjustments_are_explicit(spec, profile):
     assert spec == original
     assert result["classifiers"][1]["applicable"] is False
     assert result["classifiers"][1]["na_reason"]
-    assert all(c["label_source"] == "haiku" for c in result["classifiers"])
+    assert all(c["label_source"] == "model" for c in result["classifiers"])
     assert any(a["field"] == "applicable" and a["before"] is True and a["after"] is False for a in adjustments)
     assert any(a["field"] == "label_source" and a["before"] == "data_then_haiku" for a in adjustments)
     validate_spec(result, profile=profile)

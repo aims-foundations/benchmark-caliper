@@ -7,7 +7,7 @@ A public-facing interface to three evaluation workflows at <https://aimslab.stan
 - `/` — workflow selection.
 - `/caliper` — the existing benchmark-paper analysis, using an Anthropic key.
 - `/items` — the new item-review demo, using an OpenAI key.
-- `/item-analysis` — post-assessment item analysis, using an Anthropic key.
+- `/item-analysis` — post-assessment item analysis, using an OpenAI key.
 - `/run/{run_id}` — existing Caliper report links, preserved.
 
 All routes work under the production `/benchmark-caliper` prefix.
@@ -22,10 +22,10 @@ The page walks through three steps:
    The website downloads all 14,015 items from the pinned
    `aims-foundations/measurement-db-pp` snapshot on Hugging Face. The bundled
    ten-item teaching example remains available as a separate illustrative option.
-2. Generate classifier instructions with Sonnet, or load the supplied example
+2. Generate classifier instructions with GPT-6 Luna, or load the supplied example
    instructions without a model call. Review the deployment, decision rules,
    labels, and applicability before starting classification.
-3. Classify the first 100 items with Haiku (all items for smaller datasets),
+3. Classify the first 100 items with GPT-6 Luna (all items for smaller datasets),
    inspect the evidence, then explicitly continue through the full snapshot.
    Completed items are reused on continuation or retry.
 
@@ -37,8 +37,9 @@ the demo does not turn item prevalence into new 1–5 scores. Criteria changes
 require a new run. The website does not automatically revise criteria or import
 completed human reviews; the CLI supports comparison with a completed worksheet.
 
-An Anthropic key is required for generation and classification. Loading supplied
-criteria and browsing the prepared evidence need no key. The key stays in memory;
+An OpenAI key is required for generation and classification. Both steps use
+`gpt-6-luna` with low reasoning effort; each run records this model configuration.
+Loading supplied criteria and browsing the prepared evidence need no key. The key stays in memory;
 only the run ID and a separate access secret are kept in browser session storage.
 Refresh restores the active run, but a later phase may require entering the key
 again. Runs expire one hour after the last phase ends and do not survive a server
@@ -48,7 +49,7 @@ request and prevents new calls; a request already submitted may still be billed.
 ### Configure the MMLU example
 
 Set the server's `HF_TOKEN` to a Hugging Face credential with read access to
-`aims-foundations/measurement-db-pp`. Visitors supply only their Anthropic key;
+`aims-foundations/measurement-db-pp`. Visitors supply only their OpenAI key;
 their browsers never receive the Hugging Face token. Missing access is displayed
 explicitly instead of silently selecting the teaching example.
 
@@ -77,10 +78,11 @@ excluded from Docker. The teaching example needs no Hugging Face access.
 
 Implementation: `server/item_analysis_source.py` owns the pinned source and
 download; `server/item_analysis.py` owns jobs, access control, and the
-async Anthropic bridge. `client/src/itemAnalysis/` owns the page. Preparation,
-specification validation, classification, aggregation, and exports are reused
-from `anthropic_api_package_release/item_analysis/`. This workflow does not call
-or modify `bayesian_auditing`.
+async OpenAI bridge. `client/src/itemAnalysis/` owns the page. Preparation,
+the OpenAI Responses client, specification validation, classification,
+aggregation, and exports are reused from
+`anthropic_api_package_release/item_analysis/`. This workflow does not call or
+modify `bayesian_auditing`.
 
 ## Goal-conditioned item review
 

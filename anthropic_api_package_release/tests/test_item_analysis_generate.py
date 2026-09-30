@@ -1,4 +1,4 @@
-"""Exercise the preparation → Sonnet contract with real artifacts and no API."""
+"""Exercise the preparation → specification generation contract with real artifacts and no API."""
 
 from copy import deepcopy
 import json
@@ -116,7 +116,8 @@ def test_generated_spec_checks_references_and_uses_authoritative_profile(prepare
     result = generate_spec(prepared, call=fake)
     assert len(fake.calls) == 1
     request = fake.calls[0]
-    assert request["model"] == "sonnet"
+    assert request["model"] == "gpt-6-luna"
+    assert request["reasoning_effort"] == "low"
     payload = json.loads(request["user"])
     assert payload["benchmark"] == "mmlu"
     assert payload["dataset_profile"]["row_count"] == 2
@@ -131,6 +132,9 @@ def test_generated_spec_checks_references_and_uses_authoritative_profile(prepare
     metadata = read(prepared / "specification.json")
     assert metadata["evidence_references_checked"] is True
     assert metadata["source"]["kind"] == "generated"
+    assert metadata["source"]["provider"] == "openai"
+    assert metadata["source"]["model_id"] == "gpt-6-luna"
+    assert metadata["source"]["reasoning_effort"] == "low"
     assert metadata["spec_sha256"] == file_sha256(prepared / "classifier_spec.json")
     assert any(change["field"] == "dataset_profile" for change in metadata["adjustments"])
     assert read(prepared / "generation_request.json")["user"] == request["user"]

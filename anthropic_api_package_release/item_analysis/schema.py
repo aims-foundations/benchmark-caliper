@@ -1,7 +1,7 @@
 """Contracts for the fixed classifier roster and its item-level labels.
 
 Validation never changes an input artifact. Dataset gates and the explicit
-Haiku-only execution policy are applied separately and return an audit trail.
+model-based execution policy are applied separately and return an audit trail.
 """
 
 from __future__ import annotations
@@ -46,7 +46,8 @@ _COMMON_FIELDS = {
     "criterion": {"type": "string"},
     "label_source": {
         "type": "string",
-        "pattern": r"^(haiku|data_then_haiku|data_column:[^\s:]+)$",
+        # Accept the original pilot's provider-specific labels on import.
+        "pattern": r"^(model|data_then_model|haiku|data_then_haiku|data_column:[^\s:]+)$",
     },
     "grounded_in": {**_TEXT_LIST, "uniqueItems": True},
     "example_items": _TEXT_LIST,
@@ -186,7 +187,7 @@ def apply_profile_gates(spec: dict, profile: dict) -> tuple[dict, list[dict]]:
     """Apply observable gates and return explicit changes alongside a copy.
 
     MCQs have a uniform answer representation, so output-category assignment is
-    N/A under SPEC.md. This release runs every applicable slot through Haiku;
+    N/A under SPEC.md. This release runs every applicable slot through the model;
     source-column suggestions in older artifacts are recorded before conversion.
     Mixed/media items retain their slots: missing evidence becomes an item-level
     unknown, not a benchmark-wide claim that the construct is inapplicable.
@@ -217,12 +218,12 @@ def apply_profile_gates(spec: dict, profile: dict) -> tuple[dict, list[dict]]:
             isinstance(source, str) and source.startswith("data_column:")
             and source.split(":", 1)[1] in _profile_columns(profile)
         )
-        if source == "data_then_haiku" or known_column:
+        if source in ("haiku", "data_then_haiku", "data_then_model") or known_column:
             adjustments.append({
-                "id": slot_id, "field": "label_source", "before": source, "after": "haiku",
-                "reason": "This implementation evaluates every applicable classifier with Haiku.",
+                "id": slot_id, "field": "label_source", "before": source, "after": "model",
+                "reason": "This implementation evaluates every applicable classifier with the configured model.",
             })
-            classifier["label_source"] = "haiku"
+            classifier["label_source"] = "model"
     return result, adjustments
 
 

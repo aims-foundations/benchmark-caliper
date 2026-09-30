@@ -20,7 +20,9 @@ no manual dataset transfer is needed. The source is cached privately at
 `/data/item-analysis-sources/`. The original assessment and supplied classifier
 specification ship with the code; dataset rows stay out of Git and image layers.
 
-Visitors supply an Anthropic key for Sonnet generation and Haiku classification.
+Visitors supply an OpenAI key for both specification generation and item
+classification. Both steps use `gpt-6-luna` with low reasoning effort; the
+server needs no OpenAI key of its own for this workflow.
 Loading the supplied MMLU criteria requires no visitor key, but does require
 server dataset access. An optional ten-item teaching example remains available
 and is explicitly illustrative. Access errors are shown without silently

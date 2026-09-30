@@ -5,13 +5,15 @@ import json
 from pathlib import Path
 
 from .data import file_sha256, read_items
+from .model_client import MODEL_ID, PROVIDER, REASONING_EFFORT
 from .schema import labels_schema, validate_labels, validate_spec
 from .storage import check_prepared, check_specification, parse_response, read_json, run_lock, text_hash, write_json
 
 PROMPT_PATH = Path(__file__).parent / "prompts" / "classify_item.md"
 
 
-def classification_request(item, spec, deployment, prompt, *, max_tokens=4096):
+def classification_request(item, spec, deployment, prompt, *, max_tokens=4096,
+                           model_id=MODEL_ID, reasoning_effort=REASONING_EFFORT):
     fields = ("id", "component", "operation", "criterion", "category_set", "ordinal_anchors",
               "positive_class", "example_items")
     classifiers = [{key: c[key] for key in fields if key in c}
@@ -20,9 +22,9 @@ def classification_request(item, spec, deployment, prompt, *, max_tokens=4096):
         "deployment": deployment, "contextualized_deployment": spec["deployment"],
         "classifiers": classifiers, "item": item, "output_schema": labels_schema(spec),
     }
-    return {"model": "haiku", "system": prompt,
+    return {"model": model_id, "reasoning_effort": reasoning_effort, "system": prompt,
             "user": json.dumps(payload, ensure_ascii=False, allow_nan=False),
-            "max_tokens": max_tokens, "step": "item_classification", "stream": False}
+            "max_tokens": max_tokens, "step": "item_classification"}
 
 
 def read_results(path: Path, *, repair_tail=False) -> dict:
@@ -59,11 +61,12 @@ def read_results(path: Path, *, repair_tail=False) -> dict:
 
 
 def run(directory: Path, *, limit=100, resume=False, dry_run=False, max_tokens=4096,
-        call=None, model_id="haiku", on_result=None, should_stop=None) -> dict:
+        call=None, model_id=MODEL_ID, provider=PROVIDER, reasoning_effort=REASONING_EFFORT,
+        on_result=None, should_stop=None) -> dict:
     """limit is a prefix of a saved random permutation, and can grow on resume.
 
     All other inputs are frozen. A changed rubric, specification, dataset,
-    deployment, actual model ID, or token setting requires a fresh directory.
+    deployment, provider, actual model ID, reasoning, or token setting requires a fresh directory.
     Optional website hooks report flushed records and stop before the next call.
     A response already received is saved before stopping, so it can be resumed.
     """
@@ -84,14 +87,16 @@ def run(directory: Path, *, limit=100, resume=False, dry_run=False, max_tokens=4
             preview_path = directory / "preview_requests.jsonl"
             with preview_path.open("w", encoding="utf-8") as stream:
                 for item in selected():
-                    request = classification_request(item, spec, deployment, prompt, max_tokens=max_tokens)
+                    request = classification_request(item, spec, deployment, prompt, max_tokens=max_tokens,
+                                                     model_id=model_id, reasoning_effort=reasoning_effort)
                     stream.write(json.dumps({"item_id": item["item_id"], "request": request}, ensure_ascii=False) + "\n")
             return {"status": "preview", "items": target, "model_calls": 0, "path": str(preview_path)}
         if call is None:
             raise ValueError("Classification requires an API client; use --dry-run to inspect inputs")
         config = {
-            "version": 1, "dataset_sha256": file_sha256(directory / "dataset.json"),
-            "spec_sha256": metadata["spec_sha256"], "model": "haiku", "model_id": model_id,
+            "version": 2, "dataset_sha256": file_sha256(directory / "dataset.json"),
+            "spec_sha256": metadata["spec_sha256"], "provider": provider,
+            "model": model_id, "model_id": model_id, "reasoning_effort": reasoning_effort,
             "prompt": prompt, "prompt_sha256": text_hash(prompt), "output_schema": labels_schema(spec),
             "max_tokens": max_tokens,
         }
@@ -124,7 +129,8 @@ def run(directory: Path, *, limit=100, resume=False, dry_run=False, max_tokens=4
                 previous = completed.get(item["item_id"])
                 if previous and previous["status"] == "complete":
                     continue
-                request = classification_request(item, spec, deployment, prompt, max_tokens=max_tokens)
+                request = classification_request(item, spec, deployment, prompt, max_tokens=max_tokens,
+                                                 model_id=model_id, reasoning_effort=reasoning_effort)
                 attempts = []
                 record = {"item_id": item["item_id"], "status": "error"}
                 for attempt in range(2):

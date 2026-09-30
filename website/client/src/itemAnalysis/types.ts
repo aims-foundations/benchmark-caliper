@@ -95,6 +95,7 @@ export interface AnalysisRun {
   items: Item[]
   pagination: { page: number; total_pages: number }
   usage: { input_tokens: number; output_tokens: number }
+  model?: { provider: string; model_id: string; reasoning_effort: string }
   can_continue: boolean
   error?: string
   scope: RunScope | null

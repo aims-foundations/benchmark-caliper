@@ -24,6 +24,7 @@ const ready: AnalysisRun = {
   summary: { total_items: 10, completed_items: 0, error_items: 0, pending_items: 10, complete_snapshot: false, classifiers: [] },
   processed: 0, total: 10, complete: 0, errors: 0, items: [{ item_id: 'example-1', content: 'What is 2 + 2?', reference_answer: '4', status: 'pending' }],
   pagination: { page: 1, total_pages: 1 }, usage: { input_tokens: 0, output_tokens: 0 }, can_continue: false, scope: null,
+  model: { provider: 'openai', model_id: 'gpt-6-luna', reasoning_effort: 'low' },
 }
 
 beforeEach(() => {
@@ -59,8 +60,8 @@ it('keeps unavailable MMLU selected and explains server access instead of silent
   const selector = await screen.findByRole('combobox', { name: 'Benchmark example' })
   expect(selector).toHaveValue('mmlu')
   expect(screen.getByText(unavailable_reason)).toBeVisible()
-  expect(screen.getByRole('button', { name: /Generate criteria with Sonnet/ })).toBeDisabled()
-  expect(screen.queryByLabelText('Anthropic API key')).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /Generate criteria with GPT-6 Luna/ })).toBeDisabled()
+  expect(screen.queryByLabelText('OpenAI API key')).not.toBeInTheDocument()
   expect(screen.getByText(/No Hugging Face key is needed from visitors/)).toBeVisible()
   expect(api.createRun).not.toHaveBeenCalled()
   await user.selectOptions(selector, 'illustrative')
@@ -75,6 +76,7 @@ it('preserves dataset provenance when restoring a prepared MMLU run', async () =
   const user = userEvent.setup()
   render(<ItemAnalysis />)
   await user.click(await screen.findByText('Context and usage'))
+  expect(screen.getByText('gpt-6-luna')).toBeVisible()
   expect(screen.getByRole('link', { name: /View dataset on Hugging Face/ })).toHaveAttribute('href', mmlu.source_url)
   expect(screen.getByText('1234567890ab')).toHaveAttribute('title', mmlu.source_revision)
 })
@@ -82,35 +84,36 @@ it('preserves dataset provenance when restoring a prepared MMLU run', async () =
 it('loads supplied criteria without a key and labels unscored illustrative items honestly', async () => {
   const user = userEvent.setup()
   render(<ItemAnalysis />)
-  expect(await screen.findByRole('radio', { name: /Generate with Sonnet/ })).toBeChecked()
+  expect(await screen.findByRole('radio', { name: /Generate with GPT-6 Luna/ })).toBeChecked()
   expect(screen.getByText('Illustrative teaching items')).toBeVisible()
   await user.click(screen.getByRole('radio', { name: /Use example criteria/ }))
-  expect(screen.queryByLabelText('Anthropic API key')).not.toBeInTheDocument()
+  expect(screen.queryByLabelText('OpenAI API key')).not.toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: /Load example criteria/ }))
   await screen.findByRole('heading', { name: 'Your criteria are ready' })
   expect(api.createRun).toHaveBeenCalledWith('illustrative', 'provided', '')
   expect(api.classify).not.toHaveBeenCalled()
-  expect(screen.getByRole('button', { name: 'Classify 10 items with Haiku' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Classify 10 items with GPT-6 Luna' })).toBeDisabled()
   expect(screen.getByText('Pending')).toBeVisible()
   expect(screen.queryByRole('heading', { name: 'What the items show' })).not.toBeInTheDocument()
   await user.click(screen.getByText('Regional relevance'))
   expect(screen.getByText('Assess the item’s regional relevance.')).toBeVisible()
 })
 
-it('generates with Sonnet, then explicitly starts Haiku without persisting the API key', async () => {
+it('uses GPT-6 Luna for both steps without persisting the OpenAI key', async () => {
   const user = userEvent.setup()
   vi.mocked(api.classify).mockResolvedValue({ ...ready, status: 'running', scope: 'pilot' })
   render(<ItemAnalysis />)
-  await user.type(await screen.findByLabelText('Anthropic API key'), 'sk-ant-private')
-  await user.click(screen.getByRole('button', { name: /Generate criteria with Sonnet/ }))
+  await user.type(await screen.findByLabelText('OpenAI API key'), 'sk-private')
+  expect(screen.queryByText(/Claude|Sonnet|Haiku|Anthropic/)).not.toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: /Generate criteria with GPT-6 Luna/ }))
   await screen.findByRole('heading', { name: 'Your criteria are ready' })
-  expect(api.createRun).toHaveBeenCalledWith('illustrative', 'generate', 'sk-ant-private')
+  expect(api.createRun).toHaveBeenCalledWith('illustrative', 'generate', 'sk-private')
   expect(api.classify).not.toHaveBeenCalled()
   expect(JSON.parse(sessionStorage.getItem('item_analysis_run_v1')!)).toEqual(access)
   expect(localStorage.length).toBe(0)
-  await user.click(screen.getByRole('button', { name: 'Classify 10 items with Haiku' }))
-  expect(api.classify).toHaveBeenCalledWith(access, 'pilot', 'sk-ant-private')
-  expect(sessionStorage.getItem('item_analysis_run_v1')).not.toContain('sk-ant-private')
+  await user.click(screen.getByRole('button', { name: 'Classify 10 items with GPT-6 Luna' }))
+  expect(api.classify).toHaveBeenCalledWith(access, 'pilot', 'sk-private')
+  expect(sessionStorage.getItem('item_analysis_run_v1')).not.toContain('sk-private')
 })
 
 it('restores a checkpoint, requires key reentry, and continues through all remaining items', async () => {
@@ -123,12 +126,12 @@ it('restores a checkpoint, requires key reentry, and continues through all remai
   render(<ItemAnalysis />)
   await screen.findByRole('heading', { name: 'Pause here for a human review' })
   expect(screen.getByText('measurement-db MMLU snapshot')).toBeVisible()
-  expect(screen.getByLabelText('Anthropic API key')).toHaveValue('')
+  expect(screen.getByLabelText('OpenAI API key')).toHaveValue('')
   expect(screen.getByRole('button', { name: 'Continue through all items' })).toBeDisabled()
-  expect(screen.getByText(/13,915 paid Haiku item requests/)).toBeVisible()
-  await user.type(screen.getByLabelText('Anthropic API key'), 'sk-ant-returned')
+  expect(screen.getByText(/13,915 paid GPT-6 Luna item requests/)).toBeVisible()
+  await user.type(screen.getByLabelText('OpenAI API key'), 'sk-returned')
   await user.click(screen.getByRole('button', { name: 'Continue through all items' }))
-  expect(api.classify).toHaveBeenCalledWith(access, 'all', 'sk-ant-returned')
+  expect(api.classify).toHaveBeenCalledWith(access, 'all', 'sk-returned')
   expect(api.createRun).not.toHaveBeenCalled()
 })
 
