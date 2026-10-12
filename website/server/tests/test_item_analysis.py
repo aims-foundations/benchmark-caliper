@@ -3,6 +3,8 @@
 import asyncio
 from contextlib import asynccontextmanager
 from copy import deepcopy
+import csv
+import io
 import json
 from pathlib import Path
 import shutil
@@ -19,6 +21,12 @@ from website.server import db, item_analysis as analysis
 
 KEY = "sk-test-private-item-analysis-key"
 BODY = {"example_id": "illustrative", "specification_mode": "provided"}
+REMOTE_CONTEXTS = (
+    ("gsm8k", "gsm8k", "US K–8 math tutoring"),
+    ("humaneval", "humaneval", "US Python code review"),
+    ("toxigen", "toxigen", "Bangladesh Gausa clinical toxicity"),
+    ("toxigen-south-asia", "toxigen", "South Asia academic toxicity research"),
+)
 
 
 @pytest.fixture
@@ -99,12 +107,24 @@ def classify(client, access, scope="pilot"):
     return settled(client, access)
 
 
-def prepared_snapshot(tmp_path, monkeypatch, count=105):
+def prepared_snapshot(tmp_path, monkeypatch, count=105, *, benchmark=None, assessment_context=None):
     """Make a small local snapshot using the shared production preparation step."""
     import pyarrow as pa
     import pyarrow.parquet as pq
 
     fixture = read_json(analysis.FIXTURE_PATH)
+    if benchmark is not None:
+        context = assessment_context or benchmark
+        fixture["assessment"]["benchmark"] = benchmark
+        fixture["assessment"]["dimensions"]["input_form"] = {
+            "score": 4, "justification": f"Original {context} input-form assessment.",
+        }
+        fixture["deployment"] = f"The original deployment requirements for {context}."
+        fixture["classifier_spec"]["benchmark"] = benchmark
+        fixture["classifier_spec"]["deployment"] = fixture["deployment"]
+        for item in fixture["items"]:
+            item["benchmark_id"] = benchmark
+            item["content"] = f"{benchmark} source item: {item['content']}"
     source, output = tmp_path / "source", tmp_path / "prepared"
     source.mkdir()
     write_json(source / "scoring.json", fixture["assessment"])
@@ -112,7 +132,8 @@ def prepared_snapshot(tmp_path, monkeypatch, count=105):
                           ("elicitation_summary.md", "elicitation_summary"),
                           ("dataset_analysis_report.md", "dataset_analysis_report")):
         (source / filename).write_text(fixture[key], encoding="utf-8")
-    rows = [dict(deepcopy(fixture["items"][i % len(fixture["items"])]), item_id=f"test-{i:04d}") for i in range(count)]
+    rows = [dict(deepcopy(fixture["items"][i % len(fixture["items"])]),
+                 item_id=f"{benchmark or 'test'}-{i:04d}") for i in range(count)]
     pq.write_table(pa.Table.from_pylist(rows), source / "items.parquet")
     prepare.prepare(source, source / "items.parquet", output, source_repo="test-only", source_revision="fixture")
     write_json(output / "classifier_spec.original.json", fixture["classifier_spec"])
@@ -123,37 +144,59 @@ def prepared_snapshot(tmp_path, monkeypatch, count=105):
 def remote_source(monkeypatch, prepared=None, *, available=True):
     """Exercise the HTTP adapter's remote branch without contacting Hugging Face."""
     monkeypatch.delenv("ITEM_ANALYSIS_PREPARED_DIR", raising=False)
-    entry = {
+    entries = [{
         "id": "mmlu", "title": "MMLU", "description": "Pinned Hugging Face snapshot.",
         "benchmark": "mmlu", "deployment": "The catalog deployment.",
         "source_label": "measurement-db-pp MMLU", "item_count": 14015,
         "available": available, "supplied_spec_available": True,
         "source_url": "https://huggingface.co/datasets/aims-foundations/measurement-db-pp/tree/main/mmlu",
         "source_revision": "advertised-revision",
-    }
+    }]
+    for example_id, benchmark, assessment_context in REMOTE_CONTEXTS:
+        entries.append({
+            "id": example_id, "title": f"{benchmark.upper()} · {assessment_context}",
+            "assessment_title": assessment_context,
+            "description": "Pinned benchmark snapshot.", "benchmark": benchmark,
+            "deployment": f"The advertised {assessment_context} deployment.",
+            "source_label": f"Original {benchmark} dataset", "item_count": 1000,
+            "available": available, "supplied_spec_available": False,
+            "source_url": f"https://huggingface.co/datasets/test/{benchmark}",
+            "source_revision": f"advertised-{benchmark}-revision",
+        })
     if not available:
-        entry["unavailable_reason"] = "The MMLU dataset is unavailable on this server."
-    monkeypatch.setattr(analysis.item_analysis_source, "source_entry", lambda: deepcopy(entry))
+        for entry in entries:
+            entry["unavailable_reason"] = f"The {entry['title']} dataset is unavailable on this server."
+    monkeypatch.setattr(analysis.item_analysis_source, "source_entries", lambda: deepcopy(entries))
+    monkeypatch.setattr(analysis.item_analysis_source, "source_entry", lambda example_id="mmlu":
+                        deepcopy(next(entry for entry in entries if entry["id"] == example_id)))
     calls = []
 
-    def prepare_remote(directory, stopped=None):
+    def prepare_remote(directory, stopped=None, *, example_id="mmlu"):
         assert stopped is not None and not stopped()
         assert prepared is not None, "This test must not prepare or download a dataset"
-        calls.append(directory)
+        assert example_id in {entry["id"] for entry in entries}
+        source = prepared[example_id] if isinstance(prepared, dict) else prepared
+        calls.append((directory, example_id))
         for name in analysis.PREPARED_FILES:
-            shutil.copyfile(prepared / name, directory / name)
+            shutil.copyfile(source / name, directory / name)
         supplied = directory / "provided_spec.json"
-        shutil.copyfile(prepared / "classifier_spec.original.json", supplied)
+        if (source / "classifier_spec.original.json").is_file():
+            shutil.copyfile(source / "classifier_spec.original.json", supplied)
         return supplied
 
     monkeypatch.setattr(analysis.item_analysis_source, "prepare_source", prepare_remote)
     return calls
 
 
-def test_default_catalog_puts_real_mmlu_before_illustrative_example(client, monkeypatch):
+def test_default_catalog_lists_all_real_benchmarks_before_illustrative_example(client, monkeypatch):
     calls = remote_source(monkeypatch)
     catalog = client.get("/api/item-analysis/catalog").json()
-    assert [entry["id"] for entry in catalog["examples"]] == ["mmlu", "illustrative"]
+    assert [entry["id"] for entry in catalog["examples"]] == [
+        "mmlu", "gsm8k", "humaneval", "toxigen", "toxigen-south-asia", "illustrative",
+    ]
+    toxicity_contexts = [entry for entry in catalog["examples"] if entry["benchmark"] == "toxigen"]
+    assert len(toxicity_contexts) == 2
+    assert len({entry["assessment_title"] for entry in toxicity_contexts}) == 2
     assert catalog["examples"][0]["item_count"] == 14015
     assert "measurement-db-pp" in catalog["examples"][0]["source_url"]
     assert analysis.prepared_directory() is None
@@ -173,9 +216,100 @@ def test_remote_preparation_uses_actual_frozen_metadata_and_hides_paths(client, 
     assert len(ready["example"]["source_sha256"]) == 64
     assert ready["processed"] == 0 and not model
     directory = analysis.jobs[access["run_id"]].directory
-    assert calls == [directory]
+    assert calls == [(directory, "mmlu")]
     assert "path" not in read_json(directory / "dataset.json")["source"]
     assert "assessment_dir" not in read_json(directory / "evidence.json")
+
+
+@pytest.mark.parametrize("example_id,benchmark,assessment_context", REMOTE_CONTEXTS)
+def test_selected_context_drives_generation_classification_and_exports(
+        client, tmp_path, monkeypatch, model, example_id, benchmark, assessment_context):
+    prepared = prepared_snapshot(tmp_path, monkeypatch, count=3, benchmark=benchmark,
+                                 assessment_context=assessment_context)
+    (prepared / "classifier_spec.original.json").unlink()
+    calls = remote_source(monkeypatch, {example_id: prepared})
+    evidence = read_json(prepared / "evidence.json")
+    expected_items = {item["item_id"]: item for item in (
+        json.loads(line) for line in (prepared / "items.jsonl").read_text().splitlines())}
+
+    access = start(client, example=example_id, mode="generate")
+    ready = settled(client, access)
+    assert ready["status"] == "ready", ready
+    assert ready["example"]["id"] == example_id
+    assert ready["example"]["benchmark"] == benchmark
+    assert ready["example"]["assessment_title"] == assessment_context
+    assert ready["example"]["deployment"] == evidence["deployment"]
+    assert ready["example"]["item_count"] == ready["total"] == 3
+    assert ready["example"]["source_revision"] == "fixture"
+    assert ready["spec"]["benchmark"] == benchmark
+    assert ready["spec"]["deployment"] == evidence["deployment"]
+    assert ready["summary"]["specification"]["source"]["kind"] == "generated"
+    directory = analysis.jobs[access["run_id"]].directory
+    assert calls == [(directory, example_id)]
+    generation = [payload for _, payload in model if "item" not in payload]
+    assert len(generation) == 1
+    assert generation[0]["benchmark"] == benchmark
+    assert generation[0]["deployment"] == evidence["deployment"]
+    assert generation[0]["evidence_registry"] == evidence["registry"]
+    assert {item["item_id"]: item for item in generation[0]["example_items"]} == expected_items
+
+    result = classify(client, access)
+    assert result["status"] == "complete", result
+    assert result["complete"] == result["processed"] == result["total"] == 3
+    classification = [payload for _, payload in model if "item" in payload]
+    assert len(classification) == 3
+    assert {payload["item"]["item_id"]: payload["item"] for payload in classification} == expected_items
+    assert all(payload["deployment"] == payload["contextualized_deployment"] == evidence["deployment"]
+               for payload in classification)
+    exports = {artifact: client.get(url(access) + f"/download/{artifact}", headers=headers(access))
+               for artifact in analysis.ARTIFACTS}
+    assert all(response.status_code == 200 for response in exports.values())
+    assert exports["spec"].json()["benchmark"] == benchmark
+    summary = exports["summary"].json()
+    assert summary["benchmark"] == benchmark
+    assert summary["deployment"] == summary["original_deployment"] == evidence["deployment"]
+    assert summary["original_assessment"] == evidence["scoring"]["dimensions"]
+    item_rows = list(csv.DictReader(io.StringIO(exports["items"].text)))
+    assert {row["item_id"] for row in item_rows} == set(expected_items)
+    assert all(benchmark + " source item:" in row["content"] for row in item_rows)
+    assert evidence["deployment"] in exports["report"].text
+    assert evidence["scoring"]["dimensions"]["input_form"]["justification"] in exports["report"].text
+
+
+@pytest.mark.parametrize("example_id", [context[0] for context in REMOTE_CONTEXTS])
+def test_remote_benchmark_without_supplied_criteria_requires_generation(client, monkeypatch, model, example_id):
+    calls = remote_source(monkeypatch)
+    entry = next(entry for entry in client.get("/api/item-analysis/catalog").json()["examples"]
+                 if entry["id"] == example_id)
+    assert entry["available"] and not entry["supplied_spec_available"]
+    response = client.post("/api/item-analysis/runs", json={"example_id": example_id, "specification_mode": "provided"})
+    assert response.status_code == 409
+    assert not analysis.jobs and not calls and not model
+    assert not (db.DEFAULT_DB_PATH.parent / "item-analysis").exists()
+
+
+@pytest.mark.parametrize("mode", ["provided", "generate"])
+def test_unknown_benchmark_cannot_prepare_data_or_call_model(client, monkeypatch, model, mode):
+    calls = remote_source(monkeypatch)
+    response = client.post("/api/item-analysis/runs", json={"example_id": "unlisted_benchmark", "specification_mode": mode},
+                           headers={"X-OpenAI-Key": KEY})
+    assert response.status_code == 404
+    assert not analysis.jobs and not calls and not model
+    assert not (db.DEFAULT_DB_PATH.parent / "item-analysis").exists()
+
+
+def test_local_override_displays_actual_benchmark_and_prepared_assessment(client, tmp_path, monkeypatch, model):
+    prepared_snapshot(tmp_path, monkeypatch, count=3, benchmark="gsm8k")
+    entries = client.get("/api/item-analysis/catalog").json()["examples"]
+    assert [entry["id"] for entry in entries] == ["mmlu", "illustrative"]
+    entry = entries[0]
+    assert entry["title"] == "gsm8k · Prepared assessment"
+    assert entry["benchmark"] == entry["benchmark_title"] == "gsm8k"
+    assert entry["assessment_title"] == "Prepared assessment"
+    ready = settled(client, start(client, example="mmlu"))
+    assert ready["status"] == "ready"
+    assert ready["example"]["title"] == entry["title"]
+    assert ready["spec"]["benchmark"] == "gsm8k" and not model
 
 
 @pytest.mark.parametrize("failure", ["DatasetAccessError", "DatasetPreparationError"])

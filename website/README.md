@@ -18,12 +18,17 @@ Open `/item-analysis` for a browser demo of the shared
 [`item_analysis` pipeline](../anthropic_api_package_release/item_analysis/README.md).
 The page walks through three steps:
 
-1. Start with MMLU and its original Hindi-medium exam-preparation assessment.
-   The website downloads all 14,015 items from the pinned
-   `aims-foundations/measurement-db-pp` snapshot on Hugging Face. The bundled
-   ten-item teaching example remains available as a separate illustrative option.
-2. Generate classifier instructions with GPT-6 Luna, or load the supplied example
-   instructions without a model call. Review the deployment, decision rules,
+1. Choose a benchmark and its matching Caliper assessment: MMLU for Hindi-medium
+   exam preparation (14,015 items), GSM8K for US K–8 math tutoring (1,319 test
+   items), HumanEval for US Python code review (164 test items), or TOXIGEN
+   (39,011 items) for Bangladesh clinical content moderation or South Asian
+   academic toxicity research. The two TOXIGEN options share the same item
+   snapshot and use different saved assessments. The website
+   downloads each pinned snapshot from Hugging Face. The bundled ten-item
+   teaching example remains available as a separate illustrative option.
+2. Generate classifier instructions with GPT-6 Luna from the selected assessment,
+   or load the supplied MMLU/teaching-example instructions without a model call.
+   TOXIGEN, GSM8K, and HumanEval require generation. Review the deployment, decision rules,
    labels, and applicability before starting classification.
 3. Classify the first 100 items with GPT-6 Luna (all items for smaller datasets),
    inspect the evidence, then explicitly continue through the full snapshot.
@@ -46,22 +51,50 @@ again. Runs expire one hour after the last phase ends and do not survive a serve
 restart. Download outputs before they expire. Stop cancels the current awaited
 request and prevents new calls; a request already submitted may still be billed.
 
-### Configure the MMLU example
+### Configure the benchmark sources
 
 Set the server's `HF_TOKEN` to a Hugging Face credential with read access to
-`aims-foundations/measurement-db-pp`. Visitors supply only their OpenAI key;
+`aims-foundations/measurement-db-pp` for MMLU and TOXIGEN. GSM8K and HumanEval use public
+OpenAI datasets and can be downloaded without a Hugging Face credential.
+Visitors supply only their OpenAI key;
 their browsers never receive the Hugging Face token. Missing access is displayed
 explicitly instead of silently selecting the teaching example.
 
-The default source is `mmlu/items.parquet` at revision
+MMLU remains the default selection, using `mmlu/items.parquet` at revision
 `cc796d3545a6bd2e78b5513c13e60a6913d01e3f` (14,015 items). The server downloads
 and caches that table in `WEBSITE_DATA_DIR/item-analysis-sources/`, checks its
 SHA-256, row count, and columns, and uses the shared preparation step to profile
 and shuffle every item. The pinned source has exactly the same bytes as the
 previous locally prepared MMLU table. Source repository, revision, and checksum
 are recorded for every run. Updating the snapshot is a deliberate code change
-in `server/item_analysis_source.py`; a moving `main` branch cannot change an
+in `server/item_analysis_sources.json`; a moving `main` branch cannot change an
 existing analysis.
+
+TOXIGEN uses `toxigen/items.parquet` from the same repository, pinned to revision
+`7a840c66f04393497c106289a1b8bbca8d107008`. Its 39,011 items include 27,820
+classification items and 11,191 continuation-generation items. The original
+grading rules and response scales are preserved; item-analysis counts describe
+this mixed snapshot and do not combine the tasks into an accuracy score.
+Choose **TOXIGEN · Bangladesh clinical content moderation** or
+**TOXIGEN · South Asian academic toxicity research**, enter an OpenAI key,
+generate and review the criteria, then classify the first 100 items. Continuing
+through the remaining items is a separate action after that review.
+
+The same registry pins GSM8K's `openai/gsm8k` main test split and HumanEval's
+`openai/openai_humaneval` test split, including their revisions, checksums, item
+counts, and assessment directories. GSM8K questions and complete worked answers
+are preserved; HumanEval prompts, canonical solutions, tests, and entry points
+are preserved as evidence. Benchmark code is never executed. Runs record the
+original source checksum and the checksum of any normalized table.
+
+To add another benchmark, add a server-owned registry entry with a verified
+source and a matching completed assessment (`scoring.json`,
+`deployment_description.txt`, `elicitation_summary.md`, and
+`dataset_analysis_report.md`). Use the `measurement-db` adapter for tables that
+already contain `item_id` and `content`, or add a source adapter and tests for
+other schemas. An optional `supplied_spec` must match that benchmark and context.
+The browser lists registered choices automatically; it does not accept arbitrary
+dataset URLs or uploads.
 
 The cache contains source data only, survives normal shutdown, and is not
 committed to Git or bundled in the image. A cancelled preparation waits for the
@@ -72,12 +105,15 @@ run.
 
 For an explicitly prepared local snapshot, the optional
 `ITEM_ANALYSIS_PREPARED_DIR=/absolute/path/to/prepared/run` override still works.
-It replaces the default remote source and copies prepared inputs into each run;
+It replaces the remote catalog and copies prepared inputs into each run;
 existing classifications are not imported. Local `results/` folders remain
-excluded from Docker. The teaching example needs no Hugging Face access.
+excluded from Docker. Its title uses the prepared dataset's actual benchmark.
+The teaching example needs no Hugging Face access.
 
-Implementation: `server/item_analysis_source.py` owns the pinned source and
-download; `server/item_analysis.py` owns jobs, access control, and the
+Implementation: `server/item_analysis_sources.json` owns the source catalog;
+`server/item_analysis_source.py` owns downloads and validation;
+`server/item_analysis_adapters.py` normalizes source fields;
+`server/item_analysis.py` owns jobs, access control, and the
 async OpenAI bridge. `client/src/itemAnalysis/` owns the page. Preparation,
 the OpenAI Responses client, specification validation, classification,
 aggregation, and exports are reused from

@@ -59,10 +59,13 @@ pipeline, with the following boundaries:
   use GPT-6 Luna with low reasoning effort, recorded in each run.
 - Users choose server-configured examples. Requests cannot select filesystem
   paths, repositories, models, or provider URLs. The bundled teaching example is
-  labeled illustrative and contains no prerecorded model predictions. MMLU is
-  downloaded from a fixed `measurement-db-pp` revision using server-managed
-  Hugging Face access, with checksum, row-count, and schema checks before use.
-  Its source table is cached in the private `item-analysis-sources/` directory,
+  labeled illustrative and contains no prerecorded model predictions. Sources
+  and matching assessment directories are allowlisted in the bundled source
+  registry. MMLU and TOXIGEN use server-managed Hugging Face access; public GSM8K and
+  HumanEval tables are downloaded anonymously from their original repositories.
+  Each uses a fixed revision with checksum, row-count, and schema checks before
+  use. Adapters preserve source evidence, including HumanEval code as text;
+  benchmark code is never executed. Source tables are cached in the private `item-analysis-sources/` directory,
   which survives normal shutdown and contains no visitor keys or model labels.
   Each run prepares all source items independently. An explicit local prepared
   snapshot override remains supported. Dataset access failures do not silently

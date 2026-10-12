@@ -1,6 +1,8 @@
 export interface Example {
   id: string
   title: string
+  benchmark_title?: string
+  assessment_title?: string
   description: string
   item_count: number
   benchmark: string
@@ -74,7 +76,7 @@ export interface AnalysisSummary {
 
 export interface Item {
   item_id: string
-  content: string | null
+  content: unknown
   reference_answer: unknown
   status: string
   error?: string

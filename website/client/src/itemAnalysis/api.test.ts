@@ -3,13 +3,13 @@ import { AnalysisApiError, classify, createRun, download, getRun } from './api'
 
 afterEach(() => vi.unstubAllGlobals())
 
-it('sends the API key in a header and keeps it outside the request body and URL', async () => {
+it.each(['mmlu', 'gsm8k', 'toxigen', 'toxigen-south-asia'])('sends the selected %s context in the body and keeps the API key in a header', async exampleId => {
   const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ run_id: 'test', run_secret: 'private' })))
   vi.stubGlobal('fetch', fetch)
-  await createRun('mmlu', 'generate', 'sk-secret')
+  await createRun(exampleId, 'generate', 'sk-secret')
   expect(fetch).toHaveBeenCalledWith('/api/item-analysis/runs', expect.objectContaining({
     method: 'POST', headers: { 'Content-Type': 'application/json', 'X-OpenAI-Key': 'sk-secret' },
-    body: JSON.stringify({ example_id: 'mmlu', specification_mode: 'generate' }),
+    body: JSON.stringify({ example_id: exampleId, specification_mode: 'generate' }),
   }))
 })
 

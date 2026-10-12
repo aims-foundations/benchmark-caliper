@@ -25,7 +25,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Header, HTTPException, Query, Response
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from starlette.background import BackgroundTask
 
 from anthropic_api_package_release.item_analysis import classify, generate, model_client, prepare, report
@@ -53,7 +53,7 @@ ARTIFACTS = {
 
 class NewRun(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    example_id: Literal["illustrative", "mmlu"]
+    example_id: str = Field(pattern=r"^[a-z0-9][a-z0-9_-]{0,159}$")
     specification_mode: Literal["generate", "provided"]
 
 
@@ -112,7 +112,7 @@ def examples() -> list[dict]:
         "item_count": len(fixture["items"]), "available": True, "supplied_spec_available": True}
     directory = prepared_directory()
     if directory is None:
-        return [item_analysis_source.source_entry(), illustrative]
+        return [*item_analysis_source.source_entries(), illustrative]
     entries = []
     # Source paths come only from server configuration, never HTTP parameters.
     try:
@@ -121,10 +121,12 @@ def examples() -> list[dict]:
         available = all((directory / name).is_file() for name in PREPARED_FILES)
         if available:
             entries.append({
-                "id": "mmlu", "title": "MMLU · Hindi-medium exam preparation",
-                "description": "The configured measurement-db snapshot and original Caliper assessment. Review 100 items, then continue across the full snapshot.",
+                # Preserve the legacy override ID while displaying its actual benchmark.
+                "id": "mmlu", "title": f"{dataset['benchmark']} · Prepared assessment",
+                "benchmark_title": dataset["benchmark"], "assessment_title": "Prepared assessment",
+                "description": "The configured benchmark snapshot and original Caliper assessment. Review 100 items, then continue across the full snapshot.",
                 "benchmark": dataset["benchmark"], "deployment": evidence["deployment"],
-                "source_label": "Prepared measurement-db snapshot with its original assessment; counts apply to this snapshot.",
+                "source_label": "Prepared benchmark snapshot with its original assessment; counts apply to this snapshot.",
                 "item_count": dataset["item_count"], "available": True,
                 "supplied_spec_available": (directory / "classifier_spec.original.json").is_file(),
             })
@@ -206,10 +208,10 @@ def public_job(job: AnalysisJob, page: int = 1) -> dict:
 
 def prepare_job(job: AnalysisJob, example_id: str) -> Path:
     """Prepare immutable inputs, returning the optional provided-spec location."""
-    if example_id == "mmlu":
+    if example_id != "illustrative":
         source = prepared_directory()
         if source is None:
-            item_analysis_source.prepare_source(job.directory, stopped=job.stopped.is_set)
+            item_analysis_source.prepare_source(job.directory, stopped=job.stopped.is_set, example_id=example_id)
         else:
             try:
                 check_prepared(source)
@@ -221,7 +223,7 @@ def prepare_job(job: AnalysisJob, example_id: str) -> Path:
                 check_prepared(job.directory)
             except (OSError, ValueError, KeyError, TypeError):
                 raise item_analysis_source.DatasetPreparationError(
-                    "The configured MMLU snapshot could not be prepared. Ask the website administrator to check its files."
+                    "The configured benchmark snapshot could not be prepared. Ask the website administrator to check its files."
                 ) from None
     else:
         import pyarrow as pa

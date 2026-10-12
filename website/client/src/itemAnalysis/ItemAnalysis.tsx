@@ -66,7 +66,7 @@ export function ItemAnalysis() {
       // replace the real benchmark with the small teaching example.
       setExampleId(current => current || value.examples.find(example => example.id === 'mmlu')?.id || value.examples[0]?.id || '')
       setError('')
-    }).catch(problem => { if (!controller.signal.aborted) setError(problem instanceof Error ? problem.message : 'Could not load the examples.') })
+    }).catch(problem => { if (!controller.signal.aborted) setError(problem instanceof Error ? problem.message : 'Could not load the benchmarks.') })
     return () => controller.abort()
   }, [catalogVersion])
 
@@ -101,7 +101,8 @@ export function ItemAnalysis() {
 
   async function start(event: FormEvent) {
     event.preventDefault()
-    if (busy || !catalog?.examples.find(entry => entry.id === exampleId)?.available || (mode === 'generate' && !apiKey.trim())) return
+    const selected = catalog?.examples.find(entry => entry.id === exampleId)
+    if (busy || !selected?.available || (mode === 'provided' && selected.supplied_spec_available === false) || (mode === 'generate' && !apiKey.trim())) return
     setBusy(true)
     setError('')
     try {
@@ -188,27 +189,28 @@ export function ItemAnalysis() {
       <ol className="ia-steps" aria-label="Analysis steps">{['Choose a context', 'Review the criteria', 'Explore the results'].map((label, index) =>
         <li key={label} aria-current={stage === index ? 'step' : undefined} data-done={stage > index || undefined}><span>{index + 1}</span>{label}</li>)}</ol>
       {(error || pollError) && <div className="ia-error" role="alert"><p>{error || pollError}</p>
-        {!catalog && <button className="ia-secondary" onClick={() => { setError(''); setCatalogVersion(value => value + 1) }}>Retry loading examples</button>}
+        {!catalog && <button className="ia-secondary" onClick={() => { setError(''); setCatalogVersion(value => value + 1) }}>Retry loading benchmarks</button>}
         {pollError && <div className="ia-actions"><button className="ia-secondary" onClick={() => setPollVersion(value => value + 1)}>Retry connection</button><button className="ia-secondary" onClick={reset}>Start a new analysis</button></div>}
       </div>}
-      {!catalog && !access && !error && <p role="status">Loading examples…</p>}
+      {!catalog && !access && !error && <p role="status">Loading benchmarks…</p>}
 
       {!access && catalog && <div className="ia-setup"><form className="ia-panel" onSubmit={start}>
-        <p className="ia-eyebrow">Start with an example</p><h2>A benchmark. A real use case.</h2>
-        <p className="ia-muted">Choose a prepared context to try the complete workflow.</p>
-        <label className="ia-field"><span>Benchmark example</span><select value={exampleId} onChange={event => { setExampleId(event.target.value); setMode('generate') }}>
+        <p className="ia-eyebrow">Choose a benchmark</p><h2>A benchmark. A real use case.</h2>
+        <p className="ia-muted">Select a benchmark and its assessment context. Each analysis uses that context to generate criteria and inspect the benchmark’s items.</p>
+        <label className="ia-field"><span>Benchmark and assessment context</span><select value={exampleId} onChange={event => { setExampleId(event.target.value); setMode('generate') }}>
           {catalog.examples.map(entry => <option key={entry.id} value={entry.id}>{entry.title}{!entry.available ? ' — unavailable' : ''}</option>)}
         </select></label>
         {example && <div className="ia-context"><div className="ia-context-top"><strong>{example.item_count.toLocaleString()} items</strong><span>{example.source_label}</span></div>
+          {example.assessment_title && <p><strong>Assessment context:</strong> {example.assessment_title}</p>}
           <p>{example.description}</p><details><summary>Deployment context</summary><p>{example.deployment}</p><DatasetSource example={example} /></details></div>}
         {example && !example.available && <p className="ia-error" role="status">{example.unavailable_reason || 'This dataset is not available on the server yet. The site maintainer needs to configure dataset access.'}</p>}
         <fieldset className="ia-mode" disabled={!example?.available}><legend>Classification criteria</legend>
           <label><input type="radio" name="specification" value="generate" checked={mode === 'generate'} onChange={() => setMode('generate')} /><span><strong>Generate with GPT-6 Luna</strong><small>Create criteria from the assessment and dataset evidence.</small></span></label>
-          <label><input type="radio" name="specification" value="provided" checked={mode === 'provided'} disabled={example?.supplied_spec_available === false} onChange={() => setMode('provided')} /><span><strong>Use example criteria</strong><small>Inspect the supplied specification without a model call.</small></span></label>
+          <label><input type="radio" name="specification" value="provided" checked={mode === 'provided'} disabled={example?.supplied_spec_available === false} onChange={() => setMode('provided')} /><span><strong>Use supplied criteria</strong><small>{example?.supplied_spec_available === false ? 'No supplied criteria for this context. Generate criteria from its assessment to continue.' : 'Inspect the supplied specification without a model call.'}</small></span></label>
         </fieldset>
         {mode === 'generate' && example?.available && <KeyInput value={apiKey} onChange={setApiKey} />}
         <button className="ia-primary" type="submit" disabled={busy || !example?.available || (mode === 'generate' && !apiKey.trim())}>
-          {busy ? 'Starting…' : mode === 'generate' ? 'Generate criteria with GPT-6 Luna' : 'Load example criteria'}<span aria-hidden="true"> →</span>
+          {busy ? 'Starting…' : mode === 'generate' ? 'Generate criteria with GPT-6 Luna' : 'Load supplied criteria'}<span aria-hidden="true"> →</span>
         </button>
         <p className="ia-small ia-cost-note">{!example?.available ? 'Dataset access is managed by the website. No Hugging Face key is needed from visitors.' : mode === 'generate' ? 'Starts a paid GPT-6 Luna request. Item classification begins separately.' : 'No API key needed to inspect criteria and browse the items.'}</p>
       </form><aside className="ia-guide"><p className="ia-eyebrow">A closer reading</p>
@@ -228,7 +230,7 @@ export function ItemAnalysis() {
           {run.status === 'running' && <><progress max={run.scope === 'pilot' ? pilotSize : run.total} value={run.processed} aria-label="Classification progress" />
             <p className="ia-small">{run.processed.toLocaleString()} processed · {run.complete.toLocaleString()} classified · {run.errors.toLocaleString()} failed · {run.total.toLocaleString()} in snapshot</p></>}
           {run.error && <p className="ia-error">{run.error}</p>}
-          <div className="ia-run-meta"><span>{run.example.source_label}</span><span>{run.total.toLocaleString()} items</span></div>
+          <div className="ia-run-meta">{run.example.assessment_title && <span>Assessment context: {run.example.assessment_title}</span>}<span>{run.example.source_label}</span><span>{run.total.toLocaleString()} items</span></div>
           <div className="ia-actions">{active ? <button className="ia-secondary" onClick={() => void stop()} disabled={busy}>Stop analysis</button> :
             <button className="ia-text-button" onClick={reset} disabled={busy}>Start a new analysis</button>}
             {run.spec && <button className="ia-text-button" disabled={downloading !== null} onClick={() => void download('spec')}>Download criteria ↓</button>}</div>
@@ -252,7 +254,7 @@ export function ItemAnalysis() {
       </div>}
       <details className="ia-privacy" id="item-analysis-privacy" open={privacyOpen} onToggle={event => setPrivacyOpen(event.currentTarget.open)}><summary>About your key and this demo</summary>
         <p>Your OpenAI key is sent to the server for model calls and held in memory while a phase runs. This page never writes it to browser storage. A run access token is kept in this tab’s session storage so you can refresh and return to the results.</p>
-        <p>Source items, criteria, and model judgments are kept privately for this run and expire one hour after it ends, or when the server restarts. Download the files you need before leaving. Example datasets are labelled with their source; illustrative items are for demonstrating the workflow.</p>
+        <p>Source items, criteria, and model judgments are kept privately for this run and expire one hour after it ends, or when the server restarts. Download the files you need before leaving. Datasets are labelled with their source; illustrative items are for demonstrating the workflow.</p>
       </details>
     </main>
     <SiteFooter onPrivacyClick={() => { setPrivacyOpen(true); document.getElementById('item-analysis-privacy')?.scrollIntoView({ block: 'center', behavior: 'smooth' }) }} />

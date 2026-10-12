@@ -1,5 +1,5 @@
 import { beforeEach, expect, it, vi } from 'vitest'
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ItemAnalysis } from './ItemAnalysis'
 import * as api from './api'
@@ -16,6 +16,18 @@ const mmlu = { ...example, id: 'mmlu', title: 'MMLU · Hindi-medium exam prepara
   description: 'MMLU items from measurement-db-pp.', source_label: 'measurement-db-pp · MMLU',
   source_revision: '1234567890abcdef1234567890abcdef12345678',
   source_url: 'https://huggingface.co/datasets/aims-foundations/measurement-db-pp/tree/1234567890abcdef1234567890abcdef12345678/mmlu' }
+const gsm8k = { ...example, id: 'gsm8k', title: 'GSM8K · Math tutoring', benchmark: 'gsm8k', benchmark_title: 'GSM8K', assessment_title: 'Math tutoring',
+  item_count: 1319, description: 'Grade-school math problems from GSM8K.', deployment: 'Support students learning multi-step arithmetic.',
+  source_label: 'measurement-db-pp · GSM8K', supplied_spec_available: false, source_revision: 'abcdef1234567890abcdef1234567890abcdef12',
+  source_url: 'https://huggingface.co/datasets/aims-foundations/measurement-db-pp/tree/abcdef1234567890abcdef1234567890abcdef12/gsm8k' }
+const toxigenContexts = [
+  { id: 'toxigen', assessment_title: 'Bangladesh clinical content moderation', deployment: 'Moderate content for a clinical service in Bangladesh.' },
+  { id: 'toxigen-south-asia', assessment_title: 'South Asian academic toxicity research', deployment: 'Study toxicity in South Asian academic discourse.' },
+].map(context => ({ ...example, ...context, title: `TOXIGEN · ${context.assessment_title}`, benchmark: 'toxigen', benchmark_title: 'TOXIGEN',
+  item_count: 39011, description: 'TOXIGEN items paired with the original Caliper assessment for this use case.',
+  source_label: 'aims-foundations/measurement-db-pp · toxigen/items.parquet · 39,011-item snapshot', supplied_spec_available: false,
+  source_revision: '7a840c66f04393497c106289a1b8bbca8d107008',
+  source_url: 'https://huggingface.co/datasets/aims-foundations/measurement-db-pp/blob/7a840c66f04393497c106289a1b8bbca8d107008/toxigen/items.parquet' }))
 const access = { run_id: 'run-123', run_secret: 'private-run-token' }
 const ready: AnalysisRun = {
   run_id: access.run_id, status: 'ready', message: 'Criteria are ready for inspection.', example,
@@ -41,14 +53,14 @@ it('defaults to real MMLU and exposes the pinned dataset source', async () => {
   vi.mocked(api.getCatalog).mockResolvedValue({ ...catalog, examples: [example, mmlu] })
   const user = userEvent.setup()
   render(<ItemAnalysis />)
-  expect(await screen.findByRole('combobox', { name: 'Benchmark example' })).toHaveValue('mmlu')
+  expect(await screen.findByRole('combobox', { name: 'Benchmark and assessment context' })).toHaveValue('mmlu')
   expect(screen.getByText('14,015 items')).toBeVisible()
   expect(screen.getByText(/Start with 100 items/)).toBeVisible()
   await user.click(screen.getByText('Deployment context'))
   expect(screen.getByRole('link', { name: /View dataset on Hugging Face/ })).toHaveAttribute('href', mmlu.source_url)
   expect(screen.getByText('1234567890ab')).toHaveAttribute('title', mmlu.source_revision)
-  await user.click(screen.getByRole('radio', { name: /Use example criteria/ }))
-  await user.click(screen.getByRole('button', { name: /Load example criteria/ }))
+  await user.click(screen.getByRole('radio', { name: /Use supplied criteria/ }))
+  await user.click(screen.getByRole('button', { name: /Load supplied criteria/ }))
   expect(api.createRun).toHaveBeenCalledWith('mmlu', 'provided', '')
 })
 
@@ -57,7 +69,7 @@ it('keeps unavailable MMLU selected and explains server access instead of silent
   vi.mocked(api.getCatalog).mockResolvedValue({ ...catalog, examples: [{ ...mmlu, available: false, unavailable_reason }, example] })
   const user = userEvent.setup()
   render(<ItemAnalysis />)
-  const selector = await screen.findByRole('combobox', { name: 'Benchmark example' })
+  const selector = await screen.findByRole('combobox', { name: 'Benchmark and assessment context' })
   expect(selector).toHaveValue('mmlu')
   expect(screen.getByText(unavailable_reason)).toBeVisible()
   expect(screen.getByRole('button', { name: /Generate criteria with GPT-6 Luna/ })).toBeDisabled()
@@ -81,14 +93,95 @@ it('preserves dataset provenance when restoring a prepared MMLU run', async () =
   expect(screen.getByText('1234567890ab')).toHaveAttribute('title', mmlu.source_revision)
 })
 
+it('selects another benchmark, resets supplied mode, and generates criteria for the selected context', async () => {
+  vi.mocked(api.getCatalog).mockResolvedValue({ ...catalog, examples: [gsm8k, mmlu, example] })
+  const selectedRun = { ...ready, example: gsm8k, total: gsm8k.item_count }
+  vi.mocked(api.createRun).mockResolvedValue({ ...selectedRun, ...access })
+  vi.mocked(api.getRun).mockResolvedValue(selectedRun)
+  const user = userEvent.setup()
+  render(<ItemAnalysis />)
+  const selector = await screen.findByRole('combobox', { name: 'Benchmark and assessment context' })
+  expect(selector).toHaveValue('mmlu')
+  await user.click(screen.getByRole('radio', { name: /Use supplied criteria/ }))
+  await user.selectOptions(selector, 'gsm8k')
+  expect(screen.getByText('1,319 items')).toBeVisible()
+  expect(screen.getByText('Math tutoring', { exact: false, selector: '.ia-context p' })).toBeVisible()
+  expect(screen.getByRole('radio', { name: /Generate with GPT-6 Luna/ })).toBeChecked()
+  expect(screen.getByRole('radio', { name: /Use supplied criteria/ })).toBeDisabled()
+  expect(screen.getByText(/No supplied criteria for this context/)).toBeVisible()
+  expect(screen.getByRole('button', { name: /Generate criteria with GPT-6 Luna/ })).toBeDisabled()
+  await user.click(screen.getByText('Deployment context'))
+  expect(screen.getByText(gsm8k.deployment)).toBeVisible()
+  expect(screen.getByRole('link', { name: /View dataset on Hugging Face/ })).toHaveAttribute('href', gsm8k.source_url)
+  await user.type(screen.getByLabelText('OpenAI API key'), 'sk-gsm8k')
+  await user.click(screen.getByRole('button', { name: /Generate criteria with GPT-6 Luna/ }))
+  await screen.findByRole('heading', { name: 'Your criteria are ready' })
+  expect(api.createRun).toHaveBeenCalledWith('gsm8k', 'generate', 'sk-gsm8k')
+  expect(screen.getByText(gsm8k.title)).toBeVisible()
+  expect(screen.getByText('Assessment context: Math tutoring')).toBeVisible()
+  expect(api.classify).not.toHaveBeenCalled()
+})
+
+it('restores the selected benchmark and assessment metadata from the run even when absent from the current catalog', async () => {
+  sessionStorage.setItem('item_analysis_run_v1', JSON.stringify(access))
+  vi.mocked(api.getCatalog).mockResolvedValue({ ...catalog, examples: [mmlu, example] })
+  vi.mocked(api.getRun).mockResolvedValue({ ...ready, example: gsm8k, total: gsm8k.item_count })
+  const user = userEvent.setup()
+  render(<ItemAnalysis />)
+  expect(await screen.findByText(gsm8k.title)).toBeVisible()
+  expect(screen.getByText('Assessment context: Math tutoring')).toBeVisible()
+  expect(screen.getByText(gsm8k.source_label)).toBeVisible()
+  expect(screen.getByText('1,319 items')).toBeVisible()
+  await user.click(screen.getByText('Context and usage'))
+  expect(screen.getByText(gsm8k.deployment)).toBeVisible()
+  expect(screen.getByRole('link', { name: /View dataset on Hugging Face/ })).toHaveAttribute('href', gsm8k.source_url)
+  expect(screen.getByText('abcdef123456')).toHaveAttribute('title', gsm8k.source_revision)
+  expect(api.createRun).not.toHaveBeenCalled()
+})
+
+it.each(toxigenContexts)('uses the selected TOXIGEN assessment ID when starting $id', async selected => {
+  vi.mocked(api.getCatalog).mockResolvedValue({ ...catalog, examples: [mmlu, ...toxigenContexts, example] })
+  const selectedRun = { ...ready, example: selected, total: selected.item_count,
+    spec: { ...ready.spec!, benchmark: selected.benchmark, deployment: selected.deployment } }
+  vi.mocked(api.createRun).mockResolvedValue({ ...selectedRun, ...access })
+  vi.mocked(api.getRun).mockResolvedValue(selectedRun)
+  const user = userEvent.setup()
+  render(<ItemAnalysis />)
+  const selector = await screen.findByRole('combobox', { name: 'Benchmark and assessment context' })
+  const otherContext = toxigenContexts.find(context => context.id !== selected.id)!
+  await user.selectOptions(selector, otherContext.id)
+  expect(selector).toHaveDisplayValue(otherContext.title)
+  await user.click(screen.getByText('Deployment context'))
+  expect(screen.getByText(otherContext.deployment)).toBeVisible()
+  await user.selectOptions(selector, selected.id)
+  expect(selector).toHaveDisplayValue(selected.title)
+  expect(screen.getByText(selected.assessment_title, { exact: false, selector: '.ia-context p' })).toBeVisible()
+  expect(screen.getByText(selected.deployment)).toBeVisible()
+  expect(screen.queryByText(otherContext.deployment)).not.toBeInTheDocument()
+  expect(screen.getByText('39,011 items')).toBeVisible()
+  expect(screen.getByText(selected.source_label)).toBeVisible()
+  expect(screen.getByRole('link', { name: /View dataset on Hugging Face/ })).toHaveAttribute('href', selected.source_url)
+  expect(screen.getByText('7a840c66f043')).toHaveAttribute('title', selected.source_revision)
+  expect(screen.getByRole('radio', { name: /Use supplied criteria/ })).toBeDisabled()
+  expect(screen.getByRole('radio', { name: /Generate with GPT-6 Luna/ })).toBeChecked()
+  expect(screen.getByRole('button', { name: /Generate criteria with GPT-6 Luna/ })).toBeDisabled()
+  await user.type(screen.getByLabelText('OpenAI API key'), 'sk-toxigen-test')
+  await user.click(screen.getByRole('button', { name: /Generate criteria with GPT-6 Luna/ }))
+  await screen.findByRole('heading', { name: 'Your criteria are ready' })
+  expect(api.createRun).toHaveBeenCalledExactlyOnceWith(selected.id, 'generate', 'sk-toxigen-test')
+  expect(screen.getByText(selected.title)).toBeVisible()
+  expect(screen.getByText(`Assessment context: ${selected.assessment_title}`)).toBeVisible()
+  expect(api.classify).not.toHaveBeenCalled()
+})
+
 it('loads supplied criteria without a key and labels unscored illustrative items honestly', async () => {
   const user = userEvent.setup()
   render(<ItemAnalysis />)
   expect(await screen.findByRole('radio', { name: /Generate with GPT-6 Luna/ })).toBeChecked()
   expect(screen.getByText('Illustrative teaching items')).toBeVisible()
-  await user.click(screen.getByRole('radio', { name: /Use example criteria/ }))
+  await user.click(screen.getByRole('radio', { name: /Use supplied criteria/ }))
   expect(screen.queryByLabelText('OpenAI API key')).not.toBeInTheDocument()
-  await user.click(screen.getByRole('button', { name: /Load example criteria/ }))
+  await user.click(screen.getByRole('button', { name: /Load supplied criteria/ }))
   await screen.findByRole('heading', { name: 'Your criteria are ready' })
   expect(api.createRun).toHaveBeenCalledWith('illustrative', 'provided', '')
   expect(api.classify).not.toHaveBeenCalled()
@@ -192,6 +285,34 @@ it('withholds stale aggregate statistics and exports while item classification i
   expect(screen.getByText(/Summary statistics and exports update when this phase finishes/)).toBeVisible()
   expect(screen.getByRole('button', { name: 'Item labels CSV' })).toBeDisabled()
   expect(screen.getByRole('button', { name: 'Download criteria ↓' })).toBeEnabled()
+})
+
+it('renders structured benchmark conversations and objects with live item judgments', async () => {
+  sessionStorage.setItem('item_analysis_run_v1', JSON.stringify(access))
+  const question = { question: 'Which response is appropriate?', options: ['Offer help', 'Ignore the request'] }
+  vi.mocked(api.getRun).mockResolvedValue({ ...ready, status: 'running', processed: 2, complete: 2,
+    items: [
+      { ...ready.items[0], item_id: 'toxigen-chat', content: [
+        { role: 'system', content: 'Assess the message for toxicity.' },
+        { role: 'user', content: 'Thank you for your help.' },
+      ], status: 'complete', labels: { 'IC.region_fit': { label: 2, justification: 'This conversation is region neutral.', evidence: ['Thank you for your help.'] } } },
+      { ...ready.items[0], item_id: 'structured-question', content: question, status: 'complete' },
+      { ...ready.items[0], item_id: 'plain-text', content: 'An ordinary text item.' },
+    ] })
+  const user = userEvent.setup()
+  render(<ItemAnalysis />)
+  await screen.findByRole('heading', { name: 'Reading the items' })
+  const chat = screen.getByText('toxigen-chat').closest('details')!
+  await user.click(within(chat).getByText(/system:/, { selector: 'strong' }))
+  expect(chat.querySelector('.ia-item-text')).toHaveTextContent('system: Assess the message for toxicity. user: Thank you for your help.')
+  expect(within(chat).getByText('2 · Region neutral')).toBeVisible()
+  expect(within(chat).getByText('This conversation is region neutral.')).toBeVisible()
+  expect(within(chat).getByText('Thank you for your help.', { selector: 'li' })).toBeVisible()
+  const structured = screen.getByText('structured-question').closest('details')!
+  await user.click(within(structured).getByText(/Which response is appropriate/, { selector: 'strong' }))
+  expect(structured.querySelector('.ia-item-text')?.textContent).toBe(JSON.stringify(question, null, 2))
+  expect(screen.getByText('An ordinary text item.', { selector: 'strong' })).toBeVisible()
+  expect(screen.getByRole('progressbar', { name: 'Classification progress' })).toHaveAttribute('value', '2')
 })
 
 it('stops automatic polling after three connection failures and offers an explicit retry', async () => {

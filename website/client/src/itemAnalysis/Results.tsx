@@ -8,13 +8,28 @@ function text(value: unknown): string {
   return typeof value === 'string' ? value : value == null ? 'Not supplied' : JSON.stringify(value)
 }
 
+function contentText(value: unknown): string {
+  if (value == null) return ''
+  if (typeof value === 'string') return value
+  if (Array.isArray(value)) return value.map(contentText).filter(Boolean).join('\n\n')
+  if (typeof value === 'object') {
+    const message = value as Record<string, unknown>
+    if (typeof message.role === 'string' && 'content' in message) {
+      return `${message.role}:\n${contentText(message.content)}`
+    }
+    return JSON.stringify(value, null, 2)
+  }
+  return String(value)
+}
+
 function ItemCard({ item, classifiers }: { item: Item; classifiers: Classifier[] }) {
   const completed = item.status === 'complete'
+  const content = contentText(item.content)
   return <details className="ia-item">
-    <summary><span><small>{item.item_id}</small><strong>{item.content || 'No item text available'}</strong></span>
+    <summary><span><small>{item.item_id}</small><strong>{content || 'No item text available'}</strong></span>
       <span className={`ia-tag ${completed ? '' : 'ia-tag-muted'}`}>{completed ? 'Classified' : item.status === 'error' ? 'Failed' : 'Pending'}</span>
     </summary>
-    <div className="ia-item-body"><p className="ia-item-text">{item.content}</p>
+    <div className="ia-item-body"><p className="ia-item-text">{content}</p>
       <p className="ia-reference"><strong>Reference answer</strong> {text(item.reference_answer)}</p>
       {item.error && <p className="ia-error">{item.error}</p>}
       {completed && classifiers.map(classifier => {

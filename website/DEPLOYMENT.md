@@ -13,23 +13,33 @@ working. No second service or AIMS proxy change is required.
 The `/item-analysis` demo defaults to the real 14,015-item MMLU snapshot at
 `aims-foundations/measurement-db-pp`, revision
 `cc796d3545a6bd2e78b5513c13e60a6913d01e3f`, table `mmlu/items.parquet`.
-Grant the server's `HF_TOKEN` read access to that repository. Its access can
+The same repository supplies TOXIGEN's 39,011-item `toxigen/items.parquet`
+snapshot at revision `7a840c66f04393497c106289a1b8bbca8d107008`. TOXIGEN has two
+selectable assessments: Bangladesh clinical content moderation and South Asian
+academic toxicity research. Grant the server's `HF_TOKEN` read access to that repository. Its access can
 differ from the `measurement-db` repository used by the separate `/items` flow.
 The application downloads and verifies the table when preparing the first run;
 no manual dataset transfer is needed. The source is cached privately at
-`/data/item-analysis-sources/`. The original assessment and supplied classifier
-specification ship with the code; dataset rows stay out of Git and image layers.
+`/data/item-analysis-sources/`. The catalog also offers GSM8K's 1,319-item test
+split from `openai/gsm8k` and HumanEval's 164-item test split from
+`openai/openai_humaneval`. Those public datasets are downloaded anonymously;
+they remain available when the server has no Hugging Face credential. All four
+sources are pinned in `website/server/item_analysis_sources.json`. The matching
+original assessments and MMLU's supplied classifier specification ship with the
+code; dataset rows stay out of Git and image layers.
 
 Visitors supply an OpenAI key for both specification generation and item
 classification. Both steps use `gpt-6-luna` with low reasoning effort; the
 server needs no OpenAI key of its own for this workflow.
+TOXIGEN, GSM8K, and HumanEval require generating criteria for their selected assessment.
 Loading the supplied MMLU criteria requires no visitor key, but does require
 server dataset access. An optional ten-item teaching example remains available
 and is explicitly illustrative. Access errors are shown without silently
 substituting teaching data.
 
 `ITEM_ANALYSIS_PREPARED_DIR` remains an optional override for a manually prepared
-snapshot. Leave it unset for direct Hugging Face loading. Local `results/`
+snapshot; it replaces the remote benchmark catalog. Leave it unset to offer
+MMLU, TOXIGEN, GSM8K, and HumanEval with direct Hugging Face loading. Local `results/`
 directories remain excluded from Docker.
 
 Use one instance and one worker. Each browser run copies the source inputs into
