@@ -143,6 +143,16 @@ def get_report(entry_id: str) -> dict | None:
     if not raw:
         raw = json.dumps(scoring, indent=2, ensure_ascii=False)
 
+    # Elicitation summary carries the per-dimension priority weights table;
+    # the score table uses it to badge each dimension's priority. Optional —
+    # absent for older assessments, which the frontend handles gracefully.
+    summary_path = slug_dir / "elicitation_summary.md"
+    elicitation_summary = (
+        summary_path.read_text(encoding="utf-8")
+        if summary_path.is_file()
+        else ""
+    )
+
     entry = next(e for e in list_entries() if e["id"] == entry_id)
     return {
         "id": entry_id,
@@ -151,6 +161,7 @@ def get_report(entry_id: str) -> dict | None:
         "deployment_description": entry["deployment_description"],
         "scoring": scoring,
         "raw": raw,
+        "elicitation_summary": elicitation_summary,
     }
 
 

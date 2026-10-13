@@ -6,7 +6,89 @@ This file documents the website's security posture **as actually implemented in 
 
 Items that depend on the deployed infrastructure (TLS, DNS, hosting accounts, monitoring) live in [Pre-launch verification](#pre-launch-verification) at the bottom — these must be checked off before a public domain is pointed at the service.
 
+## Item-review demo (`/items`)
+
+The sections below describe the existing Anthropic/Caliper workflow. The separate
+item-review workflow has the following implementation:
+
+- The user's OpenAI key arrives in `X-OpenAI-Key`, remains in the active task's
+  memory, and is never stored in
+  browser storage, the database, CLI files, job results, or application logs.
+  The OpenAI client explicitly targets `https://api.openai.com/v1` with `store=False`.
+- Only an independently generated run secret authorizes polling, exports, and cancellation.
+  It travels in `X-Review-Token`; the browser keeps it in sessionStorage to allow
+  page refreshes. Job IDs alone cannot retrieve a deployment description/result.
+- Dataset access uses the server's `HF_TOKEN` or saved Hub login. No HF key is
+  accepted from visitors. Item tables are read through HTTP ranges and source
+  metadata may be cached. Deployment answers remain in process memory; assessments,
+  evidence, and provenance are stored in a private temporary SQLite directory.
+  Those files expire one hour after a run ends, with a minute-level cleanup timer,
+  and are removed on normal shutdown. An abrupt kill can leave orphaned files
+  until the host removes them. Jobs cannot resume after a restart.
+- Before model calls, requests use the pinned inventory to prepare a fixed sample
+  of up to 50 distinct items per benchmark collection. Selected dataset evidence
+  and provenance are cached in a private server directory, without deployment
+  answers or API keys. The reusable cache survives normal shutdown.
+  Three jobs may run simultaneously, at most one per caller key. At most 30 jobs
+  are retained. User-supplied model IDs, paths, API base
+  URLs, and dataset repository IDs are not accepted by the web endpoint.
+- Provider exception bodies are not returned or logged. Model-generated content
+  is rendered as React text. Review endpoints use `Cache-Control: no-store`.
+- Stopping a job cancels the awaited request and prevents subsequent requests.
+  A request already sent to OpenAI may still incur a charge. No email is sent.
+
+Verification: `website/server/tests/test_item_review.py`,
+`website/client/src/itemReview/api.test.ts`, and `ItemReview.test.tsx` cover these
+boundaries. Shared synchronous/asynchronous judge requests are checked in
+`bayesian_auditing/tests/test_judge.py`. OpenAI's own API retention policies apply
+to submitted content; `store=False` is not a promise of zero provider retention.
+
 This file is paired with [DESIGN.md](DESIGN.md). Every privacy claim in DESIGN.md should map to a statement here.
+
+## Item-analysis demo (`/item-analysis`)
+
+This separate OpenAI workflow reuses the post-assessment item-analysis
+pipeline, with the following boundaries:
+
+- The API key travels in `X-OpenAI-Key`, stays in the active phase's memory,
+  and is not stored in browser storage, job artifacts, the database, or logs.
+  A separate random access secret in `X-Review-Token` authorizes polling,
+  cancellation, and downloads. Only the run ID and access secret are kept in
+  browser session storage, so refresh can reconnect without persisting a key.
+  The client targets `https://api.openai.com/v1` with `store=False`. Both stages
+  use GPT-6 Luna with low reasoning effort, recorded in each run.
+- Users choose server-configured examples. Requests cannot select filesystem
+  paths, repositories, models, or provider URLs. The bundled teaching example is
+  labeled illustrative and contains no prerecorded model predictions. MMLU is
+  downloaded from a fixed `measurement-db-pp` revision using server-managed
+  Hugging Face access, with checksum, row-count, and schema checks before use.
+  Its source table is cached in the private `item-analysis-sources/` directory,
+  which survives normal shutdown and contains no visitor keys or model labels.
+  Each run prepares all source items independently. An explicit local prepared
+  snapshot override remains supported. Dataset access failures do not silently
+  substitute illustrative items; the browser never receives the Hugging Face token.
+- Inputs, criteria, raw model outputs, and reports are held in a private run
+  directory. Runs expire one hour after a phase ends, are swept each minute, and
+  are removed on normal shutdown. A server restart loses the in-memory access
+  registry; an abrupt kill can leave files for host cleanup. This flow does not
+  use the original Caliper workflow's opt-in logging or 90-day retention.
+- Provider exception bodies are replaced with a fixed error before they reach
+  saved artifacts or responses. Model responses redact any occurrence of the
+  caller key; frontend rendering uses React text. Private responses and downloads
+  use `Cache-Control: no-store`. Download paths are a fixed allowlist.
+- At most three jobs can run concurrently, with one active phase per caller key,
+  and at most ten retained jobs. Classification pauses at 100 items before an
+  explicit full-snapshot continuation. Completed labels are reused on retry.
+  Provider clients are closed after each call, including errors and cancellation.
+- Stop signals the shared classifier and cancels the awaited provider request.
+  Workers are drained before removing their files. A request already submitted
+  may incur a charge. During dataset preparation, stop waits for the current
+  download or preparation step before returning. No email is collected or sent.
+
+Verification: `server/tests/test_item_analysis.py`, `server/tests/test_item_analysis_source.py`,
+`../anthropic_api_package_release/tests/test_item_analysis_model_client.py`,
+and `client/src/itemAnalysis/*.test.*`. OpenAI's own retention terms apply to
+submitted evidence; `store=False` does not promise zero provider retention.
 
 ---
 

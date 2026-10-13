@@ -15,11 +15,11 @@ import { useEffect, useRef } from 'react'
    container; the cells themselves never re-render.
    ============================================================ */
 
-// Matched to the AIMS home hero (binary-matrix-backdrop): 30 rows, gap 5px,
-// 0.12 base opacity. COLS is 88 (not the AIMS 96) because our band is the
-// viewport minus the 17rem sidebar — 88 keeps the cells the same ~12px size.
+// Matched to the AIMS home hero (binary-matrix-backdrop): 30 rows, 96 cols,
+// gap 5px, 0.12 base opacity. The hero band is full-bleed (same as the main
+// site), so the AIMS column count carries over unchanged.
 const ROWS = 30
-const COLS = 88
+const COLS = 96
 
 const BASE_OPACITY = 0.12
 const HIGHLIGHT_OPACITY = 0.95

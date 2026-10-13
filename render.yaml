@@ -23,6 +23,9 @@ services:
         value: https://aimslab.stanford.edu/benchmark-caliper
       - key: WEBSITE_ALLOWED_ORIGINS
         value: https://aimslab.stanford.edu,https://benchmark-caliper.onrender.com
+      # Server-managed read access to measurement-db; enter the secret in Render.
+      - key: HF_TOKEN
+        sync: false
       # Email delivery — set the values in the Render dashboard (sync: false
       # keeps secrets out of this file). The app runs without them (dry-run).
       - key: RESEND_API_KEY

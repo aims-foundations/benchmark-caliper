@@ -1,0 +1,10 @@
+We want to evaluate an English-language mathematics tutoring assistant for
+secondary-school students working on algebra and geometry through text chat.
+
+The assistant should explain solutions step by step, identify errors in a
+student's reasoning, and support follow-up questions. Success means both correct
+mathematics and explanations appropriate for the student's level. Inputs and
+outputs are text; evaluation of image understanding is outside this deployment.
+
+This is an example deployment for demonstrating the auditing pipeline, not a
+user-ratified audit goal. No particular school curriculum or country is specified.

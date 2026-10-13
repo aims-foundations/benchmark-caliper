@@ -285,6 +285,17 @@ The scoring step rates six dimensions. When a search result surfaces, ask
 which dimension it informs — the result may support or challenge the
 benchmark's fitness for the deployment, and both are valuable:
 
+**Minimum coverage floor — no dimension goes dark.** User priorities and
+the `coverage_gap_analysis` tell you where to spend the *most* budget, not
+where to spend *all* of it. Whatever the priorities say, do not let any of
+the six dimensions reach the scoring step with zero regional evidence
+gathered. Reserve at least one query (or one deliberate, recorded null
+result) for each dimension a user marked LOWER or MODERATE priority, so that
+a real validity failure on a deprioritized dimension still has a chance to
+surface. Lower-priority dimensions warrant lighter treatment — never no
+treatment. If budget genuinely runs out, record what each uncovered
+dimension would have needed rather than silently skipping it.
+
 - **IO — Input Ontology**: regional taxonomies, category coverage studies, emic vs. etic category systems.
 - **IC — Input Content**: regional validation studies, community datasets, content relevance assessments.
 - **IF — Input Form**: dialect evaluations, infrastructure compatibility, morphology benchmarks.

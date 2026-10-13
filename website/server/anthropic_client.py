@@ -120,8 +120,13 @@ async def call_text_async(
     # + high max_tokens trips this). Streaming is also what the CLI
     # pipeline uses, so behaviour stays aligned.
     started = time.monotonic()
-    async with client.messages.stream(**kwargs) as stream_resp:
-        final = await stream_resp.get_final_message()
+    try:
+        async with client.messages.stream(**kwargs) as stream_resp:
+            final = await stream_resp.get_final_message()
+    finally:
+        # Item analysis may make thousands of sequential calls. Release each
+        # request's HTTP connections on success, provider errors, and cancellation.
+        await client.close()
     latency_ms = int((time.monotonic() - started) * 1000)
 
     return CallResult(

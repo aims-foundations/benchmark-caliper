@@ -51,6 +51,8 @@ from . import (
     db,
     email_notify,
     gallery,
+    item_analysis,
+    item_review,
     logging_gate,
     mock_anthropic,
     pdf_utils,
@@ -184,7 +186,20 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
             flush=True,
         )
     db.init_db()
-    yield
+    async def expire_reviews() -> None:
+        while True:
+            await asyncio.sleep(60)
+            item_review.sweep()
+            item_analysis.sweep()
+
+    review_cleanup = asyncio.create_task(expire_reviews())
+    try:
+        yield
+    finally:
+        review_cleanup.cancel()
+        await asyncio.gather(review_cleanup, return_exceptions=True)
+        await item_review.shutdown()
+        await item_analysis.shutdown()
 
 
 app = FastAPI(title="Benchmark Caliper", version="0.1.0", lifespan=lifespan)
@@ -198,8 +213,10 @@ app.add_middleware(
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=False,  # we never use cookies for auth
     allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type", "X-Anthropic-Key"],
+    allow_headers=["Content-Type", "X-Anthropic-Key", "X-OpenAI-Key", "X-Review-Token"],
 )
+app.include_router(item_review.router)
+app.include_router(item_analysis.router)
 
 
 # ---------- routes ----------

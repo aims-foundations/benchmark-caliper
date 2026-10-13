@@ -1,10 +1,16 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 import {
   submitFeedback,
   ApiError,
   type FeedbackCategory,
 } from '../api'
 import { appPath } from '../paths'
+import {
+  calibrateConfidence,
+  parsePriorityWeights,
+  PRIORITY_LABEL,
+  type Priority,
+} from '../scoreInsights'
 
 interface DimensionScore {
   score?: number
@@ -13,9 +19,35 @@ interface DimensionScore {
   justification?: string
   reasoning?: string
   evidence_quotes?: string[]
+  evidence_web_sources?: string[]
+  evidence_dataset?: string[]
   evidence_region_sources?: unknown[]
+  confidence?: string
   strengths?: string[]
   [key: string]: unknown
+}
+
+// Render an evidence string, turning any bare URLs into clickable links so
+// a reader can open a source and judge its quality (the Grokipedia lesson:
+// the tool must show its sources inline).
+const URL_RE = /(https?:\/\/[^\s)]+)/gi
+function linkifyEvidence(text: string): ReactNode {
+  const parts: ReactNode[] = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+  const re = new RegExp(URL_RE)
+  while ((match = re.exec(text)) !== null) {
+    const url = match[1]
+    if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index))
+    parts.push(
+      <a key={match.index} href={url} target="_blank" rel="noreferrer noopener">
+        {url}
+      </a>,
+    )
+    lastIndex = match.index + url.length
+  }
+  if (lastIndex < text.length) parts.push(text.slice(lastIndex))
+  return parts.length > 0 ? parts : text
 }
 
 interface Props {
@@ -29,6 +61,12 @@ interface Props {
   pdfUrl?: string
   /** Curated/read-only view: hides the feedback form and key controls. */
   readOnly?: boolean
+  /**
+   * The elicitation summary markdown, used to surface each dimension's
+   * user-assigned priority weight beside its score. Optional — when absent
+   * (e.g. some gallery entries) priority badges are simply omitted.
+   */
+  elicitationSummary?: string
   /** Report-email outcome from the run. Absent for the read-only gallery. */
   emailStatus?: {
     requested: boolean
@@ -55,6 +93,31 @@ const DIMENSION_ORDER = [
   'output_content',
   'output_form',
 ]
+
+const CONFIDENCE_LABEL: Record<string, string> = {
+  high: 'High confidence',
+  medium: 'Medium confidence',
+  low: 'Low confidence',
+}
+
+// Short priority tag shown beside a dimension name.
+const PRIORITY_TAG: Record<Priority, string> = {
+  HIGH: 'High',
+  MODERATE: 'Moderate',
+  LOWER: 'Lower',
+}
+
+function PriorityBadge({ priority }: { priority: Priority }) {
+  return (
+    <span
+      className="dim-priority"
+      data-priority={priority}
+      title={`${PRIORITY_LABEL[priority]} — assigned during elicitation`}
+    >
+      {PRIORITY_TAG[priority]} priority
+    </span>
+  )
+}
 
 type Tab = 'table' | 'raw'
 
@@ -83,8 +146,11 @@ export function ScoringView({
   pdfUrl,
   readOnly = false,
   emailStatus,
+  elicitationSummary,
 }: Props) {
   const [tab, setTab] = useState<Tab>('table')
+  const priorities = parsePriorityWeights(elicitationSummary)
+  const hasPriorities = Object.keys(priorities).length > 0
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [feedbackCategory, setFeedbackCategory] =
     useState<FeedbackCategory>('incorrect_score')
@@ -203,6 +269,18 @@ export function ScoringView({
 
       {tab === 'table' && (
         <div className="score-table" role="tabpanel">
+          <p className="score-table-caveat">
+            A structured opinion from Claude Opus, not a verdict — these
+            scores can miss context. Read the reasoning, not just the number.
+          </p>
+          {!empty && hasPriorities && (
+            <p className="priority-legend">
+              The badge on each dimension is the priority you assigned during
+              elicitation. A 5/5 on a <strong>Lower</strong>-priority
+              dimension matters less than a low score on a{' '}
+              <strong>High</strong>-priority one.
+            </p>
+          )}
           {empty ? (
             <p className="inline-error">
               Opus output couldn't be parsed as a scoring object. Switch to
@@ -213,20 +291,59 @@ export function ScoringView({
               {dimensions.map((key) => {
                 const dim = dimBag[key] as DimensionScore
                 const reasoning = dim.justification ?? dim.reasoning
+                const priority = priorities[key]
+                const conf = calibrateConfidence(dim)
+                const webSources = Array.isArray(dim.evidence_web_sources)
+                  ? dim.evidence_web_sources
+                  : []
+                const datasetEvidence = Array.isArray(dim.evidence_dataset)
+                  ? dim.evidence_dataset
+                  : []
                 return (
-                  <li key={key} className="score-row">
+                  <li
+                    key={key}
+                    className="score-row"
+                    data-priority={priority ?? undefined}
+                  >
                     <details>
                       <summary>
                         <span className="dim-name">
                           {DIMENSION_LABELS[key] ?? key}
+                          {priority && <PriorityBadge priority={priority} />}
                         </span>
-                        <span
-                          className="dim-score"
-                          data-score={dim.score ?? 0}
-                        >
-                          {dim.score ?? '?'} / 5
+                        <span className="dim-tags">
+                          <span
+                            className="dim-confidence"
+                            data-confidence={conf.calibrated}
+                            title={
+                              conf.downgraded
+                                ? `Adjusted down from "${conf.reported}": only ${conf.streamCount} evidence ` +
+                                  `stream${conf.streamCount === 1 ? '' : 's'} support this (high confidence needs at least two).`
+                                : `${conf.streamCount} evidence stream${conf.streamCount === 1 ? '' : 's'} support this dimension.`
+                            }
+                          >
+                            {CONFIDENCE_LABEL[conf.calibrated]}
+                            {conf.downgraded && ' *'}
+                          </span>
+                          <span
+                            className="dim-score"
+                            data-score={dim.score ?? 0}
+                          >
+                            {dim.score ?? '?'} / 5
+                          </span>
                         </span>
                       </summary>
+                      {conf.downgraded && (
+                        <p className="confidence-note">
+                          Confidence shown as{' '}
+                          <strong>{conf.calibrated}</strong>, adjusted down
+                          from the model's <em>{conf.reported}</em>: this
+                          dimension rests on {conf.streamCount} evidence
+                          stream{conf.streamCount === 1 ? '' : 's'}, and the
+                          framework reserves "high" for findings backed by at
+                          least two.
+                        </p>
+                      )}
                       {reasoning && (
                         <p className="score-reasoning">{reasoning}</p>
                       )}
@@ -244,7 +361,7 @@ export function ScoringView({
                       {Array.isArray(dim.evidence_quotes) &&
                         dim.evidence_quotes.length > 0 && (
                           <>
-                            <h4>Evidence quotes</h4>
+                            <h4>Paper quotes</h4>
                             <ul className="score-evidence">
                               {dim.evidence_quotes.map((q, i) => (
                                 <li key={i}>{String(q)}</li>
@@ -252,6 +369,26 @@ export function ScoringView({
                             </ul>
                           </>
                         )}
+                      {webSources.length > 0 && (
+                        <>
+                          <h4>Web sources</h4>
+                          <ul className="score-evidence">
+                            {webSources.map((w, i) => (
+                              <li key={i}>{linkifyEvidence(String(w))}</li>
+                            ))}
+                          </ul>
+                        </>
+                      )}
+                      {datasetEvidence.length > 0 && (
+                        <>
+                          <h4>Dataset findings</h4>
+                          <ul className="score-evidence">
+                            {datasetEvidence.map((d, i) => (
+                              <li key={i}>{String(d)}</li>
+                            ))}
+                          </ul>
+                        </>
+                      )}
                     </details>
                   </li>
                 )

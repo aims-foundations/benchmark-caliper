@@ -148,6 +148,8 @@ interface ScoredState {
   slug: string
   scoring: Record<string, unknown>
   rawText: string
+  // Carried so the score table can surface per-dimension priority weights.
+  elicitationSummary: string
   emailStatus?: {
     requested: boolean
     sent?: boolean
@@ -286,7 +288,7 @@ export function App() {
       typeof window !== 'undefined' &&
       stripBasePath(window.location.pathname).startsWith('/run/')
     ) {
-      window.history.replaceState(null, '', appPath('/'))
+      window.history.replaceState(null, '', appPath('/caliper'))
     }
     setIsDemo(false)
     setPhase({ name: 'idle' })
@@ -459,6 +461,7 @@ export function App() {
       slug,
       scoring: DEMO_SCORING,
       rawText: DEMO_RAW_TEXT,
+      elicitationSummary: DEMO_ELICITATION_SUMMARY,
     }
     enterScored(scored)
   }
@@ -589,12 +592,14 @@ export function App() {
     void handleAutoRun({
       runId: args.runId,
       slug: args.slug,
+      elicitationSummary: args.elicitationSummary,
     })
   }
 
   async function handleAutoRun(args: {
     runId: string
     slug: string
+    elicitationSummary: string
   }): Promise<void> {
     const events: PipelineEvent[] = []
     setPhase({
@@ -674,6 +679,7 @@ export function App() {
       scoring,
       rawText,
       emailStatus,
+      elicitationSummary: args.elicitationSummary,
     })
   }
 
@@ -1019,6 +1025,7 @@ export function App() {
       slug: base.slug,
       scoring,
       rawText,
+      elicitationSummary: base.elicitationSummary,
     })
   }
 
@@ -1116,9 +1123,37 @@ export function App() {
         ? 'session'
         : null
 
+  // .rd-root scopes the verbatim main-site stylesheet (aims-redesign.css),
+  // exactly as the main site's (site)/layout.tsx wraps its pages.
   return (
-    <>
+    <div className="rd-root">
       <SiteHeader />
+      {/* Full-bleed page hero using the main site's verbatim rd-page-hero /
+          rd-page-title / rd-lead / rd-btn classes: it runs under the fixed
+          transparent header, so the matrix motif shows through behind the
+          nav until the page scrolls. */}
+      <div className="rd-page-hero">
+        <MatrixBackdrop />
+        <header className="rd-container">
+          <p className="eyebrow">AIMS · Software &amp; Data</p>
+          <h1 className="rd-page-title">Benchmark Caliper.</h1>
+          <p className="tagline rd-lead">
+            Assess whether an AI benchmark applies to a different deployment
+            context.
+          </p>
+          <div className="hero-actions">
+            <a className="rd-btn" href={appPath('/')}>Choose an evaluation</a>
+            <a
+              className="rd-btn"
+              href="https://github.com/aims-foundations/benchmark-caliper"
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              View on GitHub
+            </a>
+          </div>
+        </header>
+      </div>
       <div className="app-shell">
       <GallerySidebar
         entries={galleryEntries}
@@ -1130,26 +1165,6 @@ export function App() {
         onAddBenchmark={handleAddBenchmark}
       />
       <main className="app">
-      <div className="hero">
-        <MatrixBackdrop />
-        <header>
-          <h1>Benchmark Caliper</h1>
-          <p className="tagline">
-            Assess whether an AI benchmark applies to a different deployment
-            context.
-          </p>
-          <div className="hero-actions">
-            <a
-              className="hero-cta"
-              href="https://github.com/aims-foundations/benchmark-caliper"
-              target="_blank"
-              rel="noreferrer noopener"
-            >
-              View on GitHub
-            </a>
-          </div>
-        </header>
-      </div>
 
       {phase.name === 'viewing-report' && (
         <ReportView
@@ -1162,8 +1177,10 @@ export function App() {
       {isDemo && phase.name !== 'scored' && (
         <div className="demo-banner" role="status">
           <p>
-            <strong>Demo mode.</strong> Replaying a cached expert assessment
-            (MathDial — India urban English tutoring). No Anthropic API calls
+            <strong>Demo mode.</strong> Replaying a cached assessment
+            (expert-elicited inputs) for MathDial — India urban English
+            tutoring. The scores are Claude Opus's, conditioned on an expert's
+            elicitation, not an expert's own scores. No Anthropic API calls
             are being made.
           </p>
           <button
@@ -1329,6 +1346,7 @@ export function App() {
           onStartOver={handleStartOver}
           onChangeKey={handleChangeKey}
           emailStatus={phase.state.emailStatus}
+          elicitationSummary={phase.state.elicitationSummary}
         />
       )}
 
@@ -1346,6 +1364,7 @@ export function App() {
           readOnly
           onStartOver={handleStartOver}
           onChangeKey={handleChangeKey}
+          elicitationSummary={phase.state.report.elicitation_summary}
         />
       )}
 
@@ -1398,6 +1417,6 @@ export function App() {
       </main>
       </div>
       <SiteFooter onPrivacyClick={() => setShowPrivacy(true)} />
-    </>
+    </div>
   )
 }
