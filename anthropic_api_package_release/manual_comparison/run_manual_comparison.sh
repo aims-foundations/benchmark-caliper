@@ -64,6 +64,12 @@ ROWS=(
   # flood / Argentina fit question (whether the benchmark's disaster + region coverage
   # matches the deployment).
   "disastervqa|papers/disastervqa.pdf|manual_comparison/row5_disastervqa|QCRI/DisasterVQA|-"
+  # Row 6 (2026-10 batch, tuple sent directly by the expert).
+  # VisDoM (VisDoMBench, arXiv 2412.10704): multimodal multi-document RAG QA over
+  # visually rich scientific PDFs (tables / charts / plots). DA left OFF for now —
+  # enable only if the HF dataset loads cleanly with no runner/code change (the
+  # standing rule); flip the last two fields to the HF id + config once verified.
+  "visdom|papers/visdom.pdf|manual_comparison/row6_visdom|-|-"
 )
 
 # === Step sequence (elicitation stages 1 / 2-questions / 2-summary omitted) =
