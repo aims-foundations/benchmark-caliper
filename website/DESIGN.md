@@ -126,6 +126,23 @@ directly into item analysis before the full workflow is complete.
 
 10. **Cleanup.** The benchmark job drops its in-memory API key and PDF bytes when it ends; a safety-net sweeper removes stale entries after one hour. Existing 90-day benchmark workspace and trace retention remain separate. Item runs expire one hour after their last phase ends and do not survive a server restart; their input copies and outputs are removed on normal shutdown. Users must download item outputs before expiry.
 
+### Starting at the item stage
+
+`/caliper?start=items` offers existing gallery/saved-report reuse and direct
+entry with new deployment requirements. Both are starting points within the
+same validity-analysis workflow. Existing assessments retain their original
+context and findings. Direct context is separately validated and frozen; its
+identifier hashes all normalized user requirement fields.
+
+Direct generation uses an evidence registry of explicit requirements and the
+framework, plus the actual dataset profile and sample items. It does not run
+paper analysis, elicitation synthesis, regional research, or benchmark scoring.
+The item generator uses the same fixed classifier roster and structural checks,
+including an explicit task-requirements reference for task coverage. Reports
+mark the benchmark assessment as not run; Input Form and Output Form remain
+unassessed and no six-dimension scores are generated. Both paths use confirmed
+dataset selection, reviewed criteria, a pilot, and full-snapshot classification.
+
 ### Free walkthrough
 
 `/caliper?demo=mathdial` replays the cached MathDial benchmark assessment and

@@ -53,6 +53,9 @@ def _read_jsonl(path: Path) -> list[dict]:
 
 
 def _load_run(run_dir: Path) -> tuple[dict, list[dict], dict[str, dict]]:
+    dataset = _read_json(run_dir / "dataset.json", {})
+    if dataset.get("analysis_basis") == "deployment_requirements":
+        storage.check_prepared(run_dir)
     if (run_dir / "specification.json").exists():
         storage.check_specification(run_dir)
     spec = _read_json(run_dir / "classifier_spec.json")
@@ -126,10 +129,13 @@ def _csv_text(value: Any) -> str:
     return "'" + text if text.lstrip().startswith(("=", "+", "-", "@")) else text
 
 
-def _write_items_csv(run_dir: Path, items: list[dict], results: dict, classifiers: list[dict]) -> None:
+def _write_items_csv(run_dir: Path, items: list[dict], results: dict, classifiers: list[dict],
+                     provenance: dict | None = None) -> None:
+    provenance = provenance or {}
     columns = ["item_id", "status", "content", "reference_answer", "grading_criterion", "error"]
     for classifier in classifiers:
         columns.extend(f"{classifier['id']}.{suffix}" for suffix in ("label", "evidence", "justification"))
+    columns.extend(provenance)
     with (run_dir / "items.csv").open("w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=columns)
         writer.writeheader()
@@ -137,6 +143,7 @@ def _write_items_csv(run_dir: Path, items: list[dict], results: dict, classifier
             result = results.get(item["item_id"], {})
             row = {key: item.get(key, "") for key in columns[:5]}
             row.update(status=result.get("status", "pending"), error=result.get("error", ""))
+            row.update(provenance)
             for classifier in classifiers:
                 prefix = classifier["id"]
                 if not classifier["applicable"]:
@@ -149,7 +156,9 @@ def _write_items_csv(run_dir: Path, items: list[dict], results: dict, classifier
             writer.writerow({key: _csv_text(value) for key, value in row.items()})
 
 
-def _export_review(run_dir: Path, items: list[dict], classifiers: list[dict]) -> dict:
+def _export_review(run_dir: Path, items: list[dict], classifiers: list[dict],
+                   provenance: dict | None = None) -> dict:
+    provenance = provenance or {}
     path = run_dir / "review.csv"
     selection_path = run_dir / "review_selection.json"
     if path.exists():
@@ -169,11 +178,13 @@ def _export_review(run_dir: Path, items: list[dict], classifiers: list[dict]) ->
     }
     applicable = [classifier["id"] for classifier in classifiers if classifier["applicable"]]
     columns = ["item_id", "content", "reference_answer", "grading_criterion", *applicable, "review_notes"]
+    columns.extend(provenance)
     with path.open("w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=columns)
         writer.writeheader()
         for item in selected:
-            writer.writerow({key: _csv_text(item.get(key, "")) for key in columns[:4]})
+            row = {key: item.get(key, "") for key in columns[:4]}
+            writer.writerow({key: _csv_text(value) for key, value in {**row, **provenance}.items()})
     _write_json(selection_path, selection)
     return selection
 
@@ -233,6 +244,7 @@ def generate_report(run_dir: Path) -> dict:
     spec, items, results = _load_run(run_dir)
     dataset = _read_json(run_dir / "dataset.json", {})
     evidence = _read_json(run_dir / "evidence.json", {})
+    direct = evidence.get("analysis_basis") == "deployment_requirements"
     original = evidence.get("scoring", {})
     original_dimensions = original.get("dimensions", original) if isinstance(original, dict) else {}
     completed = sum(result["status"] == "complete" for result in results.values())
@@ -264,11 +276,25 @@ def generate_report(run_dir: Path) -> dict:
             "Percentages exclude unknown, invalid, failed, and pending judgments. "
             "No item statistics are converted into 1–5 scores."
         ),
-        "original_assessment": {dimension: original_dimensions.get(dimension) for dimension in DIMENSIONS},
+        "original_assessment": None if direct else {dimension: original_dimensions.get(dimension) for dimension in DIMENSIONS},
         "classifiers": classifiers,
     }
-    _write_items_csv(run_dir, items, results, spec["classifiers"])
-    summary["review_selection"] = _export_review(run_dir, items, spec["classifiers"])
+    provenance = {}
+    if direct:
+        provenance = {
+            "analysis_basis": "deployment_requirements", "assessment_status": "not_run",
+            "unassessed_dimensions": ["input_form", "output_form"],
+            "direct_context_sha256": dataset.get("direct_context_sha256"),
+        }
+        summary.update(**provenance, analysis_scope="item_only",
+                       requirements=evidence.get("requirements", {}), direct_context=evidence.get("direct_context"))
+        summary["interpretation"] += (
+            " This is item-only analysis based on explicit deployment requirements. "
+            "No benchmark assessment was run; Input Form and Output Form are not assessed. "
+            "Completion refers only to classifying this item snapshot, not to a complete benchmark validity assessment."
+        )
+    _write_items_csv(run_dir, items, results, spec["classifiers"], provenance)
+    summary["review_selection"] = _export_review(run_dir, items, spec["classifiers"], provenance)
     comparison = _read_json(run_dir / "review_comparison.json")
     if comparison:
         review_path = Path(comparison.get("review_path", ""))
@@ -347,16 +373,24 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}small{color:#465368
         "<a href='summary.json'>Summary JSON</a></p>"
     )
     parts.append(f"<details><summary>Dataset provenance</summary><pre>{_escape(summary['dataset'])}</pre></details>")
-    parts.append(
-        "<section><h2>Original assessment</h2><p>These benchmark-level scores are retained unchanged. "
-        "Input Form and Output Form remain at benchmark level.</p>"
-        "<table><tr><th>Dimension</th><th>Original score</th><th>Original finding</th></tr>"
-    )
-    for dimension, assessment in summary["original_assessment"].items():
-        score = assessment.get("score", "Not supplied") if isinstance(assessment, dict) else "Not supplied"
-        finding = assessment.get("justification", "") if isinstance(assessment, dict) else ""
-        parts.append(f"<tr><td>{_escape(dimension.replace('_', ' ').title())}</td><td>{_escape(score)}</td><td>{_escape(finding)}</td></tr>")
-    parts.append("</table></section>")
+    if summary.get("assessment_status") == "not_run":
+        parts.append(
+            "<section><h2>Benchmark assessment not run</h2>"
+            "<p>This item-only analysis uses explicit deployment requirements. "
+            "There are no benchmark-level validity scores. Input Form and Output Form are not assessed.</p>"
+            f"<h3>Supplied requirements</h3><pre>{_escape(summary.get('requirements'))}</pre></section>"
+        )
+    else:
+        parts.append(
+            "<section><h2>Original assessment</h2><p>These benchmark-level scores are retained unchanged. "
+            "Input Form and Output Form remain at benchmark level.</p>"
+            "<table><tr><th>Dimension</th><th>Original score</th><th>Original finding</th></tr>"
+        )
+        for dimension, assessment in summary["original_assessment"].items():
+            score = assessment.get("score", "Not supplied") if isinstance(assessment, dict) else "Not supplied"
+            finding = assessment.get("justification", "") if isinstance(assessment, dict) else ""
+            parts.append(f"<tr><td>{_escape(dimension.replace('_', ' ').title())}</td><td>{_escape(score)}</td><td>{_escape(finding)}</td></tr>")
+        parts.append("</table></section>")
     item_by_id = {item["item_id"]: item for item in items}
     for classifier in summary["classifiers"]:
         parts.append(f"<section><h2>{_escape(classifier['id'])}</h2>")
@@ -382,7 +416,8 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}small{color:#465368
         if classifier.get("required_categories_not_observed"):
             categories = ", ".join(classifier["required_categories_not_observed"])
             parts.append(f"<p>Required categories not observed among classified items: {_escape(categories)}.</p>")
-        parts.append(f"<details><summary>Grounding in the original assessment</summary><pre>{_escape(classifier.get('grounded_in'))}</pre></details>")
+        grounding = "Grounding in explicit deployment requirements" if summary.get("assessment_status") == "not_run" else "Grounding in the original assessment"
+        parts.append(f"<details><summary>{grounding}</summary><pre>{_escape(classifier.get('grounded_in'))}</pre></details>")
         parts.append("<h3>Examples</h3><p><small>First example of each observed label, including unknown. Inspect the CSV for all items.</small></p>")
         seen: set[str] = set()
         for item_id, result in results.items():

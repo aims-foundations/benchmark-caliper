@@ -44,6 +44,9 @@ def model(monkeypatch):
         if "item" not in payload:
             spec = read_json(analysis.FIXTURE_PATH)["classifier_spec"]
             spec["benchmark"], spec["deployment"] = payload["benchmark"], payload["deployment"]
+            if payload.get("analysis_basis") == "deployment_requirements":
+                for classifier in spec["classifiers"]:
+                    classifier["grounded_in"] = ["direct_context.json#/task_requirements", "deployment_description.txt"]
             text = json.dumps(spec)
         else:
             slots = payload["output_schema"]["properties"]["labels"]["properties"]

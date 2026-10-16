@@ -6,6 +6,8 @@ The website source provides two tools: **benchmark validity analysis** and **goa
 
 - `/` — selection between the two tools.
 - `/caliper` — benchmark assessment with an Anthropic key, followed by required item analysis with an OpenAI key.
+- `/caliper?start=items` — enter the item stage using an existing assessment or a new deployment context; no new benchmark assessment or Anthropic key required.
+- `/caliper?start=items&mode=new` — direct item analysis from explicit deployment, task, and answer requirements.
 - `/caliper?demo=mathdial` — free walkthrough of benchmark and item analysis.
 - `/caliper?demo=mathdial&stage=items` — direct entry to the free item walkthrough.
 - `/items` — the separate goal-conditioned item-review demo, using an OpenAI key.
@@ -13,6 +15,34 @@ The website source provides two tools: **benchmark validity analysis** and **goa
 - `/run/{run_id}` — saved benchmark report with the same item-analysis continuation.
 
 All routes work under the production `/benchmark-caliper` prefix.
+
+## Start at item analysis
+
+**Start at item analysis** is another starting point within Benchmark Caliper.
+Users can select a gallery assessment or reopen a saved report and retain its
+original deployment and findings. Links jump to the report's item stage; no
+benchmark model calls are made to open the report.
+
+For a new deployment, users supply the benchmark name, deployment context,
+required tasks/topics, expected answers, and optional validity concerns. The
+website searches the same Measurement Data Bank catalog and requires explicit
+benchmark/snapshot confirmation, or confirmation of an uploaded CSV/JSON file.
+Neither entering context nor searching/confirming requires a key or model call.
+Generating criteria and classifying items require explicit actions and an
+OpenAI key. The full-snapshot continuation also requires pilot review.
+
+Direct criteria use the frozen user requirements, framework, deterministic
+dataset profile, and actual sample items. No benchmark scores or elicitation
+summary are invented. UI and exported artifacts identify the basis as
+deployment requirements and the benchmark assessment as **Not run**. Input Form
+and Output Form remain unassessed. Completing an item snapshot does not claim
+a completed six-dimension benchmark assessment.
+
+Direct context and run access are restored in the same browser tab, separately
+from gallery/run-linked analyses and the free demo. Provider keys are never
+stored by the item workflow. Editing the context starts fresh criteria and
+requires dataset confirmation again; active model phases must finish or stop
+first. The normal full pipeline and free walkthrough remain available.
 
 ## Free pipeline walkthrough
 

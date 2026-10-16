@@ -7,7 +7,7 @@ import { Criteria } from './Criteria'
 import { Results } from './Results'
 import { BenchmarkConfirmation } from './BenchmarkConfirmation'
 import { assessmentStorageKey, restoreAccess } from './accessStorage'
-import type { AnalysisRun, Artifact, AssessmentReference, AssessmentSetup, Catalog, ConfirmedDataset, Example, RunAccess, RunScope, SpecificationMode } from './types'
+import type { AnalysisRun, Artifact, AssessmentReference, AssessmentSetup, Catalog, ConfirmedDataset, DirectContext, Example, RunAccess, RunScope, SpecificationMode } from './types'
 import './itemAnalysis.css'
 
 const ACTIVE_STATUSES = ['preparing', 'generating', 'running']
@@ -35,6 +35,9 @@ function DatasetSource({ example }: { example: Example }) {
 
 interface Props {
   assessment?: AssessmentReference
+  directContext?: DirectContext
+  initialSetup?: AssessmentSetup
+  onEditContext?: () => void
   onStatusChange?: (status: 'pending' | 'in_progress' | 'complete') => void
 }
 
@@ -42,10 +45,10 @@ export function ItemAnalysis(props: Props) {
   return <AnalysisView key={props.assessment ? `${props.assessment.kind}:${props.assessment.id}` : 'legacy'} {...props} />
 }
 
-function AnalysisView({ assessment, onStatusChange }: Props) {
+function AnalysisView({ assessment, directContext, initialSetup, onEditContext, onStatusChange }: Props) {
   const storageKey = assessmentStorageKey(assessment)
   const [catalog, setCatalog] = useState<Catalog | null>(null)
-  const [setup, setSetup] = useState<AssessmentSetup | null>(null)
+  const [setup, setSetup] = useState<AssessmentSetup | null>(initialSetup || null)
   const [confirmedDataset, setConfirmedDataset] = useState<ConfirmedDataset | null>(null)
   const [exampleId, setExampleId] = useState('')
   const [mode, setMode] = useState<SpecificationMode>('generate')
@@ -61,6 +64,8 @@ function AnalysisView({ assessment, onStatusChange }: Props) {
   const [catalogVersion, setCatalogVersion] = useState(0)
   const [downloading, setDownloading] = useState<Artifact | null>(null)
   const [privacyOpen, setPrivacyOpen] = useState(false)
+  const [pilotReviewed, setPilotReviewed] = useState(false)
+  const direct = assessment?.kind === 'direct'
 
   useEffect(() => {
     if (assessment) return
@@ -77,16 +82,20 @@ function AnalysisView({ assessment, onStatusChange }: Props) {
   }, [catalogVersion, assessment?.kind, assessment?.id])
 
   useEffect(() => {
-    if (!assessment || access) return
+    if (!assessment || access || setup) return
     const controller = new AbortController()
-    api.getAssessment(assessment, controller.signal).then(value => {
+    const request = directContext ? api.getDirectSetup(directContext, '', controller.signal) : api.getAssessment(assessment, controller.signal)
+    request.then(value => {
       if (controller.signal.aborted) return
+      if (value.assessment.kind !== assessment.kind || value.assessment.id !== assessment.id) {
+        throw new api.AnalysisApiError('The context has changed. Edit the context to start a new item analysis.', 409)
+      }
       setSetup(value)
     }).catch(problem => {
       if (!controller.signal.aborted) setError(problem instanceof Error ? problem.message : 'Could not load the benchmark assessment.')
     })
     return () => controller.abort()
-  }, [assessment?.kind, assessment?.id, access, catalogVersion])
+  }, [assessment?.kind, assessment?.id, access, catalogVersion, setup, directContext])
 
   useEffect(() => {
     const complete = run?.status === 'complete' && run.total > 0 && run.complete === run.total && run.errors === 0
@@ -135,9 +144,14 @@ function AnalysisView({ assessment, onStatusChange }: Props) {
     setBusy(true)
     setError('')
     try {
-      const result = assessment
+      const result = directContext
+        ? await api.createDirectRun(directContext, confirmedDataset!, apiKey.trim())
+        : assessment
         ? await api.createAssessmentRun(assessment, confirmedDataset!, apiKey.trim())
         : await api.createRun(exampleId, mode, mode === 'generate' ? apiKey.trim() : '')
+      if (assessment && (result.assessment?.kind !== assessment.kind || result.assessment.id !== assessment.id)) {
+        throw new api.AnalysisApiError('The returned item analysis does not match this context. Confirm the context again.', 409)
+      }
       const nextAccess = { run_id: result.run_id, run_secret: result.run_secret }
       // Persist only the run's access token. API keys never enter browser storage.
       try { sessionStorage.setItem(storageKey, JSON.stringify(nextAccess)) } catch { /* The current tab can still use the run. */ }
@@ -157,10 +171,13 @@ function AnalysisView({ assessment, onStatusChange }: Props) {
 
   async function classify(scope: RunScope) {
     if (!access || !apiKey.trim() || busy) return
+    if (direct && scope === 'all' && !pilotReviewed) return
     setBusy(true)
     setError('')
     try {
-      setRun(await api.classify(access, scope, apiKey.trim()))
+      setRun(await (direct && scope === 'all'
+        ? api.classify(access, scope, apiKey.trim(), pilotReviewed)
+        : api.classify(access, scope, apiKey.trim())))
       setPage(1)
       setPollVersion(value => value + 1)
     } catch (problem) { setError(problem instanceof Error ? problem.message : 'Could not start classification.') }
@@ -189,6 +206,7 @@ function AnalysisView({ assessment, onStatusChange }: Props) {
     setError('')
     setPollError('')
     setPage(1)
+    setPilotReviewed(false)
   }
 
   async function download(artifact: Artifact) {
@@ -227,8 +245,11 @@ function AnalysisView({ assessment, onStatusChange }: Props) {
     </div></header></>}
 
     <section id={assessment ? 'item-analysis' : undefined} className={assessment ? 'ia-main' : 'rd-container ia-main'} aria-label="Item analysis">
-      {assessment && <div className="ia-integrated-heading"><p className="ia-eyebrow">Next pipeline stage</p><h2>Item analysis</h2>
-        <p>Apply the findings above to the benchmark’s items. Review the criteria and initial classifications, then complete the full dataset to finish this assessment.</p></div>}
+      {assessment && <div className="ia-integrated-heading"><p className="ia-eyebrow">{direct ? 'Starting from your requirements' : 'Next pipeline stage'}</p><h2>Item analysis</h2>
+        <p>{direct ? 'Generate item criteria from your deployment, task, and answer requirements. Review a pilot before classifying the full dataset.' : 'Apply the findings above to the benchmark’s items. Review the criteria and initial classifications, then complete the full dataset to finish this assessment.'}</p>
+        {direct && <p className="ia-assessment-not-run"><strong>Benchmark assessment: Not run.</strong> This path analyzes items against your requirements and does not produce benchmark-level validity scores.</p>}
+        {onEditContext && <button type="button" className="ia-text-button" disabled={busy || active} onClick={onEditContext}>Edit context and start again</button>}
+      </div>}
       <ol className="ia-steps" aria-label="Item analysis steps">{[assessment ? 'Confirm the benchmark' : 'Choose a context', 'Review the criteria', 'Classify and inspect'].map((label, index) =>
         <li key={label} aria-current={stage === index ? 'step' : undefined} data-done={stage > index || undefined}><span>{index + 1}</span>{label}</li>)}</ol>
       {(error || pollError) && <div className="ia-error" role="alert"><p>{error || pollError}</p>
@@ -239,10 +260,10 @@ function AnalysisView({ assessment, onStatusChange }: Props) {
 
       {assessment && !access && setup && <form className="ia-panel ia-linked-setup" onSubmit={start} aria-busy={busy}>
         <h3>Continue with {setup.assessment.benchmark_name || setup.assessment.benchmark}</h3>
-        <p>The scores and deployment context from this report will be used to generate the item criteria.</p>
-        <details className="ia-context"><summary>Deployment context carried forward</summary><p>{setup.assessment.deployment}</p></details>
+        <p>{direct ? 'Your deployment, task requirements, and answer requirements will be used to generate the item criteria.' : 'The scores and deployment context from this report will be used to generate the item criteria.'}</p>
+        <details className="ia-context"><summary>{direct ? 'Context and requirements' : 'Deployment context carried forward'}</summary><p>{setup.assessment.deployment}</p></details>
         <fieldset className="ia-linked-controls" disabled={busy}>
-        <BenchmarkConfirmation assessment={assessment} setup={setup} confirmed={confirmedDataset} onConfirm={dataset => { setConfirmedDataset(dataset); if (dataset) setError('') }} />
+        <BenchmarkConfirmation assessment={assessment} setup={setup} directContext={directContext} confirmed={confirmedDataset} onConfirm={dataset => { setConfirmedDataset(dataset); if (dataset) setError('') }} />
         {confirmedDataset && <div className="ia-confirmed-next-step">
           <KeyInput value={apiKey} onChange={setApiKey} />
           <button className="ia-primary" type="submit" disabled={busy || !apiKey.trim()}>{busy ? 'Starting…' : 'Generate item criteria'}<span aria-hidden="true"> →</span></button>
@@ -280,10 +301,10 @@ function AnalysisView({ assessment, onStatusChange }: Props) {
       {access && !run && !pollError && <p role="status">Restoring your analysis…</p>}
       {run && <div className="ia-run">
         <section className="ia-panel ia-run-status" aria-label="Run progress"><div className="ia-section-heading"><div>
-          <p className="ia-eyebrow">{run.example.title}</p><h2>{incompleteResults ? 'Some items still need classification' : runTitle(run)}</h2></div>
+          <p className="ia-eyebrow">{run.example.title}</p><h2>{incompleteResults ? 'Some items still need classification' : direct && run.status === 'complete' ? 'Item analysis complete' : runTitle(run)}</h2></div>
           <span className={`ia-tag ${active ? 'ia-tag-active' : ''}`}>{active ? 'In progress' : run.status === 'checkpoint' ? 'Review checkpoint' : incompleteResults ? 'Incomplete' : run.status === 'complete' ? 'Finished' : 'Your analysis'}</span></div>
           <p className="ia-muted" role="status">{run.message}</p>
-          {run.status === 'checkpoint' && <p className="ia-small">Inspect the labels and evidence below, then continue through all remaining items to complete the assessment. To regenerate the criteria, start a new item analysis so all items use the same instructions.</p>}
+          {run.status === 'checkpoint' && <p className="ia-small">Inspect the labels and evidence below, then continue through all remaining items to complete the {direct ? 'item analysis' : 'assessment'}. To regenerate the criteria, start a new item analysis so all items use the same instructions.</p>}
           {run.status === 'running' && <><progress max={run.scope === 'pilot' ? pilotSize : run.total} value={run.processed} aria-label="Classification progress" />
             <p className="ia-small">{run.processed.toLocaleString()} processed · {run.complete.toLocaleString()} classified · {run.errors.toLocaleString()} failed · {run.total.toLocaleString()} in snapshot</p></>}
           {run.error && <p className="ia-error">{run.error}</p>}
@@ -297,13 +318,14 @@ function AnalysisView({ assessment, onStatusChange }: Props) {
             <p className="ia-small">Model usage: {(run.usage?.input_tokens || 0).toLocaleString()} input tokens · {(run.usage?.output_tokens || 0).toLocaleString()} output tokens.</p></details>
         </section>
 
-        {run.spec && <Criteria spec={run.spec} metadata={run.summary?.specification} />}
+        {run.spec && <Criteria spec={run.spec} metadata={run.summary?.specification} direct={direct} />}
 
         {canClassify && <form className="ia-classify-panel" onSubmit={event => { event.preventDefault(); void classify(scope) }}>
           <div><p className="ia-eyebrow">{scope === 'all' ? 'Complete the snapshot' : 'Try the criteria'}</p>
             <h2>{scope === 'all' ? 'Classify the remaining items' : `Classify ${pilotSize < run.total ? `the first ${pilotSize}` : `all ${pilotSize}`} items`}</h2>
             <p className="ia-small">{scope === 'all' ? 'Continue with the same criteria. Completed judgments are preserved.' : pilotSize < run.total ? 'The run pauses after this pilot for your review.' : 'This small example fits in a single run.'} Up to {remaining.toLocaleString()} paid GPT-6 Luna item requests; malformed responses may be retried.</p></div>
-          <div><KeyInput value={apiKey} onChange={setApiKey} /><button type="submit" className="ia-primary" disabled={busy || !apiKey.trim()}>
+          <div>{direct && scope === 'all' && <label className="ia-pilot-review"><input type="checkbox" checked={pilotReviewed} onChange={event => setPilotReviewed(event.target.checked)} /><span>I have reviewed the pilot labels, evidence, and criteria</span></label>}
+            <KeyInput value={apiKey} onChange={setApiKey} /><button type="submit" className="ia-primary" disabled={busy || !apiKey.trim() || (direct && scope === 'all' && !pilotReviewed)}>
             {busy ? 'Starting…' : scope === 'all' ? 'Continue through all items' : ['cancelled', 'failed'].includes(run.status) ? 'Resume classification' : `Classify ${pilotSize} items with GPT-6 Luna`}</button></div>
         </form>}
 

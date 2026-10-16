@@ -11,6 +11,26 @@ This file documents the website's security posture **as actually implemented in 
 
 Items that depend on the deployed infrastructure (TLS, DNS, hosting accounts, monitoring) live in [Pre-launch verification](#pre-launch-verification) at the bottom — these must be checked off before a public domain is pointed at the service.
 
+## Direct entry to item analysis
+
+The `/caliper?start=items` entry can reuse an existing report or accept new
+deployment requirements without creating a benchmark run. `POST
+/api/item-analysis/direct/setup` validates context and searches public catalog
+metadata without calling a model or persisting a server job. Context is sent in
+the request body, never the URL. The accepted context is kept in this tab's
+session storage; its deterministic identifier is a context fingerprint, not
+an authorization credential.
+
+`POST /api/item-analysis/runs/from-context` requires explicit dataset
+confirmation, a current pinned source revision or a validated upload, and an
+OpenAI key before generating criteria. It uses the existing private run token,
+capacity limits, worker lifecycle, credential handling, and one-hour retention.
+Direct full-snapshot continuation requires a pilot-review acknowledgment.
+The frozen evidence records requirements without synthesizing benchmark scores.
+Changing the context creates a distinct run scope; gallery and demo run tokens
+are not reused. Saved report links are resolved to local report routes, not
+fetched as arbitrary remote URLs.
+
 ## Free MathDial walkthrough
 
 The explicit `?demo=mathdial` routes use bundled benchmark scores and a small

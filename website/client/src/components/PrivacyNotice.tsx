@@ -56,12 +56,18 @@ export function PrivacyNotice({ onClose }: Props) {
         You can revoke it with OpenAI at any time.
       </p>
       <p>
-        Assessment context and dataset items are sent to OpenAI to generate
+        Assessment context or direct deployment requirements, together with dataset items, are sent to OpenAI to generate
         criteria and classify items. Source items, criteria, and results are
         private to the item-analysis run and expire one hour after it ends or
         when the server restarts. A run access token is saved in this tab's
         session storage so you can return to the results. Download the files
         you need before they expire.
+      </p>
+      <p>
+        If you start directly with a new deployment context, the accepted
+        requirements are also kept in this tab's session storage for restoration
+        after a refresh. Searching for matching datasets makes no model calls.
+        Editing the context starts a new item analysis.
       </p>
 
       <h3>Your email address (auto mode)</h3>

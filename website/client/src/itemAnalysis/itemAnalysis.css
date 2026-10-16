@@ -249,3 +249,4 @@
   .ia-source-search { flex-direction: column; align-items: stretch; }
   .ia-source-facts { grid-template-columns: 1fr; }
 }
+.ia-direct-start{max-width:900px;margin:0 auto}.ia-direct-form{display:grid;gap:1rem}.ia-direct-form h2,.ia-direct-form p{margin:0}.ia-direct-form textarea{resize:vertical;min-height:6rem}.ia-assessment-not-run{padding:.9rem 1rem;background:var(--ia-surface,#f6f4ef);border-left:3px solid #8a765c}.ia-pilot-review{display:flex;align-items:flex-start;gap:.6rem;margin-bottom:1rem;line-height:1.5}.ia-pilot-review input{margin-top:.3rem;flex-shrink:0}

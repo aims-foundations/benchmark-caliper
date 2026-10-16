@@ -79,7 +79,8 @@ export function Results({ run, page, setPage, onDownload, downloading, pageLoadi
       </article>)}</div>
     </>}
 
-    {!!summary?.original_assessment && <details className="ia-original"><summary>Original six-dimension assessment</summary>
+    {run.assessment?.kind === 'direct' && <div className="ia-original"><strong>Benchmark assessment: Not run.</strong><p className="ia-small">These item judgments use the supplied deployment, task, and answer requirements. No benchmark-level validity scores were generated.</p></div>}
+    {run.assessment?.kind !== 'direct' && !!summary?.original_assessment && <details className="ia-original"><summary>Original six-dimension assessment</summary>
       <p className="ia-small">These are the original benchmark-level judgments. Item statistics do not change these scores.</p>
       <div className="ia-original-grid">{DIMENSIONS.map(dimension => {
         const assessment = summary.original_assessment?.[dimension]

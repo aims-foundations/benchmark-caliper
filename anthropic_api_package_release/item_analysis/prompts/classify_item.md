@@ -25,9 +25,11 @@ Do not reconstruct an unavailable reference answer or pretend to inspect media
 from a filename or URL. An asset path is evidence of an asset reference, not its
 contents. A subject tag can provide context but does not prove item relevance.
 
-The prior assessment and examples motivate the criteria; they are not proof of
-this item's label. Do not repeat an earlier concern unless this item supports
-it. Do not infer regional preferences, knowledge, or disagreement from nationality
+The explicit deployment requirements, examples, and any prior assessment
+motivate the criteria; they are not proof of this item's label. A direct item
+analysis has no prior benchmark assessment. Do not invent prior findings or
+repeat a concern unless this item supports it. Do not infer regional
+preferences, knowledge, or disagreement from nationality
 alone. Never conflate an out-of-scope topic with a disputed answer. In particular,
 a question explicitly about a foreign jurisdiction may have an uncontroversially
 correct answer under its stated assumptions even when irrelevant to deployment.

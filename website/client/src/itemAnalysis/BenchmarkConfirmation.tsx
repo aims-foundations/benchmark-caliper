@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { searchSources } from './api'
-import type { AssessmentReference, AssessmentSetup, AssessmentSource, ConfirmedDataset } from './types'
+import { getDirectSetup, searchSources } from './api'
+import type { AssessmentReference, AssessmentSetup, AssessmentSource, ConfirmedDataset, DirectContext } from './types'
 
 interface Props {
   assessment: AssessmentReference
   setup: AssessmentSetup
   confirmed: ConfirmedDataset | null
   onConfirm: (dataset: ConfirmedDataset | null) => void
+  directContext?: DirectContext
 }
 
 const MATCH_LABELS = { identifier: 'Identifier match', exact_name: 'Name match', related_name: 'Related name', search: 'Search result' }
@@ -30,7 +31,7 @@ function SourceDetails({ source }: { source: AssessmentSource }) {
 }
 
 /** Read-only discovery and explicit confirmation, before any model request. */
-export function BenchmarkConfirmation({ assessment, setup, confirmed, onConfirm }: Props) {
+export function BenchmarkConfirmation({ assessment, setup, confirmed, onConfirm, directContext }: Props) {
   const initialSource = setup.sources.find(source => source.available && source.source_revision) || setup.sources[0]
   const [datasetMode, setDatasetMode] = useState<'source' | 'upload'>(initialSource ? 'source' : 'upload')
   const [sources, setSources] = useState(setup.sources)
@@ -75,7 +76,9 @@ export function BenchmarkConfirmation({ assessment, setup, confirmed, onConfirm 
     const controller = new AbortController()
     request.current = controller
     try {
-      const result = await searchSources(assessment, query.trim(), controller.signal)
+      const result = directContext
+        ? await getDirectSetup(directContext, query.trim(), controller.signal)
+        : await searchSources(assessment, query.trim(), controller.signal)
       if (controller.signal.aborted) return
       setSources(result.sources)
       setCatalog(result.catalog)
@@ -95,9 +98,9 @@ export function BenchmarkConfirmation({ assessment, setup, confirmed, onConfirm 
 
   return <div className="ia-benchmark-confirmation">
     <h3>Confirm the benchmark and snapshot</h3>
-    <p>We look for the assessed benchmark in the Measurement Data Bank. Review the identity and snapshot before confirming, including when a match is exact.</p>
+    <p>We look for {directContext ? 'your benchmark' : 'the assessed benchmark'} in the Measurement Data Bank. Review the identity and snapshot before confirming, including when a match is exact.</p>
     <div className="ia-detected-benchmark">
-      <p className="ia-eyebrow">Benchmark detected from the assessment</p><strong>{originalName}</strong>
+      <p className="ia-eyebrow">{directContext ? 'Benchmark you specified' : 'Benchmark detected from the assessment'}</p><strong>{originalName}</strong>
       {identity.name !== originalName && <p className="ia-small">Short name: {identity.name}</p>}
       <dl className="ia-source-facts">
         <div><dt>Paper year</dt><dd>{identity.year || 'Not recorded'}</dd></div>
@@ -145,7 +148,7 @@ export function BenchmarkConfirmation({ assessment, setup, confirmed, onConfirm 
     <div className="ia-confirm-benchmark">
       {datasetMode === 'upload'
         ? <p>Confirm that <strong>{file?.name || 'your uploaded file'}</strong> contains items from <strong>{originalName}</strong> and the version and split you intend to analyze. Uploaded file metadata has not been verified against the Data Bank.</p>
-        : <p>Confirm that <strong>{source?.title || 'the selected result'}</strong> is the benchmark assessed above and that this is the snapshot you intend to analyze. Check the version, testing scope, and split; missing metadata is shown as “Not recorded.”</p>}
+        : <p>Confirm that <strong>{source?.title || 'the selected result'}</strong> is the benchmark {directContext ? 'you specified' : 'assessed above'} and that this is the snapshot you intend to analyze. Check the version, testing scope, and split; missing metadata is shown as “Not recorded.”</p>}
       <button type="button" className="ia-primary" disabled={!canConfirm || !!confirmed} onClick={confirm}>Confirm benchmark</button>
       <p className="ia-small">Searching and confirming do not make paid model calls.</p>
       {confirmed && <p className="ia-confirmed" role="status">Benchmark and {datasetMode === 'upload' ? 'uploaded file' : 'snapshot'} confirmed. Generate the item criteria below when ready.</p>}

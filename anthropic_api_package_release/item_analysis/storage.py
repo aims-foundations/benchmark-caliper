@@ -60,6 +60,15 @@ def check_prepared(directory: Path) -> dict:
         raise ValueError("Assessment evidence changed; prepare a new run directory")
     if evidence["benchmark"] != dataset["benchmark"]:
         raise ValueError("Assessment and dataset benchmark differ")
+    if dataset.get("analysis_basis") == "deployment_requirements":
+        if (file_sha256(directory / "direct_context.json") != dataset.get("direct_context_sha256")
+                or read_json(directory / "direct_context.json") != evidence.get("direct_context")):
+            raise ValueError("Direct deployment requirements changed; prepare a new run directory")
+        if (evidence.get("analysis_basis") != "deployment_requirements"
+                or evidence.get("assessment_status") != "not_run"
+                or dataset.get("assessment_status") != "not_run"
+                or "scoring" in evidence):
+            raise ValueError("Direct item analysis cannot include a benchmark assessment")
     return dataset
 
 

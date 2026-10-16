@@ -202,8 +202,8 @@ def resolve(kind: str, assessment_id: str) -> dict:
 def public_assessment(assessment: dict) -> dict:
     return {key: assessment[key] for key in (
         "kind", "id", "benchmark", "benchmark_name", "deployment", "elicitation_summary", "scoring",
-        "benchmark_identity",
-    )}
+        "benchmark_identity", "direct_context", "analysis_basis", "assessment_status",
+    ) if key in assessment}
 
 
 def _name(value: str) -> str:

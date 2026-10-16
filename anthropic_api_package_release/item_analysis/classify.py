@@ -22,6 +22,8 @@ def classification_request(item, spec, deployment, prompt, *, max_tokens=4096,
         "deployment": deployment, "contextualized_deployment": spec["deployment"],
         "classifiers": classifiers, "item": item, "output_schema": labels_schema(spec),
     }
+    if spec.get("analysis_basis") == "deployment_requirements":
+        payload.update(analysis_basis="deployment_requirements", assessment_status="not_run")
     return {"model": model_id, "reasoning_effort": reasoning_effort, "system": prompt,
             "user": json.dumps(payload, ensure_ascii=False, allow_nan=False),
             "max_tokens": max_tokens, "step": "item_classification"}

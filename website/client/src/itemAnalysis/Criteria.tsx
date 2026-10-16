@@ -18,11 +18,11 @@ export function labelName(classifier: Classifier, label: string | number | null)
   return readable(String(label))
 }
 
-export function Criteria({ spec, metadata, classifierNames }: { spec: Specification; metadata?: AnalysisSummary['specification']; classifierNames?: Record<string, string> }) {
+export function Criteria({ spec, metadata, classifierNames, direct = false }: { spec: Specification; metadata?: AnalysisSummary['specification']; classifierNames?: Record<string, string>; direct?: boolean }) {
   return <section className="ia-criteria" aria-label="Classification criteria">
     <div className="ia-section-heading"><div><p className="ia-eyebrow">The questions we ask</p>
       <h2>Review the criteria</h2></div><span>{spec.classifiers.filter(c => c.applicable).length} active classifiers</span></div>
-    <p className="ia-muted">Open a criterion to see exactly how each item will be judged. Input Form and Output Form stay in the original benchmark assessment.</p>
+    <p className="ia-muted">Open a criterion to see exactly how each item will be judged. {direct ? 'Input Form and Output Form are not assessed in this path.' : 'Input Form and Output Form stay in the original benchmark assessment.'}</p>
     <details className="ia-original"><summary>Criteria context and preparation notes</summary>
       <p><strong>Deployment used by these criteria</strong></p><p>{spec.deployment}</p>
       {metadata?.deployment_text_matches === false && <p className="ia-small">This supplied specification describes the deployment in different words. Compare it with the original deployment in “Context and usage” above.</p>}
@@ -34,14 +34,14 @@ export function Criteria({ spec, metadata, classifierNames }: { spec: Specificat
         <span className={`ia-tag ${classifier.applicable ? '' : 'ia-tag-muted'}`}>{classifier.applicable ? { assignment: 'Category', ordinal: 'Regional fit', flag: 'Yes / no' }[classifier.operation] : 'Not applicable'}</span>
       </summary>
       <div className="ia-criterion-body">
-        <p>{classifier.applicable ? classifier.criterion : classifier.na_reason || 'Assessed at benchmark level.'}</p>
+        <p>{classifier.applicable ? classifier.criterion : classifier.na_reason || (direct ? 'Not assessed in this item analysis.' : 'Assessed at benchmark level.')}</p>
         {classifier.applicable && <>
           {classifier.category_set && <div className="ia-label-list">{classifier.category_set.map(category => <span key={category}>{readable(category)}</span>)}</div>}
           {classifier.ordinal_anchors && <dl className="ia-anchors">{Object.entries(classifier.ordinal_anchors).map(([label, anchor]) => <div key={label}><dt>{label}</dt><dd>{anchor}</dd></div>)}</dl>}
           {classifier.positive_class && <p className="ia-small">Flag means: {readable(classifier.positive_class)}.</p>}
           <p className="ia-small">Unknown is allowed when the evidence is insufficient.</p>
         </>}
-        {!!classifier.grounded_in?.length && <details className="ia-nested"><summary>Source findings</summary><ul>{classifier.grounded_in.map((source, i) => <li key={i}>{source}</li>)}</ul></details>}
+        {!!classifier.grounded_in?.length && <details className="ia-nested"><summary>{direct ? 'Source requirements' : 'Source findings'}</summary><ul>{classifier.grounded_in.map((source, i) => <li key={i}>{source}</li>)}</ul></details>}
       </div>
     </details>)}</div>
   </section>

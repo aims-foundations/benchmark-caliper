@@ -1,4 +1,4 @@
-import { useCallback, useState, type FormEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import {
   submitFeedback,
   ApiError,
@@ -162,6 +162,11 @@ export function ScoringView({
 }: Props) {
   const [tab, setTab] = useState<Tab>('table')
   const assessmentKey = `${assessment.kind}:${assessment.id}`
+  useEffect(() => {
+    if (window.location.hash !== '#item-analysis-stage') return
+    const frame = window.requestAnimationFrame(() => document.getElementById('item-analysis-stage')?.scrollIntoView({ block: 'start' }))
+    return () => window.cancelAnimationFrame(frame)
+  }, [assessmentKey])
   const [itemState, setItemState] = useState<{ key: string; status: 'pending' | 'in_progress' | 'complete' }>({ key: assessmentKey, status: 'pending' })
   const itemStatus = itemState.key === assessmentKey ? itemState.status : 'pending'
   const handleItemStatus = useCallback((status: 'pending' | 'in_progress' | 'complete') => {

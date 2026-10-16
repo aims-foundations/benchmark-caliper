@@ -32,7 +32,7 @@ from starlette.background import BackgroundTask
 from anthropic_api_package_release.item_analysis import classify, generate, model_client, prepare, report
 from anthropic_api_package_release.item_analysis.data import file_sha256
 from anthropic_api_package_release.item_analysis.storage import check_prepared, read_json, write_json
-from . import db, item_analysis_assessment, item_analysis_databank, item_analysis_source
+from . import db, item_analysis_assessment, item_analysis_databank, item_analysis_direct, item_analysis_source
 
 router = APIRouter(prefix="/api/item-analysis", tags=["Item analysis"])
 FIXTURE_PATH = Path(__file__).with_name("item_analysis_demo.json")
@@ -61,6 +61,7 @@ class NewRun(BaseModel):
 class Classification(BaseModel):
     model_config = ConfigDict(extra="forbid")
     scope: Literal["pilot", "all"]
+    pilot_review_confirmed: bool = False
 
 
 @dataclass
@@ -368,7 +369,10 @@ def prepare_assessment_job(job: AnalysisJob, upload: dict | None) -> Path:
         item_analysis_databank.prepare_candidate(job.directory, job.source, stopped=job.stopped.is_set)
     else:
         item_analysis_assessment.prepare_upload(job.directory, job.assessment, **upload)
-    item_analysis_assessment.attach_assessment(job.directory, job.assessment, confirmed_source=job.source is not None)
+    if job.assessment["kind"] == "direct":
+        item_analysis_direct.attach_context(job.directory, job.assessment, confirmed_source=job.source is not None)
+    else:
+        item_analysis_assessment.attach_assessment(job.directory, job.assessment, confirmed_source=job.source is not None)
     check_prepared(job.directory)
     dataset = read_json(job.directory / "dataset.json")
     job.example = {**job.example, "benchmark": job.assessment["benchmark"],
@@ -389,7 +393,10 @@ async def initialize(job: AnalysisJob, mode: str, api_key: str | None, upload: d
         if job.stopped.is_set():
             return
         if mode == "generate":
-            job.status, job.message = "generating", "GPT-6 Luna is turning the assessment into item-level classification rules."
+            job.status = "generating"
+            job.message = ("GPT-6 Luna is turning your deployment requirements into item-level classification rules."
+                           if job.assessment and job.assessment["kind"] == "direct" else
+                           "GPT-6 Luna is turning the assessment into item-level classification rules.")
         job.spec = await drained_thread(
             generate.generate_spec, job.directory,
             supplied=supplied if mode == "provided" else None,
@@ -477,7 +484,11 @@ async def assessment_context(response: Response,
                              id: Annotated[str, Query(min_length=1, max_length=160)]) -> dict:
     response.headers["Cache-Control"] = "no-store"
     assessment = item_analysis_assessment.resolve(kind, id)
-    discovery = await drained_thread(item_analysis_databank.search_candidates, assessment)
+    return await setup_context(assessment)
+
+
+async def setup_context(assessment: dict, query: str | None = None) -> dict:
+    discovery = await drained_thread(item_analysis_databank.search_candidates, assessment, query)
     return {
         "assessment": item_analysis_assessment.public_assessment(assessment),
         "benchmark_identity": assessment["benchmark_identity"],
@@ -490,6 +501,14 @@ async def assessment_context(response: Response,
                    "item_id": "Generated from the row number when omitted.",
                    "json_shape": "An array of item objects."},
     }
+
+
+@router.post("/direct/setup")
+async def direct_context(body: item_analysis_direct.DirectSetup, response: Response) -> dict:
+    """Discover datasets without saving context or making provider requests."""
+    response.headers["Cache-Control"] = "no-store"
+    context = item_analysis_direct.DirectContext.model_validate(body.model_dump(exclude={"q"}))
+    return await setup_context(item_analysis_direct.resolve(context), body.q)
 
 
 @router.get("/sources")
@@ -517,10 +536,33 @@ async def create_assessment_run(
     response.headers["Cache-Control"] = "no-store"
     api_key = key_required(x_openai_key)
     assessment = item_analysis_assessment.resolve(assessment_kind, assessment_id)
+    return await create_context_job(assessment, source_id, source_revision, benchmark_confirmed, items_file, api_key)
+
+
+@router.post("/runs/from-context", status_code=202)
+async def create_direct_run(
+        response: Response,
+        context_json: Annotated[str, Form(min_length=1, max_length=300_000)],
+        source_id: Annotated[str | None, Form(max_length=300)] = None,
+        source_revision: Annotated[str | None, Form(max_length=80)] = None,
+        benchmark_confirmed: Annotated[bool, Form()] = False,
+        items_file: Annotated[UploadFile | None, File()] = None,
+        x_openai_key: Annotated[str | None, Header()] = None) -> dict:
+    response.headers["Cache-Control"] = "no-store"
+    api_key = key_required(x_openai_key)
+    assessment = item_analysis_direct.resolve(item_analysis_direct.parse_context(context_json))
+    return await create_context_job(assessment, source_id, source_revision, benchmark_confirmed, items_file, api_key)
+
+
+async def create_context_job(assessment: dict, source_id: str | None, source_revision: str | None,
+                             benchmark_confirmed: bool, items_file: UploadFile | None, api_key: str) -> dict:
+    """Both starting points share dataset confirmation, preparation, and privacy."""
     if not benchmark_confirmed:
         raise HTTPException(400, "Confirm the benchmark identity and selected item snapshot before starting item analysis.")
     if bool(source_id) == bool(items_file):
         raise HTTPException(400, "Select a matching dataset snapshot or upload an item file.")
+    if items_file and source_revision:
+        raise HTTPException(400, "Choose one item source: an uploaded file or a confirmed Data Bank snapshot.")
     upload = None
     source = None
     if items_file:
@@ -555,6 +597,8 @@ async def create_assessment_run(
     directory.mkdir(mode=0o700, parents=True)
     job = AnalysisJob(run_id, secrets.token_urlsafe(32), example, directory,
                       total=example["item_count"], owner_hash=owner, assessment=assessment, source=source)
+    if assessment["kind"] == "direct":
+        job.message = "Preparing the confirmed item snapshot and your deployment requirements."
     jobs[run_id] = job
     job.task = asyncio.create_task(initialize(job, "generate", api_key, upload))
     return {**public_job(job), "run_secret": job.secret}
@@ -607,6 +651,9 @@ async def start_classification(run_id: str, body: Classification, response: Resp
         raise HTTPException(409, "Wait for a valid specification or the current phase to finish.")
     if body.scope == "all" and not job.checkpoint_seen:
         raise HTTPException(409, "Classify and review the first items before continuing across the full snapshot.")
+    if (body.scope == "all" and job.assessment and job.assessment["kind"] == "direct"
+            and not body.pilot_review_confirmed):
+        raise HTTPException(400, "Confirm that you reviewed the pilot judgments and criteria before continuing across the full snapshot.")
     if body.scope == "pilot" and job.scope == "all":
         raise HTTPException(409, "Resume the full-snapshot phase to keep this run's scope consistent.")
     job.owner_hash = reserve_worker(api_key, job)

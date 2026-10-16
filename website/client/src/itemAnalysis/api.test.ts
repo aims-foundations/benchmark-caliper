@@ -1,7 +1,39 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { AnalysisApiError, classify, createAssessmentRun, createRun, download, getAssessment, getRun, searchSources } from './api'
+import { AnalysisApiError, classify, createAssessmentRun, createDirectRun, createRun, download, getAssessment, getDirectSetup, getRun, searchSources } from './api'
 
 afterEach(() => vi.unstubAllGlobals())
+
+const directContext = { benchmark: 'MathDial', deployment: 'India tutoring', task_requirements: 'Arithmetic', answer_requirements: 'Hints' }
+
+it('discovers direct-context sources with no credentials or assessment request', async () => {
+  const fetch = vi.fn().mockResolvedValue(new Response('{}'))
+  vi.stubGlobal('fetch', fetch)
+  await getDirectSetup(directContext, 'test split')
+  expect(fetch).toHaveBeenCalledExactlyOnceWith('/api/item-analysis/direct/setup', expect.objectContaining({
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...directContext, q: 'test split' }),
+  }))
+})
+
+it('binds a direct context to its confirmed dataset while keeping the paid key in the header', async () => {
+  const fetch = vi.fn().mockResolvedValue(new Response('{}'))
+  vi.stubGlobal('fetch', fetch)
+  await createDirectRun(directContext, { benchmark_confirmed: true, source_id: 'databank:sha:mathdial', source_revision: 'sha' }, 'sk-private')
+  const [url, request] = fetch.mock.calls[0]
+  expect(url).toBe('/api/item-analysis/runs/from-context')
+  expect(request.headers).toEqual({ 'X-OpenAI-Key': 'sk-private' })
+  expect(JSON.parse(request.body.get('context_json'))).toEqual(directContext)
+  expect(request.body.get('benchmark_confirmed')).toBe('true')
+  expect(request.body.get('source_revision')).toBe('sha')
+  expect(Array.from(request.body.keys())).not.toContain('assessment_id')
+  expect(Array.from(request.body.values()).join(' ')).not.toContain('sk-private')
+})
+
+it('sends explicit pilot review acknowledgment for direct full classification', async () => {
+  const fetch = vi.fn().mockResolvedValue(new Response('{}'))
+  vi.stubGlobal('fetch', fetch)
+  await classify({ run_id: 'direct-run', run_secret: 'private' }, 'all', 'sk-private', true)
+  expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ scope: 'all', pilot_review_confirmed: true })
+})
 
 it('loads the linked assessment without model calls or credentials', async () => {
   const fetch = vi.fn().mockResolvedValue(new Response('{}'))

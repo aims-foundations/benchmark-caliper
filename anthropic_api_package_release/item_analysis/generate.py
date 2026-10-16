@@ -18,11 +18,16 @@ def generation_request(directory: Path, max_tokens=12000, *, model_id=MODEL_ID,
     evidence = read_json(directory / "evidence.json")
     payload = {
         "benchmark": dataset["benchmark"], "deployment": evidence["deployment"],
+        "analysis_basis": evidence.get("analysis_basis", "benchmark_assessment"),
+        "assessment_status": evidence.get("assessment_status", "complete"),
         "dataset_profile": read_json(directory / "profile.json"),
         "evidence_registry": evidence["registry"],
         "example_items": list(islice(read_items(directory / "items.jsonl"), 8)),
         "output_schema": SPEC_SCHEMA,
     }
+    if evidence.get("analysis_basis") == "deployment_requirements":
+        payload["requirements"] = evidence["requirements"]
+        payload["unassessed_dimensions"] = ["input_form", "output_form"]
     return {
         "model": model_id, "reasoning_effort": reasoning_effort,
         "system": PROMPT_PATH.read_text(encoding="utf-8"),
@@ -35,11 +40,20 @@ def _save_spec(directory, raw_spec, *, source, validate_references):
     dataset = check_prepared(directory)
     profile = read_json(directory / "profile.json")
     evidence = read_json(directory / "evidence.json")
+    direct = evidence.get("analysis_basis") == "deployment_requirements"
     canonical, adjustments = apply_profile_gates(raw_spec, profile)
+    if direct and isinstance(canonical, dict):
+        canonical.update(analysis_basis="deployment_requirements", assessment_status="not_run")
+    elif isinstance(canonical, dict) and any(key in canonical for key in ("analysis_basis", "assessment_status")):
+        raise ValueError("An assessment-linked specification cannot claim direct item-only provenance")
     canonical = validate_spec(
         canonical, profile=profile, benchmark=dataset["benchmark"],
         evidence=evidence["registry"] if validate_references else None,
     )
+    if direct and validate_references:
+        task = next(classifier for classifier in canonical["classifiers"] if classifier["id"] == "IO.task_category")
+        if task["applicable"] and "direct_context.json#/task_requirements" not in task["grounded_in"]:
+            raise ValueError("IO.task_category must cite direct_context.json#/task_requirements; dataset categories are not deployment requirements")
     deployment_matches = canonical["deployment"].strip() == evidence["deployment"].strip()
     if validate_references and not deployment_matches:
         raise ValueError("Generated deployment must copy the supplied deployment text exactly; contextual details belong in classifier criteria")
@@ -60,6 +74,11 @@ def _save_spec(directory, raw_spec, *, source, validate_references):
         "spec_sha256": file_sha256(directory / "classifier_spec.json"),
         "dataset_sha256": file_sha256(directory / "dataset.json"),
     }
+    if direct:
+        metadata.update(analysis_basis="deployment_requirements", assessment_status="not_run",
+                        unassessed_dimensions=["input_form", "output_form"])
+        metadata["note"] += (" This is item-only analysis based on explicit deployment requirements. "
+                             "No benchmark assessment was run; Input Form and Output Form are not assessed.")
     write_json(directory / "specification.json", metadata)
     return canonical
 

@@ -270,7 +270,8 @@ export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boole
     let cancelled = false
     fetchGalleryReport(loadingGalleryId).then((report) => {
       if (cancelled) return
-      window.history.replaceState(null, '', appPath(`/caliper?assessment=${encodeURIComponent(report.id)}`))
+      const itemAnchor = window.location.hash === '#item-analysis-stage' ? '#item-analysis-stage' : ''
+      window.history.replaceState(null, '', appPath(`/caliper?assessment=${encodeURIComponent(report.id)}${itemAnchor}`))
       setPhase({ name: 'viewing-gallery', state: { report } })
     }).catch(() => {
       if (!cancelled) setPhase({ name: 'error', message: 'Could not load that benchmark.' })
@@ -1199,6 +1200,7 @@ export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boole
           </p>
           <div className="hero-actions">
             <a className="rd-btn" href={appPath('/')}>Choose an evaluation</a>
+            {!isDemo && GALLERY_ENABLED_PHASES.has(phase.name) && <a className="rd-btn" href={appPath('/caliper?start=items')}>Start at item analysis</a>}
             {!isDemo && GALLERY_ENABLED_PHASES.has(phase.name) && <button type="button" className="rd-btn" onClick={handleTryDemo}>Try the free demo</button>}
             <a
               className="rd-btn"

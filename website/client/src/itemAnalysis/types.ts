@@ -16,7 +16,14 @@ export interface Example {
 }
 
 export interface Catalog { examples: Example[]; checkpoint_size: number }
-export interface AssessmentReference { kind: 'run' | 'gallery'; id: string }
+export interface AssessmentReference { kind: 'run' | 'gallery' | 'direct'; id: string }
+export interface DirectContext {
+  benchmark: string
+  deployment: string
+  task_requirements: string
+  answer_requirements: string
+  validity_concerns?: string
+}
 export interface AssessmentContext extends AssessmentReference {
   benchmark: string
   benchmark_name?: string
@@ -24,6 +31,9 @@ export interface AssessmentContext extends AssessmentReference {
   elicitation_summary?: string
   scoring?: Record<string, unknown>
   benchmark_identity?: BenchmarkIdentity
+  direct_context?: DirectContext
+  assessment_status?: 'not_run'
+  analysis_basis?: 'deployment_requirements'
 }
 export interface BenchmarkIdentity {
   name: string

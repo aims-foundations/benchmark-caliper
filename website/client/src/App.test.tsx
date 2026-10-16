@@ -863,8 +863,8 @@ describe('App', () => {
     expect(window.location.pathname).toBe('/caliper')
   })
 
-  it('restores the selected gallery assessment after a page refresh', async () => {
-    window.history.replaceState(null, '', '/caliper?assessment=expert__restored')
+  it.each(['', '#item-analysis-stage'])('restores the selected gallery assessment and item entry anchor %s', async anchor => {
+    window.history.replaceState(null, '', `/caliper?assessment=expert__restored${anchor}`)
     globalThis.fetch = vi.fn(async (url: unknown) => new Response(JSON.stringify(
       String(url) === '/api/gallery' ? { benchmarks: [] } : {
         id: 'expert__restored', benchmark_name: 'Restored benchmark', slug: 'restored_context',
@@ -875,6 +875,7 @@ describe('App', () => {
     expect(await screen.findByTestId('item-assessment-reference')).toHaveTextContent('gallery:expert__restored')
     expect(screen.getByText('Benchmark assessment ready · item analysis remains')).toBeInTheDocument()
     expect(globalThis.fetch).toHaveBeenCalledWith('/api/gallery/expert__restored')
+    expect(window.location.hash).toBe(anchor)
   })
 
   it('explains the merged workflow to visitors using the legacy item-analysis link', () => {

@@ -1,5 +1,6 @@
 import { App } from './App'
 import { ItemReview } from './itemReview/ItemReview'
+import { ItemAnalysisEntry } from './ItemAnalysisEntry'
 import { SiteHeader } from './components/SiteHeader'
 import { SiteFooter } from './components/SiteFooter'
 import { appPath, stripBasePath } from './paths'
@@ -8,6 +9,8 @@ export function EvaluationSite() {
   const path = stripBasePath(window.location.pathname).replace(/\/+$/, '') || '/'
   if (path === '/items') return <ItemReview />
   if (path === '/item-analysis') return <App legacyItemAnalysis />
+  if (path === '/caliper' && new URLSearchParams(window.location.search).get('start') === 'items'
+      && !new URLSearchParams(window.location.search).has('assessment') && !new URLSearchParams(window.location.search).has('demo')) return <ItemAnalysisEntry />
   if (path === '/caliper' || path.startsWith('/run/')) return <App />
   return (
     <div className="rd-root evaluation-site">
@@ -59,6 +62,7 @@ export function EvaluationSite() {
           <dl className="evaluation-outcome"><div><dt>Input</dt><dd>Benchmark paper, deployment context, and matching dataset</dd></div><div><dt>Output</dt><dd>Six-dimensional assessment and issue prevalence with inspectable items</dd></div></dl>
           <div className="evaluation-choice-actions">
             <a className="evaluation-choice-link" href={appPath('/caliper')}>Analyze a benchmark <span aria-hidden="true">→</span></a>
+            <a className="evaluation-choice-link" href={appPath('/caliper?start=items')}>Start at item analysis <span aria-hidden="true">→</span></a>
             <a className="evaluation-choice-link" href={appPath('/caliper?demo=mathdial')}>Try the free demo <span aria-hidden="true">→</span></a>
           </div>
         </article>

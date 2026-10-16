@@ -103,6 +103,10 @@ SPEC_SCHEMA = {
     "properties": {
         "benchmark": _TEXT,
         "deployment": _TEXT,
+        # Added by preparation for direct entry, never inferred by the model.
+        # Older assessment-linked specifications retain their original shape.
+        "analysis_basis": {"const": "deployment_requirements"},
+        "assessment_status": {"const": "not_run"},
         # The profile can contain the complete deterministic counts/dtypes or
         # the older pilot's summary. Runtime gates use the actual profile.
         "dataset_profile": {"type": "object"},
@@ -112,6 +116,10 @@ SPEC_SCHEMA = {
         },
     },
     "required": ["benchmark", "deployment", "dataset_profile", "classifiers"],
+    "dependentRequired": {
+        "analysis_basis": ["assessment_status"],
+        "assessment_status": ["analysis_basis"],
+    },
     "additionalProperties": False,
 }
 

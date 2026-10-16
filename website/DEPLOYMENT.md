@@ -10,6 +10,21 @@ the required item-analysis stage. Existing `/run/{run_id}` report links provide
 the same continuation; `/item-analysis` is a compatibility entry into the main
 Caliper flow. No second service or AIMS proxy change is required.
 
+## Direct item-entry verification
+
+Open `/caliper?start=items`. Confirm that gallery and saved-report links reach
+the selected report's item section without requesting an Anthropic key. In
+the new-context path, entering requirements and searching/confirming a Data Bank
+source or upload must make no model calls. Criterion generation and each
+classification phase require explicit user action and an OpenAI key.
+
+Verify same-tab restoration without key storage, context edits invalidating
+confirmation/criteria, the pilot-review requirement, and downloads carrying
+`analysis_basis=deployment_requirements` and `assessment_status=not_run`.
+Use mocked model responses for automated end-to-end verification; no live paid
+calls are needed to validate deployment. This uses the existing service and
+Data Bank configuration, with no new hosting service or credential required.
+
 ## Free walkthrough verification
 
 Open `/caliper?demo=mathdial` without saved API keys and follow the full demo,
