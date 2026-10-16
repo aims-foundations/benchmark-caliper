@@ -1,5 +1,6 @@
 """Generate a classifier specification once, or import a reviewed specification."""
 
+from copy import deepcopy
 from itertools import islice
 import json
 from pathlib import Path
@@ -12,10 +13,60 @@ from .storage import check_prepared, parse_response, read_json, run_lock, write_
 PROMPT_PATH = Path(__file__).parent / "prompts" / "generate_spec.md"
 
 
+_VALIDATION_MESSAGES = {
+    "invalid_json": "The model returned invalid JSON after one repair. No items were classified; start a new analysis to generate the rules again.",
+    "schema": "The model returned classifier rules that still failed the required format after one repair. No items were classified; start a new analysis.",
+    "evidence": "The generated classifier rules cited evidence outside the supplied context after one repair. No items were classified; start a new analysis.",
+    "deployment": "The generated classifier rules changed the supplied deployment text after one repair. No items were classified; start a new analysis.",
+    "provenance": "The generated classifier rules misstated whether a benchmark assessment was run after one repair. No items were classified; start a new analysis.",
+    "task_grounding": "The generated task categories did not cite your task requirements after one repair. No items were classified; start a new analysis.",
+}
+
+
+class SpecificationValidationError(ValueError):
+    """Exhausted structural repair with a fixed, context-free public diagnostic."""
+
+    def __init__(self, *, code="schema"):
+        self.code = code if isinstance(code, str) and code in _VALIDATION_MESSAGES else "schema"
+        self.public_message = _VALIDATION_MESSAGES[self.code]
+        super().__init__("Specification failed validation after one repair; inspect generation_attempts.json")
+
+
+def _validation_code(error: ValueError) -> str:
+    """Classify validator-owned messages without exposing their model values."""
+    message = str(error)
+    if isinstance(error, json.JSONDecodeError) or message == "Expected JSON or one complete JSON code block":
+        return "invalid_json"
+    if message == "An assessment-linked specification cannot claim direct item-only provenance":
+        return "provenance"
+    if message.startswith("IO.task_category must cite direct_context.json#/task_requirements;"):
+        return "task_grounding"
+    if message.startswith("Generated deployment must copy the supplied deployment text exactly;"):
+        return "deployment"
+    # Schema errors can quote arbitrary model text. Only classify the exact
+    # validator prefix, never matching phrases inside that quoted text.
+    if message.startswith("Invalid classifier specification at "):
+        return "schema"
+    if any(message.startswith(f"{slot}: unknown evidence identifiers: ") for slot in (
+        "IO.task_category", "OO.output_category", "OO.value_encoding",
+        "IC.region_fit", "OC.label_contestability",
+    )):
+        return "evidence"
+    return "schema"
+
+
 def generation_request(directory: Path, max_tokens=12000, *, model_id=MODEL_ID,
                        reasoning_effort=REASONING_EFFORT) -> dict:
     dataset = check_prepared(directory)
     evidence = read_json(directory / "evidence.json")
+    output_schema = deepcopy(SPEC_SCHEMA)
+    if evidence.get("analysis_basis") != "deployment_requirements":
+        # The stored specification schema also supports direct entry. A linked
+        # assessment must not advertise provenance fields that its validator
+        # correctly rejects, even though those fields are optional in storage.
+        for field in ("analysis_basis", "assessment_status"):
+            output_schema["properties"].pop(field)
+        output_schema.pop("dependentRequired")
     payload = {
         "benchmark": dataset["benchmark"], "deployment": evidence["deployment"],
         "analysis_basis": evidence.get("analysis_basis", "benchmark_assessment"),
@@ -23,7 +74,7 @@ def generation_request(directory: Path, max_tokens=12000, *, model_id=MODEL_ID,
         "dataset_profile": read_json(directory / "profile.json"),
         "evidence_registry": evidence["registry"],
         "example_items": list(islice(read_items(directory / "items.jsonl"), 8)),
-        "output_schema": SPEC_SCHEMA,
+        "output_schema": output_schema,
     }
     if evidence.get("analysis_basis") == "deployment_requirements":
         payload["requirements"] = evidence["requirements"]
@@ -131,7 +182,7 @@ def generate_spec(directory: Path, *, supplied: Path | None = None, dry_run=Fals
                 attempts.append(entry)
                 write_json(directory / "generation_attempts.json", attempts)
                 if attempt:
-                    raise ValueError("Specification failed validation after one repair; inspect generation_attempts.json") from exc
+                    raise SpecificationValidationError(code=_validation_code(exc)) from exc
             else:
                 attempts.append(entry)
                 write_json(directory / "generation_attempts.json", attempts)

@@ -170,5 +170,6 @@ export interface AnalysisRun {
   model?: { provider: string; model_id: string; reasoning_effort: string }
   can_continue: boolean
   error?: string
+  failure?: { stage: string; code: string; message: string } | null
   scope: RunScope | null
 }

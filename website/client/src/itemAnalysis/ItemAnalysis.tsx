@@ -234,6 +234,7 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
   const scope: RunScope = run?.can_continue ? 'all' : 'pilot'
   const remaining = run ? Math.max(0, (scope === 'all' ? run.total : pilotSize) - run.complete) : pilotSize
   const incompleteResults = !!assessment && run?.status === 'complete' && (run.complete < run.total || run.errors > 0)
+  const runMessage = run?.status === 'failed' ? run.failure?.message || run.error || run.message : run?.message
 
   return <div className={assessment ? 'item-analysis-site ia-embedded' : 'rd-root item-analysis-site'}>
     {!assessment && <><SiteHeader />
@@ -303,11 +304,12 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
         <section className="ia-panel ia-run-status" aria-label="Run progress"><div className="ia-section-heading"><div>
           <p className="ia-eyebrow">{run.example.title}</p><h2>{incompleteResults ? 'Some items still need classification' : direct && run.status === 'complete' ? 'Item analysis complete' : runTitle(run)}</h2></div>
           <span className={`ia-tag ${active ? 'ia-tag-active' : ''}`}>{active ? 'In progress' : run.status === 'checkpoint' ? 'Review checkpoint' : incompleteResults ? 'Incomplete' : run.status === 'complete' ? 'Finished' : 'Your analysis'}</span></div>
-          <p className="ia-muted" role="status">{run.message}</p>
+          <p className={run.status === 'failed' ? 'ia-error' : 'ia-muted'} role="status">{runMessage}</p>
+          {run.status === 'failed' && run.failure && <p className="ia-small">Error reference: <code>{run.failure.stage}/{run.failure.code}</code></p>}
           {run.status === 'checkpoint' && <p className="ia-small">Inspect the labels and evidence below, then continue through all remaining items to complete the {direct ? 'item analysis' : 'assessment'}. To regenerate the criteria, start a new item analysis so all items use the same instructions.</p>}
           {run.status === 'running' && <><progress max={run.scope === 'pilot' ? pilotSize : run.total} value={run.processed} aria-label="Classification progress" />
             <p className="ia-small">{run.processed.toLocaleString()} processed · {run.complete.toLocaleString()} classified · {run.errors.toLocaleString()} failed · {run.total.toLocaleString()} in snapshot</p></>}
-          {run.error && <p className="ia-error">{run.error}</p>}
+          {run.status !== 'failed' && run.error && run.error !== runMessage && <p className="ia-error">{run.error}</p>}
           <div className="ia-run-meta">{run.example.assessment_title && <span>Assessment context: {run.example.assessment_title}</span>}<span>{run.example.source_label}</span><span>{run.total.toLocaleString()} items</span></div>
           <div className="ia-actions">{active ? <button className="ia-secondary" onClick={() => void stop()} disabled={busy}>Stop analysis</button> :
             <button className="ia-text-button" onClick={reset} disabled={busy}>Start a new analysis</button>}

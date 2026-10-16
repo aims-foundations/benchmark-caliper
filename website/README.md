@@ -109,6 +109,11 @@ Opening the report and dataset setup makes no model calls. Generating criteria,
 classifying the pilot, and continuing through the remaining items are separate
 paid actions. The key stays in memory; the item run's ID and separate access
 secret are kept in browser session storage, scoped to the source assessment.
+Initialization failures identify dataset/evidence preparation, criteria
+validation, provider access, or report preparation separately. The displayed
+error reference contains a stage and fixed code; raw model replies and private
+source text are not included. Validation permits one structural repair and does
+not start item classification when the criteria are invalid.
 Refresh restores the active run, but a later phase may require entering the key
 again. Runs expire one hour after the last phase ends and do not survive a server
 restart. Download outputs before they expire. Stop cancels the current awaited

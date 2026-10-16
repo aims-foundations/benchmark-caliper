@@ -492,6 +492,8 @@ def test_safe_provider_diagnostics_reach_generation_and_classification(
     assert failed["provider_error"] == {
         "code": code, "status_code": status_code, "message": error.public_message,
     }
+    if mode == "generate":
+        assert failed["failure"] == {"stage": "specification", "code": code, "message": error.public_message}
     assert KEY not in json.dumps(failed)
     assert "confidential provider text" not in json.dumps(failed)
     directory = analysis.jobs[access["run_id"]].directory
@@ -1129,3 +1131,116 @@ def test_deleting_benchmark_run_also_deletes_its_linked_item_data(client, curren
     assert client.get(url(access), headers=headers(access)).status_code == 404
     if running:
         assert stopped.is_set()
+
+
+@pytest.mark.parametrize("code", ["invalid_json", "schema", "evidence", "deployment", "provenance", "task_grounding"])
+def test_specification_validation_diagnostics_are_safe_and_specific(client, monkeypatch, code):
+    calls = []
+    private_marker = "PRIVATE-MODEL-CONTEXT-MUST-NOT-APPEAR-IN-PUBLIC-ERROR"
+
+    async def invalid_specification(**arguments):
+        # Repair feedback follows the first JSON object. Exercise the real
+        # generator and validator, including the one allowed correction.
+        payload, _ = json.JSONDecoder().raw_decode(arguments["user"])
+        assert "item" not in payload
+        calls.append(payload)
+        spec = read_json(analysis.FIXTURE_PATH)["classifier_spec"]
+        spec["benchmark"], spec["deployment"] = payload["benchmark"], payload["deployment"]
+        for classifier in spec["classifiers"]:
+            classifier["grounded_in"] = ["deployment_description.txt"]
+        spec["classifiers"][0]["criterion"] += f" {private_marker} {KEY}"
+        if code == "invalid_json":
+            text = f"Not JSON: {private_marker} {KEY}"
+        else:
+            if code == "schema":
+                del spec["classifiers"][0]["component"]
+            elif code == "evidence":
+                spec["classifiers"][0]["grounded_in"] = [f"unknown-evidence-{private_marker}-{KEY}"]
+            elif code == "deployment":
+                spec["deployment"] = f"An invented deployment: {private_marker} {KEY}"
+            elif code == "provenance":
+                spec.update(analysis_basis="deployment_requirements", assessment_status="not_run")
+            # task_grounding uses a direct run with deliberately missing task
+            # citations while the rest of the structure and references are valid.
+            text = json.dumps(spec)
+        return model_client.CallResult(text, arguments["model"], 10, 5, 1)
+
+    monkeypatch.setattr(model_client, "call_text_async", invalid_specification)
+    if code == "task_grounding":
+        response = client.post("/api/item-analysis/runs/from-context", data={
+            "context_json": json.dumps({"benchmark": "New benchmark", "deployment": "Spanish classroom tutors.",
+                                         "task_requirements": "Arithmetic and reasoning.", "answer_requirements": "Clear correct explanations."}),
+            "benchmark_confirmed": "true",
+        }, files={"items_file": ("items.json", '[{"content":"Explain 2+2.","reference_answer":"4"}]')},
+                               headers={"X-OpenAI-Key": KEY})
+        assert response.status_code == 202, response.text
+        access = response.json()
+    else:
+        access = start(client, mode="generate")
+    failed = settled(client, access)
+    expected = analysis.generate.SpecificationValidationError(code=code).public_message
+    assert failed["status"] == "failed" and failed["provider_error"] is None
+    assert failed["failure"] == {"stage": "specification", "code": code, "message": expected}
+    assert failed["message"] == failed["error"] == expected
+    assert "No items were classified" in expected
+    assert "API key" not in expected and "model access" not in expected
+    assert len(calls) == 2 and failed["processed"] == 0 and failed["spec"] is None
+    assert private_marker not in json.dumps(failed) and KEY not in json.dumps(failed)
+    directory = analysis.jobs[access["run_id"]].directory
+    assert not (directory / "results.jsonl").exists()
+    assert all(KEY not in path.read_text() for path in directory.iterdir() if path.is_file())
+
+
+@pytest.mark.parametrize("phase", ["preparation", "specification", "report"])
+def test_unexpected_initialization_failure_identifies_phase_without_exposing_exception(
+        client, current_assessment, monkeypatch, model, phase):
+    private_marker = "PRIVATE-SERVER-EXCEPTION-MUST-NOT-APPEAR"
+
+    def fail(*args, **kwargs):
+        raise RuntimeError(f"{private_marker} {KEY} /private/server/path")
+
+    if phase == "preparation":
+        monkeypatch.setattr(analysis, "prepare_assessment_job", fail)
+    elif phase == "specification":
+        monkeypatch.setattr(analysis.generate, "generate_spec", fail)
+    else:
+        monkeypatch.setattr(analysis.report, "generate_report", fail)
+    access = start_linked(client, current_assessment, rows=[{"content": "Explain 2+2.", "reference_answer": "4"}])
+    failed = settled(client, access)
+    assert failed["status"] == "failed" and failed["provider_error"] is None
+    assert failed["failure"] == {"stage": phase, "code": f"{phase}_failed", "message": failed["message"]}
+    assert failed["error"] == failed["message"] and failed["processed"] == 0
+    assert private_marker not in json.dumps(failed) and KEY not in json.dumps(failed)
+    assert "/private/server/path" not in json.dumps(failed)
+    assert "Check the example, model access, and API key" not in failed["message"]
+    if phase == "report":
+        assert failed["spec"] is not None and failed["summary"] is None
+        assert "criteria are ready" in failed["message"] and len(model) == 1
+        assert all("item" not in payload for _, payload in model)
+    else:
+        assert not model and failed["spec"] is None
+        if phase == "preparation":
+            assert "No model calls were made" in failed["message"]
+    assert not (analysis.jobs[access["run_id"]].directory / "results.jsonl").exists()
+
+
+def test_initialization_failure_is_cleared_before_a_later_classification_failure(client, monkeypatch):
+    original_report = analysis.report.generate_report
+
+    def broken_report(*args, **kwargs):
+        raise RuntimeError("Temporary local report failure")
+
+    monkeypatch.setattr(analysis.report, "generate_report", broken_report)
+    access = start(client)
+    initial = settled(client, access)
+    assert initial["failure"]["code"] == "report_failed" and initial["spec"] is not None
+    monkeypatch.setattr(analysis.report, "generate_report", original_report)
+
+    async def rejected(**arguments):
+        raise model_client.ModelRequestError(code="authentication", status_code=401)
+
+    monkeypatch.setattr(model_client, "call_text_async", rejected)
+    failed = classify(client, access)
+    assert failed["status"] == "failed" and failed["provider_error"]["code"] == "authentication"
+    assert failed["failure"] is None
+    assert "results view" not in failed["message"]

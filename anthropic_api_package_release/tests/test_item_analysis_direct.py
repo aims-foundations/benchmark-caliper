@@ -7,10 +7,11 @@ import json
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
+from jsonschema import Draft202012Validator
 
 from item_analysis.classify import run
 from item_analysis.data import file_sha256, prepare_data
-from item_analysis.generate import generate_spec, generation_request
+from item_analysis.generate import SpecificationValidationError, generate_spec, generation_request
 from item_analysis.prepare import attach_direct_context
 from item_analysis.report import generate_report
 from item_analysis.schema import ROSTER
@@ -120,6 +121,12 @@ def test_direct_generation_request_distinguishes_required_tasks_from_observed_su
     assert "Never replace the requested taxonomy" in request["system"]
     assert "no benchmark assessment exists" in request["system"]
     assert "Do not invent stage-7 findings, scores" in request["system"]
+    output_schema = payload["output_schema"]
+    Draft202012Validator.check_schema(output_schema)
+    provenance = {"analysis_basis": "deployment_requirements", "assessment_status": "not_run"}
+    for field, value in provenance.items():
+        assert output_schema["properties"][field] == {"const": value}
+    assert not list(Draft202012Validator(output_schema).iter_errors({**_spec(direct), **provenance}))
 
 
 def test_direct_specification_requires_task_requirement_citation_and_retains_provenance(direct):
@@ -142,6 +149,24 @@ def test_direct_specification_requires_task_requirement_citation_and_retains_pro
     metadata = read_json(direct / "specification.json")
     assert metadata["unassessed_dimensions"] == ["input_form", "output_form"]
     assert "No benchmark assessment was run" in metadata["note"]
+
+
+def test_exhausted_direct_task_grounding_failure_has_safe_specific_diagnostic(direct):
+    invalid = _spec(direct)
+    invalid["classifiers"][0]["grounded_in"] = ["framework.yaml"]
+    calls = []
+
+    def fake(**request):
+        calls.append(request)
+        return json.dumps(invalid)
+
+    with pytest.raises(SpecificationValidationError, match="after one repair") as caught:
+        generate_spec(direct, call=fake)
+    assert caught.value.code == "task_grounding"
+    assert "task requirements" in caught.value.public_message
+    assert CONTEXT["task_requirements"] not in caught.value.public_message
+    assert len(calls) == 2
+    assert not (direct / "classifier_spec.json").exists()
 
 
 @pytest.mark.parametrize("artifact", ["direct_context.json", "evidence.json"])

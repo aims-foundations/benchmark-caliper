@@ -90,6 +90,7 @@ class AnalysisJob:
     provider_call: object | None = field(default=None, repr=False)
     provider_tasks: set = field(default_factory=set, repr=False)
     provider_error: dict | None = None
+    failure: dict | None = None
     data_ready: bool = False
     stopped: Event = field(default_factory=Event, repr=False)
     owner_hash: str | None = field(default=None, repr=False)
@@ -220,6 +221,7 @@ def public_job(job: AnalysisJob, page: int = 1) -> dict:
         "can_continue": job.checkpoint_seen and job.status in {"checkpoint", "cancelled", "failed"},
         "error": job.message if job.status == "failed" else None,
         "provider_error": dict(job.provider_error) if job.status == "failed" and job.provider_error else None,
+        "failure": dict(job.failure) if job.status == "failed" and job.failure else None,
     }
 
 
@@ -382,6 +384,7 @@ def prepare_assessment_job(job: AnalysisJob, upload: dict | None) -> Path:
 
 
 async def initialize(job: AnalysisJob, mode: str, api_key: str | None, upload: dict | None = None) -> None:
+    phase = "preparation"
     try:
         if job.assessment:
             supplied = await drained_thread(prepare_assessment_job, job, upload)
@@ -392,6 +395,7 @@ async def initialize(job: AnalysisJob, mode: str, api_key: str | None, upload: d
         job.data_ready = True
         if job.stopped.is_set():
             return
+        phase = "specification"
         if mode == "generate":
             job.status = "generating"
             job.message = ("GPT-6 Luna is turning your deployment requirements into item-level classification rules."
@@ -403,6 +407,7 @@ async def initialize(job: AnalysisJob, mode: str, api_key: str | None, upload: d
             call=model_bridge(job, api_key) if api_key else None,
             **job.model,
         )
+        phase = "report"
         metadata = read_json(job.directory / "specification.json")
         metadata.get("source", {}).pop("path", None)
         write_json(job.directory / "specification.json", metadata)
@@ -411,10 +416,24 @@ async def initialize(job: AnalysisJob, mode: str, api_key: str | None, upload: d
     except (item_analysis_source.DatasetAccessError, item_analysis_source.DatasetPreparationError,
             item_analysis_databank.DataBankError) as error:
         job.status, job.message = "failed", str(error)
+        job.failure = {"stage": phase, "code": "dataset_unavailable", "message": job.message}
+    except generate.SpecificationValidationError as error:
+        job.status, job.message = "failed", error.public_message
+        job.failure = {"stage": phase, "code": error.code, "message": job.message}
     except Exception:
         job.status = "failed"
-        job.message = (job.provider_error["message"] if job.provider_error else
-                       "Could not prepare a valid specification. Check the example, model access, and API key, then start a new analysis.")
+        if job.provider_error:
+            job.message = job.provider_error["message"]
+            code = job.provider_error["code"]
+        else:
+            # Keep diagnostics specific to the failed stage without echoing
+            # exception bodies, model output, source text, or credentials.
+            code, job.message = {
+                "preparation": ("preparation_failed", "The website could not prepare the benchmark items or deployment evidence. No model calls were made. Share this error with the maintainer."),
+                "specification": ("specification_failed", "The website could not finish preparing the item criteria. No items have been classified. Share this error with the maintainer; this does not establish a problem with your API key."),
+                "report": ("report_failed", "The item criteria are ready, but the website could not prepare their results view. No items have been classified. Share this error with the maintainer."),
+            }[phase]
+        job.failure = {"stage": phase, "code": code, "message": job.message}
     finally:
         await drain_provider(job)
         api_key = None
@@ -659,6 +678,7 @@ async def start_classification(run_id: str, body: Classification, response: Resp
     job.owner_hash = reserve_worker(api_key, job)
     job.stopped.clear()
     job.provider_error = None
+    job.failure = None
     job.scope = body.scope
     job.status = "running"
     job.message = "Classifying the first items for review." if body.scope == "pilot" else "Continuing across all items using the same classifier rules."

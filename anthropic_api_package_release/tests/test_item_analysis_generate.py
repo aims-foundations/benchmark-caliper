@@ -7,10 +7,12 @@ from pathlib import Path
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
+from jsonschema import Draft202012Validator
 
 from item_analysis.data import file_sha256
-from item_analysis.generate import generate_spec
+from item_analysis.generate import SpecificationValidationError, generate_spec, generation_request
 from item_analysis.prepare import prepare
+from item_analysis.schema import SPEC_SCHEMA
 
 
 SPEC_FIXTURE = Path(__file__).parent / "fixtures" / "item_analysis_spec.json"
@@ -138,6 +140,64 @@ def test_generated_spec_checks_references_and_uses_authoritative_profile(prepare
     assert metadata["spec_sha256"] == file_sha256(prepared / "classifier_spec.json")
     assert any(change["field"] == "dataset_profile" for change in metadata["adjustments"])
     assert read(prepared / "generation_request.json")["user"] == request["user"]
+
+
+def test_linked_generation_schema_cannot_advertise_direct_only_provenance(prepared, peer_spec):
+    payload = json.loads(generation_request(prepared)["user"])
+    output_schema = payload["output_schema"]
+    Draft202012Validator.check_schema(output_schema)
+    assert payload["analysis_basis"] == "benchmark_assessment"
+    assert payload["assessment_status"] == "complete"
+    assert "analysis_basis" not in output_schema["properties"]
+    assert "assessment_status" not in output_schema["properties"]
+    assert "dependentRequired" not in output_schema
+    valid = generation_spec(peer_spec, prepared)
+    assert not list(Draft202012Validator(output_schema).iter_errors(valid))
+    direct_provenance = {**valid, "analysis_basis": "deployment_requirements", "assessment_status": "not_run"}
+    # This previously passed the advertised schema, then failed the save gate.
+    assert list(Draft202012Validator(output_schema).iter_errors(direct_provenance))
+    assert not list(Draft202012Validator(SPEC_SCHEMA).iter_errors(direct_provenance))
+    assert "Omit\n  analysis_basis and assessment_status" in generation_request(prepared)["system"]
+
+
+@pytest.mark.parametrize("code", ["invalid_json", "schema", "evidence", "deployment", "provenance"])
+def test_exhausted_validation_reports_safe_category_and_preserves_private_attempts(prepared, peer_spec, code):
+    invalid = generation_spec(peer_spec, prepared)
+    private = "PRIVATE-MODEL-AND-CONTEXT-SENTINEL"
+    if code == "invalid_json":
+        response = '{"unfinished": "' + private
+    else:
+        if code == "schema":
+            invalid["classifiers"][0]["operation"] = private
+        elif code == "evidence":
+            invalid["classifiers"][0]["grounded_in"] = [private]
+        elif code == "deployment":
+            invalid["deployment"] = private
+        else:
+            invalid.update(analysis_basis="deployment_requirements", assessment_status="not_run")
+            invalid["classifiers"][0]["criterion"] = private
+        response = json.dumps(invalid)
+    fake = FakeCall(response, response)
+    with pytest.raises(SpecificationValidationError, match="failed validation after one repair") as caught:
+        generate_spec(prepared, call=fake)
+    error = caught.value
+    assert isinstance(error, ValueError)
+    assert error.code == code
+    assert "No items were classified" in error.public_message
+    assert "API key" not in error.public_message
+    assert private not in error.public_message and private not in str(error)
+    assert len(fake.calls) == 2
+    attempts = read(prepared / "generation_attempts.json")
+    assert len(attempts) == 2 and all("error" in attempt for attempt in attempts)
+    assert private in attempts[0]["response"]
+    assert not (prepared / "classifier_spec.json").exists()
+    assert not (prepared / "specification.json").exists()
+
+
+def test_public_validation_diagnostic_never_uses_an_unrecognized_code():
+    error = SpecificationValidationError(code="PRIVATE-MODEL-CONTENT")
+    assert error.code == "schema"
+    assert "PRIVATE-MODEL-CONTENT" not in error.public_message
 
 
 def test_generated_deployment_drift_is_repaired_before_classification(prepared, peer_spec):

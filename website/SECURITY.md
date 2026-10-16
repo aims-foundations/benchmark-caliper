@@ -158,6 +158,8 @@ boundaries:
   saved artifacts or responses. Model responses redact any occurrence of the
   caller key; frontend rendering uses React text. Private responses and downloads
   use `Cache-Control: no-store`. Download paths are a fixed allowlist.
+  Initialization diagnostics expose only fixed stage/code/message fields;
+  validation feedback and raw model replies stay in the private run directory.
 - At most three jobs can run concurrently, with one active phase per caller key,
   and at most ten retained jobs. Classification pauses at 100 items before an
   explicit full-snapshot continuation. Completed labels are reused on retry.

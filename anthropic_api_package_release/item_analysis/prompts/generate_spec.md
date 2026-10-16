@@ -10,7 +10,10 @@ analysis_basis and assessment_status identify which evidence is available:
 
 - benchmark_assessment / complete: the registry also contains the existing
   stage-7 assessment and any recorded dataset-analysis findings. Use those
-  findings as hypotheses, preserving the original assessment.
+  findings as hypotheses, preserving the original assessment. Omit
+  analysis_basis and assessment_status from the returned specification in this
+  mode; those input fields describe which evidence is available, not output
+  fields to copy.
 - deployment_requirements / not_run: no benchmark assessment exists. Draft
   criteria directly from the user's task_requirements, answer_requirements,
   deployment, and optional validity_concerns. Ground task coverage in

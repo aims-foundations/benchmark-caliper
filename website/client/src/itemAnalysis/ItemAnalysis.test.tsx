@@ -257,6 +257,41 @@ it('handles expired runs without starting model calls and supports a fresh analy
   expect(api.classify).not.toHaveBeenCalled()
 })
 
+it('shows one safe initialization error and its reference without retrying paid work automatically', async () => {
+  vi.useFakeTimers()
+  try {
+    const message = 'The criteria could not be generated from the available evidence. Start a new analysis to retry.'
+    const olderError = 'Older provider error detail.'
+    sessionStorage.setItem('item_analysis_run_v1', JSON.stringify(access))
+    vi.mocked(api.getRun).mockResolvedValue({ ...ready, status: 'failed', spec: null, summary: null, message, error: olderError,
+      failure: { stage: 'specification', code: 'evidence', message } })
+    render(<ItemAnalysis />)
+    await act(async () => {})
+    expect(screen.getByRole('heading', { name: 'This run needs attention' })).toBeVisible()
+    expect(screen.getAllByText(message)).toHaveLength(1)
+    expect(screen.queryByText(olderError)).not.toBeInTheDocument()
+    expect(screen.getByText('specification/evidence').parentElement).toHaveTextContent('Error reference: specification/evidence')
+    expect(screen.getByRole('button', { name: 'Start a new analysis' })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: 'Resume classification' })).not.toBeInTheDocument()
+    await act(async () => { await vi.advanceTimersByTimeAsync(30000) })
+    expect(api.getRun).toHaveBeenCalledTimes(1)
+    expect(api.createRun).not.toHaveBeenCalled()
+    expect(api.classify).not.toHaveBeenCalled()
+  } finally { vi.useRealTimers() }
+})
+
+it.each([undefined, null])('renders older failed runs without failure metadata (%s) once', async failure => {
+  const message = 'Criteria generation failed. Start a new analysis to retry.'
+  sessionStorage.setItem('item_analysis_run_v1', JSON.stringify(access))
+  vi.mocked(api.getRun).mockResolvedValue({ ...ready, status: 'failed', spec: null, summary: null, message, error: message, failure })
+  render(<ItemAnalysis />)
+  await screen.findByRole('heading', { name: 'This run needs attention' })
+  expect(screen.getAllByText(message)).toHaveLength(1)
+  expect(screen.queryByText(/Error reference:/)).not.toBeInTheDocument()
+  expect(api.createRun).not.toHaveBeenCalled()
+  expect(api.classify).not.toHaveBeenCalled()
+})
+
 it('shows category denominators, unknowns, and item evidence for completed results', async () => {
   sessionStorage.setItem('item_analysis_run_v1', JSON.stringify(access))
   const completed: AnalysisRun = { ...ready, status: 'complete', processed: 10, complete: 9, errors: 1,
