@@ -79,7 +79,7 @@ export function KeyForm({ onSaved, onTryDemo }: Props) {
           <button type="button" className="link" onClick={onTryDemo}>
             Try a demo run instead →
           </button>{' '}
-          <span>(free benchmark-stage replay; item analysis uses your API key)</span>
+          <span>(free walkthrough of both benchmark and item analysis; no API key)</span>
         </p>
       )}
     </form>

@@ -11,6 +11,19 @@ This file documents the website's security posture **as actually implemented in 
 
 Items that depend on the deployed infrastructure (TLS, DNS, hosting accounts, monitoring) live in [Pre-launch verification](#pre-launch-verification) at the bottom — these must be checked off before a public domain is pointed at the service.
 
+## Free MathDial walkthrough
+
+The explicit `?demo=mathdial` routes use bundled benchmark scores and a small
+public, attributed MathDial sample with authored example judgments. They do not
+request either API key, create server runs, call provider endpoints, or use the
+live item-analysis API. The gallery listing may still load for navigation.
+Demo progress uses `caliper_demo_mathdial_items_v1`, separate from real run
+credentials. Exports are generated in the browser with source and demo labels.
+Only the bundled sample is counted; the page does not claim a completed analysis
+of all MathDial items. Normal gallery and run URLs retain their existing live
+analysis behavior. Exiting the benchmark replay invalidates pending replay
+transitions, so old timers cannot return the visitor to demo mode.
+
 ## Item-review demo (`/items`)
 
 The sections below describe the existing Anthropic/Caliper workflow. The separate

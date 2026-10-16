@@ -126,6 +126,18 @@ directly into item analysis before the full workflow is complete.
 
 10. **Cleanup.** The benchmark job drops its in-memory API key and PDF bytes when it ends; a safety-net sweeper removes stale entries after one hour. Existing 90-day benchmark workspace and trace retention remain separate. Item runs expire one hour after their last phase ends and do not survive a server restart; their input copies and outputs are removed on normal shutdown. Users must download item outputs before expiry.
 
+### Free walkthrough
+
+`/caliper?demo=mathdial` replays the cached MathDial benchmark assessment and
+continues into a browser-only item walkthrough. The direct
+`/caliper?demo=mathdial&stage=items` URL reconstructs the cached report on refresh
+and restores the separate demo item-stage state. Both stages share the original
+MathDial deployment context. A ten-dialogue public source sample with authored
+example judgments illustrates confirmation, criteria, a four-item pilot,
+review, and completion of the remaining sample. The demo never creates a live
+item job, requests provider keys, or claims to analyze the entire benchmark.
+Real gallery links continue to use Data Bank discovery and paid model actions.
+
 ### Assessment-to-item boundary
 
 `GET /api/item-analysis/assessment?kind=run&id={run_id}` (or `kind=gallery`)

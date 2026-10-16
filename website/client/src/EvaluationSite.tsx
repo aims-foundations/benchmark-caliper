@@ -57,7 +57,10 @@ export function EvaluationSite() {
           <h3>Benchmark<br />validity analysis</h3>
           <p>Assess benchmark documentation against your deployment context, then analyze the benchmark's individual items to measure how common the identified validity concerns are.</p>
           <dl className="evaluation-outcome"><div><dt>Input</dt><dd>Benchmark paper, deployment context, and matching dataset</dd></div><div><dt>Output</dt><dd>Six-dimensional assessment and issue prevalence with inspectable items</dd></div></dl>
-          <a className="evaluation-choice-link" href={appPath('/caliper')}>Analyze a benchmark <span aria-hidden="true">→</span></a>
+          <div className="evaluation-choice-actions">
+            <a className="evaluation-choice-link" href={appPath('/caliper')}>Analyze a benchmark <span aria-hidden="true">→</span></a>
+            <a className="evaluation-choice-link" href={appPath('/caliper?demo=mathdial')}>Try the free demo <span aria-hidden="true">→</span></a>
+          </div>
         </article>
         <article className="evaluation-choice">
           <h3>Goal-conditioned<br />item assessment <span className="review-badge">Demo</span></h3>

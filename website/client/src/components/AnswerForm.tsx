@@ -4,7 +4,7 @@ import type { Question } from '../api'
 interface Props {
   questions: Question[]
   onSubmit: (answers: Array<{ id: string; answer: string }>) => void
-  onChangeKey: () => void
+  onChangeKey?: () => void
   /** Optional pre-fill (used by demo mode to show expert answers). */
   initialAnswers?: Record<string, string>
 }
@@ -109,9 +109,9 @@ export function AnswerForm({
       </ol>
 
       <div className="actions">
-        <button type="button" className="link" onClick={onChangeKey}>
+        {onChangeKey && <button type="button" className="link" onClick={onChangeKey}>
           Change key
-        </button>
+        </button>}
         <button type="submit" disabled={!allAnswered}>
           Submit answers
         </button>

@@ -22,12 +22,12 @@ function contentText(value: unknown): string {
   return String(value)
 }
 
-function ItemCard({ item, classifiers }: { item: Item; classifiers: Classifier[] }) {
+function ItemCard({ item, classifiers, demo, classifierNames }: { item: Item; classifiers: Classifier[]; demo: boolean; classifierNames?: Record<string, string> }) {
   const completed = item.status === 'complete'
   const content = contentText(item.content)
   return <details className="ia-item">
     <summary><span><small>{item.item_id}</small><strong>{content || 'No item text available'}</strong></span>
-      <span className={`ia-tag ${completed ? '' : 'ia-tag-muted'}`}>{completed ? 'Classified' : item.status === 'error' ? 'Failed' : 'Pending'}</span>
+      <span className={`ia-tag ${completed ? '' : 'ia-tag-muted'}`}>{completed ? demo ? 'Example judgment shown' : 'Classified' : item.status === 'error' ? 'Failed' : 'Pending'}</span>
     </summary>
     <div className="ia-item-body"><p className="ia-item-text">{content}</p>
       <p className="ia-reference"><strong>Reference answer</strong> {text(item.reference_answer)}</p>
@@ -35,23 +35,25 @@ function ItemCard({ item, classifiers }: { item: Item; classifiers: Classifier[]
       {completed && classifiers.map(classifier => {
         const judgment = item.labels?.[classifier.id]
         return <section key={classifier.id} className="ia-judgment"><div className="ia-judgment-heading">
-          <h4>{classifierName(classifier.id)}</h4><span>{!classifier.applicable ? 'Not applicable' : judgment ? labelName(classifier, judgment.label) : 'Unknown'}</span></div>
+          <h4>{classifierName(classifier.id, classifierNames)}</h4><span>{!classifier.applicable ? 'Not applicable' : judgment ? labelName(classifier, judgment.label) : 'Unknown'}</span></div>
           {judgment && classifier.applicable && <><p>{judgment.justification}</p>
             {!!judgment.evidence?.length && <ul className="ia-evidence">{judgment.evidence.map((evidence, i) => <li key={i}>{evidence}</li>)}</ul>}</>}
         </section>
       })}
-      {!completed && !item.error && <p className="ia-small">This item has not been classified yet.</p>}
+      {!completed && !item.error && <p className="ia-small">{demo ? 'This example will be included after the pilot review.' : 'This item has not been classified yet.'}</p>}
     </div>
   </details>
 }
 
-export function Results({ run, page, setPage, onDownload, downloading, pageLoading }: {
+export function Results({ run, page, setPage, onDownload, downloading, pageLoading, demo = false, classifierNames }: {
   run: AnalysisRun
   page: number
   setPage: (page: number) => void
   onDownload: (artifact: Artifact) => void
   downloading: Artifact | null
   pageLoading: boolean
+  demo?: boolean
+  classifierNames?: Record<string, string>
 }) {
   const summary = run.summary
   const active = ['preparing', 'generating', 'running'].includes(run.status)
@@ -59,13 +61,13 @@ export function Results({ run, page, setPage, onDownload, downloading, pageLoadi
     {active && <p className="ia-small">Summary statistics and exports update when this phase finishes. You can inspect completed item judgments below.</p>}
     {summary && run.processed > 0 && !active && <>
       <div className="ia-section-heading"><div><p className="ia-eyebrow">From findings to counts</p><h2>What the items show</h2></div>
-        <span>{summary.complete_snapshot ? 'Full snapshot' : 'Partial results'}</span></div>
-      <div className="ia-stats"><div><strong>{run.complete.toLocaleString()}</strong><span>Items classified</span></div>
-        <div><strong>{run.total.toLocaleString()}</strong><span>Items in snapshot</span></div>
+        <span>{summary.complete_snapshot ? demo ? 'Full demo sample' : 'Full snapshot' : demo ? 'Demo pilot results' : 'Partial results'}</span></div>
+      <div className="ia-stats"><div><strong>{run.complete.toLocaleString()}</strong><span>{demo ? 'Demo judgments shown' : 'Items classified'}</span></div>
+        <div><strong>{run.total.toLocaleString()}</strong><span>{demo ? 'Items in demo sample' : 'Items in snapshot'}</span></div>
         <div><strong>{run.errors.toLocaleString()}</strong><span>Failed assessments</span></div></div>
-      <p className="ia-small">Percentages describe model judgments among known labels. Unknowns, failures, and pending items are excluded. Human review is needed to check accuracy.</p>
+      <p className="ia-small">{demo ? 'Percentages describe authored walkthrough judgments among known labels in this bundled sample only. They are not model outputs or estimates for the full MathDial benchmark. Unknown and pending examples are excluded.' : 'Percentages describe model judgments among known labels. Unknowns, failures, and pending items are excluded. Human review is needed to check accuracy.'}</p>
       <div className="ia-distributions">{summary.classifiers.filter(c => c.applicable).map(classifier => <article key={classifier.id} className="ia-distribution">
-        <h3>{classifierName(classifier.id)}</h3>
+        <h3>{classifierName(classifier.id, classifierNames)}</h3>
         <p className="ia-small">{(classifier.known || 0).toLocaleString()} known labels · {(classifier.unknown || 0).toLocaleString()} unknown · {(classifier.invalid || 0).toLocaleString()} invalid</p>
         <div className="ia-bars">{Object.entries(classifier.counts || {}).map(([label, count]) => {
           const pct = classifier.percentages_among_known?.[label]
@@ -87,8 +89,8 @@ export function Results({ run, page, setPage, onDownload, downloading, pageLoadi
     </details>}
 
     <div className="ia-section-heading ia-item-heading"><div><p className="ia-eyebrow">Trace every judgment</p><h2>Explore the items</h2></div>
-      <span>20 per page</span></div>
-    <div className="ia-items" aria-busy={pageLoading}>{run.items.map(item => <ItemCard key={item.item_id} item={item} classifiers={run.spec?.classifiers || []} />)}</div>
+      <span>{demo ? `${run.total} bundled examples` : '20 per page'}</span></div>
+    <div className="ia-items" aria-busy={pageLoading}>{run.items.map(item => <ItemCard key={item.item_id} item={item} classifiers={run.spec?.classifiers || []} demo={demo} classifierNames={classifierNames} />)}</div>
     {!run.items.length && <p className="ia-small">Items will appear when preparation finishes.</p>}
     {run.pagination.total_pages > 1 && <nav className="ia-pagination" aria-label="Item pages">
       <button type="button" className="ia-secondary" disabled={page <= 1 || pageLoading} onClick={() => setPage(page - 1)}>Previous</button>
@@ -97,6 +99,6 @@ export function Results({ run, page, setPage, onDownload, downloading, pageLoadi
     </nav>}
     {summary && <div className="ia-exports"><h3>Take the results with you</h3><div>{ARTIFACTS.map(([artifact, label]) => <button key={artifact} type="button" className="ia-secondary"
       onClick={() => onDownload(artifact)} disabled={downloading !== null || active}>{downloading === artifact ? 'Downloading…' : label}<span aria-hidden="true"> ↓</span></button>)}</div>
-      <p className="ia-small">The human review worksheet omits model predictions for independent review.</p></div>}
+      <p className="ia-small">{demo ? 'Downloads cover this bundled demo sample only and include source and judgment provenance. The human review worksheet omits example judgments for independent review.' : 'The human review worksheet omits model predictions for independent review.'}</p></div>}
   </section>
 }

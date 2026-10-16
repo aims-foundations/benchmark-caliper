@@ -16,6 +16,7 @@ describe('Evaluation routes', () => {
     render(<EvaluationSite />)
     expect(screen.getByRole('link', { name: /analyze a benchmark/i })).toHaveAttribute('href', '/caliper')
     expect(screen.getByRole('link', { name: /assess evaluation items/i })).toHaveAttribute('href', '/items')
+    expect(screen.getByRole('link', { name: /try the free demo/i })).toHaveAttribute('href', '/caliper?demo=mathdial')
     expect(screen.getAllByRole('article')).toHaveLength(2)
     expect(screen.queryByRole('link', { name: /explore item analysis/i })).not.toBeInTheDocument()
     expect(screen.getByText(/benchmark paper, deployment context, and matching dataset/i)).toBeInTheDocument()

@@ -6,6 +6,7 @@ import {
 } from '../api'
 import { appPath } from '../paths'
 import { ItemAnalysis } from '../itemAnalysis/ItemAnalysis'
+import { DemoItemAnalysis } from '../itemAnalysis/DemoItemAnalysis'
 import { PipelineProgress } from './ProgressView'
 import {
   calibrateConfidence,
@@ -238,13 +239,19 @@ export function ScoringView({
     <>
     <PipelineProgress stage={itemStatus === 'complete' ? 'complete' : 'items'} />
     <div className="pipeline-stage-status" role="status">
-      <strong>{itemStatus === 'complete' ? 'Validity analysis complete' : 'Benchmark assessment ready · item analysis remains'}</strong>
-      <p>{itemStatus === 'complete'
-        ? 'Review the benchmark assessment and the item-level evidence together below.'
-        : 'Continue with the matching dataset below. Item analysis is the next required stage: review the criteria, inspect the pilot, and classify the full dataset to complete this analysis.'}</p>
+      <strong>{demo
+        ? itemStatus === 'complete' ? 'Demo walkthrough complete' : 'Demo benchmark ready · item walkthrough remains'
+        : itemStatus === 'complete' ? 'Validity analysis complete' : 'Benchmark assessment ready · item analysis remains'}</strong>
+      <p>{demo
+        ? itemStatus === 'complete'
+          ? 'The benchmark assessment and all example judgments in the small walkthrough sample are available below. These example counts do not describe the full MathDial benchmark.'
+          : 'Continue below to confirm the demo sample, review criteria, inspect the pilot, and reveal the remaining sample judgments. No API key is needed.'
+        : itemStatus === 'complete'
+          ? 'Review the benchmark assessment and the item-level evidence together below.'
+          : 'Continue with the matching dataset below. Item analysis is the next required stage: review the criteria, inspect the pilot, and classify the full dataset to complete this analysis.'}</p>
       {itemStatus !== 'complete' && <a href="#item-analysis-stage">Continue to item analysis ↓</a>}
     </div>
-    {demo && <div className="demo-banner"><p><strong>Prerecorded benchmark assessment.</strong> The MathDial scores below come from the free walkthrough. The item-analysis stage uses this same assessment and requires your API key and an explicit action before any paid model calls.</p></div>}
+    {demo && <div className="demo-banner"><p><strong>Free pipeline walkthrough.</strong> The MathDial benchmark scores below are prerecorded. The item stage carries forward this same deployment context and shows authored example judgments on a small sample. No API key or model calls are required.</p></div>}
     <section className="summary">
       <p className="eyebrow">Stage 2 · Benchmark assessment</p>
       <h2>Benchmark validity assessment</h2>
@@ -564,11 +571,13 @@ export function ScoringView({
       )}
     </section>
     <div id="item-analysis-stage" className="pipeline-item-stage">
-      <ItemAnalysis key={assessmentKey} assessment={assessment} onStatusChange={handleItemStatus} />
+      {demo
+        ? <DemoItemAnalysis onStatusChange={handleItemStatus} />
+        : <ItemAnalysis key={assessmentKey} assessment={assessment} onStatusChange={handleItemStatus} />}
     </div>
     <div className="actions">
       <button type="button" className={itemStatus === 'complete' ? undefined : 'link'} onClick={onStartOver}>
-        Start another benchmark analysis
+        {demo ? 'Start your own analysis' : 'Start another benchmark analysis'}
       </button>
     </div>
     </>

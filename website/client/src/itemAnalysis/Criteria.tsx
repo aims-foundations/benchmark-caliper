@@ -9,7 +9,7 @@ export const CLASSIFIER_NAMES: Record<string, string> = {
 }
 
 export const readable = (value: string) => value.replaceAll('_', ' ')
-export const classifierName = (id: string) => CLASSIFIER_NAMES[id] || readable(id)
+export const classifierName = (id: string, names?: Record<string, string>) => names?.[id] || CLASSIFIER_NAMES[id] || readable(id)
 
 export function labelName(classifier: Classifier, label: string | number | null): string {
   if (label === null) return 'Unknown'
@@ -18,7 +18,7 @@ export function labelName(classifier: Classifier, label: string | number | null)
   return readable(String(label))
 }
 
-export function Criteria({ spec, metadata }: { spec: Specification; metadata?: AnalysisSummary['specification'] }) {
+export function Criteria({ spec, metadata, classifierNames }: { spec: Specification; metadata?: AnalysisSummary['specification']; classifierNames?: Record<string, string> }) {
   return <section className="ia-criteria" aria-label="Classification criteria">
     <div className="ia-section-heading"><div><p className="ia-eyebrow">The questions we ask</p>
       <h2>Review the criteria</h2></div><span>{spec.classifiers.filter(c => c.applicable).length} active classifiers</span></div>
@@ -30,7 +30,7 @@ export function Criteria({ spec, metadata }: { spec: Specification; metadata?: A
       {!!metadata?.adjustments?.length && <><p className="ia-small">Preparation adjustments</p><ul className="ia-small">{metadata.adjustments.map((adjustment, i) => <li key={i}>{adjustment.reason || adjustment.field}</li>)}</ul></>}
     </details>
     <div className="ia-criteria-list">{spec.classifiers.map(classifier => <details key={classifier.id} className="ia-criterion">
-      <summary><span><small>{readable(classifier.component)}</small><strong>{classifierName(classifier.id)}</strong></span>
+      <summary><span><small>{readable(classifier.component)}</small><strong>{classifierName(classifier.id, classifierNames)}</strong></span>
         <span className={`ia-tag ${classifier.applicable ? '' : 'ia-tag-muted'}`}>{classifier.applicable ? { assignment: 'Category', ordinal: 'Regional fit', flag: 'Yes / no' }[classifier.operation] : 'Not applicable'}</span>
       </summary>
       <div className="ia-criterion-body">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { PrivacyNotice } from './components/PrivacyNotice'
 import { GallerySidebar } from './components/GallerySidebar'
 import { KeyForm } from './components/KeyForm'
@@ -46,6 +46,7 @@ import {
   type GalleryReport,
 } from './api'
 import { appPath, stripBasePath } from './paths'
+import { resetDemoItemProgress } from './demo/session'
 import {
   DEMO_DEPLOYMENT_DESCRIPTION,
   DEMO_ELICITATION_SUMMARY,
@@ -217,12 +218,27 @@ function initialReportRunId(): string | null {
   return match ? match[1] : null
 }
 
+function initialDemoView(): 'intro' | 'items' | null {
+  if (stripBasePath(window.location.pathname).replace(/\/+$/, '') !== '/caliper') return null
+  const params = new URLSearchParams(window.location.search)
+  if (params.has('assessment') || params.get('demo') !== 'mathdial') return null
+  return params.get('stage') === 'items' ? 'items' : 'intro'
+}
+
+function demoScoredState(): ScoredState {
+  return { runId: DEMO_RUN_ID, slug: DEMO_SLUG, scoring: DEMO_SCORING,
+    rawText: DEMO_RAW_TEXT, elicitationSummary: DEMO_ELICITATION_SUMMARY }
+}
+
 export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boolean }) {
   const [phase, setPhase] = useState<Phase>(() => {
     const reportRun = initialReportRunId()
     if (reportRun) return { name: 'viewing-report', runId: reportRun }
     const galleryId = new URLSearchParams(window.location.search).get('assessment')
     if (galleryId) return { name: 'loading-gallery', id: galleryId }
+    const demoView = initialDemoView()
+    if (demoView === 'items') return { name: 'scored', state: demoScoredState() }
+    if (demoView === 'intro') return { name: 'demo-intro' }
     if (!hasConsent()) return { name: 'consent' }
     return hasKey() ? { name: 'idle' } : { name: 'enter-key' }
   })
@@ -234,9 +250,10 @@ export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boole
     null,
   )
   // Demo mode: when true, the pipeline phases are replayed from a cached
-  // expert assessment instead of making real API calls. No Anthropic key
-  // is required. Cleared by Restart session / Run another.
-  const [isDemo, setIsDemo] = useState(false)
+  // expert assessment and a bundled item walkthrough without provider calls.
+  const [isDemo, setIsDemo] = useState(() => initialDemoView() !== null)
+  const demoPlayback = useRef(0)
+  useEffect(() => () => { demoPlayback.current += 1 }, [])
   const loadingGalleryId = phase.name === 'loading-gallery' ? phase.id : null
 
   // Load the curated gallery once on mount.
@@ -264,8 +281,9 @@ export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boole
   /** Enter the scored view and remember the run as this session's benchmark. */
   function enterScored(state: ScoredState): void {
     window.history.replaceState(null, '', state.runId === DEMO_RUN_ID
-      ? appPath(`/caliper?assessment=${encodeURIComponent(DEMO_GALLERY_ID)}`)
+      ? appPath('/caliper?demo=mathdial&stage=items')
       : appPath(`/run/${encodeURIComponent(state.runId)}`))
+    setIsDemo(state.runId === DEMO_RUN_ID)
     setSessionBenchmark(state)
     setPhase({ name: 'scored', state })
   }
@@ -275,6 +293,7 @@ export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boole
   }
 
   function handleSelectCurated(id: string): void {
+    demoPlayback.current += 1
     setIsDemo(false)
     setPhase({ name: 'loading-gallery', id })
   }
@@ -286,6 +305,7 @@ export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boole
   }
 
   function handleAddBenchmark(): void {
+    demoPlayback.current += 1
     window.history.replaceState(null, '', appPath('/caliper'))
     setIsDemo(false)
     setPhase(hasKey() ? { name: 'idle' } : { name: 'enter-key' })
@@ -301,12 +321,15 @@ export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boole
   }
 
   function handleChangeKey(): void {
+    demoPlayback.current += 1
+    setIsDemo(false)
     window.history.replaceState(null, '', appPath('/caliper'))
     clearKey()
     setPhase({ name: 'enter-key' })
   }
 
   function handleStartOver(): void {
+    demoPlayback.current += 1
     window.history.replaceState(null, '', appPath('/caliper'))
     setIsDemo(false)
     setPhase(hasKey() ? { name: 'idle' } : { name: 'enter-key' })
@@ -316,11 +339,13 @@ export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boole
   // Replays the curated MathDial / India tutoring assessment as if it were
   // a live run: ticks fake SSE events into the existing phase states with
   // realistic delays, walks through the same UI components as a real run,
-  // and lands on the genuine scoring before the required item stage. The
-  // prerecorded benchmark stage requires no key and starts no model calls.
+  // and lands on the genuine scoring before the bundled item walkthrough.
+  // Both stages require no key and start no model calls.
 
   function handleTryDemo(): void {
-    window.history.replaceState(null, '', appPath('/caliper'))
+    demoPlayback.current += 1
+    resetDemoItemProgress()
+    window.history.replaceState(null, '', appPath('/caliper?demo=mathdial'))
     // Land on a pre-filled "describe your deployment" screen first, so
     // the user sees Step 1 of the real flow (the upload form) before any
     // progress starts ticking. Clicking "Run the demo" there calls
@@ -330,13 +355,16 @@ export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boole
   }
 
   async function runDemoIntro(): Promise<void> {
+    const playback = ++demoPlayback.current
     const description = DEMO_DEPLOYMENT_DESCRIPTION
     const events: PipelineEvent[] = []
-    const setRunning = () =>
+    const setRunning = () => {
+      if (playback !== demoPlayback.current) return
       setPhase({
         name: 'running',
         state: { events: [...events], description, optedInFull: false },
       })
+    }
     setRunning()
 
     const push = (ev: PipelineEvent) => {
@@ -358,6 +386,7 @@ export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boole
     push({ type: 'step-completed', step: '2-questions' })
 
     await sleep(500)
+    if (playback !== demoPlayback.current) return
     setPhase({
       name: 'answering',
       state: {
@@ -374,13 +403,16 @@ export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boole
 
   async function runDemoSummary(): Promise<void> {
     if (phase.name !== 'answering') return
+    const playback = ++demoPlayback.current
     const base = phase.state
     const events: PipelineEvent[] = []
-    const setSubmitting = () =>
+    const setSubmitting = () => {
+      if (playback !== demoPlayback.current) return
       setPhase({
         name: 'submitting',
         state: { ...base, events: [...events] },
       })
+    }
     setSubmitting()
 
     const push = (ev: PipelineEvent) => {
@@ -393,6 +425,7 @@ export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boole
     await sleep(2200)
     push({ type: 'step-completed', step: '2-summary' })
     await sleep(500)
+    if (playback !== demoPlayback.current) return
     setPhase({
       name: 'summary',
       state: {
@@ -404,12 +437,15 @@ export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boole
   }
 
   async function runDemoAuto(runId: string, slug: string): Promise<void> {
+    const playback = ++demoPlayback.current
     const events: PipelineEvent[] = []
-    const setAuto = () =>
+    const setAuto = () => {
+      if (playback !== demoPlayback.current) return
       setPhase({
         name: 'auto-running',
         state: { runId, slug, events: [...events] },
       })
+    }
     setAuto()
 
     const push = (ev: PipelineEvent) => {
@@ -475,6 +511,7 @@ export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boole
     push({ type: 'step-completed', step: '7-score' })
 
     await sleep(400)
+    if (playback !== demoPlayback.current) return
     const scored: ScoredState = {
       runId,
       slug,
@@ -1162,6 +1199,7 @@ export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boole
           </p>
           <div className="hero-actions">
             <a className="rd-btn" href={appPath('/')}>Choose an evaluation</a>
+            {!isDemo && GALLERY_ENABLED_PHASES.has(phase.name) && <button type="button" className="rd-btn" onClick={handleTryDemo}>Try the free demo</button>}
             <a
               className="rd-btn"
               href="https://github.com/aims-foundations/benchmark-caliper"
@@ -1225,9 +1263,9 @@ export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boole
             <strong>Demo mode.</strong> Replaying a cached assessment
             (expert-elicited inputs) for MathDial — India urban English
             tutoring. The scores are Claude Opus's, conditioned on an expert's
-            elicitation, not an expert's own scores. No Anthropic API calls
-            are being made during this prerecorded benchmark stage. The required
-            item-analysis stage follows and uses your API key when you choose to run it.
+            elicitation, not an expert's own scores. The item stage then walks
+            through a small MathDial sample with authored example judgments.
+            The entire demo is free and makes no model calls.
           </p>
           <button
             type="button"
@@ -1249,6 +1287,7 @@ export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boole
         <DemoIntro
           onStart={() => void runDemoIntro()}
           onExit={handleStartOver}
+          onPreviewItems={() => { demoPlayback.current += 1; enterScored(demoScoredState()) }}
         />
       )}
 
@@ -1264,7 +1303,7 @@ export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boole
         <AnswerForm
           questions={phase.state.questions}
           onSubmit={handleAnswers}
-          onChangeKey={handleChangeKey}
+          onChangeKey={isDemo ? undefined : handleChangeKey}
           initialAnswers={isDemo ? DEMO_EXPERT_ANSWERS : undefined}
         />
       )}
@@ -1402,6 +1441,7 @@ export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boole
           onChangeKey={handleChangeKey}
           emailStatus={phase.state.emailStatus}
           elicitationSummary={phase.state.elicitationSummary}
+          deploymentContext={phase.state.runId === DEMO_RUN_ID ? DEMO_DEPLOYMENT_DESCRIPTION : undefined}
         />
       )}
 

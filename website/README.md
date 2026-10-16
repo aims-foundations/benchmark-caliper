@@ -6,11 +6,38 @@ The website source provides two tools: **benchmark validity analysis** and **goa
 
 - `/` — selection between the two tools.
 - `/caliper` — benchmark assessment with an Anthropic key, followed by required item analysis with an OpenAI key.
+- `/caliper?demo=mathdial` — free walkthrough of benchmark and item analysis.
+- `/caliper?demo=mathdial&stage=items` — direct entry to the free item walkthrough.
 - `/items` — the separate goal-conditioned item-review demo, using an OpenAI key.
 - `/item-analysis` — compatibility entry into the main Caliper workflow; no standalone item-analysis chooser.
 - `/run/{run_id}` — saved benchmark report with the same item-analysis continuation.
 
 All routes work under the production `/benchmark-caliper` prefix.
+
+## Free pipeline walkthrough
+
+The homepage and Caliper screen offer **Try the free demo**. The MathDial
+walkthrough replays the existing benchmark assessment, then continues through
+mandatory sample confirmation, criterion review, a four-dialogue pilot,
+a human-review checkpoint, and all ten bundled sample dialogues. No Anthropic
+or OpenAI key is required, and the walkthrough makes no model calls or creates
+server analysis jobs. The optional gallery listing remains a read-only request.
+The intro also provides **Preview item analysis** for returning visitors.
+
+The item sample contains the first ten complete dialogues from the public
+`eth-nlped/mathdial` test split, pinned to a repository revision. Original source
+records, source identifiers, attribution, license, and selection scope ship with
+the fixture. Item criteria and judgments are authored walkthrough examples,
+clearly distinguished from the prerecorded benchmark scores and source data.
+Counts describe the ten-dialogue convenience sample, not all 599 test dialogues
+or the full MathDial benchmark. Missing local-teacher acceptance evidence stays
+unknown. This supplied sample does not claim to be a Data Bank search result.
+
+The item-stage state is stored under a demo-only session-storage key. Refreshing
+its demo URL restores the walkthrough without opening a paid gallery
+continuation. Restarting the item demo requires confirming the sample again.
+Downloads are generated locally and retain demo/source provenance. Opening an
+ordinary gallery report or starting a new assessment uses the live pipeline.
 
 ## Item-level validity analysis
 

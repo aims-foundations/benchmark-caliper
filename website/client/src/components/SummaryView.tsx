@@ -139,13 +139,12 @@ export function SummaryView({
       <form onSubmit={handleStart} className="email-form">
         <h3>Run the benchmark assessment</h3>
         <p className="help">
-          {demo ? 'This walkthrough replays the prerecorded benchmark assessment without model calls.' : 'The benchmark assessment takes about 3–7 minutes on your Anthropic key.'}
-          {' '}Its report appears here, followed by the required item-analysis
-          stage. You will connect the dataset, review the criteria and pilot,
-          and classify the remaining items before the analysis is complete.
+          {demo
+            ? 'This free walkthrough replays the benchmark assessment, then guides you through sample confirmation, item criteria, pilot review, and the final demo-sample summary. No API key or model calls are required.'
+            : 'The benchmark assessment takes about 3–7 minutes on your Anthropic key. Its report appears here, followed by the required item-analysis stage. You will connect the dataset, review the criteria and pilot, and classify the remaining items before the analysis is complete.'}
         </p>
 
-        <label className="step-by-step">
+        {!demo && <label className="step-by-step">
           <input
             type="checkbox"
             checked={stepByStep}
@@ -155,12 +154,12 @@ export function SummaryView({
             Walk me through each step instead. I'd rather review the
             extracted paper and regional context before scoring.
           </span>
-        </label>
+        </label>}
 
         <div className="actions">
-          <button type="button" className="link" onClick={onChangeKey}>
+          {!demo && <button type="button" className="link" onClick={onChangeKey}>
             Change key
-          </button>
+          </button>}
           <button type="button" className="link" onClick={handleDownloadMd}>
             Download .md
           </button>

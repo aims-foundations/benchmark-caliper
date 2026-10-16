@@ -1,0 +1,34 @@
+.ia-demo { padding-block: 1.5rem; }
+.ia-demo-intro { display: flex; justify-content: space-between; align-items: flex-start; gap: 1.5rem; margin-bottom: 1.7rem; }
+.ia-demo-intro h2 { font-size: clamp(1.6rem, 3vw, 2.1rem); font-weight: 500; letter-spacing: -.035em; line-height: 1.2; margin: .45rem 0 .7rem; }
+.ia-demo-intro p:not(.ia-eyebrow) { color: var(--ia-muted); max-width: 45rem; font-size: .9rem; margin: 0; }
+.ia-demo-intro > button { flex-shrink: 0; }
+.ia-demo-steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ia-demo-source-facts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem 2rem; font-size: .82rem; margin-block: 1.5rem; }
+.ia-demo-source-facts dt { color: var(--ia-muted); font-size: .69rem; margin-bottom: .3rem; }
+.ia-demo-source-facts dd { margin: 0; line-height: 1.6; overflow-wrap: anywhere; }
+.ia-demo-source-facts code { font-size: .73rem; }
+.ia-demo-source > a { color: var(--cardinal); font-size: .8rem; }
+.ia-demo-disclosure { background: #f8f2e6; border-left: 3px solid #b18d59; padding: .8rem 1rem; font-size: .83rem; color: #655039; margin-top: 1.4rem; }
+.ia-demo-deployment { white-space: pre-line; }
+.ia-demo-next { margin-top: 1.3rem; }
+.ia-demo-next p { max-width: 48rem; color: var(--ia-muted); font-size: .87rem; }
+.ia-demo-stage { padding: 1.4rem 1.6rem; border: 1px solid var(--ia-rule); border-radius: 10px; background: #f5f3ed; margin-block: 1.5rem; }
+.ia-demo-stage h3, .ia-demo-status h3, .ia-demo-checkpoint h3 { font-weight: 500; font-size: 1.2rem; margin: 0 0 .6rem; }
+.ia-demo-status { margin-block: 2rem 1.5rem; border-left: 3px solid #769061; padding: .3rem 0 .3rem 1rem; }
+.ia-demo-status p { font-size: .88rem; color: var(--ia-muted); margin: 0; }
+.ia-demo-checkpoint { background: #eef1e8; border: 1px solid #dce3d3; border-radius: 10px; padding: 1.6rem; margin-top: 2rem; }
+.ia-demo-checkpoint > p:not(.ia-small) { max-width: 48rem; color: var(--ia-muted); font-size: .87rem; }
+.ia-demo-checkpoint label { display: flex; align-items: flex-start; gap: .7rem; margin-block: 1.4rem; font-size: .85rem; cursor: pointer; line-height: 1.6; }
+.ia-demo-checkpoint input { flex-shrink: 0; width: 1.05rem; height: 1.05rem; margin: .16rem 0 0; accent-color: var(--cardinal); }
+.ia-demo-checkpoint .ia-small:last-child { margin-bottom: 0; }
+@media (max-width: 700px) {
+  .ia-demo-intro { display: block; }
+  .ia-demo-intro > button { margin-top: .5rem; }
+  .ia-demo-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ia-demo-source-facts { grid-template-columns: minmax(0, 1fr); }
+  .ia-demo .ia-primary { max-width: 100%; text-align: center; line-height: 1.5; }
+}
+@media (max-width: 480px) {
+  .ia-demo .ia-original-grid { grid-template-columns: minmax(0, 1fr); }
+}

@@ -20,6 +20,14 @@ vi.mock('./itemAnalysis/ItemAnalysis', () => ({
   </section>,
 }))
 
+vi.mock('./itemAnalysis/DemoItemAnalysis', () => ({
+  DemoItemAnalysis: ({ onStatusChange }: { onStatusChange?: (status: 'pending' | 'in_progress' | 'complete') => void }) =>
+    <section aria-label="Free demo item analysis">
+      <button onClick={() => onStatusChange?.('in_progress')}>Finish demo pilot</button>
+      <button onClick={() => onStatusChange?.('complete')}>Finish demo sample</button>
+    </section>,
+}))
+
 function makeStream(body: string): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder()
   return new ReadableStream<Uint8Array>({
@@ -679,7 +687,7 @@ describe('App', () => {
     expect(screen.getByText('Benchmark assessment ready · item analysis remains')).toBeInTheDocument()
   })
 
-  it('hands the free demo to its real MathDial assessment and labels the paid continuation', async () => {
+  it('continues the prerecorded MathDial benchmark into free demo item analysis', async () => {
     vi.useFakeTimers()
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: /try a demo run/i }))
@@ -689,18 +697,80 @@ describe('App', () => {
     await act(async () => { await vi.advanceTimersByTimeAsync(10_000) })
     fireEvent.click(screen.getByRole('button', { name: /start scoring/i }))
     await act(async () => { await vi.advanceTimersByTimeAsync(40_000) })
-    expect(screen.getByTestId('item-assessment-reference')).toHaveTextContent('gallery:expert_1a429e941728__mathdial')
+    expect(screen.getByRole('region', { name: 'Free demo item analysis' })).toBeInTheDocument()
+    expect(screen.queryByTestId('item-assessment-reference')).not.toBeInTheDocument()
     expect(window.location.pathname).toBe('/caliper')
-    expect(new URLSearchParams(window.location.search).get('assessment')).toBe('expert_1a429e941728__mathdial')
-    expect(screen.getByText(/prerecorded benchmark assessment\./i)).toBeInTheDocument()
-    expect(screen.getByText(/explicit action before any paid model calls/i)).toBeInTheDocument()
+    expect(new URLSearchParams(window.location.search).get('demo')).toBe('mathdial')
+    expect(new URLSearchParams(window.location.search).get('stage')).toBe('items')
+    expect(new URLSearchParams(window.location.search).has('assessment')).toBe(false)
+    expect(screen.queryByLabelText('OpenAI API key')).not.toBeInTheDocument()
     expect(globalThis.fetch).toHaveBeenCalledTimes(1) // Read-only gallery listing.
-    expect(screen.queryByText('Validity analysis complete')).not.toBeInTheDocument()
+    expect(screen.getByText('Complete').closest('li')).not.toHaveAttribute('aria-current', 'step')
+    fireEvent.click(screen.getByRole('button', { name: 'Finish demo pilot' }))
+    expect(screen.getByText('Complete').closest('li')).not.toHaveAttribute('aria-current', 'step')
+    fireEvent.click(screen.getByRole('button', { name: 'Finish demo sample' }))
+    expect(screen.getByText('Complete').closest('li')).toHaveAttribute('aria-current', 'step')
   })
 
-  it('continues the exact saved run into required item analysis', async () => {
+  it('restores a free item-demo URL without fetching a live assessment', async () => {
+    window.history.replaceState(null, '', '/caliper?demo=mathdial&stage=items')
+    const first = render(<App />)
+    expect(screen.getByRole('region', { name: 'Free demo item analysis' })).toBeInTheDocument()
+    expect(screen.queryByTestId('item-assessment-reference')).not.toBeInTheDocument()
+    first.unmount()
+    render(<App />)
+    expect(screen.getByRole('region', { name: 'Free demo item analysis' })).toBeInTheDocument()
+    expect(screen.queryByTestId('item-assessment-reference')).not.toBeInTheDocument()
+    expect(vi.mocked(globalThis.fetch).mock.calls.map(([url]) => String(url))).toEqual(['/api/gallery', '/api/gallery'])
+  })
+
+  it('opens the free demo directly and can preview its item stage without a key', async () => {
+    localStorage.clear()
+    window.history.replaceState(null, '', '/caliper?demo=mathdial')
+    const user = userEvent.setup()
+    render(<App />)
+    expect(screen.getByRole('button', { name: /run the demo/i })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /enter your anthropic api key/i })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /preview item analysis/i }))
+    expect(screen.getByRole('region', { name: 'Free demo item analysis' })).toBeInTheDocument()
+    expect(new URLSearchParams(window.location.search).get('stage')).toBe('items')
+    expect(vi.mocked(globalThis.fetch).mock.calls.map(([url]) => String(url))).toEqual(['/api/gallery'])
+  })
+
+  it('leaves free demo mode when the user selects a gallery assessment', async () => {
+    const user = userEvent.setup()
+    const entry = { id: 'expert__live-mmlu', benchmark_name: 'Live MMLU', slug: 'live_context', deployment_description: 'A real deployment' }
+    globalThis.fetch = vi.fn(async (url: unknown) => new Response(JSON.stringify(String(url) === '/api/gallery'
+      ? { benchmarks: [entry] } : { ...entry, scoring: { input_content: { score: 3 } }, raw: '{}' }), { status: 200 })) as unknown as typeof fetch
+    window.history.replaceState(null, '', '/caliper?demo=mathdial&stage=items')
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Finish demo sample' }))
+    expect(screen.getByText('Complete').closest('li')).toHaveAttribute('aria-current', 'step')
+    await user.click(await screen.findByRole('button', { name: /Live MMLU A real deployment/ }))
+    expect(await screen.findByTestId('item-assessment-reference')).toHaveTextContent('gallery:expert__live-mmlu')
+    expect(screen.queryByRole('region', { name: 'Free demo item analysis' })).not.toBeInTheDocument()
+    expect(new URLSearchParams(window.location.search).get('assessment')).toBe(entry.id)
+    expect(new URLSearchParams(window.location.search).has('demo')).toBe(false)
+    expect(screen.getByText('Complete').closest('li')).not.toHaveAttribute('aria-current', 'step')
+  })
+
+  it('does not return to a stale replay after exiting the demo', async () => {
+    vi.useFakeTimers()
+    window.history.replaceState(null, '', '/caliper?demo=mathdial')
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: /run the demo/i }))
+    await act(async () => { await vi.advanceTimersByTimeAsync(800) })
+    fireEvent.click(screen.getByRole('button', { name: /exit demo/i }))
+    await act(async () => { await vi.advanceTimersByTimeAsync(90_000) })
+    expect(screen.getByRole('heading', { name: /enter your anthropic api key/i })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /answer the elicitation questions/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Free demo item analysis' })).not.toBeInTheDocument()
+    expect(new URLSearchParams(window.location.search).has('demo')).toBe(false)
+  })
+
+  it.each(['', '?demo=mathdial&stage=items'])('continues the exact saved run into live item analysis despite query %s', async query => {
     const runId = '12345678-abcd-1234-abcd-123456789abc'
-    window.history.replaceState(null, '', `/run/${runId}`)
+    window.history.replaceState(null, '', `/run/${runId}${query}`)
     globalThis.fetch = vi.fn(async (url: unknown) => new Response(JSON.stringify(
       String(url) === '/api/gallery' ? { benchmarks: [] } : {
         run_id: runId, slug: 'saved-deployment', scoring: { input_content: { score: 3 } }, raw: '{}',
@@ -710,6 +780,7 @@ describe('App', () => {
 
     render(<App />)
     expect(await screen.findByTestId('item-assessment-reference')).toHaveTextContent(`run:${runId}`)
+    expect(screen.queryByRole('region', { name: 'Free demo item analysis' })).not.toBeInTheDocument()
     expect(screen.getByText('High priority')).toBeInTheDocument()
     expect(screen.getByText('Benchmark assessment ready · item analysis remains')).toBeInTheDocument()
     expect(screen.queryByText('Validity analysis complete')).not.toBeInTheDocument()

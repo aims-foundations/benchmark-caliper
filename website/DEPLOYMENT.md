@@ -10,6 +10,16 @@ the required item-analysis stage. Existing `/run/{run_id}` report links provide
 the same continuation; `/item-analysis` is a compatibility entry into the main
 Caliper flow. No second service or AIMS proxy change is required.
 
+## Free walkthrough verification
+
+Open `/caliper?demo=mathdial` without saved API keys and follow the full demo,
+or use `/caliper?demo=mathdial&stage=items` to inspect the item stage directly.
+Verify confirmation, criteria, the pilot checkpoint, the remaining sample,
+refresh, restart, and downloads. All item judgments in the walkthrough are
+explicitly authored examples; no live model calls or item jobs occur. It needs
+no server Hugging Face credential because the attributed public sample is
+bundled with the frontend. Ordinary gallery reports still use live analysis.
+
 ## Item-analysis configuration
 
 The item-analysis stage resolves the open benchmark assessment and searches

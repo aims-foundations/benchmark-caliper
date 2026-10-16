@@ -3,6 +3,7 @@ import { DEMO_DEPLOYMENT_DESCRIPTION } from '../demo/fixture'
 interface Props {
   onStart: () => void
   onExit: () => void
+  onPreviewItems: () => void
 }
 
 /**
@@ -14,7 +15,7 @@ interface Props {
  * Visually it reuses .run-form / .hf-details classes so it sits in the
  * same panel layout as the real form.
  */
-export function DemoIntro({ onStart, onExit }: Props) {
+export function DemoIntro({ onStart, onExit, onPreviewItems }: Props) {
   return (
     <form
       className="run-form"
@@ -28,9 +29,11 @@ export function DemoIntro({ onStart, onExit }: Props) {
         This is a <strong>demo run</strong>. Every field below is pre-filled
         with the actual inputs that produced our cached MathDial / India
         urban tutoring assessment. Click <em>Run the demo</em> to watch the
-        benchmark-assessment stage replay — no Anthropic key required and no
-        model calls made. Item analysis follows using this same assessment;
-        it requires your API key and an explicit action to run.
+        benchmark assessment replay, then confirm the sample, review item
+        criteria, inspect a pilot, and explore the final item summary.
+        The item stage uses a small MathDial sample and authored example
+        judgments. The entire walkthrough is free; no API key or model calls
+        are required.
       </p>
 
       <label>
@@ -85,6 +88,7 @@ export function DemoIntro({ onStart, onExit }: Props) {
           Exit demo
         </button>
         <button type="submit">Run the demo →</button>
+        <button type="button" className="link" onClick={onPreviewItems}>Preview item analysis</button>
       </div>
     </form>
   )
