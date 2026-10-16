@@ -1,5 +1,28 @@
 import type { PipelineEvent } from '../api'
 
+/** The shared workflow, including the required item-analysis stage. */
+export function PipelineProgress({ stage }: { stage: 'context' | 'benchmark' | 'items' | 'complete' }) {
+  const stages = [
+    { id: 'context', label: 'Deployment context' },
+    { id: 'benchmark', label: 'Benchmark assessment' },
+    { id: 'items', label: 'Item analysis' },
+    { id: 'complete', label: 'Complete' },
+  ]
+  const current = stages.findIndex(({ id }) => id === stage)
+  return (
+    <nav aria-label="Benchmark analysis progress" className="pipeline-progress">
+      <ol>
+        {stages.map(({ id, label }, index) => (
+          <li key={id} aria-current={index === current ? 'step' : undefined} data-complete={index < current || stage === 'complete'}>
+            <span aria-hidden="true">{index < current || stage === 'complete' ? '✓' : index + 1}</span>
+            {label}
+          </li>
+        ))}
+      </ol>
+    </nav>
+  )
+}
+
 export interface StepLabel {
   step: string
   label: string

@@ -5,6 +5,7 @@ import { KeyForm } from './components/KeyForm'
 import { RunForm } from './components/RunForm'
 import {
   ProgressView,
+  PipelineProgress,
   RUN_STEPS,
   SUMMARY_STEPS,
   EXTRACT_STEPS,
@@ -49,6 +50,7 @@ import {
   DEMO_DEPLOYMENT_DESCRIPTION,
   DEMO_ELICITATION_SUMMARY,
   DEMO_EXPERT_ANSWERS,
+  DEMO_GALLERY_ID,
   DEMO_METADATA,
   DEMO_QUESTIONS,
   DEMO_RAW_TEXT,
@@ -183,6 +185,7 @@ type Phase =
   | { name: 'composed'; state: ComposedState }
   | { name: 'scoring'; state: ScoringState; from: RegionedState }
   | { name: 'scored'; state: ScoredState }
+  | { name: 'loading-gallery'; id: string }
   | { name: 'viewing-gallery'; state: { report: GalleryReport } }
   | { name: 'deleted' }
   | { name: 'error'; message: string }
@@ -214,16 +217,18 @@ function initialReportRunId(): string | null {
   return match ? match[1] : null
 }
 
-export function App() {
+export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boolean }) {
   const [phase, setPhase] = useState<Phase>(() => {
     const reportRun = initialReportRunId()
     if (reportRun) return { name: 'viewing-report', runId: reportRun }
+    const galleryId = new URLSearchParams(window.location.search).get('assessment')
+    if (galleryId) return { name: 'loading-gallery', id: galleryId }
     if (!hasConsent()) return { name: 'consent' }
     return hasKey() ? { name: 'idle' } : { name: 'enter-key' }
   })
   const [showPrivacy, setShowPrivacy] = useState(false)
   const [galleryEntries, setGalleryEntries] = useState<GalleryEntry[]>([])
-  // The user's own finished run, kept for this session so they can
+  // The user's own benchmark assessment, kept for this session so they can
   // switch back to it from the sidebar. Cleared on restart / "Run another".
   const [sessionBenchmark, setSessionBenchmark] = useState<ScoredState | null>(
     null,
@@ -232,6 +237,7 @@ export function App() {
   // expert assessment instead of making real API calls. No Anthropic key
   // is required. Cleared by Restart session / Run another.
   const [isDemo, setIsDemo] = useState(false)
+  const loadingGalleryId = phase.name === 'loading-gallery' ? phase.id : null
 
   // Load the curated gallery once on mount.
   useEffect(() => {
@@ -240,8 +246,26 @@ export function App() {
       .catch(() => setGalleryEntries([]))
   }, [])
 
+  // Keep the parent assessment in the URL, so refreshing during item analysis
+  // restores both this report and its assessment-scoped item-run token.
+  useEffect(() => {
+    if (!loadingGalleryId) return
+    let cancelled = false
+    fetchGalleryReport(loadingGalleryId).then((report) => {
+      if (cancelled) return
+      window.history.replaceState(null, '', appPath(`/caliper?assessment=${encodeURIComponent(report.id)}`))
+      setPhase({ name: 'viewing-gallery', state: { report } })
+    }).catch(() => {
+      if (!cancelled) setPhase({ name: 'error', message: 'Could not load that benchmark.' })
+    })
+    return () => { cancelled = true }
+  }, [loadingGalleryId])
+
   /** Enter the scored view and remember the run as this session's benchmark. */
   function enterScored(state: ScoredState): void {
+    window.history.replaceState(null, '', state.runId === DEMO_RUN_ID
+      ? appPath(`/caliper?assessment=${encodeURIComponent(DEMO_GALLERY_ID)}`)
+      : appPath(`/run/${encodeURIComponent(state.runId)}`))
     setSessionBenchmark(state)
     setPhase({ name: 'scored', state })
   }
@@ -250,22 +274,20 @@ export function App() {
     setPhase(hasKey() ? { name: 'idle' } : { name: 'enter-key' })
   }
 
-  async function handleSelectCurated(id: string): Promise<void> {
-    try {
-      const report = await fetchGalleryReport(id)
-      setPhase({ name: 'viewing-gallery', state: { report } })
-    } catch {
-      setPhase({ name: 'error', message: 'Could not load that benchmark.' })
-    }
+  function handleSelectCurated(id: string): void {
+    setIsDemo(false)
+    setPhase({ name: 'loading-gallery', id })
   }
 
   function handleSelectSession(): void {
     if (sessionBenchmark) {
-      setPhase({ name: 'scored', state: sessionBenchmark })
+      enterScored(sessionBenchmark)
     }
   }
 
   function handleAddBenchmark(): void {
+    window.history.replaceState(null, '', appPath('/caliper'))
+    setIsDemo(false)
     setPhase(hasKey() ? { name: 'idle' } : { name: 'enter-key' })
   }
 
@@ -279,29 +301,26 @@ export function App() {
   }
 
   function handleChangeKey(): void {
+    window.history.replaceState(null, '', appPath('/caliper'))
     clearKey()
     setPhase({ name: 'enter-key' })
   }
 
   function handleStartOver(): void {
-    if (
-      typeof window !== 'undefined' &&
-      stripBasePath(window.location.pathname).startsWith('/run/')
-    ) {
-      window.history.replaceState(null, '', appPath('/caliper'))
-    }
+    window.history.replaceState(null, '', appPath('/caliper'))
     setIsDemo(false)
-    setPhase({ name: 'idle' })
+    setPhase(hasKey() ? { name: 'idle' } : { name: 'enter-key' })
   }
 
   // -------------------- Demo mode --------------------
   // Replays the curated MathDial / India tutoring assessment as if it were
   // a live run: ticks fake SSE events into the existing phase states with
   // realistic delays, walks through the same UI components as a real run,
-  // and lands on the genuine scoring as the final report. The user never
-  // supplies an API key; no requests hit the backend.
+  // and lands on the genuine scoring before the required item stage. The
+  // prerecorded benchmark stage requires no key and starts no model calls.
 
   function handleTryDemo(): void {
+    window.history.replaceState(null, '', appPath('/caliper'))
     // Land on a pre-filled "describe your deployment" screen first, so
     // the user sees Step 1 of the real flow (the upload form) before any
     // progress starts ticking. Clicking "Run the demo" there calls
@@ -1138,8 +1157,8 @@ export function App() {
           <p className="eyebrow">AIMS · Software &amp; Data</p>
           <h1 className="rd-page-title">Benchmark Caliper.</h1>
           <p className="tagline rd-lead">
-            Assess whether an AI benchmark applies to a different deployment
-            context.
+            Assess a benchmark for your deployment context, then examine its
+            individual items to measure the validity concerns.
           </p>
           <div className="hero-actions">
             <a className="rd-btn" href={appPath('/')}>Choose an evaluation</a>
@@ -1164,7 +1183,33 @@ export function App() {
         onSelectSession={handleSelectSession}
         onAddBenchmark={handleAddBenchmark}
       />
-      <main className="app">
+      <main className={`app${['scored', 'viewing-gallery', 'viewing-report'].includes(phase.name) ? ' app-analysis' : ''}`}>
+
+      {galleryEntries.length > 0 && (
+        <label className="gallery-mobile">
+          <span className="label-text">Open an existing benchmark assessment</span>
+          <select value={phase.name === 'viewing-gallery' ? phase.state.report.id : ''} disabled={!GALLERY_ENABLED_PHASES.has(phase.name)} onChange={(event) => { if (event.target.value) void handleSelectCurated(event.target.value) }}>
+            <option value="">Choose an assessment…</option>
+            {galleryEntries.map((entry) => <option key={entry.id} value={entry.id}>{entry.benchmarkName} · {entry.deploymentDescription || entry.slug}</option>)}
+          </select>
+        </label>
+      )}
+
+      {legacyItemAnalysis && (
+        <p className="pipeline-stage-status" role="status">
+          Item analysis is now part of benchmark validity analysis. Choose an
+          existing assessment from the gallery or start a new benchmark below;
+          its item-analysis stage follows the benchmark report.
+        </p>
+      )}
+
+      {!['scored', 'viewing-gallery', 'viewing-report', 'loading-gallery'].includes(phase.name) && (
+        <PipelineProgress stage={['summary', 'auto-running', 'extracting', 'extracted', 'regioning', 'analyzing-dataset', 'regioned', 'composed', 'scoring'].includes(phase.name) ? 'benchmark' : 'context'} />
+      )}
+
+      {phase.name === 'loading-gallery' && (
+        <section className="progress" role="status"><h2>Loading benchmark assessment…</h2></section>
+      )}
 
       {phase.name === 'viewing-report' && (
         <ReportView
@@ -1181,7 +1226,8 @@ export function App() {
             (expert-elicited inputs) for MathDial — India urban English
             tutoring. The scores are Claude Opus's, conditioned on an expert's
             elicitation, not an expert's own scores. No Anthropic API calls
-            are being made.
+            are being made during this prerecorded benchmark stage. The required
+            item-analysis stage follows and uses your API key when you choose to run it.
           </p>
           <button
             type="button"
@@ -1233,6 +1279,7 @@ export function App() {
 
       {phase.name === 'summary' && (
         <SummaryView
+          demo={isDemo}
           summary={phase.state.summary}
           runId={phase.state.runId}
           slug={phase.state.slug}
@@ -1255,7 +1302,7 @@ export function App() {
         <ProgressView
           events={phase.state.events}
           steps={AUTO_STEPS}
-          heading="Running the full pipeline"
+          heading="Running the benchmark assessment"
         />
       )}
 
@@ -1291,13 +1338,14 @@ export function App() {
 
       {phase.name === 'analyzing-dataset' && (
         <section className="status" role="status" aria-live="polite">
-          <h2>Analyzing the benchmark dataset</h2>
+          <h2>Profiling the benchmark dataset</h2>
           <p className="help">
-            Step 5b — profiling the benchmark's HuggingFace dataset and
+            Profiling the benchmark's HuggingFace dataset and
             interpreting it against your deployment context. The findings
             are folded into the validity scoring. This can take several
             minutes; it is skipped automatically if the benchmark has no
-            resolvable HuggingFace dataset.
+            resolvable HuggingFace dataset. The required item-analysis stage
+            follows the benchmark assessment.
           </p>
         </section>
       )}
@@ -1339,9 +1387,16 @@ export function App() {
 
       {phase.name === 'scored' && (
         <ScoringView
+          key={phase.state.runId}
           scoring={phase.state.scoring}
           rawText={phase.state.rawText}
           runId={phase.state.runId}
+          assessment={phase.state.runId === DEMO_RUN_ID
+            ? { kind: 'gallery', id: DEMO_GALLERY_ID }
+            : { kind: 'run', id: phase.state.runId }}
+          demo={phase.state.runId === DEMO_RUN_ID}
+          readOnly={phase.state.runId === DEMO_RUN_ID}
+          pdfUrl={phase.state.runId === DEMO_RUN_ID ? appPath(`/api/gallery/${DEMO_GALLERY_ID}/review.pdf`) : undefined}
           slug={phase.state.slug}
           onStartOver={handleStartOver}
           onChangeKey={handleChangeKey}
@@ -1352,9 +1407,11 @@ export function App() {
 
       {phase.name === 'viewing-gallery' && (
         <ScoringView
+          key={phase.state.report.id}
           scoring={phase.state.report.scoring}
           rawText={phase.state.report.raw}
           runId={phase.state.report.id}
+          assessment={{ kind: 'gallery', id: phase.state.report.id }}
           slug={phase.state.report.slug}
           pdfUrl={appPath(
             `/api/gallery/${encodeURIComponent(

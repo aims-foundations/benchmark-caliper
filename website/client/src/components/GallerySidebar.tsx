@@ -37,10 +37,10 @@ export function GallerySidebar({
 }: Props) {
   return (
     <aside className="gallery-sidebar" aria-label="Benchmark gallery">
-      <h2 className="gallery-title">Evaluated benchmarks</h2>
+      <h2 className="gallery-title">Benchmark assessments</h2>
       <p className="gallery-hint">
         Reports from benchmarks our experts have already assessed. Click
-        one to view its validity scores.
+        one to review its validity scores and continue with item analysis.
       </p>
 
       <ul className="gallery-list">

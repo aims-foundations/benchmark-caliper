@@ -1,6 +1,5 @@
 import { App } from './App'
 import { ItemReview } from './itemReview/ItemReview'
-import { ItemAnalysis } from './itemAnalysis/ItemAnalysis'
 import { SiteHeader } from './components/SiteHeader'
 import { SiteFooter } from './components/SiteFooter'
 import { appPath, stripBasePath } from './paths'
@@ -8,7 +7,7 @@ import { appPath, stripBasePath } from './paths'
 export function EvaluationSite() {
   const path = stripBasePath(window.location.pathname).replace(/\/+$/, '') || '/'
   if (path === '/items') return <ItemReview />
-  if (path === '/item-analysis') return <ItemAnalysis />
+  if (path === '/item-analysis') return <App legacyItemAnalysis />
   if (path === '/caliper' || path.startsWith('/run/')) return <App />
   return (
     <div className="rd-root evaluation-site">
@@ -52,12 +51,12 @@ export function EvaluationSite() {
         </header>
       </div>
       <main className="rd-container evaluation-main" id="choose-workflow">
-        <div className="evaluation-section-heading"><h2>Research tools</h2><p>Context-specific validity analysis at the benchmark and item levels.</p></div>
+        <div className="evaluation-section-heading"><h2>Research tools</h2><p>Assess a benchmark through its items, or find items for your deployment.</p></div>
         <div className="evaluation-choices">
         <article className="evaluation-choice">
-          <h3>Benchmark-level<br />validity analysis</h3>
-          <p>Analyze benchmark documentation to assess applicability to a specified AI system, task, and deployment context across six dimensions of validity.</p>
-          <dl className="evaluation-outcome"><div><dt>Input</dt><dd>Benchmark paper and deployment context</dd></div><div><dt>Output</dt><dd>Six-dimensional validity assessment</dd></div></dl>
+          <h3>Benchmark<br />validity analysis</h3>
+          <p>Assess benchmark documentation against your deployment context, then analyze the benchmark's individual items to measure how common the identified validity concerns are.</p>
+          <dl className="evaluation-outcome"><div><dt>Input</dt><dd>Benchmark paper, deployment context, and matching dataset</dd></div><div><dt>Output</dt><dd>Six-dimensional assessment and issue prevalence with inspectable items</dd></div></dl>
           <a className="evaluation-choice-link" href={appPath('/caliper')}>Analyze a benchmark <span aria-hidden="true">→</span></a>
         </article>
         <article className="evaluation-choice">
@@ -65,12 +64,6 @@ export function EvaluationSite() {
           <p>Assess and rank evaluation items from the Measurement Data Bank according to their compatibility with a specified deployment context, with supporting evidence and assessment confidence.</p>
           <dl className="evaluation-outcome"><div><dt>Input</dt><dd>Description of the AI system, task, and deployment context</dd></div><div><dt>Output</dt><dd>Ranked evaluation items with dimension-level assessments</dd></div></dl>
           <a className="evaluation-choice-link" href={appPath('/items')}>Assess evaluation items <span aria-hidden="true">→</span></a>
-        </article>
-        <article className="evaluation-choice">
-          <h3>Item-level<br />validity analysis <span className="review-badge">Demo</span></h3>
-          <p>Follow up on a benchmark assessment by examining individual questions. See how common each issue is and explore the items behind the findings.</p>
-          <dl className="evaluation-outcome"><div><dt>Input</dt><dd>Existing benchmark assessment and dataset</dd></div><div><dt>Output</dt><dd>Issue prevalence with inspectable items</dd></div></dl>
-          <a className="evaluation-choice-link" href={appPath('/item-analysis')}>Explore item analysis <span aria-hidden="true">→</span></a>
         </article>
         </div>
       </main>

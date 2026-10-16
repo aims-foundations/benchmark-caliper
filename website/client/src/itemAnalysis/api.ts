@@ -1,5 +1,5 @@
 import { appPath } from '../paths'
-import type { AnalysisRun, Artifact, Catalog, RunAccess, RunScope, SpecificationMode } from './types'
+import type { AnalysisRun, Artifact, AssessmentReference, AssessmentSetup, Catalog, ConfirmedDataset, RunAccess, RunScope, SourceDiscovery, SpecificationMode } from './types'
 
 export class AnalysisApiError extends Error {
   constructor(message: string, readonly status: number) { super(message) }
@@ -22,6 +22,23 @@ const runPath = (run: RunAccess) => `/runs/${encodeURIComponent(run.run_id)}`
 const accessHeader = (run: RunAccess) => ({ 'X-Review-Token': run.run_secret })
 
 export const getCatalog = (signal?: AbortSignal) => json<Catalog>('/catalog', { signal })
+export const getAssessment = (assessment: AssessmentReference, signal?: AbortSignal) =>
+  json<AssessmentSetup>(`/assessment?${new URLSearchParams({ kind: assessment.kind, id: assessment.id })}`, { signal })
+export const searchSources = (assessment: AssessmentReference, query: string, signal?: AbortSignal) =>
+  json<SourceDiscovery>(`/sources?${new URLSearchParams({ kind: assessment.kind, id: assessment.id, q: query })}`, { signal })
+
+export const createAssessmentRun = (assessment: AssessmentReference, dataset: ConfirmedDataset, apiKey: string) => {
+  const body = new FormData()
+  body.set('assessment_kind', assessment.kind)
+  body.set('assessment_id', assessment.id)
+  body.set('benchmark_confirmed', String(dataset.benchmark_confirmed))
+  if (dataset.source_id) body.set('source_id', dataset.source_id)
+  if (dataset.source_revision) body.set('source_revision', dataset.source_revision)
+  if (dataset.items_file) body.set('items_file', dataset.items_file)
+  return json<AnalysisRun & RunAccess>('/runs/from-assessment', {
+    method: 'POST', headers: { 'X-OpenAI-Key': apiKey }, body,
+  })
+}
 export const createRun = (exampleId: string, mode: SpecificationMode, apiKey: string) => json<AnalysisRun & RunAccess>('/runs', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json', ...(apiKey ? { 'X-OpenAI-Key': apiKey } : {}) },

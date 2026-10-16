@@ -28,8 +28,9 @@ export function DemoIntro({ onStart, onExit }: Props) {
         This is a <strong>demo run</strong>. Every field below is pre-filled
         with the actual inputs that produced our cached MathDial / India
         urban tutoring assessment. Click <em>Run the demo</em> to watch the
-        pipeline replay end-to-end — no Anthropic key required, no API
-        calls made.
+        benchmark-assessment stage replay — no Anthropic key required and no
+        model calls made. Item analysis follows using this same assessment;
+        it requires your API key and an explicit action to run.
       </p>
 
       <label>

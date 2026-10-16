@@ -24,8 +24,13 @@ export function ConsentGate({ onAccept }: Props) {
     <section className="consent-gate" aria-labelledby="consent-heading">
       <h2 id="consent-heading">Before you start</h2>
       <p>
-        This tool runs validity-analysis pipeline calls against the Anthropic
-        API. Read this once, then you won't see it again on this device.
+        This workflow uses your Anthropic API key for the benchmark assessment
+        and your OpenAI API key for the required item analysis. You connect a
+        matching dataset after the benchmark assessment: we search the
+        Measurement Data Bank, then you confirm the benchmark and snapshot.
+        You can also search for another match or upload the benchmark’s items.
+        Each stage has an explicit action to start
+        its paid model calls.
       </p>
 
       <h3>About the scores you'll see</h3>
@@ -39,23 +44,30 @@ export function ConsentGate({ onAccept }: Props) {
         form on every report - that's how we make the next version better.
       </p>
 
-      <h3>Your API key</h3>
+      <h3>Your API keys</h3>
       <ul>
-        <li>Stays in your browser only.</li>
+        <li>Your Anthropic key is saved in your browser; your OpenAI key stays in the page's memory.</li>
         <li>
-          Sent only in a header on requests to our backend; never written to
-          any server-side log, database, or file.
+          Keys are sent to our backend in request headers and held in server
+          memory while needed for model calls. They are never written to
+          server logs, databases, or files.
         </li>
-        <li>You can revoke it at any time from your Anthropic console.</li>
+        <li>You can revoke either key at any time with its provider.</li>
       </ul>
 
-      <h3>What we logs (for future improvement) </h3>
+      <h3>What we log (for future improvement)</h3>
       <ul>
         <li>Which pipeline steps ran, when, on which model.</li>
         <li>Token counts, costs, and step latency.</li>
         <li>SHA-256 hashes of your inputs (so we can dedupe identical papers).</li>
         <li>Whether each step succeeded or failed.</li>
       </ul>
+
+      <p>
+        The item-analysis stage sends assessment context and items to OpenAI.
+        Its criteria and results are temporary: download them before they
+        expire one hour after the run ends or when the server restarts.
+      </p>
 
       <h3>Your rights</h3>
       <ul>

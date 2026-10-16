@@ -57,9 +57,6 @@
 .evaluation-outcome dd { margin: 0; font-weight: 400; }
 .evaluation-choice-link { display: inline-flex; align-items: center; justify-self: start; gap: .65rem; min-height: 44px; margin-top: 1rem; color: var(--cardinal); font-size: .95rem; font-weight: 500; text-decoration: none; }
 .evaluation-choice-link:hover { color: #691010; text-decoration: underline; text-underline-offset: .2em; }
-@media (min-width: 1100px) {
-  .evaluation-choices { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
 @media (max-width: 760px) {
   .evaluation-choices { grid-template-columns: 1fr; }
 }

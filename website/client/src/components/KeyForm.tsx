@@ -4,7 +4,7 @@ import { setKey } from '../keyStorage'
 interface Props {
   onSaved: () => void
   /** Optional. When provided, a "Try the demo" link is shown that
-   * replays a real expert run end-to-end without needing an API key. */
+   * replays a real expert benchmark assessment without needing an API key. */
   onTryDemo?: () => void
 }
 
@@ -25,9 +25,15 @@ export function KeyForm({ onSaved, onTryDemo }: Props) {
     <form onSubmit={handleSubmit} className="key-form">
       <h2>Enter your Anthropic API key</h2>
       <p className="help">
-        Your key is stored on this device only. It is sent directly from
-        your browser to our backend on each request and is never logged or
-        persisted on our servers. Get a key at{' '}
+        The benchmark assessment uses your Anthropic key. The required
+        item-analysis stage uses a separate OpenAI key, which you enter later,
+        and a matching dataset. We search the Measurement Data Bank and ask
+        you to confirm the benchmark and snapshot; uploading items is also supported.
+      </p>
+      <p className="help">
+        Your Anthropic key is saved in your browser and sent to our backend for
+        model calls. It is held in server memory while needed, never written to
+        server logs or storage. Get a key at{' '}
         <a
           href="https://console.anthropic.com/"
           target="_blank"
@@ -73,7 +79,7 @@ export function KeyForm({ onSaved, onTryDemo }: Props) {
           <button type="button" className="link" onClick={onTryDemo}>
             Try a demo run instead →
           </button>{' '}
-          <span>(replays a real assessment, no API key needed)</span>
+          <span>(free benchmark-stage replay; item analysis uses your API key)</span>
         </p>
       )}
     </form>

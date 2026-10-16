@@ -1,10 +1,12 @@
-import { useState, type FormEvent, type ReactNode } from 'react'
+import { useCallback, useState, type FormEvent, type ReactNode } from 'react'
 import {
   submitFeedback,
   ApiError,
   type FeedbackCategory,
 } from '../api'
 import { appPath } from '../paths'
+import { ItemAnalysis } from '../itemAnalysis/ItemAnalysis'
+import { PipelineProgress } from './ProgressView'
 import {
   calibrateConfidence,
   parsePriorityWeights,
@@ -55,18 +57,23 @@ interface Props {
   rawText: string
   runId: string
   slug: string
+  /** The assessment whose findings and deployment feed the next stage. */
+  assessment: { kind: 'run' | 'gallery'; id: string }
   onStartOver: () => void
   onChangeKey: () => void
   /** Override the review.pdf URL (curated gallery entries live elsewhere). */
   pdfUrl?: string
-  /** Curated/read-only view: hides the feedback form and key controls. */
+  pdfAvailable?: boolean
+  /** Benchmark-stage read-only view: hides feedback and Anthropic key controls. */
   readOnly?: boolean
+  demo?: boolean
   /**
    * The elicitation summary markdown, used to surface each dimension's
    * user-assigned priority weight beside its score. Optional — when absent
    * (e.g. some gallery entries) priority badges are simply omitted.
    */
   elicitationSummary?: string
+  deploymentContext?: string
   /** Report-email outcome from the run. Absent for the read-only gallery. */
   emailStatus?: {
     requested: boolean
@@ -141,14 +148,24 @@ export function ScoringView({
   rawText,
   runId,
   slug,
+  assessment,
   onStartOver,
   onChangeKey,
   pdfUrl,
+  pdfAvailable = true,
   readOnly = false,
+  demo = false,
   emailStatus,
   elicitationSummary,
+  deploymentContext,
 }: Props) {
   const [tab, setTab] = useState<Tab>('table')
+  const assessmentKey = `${assessment.kind}:${assessment.id}`
+  const [itemState, setItemState] = useState<{ key: string; status: 'pending' | 'in_progress' | 'complete' }>({ key: assessmentKey, status: 'pending' })
+  const itemStatus = itemState.key === assessmentKey ? itemState.status : 'pending'
+  const handleItemStatus = useCallback((status: 'pending' | 'in_progress' | 'complete') => {
+    setItemState((previous) => previous.key === assessmentKey && previous.status === status ? previous : { key: assessmentKey, status })
+  }, [assessmentKey])
   const priorities = parsePriorityWeights(elicitationSummary)
   const hasPriorities = Object.keys(priorities).length > 0
   const [feedbackOpen, setFeedbackOpen] = useState(false)
@@ -218,18 +235,31 @@ export function ScoringView({
   const empty = dimensions.length === 0
 
   return (
+    <>
+    <PipelineProgress stage={itemStatus === 'complete' ? 'complete' : 'items'} />
+    <div className="pipeline-stage-status" role="status">
+      <strong>{itemStatus === 'complete' ? 'Validity analysis complete' : 'Benchmark assessment ready · item analysis remains'}</strong>
+      <p>{itemStatus === 'complete'
+        ? 'Review the benchmark assessment and the item-level evidence together below.'
+        : 'Continue with the matching dataset below. Item analysis is the next required stage: review the criteria, inspect the pilot, and classify the full dataset to complete this analysis.'}</p>
+      {itemStatus !== 'complete' && <a href="#item-analysis-stage">Continue to item analysis ↓</a>}
+    </div>
+    {demo && <div className="demo-banner"><p><strong>Prerecorded benchmark assessment.</strong> The MathDial scores below come from the free walkthrough. The item-analysis stage uses this same assessment and requires your API key and an explicit action before any paid model calls.</p></div>}
     <section className="summary">
-      <h2>Validity scoring</h2>
+      <p className="eyebrow">Stage 2 · Benchmark assessment</p>
+      <h2>Benchmark validity assessment</h2>
       <p className="help">
-        Step 7's output: an Opus-scored validity assessment across the six
-        dimensions, conditioned on your deployment context. Scores are 1–5;
-        higher is better. Click a dimension to expand its reasoning.
+        The benchmark-level assessment across six dimensions, conditioned on your
+        deployment context. Scores are 1–5; higher is better. Expand each
+        dimension to review the concerns that guide the item-analysis stage below.
       </p>
+
+      {deploymentContext && <details className="score-deployment-context"><summary>Deployment context</summary><p>{deploymentContext}</p></details>}
 
       {emailStatus?.requested &&
         (emailStatus.sent && !emailStatus.fallback ? (
           <p className="email-status" role="status">
-            📧 The report has been emailed to you, with Markdown and JSON
+            📧 The benchmark-stage report has been emailed to you, with Markdown and JSON
             copies attached.
           </p>
         ) : emailStatus.fallback ? (
@@ -408,10 +438,12 @@ export function ScoringView({
       )}
 
       <dl className="run-meta">
+        {slug && <>
         <dt>Slug</dt>
         <dd>
           <code>{slug}</code>
         </dd>
+        </>}
         <dt>Run ID</dt>
         <dd>
           <code>{runId}</code>
@@ -427,18 +459,15 @@ export function ScoringView({
         <button type="button" className="link" onClick={handleDownload}>
           Download {tab === 'table' ? '.json' : '.txt'}
         </button>
-        <a
+        {pdfAvailable && <a
           className="link"
           href={pdfUrl ?? appPath(`/api/runs/${runId}/review.pdf`)}
           download={`validity_report_${slug || runId}.pdf`}
           target="_blank"
           rel="noreferrer"
         >
-          Download report PDF
-        </a>
-        <button type="button" onClick={onStartOver}>
-          Run another
-        </button>
+          Download benchmark report PDF
+        </a>}
       </div>
 
       <aside className="score-disclaimer">
@@ -534,5 +563,14 @@ export function ScoringView({
       </details>
       )}
     </section>
+    <div id="item-analysis-stage" className="pipeline-item-stage">
+      <ItemAnalysis key={assessmentKey} assessment={assessment} onStatusChange={handleItemStatus} />
+    </div>
+    <div className="actions">
+      <button type="button" className={itemStatus === 'complete' ? undefined : 'link'} onClick={onStartOver}>
+        Start another benchmark analysis
+      </button>
+    </div>
+    </>
   )
 }

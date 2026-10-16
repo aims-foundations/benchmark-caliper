@@ -1,59 +1,84 @@
 # Benchmark Caliper Deployment
 
-This website is deployed as one backend web service. The container builds the
+This website is packaged as one backend web service. The container builds the
 Vite frontend and serves it from the FastAPI app, so Render only needs one
 service for the MVP.
 
-The same image now serves the workflow selector, `/caliper`, `/items`, and `/item-analysis` under
-the existing `/benchmark-caliper` proxy. Existing `/run/{run_id}` links keep
-working. No second service or AIMS proxy change is required.
+The image serves a two-tool selector, `/caliper`, and `/items` under the existing
+`/benchmark-caliper` proxy. `/caliper` continues from its benchmark report into
+the required item-analysis stage. Existing `/run/{run_id}` report links provide
+the same continuation; `/item-analysis` is a compatibility entry into the main
+Caliper flow. No second service or AIMS proxy change is required.
 
 ## Item-analysis configuration
 
-The `/item-analysis` demo defaults to the real 14,015-item MMLU snapshot at
-`aims-foundations/measurement-db-pp`, revision
-`cc796d3545a6bd2e78b5513c13e60a6913d01e3f`, table `mmlu/items.parquet`.
-The same repository supplies TOXIGEN's 39,011-item `toxigen/items.parquet`
-snapshot at revision `7a840c66f04393497c106289a1b8bbca8d107008`. TOXIGEN has two
-selectable assessments: Bangladesh clinical content moderation and South Asian
-academic toxicity research. Grant the server's `HF_TOKEN` read access to that repository. Its access can
-differ from the `measurement-db` repository used by the separate `/items` flow.
-The application downloads and verifies the table when preparing the first run;
-no manual dataset transfer is needed. The source is cached privately at
-`/data/item-analysis-sources/`. The catalog also offers GSM8K's 1,319-item test
-split from `openai/gsm8k` and HumanEval's 164-item test split from
-`openai/openai_humaneval`. Those public datasets are downloaded anonymously;
-they remain available when the server has no Hugging Face credential. All four
-sources are pinned in `website/server/item_analysis_sources.json`. The matching
-original assessments and MMLU's supplied classifier specification ship with the
-code; dataset rows stay out of Git and image layers.
+The item-analysis stage resolves the open benchmark assessment and searches
+`aims-foundations/measurement-db` using its saved paper metadata. Every source
+requires explicit benchmark confirmation, including exact matches. The user can
+search other candidates or upload CSV/JSON items. Uploads accept up to 10 MiB and
+50,000 items, require `content`, and allow optional `item_id` and
+`reference_answer`. No Hugging Face credential is needed for uploads.
+
+Set the server's `HF_TOKEN` to a credential with read access to
+`aims-foundations/measurement-db`. The bundled metadata catalog supports fast
+search and background refresh; selected sources remain pinned to the displayed
+repository revision. Discovery uses main-branch public releases and does not
+merge the historical migration branch or the separate `/items` sample.
+The source catalog displays versions, item counts, matching evidence, and
+unavailable reasons. Unsupported sources can be reviewed in search but cannot
+start model calls. See the [Data Bank setup](README.md#configure-data-bank-access)
+for catalog refresh instructions.
+
+The earlier prepared-example API retains the small pinned source registry in
+`website/server/item_analysis_sources.json`. Its MMLU and TOXIGEN entries use
+`measurement-db-pp`; GSM8K and HumanEval use their public upstream repositories.
+Those legacy entries do not supply the merged report's dataset choices or
+assessment context. Raw dataset rows stay out of Git and image layers.
 
 Visitors supply an OpenAI key for both specification generation and item
 classification. Both steps use `gpt-6-luna` with low reasoning effort; the
 server needs no OpenAI key of its own for this workflow.
-TOXIGEN, GSM8K, and HumanEval require generating criteria for their selected assessment.
-Loading the supplied MMLU criteria requires no visitor key, but does require
-server dataset access. An optional ten-item teaching example remains available
-and is explicitly illustrative. Access errors are shown without silently
-substituting teaching data.
+All report continuations require fresh criteria generation. No paid call starts
+when a report or dataset setup is opened: visitors separately start criteria
+generation, pilot classification, and full-snapshot continuation. The earlier
+prepared-example API remains available, including supplied MMLU criteria and the
+explicitly illustrative ten-item example, but has no standalone homepage entry.
+Access errors are shown without silently substituting teaching data.
 
-`ITEM_ANALYSIS_PREPARED_DIR` remains an optional override for a manually prepared
-snapshot; it replaces the remote benchmark catalog. Leave it unset to offer
-MMLU, TOXIGEN, GSM8K, and HumanEval with direct Hugging Face loading. Local `results/`
-directories remain excluded from Docker.
+`ITEM_ANALYSIS_PREPARED_DIR` remains an optional override for the legacy
+prepared-example API only. It does not bypass Data Bank confirmation in report
+continuations. Local `results/` directories remain excluded from Docker.
 
-Use one instance and one worker. Each browser run copies the source inputs into
-a private directory. Jobs expire one hour after a phase ends and cannot resume
-after a server restart. The live catalog shows which examples are configured:
+Use one instance and one worker. Each item run copies its source inputs and
+the exact original assessment into a private directory. Jobs expire one hour
+after a phase ends and cannot resume
+after a server restart. Preserve the benchmark tuple workspace under the data
+directory: saved report continuation needs its deployment and assessment
+artifacts, including when trace logging was not enabled. The existing benchmark
+workspace retention and deletion rules still apply.
+
+The read-only setup endpoint resolves a completed run or gallery assessment:
 
 ```bash
-curl -f https://aimslab.stanford.edu/benchmark-caliper/api/item-analysis/catalog
+curl -f 'https://aimslab.stanford.edu/benchmark-caliper/api/item-analysis/assessment?kind=run&id=RUN_ID'
 ```
 
-Verify `/benchmark-caliper/item-analysis`, load MMLU's supplied criteria, and
-confirm that all 14,015 items are available with unclassified items marked pending. This checks
-the deployed pipeline without paid calls. Generation and classification require
-a separate live test with a visitor's key.
+`POST /api/item-analysis/runs/from-assessment` takes multipart
+`assessment_kind`, `assessment_id`, `benchmark_confirmed=true`, and exactly one
+of `source_id` or `items_file`, with a visitor's `X-OpenAI-Key`. Data Bank sources
+also require `source_revision` matching the displayed selection. Treat this as a
+paid action; it starts criteria generation after validating the source and
+assessment. The old
+`/api/item-analysis/catalog` and `POST /api/item-analysis/runs` prepared-example
+API remains available for compatibility.
+
+After deployment, verify the homepage has two tools, open a gallery report and a
+retained `/run/{run_id}` report, and confirm that each carries its own context
+into the item stage. Check the proposed Data Bank match, manual search, required
+confirmation, and upload fallback before starting any paid model phase. Check
+that `/item-analysis` opens the main flow. Loading these pages and the setup endpoint makes no paid calls. Generation, pilot
+classification, cancellation, and continuation require a separate authorized
+live test with a visitor's key; offline tests use mocked model responses.
 
 ## Item-review configuration
 

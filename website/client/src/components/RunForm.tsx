@@ -14,7 +14,7 @@ interface Props {
 
 // Loose shape check for `org/dataset` (HF requires non-empty namespace and
 // name; we don't validate against the live registry). Empty string is fine
-// — that just means the user is opting out of dataset analysis.
+// — the matching item dataset can be connected after the benchmark assessment.
 const HF_ID_RE = /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/
 
 export function RunForm({ onSubmit, onChangeKey }: Props) {
@@ -109,8 +109,10 @@ export function RunForm({ onSubmit, onChangeKey }: Props) {
       <h2>Describe your deployment</h2>
       <p className="help">
         Upload the benchmark paper as a PDF and describe the deployment context
-        where you'd want to use it. Steps 0–2 of the pipeline run on submit;
-        you'll see live progress and a few elicitation questions.
+        where you'd want to use it. First, answer a few questions and assess the
+        benchmark. Then connect its dataset and analyze individual items to
+        complete the validity analysis. The benchmark stage uses your Anthropic
+        key; item analysis uses an OpenAI key.
       </p>
 
       <label>
@@ -142,13 +144,15 @@ export function RunForm({ onSubmit, onChangeKey }: Props) {
 
       <fieldset className="hf-details">
         <legend>
-          <strong>Optional:</strong> HuggingFace dataset for this benchmark
+          HuggingFace dataset for preliminary profiling
         </legend>
         <p className="help">
           If the benchmark's data is published on HuggingFace and you know
-          the dataset ID, paste it here. The pipeline will profile a sample
-          of the actual data and include those findings in the validity
-          scoring (Step 5b). Leave blank to skip — scoring still runs.
+          the dataset ID, paste it here to include a preliminary data profile in
+          the benchmark assessment. You can leave this field blank. In the next
+          stage, confirm a matching Measurement Data Bank snapshot or upload
+          the benchmark’s items. Item analysis
+          is required to complete the pipeline.
         </p>
         <label>
           <span className="label-text">HF dataset ID (e.g. org/dataset)</span>

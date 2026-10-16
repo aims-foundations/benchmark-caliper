@@ -13,6 +13,7 @@ import type { Question } from '../api'
 
 export const DEMO_SLUG = 'india_urban_english_tutoring'
 export const DEMO_RUN_ID = 'demo-mathdial'
+export const DEMO_GALLERY_ID = 'expert_1a429e941728__mathdial'
 export const DEMO_BENCHMARK_LABEL = 'MathDial — India urban tutoring (demo)'
 
 export const DEMO_DEPLOYMENT_DESCRIPTION =

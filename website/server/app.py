@@ -1734,7 +1734,7 @@ def export_run(run_id: str) -> dict:
 
 
 @app.delete("/api/runs/{run_id}", status_code=204)
-def delete_run(run_id: str) -> Response:
+async def delete_run(run_id: str) -> Response:
     """Hard-delete a run: rows and blobs.
 
     `steps` rows are removed by cascade (see db.py). The per-run blob
@@ -1750,6 +1750,7 @@ def delete_run(run_id: str) -> Response:
             raise HTTPException(404, "run not found")
         conn.execute("DELETE FROM runs WHERE run_id = ?", (run_id,))
 
+    await item_analysis.delete_for_assessment(run_id)
     run_dir = blob_root / run_id
     if run_dir.exists():
         shutil.rmtree(run_dir, ignore_errors=True)
@@ -2050,6 +2051,27 @@ def get_report(run_id: str) -> dict:
             "scoring": active.artifacts.get("scoring") or {},
             "raw": active.artifacts.get("raw_text") or "",
         }
+
+    # Completed runs discard their in-memory artifacts. Their session report
+    # workspace still holds the scored result even when trace logging was
+    # opted out, and is also the source for the following item-analysis step.
+    if re.fullmatch(r"[a-zA-Z0-9_-]{1,160}", run_id):
+        directory = pipeline_runner._WORKSPACE_ROOT / run_id
+        try:
+            scoring = json.loads((directory / "scoring.json").read_text(encoding="utf-8"))
+            if isinstance(scoring, dict) and isinstance(scoring.get("dimensions"), dict):
+                def artifact_text(filename: str) -> str:
+                    path = directory / filename
+                    return path.read_text(encoding="utf-8") if path.is_file() else ""
+
+                return {
+                    "run_id": run_id, "slug": "", "scoring": scoring,
+                    "raw": _load_recent_step_output(run_id, "7-score") or json.dumps(scoring, ensure_ascii=False, indent=2),
+                    "deployment_description": artifact_text("deployment_description.txt"),
+                    "elicitation_summary": artifact_text("elicitation_summary.md"),
+                }
+        except (OSError, ValueError):
+            pass
 
     # Otherwise try to recover from the 7-score blob if tier-3 is on.
     blob_root = logging_gate.DEFAULT_BLOB_ROOT
@@ -2948,6 +2970,7 @@ async def _run_score_phase(
         benchmark_yaml=benchmark_yaml,
         region_yaml=region_yaml,
         dataset_analysis_text=dataset_analysis_text,
+        elicitation_summary=elicitation_summary,
         pdf_bytes=_auto_active.pdf_bytes if _auto_active is not None else None,
     )
 

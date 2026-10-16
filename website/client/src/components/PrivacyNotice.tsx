@@ -47,6 +47,23 @@ export function PrivacyNotice({ onClose }: Props) {
         </li>
       </ul>
 
+      <h3>Your OpenAI key and item data</h3>
+      <p>
+        The required item-analysis stage uses your OpenAI key, entered separately.
+        The key stays in the page's memory and is sent in a request header to our
+        backend for paid model calls. It is held in server memory while a phase
+        runs and is never written to browser storage, server logs, or files.
+        You can revoke it with OpenAI at any time.
+      </p>
+      <p>
+        Assessment context and dataset items are sent to OpenAI to generate
+        criteria and classify items. Source items, criteria, and results are
+        private to the item-analysis run and expire one hour after it ends or
+        when the server restarts. A run access token is saved in this tab's
+        session storage so you can return to the results. Download the files
+        you need before they expire.
+      </p>
+
       <h3>Your email address (auto mode)</h3>
       <ul>
         <li>
@@ -117,11 +134,12 @@ export function PrivacyNotice({ onClose }: Props) {
       <h3>What we do not do</h3>
       <ul>
         <li>We do not run third-party analytics, advertising, or tracking on this site.</li>
-        <li>We do not sell, rent, or share your data with anyone.</li>
+        <li>We do not sell or rent your data.</li>
         <li>
           We do not use your prompts or responses to train any model — they
-          go to Anthropic via your key under their terms, and we keep our
-          own copy only when you opt in for debugging purposes.
+          go to Anthropic or OpenAI via your keys under their terms. Item-analysis
+          artifacts are retained temporarily as described above; longer-term
+          benchmark debugging records require your per-run opt-in.
         </li>
       </ul>
 

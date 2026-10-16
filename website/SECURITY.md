@@ -1,6 +1,11 @@
 # Security and privacy
 
-How the Validity Analyzer website handles user data and credentials.
+How the Benchmark Caliper website handles user data and credentials. The homepage
+has two tools: benchmark validity analysis, including its required item-analysis
+stage, and separate goal-conditioned item assessment. `/item-analysis` opens the
+main Caliper flow for compatibility; saved `/run/{run_id}` reports can continue
+into the same item stage. This document describes the checkout, not a verification
+of the deployed revision.
 
 This file documents the website's security posture **as actually implemented in the code**. Every statement below is a property of the code or schema in this repo, with a one-line description of how anyone can independently verify it.
 
@@ -45,36 +50,74 @@ to submitted content; `store=False` is not a promise of zero provider retention.
 
 This file is paired with [DESIGN.md](DESIGN.md). Every privacy claim in DESIGN.md should map to a statement here.
 
-## Item-analysis demo (`/item-analysis`)
+## Item-analysis stage (within `/caliper` and saved reports)
 
-This separate OpenAI workflow reuses the post-assessment item-analysis
-pipeline, with the following boundaries:
+The benchmark report embeds the post-assessment item-analysis pipeline. It is a
+required stage before the UI marks the analysis complete, with the following
+boundaries:
+
+- Opening a report or loading its item setup makes no model calls. Generating
+  criteria, classifying the pilot, and continuing through the full snapshot are
+  explicit paid actions requiring the visitor's OpenAI key.
+- `GET /api/item-analysis/assessment` resolves `kind=run|gallery` and `id` using
+  the existing report access model. A saved run ID is a bearer credential;
+  gallery IDs are allowlisted. This setup endpoint does not require an item-run
+  secret because the private item run does not exist yet. The server resolves
+  the deployment, scores, summary, and available dataset evidence itself.
+- `POST /api/item-analysis/runs/from-assessment` accepts multipart
+  `assessment_kind`, `assessment_id`, explicit `benchmark_confirmed=true`, and
+  exactly one of a catalog-owned, revision-bound `source_id` or `items_file`.
+  Missing confirmation, stale selections, unavailable sources, and invalid
+  uploads are rejected before model calls. The new run copies the exact original assessment and always
+  generates fresh criteria; a source's historical deployment or supplied
+  specification cannot replace the selected report's context.
+- Uploaded CSV or JSON arrays are limited to 10 MiB and 50,000 items and validated
+  before any paid call. Each row requires nonempty `content`; `item_id` is
+  generated from the row number if omitted and must be unique when present.
+  `reference_answer` and other supported evidence fields are optional. Upload
+  names are used only to validate the format, not as filesystem paths. Normalized
+  input copies live in the private item-run directory, not the reusable source
+  cache; benchmark code is treated as evidence and never executed.
 
 - The API key travels in `X-OpenAI-Key`, stays in the active phase's memory,
   and is not stored in browser storage, job artifacts, the database, or logs.
   A separate random access secret in `X-Review-Token` authorizes polling,
   cancellation, and downloads. Only the run ID and access secret are kept in
-  browser session storage, so refresh can reconnect without persisting a key.
+  browser session storage, scoped to the original assessment, so refresh can
+  reconnect without persisting a key. The independent item-run secret protects
+  results after creation; it does not change the original report's bearer-ID
+  access model.
   The client targets `https://api.openai.com/v1` with `store=False`. Both stages
   use GPT-6 Luna with low reasoning effort, recorded in each run.
-- Users choose server-configured examples. Requests cannot select filesystem
-  paths, repositories, models, or provider URLs. The bundled teaching example is
-  labeled illustrative and contains no prerecorded model predictions. Sources
-  and matching assessment directories are allowlisted in the bundled source
-  registry. MMLU and TOXIGEN use server-managed Hugging Face access; public GSM8K and
-  HumanEval tables are downloaded anonymously from their original repositories.
-  Each uses a fixed revision with checksum, row-count, and schema checks before
-  use. Adapters preserve source evidence, including HumanEval code as text;
-  benchmark code is never executed. Source tables are cached in the private `item-analysis-sources/` directory,
-  which survives normal shutdown and contains no visitor keys or model labels.
-  Each run prepares all source items independently. An explicit local prepared
-  snapshot override remains supported. Dataset access failures do not silently
-  substitute illustrative items; the browser never receives the Hugging Face token.
+- Users explicitly confirm a Data Bank benchmark snapshot or uploaded items.
+  Searching metadata and confirming a source do not start model calls. The
+  frontend clears confirmation when the candidate or file changes. Discovery
+  uses the fixed `aims-foundations/measurement-db` repository, public releases,
+  and a pinned main-branch revision. Requests cannot choose arbitrary repositories,
+  filesystem paths, models, or provider URLs. Paper identity, not deployment
+  context, determines suggested matches. Candidate versions and match reasons
+  remain visible for human review.
+- The catalog is metadata-only. Its bundled snapshot and server cache contain no
+  uploaded papers, deployment descriptions, provider keys, or raw item rows.
+  Background refresh never changes the revision of an existing run. The selected
+  source is checked for integrity, row count, schema, and benchmark identity
+  before model calls. The hosted reader rejects unsupported or excessive tables
+  rather than silently analyzing a subset. All items in an accepted snapshot
+  are prepared; benchmark code is treated as text and never executed.
+- Source tables are cached privately, separately from item-run outputs. Dataset
+  access failures do not substitute illustrative data; the browser never receives
+  the server's Hugging Face token. The older prepared-example API retains its
+  allowlisted source registry, supplied criteria, illustrative example, and local
+  prepared-directory override for compatibility. These do not replace the
+  current assessment or bypass confirmation in the report continuation.
 - Inputs, criteria, raw model outputs, and reports are held in a private run
   directory. Runs expire one hour after a phase ends, are swept each minute, and
   are removed on normal shutdown. A server restart loses the in-memory access
   registry; an abrupt kill can leave files for host cleanup. This flow does not
-  use the original Caliper workflow's opt-in logging or 90-day retention.
+  use the original Caliper workflow's opt-in logging or 90-day retention. The
+  original benchmark tuple workspace remains under its existing retention and
+  deletion rules; its deployment and assessment artifacts support saved-report
+  continuation even when optional trace logging was not enabled.
 - Provider exception bodies are replaced with a fixed error before they reach
   saved artifacts or responses. Model responses redact any occurrence of the
   caller key; frontend rendering uses React text. Private responses and downloads
@@ -88,7 +131,9 @@ pipeline, with the following boundaries:
   may incur a charge. During dataset preparation, stop waits for the current
   download or preparation step before returning. No email is collected or sent.
 
-Verification: `server/tests/test_item_analysis.py`, `server/tests/test_item_analysis_source.py`,
+Verification: `server/item_analysis_assessment.py` and the `/assessment` and
+`/runs/from-assessment` routes in `server/item_analysis.py` define these boundaries;
+see also `server/tests/test_item_analysis.py`, `server/tests/test_item_analysis_source.py`,
 `../anthropic_api_package_release/tests/test_item_analysis_model_client.py`,
 and `client/src/itemAnalysis/*.test.*`. OpenAI's own retention terms apply to
 submitted evidence; `store=False` does not promise zero provider retention.
@@ -205,7 +250,7 @@ The website classifies every piece of data into one of four tiers. All persisten
 - **No third-party analytics, advertising, or tracking SDKs anywhere on the site.**
   *How to verify:* open the network tab on every page — only requests to our own origin and `api.anthropic.com`.
 
-- **The user's email address (provided for the report-ready notification) is stored only on the `runs` row and is removed by delete-my-data.** Schema in `server/db.py`: `runs.email` and `runs.email_sent_at` are the only columns for it; no email column exists on `steps`. The redaction gate's `EMAIL_PATTERN` strips emails from tier-3 blob writes.
+- **The current browser workflow does not collect a report-notification email address.** Optional email endpoints remain available for compatible API clients. An address supplied through those endpoints is stored on the `runs` row and removed by delete-my-data. Schema in `server/db.py`: `runs.email` and `runs.email_sent_at` are the report-notification columns; no email column exists on `steps`. The redaction gate's `EMAIL_PATTERN` strips emails from tier-3 blob writes. The report's separate issue-feedback form has an optional contact email.
   *How to verify:* schema review. End-to-end test: provide an email, run a pipeline, verify the row contains the address, then call delete-my-data and confirm the row is gone. Grep tier-3 blobs for the address — zero matches.
 
 - **Email delivery uses Resend only.** No other module references `runs.email`. If `RESEND_API_KEY` is unset, the dry-run fallback logs to stderr instead of contacting any third party.

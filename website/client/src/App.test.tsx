@@ -3,9 +3,22 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { App } from './App'
+
+// The embedded stage has its own API/state tests. Here verify that each
+// benchmark entry point supplies the exact assessment and honors completion.
+vi.mock('./itemAnalysis/ItemAnalysis', () => ({
+  ItemAnalysis: ({ assessment, onStatusChange }: {
+    assessment: { kind: 'run' | 'gallery'; id: string }
+    onStatusChange?: (status: 'pending' | 'in_progress' | 'complete') => void
+  }) => <section aria-label="Embedded item analysis">
+    <p data-testid="item-assessment-reference">{assessment.kind}:{assessment.id}</p>
+    <button onClick={() => onStatusChange?.('in_progress')}>Finish pilot</button>
+    <button onClick={() => onStatusChange?.('complete')}>Finish all items</button>
+  </section>,
+}))
 
 function makeStream(body: string): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder()
@@ -86,10 +99,13 @@ describe('App', () => {
     // gate. Tests that exercise the gate explicitly clear this.
     localStorage.setItem('consent_v1', 'yes')
     originalFetch = globalThis.fetch
+    globalThis.fetch = vi.fn(async () => new Response(JSON.stringify({ benchmarks: [] }), { status: 200 })) as unknown as typeof fetch
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     globalThis.fetch = originalFetch
+    window.history.replaceState(null, '', '/')
   })
 
   it('shows the key form first when no key is stored', () => {
@@ -393,7 +409,7 @@ describe('App', () => {
     // Default tab is the paper summary.
     expect(screen.getByText(/the paper covers/i)).toBeInTheDocument()
     // Page count rendered.
-    expect(screen.getByText('2')).toBeInTheDocument()
+    expect(screen.getByText('2', { selector: 'dd' })).toBeInTheDocument()
     // Selected reference appears at least once on the page.
     expect(screen.getAllByText(/helm\.yaml/i).length).toBeGreaterThan(0)
 
@@ -607,7 +623,7 @@ describe('App', () => {
 
     await waitFor(() =>
       expect(
-        screen.getByRole('heading', { name: /validity scoring/i }),
+        screen.getByRole('heading', { name: /benchmark validity assessment/i }),
       ).toBeInTheDocument(),
     )
 
@@ -615,6 +631,18 @@ describe('App', () => {
     expect(screen.getByText(/Input Ontology/i)).toBeInTheDocument()
     expect(screen.getByText('3 / 5')).toBeInTheDocument()
     expect(screen.getByText('4 / 5')).toBeInTheDocument()
+    expect(screen.getByTestId('item-assessment-reference')).toHaveTextContent('run:run-x')
+    expect(window.location.pathname).toBe('/run/run-x')
+    expect(screen.getByText('Benchmark assessment ready · item analysis remains')).toBeInTheDocument()
+    expect(screen.queryByText('Validity analysis complete')).not.toBeInTheDocument()
+
+    // A successful pilot is still incomplete; only finishing all items
+    // advances the shared workflow's final stage.
+    await user.click(screen.getByRole('button', { name: 'Finish pilot' }))
+    expect(screen.queryByText('Validity analysis complete')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Finish all items' }))
+    expect(screen.getByText('Validity analysis complete')).toBeInTheDocument()
+    expect(screen.getByText('Complete').closest('li')).toHaveAttribute('aria-current', 'step')
 
     // The /score call carried the BYOK key.
     const scoreCall = calls.find((c) => c.url.endsWith('/score'))
@@ -626,6 +654,164 @@ describe('App', () => {
     // Full pipeline drive-through (answers → extract → region → 5b → score)
     // legitimately runs long; give it headroom over the 5s default.
   }, 15000)
+
+  it('continues automatic benchmark scoring into the same required item stage', async () => {
+    const user = userEvent.setup()
+    sessionStorage.setItem('anthropic_api_key', 'sk-ant-test')
+    globalThis.fetch = vi.fn(async (url: unknown) => {
+      const path = String(url)
+      if (path === '/api/gallery') return new Response(JSON.stringify({ benchmarks: [] }), { status: 200 })
+      if (path.endsWith('/answers')) return makeStreamingResponse(SUMMARY_STREAM)
+      if (path.endsWith('/auto-run')) return new Response('{}', { status: 202 })
+      if (path.endsWith('/events')) return makeStreamingResponse(SCORE_STREAM)
+      return makeStreamingResponse(HAPPY_STREAM)
+    }) as unknown as typeof fetch
+    render(<App />)
+    await user.upload(screen.getByLabelText(/benchmark paper/i), makePdfFile())
+    await user.type(screen.getByLabelText(/deployment description/i), 'desc')
+    await user.click(screen.getByRole('button', { name: /^run$/i }))
+    await screen.findByRole('heading', { name: /answer the elicitation questions/i })
+    await user.type(screen.getByRole('textbox'), 'answer')
+    await user.click(screen.getByRole('button', { name: /submit answers/i }))
+    await user.click(await screen.findByRole('button', { name: /start scoring/i }))
+    expect(await screen.findByTestId('item-assessment-reference')).toHaveTextContent('run:run-x')
+    expect(window.location.pathname).toBe('/run/run-x')
+    expect(screen.getByText('Benchmark assessment ready · item analysis remains')).toBeInTheDocument()
+  })
+
+  it('hands the free demo to its real MathDial assessment and labels the paid continuation', async () => {
+    vi.useFakeTimers()
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: /try a demo run/i }))
+    fireEvent.click(screen.getByRole('button', { name: /run the demo/i }))
+    await act(async () => { await vi.advanceTimersByTimeAsync(10_000) })
+    fireEvent.click(screen.getByRole('button', { name: /submit answers/i }))
+    await act(async () => { await vi.advanceTimersByTimeAsync(10_000) })
+    fireEvent.click(screen.getByRole('button', { name: /start scoring/i }))
+    await act(async () => { await vi.advanceTimersByTimeAsync(40_000) })
+    expect(screen.getByTestId('item-assessment-reference')).toHaveTextContent('gallery:expert_1a429e941728__mathdial')
+    expect(window.location.pathname).toBe('/caliper')
+    expect(new URLSearchParams(window.location.search).get('assessment')).toBe('expert_1a429e941728__mathdial')
+    expect(screen.getByText(/prerecorded benchmark assessment\./i)).toBeInTheDocument()
+    expect(screen.getByText(/explicit action before any paid model calls/i)).toBeInTheDocument()
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1) // Read-only gallery listing.
+    expect(screen.queryByText('Validity analysis complete')).not.toBeInTheDocument()
+  })
+
+  it('continues the exact saved run into required item analysis', async () => {
+    const runId = '12345678-abcd-1234-abcd-123456789abc'
+    window.history.replaceState(null, '', `/run/${runId}`)
+    globalThis.fetch = vi.fn(async (url: unknown) => new Response(JSON.stringify(
+      String(url) === '/api/gallery' ? { benchmarks: [] } : {
+        run_id: runId, slug: 'saved-deployment', scoring: { input_content: { score: 3 } }, raw: '{}',
+        elicitation_summary: '| IC | HIGH | Critical to deployment |',
+      },
+    ), { status: 200 })) as unknown as typeof fetch
+
+    render(<App />)
+    expect(await screen.findByTestId('item-assessment-reference')).toHaveTextContent(`run:${runId}`)
+    expect(screen.getByText('High priority')).toBeInTheDocument()
+    expect(screen.getByText('Benchmark assessment ready · item analysis remains')).toBeInTheDocument()
+    expect(screen.queryByText('Validity analysis complete')).not.toBeInTheDocument()
+  })
+
+  it('restores a missing benchmark report from its authenticated item run without new model calls', async () => {
+    const runId = '12345678-abcd-1234-abcd-123456789abc'
+    window.history.replaceState(null, '', `/run/${runId}`)
+    sessionStorage.setItem(`item_analysis_run_v1:run:${runId}`, JSON.stringify({ run_id: 'item-run-live', run_secret: 'secret-token' }))
+    const fetchSpy = vi.fn(async (url: unknown) => {
+      if (String(url) === '/api/gallery') return new Response(JSON.stringify({ benchmarks: [] }), { status: 200 })
+      if (String(url).endsWith('/report')) return new Response('Report expired', { status: 404 })
+      return new Response(JSON.stringify({ run_id: 'item-run-live', assessment: {
+        kind: 'run', id: runId, benchmark: 'Saved benchmark', deployment: 'Original deployment context',
+        scoring: { input_content: { score: 4, reasoning: 'Saved original reasoning' } },
+        elicitation_summary: '| IC | HIGH | Critical to deployment |',
+      } }), { status: 200 })
+    })
+    globalThis.fetch = fetchSpy as unknown as typeof fetch
+    render(<App />)
+
+    expect(await screen.findByTestId('item-assessment-reference')).toHaveTextContent(`run:${runId}`)
+    expect(screen.getByText(/restored the benchmark assessment saved with your item analysis/i)).toBeInTheDocument()
+    expect(screen.getByText('Original deployment context')).toBeInTheDocument()
+    expect(screen.getByText('High priority')).toBeInTheDocument()
+    expect(screen.getByText('4 / 5')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /download benchmark report pdf/i })).not.toBeInTheDocument()
+    expect(fetchSpy).toHaveBeenCalledWith('/api/item-analysis/runs/item-run-live?page=1', expect.objectContaining({ headers: { 'X-Review-Token': 'secret-token' } }))
+    expect(fetchSpy.mock.calls).toHaveLength(3) // Gallery, original report, authenticated recovery; no mutation.
+  })
+
+  it.each(['different-parent', 'different-kind', 'different-item-run', 'expired-token', 'missing-token'])('does not recover a report with %s', async (scenario) => {
+    const runId = '12345678-abcd-1234-abcd-123456789abc'
+    window.history.replaceState(null, '', `/run/${runId}`)
+    if (scenario !== 'missing-token') sessionStorage.setItem(`item_analysis_run_v1:run:${runId}`, JSON.stringify({ run_id: 'item-run-live', run_secret: 'secret-token' }))
+    const fetchSpy = vi.fn(async (url: unknown) => {
+      if (String(url) === '/api/gallery') return new Response(JSON.stringify({ benchmarks: [] }), { status: 200 })
+      if (String(url).endsWith('/report')) return new Response('Report expired', { status: 404 })
+      if (scenario === 'expired-token') return new Response(JSON.stringify({ detail: 'Expired' }), { status: 410 })
+      return new Response(JSON.stringify({ run_id: scenario === 'different-item-run' ? 'wrong-item-run' : 'item-run-live', assessment: {
+        kind: scenario === 'different-kind' ? 'gallery' : 'run', id: scenario === 'different-parent' ? 'different-parent' : runId,
+        benchmark: 'Wrong assessment', deployment: 'Wrong deployment', scoring: { input_content: { score: 5 } },
+      } }), { status: 200 })
+    })
+    globalThis.fetch = fetchSpy as unknown as typeof fetch
+    render(<App />)
+
+    expect(await screen.findByRole('heading', { name: 'Report unavailable' })).toBeInTheDocument()
+    expect(screen.getByText('This run has already been deleted, or never finished scoring.')).toBeInTheDocument()
+    expect(screen.queryByTestId('item-assessment-reference')).not.toBeInTheDocument()
+    expect(screen.queryByText('Wrong deployment')).not.toBeInTheDocument()
+    expect(fetchSpy.mock.calls).toHaveLength(scenario === 'missing-token' ? 2 : 3)
+  })
+
+  it('continues curated assessments by their own IDs and clears completion when switching', async () => {
+    const user = userEvent.setup()
+    const benchmarks = ['first', 'second'].map((id) => ({
+      id: `expert__${id}`, benchmark_name: `${id} benchmark`, slug: `${id}_context`, deployment_description: `${id} deployment`,
+    }))
+    globalThis.fetch = vi.fn(async (url: unknown) => {
+      const current = benchmarks.find((entry) => String(url).endsWith(`/${entry.id}`))
+      return new Response(JSON.stringify(String(url) === '/api/gallery' ? { benchmarks } : {
+        ...current, scoring: { input_content: { score: 3 } }, raw: '{}',
+      }), { status: 200 })
+    }) as unknown as typeof fetch
+
+    render(<App />)
+    await user.click(await screen.findByRole('button', { name: /first benchmark first deployment/i }))
+    expect(await screen.findByTestId('item-assessment-reference')).toHaveTextContent('gallery:expert__first')
+    await user.click(screen.getByRole('button', { name: 'Finish all items' }))
+    expect(screen.getByText('Validity analysis complete')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /second benchmark second deployment/i }))
+    await waitFor(() => expect(screen.getByTestId('item-assessment-reference')).toHaveTextContent('gallery:expert__second'))
+    expect(window.location.pathname).toBe('/caliper')
+    expect(new URLSearchParams(window.location.search).get('assessment')).toBe('expert__second')
+    expect(screen.queryByText('Validity analysis complete')).not.toBeInTheDocument()
+    expect(screen.getByText('Benchmark assessment ready · item analysis remains')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /start another benchmark analysis/i }))
+    expect(window.location.search).toBe('')
+    expect(window.location.pathname).toBe('/caliper')
+  })
+
+  it('restores the selected gallery assessment after a page refresh', async () => {
+    window.history.replaceState(null, '', '/caliper?assessment=expert__restored')
+    globalThis.fetch = vi.fn(async (url: unknown) => new Response(JSON.stringify(
+      String(url) === '/api/gallery' ? { benchmarks: [] } : {
+        id: 'expert__restored', benchmark_name: 'Restored benchmark', slug: 'restored_context',
+        scoring: { input_content: { score: 3 } }, raw: '{}',
+      },
+    ), { status: 200 })) as unknown as typeof fetch
+    render(<App />)
+    expect(await screen.findByTestId('item-assessment-reference')).toHaveTextContent('gallery:expert__restored')
+    expect(screen.getByText('Benchmark assessment ready · item analysis remains')).toBeInTheDocument()
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/gallery/expert__restored')
+  })
+
+  it('explains the merged workflow to visitors using the legacy item-analysis link', () => {
+    render(<App legacyItemAnalysis />)
+    expect(screen.getByText(/item analysis is now part of benchmark validity analysis/i)).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: 'Benchmark analysis progress' })).toBeInTheDocument()
+    expect(screen.queryByTestId('item-assessment-reference')).not.toBeInTheDocument()
+  })
 
   it('"change key" clears storage and returns to the key form', async () => {
     const user = userEvent.setup()

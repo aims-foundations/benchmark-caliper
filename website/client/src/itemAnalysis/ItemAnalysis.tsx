@@ -5,20 +5,13 @@ import { appPath } from '../paths'
 import * as api from './api'
 import { Criteria } from './Criteria'
 import { Results } from './Results'
-import type { AnalysisRun, Artifact, Catalog, Example, RunAccess, RunScope, SpecificationMode } from './types'
+import { BenchmarkConfirmation } from './BenchmarkConfirmation'
+import { assessmentStorageKey, restoreAccess } from './accessStorage'
+import type { AnalysisRun, Artifact, AssessmentReference, AssessmentSetup, Catalog, ConfirmedDataset, Example, RunAccess, RunScope, SpecificationMode } from './types'
 import './itemAnalysis.css'
 
-const STORAGE_KEY = 'item_analysis_run_v1'
 const ACTIVE_STATUSES = ['preparing', 'generating', 'running']
 const FILE_NAMES: Record<Artifact, string> = { spec: 'classifier_spec.json', items: 'items.csv', summary: 'summary.json', report: 'report.html', review: 'review.csv' }
-
-function restoreRun(): RunAccess | null {
-  try {
-    const saved = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || 'null')
-    return saved && typeof saved.run_id === 'string' && typeof saved.run_secret === 'string'
-      ? { run_id: saved.run_id, run_secret: saved.run_secret } : null
-  } catch { return null }
-}
 
 function KeyInput({ value, onChange }: { value: string; onChange: (key: string) => void }) {
   return <div className="ia-key"><label className="ia-field"><span>OpenAI API key</span>
@@ -40,12 +33,24 @@ function DatasetSource({ example }: { example: Example }) {
   </p>
 }
 
-export function ItemAnalysis() {
+interface Props {
+  assessment?: AssessmentReference
+  onStatusChange?: (status: 'pending' | 'in_progress' | 'complete') => void
+}
+
+export function ItemAnalysis(props: Props) {
+  return <AnalysisView key={props.assessment ? `${props.assessment.kind}:${props.assessment.id}` : 'legacy'} {...props} />
+}
+
+function AnalysisView({ assessment, onStatusChange }: Props) {
+  const storageKey = assessmentStorageKey(assessment)
   const [catalog, setCatalog] = useState<Catalog | null>(null)
+  const [setup, setSetup] = useState<AssessmentSetup | null>(null)
+  const [confirmedDataset, setConfirmedDataset] = useState<ConfirmedDataset | null>(null)
   const [exampleId, setExampleId] = useState('')
   const [mode, setMode] = useState<SpecificationMode>('generate')
   const [apiKey, setApiKey] = useState('')
-  const [access, setAccess] = useState<RunAccess | null>(restoreRun)
+  const [access, setAccess] = useState<RunAccess | null>(() => restoreAccess(storageKey))
   const [run, setRun] = useState<AnalysisRun | null>(null)
   const [page, setPage] = useState(1)
   const [pageLoading, setPageLoading] = useState(false)
@@ -58,6 +63,7 @@ export function ItemAnalysis() {
   const [privacyOpen, setPrivacyOpen] = useState(false)
 
   useEffect(() => {
+    if (assessment) return
     const controller = new AbortController()
     api.getCatalog(controller.signal).then(value => {
       if (controller.signal.aborted) return
@@ -68,7 +74,24 @@ export function ItemAnalysis() {
       setError('')
     }).catch(problem => { if (!controller.signal.aborted) setError(problem instanceof Error ? problem.message : 'Could not load the benchmarks.') })
     return () => controller.abort()
-  }, [catalogVersion])
+  }, [catalogVersion, assessment?.kind, assessment?.id])
+
+  useEffect(() => {
+    if (!assessment || access) return
+    const controller = new AbortController()
+    api.getAssessment(assessment, controller.signal).then(value => {
+      if (controller.signal.aborted) return
+      setSetup(value)
+    }).catch(problem => {
+      if (!controller.signal.aborted) setError(problem instanceof Error ? problem.message : 'Could not load the benchmark assessment.')
+    })
+    return () => controller.abort()
+  }, [assessment?.kind, assessment?.id, access, catalogVersion])
+
+  useEffect(() => {
+    const complete = run?.status === 'complete' && run.total > 0 && run.complete === run.total && run.errors === 0
+    onStatusChange?.(complete ? 'complete' : access ? 'in_progress' : 'pending')
+  }, [access, run?.status, run?.total, run?.complete, run?.errors, onStatusChange])
 
   useEffect(() => {
     if (!access) return
@@ -80,6 +103,9 @@ export function ItemAnalysis() {
       try {
         const latest = await api.getRun(access!, page, controller.signal)
         if (controller.signal.aborted) return
+        if (assessment && (latest.assessment?.kind !== assessment.kind || latest.assessment.id !== assessment.id)) {
+          throw new api.AnalysisApiError('This item analysis belongs to another assessment.', 409)
+        }
         setRun(latest)
         setPollError('')
         setPageLoading(false)
@@ -89,7 +115,7 @@ export function ItemAnalysis() {
         if (controller.signal.aborted) return
         setPageLoading(false)
         failures += 1
-        const expired = problem instanceof api.AnalysisApiError && [401, 403, 404, 410].includes(problem.status)
+        const expired = problem instanceof api.AnalysisApiError && [401, 403, 404, 409, 410].includes(problem.status)
         setPollError(expired ? 'This run is no longer available. Start a new analysis to continue.' :
           failures < 3 ? 'Connection interrupted. Reconnecting to your run…' : 'Could not reconnect. Your run may still be processing; retry to check its progress.')
         if (!expired && failures < 3) timer = setTimeout(() => void poll(), failures * 2000)
@@ -97,23 +123,35 @@ export function ItemAnalysis() {
     }
     void poll()
     return () => { controller.abort(); if (timer) clearTimeout(timer) }
-  }, [access, page, pollVersion])
+  }, [access, page, pollVersion, assessment?.kind, assessment?.id])
 
   async function start(event: FormEvent) {
     event.preventDefault()
     const selected = catalog?.examples.find(entry => entry.id === exampleId)
-    if (busy || !selected?.available || (mode === 'provided' && selected.supplied_spec_available === false) || (mode === 'generate' && !apiKey.trim())) return
+    if (busy) return
+    if (assessment) {
+      if (!setup || !apiKey.trim() || !confirmedDataset) return
+    } else if (!selected?.available || (mode === 'provided' && selected.supplied_spec_available === false) || (mode === 'generate' && !apiKey.trim())) return
     setBusy(true)
     setError('')
     try {
-      const result = await api.createRun(exampleId, mode, mode === 'generate' ? apiKey.trim() : '')
+      const result = assessment
+        ? await api.createAssessmentRun(assessment, confirmedDataset!, apiKey.trim())
+        : await api.createRun(exampleId, mode, mode === 'generate' ? apiKey.trim() : '')
       const nextAccess = { run_id: result.run_id, run_secret: result.run_secret }
       // Persist only the run's access token. API keys never enter browser storage.
-      try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(nextAccess)) } catch { /* The current tab can still use the run. */ }
+      try { sessionStorage.setItem(storageKey, JSON.stringify(nextAccess)) } catch { /* The current tab can still use the run. */ }
       setRun(result)
       setPage(1)
       setAccess(nextAccess)
-    } catch (problem) { setError(problem instanceof Error ? problem.message : 'Could not start this analysis.') }
+    } catch (problem) {
+      setError(problem instanceof Error ? problem.message : 'Could not start this analysis.')
+      if (assessment && problem instanceof api.AnalysisApiError && problem.status === 409) {
+        setConfirmedDataset(null)
+        setSetup(null)
+        setCatalogVersion(value => value + 1)
+      }
+    }
     finally { setBusy(false) }
   }
 
@@ -142,10 +180,12 @@ export function ItemAnalysis() {
   }
 
   function reset() {
-    try { sessionStorage.removeItem(STORAGE_KEY) } catch { /* Storage may be disabled. */ }
+    try { sessionStorage.removeItem(storageKey) } catch { /* Storage may be disabled. */ }
     setAccess(null)
     setRun(null)
     setApiKey('')
+    setConfirmedDataset(null)
+    setSetup(null)
     setError('')
     setPollError('')
     setPage(1)
@@ -170,31 +210,48 @@ export function ItemAnalysis() {
 
   const example = run?.example || catalog?.examples.find(value => value.id === exampleId)
   const active = !!run && ACTIVE_STATUSES.includes(run.status)
-  const pilotSize = Math.min(catalog?.checkpoint_size || 100, run?.total || example?.item_count || 100)
+  const pilotSize = Math.min(setup?.checkpoint_size || catalog?.checkpoint_size || 100, run?.total || example?.item_count || 100)
   const stage = !access ? 0 : !run?.spec || (run.status === 'ready' && !run.processed) ? 1 : 2
   const canClassify = !!run?.spec && !active && !pollError && ['ready', 'checkpoint', 'cancelled', 'failed'].includes(run.status)
   const scope: RunScope = run?.can_continue ? 'all' : 'pilot'
   const remaining = run ? Math.max(0, (scope === 'all' ? run.total : pilotSize) - run.complete) : pilotSize
+  const incompleteResults = !!assessment && run?.status === 'complete' && (run.complete < run.total || run.errors > 0)
 
-  return <div className="rd-root item-analysis-site">
-    <SiteHeader />
+  return <div className={assessment ? 'item-analysis-site ia-embedded' : 'rd-root item-analysis-site'}>
+    {!assessment && <><SiteHeader />
     <header className="ia-hero"><div className="rd-container">
       <a className="ia-back" href={appPath('/')}><span aria-hidden="true">← </span>Benchmark Caliper</a>
       <div className="ia-hero-row"><div><p className="ia-eyebrow">Item-level validity analysis <span className="ia-badge">Demo</span></p>
         <h1>Look closer at<br />your benchmark.</h1></div>
         <p>Turn an assessment into clear questions.<br className="ia-desktop-break" /> Apply them to individual items, then explore<br className="ia-desktop-break" /> the evidence behind the numbers.</p></div>
-    </div></header>
+    </div></header></>}
 
-    <main className="rd-container ia-main">
-      <ol className="ia-steps" aria-label="Analysis steps">{['Choose a context', 'Review the criteria', 'Explore the results'].map((label, index) =>
+    <section id={assessment ? 'item-analysis' : undefined} className={assessment ? 'ia-main' : 'rd-container ia-main'} aria-label="Item analysis">
+      {assessment && <div className="ia-integrated-heading"><p className="ia-eyebrow">Next pipeline stage</p><h2>Item analysis</h2>
+        <p>Apply the findings above to the benchmark’s items. Review the criteria and initial classifications, then complete the full dataset to finish this assessment.</p></div>}
+      <ol className="ia-steps" aria-label="Item analysis steps">{[assessment ? 'Confirm the benchmark' : 'Choose a context', 'Review the criteria', 'Classify and inspect'].map((label, index) =>
         <li key={label} aria-current={stage === index ? 'step' : undefined} data-done={stage > index || undefined}><span>{index + 1}</span>{label}</li>)}</ol>
       {(error || pollError) && <div className="ia-error" role="alert"><p>{error || pollError}</p>
-        {!catalog && <button className="ia-secondary" onClick={() => { setError(''); setCatalogVersion(value => value + 1) }}>Retry loading benchmarks</button>}
+        {!(assessment ? setup || access : catalog) && <button className="ia-secondary" onClick={() => { setError(''); setCatalogVersion(value => value + 1) }}>{assessment ? 'Retry loading assessment' : 'Retry loading benchmarks'}</button>}
         {pollError && <div className="ia-actions"><button className="ia-secondary" onClick={() => setPollVersion(value => value + 1)}>Retry connection</button><button className="ia-secondary" onClick={reset}>Start a new analysis</button></div>}
       </div>}
-      {!catalog && !access && !error && <p role="status">Loading benchmarks…</p>}
+      {!(assessment ? setup : catalog) && !access && !error && <p role="status">{assessment ? 'Connecting your benchmark assessment…' : 'Loading benchmarks…'}</p>}
 
-      {!access && catalog && <div className="ia-setup"><form className="ia-panel" onSubmit={start}>
+      {assessment && !access && setup && <form className="ia-panel ia-linked-setup" onSubmit={start} aria-busy={busy}>
+        <h3>Continue with {setup.assessment.benchmark_name || setup.assessment.benchmark}</h3>
+        <p>The scores and deployment context from this report will be used to generate the item criteria.</p>
+        <details className="ia-context"><summary>Deployment context carried forward</summary><p>{setup.assessment.deployment}</p></details>
+        <fieldset className="ia-linked-controls" disabled={busy}>
+        <BenchmarkConfirmation assessment={assessment} setup={setup} confirmed={confirmedDataset} onConfirm={dataset => { setConfirmedDataset(dataset); if (dataset) setError('') }} />
+        {confirmedDataset && <div className="ia-confirmed-next-step">
+          <KeyInput value={apiKey} onChange={setApiKey} />
+          <button className="ia-primary" type="submit" disabled={busy || !apiKey.trim()}>{busy ? 'Starting…' : 'Generate item criteria'}<span aria-hidden="true"> →</span></button>
+          <p className="ia-small ia-cost-note">This stage uses your OpenAI key. Generating criteria starts paid model calls; review the criteria before starting item classification.</p>
+        </div>}
+        </fieldset>
+      </form>}
+
+      {!assessment && !access && catalog && <div className="ia-setup"><form className="ia-panel" onSubmit={start}>
         <p className="ia-eyebrow">Choose a benchmark</p><h2>A benchmark. A real use case.</h2>
         <p className="ia-muted">Select a benchmark and its assessment context. Each analysis uses that context to generate criteria and inspect the benchmark’s items.</p>
         <label className="ia-field"><span>Benchmark and assessment context</span><select value={exampleId} onChange={event => { setExampleId(event.target.value); setMode('generate') }}>
@@ -223,10 +280,10 @@ export function ItemAnalysis() {
       {access && !run && !pollError && <p role="status">Restoring your analysis…</p>}
       {run && <div className="ia-run">
         <section className="ia-panel ia-run-status" aria-label="Run progress"><div className="ia-section-heading"><div>
-          <p className="ia-eyebrow">{run.example.title}</p><h2>{runTitle(run)}</h2></div>
-          <span className={`ia-tag ${active ? 'ia-tag-active' : ''}`}>{active ? 'In progress' : run.status === 'checkpoint' ? 'Review checkpoint' : run.status === 'complete' ? 'Finished' : 'Your analysis'}</span></div>
+          <p className="ia-eyebrow">{run.example.title}</p><h2>{incompleteResults ? 'Some items still need classification' : runTitle(run)}</h2></div>
+          <span className={`ia-tag ${active ? 'ia-tag-active' : ''}`}>{active ? 'In progress' : run.status === 'checkpoint' ? 'Review checkpoint' : incompleteResults ? 'Incomplete' : run.status === 'complete' ? 'Finished' : 'Your analysis'}</span></div>
           <p className="ia-muted" role="status">{run.message}</p>
-          {run.status === 'checkpoint' && <p className="ia-small">Inspect the labels and evidence below before continuing. If the criteria need changes, update them and start a new run so all items use the same instructions.</p>}
+          {run.status === 'checkpoint' && <p className="ia-small">Inspect the labels and evidence below, then continue through all remaining items to complete the assessment. To regenerate the criteria, start a new item analysis so all items use the same instructions.</p>}
           {run.status === 'running' && <><progress max={run.scope === 'pilot' ? pilotSize : run.total} value={run.processed} aria-label="Classification progress" />
             <p className="ia-small">{run.processed.toLocaleString()} processed · {run.complete.toLocaleString()} classified · {run.errors.toLocaleString()} failed · {run.total.toLocaleString()} in snapshot</p></>}
           {run.error && <p className="ia-error">{run.error}</p>}
@@ -244,7 +301,7 @@ export function ItemAnalysis() {
 
         {canClassify && <form className="ia-classify-panel" onSubmit={event => { event.preventDefault(); void classify(scope) }}>
           <div><p className="ia-eyebrow">{scope === 'all' ? 'Complete the snapshot' : 'Try the criteria'}</p>
-            <h2>{scope === 'all' ? 'Ready to read the remaining items?' : `Classify ${pilotSize < run.total ? `the first ${pilotSize}` : `all ${pilotSize}`} items`}</h2>
+            <h2>{scope === 'all' ? 'Classify the remaining items' : `Classify ${pilotSize < run.total ? `the first ${pilotSize}` : `all ${pilotSize}`} items`}</h2>
             <p className="ia-small">{scope === 'all' ? 'Continue with the same criteria. Completed judgments are preserved.' : pilotSize < run.total ? 'The run pauses after this pilot for your review.' : 'This small example fits in a single run.'} Up to {remaining.toLocaleString()} paid GPT-6 Luna item requests; malformed responses may be retried.</p></div>
           <div><KeyInput value={apiKey} onChange={setApiKey} /><button type="submit" className="ia-primary" disabled={busy || !apiKey.trim()}>
             {busy ? 'Starting…' : scope === 'all' ? 'Continue through all items' : ['cancelled', 'failed'].includes(run.status) ? 'Resume classification' : `Classify ${pilotSize} items with GPT-6 Luna`}</button></div>
@@ -252,11 +309,11 @@ export function ItemAnalysis() {
 
         {run.spec && <Results run={run} page={page} setPage={setPage} onDownload={artifact => void download(artifact)} downloading={downloading} pageLoading={pageLoading} />}
       </div>}
-      <details className="ia-privacy" id="item-analysis-privacy" open={privacyOpen} onToggle={event => setPrivacyOpen(event.currentTarget.open)}><summary>About your key and this demo</summary>
+      <details className="ia-privacy" id="item-analysis-privacy" open={privacyOpen} onToggle={event => setPrivacyOpen(event.currentTarget.open)}><summary>{assessment ? 'About your key and item data' : 'About your key and this demo'}</summary>
         <p>Your OpenAI key is sent to the server for model calls and held in memory while a phase runs. This page never writes it to browser storage. A run access token is kept in this tab’s session storage so you can refresh and return to the results.</p>
         <p>Source items, criteria, and model judgments are kept privately for this run and expire one hour after it ends, or when the server restarts. Download the files you need before leaving. Datasets are labelled with their source; illustrative items are for demonstrating the workflow.</p>
       </details>
-    </main>
-    <SiteFooter onPrivacyClick={() => { setPrivacyOpen(true); document.getElementById('item-analysis-privacy')?.scrollIntoView({ block: 'center', behavior: 'smooth' }) }} />
+    </section>
+    {!assessment && <SiteFooter onPrivacyClick={() => { setPrivacyOpen(true); document.getElementById('item-analysis-privacy')?.scrollIntoView({ block: 'center', behavior: 'smooth' }) }} />}
   </div>
 }

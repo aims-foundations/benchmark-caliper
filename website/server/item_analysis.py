@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 from concurrent.futures import CancelledError as FutureCancelledError
+from copy import deepcopy
 from dataclasses import dataclass, field
 import hashlib
 from itertools import islice
@@ -23,7 +24,7 @@ from threading import Event
 import time
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Header, HTTPException, Query, Response
+from fastapi import APIRouter, File, Form, Header, HTTPException, Query, Response, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.background import BackgroundTask
@@ -31,7 +32,7 @@ from starlette.background import BackgroundTask
 from anthropic_api_package_release.item_analysis import classify, generate, model_client, prepare, report
 from anthropic_api_package_release.item_analysis.data import file_sha256
 from anthropic_api_package_release.item_analysis.storage import check_prepared, read_json, write_json
-from . import db, item_analysis_source
+from . import db, item_analysis_assessment, item_analysis_databank, item_analysis_source
 
 router = APIRouter(prefix="/api/item-analysis", tags=["Item analysis"])
 FIXTURE_PATH = Path(__file__).with_name("item_analysis_demo.json")
@@ -94,6 +95,8 @@ class AnalysisJob:
     checkpoint_seen: bool = False
     updated_at: float = field(default_factory=time.monotonic)
     downloads: int = 0
+    assessment: dict | None = field(default=None, repr=False)
+    source: dict | None = field(default=None, repr=False)
 
 
 jobs: dict[str, AnalysisJob] = {}
@@ -153,6 +156,18 @@ async def shutdown() -> None:
     jobs.clear()
 
 
+async def delete_for_assessment(run_id: str) -> None:
+    """Honor deletion of the benchmark run across its linked item stages."""
+    linked = [job for job in jobs.values() if job.assessment
+              and job.assessment["kind"] == "run" and job.assessment["id"] == run_id]
+    for job in linked:
+        jobs.pop(job.run_id, None)
+        stop(job)
+    await asyncio.gather(*(job.task for job in linked if job.task), return_exceptions=True)
+    for job in linked:
+        shutil.rmtree(job.directory, ignore_errors=True)
+
+
 def authorize(run_id: str, secret: str | None) -> AnalysisJob:
     sweep()
     job = jobs.get(run_id)
@@ -197,6 +212,7 @@ def public_job(job: AnalysisJob, page: int = 1) -> dict:
     return {
         "run_id": job.run_id, "status": job.status, "message": job.message,
         "example": job.example, "spec": job.spec, "summary": job.summary,
+        "assessment": item_analysis_assessment.public_assessment(job.assessment) if job.assessment else None,
         "processed": len(job.results), "total": job.total, "complete": complete, "errors": errors,
         "items": rows, "pagination": {"page": page, "page_size": PAGE_SIZE, "total_pages": pages},
         "usage": dict(job.usage), "model": dict(job.model), "scope": job.scope,
@@ -347,9 +363,27 @@ async def refresh_report(job: AnalysisJob) -> None:
     job.summary = await drained_thread(report.generate_report, job.directory)
 
 
-async def initialize(job: AnalysisJob, mode: str, api_key: str | None) -> None:
+def prepare_assessment_job(job: AnalysisJob, upload: dict | None) -> Path:
+    if upload is None:
+        item_analysis_databank.prepare_candidate(job.directory, job.source, stopped=job.stopped.is_set)
+    else:
+        item_analysis_assessment.prepare_upload(job.directory, job.assessment, **upload)
+    item_analysis_assessment.attach_assessment(job.directory, job.assessment, confirmed_source=job.source is not None)
+    check_prepared(job.directory)
+    dataset = read_json(job.directory / "dataset.json")
+    job.example = {**job.example, "benchmark": job.assessment["benchmark"],
+                   "deployment": job.assessment["deployment"], "item_count": dataset["item_count"],
+                   **{f"source_{key}": dataset["source"].get(key) for key in ("repo", "revision", "table", "sha256")}}
+    return job.directory / "provided_spec.json"
+
+
+async def initialize(job: AnalysisJob, mode: str, api_key: str | None, upload: dict | None = None) -> None:
     try:
-        supplied = await drained_thread(prepare_job, job, job.example["id"])
+        if job.assessment:
+            supplied = await drained_thread(prepare_assessment_job, job, upload)
+        else:
+            supplied = await drained_thread(prepare_job, job, job.example["id"])
+        upload = None
         job.total = read_json(job.directory / "dataset.json")["item_count"]
         job.data_ready = True
         if job.stopped.is_set():
@@ -367,7 +401,8 @@ async def initialize(job: AnalysisJob, mode: str, api_key: str | None) -> None:
         write_json(job.directory / "specification.json", metadata)
         await refresh_report(job)
         job.status, job.message = "ready", "Review the classifier rules, then classify the first items."
-    except (item_analysis_source.DatasetAccessError, item_analysis_source.DatasetPreparationError) as error:
+    except (item_analysis_source.DatasetAccessError, item_analysis_source.DatasetPreparationError,
+            item_analysis_databank.DataBankError) as error:
         job.status, job.message = "failed", str(error)
     except Exception:
         job.status = "failed"
@@ -434,6 +469,95 @@ def stop(job: AnalysisJob) -> None:
 async def catalog(response: Response) -> dict:
     response.headers["Cache-Control"] = "no-store"
     return {"examples": examples(), "checkpoint_size": CHECKPOINT_SIZE}
+
+
+@router.get("/assessment")
+async def assessment_context(response: Response,
+                             kind: Literal["run", "gallery"],
+                             id: Annotated[str, Query(min_length=1, max_length=160)]) -> dict:
+    response.headers["Cache-Control"] = "no-store"
+    assessment = item_analysis_assessment.resolve(kind, id)
+    discovery = await drained_thread(item_analysis_databank.search_candidates, assessment)
+    return {
+        "assessment": item_analysis_assessment.public_assessment(assessment),
+        "benchmark_identity": assessment["benchmark_identity"],
+        "sources": discovery["candidates"], "checkpoint_size": CHECKPOINT_SIZE,
+        "catalog": {key: value for key, value in discovery.items() if key != "candidates"},
+        "upload": {"max_bytes": item_analysis_assessment.MAX_UPLOAD_BYTES,
+                   "max_items": item_analysis_assessment.MAX_UPLOAD_ITEMS,
+                   "formats": ["csv", "json"], "required_fields": ["content"],
+                   "optional_fields": ["item_id", "reference_answer", "grading_criterion", "verifier", "item_features", "asset_manifest"],
+                   "item_id": "Generated from the row number when omitted.",
+                   "json_shape": "An array of item objects."},
+    }
+
+
+@router.get("/sources")
+async def search_sources(response: Response,
+                         kind: Literal["run", "gallery"],
+                         id: Annotated[str, Query(min_length=1, max_length=160)],
+                         q: Annotated[str | None, Query(max_length=200)] = None) -> dict:
+    response.headers["Cache-Control"] = "no-store"
+    assessment = item_analysis_assessment.resolve(kind, id)
+    discovery = await drained_thread(item_analysis_databank.search_candidates, assessment, q)
+    return {"sources": discovery["candidates"], "benchmark_identity": assessment["benchmark_identity"],
+            "catalog": {key: value for key, value in discovery.items() if key != "candidates"}}
+
+
+@router.post("/runs/from-assessment", status_code=202)
+async def create_assessment_run(
+        response: Response,
+        assessment_kind: Annotated[Literal["run", "gallery"], Form()],
+        assessment_id: Annotated[str, Form(min_length=1, max_length=160)],
+        source_id: Annotated[str | None, Form(max_length=300)] = None,
+        source_revision: Annotated[str | None, Form(max_length=80)] = None,
+        benchmark_confirmed: Annotated[bool, Form()] = False,
+        items_file: Annotated[UploadFile | None, File()] = None,
+        x_openai_key: Annotated[str | None, Header()] = None) -> dict:
+    response.headers["Cache-Control"] = "no-store"
+    api_key = key_required(x_openai_key)
+    assessment = item_analysis_assessment.resolve(assessment_kind, assessment_id)
+    if not benchmark_confirmed:
+        raise HTTPException(400, "Confirm the benchmark identity and selected item snapshot before starting item analysis.")
+    if bool(source_id) == bool(items_file):
+        raise HTTPException(400, "Select a matching dataset snapshot or upload an item file.")
+    upload = None
+    source = None
+    if items_file:
+        try:
+            payload = await items_file.read(item_analysis_assessment.MAX_UPLOAD_BYTES + 1)
+            rows = item_analysis_assessment.parse_upload(payload, items_file.filename or "")
+            upload = {"rows": rows, "payload_sha256": hashlib.sha256(payload).hexdigest(),
+                      "suffix": Path(items_file.filename).suffix.lower()}
+        finally:
+            await items_file.close()
+        example = {"id": "upload", "title": "Uploaded benchmark items", "benchmark": assessment["benchmark"],
+                   "deployment": assessment["deployment"], "source_label": "Uploaded item snapshot",
+                   "item_count": len(rows), "available": True, "supplied_spec_available": False}
+    else:
+        if not source_revision:
+            raise HTTPException(409, "Select and confirm the Data Bank snapshot again; its revision is required.")
+        try:
+            source = deepcopy(await drained_thread(item_analysis_databank.resolve_candidate, source_id))
+        except item_analysis_databank.DataBankError as error:
+            raise HTTPException(409, str(error)) from None
+        if source_revision != source["source_revision"]:
+            raise HTTPException(409, "The selected snapshot revision changed. Search and confirm the dataset again.")
+        if not source["available"]:
+            raise HTTPException(503, source.get("unavailable_reason") or "This dataset is unavailable. Upload the matching items instead.")
+        example = {**source, "deployment": assessment["deployment"], "supplied_spec_available": False}
+    sweep()
+    if len(jobs) >= MAX_RETAINED:
+        raise HTTPException(429, "The analysis service is at capacity. Try again later.")
+    owner = reserve_worker(api_key)
+    run_id = secrets.token_hex(16)
+    directory = db.DEFAULT_DB_PATH.parent / "item-analysis" / run_id
+    directory.mkdir(mode=0o700, parents=True)
+    job = AnalysisJob(run_id, secrets.token_urlsafe(32), example, directory,
+                      total=example["item_count"], owner_hash=owner, assessment=assessment, source=source)
+    jobs[run_id] = job
+    job.task = asyncio.create_task(initialize(job, "generate", api_key, upload))
+    return {**public_job(job), "run_secret": job.secret}
 
 
 @router.post("/runs", status_code=202)

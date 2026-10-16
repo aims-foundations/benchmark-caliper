@@ -1,35 +1,39 @@
 # Benchmark Caliper — Website
 
-A public-facing interface to three evaluation workflows at <https://aimslab.stanford.edu/benchmark-caliper/>. The starting page lets users choose Benchmark Caliper, goal-conditioned item review, or item-level validity analysis. See [SECURITY.md](SECURITY.md) for how each flow handles data and keys.
+The website source provides two tools: **benchmark validity analysis** and **goal-conditioned item assessment**. Benchmark validity analysis is one continuous workflow: assess the benchmark documentation, then analyze its items using the same deployment context. This document describes the checkout; check the hosted service at <https://aimslab.stanford.edu/benchmark-caliper/> separately before assuming a change is deployed. See [SECURITY.md](SECURITY.md) for data and key handling.
 
 ## Routes
 
-- `/` — workflow selection.
-- `/caliper` — the existing benchmark-paper analysis, using an Anthropic key.
-- `/items` — the new item-review demo, using an OpenAI key.
-- `/item-analysis` — post-assessment item analysis, using an OpenAI key.
-- `/run/{run_id}` — existing Caliper report links, preserved.
+- `/` — selection between the two tools.
+- `/caliper` — benchmark assessment with an Anthropic key, followed by required item analysis with an OpenAI key.
+- `/items` — the separate goal-conditioned item-review demo, using an OpenAI key.
+- `/item-analysis` — compatibility entry into the main Caliper workflow; no standalone item-analysis chooser.
+- `/run/{run_id}` — saved benchmark report with the same item-analysis continuation.
 
 All routes work under the production `/benchmark-caliper` prefix.
 
 ## Item-level validity analysis
 
-Open `/item-analysis` for a browser demo of the shared
-[`item_analysis` pipeline](../anthropic_api_package_release/item_analysis/README.md).
-The page walks through three steps:
+The benchmark report embeds the shared
+[`item_analysis` pipeline](../anthropic_api_package_release/item_analysis/README.md)
+as the next required stage, including reports opened from the gallery or a saved
+`/run/{run_id}` link. The report remains marked as awaiting item analysis until
+the full connected item snapshot is classified. This product requirement does
+not authorize automatic paid calls: each model phase requires a user action.
 
-1. Choose a benchmark and its matching Caliper assessment: MMLU for Hindi-medium
-   exam preparation (14,015 items), GSM8K for US K–8 math tutoring (1,319 test
-   items), HumanEval for US Python code review (164 test items), or TOXIGEN
-   (39,011 items) for Bangladesh clinical content moderation or South Asian
-   academic toxicity research. The two TOXIGEN options share the same item
-   snapshot and use different saved assessments. The website
-   downloads each pinned snapshot from Hugging Face. The bundled ten-item
-   teaching example remains available as a separate illustrative option.
-2. Generate classifier instructions with GPT-6 Luna from the selected assessment,
-   or load the supplied MMLU/teaching-example instructions without a model call.
-   TOXIGEN, GSM8K, and HumanEval require generation. Review the deployment, decision rules,
-   labels, and applicability before starting classification.
+1. Find and confirm the benchmark's items. Caliper searches the Measurement Data
+   Bank using the paper identity saved with the assessment. Review the matching
+   evidence, version, scope, item count, and source before explicitly confirming
+   the benchmark and snapshot. Search for another candidate or upload its items
+   as CSV or a JSON array of objects when needed. Uploads require confirmation too.
+   Uploads accept 1–50,000 items and at most 10 MiB. Each item needs nonempty
+   `content`; `item_id` is generated from its row number when omitted and must
+   be unique when supplied. Include `reference_answer` when available.
+2. Generate fresh classifier instructions with GPT-6 Luna. The server carries
+   forward the exact report's deployment description, scoring, elicitation
+   summary, and available dataset evidence. Selecting a dataset does not select
+   another deployment or reuse that source's supplied criteria. Review the
+   decision rules, labels, and applicability before classification.
 3. Classify the first 100 items with GPT-6 Luna (all items for smaller datasets),
    inspect the evidence, then explicitly continue through the full snapshot.
    Completed items are reused on continuation or retry.
@@ -44,85 +48,98 @@ completed human reviews; the CLI supports comparison with a completed worksheet.
 
 An OpenAI key is required for generation and classification. Both steps use
 `gpt-6-luna` with low reasoning effort; each run records this model configuration.
-Loading supplied criteria and browsing the prepared evidence need no key. The key stays in memory;
-only the run ID and a separate access secret are kept in browser session storage.
+Opening the report and dataset setup makes no model calls. Generating criteria,
+classifying the pilot, and continuing through the remaining items are separate
+paid actions. The key stays in memory; the item run's ID and separate access
+secret are kept in browser session storage, scoped to the source assessment.
 Refresh restores the active run, but a later phase may require entering the key
 again. Runs expire one hour after the last phase ends and do not survive a server
 restart. Download outputs before they expire. Stop cancels the current awaited
 request and prevents new calls; a request already submitted may still be billed.
 
-### Configure the benchmark sources
+### Assessment-continuation API
+
+- `GET /api/item-analysis/assessment?kind=run&id={run_id}` (or `kind=gallery`)
+  resolves the existing report, returns its context, extracted benchmark identity,
+  suggested Data Bank sources, catalog status, and upload limits. It makes no
+  model call. A run ID uses the existing report access model; gallery IDs must identify an allowlisted report.
+- `GET /api/item-analysis/sources?kind=run&id={run_id}&q={query}` searches the
+  catalog for another candidate while retaining the original assessment identity.
+- `POST /api/item-analysis/runs/from-assessment` accepts multipart fields
+  `assessment_kind` (`run` or `gallery`), `assessment_id`, and exactly one of
+  `source_id` or `items_file`, plus explicit `benchmark_confirmed=true` and
+  `X-OpenAI-Key`. Remote sources also require the displayed `source_revision`.
+  It validates confirmation, the assessment, and source or upload before starting
+  fresh criteria generation. Clients cannot submit replacement assessment text
+  or arbitrary source URLs. Stale revisions must be reviewed and confirmed again.
+- Polling, classification, cancellation, and downloads use the existing item-run
+  endpoints with `X-Review-Token`. Classification pauses at the 100-item review
+  checkpoint before full-snapshot continuation.
+
+The older `/api/item-analysis/catalog` and `POST /api/item-analysis/runs` prepared
+example API remains available for compatibility and tests. It retains generated
+or supplied criteria modes and the ten-item illustrative example. These presets
+are not a separate homepage tool and do not replace the current report's context.
+
+### Configure Data Bank access
 
 Set the server's `HF_TOKEN` to a Hugging Face credential with read access to
-`aims-foundations/measurement-db-pp` for MMLU and TOXIGEN. GSM8K and HumanEval use public
-OpenAI datasets and can be downloaded without a Hugging Face credential.
-Visitors supply only their OpenAI key;
-their browsers never receive the Hugging Face token. Missing access is displayed
-explicitly instead of silently selecting the teaching example.
+`aims-foundations/measurement-db`. The browser never receives this credential.
+Visitors supply only their OpenAI key for the item stage. Catalog search and
+benchmark confirmation make no model calls and do not require an OpenAI key.
 
-MMLU remains the default selection, using `mmlu/items.parquet` at revision
-`cc796d3545a6bd2e78b5513c13e60a6913d01e3f` (14,015 items). The server downloads
-and caches that table in `WEBSITE_DATA_DIR/item-analysis-sources/`, checks its
-SHA-256, row count, and columns, and uses the shared preparation step to profile
-and shuffle every item. The pinned source has exactly the same bytes as the
-previous locally prepared MMLU table. Source repository, revision, and checksum
-are recorded for every run. Updating the snapshot is a deliberate code change
-in `server/item_analysis_sources.json`; a moving `main` branch cannot change an
-existing analysis.
+`server/item_analysis_databank_catalog.json` ships a metadata-only catalog for
+fast initial search. `server/item_analysis_databank.py` discovers the Data Bank's
+main branch, pins its commit, and refreshes the cached catalog in the background.
+It uses benchmark metadata and table metadata without downloading every item
+population. Historical migration branches are not silently combined. Only
+public releases can be used. Sources that exceed the hosted reader's size or
+schema capabilities remain visible with an explanation and an upload alternative.
+The hosted reader currently accepts text/code item tables with at most 50,000
+items, 32 MiB compressed data, and 96 MiB decoded Parquet data. These are full
+snapshot limits; the server never silently samples down an oversized benchmark.
 
-TOXIGEN uses `toxigen/items.parquet` from the same repository, pinned to revision
-`7a840c66f04393497c106289a1b8bbca8d107008`. Its 39,011 items include 27,820
-classification items and 11,191 continuation-generation items. The original
-grading rules and response scales are preserved; item-analysis counts describe
-this mixed snapshot and do not combine the tasks into an accuracy score.
-Choose **TOXIGEN · Bangladesh clinical content moderation** or
-**TOXIGEN · South Asian academic toxicity research**, enter an OpenAI key,
-generate and review the criteria, then classify the first 100 items. Continuing
-through the remaining items is a separate action after that review.
+Matching uses canonical paper identifiers and dataset URLs, normalized names and
+aliases, then fuzzy name matching. Match reasons and version/scope differences
+are shown instead of numeric confidence claims. The deployment context never
+participates in benchmark identity matching. Every proposed source requires
+confirmation, including exact identifier matches; changing the candidate or
+uploaded file clears that confirmation. A revision-bound source ID prevents a
+catalog refresh from silently switching the selected snapshot.
 
-The same registry pins GSM8K's `openai/gsm8k` main test split and HumanEval's
-`openai/openai_humaneval` test split, including their revisions, checksums, item
-counts, and assessment directories. GSM8K questions and complete worked answers
-are preserved; HumanEval prompts, canonical solutions, tests, and entry points
-are preserved as evidence. Benchmark code is never executed. Runs record the
-original source checksum and the checksum of any normalized table.
+Refresh the bundled catalog deliberately with:
 
-To add another benchmark, add a server-owned registry entry with a verified
-source and a matching completed assessment (`scoring.json`,
-`deployment_description.txt`, `elicitation_summary.md`, and
-`dataset_analysis_report.md`). Use the `measurement-db` adapter for tables that
-already contain `item_id` and `content`, or add a source adapter and tests for
-other schemas. An optional `supplied_spec` must match that benchmark and context.
-The browser lists registered choices automatically; it does not accept arbitrary
-dataset URLs or uploads.
+```bash
+python -m website.server.item_analysis_databank --refresh --output website/server/item_analysis_databank_catalog.json
+```
 
-The cache contains source data only, survives normal shutdown, and is not
-committed to Git or bundled in the image. A cancelled preparation waits for the
-current download or preparation step to finish; no model calls begin afterward.
-The original Caliper assessment and supplied pilot specification are included
-with the code; generated specifications and model labels remain specific to each
-run.
+The selected item table is downloaded only when criteria generation is started,
+then checked for integrity, expected row count, schema, and benchmark identity
+before any model call. The complete supported snapshot is prepared; the first
+100 items form the review checkpoint, not the population for the final report.
+Repository, revision, table, and checksum remain recorded with the run. Raw
+items are cached privately and are excluded from Git and the container image.
+An access or validation failure never substitutes another benchmark.
 
-For an explicitly prepared local snapshot, the optional
-`ITEM_ANALYSIS_PREPARED_DIR=/absolute/path/to/prepared/run` override still works.
-It replaces the remote catalog and copies prepared inputs into each run;
-existing classifications are not imported. Local `results/` folders remain
-excluded from Docker. Its title uses the prepared dataset's actual benchmark.
-The teaching example needs no Hugging Face access.
+The older prepared-example API retains `server/item_analysis_sources.json`,
+its pinned MMLU/TOXIGEN sources in `measurement-db-pp`, public GSM8K/HumanEval
+sources, and the illustrative example. `ITEM_ANALYSIS_PREPARED_DIR` applies only
+to that legacy API. These sources and historical assessment contexts do not
+replace Data Bank discovery or the current report's context in the merged flow.
 
-Implementation: `server/item_analysis_sources.json` owns the source catalog;
-`server/item_analysis_source.py` owns downloads and validation;
-`server/item_analysis_adapters.py` normalizes source fields;
-`server/item_analysis.py` owns jobs, access control, and the
-async OpenAI bridge. `client/src/itemAnalysis/` owns the page. Preparation,
-the OpenAI Responses client, specification validation, classification,
-aggregation, and exports are reused from
-`anthropic_api_package_release/item_analysis/`. This workflow does not call or
-modify `bayesian_auditing`.
+Implementation: `server/item_analysis_assessment.py` resolves existing reports,
+extracts paper identity, validates uploads, and freezes the original context;
+`server/item_analysis_databank.py` owns discovery, matching, and selected-source
+validation; `server/item_analysis.py` owns jobs, access control, and the async
+OpenAI bridge. `client/src/itemAnalysis/` owns the stage embedded by
+`client/src/components/ScoringView.tsx`. Preparation, the OpenAI client,
+specification validation, classification, aggregation, and exports reuse
+`anthropic_api_package_release/item_analysis/`. The separate `bayesian_auditing`
+review workflow keeps its own sample and catalog.
 
 ## Goal-conditioned item review
 
-The new flow asks for an OpenAI key, collects six concrete deployment questions,
+This separate tool asks for an OpenAI key, collects six concrete deployment questions,
 shows the catalog and fixed sample size before paid calls, and displays ranked items with all six
 validity judgments, per-dimension confidence and explanations, evidence,
 information gaps, and pinned source provenance. It
@@ -252,16 +269,21 @@ A user pastes their Anthropic API key, uploads a benchmark paper PDF, and descri
 3. **Elicitation questions** — generate 3–5 deployment-context questions (Sonnet)
 4. **User answers** the questions in the browser
 5. **Elicitation summary** — synthesize a structured summary (Sonnet)
-6. **Email + mode** — user provides an email address and chooses auto (default) or step-by-step. By default the rest of the pipeline runs unattended and the user is emailed when the report is ready.
+6. **Run mode** — user chooses automatic benchmark processing (default) or step-by-step review. The current browser UI does not collect a report-notification email address.
 7. **Paper extraction** — per-page parallel Haiku fan-out + Sonnet consolidation
 8. **Benchmark YAML** — Haiku picks ICL examples, Sonnet writes a per-paper YAML
 9. **Region YAML** — Haiku picks templates, Sonnet writes a regional scaffold, Sonnet+web search enriches it
 10. **Validity scoring** — single Opus call across the 6 dimensions
-11. **Email delivery** — Resend sends the user a link to `/run/{run_id}` with the rendered Markdown report and raw JSON attached.
+11. **Benchmark report** — the six-dimension report is displayed with downloads and the required item-analysis stage below it. Saved `/run/{run_id}` reports offer the same continuation. Optional notification endpoints remain available to compatible clients when email delivery is configured.
+12. **Item analysis** — connect matching benchmark items, generate and review criteria, classify the first 100 items, inspect the pilot, then continue through the full snapshot. These explicit paid actions use a separately supplied OpenAI key.
 
-The final output is a 6-dimension validity report with per-dimension scores, reasoning, and evidence.
+The complete output combines the six-dimension validity report with item-level
+judgments, prevalence summaries, and exportable evidence. Item prevalence does
+not change the original benchmark scores.
 
-A typical end-to-end run for a 20-page paper costs roughly $1.50–$2.50 of Anthropic API spend at current rates (Haiku 4.5 / Sonnet 4.6 / Opus 4.7). Web search adds $10 per 1,000 searches on top of tokens.
+Benchmark-stage cost depends on paper length, model usage, and web search.
+Item criteria generation and classification incur separate OpenAI charges;
+classification volume depends on the connected dataset's size.
 
 ---
 
@@ -287,7 +309,7 @@ Open <http://localhost:5173>. Vite proxies `/api/*` to <http://localhost:8000>.
 
 ### Free local dev (no Anthropic spend)
 
-For the original `/caliper` workflow, UI work and click-through testing without paying for API calls can use `MOCK_ANTHROPIC=1`. Every `call_text_async()` short-circuits to canned fixtures pulled from one already-paid assessment under `anthropic_api_package_release/assessments/`. Paste any string (e.g. `sk-ant-FAKE`) into the API-key field — the value is ignored. These replay fixtures do not cover `/item-analysis`: use its supplied-criteria preview without a key, or its offline tests for the complete workflow.
+For the benchmark-assessment stage of `/caliper`, UI work and click-through testing without paying for API calls can use `MOCK_ANTHROPIC=1`. Every `call_text_async()` short-circuits to canned fixtures pulled from one already-paid assessment under `anthropic_api_package_release/assessments/`. Paste any string (e.g. `sk-ant-FAKE`) into the API-key field — the value is ignored. This flag does not mock the subsequent OpenAI item-analysis stage. Inspect its setup without starting a model phase, or use offline tests for the complete workflow.
 
 ```bash
 MOCK_ANTHROPIC=1 python3 -m uvicorn website.server.app:app --reload --port 8000

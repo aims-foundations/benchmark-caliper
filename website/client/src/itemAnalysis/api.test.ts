@@ -1,7 +1,48 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { AnalysisApiError, classify, createRun, download, getRun } from './api'
+import { AnalysisApiError, classify, createAssessmentRun, createRun, download, getAssessment, getRun, searchSources } from './api'
 
 afterEach(() => vi.unstubAllGlobals())
+
+it('loads the linked assessment without model calls or credentials', async () => {
+  const fetch = vi.fn().mockResolvedValue(new Response('{}'))
+  vi.stubGlobal('fetch', fetch)
+  await getAssessment({ kind: 'gallery', id: 'expert__mmlu' })
+  expect(fetch).toHaveBeenCalledWith('/api/item-analysis/assessment?kind=gallery&id=expert__mmlu', expect.objectContaining({ cache: 'no-store' }))
+})
+
+it('uploads items with the original assessment reference and keeps the key out of the body', async () => {
+  const fetch = vi.fn().mockResolvedValue(new Response('{}'))
+  vi.stubGlobal('fetch', fetch)
+  const file = new File(['item_id,content\n1,Question'], 'items.csv', { type: 'text/csv' })
+  await createAssessmentRun({ kind: 'run', id: 'original-run' }, { items_file: file, benchmark_confirmed: true }, 'sk-private')
+  const [url, request] = fetch.mock.calls[0]
+  expect(url).toBe('/api/item-analysis/runs/from-assessment')
+  expect(request.headers).toEqual({ 'X-OpenAI-Key': 'sk-private' })
+  expect(Array.from(request.body.keys())).toEqual(['assessment_kind', 'assessment_id', 'benchmark_confirmed', 'items_file'])
+  expect(request.body.get('benchmark_confirmed')).toBe('true')
+  expect(request.body.get('assessment_id')).toBe('original-run')
+  expect(await request.body.get('items_file').text()).toContain('Question')
+})
+
+it('searches Data Bank metadata for the same assessment without a key or model call', async () => {
+  const fetch = vi.fn().mockResolvedValue(new Response('{}'))
+  vi.stubGlobal('fetch', fetch)
+  await searchSources({ kind: 'run', id: 'original-run' }, 'MMLU / test')
+  expect(fetch).toHaveBeenCalledWith('/api/item-analysis/sources?kind=run&id=original-run&q=MMLU+%2F+test', expect.objectContaining({ cache: 'no-store' }))
+  expect(fetch.mock.calls[0][1].headers).toBeUndefined()
+  expect(fetch.mock.calls[0][1].method).toBeUndefined()
+})
+
+it('binds explicit benchmark confirmation to the selected Data Bank snapshot', async () => {
+  const fetch = vi.fn().mockResolvedValue(new Response('{}'))
+  vi.stubGlobal('fetch', fetch)
+  await createAssessmentRun({ kind: 'run', id: 'original-run' }, { source_id: 'databank:revision:mmlu', source_revision: 'revision', benchmark_confirmed: true }, 'sk-private')
+  const [, request] = fetch.mock.calls[0]
+  expect(request.body.get('source_id')).toBe('databank:revision:mmlu')
+  expect(request.body.get('source_revision')).toBe('revision')
+  expect(request.body.get('benchmark_confirmed')).toBe('true')
+  expect(Array.from(request.body.values()).join(' ')).not.toContain('sk-private')
+})
 
 it.each(['mmlu', 'gsm8k', 'toxigen', 'toxigen-south-asia'])('sends the selected %s context in the body and keeps the API key in a header', async exampleId => {
   const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ run_id: 'test', run_secret: 'private' })))

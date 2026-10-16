@@ -15,6 +15,8 @@ import {
   scoreValidity,
   exportRun,
   deleteRun,
+  fetchReport,
+  fetchGalleryReport,
   ApiError,
   type PipelineEvent,
 } from './api'
@@ -572,6 +574,18 @@ describe('runPipeline', () => {
       mockFetch(new Response('not found', { status: 404 }))
       await expect(exportRun('missing')).rejects.toBeInstanceOf(ApiError)
     })
+  })
+
+  it('preserves deployment priority weights when a saved report is restored', async () => {
+    const summary = '| IC | HIGH | Critical to deployment |'
+    mockFetch(new Response(JSON.stringify({ run_id: 'r1', scoring: {}, raw: '{}', elicitation_summary: summary }), { status: 200 }))
+    expect((await fetchReport('r1')).elicitationSummary).toBe(summary)
+  })
+
+  it('preserves deployment priority weights from curated assessments', async () => {
+    const summary = '| IC | HIGH | Critical to deployment |'
+    mockFetch(new Response(JSON.stringify({ id: 'g1', scoring: {}, raw: '{}', elicitation_summary: summary }), { status: 200 }))
+    expect((await fetchGalleryReport('g1')).elicitation_summary).toBe(summary)
   })
 
   describe('deleteRun', () => {

@@ -1,0 +1,317 @@
+import json
+from pathlib import Path
+from types import SimpleNamespace
+
+import pyarrow as pa
+import pyarrow.parquet as pq
+import pytest
+import yaml
+
+from website.server import item_analysis_databank as bank
+
+
+REVISION = "a" * 40
+
+
+def entry(slug="mmlu", **changes):
+    return {"id": f"databank:{REVISION}:{slug}", "benchmark": slug,
+            "title": "MMLU" if slug == "mmlu" else slug, "aliases": [],
+            "repo": bank.REPO, "revision": REVISION, "source_revision": REVISION,
+            "paper_urls": ["https://arxiv.org/abs/2009.03300"], "source_urls": [],
+            "identifiers": ["arxiv:2009.03300"], "version": None,
+            "available": True, "unavailable_reason": None, "item_count": 2,
+            "requires_confirmation": True, **changes}
+
+
+@pytest.fixture(autouse=True)
+def isolated(monkeypatch, tmp_path):
+    monkeypatch.setattr(bank, "_catalogs", {})
+    monkeypatch.setattr(bank, "_latest", None)
+    monkeypatch.setattr(bank, "_refreshing", False)
+    monkeypatch.setattr(bank, "_refresh_failed", False)
+    monkeypatch.setattr(bank, "_last_refresh", 0)
+    monkeypatch.setattr(bank, "_cache_dir", lambda: tmp_path / "cache")
+    monkeypatch.setattr(bank, "BUNDLED_CATALOG", tmp_path / "catalog.json")
+    monkeypatch.setattr(bank, "_schedule_refresh", lambda: None)
+    monkeypatch.setattr(bank, "get_token", lambda: "private-test-token")
+
+
+def publish(entries):
+    catalog = {"repo": bank.REPO, "revision": REVISION, "entries": entries}
+    bank.BUNDLED_CATALOG.write_text(json.dumps(catalog))
+    return catalog
+
+
+def assessment(name="mmlu", **identity):
+    return {"benchmark": name, "benchmark_name": name, "benchmark_identity": identity}
+
+
+@pytest.mark.parametrize(("value", "expected"), [
+    ("https://arxiv.org/pdf/2009.03300v3.pdf", "arxiv:2009.03300"),
+    ("arXiv:2009.03300v2", "arxiv:2009.03300"),
+    ("https://doi.org/10.1000/ABC.Def", "doi:10.1000/abc.def"),
+    ("doi:10.1000/ABC.Def", "doi:10.1000/abc.def"),
+    ("https://github.com/Hendrycks/test.git/tree/main?x=1", "github:hendrycks/test"),
+    ("https://huggingface.co/datasets/OpenAI/gsm8k/tree/main", "hf:openai/gsm8k"),
+    ("https://[bad", None),
+    ("[", None),
+])
+def test_canonical_identifiers(value, expected):
+    assert bank.canonical_identifier(value) == expected
+
+
+def test_search_exact_identifier_alias_fuzzy_and_required_confirmation():
+    publish([entry(), entry("mmlupro", title="MMLU-Pro"),
+             entry("renamed", title="Unrelated renamed title", aliases=["MMLU Classic"],
+                   identifiers=["doi:10.1000/example"], paper_urls=[]),
+             entry("other", title="Unrelated", identifiers=[], paper_urls=[])])
+    matches = bank.search_candidates(assessment("Measuring Massive Multitask Language Understanding",
+                                              paper_urls=["https://arxiv.org/pdf/2009.03300v2.pdf"]))
+    assert matches["candidates"][0]["match_type"] == "identifier"
+    assert matches["requires_confirmation"]
+    assert all(c["requires_confirmation"] for c in matches["candidates"])
+    assert "suggested_source_id" not in matches
+    assert bank.search_candidates(assessment("MMLU Classic"))["candidates"][0]["benchmark"] == "renamed"
+    fuzzy = bank.search_candidates(assessment("mmlupro"))["candidates"]
+    assert fuzzy[0]["benchmark"] == "mmlupro"
+    assert next(c for c in fuzzy if c["benchmark"] == "mmlu")["conflicts"]
+    assert all(c["benchmark"] != "other" for c in matches["candidates"])
+
+
+def test_explicit_version_conflict_and_search_without_automatic_match():
+    publish([entry(version="v1"), entry("mathdial", title="MathDial", identifiers=[], paper_urls=[])])
+    result = bank.search_candidates(assessment(version="v2"))
+    assert "Release differs" in result["candidates"][0]["conflicts"][0]
+    assert bank.search_candidates(assessment("unknown zzzz"))["candidates"] == []
+    manual = bank.search_candidates(assessment("unknown zzzz"), "mathdial")
+    assert manual["candidates"][0]["benchmark"] == "mathdial"
+    assert manual["candidates"][0]["conflicts"]
+    assert manual["candidates"][0]["match_type"] == "search"
+    assert bank.search_candidates(assessment(), "  ")["candidates"][0]["benchmark"] == "mmlu"
+
+
+def test_search_does_not_use_deployment_as_identity():
+    publish([entry()])
+    context = assessment("a wholly separate benchmark")
+    context["deployment"] = "MMLU https://arxiv.org/abs/2009.03300"
+    assert bank.search_candidates(context)["candidates"] == []
+
+
+def test_documented_language_and_paper_mismatch_are_explained():
+    publish([entry(languages=["English"])])
+    result = bank.search_candidates(assessment(languages=["hi"], paper_urls=["https://arxiv.org/abs/2401.12345"]))
+    conflicts = result["candidates"][0]["conflicts"]
+    assert any("language differs" in value for value in conflicts)
+    assert any("paper identifier differs" in value for value in conflicts)
+    matched = bank.search_candidates(assessment(languages=["en-US"], paper_urls=["https://arxiv.org/pdf/2009.03300v2.pdf"]))
+    assert not matched["candidates"][0]["conflicts"]
+    assert bank.search_candidates(assessment(), "https://[bad")["candidates"] == []
+
+
+def test_missing_access_and_refresh_failure_remain_visible(monkeypatch):
+    publish([entry()])
+    monkeypatch.setattr(bank, "get_token", lambda: None)
+    monkeypatch.setattr(bank, "_refresh_failed", True)
+    result = bank.search_candidates(assessment())
+    assert result["status"] == "cached"
+    assert not result["candidates"][0]["available"]
+    assert "access" in result["candidates"][0]["unavailable_reason"]
+    assert "token" not in json.dumps(result)
+
+
+def test_no_catalog_returns_safe_unavailable():
+    result = bank.search_candidates(assessment())
+    assert result["status"] == "unavailable"
+    assert not result["candidates"]
+
+
+def test_revision_bound_resolve_retains_previous_catalog(tmp_path):
+    original = entry()
+    publish([original])
+    assert bank.resolve_candidate(original["id"])["source_revision"] == REVISION
+    new = "b" * 40
+    bank._catalogs[new] = {"repo": bank.REPO, "revision": new, "entries": []}
+    bank._latest = new
+    assert bank.resolve_candidate(original["id"])["id"] == original["id"]
+    with pytest.raises(bank.DataBankError, match="expired"):
+        bank.resolve_candidate(f"databank:{'c' * 40}:mmlu")
+    with pytest.raises(bank.DataBankError, match="invalid"):
+        bank.resolve_candidate(f"databank:{REVISION}:../../private")
+
+
+def test_background_failure_preserves_existing_catalog(monkeypatch):
+    publish([entry()])
+    bank._load_catalog()
+    monkeypatch.setattr(bank, "refresh_catalog", lambda **kwargs: (_ for _ in ()).throw(RuntimeError("private-test-token")))
+    bank._refresh_worker()
+    assert bank.search_candidates(assessment())["status"] == "cached"
+    assert bank.resolve_candidate(entry()["id"])["benchmark"] == "mmlu"
+    assert not bank._refreshing
+
+
+def discovery_fixture(tmp_path, monkeypatch, *, release="public", granularity="item", modality=None, footer=None):
+    metadata = tmp_path / "metadata.yaml"
+    metadata.write_text(yaml.safe_dump({"benchmark": {"name": "MMLU", "release": release,
+        "granularity": granularity, "modality": ["text"] if modality is None else modality,
+        "paper_url": "https://arxiv.org/abs/2009.03300", "version": "v1", "testing_condition": "Original test release"}}))
+    characterization = tmp_path / "characterization.yaml"
+    characterization.write_text(yaml.safe_dump({"tables": {"items": {"rows": 2}}}))
+    benchmarks = tmp_path / "benchmarks.parquet"
+    pq.write_table(pa.Table.from_pylist([{"benchmark_id": "mmlu", "name": "MMLU", "release": release}]), benchmarks)
+    paths = {"mmlu/metadata.yaml": metadata, "mmlu/characterization.yaml": characterization,
+             "mmlu/formatted_tables/benchmarks.parquet": benchmarks}
+    requests = []
+
+    def download(path, revision, token):
+        requests.append(path)
+        assert revision == REVISION
+        assert not path.endswith("items.parquet")
+        return paths[path]
+
+    monkeypatch.setattr(bank, "_metadata_file", download)
+    monkeypatch.setattr(bank, "_inspect_footer", lambda *args: footer or {
+        "item_count": 2, "columns": ["item_id", "benchmark_id", "content"], "uncompressed_bytes": 1000})
+
+    class Api:
+        def list_repo_refs(self, *args, **kwargs):
+            return SimpleNamespace(branches=[SimpleNamespace(name="main", target_commit=REVISION)])
+
+        def list_repo_tree(self, *args, **kwargs):
+            path = kwargs.get("path_in_repo")
+            if not path:
+                return [SimpleNamespace(path="mmlu")]
+            if path == "mmlu":
+                return [SimpleNamespace(path=name, size=file.stat().st_size) for name, file in paths.items()
+                        if name.count("/") == 1] + [SimpleNamespace(path="mmlu/formatted_tables")]
+            return [SimpleNamespace(path="mmlu/formatted_tables/benchmarks.parquet", size=1000),
+                    SimpleNamespace(path="mmlu/formatted_tables/items.parquet", size=500,
+                                    lfs=SimpleNamespace(sha256="c" * 64))]
+
+    return Api(), requests
+
+
+def test_refresh_uses_public_metadata_and_footers_not_item_rows(tmp_path, monkeypatch):
+    api, requests = discovery_fixture(tmp_path, monkeypatch)
+    result = bank.refresh_catalog(api=api)
+    candidate = result["entries"][0]
+    assert result["revision"] == REVISION
+    assert candidate["available"]
+    assert candidate["item_count"] == 2
+    assert candidate["sha256"] == "c" * 64
+    assert candidate["benchmark_ids"] == ["mmlu"]
+    assert candidate["testing_scope"] == "Original test release"
+    assert all(not path.endswith("items.parquet") for path in requests)
+    assert "private-test-token" not in json.dumps(result)
+
+
+def test_private_release_excluded(tmp_path, monkeypatch):
+    api, _ = discovery_fixture(tmp_path, monkeypatch, release="private")
+    assert bank._build_entry("mmlu", REVISION, api, "private-test-token") is None
+
+
+def test_same_revision_refresh_avoids_corpus_scan():
+    catalog = publish([entry()])
+
+    class Api:
+        def list_repo_refs(self, *args, **kwargs):
+            return SimpleNamespace(branches=[SimpleNamespace(name="main", target_commit=REVISION)])
+
+        def list_repo_tree(self, *args, **kwargs):
+            pytest.fail("Unchanged main should not scan metadata again")
+
+    assert bank.refresh_catalog(api=Api(), skip_if_unchanged=True) == catalog
+
+
+def test_source_links_only_allow_http_and_https():
+    assert bank._safe_urls(["javascript:alert(1)", "https://[bad", "https://user:secret@host.test/x",
+                            "https://arxiv.org/abs/2009.03300"]) == ["https://arxiv.org/abs/2009.03300"]
+
+
+@pytest.mark.parametrize(("changes", "reason"), [
+    ({"granularity": "aggregate"}, "not verified as individual"),
+    ({"modality": ["text", "image"]}, "requires other media"),
+    ({"footer": {"item_count": 2, "columns": ["item_id"], "uncompressed_bytes": 10}}, "lacks required"),
+    ({"footer": {"item_count": 50_001, "columns": ["item_id", "benchmark_id", "content"], "uncompressed_bytes": 10}}, "50,000"),
+    ({"footer": {"item_count": 2, "columns": ["item_id", "benchmark_id", "content"], "uncompressed_bytes": bank.MAX_UNCOMPRESSED_BYTES + 1}}, "96 MiB"),
+])
+def test_unsupported_candidates_visible_with_reason(tmp_path, monkeypatch, changes, reason):
+    api, _ = discovery_fixture(tmp_path, monkeypatch, **changes)
+    candidate = bank._build_entry("mmlu", REVISION, api, "private-test-token")
+    assert not candidate["available"]
+    assert reason in candidate["unavailable_reason"]
+
+
+def prepared_fixture(tmp_path, monkeypatch, *, benchmark_id="mmlu"):
+    path = tmp_path / "source.parquet"
+    pq.write_table(pa.Table.from_pylist([
+        {"item_id": "one", "benchmark_id": benchmark_id, "content": "Question one", "reference_answer": "One"},
+        {"item_id": "two", "benchmark_id": benchmark_id, "content": "Question two", "reference_answer": "Two"},
+    ]), path)
+    with pq.ParquetFile(path) as parquet:
+        columns = parquet.schema_arrow.names
+    candidate = entry(table_path="mmlu/formatted_tables/items.parquet", table_bytes=path.stat().st_size,
+                      sha256=bank.data.file_sha256(path), benchmark_ids=["mmlu"], columns=columns,
+                      testing_scope="Test split", version="v1")
+    publish([candidate])
+    calls = []
+
+    def download(**kwargs):
+        calls.append(kwargs)
+        return str(path)
+
+    monkeypatch.setattr(bank, "hf_hub_download", download)
+    return candidate, calls
+
+
+def test_prepare_preserves_full_population_and_pinned_identity(tmp_path, monkeypatch):
+    candidate, calls = prepared_fixture(tmp_path, monkeypatch)
+    output = tmp_path / "run"
+    dataset = bank.prepare_candidate(output, candidate)
+    assert dataset["item_count"] == 2
+    assert dataset["source"]["revision"] == REVISION
+    assert dataset["source"]["identity_validation"] == "public_metadata_mapping"
+    assert "path" not in dataset["source"]
+    assert len(list(bank.data.read_items(output / "items.jsonl"))) == 2
+    assert not (output / "evidence.json").exists()
+    assert not (output / "classifier_spec.json").exists()
+    assert calls[0]["revision"] == REVISION
+    assert calls[0]["filename"] == candidate["table_path"]
+
+
+def test_prepare_rejects_wrong_identity_before_preparing(tmp_path, monkeypatch):
+    candidate, _ = prepared_fixture(tmp_path, monkeypatch, benchmark_id="a-different-benchmark")
+    with pytest.raises(bank.DataBankError, match="validation"):
+        bank.prepare_candidate(tmp_path / "run", candidate)
+    assert not (tmp_path / "run" / "items.jsonl").exists()
+
+
+def test_prepare_rejects_changed_confirmation_and_can_stop(tmp_path, monkeypatch):
+    candidate, calls = prepared_fixture(tmp_path, monkeypatch)
+    with pytest.raises(bank.DataBankError, match="metadata changed"):
+        bank.prepare_candidate(tmp_path / "run", {**candidate, "item_count": 1})
+    with pytest.raises(InterruptedError):
+        bank.prepare_candidate(tmp_path / "run", candidate, stopped=lambda: True)
+    assert not calls
+
+
+@pytest.mark.parametrize("missing", [None, "", "   "])
+def test_prepare_rejects_any_item_without_mapped_identity(tmp_path, monkeypatch, missing):
+    candidate, _ = prepared_fixture(tmp_path, monkeypatch)
+    source = tmp_path / "source.parquet"
+    rows = pq.read_table(source).to_pylist()
+    rows[1]["benchmark_id"] = missing
+    pq.write_table(pa.Table.from_pylist(rows), source)
+    candidate.update(sha256=bank.data.file_sha256(source), table_bytes=source.stat().st_size)
+    publish([candidate])
+    with pytest.raises(bank.DataBankError, match="validation"):
+        bank.prepare_candidate(tmp_path / "run", candidate)
+    assert not (tmp_path / "run" / "items.jsonl").exists()
+
+
+def test_prepare_rejects_changed_hash(tmp_path, monkeypatch):
+    candidate, _ = prepared_fixture(tmp_path, monkeypatch)
+    changed = {**candidate, "sha256": "0" * 64}
+    publish([changed])
+    with pytest.raises(bank.DataBankError, match="validation"):
+        bank.prepare_candidate(tmp_path / "run", changed)
+    assert not (tmp_path / "run" / "items.jsonl").exists()

@@ -5,6 +5,7 @@ interface Props {
   summary: string
   runId: string
   slug: string
+  demo?: boolean
   onStartOver: () => void
   onChangeKey: () => void
   onDeleted: () => void
@@ -28,6 +29,7 @@ export function SummaryView({
   summary,
   runId,
   slug,
+  demo = false,
   onStartOver,
   onChangeKey,
   onDeleted,
@@ -106,8 +108,8 @@ export function SummaryView({
     <section className="summary">
       <h2>Elicitation summary</h2>
       <p className="help">
-        Step 2-summary's output. Downstream steps (region YAML, web search,
-        Opus scoring) will consume this.
+        This deployment context guides both the benchmark assessment and the
+        item-analysis stage that follows it.
       </p>
 
       <div className="output-doc">
@@ -135,11 +137,12 @@ export function SummaryView({
       )}
 
       <form onSubmit={handleStart} className="email-form">
-        <h3>Run the validity scoring</h3>
+        <h3>Run the benchmark assessment</h3>
         <p className="help">
-          Scoring takes about 3–7 minutes on your Anthropic key. The
-          finished report appears here when it's done, and you can download
-          it as Markdown and JSON.
+          {demo ? 'This walkthrough replays the prerecorded benchmark assessment without model calls.' : 'The benchmark assessment takes about 3–7 minutes on your Anthropic key.'}
+          {' '}Its report appears here, followed by the required item-analysis
+          stage. You will connect the dataset, review the criteria and pilot,
+          and classify the remaining items before the analysis is complete.
         </p>
 
         <label className="step-by-step">
@@ -161,14 +164,14 @@ export function SummaryView({
           <button type="button" className="link" onClick={handleDownloadMd}>
             Download .md
           </button>
-          <button
+          {!demo && <button
             type="button"
             className="link"
             onClick={handleExport}
             disabled={busy !== null}
           >
             {busy === 'export' ? 'Exporting…' : 'Download all data'}
-          </button>
+          </button>}
           <button
             type="button"
             onClick={onStartOver}

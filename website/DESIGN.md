@@ -1,6 +1,6 @@
 # Website design and operations
 
-This document describes how the validity-analyzer website is built, how it works, how user data and credentials are handled, the legal and ethical commitments we make, and how we operate it day to day.
+This document describes the website implementation in this checkout, its user flows, data handling, and operating requirements. Deployment verification is separate; source changes do not establish what is currently live.
 
 It is the single source of truth for the team. It is paired with [SECURITY.md](SECURITY.md), which is the concrete checklist we audit before each deploy. Every claim in this document should map to a verifiable item in SECURITY.md.
 
@@ -12,7 +12,9 @@ If you only have ten minutes, read sections **1 (Overview)**, **4 (Security)**, 
 
 ### What the website does
 
-The website is a public-facing interface to the validity-analysis pipeline described in the paper *"Validity Analysis when Porting Benchmarks Across Cultures and Regions."* A user uploads a benchmark paper PDF, describes the deployment context they are considering, answers a small set of elicitation questions, and receives a structured 6-dimension validity assessment with citations and remediation suggestions.
+The homepage offers two tools. **Benchmark validity analysis** (`/caliper`) starts with a benchmark paper PDF and deployment context, produces a structured six-dimension assessment, and continues into the required item-analysis stage within the same report. Users confirm matching items from the Measurement Data Bank or an upload, generate criteria from that assessment, inspect a pilot, and classify the full snapshot before the analysis is marked complete. **Goal-conditioned item assessment** (`/items`) independently ranks a reproducible sample from the Measurement Data Bank against a deployment description.
+
+Saved `/run/{run_id}` reports and gallery assessments provide the same item-analysis continuation. `/item-analysis` remains a compatibility entry into the main Caliper flow; it does not present a third top-level tool.
 
 ### Who it is for
 
@@ -20,14 +22,14 @@ Researchers, practitioners, designers, and policymakers who need to know whether
 
 ### What the website does not do
 
-- It does not host an LLM. The user supplies their own Anthropic API key (BYOK).
-- It does not store the user's API key.
+- It does not host an LLM. Users supply an Anthropic key for benchmark assessment and an OpenAI key for item analysis or goal-conditioned item assessment.
+- It does not persist provider keys on the server. Anthropic browser storage and the memory-only OpenAI key policy are described separately below.
 - It does not require an account in v0.
-- It does not provide a database of pre-computed assessments. Each run is one user's deployment.
+- Item prevalence does not automatically revise the original benchmark scores or validate model judgments against human labels.
 
 ### Relationship to the existing pipeline
 
-The website is a thin web wrapper over [anthropic_api_package_release/](../anthropic_api_package_release/). The pipeline itself — prompts, model routing, scripts, ICL templates — is unchanged. The website orchestrates the existing pipeline through a FastAPI backend; it does not reimplement any pipeline logic. This means **the website and the paper give identical answers for identical inputs**.
+The benchmark and item-analysis stages reuse [anthropic_api_package_release/](../anthropic_api_package_release/), while the separate item-review tool reuses [bayesian_auditing/](../bayesian_auditing/). FastAPI adds browser job lifecycles, report resolution, dataset selection and upload, access control, and exports. Shared code does not guarantee identical model outputs across runs.
 
 ---
 
@@ -58,6 +60,8 @@ The pipeline interaction is one-way: the server emits step-completion events whi
 
 - **SQLite** for the structured event log (tier 1 + tier 2 in the four-tier model below).
 - **Local filesystem** for blob storage (tier 3 full content), with TTL via cron.
+- **Benchmark tuple workspaces** retain the report's deployment and assessment artifacts for saved-report continuation, independently of optional trace logging, under the existing workspace retention policy.
+- **Private temporary item-run directories** hold the connected dataset, copied assessment, generated criteria, classifications, and exports. Their in-memory access registry and one-hour expiry are separate from benchmark retention.
 - For v1+: migrate to Postgres + Cloudflare R2 once we have multiple concurrent users or want a real dashboard.
 
 ---
@@ -95,6 +99,9 @@ USER                     FRONTEND                  BACKEND                 ANTHR
  │◄─────────────────────────┤                         │                         │
 ```
 
+The sequence above covers the benchmark-assessment stage. Its report leads
+directly into item analysis before the full workflow is complete.
+
 ### Stage by stage
 
 1. **Key entry.** User pastes their Anthropic API key. The browser stores it in `sessionStorage` (cleared when the tab closes). An optional "remember on this device" toggle moves it to `localStorage`. The key is masked on input.
@@ -107,15 +114,37 @@ USER                     FRONTEND                  BACKEND                 ANTHR
 
 5. **User answers elicitation questions.** Generated questions are rendered as a form. User types answers; the client posts them back. The server runs Step 2-summary and shows the result.
 
-6. **User enters email + chooses run mode.** Below the summary, the user provides an email address and decides whether to (a) run the rest of the pipeline automatically and be notified by email when scoring finishes (default) or (b) walk through each step interactively (checkbox). The email is persisted on the run row via `POST /api/runs/{id}/email`; it is never combined with cross-run data and is removed by delete-my-data.
+6. **User chooses benchmark run mode.** Below the summary, the user chooses automatic processing (default) or step-by-step review. The current UI has no report-notification email field. Optional email API support remains for compatible clients and does not gate progress.
 
 7. **Steps 3–7 run on the server.** PDF fan-out across pages (Haiku), consolidation (Sonnet), benchmark YAML synthesis, region YAML synthesis, optional web search, prompt assembly, and Opus scoring. Roughly 3–7 minutes total.
-   - **Auto mode (default):** A `POST /api/runs/{id}/auto-run` enqueues a background task that drives every phase using the API key + PDF bytes already stashed in the per-run in-memory store. Progress events flow into a ring buffer that the browser can tail via SSE (`GET /api/runs/{id}/events`) — *or* the user can close the tab. When scoring finishes, the report-ready email goes out with the scoring JSON and a Markdown rendering attached.
+   - **Auto mode (default):** A `POST /api/runs/{id}/auto-run` enqueues a background task that drives the benchmark phases using the API key + PDF bytes already stashed in the per-run in-memory store. Progress events flow into a ring buffer that the browser can tail via SSE (`GET /api/runs/{id}/events`). Closing the tab does not stop the background benchmark job. Item-analysis model calls still require separate actions after the benchmark report is ready.
    - **Step-by-step mode:** Same per-phase SSE endpoints as before (`/extract`, `/region`, `/score`), but the user is not asked to re-upload the PDF — the server reuses the bytes from step 3. The email, if provided, is still sent when scoring completes.
 
-8. **Result delivery.** The scoring JSON and a rendered markdown report are available three ways: (a) inline on the browser session, (b) downloadable from the scoring view, (c) attached to the report-ready email. The email also contains a link to `/run/{run_id}`, a landing page that fetches the same data from `GET /api/runs/{id}/report`. The run_id (a UUIDv4) is the only credential — same posture as `/export`.
+8. **Benchmark report and dataset connection.** The report appears inline with downloads and the next required item-analysis stage. `/run/{run_id}` fetches the saved benchmark report and offers the same continuation. The run ID remains the bearer credential for the original report and its assessment setup, matching `/export`; public gallery reports use allowlisted gallery IDs. The server searches the Measurement Data Bank using the saved paper metadata: paper and dataset identifiers, names and aliases, then fuzzy name matches. Deployment descriptions do not influence identity matching. The user reviews the candidate’s match reasons, version, scope, item count, and source, then explicitly confirms the benchmark and snapshot. Search supports correcting a suggestion; CSV/JSON upload remains available when no usable source is found. Changing the source clears confirmation. Uploads allow up to 10 MiB and 50,000 rows; nonempty `content` is required, `item_id` is generated when omitted, and `reference_answer` is optional.
 
-9. **Cleanup.** The in-memory entry holding the API key + PDF bytes is dropped the moment the run ends (success or failure). A safety-net sweeper drops any entry older than one hour so an abandoned auto-run can't leak memory. The 90-day retention cron continues to govern tier-3 blob storage as before.
+9. **Criteria, pilot, and full item analysis.** The server copies the report's exact deployment, scores, elicitation summary, and available dataset report into a new private item run. Connecting a dataset never selects its historical assessment or supplied criteria. An explicit action with an OpenAI key generates fresh criteria using GPT-6 Luna. Users review those criteria, explicitly classify the first 100 items (or all items for a smaller dataset), inspect the checkpoint, and explicitly continue through the remaining items. Full classification marks the workflow complete. Distributions and per-item evidence supplement the unchanged six-dimension scores; criteria, labels, summary, HTML report, and a blind human-review worksheet can be downloaded.
+
+10. **Cleanup.** The benchmark job drops its in-memory API key and PDF bytes when it ends; a safety-net sweeper removes stale entries after one hour. Existing 90-day benchmark workspace and trace retention remain separate. Item runs expire one hour after their last phase ends and do not survive a server restart; their input copies and outputs are removed on normal shutdown. Users must download item outputs before expiry.
+
+### Assessment-to-item boundary
+
+`GET /api/item-analysis/assessment?kind=run&id={run_id}` (or `kind=gallery`)
+resolves an existing assessment and returns its context, benchmark identity,
+suggested Data Bank sources, catalog status, and upload limits without model
+calls. `GET /api/item-analysis/sources` accepts the same assessment reference
+and a `q` search string for finding another candidate. `POST /api/item-analysis/runs/from-assessment`
+accepts multipart `assessment_kind`, `assessment_id`, `benchmark_confirmed=true`,
+and exactly one of `source_id` or `items_file`, with `X-OpenAI-Key`. Data Bank
+selections require the displayed `source_revision`. The backend resolves
+assessment artifacts itself, rejects unconfirmed or stale sources, validates uploads, and
+starts fresh criteria generation. Subsequent item endpoints require an independent
+`X-Review-Token`, stored in the tab alongside the item run ID and scoped to its
+original assessment.
+
+The older prepared-example `/api/item-analysis/catalog` and
+`POST /api/item-analysis/runs` API remains for compatibility, including
+supplied-criteria previews. It is not a
+standalone homepage tool and does not provide the context for report continuation.
 
 ---
 
@@ -140,6 +169,13 @@ We do not currently defend against:
 ### How we keep API keys safe
 
 The principle: **the server never writes the key to disk, ever, and only holds it in memory while it is actively needed for a run.**
+
+The bullets below describe the Anthropic benchmark stage. Item-stage OpenAI keys
+travel in `X-OpenAI-Key` and stay in frontend memory and the active server phase;
+they are never put in browser storage. Only the independent item-run access
+token is saved in session storage. Criteria generation and each classification
+phase require explicit actions; a required product stage does not imply consent
+to start paid calls. See [SECURITY.md](SECURITY.md) for item-run boundaries.
 
 - The key lives in the user's browser only (`sessionStorage` by default, `localStorage` opt-in).
 - The key is sent in an `X-Anthropic-Key` header on each request.
@@ -192,7 +228,10 @@ User content (PDFs, deployment descriptions, elicitation answers, scoring output
 
 ## 5. Logging and observability
 
-We log a lot — but in tiers, with one chokepoint, and with strict retention rules. The principle: **the API key is the only thing we never log; everything else is sorted by sensitivity.**
+The following model describes benchmark-stage trace logging. Report artifacts
+in benchmark workspaces and temporary item-run inputs and outputs have the
+separate lifecycles described above; they are not opt-in trace blobs. API keys
+are excluded from all server persistence.
 
 ### The four-tier model
 
@@ -287,7 +326,8 @@ The cron's correctness is a checklist item in `SECURITY.md` (test by inserting a
 ### What we collect, plainly
 
 - **Always:** which steps ran, when, on which model, with how many tokens, at what cost, and whether they succeeded. Hashed fingerprints of your inputs (so we can tell two runs are on the same paper without storing the paper). No name, no IP-tied identity.
-- **When you ask us to email the report:** the email address you typed, plus a timestamp of when delivery happened. Stored on the run's row, removed when you delete the run. Used once, to send that one message, never reused for anything else.
+- **If an API client requests a report email:** the supplied email address and delivery timestamp are stored on the run's row and removed when the run is deleted. The current browser flow does not collect this address.
+- **For report continuation:** the benchmark workspace retains deployment and assessment artifacts under its existing retention policy. An item run separately holds a copy of those artifacts, the connected or uploaded dataset, criteria, and classifications until its temporary expiry.
 - **Only if you explicitly opt in (per run):** the full text of your deployment description, elicitation answers, and the LLM prompts and responses for that run. Stored for 90 days then automatically deleted. Default is **off**.
 - **Never:** your Anthropic API key. Your authentication credentials.
 

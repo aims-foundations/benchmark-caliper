@@ -608,6 +608,7 @@ export interface ReportResponse {
   slug: string
   scoring: Record<string, unknown>
   raw: string
+  elicitationSummary?: string
 }
 
 export interface GalleryEntry {
@@ -664,6 +665,7 @@ export async function fetchGalleryReport(id: string): Promise<GalleryReport> {
         ? (data.scoring as Record<string, unknown>)
         : {},
     raw: typeof data.raw === 'string' ? data.raw : '',
+    elicitation_summary: typeof data.elicitation_summary === 'string' ? data.elicitation_summary : undefined,
   }
 }
 
@@ -686,6 +688,7 @@ export async function fetchReport(runId: string): Promise<ReportResponse> {
         ? (data.scoring as Record<string, unknown>)
         : {},
     raw: typeof data.raw === 'string' ? data.raw : '',
+    elicitationSummary: typeof data.elicitation_summary === 'string' ? data.elicitation_summary : undefined,
   }
 }
 

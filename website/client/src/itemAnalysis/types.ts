@@ -16,6 +16,65 @@ export interface Example {
 }
 
 export interface Catalog { examples: Example[]; checkpoint_size: number }
+export interface AssessmentReference { kind: 'run' | 'gallery'; id: string }
+export interface AssessmentContext extends AssessmentReference {
+  benchmark: string
+  benchmark_name?: string
+  deployment: string
+  elicitation_summary?: string
+  scoring?: Record<string, unknown>
+  benchmark_identity?: BenchmarkIdentity
+}
+export interface BenchmarkIdentity {
+  name: string
+  full_name: string | null
+  aliases: string[]
+  paper_urls: string[]
+  source_urls: string[]
+  year: string | null
+  languages: string[]
+  version: string | null
+  evidence: Record<string, string>
+}
+export interface SourceCatalog {
+  status: 'ready' | 'cached' | 'unavailable'
+  message: string
+  repo: string
+  revision: string | null
+  requires_confirmation: true
+}
+export interface AssessmentSource {
+  id: string
+  title: string
+  benchmark: string
+  item_count: number
+  available: boolean
+  source_label: string
+  source_url?: string
+  source_revision?: string
+  unavailable_reason?: string
+  version?: string | null
+  split?: string | null
+  testing_scope?: string | null
+  match_reasons: string[]
+  conflicts: string[]
+  match_type: 'identifier' | 'exact_name' | 'related_name' | 'search'
+  requires_confirmation: true
+}
+export interface SourceDiscovery {
+  sources: AssessmentSource[]
+  benchmark_identity: BenchmarkIdentity
+  catalog: SourceCatalog
+}
+export interface AssessmentSetup extends SourceDiscovery {
+  assessment: AssessmentContext
+  checkpoint_size: number
+  upload: { max_bytes: number; max_items: number; formats: string[] }
+}
+export type ConfirmedDataset = { benchmark_confirmed: true } & (
+  { source_id: string; source_revision: string; items_file?: never } |
+  { items_file: File; source_id?: never; source_revision?: never }
+)
 export interface RunAccess { run_id: string; run_secret: string }
 export type SpecificationMode = 'generate' | 'provided'
 export type RunScope = 'pilot' | 'all'
@@ -85,6 +144,7 @@ export interface Item {
 
 export interface AnalysisRun {
   run_id: string
+  assessment?: AssessmentContext
   status: 'preparing' | 'generating' | 'ready' | 'running' | 'checkpoint' | 'complete' | 'cancelled' | 'failed'
   message: string
   example: Example

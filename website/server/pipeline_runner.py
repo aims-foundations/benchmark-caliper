@@ -90,6 +90,7 @@ def write_tuple_inputs(
     benchmark_yaml: str | None = None,
     region_yaml: str | None = None,
     dataset_analysis_text: str | None = None,
+    elicitation_summary: str | None = None,
     pdf_bytes: bytes | None = None,
 ) -> Path:
     """Persist the inputs Step 8, Step 9, and the verify endpoint read from disk.
@@ -120,6 +121,8 @@ def write_tuple_inputs(
         (d / "dataset_analysis_report.md").write_text(
             dataset_analysis_text, encoding="utf-8"
         )
+    if elicitation_summary:
+        (d / "elicitation_summary.md").write_text(elicitation_summary, encoding="utf-8")
     if pdf_bytes:
         (d / "paper.pdf").write_bytes(pdf_bytes)
     return d
