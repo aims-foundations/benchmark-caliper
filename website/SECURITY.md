@@ -125,10 +125,12 @@ boundaries:
 - Users explicitly confirm a Data Bank benchmark snapshot or uploaded items.
   Searching metadata and confirming a source do not start model calls. The
   frontend clears confirmation when the candidate or file changes. Discovery
-  uses the fixed `aims-foundations/measurement-db` repository, public releases,
-  and a pinned main-branch revision. Requests cannot choose arbitrary repositories,
-  filesystem paths, models, or provider URLs. Paper identity, not deployment
-  context, determines suggested matches. Candidate versions and match reasons
+  uses the fixed `aims-foundations/measurement-db-pp` repository, public releases,
+  and a pinned main-branch revision. It reads benchmark descriptors from
+  `benchmarks.parquet` and optional `metadata.yaml` files. Requests cannot choose
+  arbitrary repositories, filesystem paths, models, or provider URLs. Saved paper
+  identity or the directly declared benchmark name determines suggested matches;
+  deployment requirements do not. Candidate versions and match reasons
   remain visible for human review.
 - The catalog is metadata-only. Its bundled snapshot and server cache contain no
   uploaded papers, deployment descriptions, provider keys, or raw item rows.

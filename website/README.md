@@ -141,16 +141,18 @@ are not a separate homepage tool and do not replace the current report's context
 ### Configure Data Bank access
 
 Set the server's `HF_TOKEN` to a Hugging Face credential with read access to
-`aims-foundations/measurement-db`. The browser never receives this credential.
+`aims-foundations/measurement-db-pp` for merged and direct item analysis. The
+browser never receives this credential.
 Visitors supply only their OpenAI key for the item stage. Catalog search and
 benchmark confirmation make no model calls and do not require an OpenAI key.
 
 `server/item_analysis_databank_catalog.json` ships a metadata-only catalog for
 fast initial search. `server/item_analysis_databank.py` discovers the Data Bank's
 main branch, pins its commit, and refreshes the cached catalog in the background.
-It uses benchmark metadata and table metadata without downloading every item
-population. Historical migration branches are not silently combined. Only
-public releases can be used. Sources that exceed the hosted reader's size or
+Discovery reads benchmark descriptors from `benchmarks.parquet` and optional
+`metadata.yaml` files in `measurement-db-pp`, plus item-table metadata, without
+downloading every item population. Historical migration branches are not
+silently combined. Only public releases can be used. Sources that exceed the hosted reader's size or
 schema capabilities remain visible with an explanation and an upload alternative.
 The hosted reader currently accepts text/code item tables with at most 50,000
 items, 32 MiB compressed data, and 96 MiB decoded Parquet data. These are full

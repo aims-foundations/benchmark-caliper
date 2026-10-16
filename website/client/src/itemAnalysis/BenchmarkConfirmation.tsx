@@ -48,6 +48,8 @@ export function BenchmarkConfirmation({ assessment, setup, confirmed, onConfirm,
   const originalName = identity.full_name || identity.name || setup.assessment.benchmark_name || setup.assessment.benchmark
   const source = sources.find(candidate => candidate.id === sourceId)
   const canConfirm = !searching && (datasetMode === 'upload' ? !!file : !!source?.available && !!source.source_revision)
+  const repositoryUrl = /^[A-Za-z0-9][A-Za-z0-9._-]*\/[A-Za-z0-9][A-Za-z0-9._-]*$/.test(catalog.repo)
+    ? `https://huggingface.co/datasets/${catalog.repo}` : null
 
   useEffect(() => () => request.current?.abort(), [])
 
@@ -113,6 +115,7 @@ export function BenchmarkConfirmation({ assessment, setup, confirmed, onConfirm,
     <p className={`ia-small${catalog.status === 'unavailable' ? ' ia-catalog-unavailable' : ''}`} role="status">
       {catalog.status === 'unavailable' ? 'Data Bank catalog unavailable. ' : catalog.status === 'cached' ? 'Using cached Data Bank metadata. ' : 'Data Bank metadata loaded. '}{catalog.message}
     </p>
+    {repositoryUrl && <p className="ia-small">Data Bank repository: <a href={repositoryUrl} target="_blank" rel="noreferrer">{catalog.repo} ↗</a></p>}
     <fieldset className="ia-mode"><legend>Find the matching items</legend>
       <label><input type="radio" name="dataset-source" checked={datasetMode === 'source'} onChange={() => changeMode('source')} /><span><strong>Choose from the Measurement Data Bank</strong><small>Review recommended matches or search for another benchmark.</small></span></label>
       <label><input type="radio" name="dataset-source" checked={datasetMode === 'upload'} onChange={() => changeMode('upload')} /><span><strong>Upload the benchmark’s items</strong><small>Use a CSV or JSON file when the matching snapshot is not available.</small></span></label>

@@ -38,17 +38,19 @@ bundled with the frontend. Ordinary gallery reports still use live analysis.
 ## Item-analysis configuration
 
 The item-analysis stage resolves the open benchmark assessment and searches
-`aims-foundations/measurement-db` using its saved paper metadata. Every source
-requires explicit benchmark confirmation, including exact matches. The user can
+`aims-foundations/measurement-db-pp` using its saved paper metadata. Direct
+item analysis searches the same repository using the declared benchmark name.
+Every source requires explicit benchmark confirmation, including exact matches. The user can
 search other candidates or upload CSV/JSON items. Uploads accept up to 10 MiB and
 50,000 items, require `content`, and allow optional `item_id` and
 `reference_answer`. No Hugging Face credential is needed for uploads.
 
 Set the server's `HF_TOKEN` to a credential with read access to
-`aims-foundations/measurement-db`. The bundled metadata catalog supports fast
+`aims-foundations/measurement-db-pp`. The bundled metadata catalog supports fast
 search and background refresh; selected sources remain pinned to the displayed
-repository revision. Discovery uses main-branch public releases and does not
-merge the historical migration branch or the separate `/items` sample.
+repository revision. Discovery reads `benchmarks.parquet` and optional
+`metadata.yaml` files, uses only main-branch public releases, and does not merge
+the historical migration branch or the separate `/items` sample.
 The source catalog displays versions, item counts, matching evidence, and
 unavailable reasons. Unsupported sources can be reviewed in search but cannot
 start model calls. See the [Data Bank setup](README.md#configure-data-bank-access)

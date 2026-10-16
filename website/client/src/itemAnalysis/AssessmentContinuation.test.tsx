@@ -56,6 +56,7 @@ it('continues the displayed assessment without choosing another deployment or st
   expect(api.createAssessmentRun).not.toHaveBeenCalled()
   expect(screen.queryByLabelText('OpenAI API key')).not.toBeInTheDocument()
   expect(screen.getByText('The paper identifier matches.')).toBeVisible()
+  expect(screen.getByRole('link', { name: /aims-foundations\/measurement-db-pp/ })).toHaveAttribute('href', 'https://huggingface.co/datasets/aims-foundations/measurement-db-pp')
   expect(screen.getByText('57 subjects')).toBeVisible()
   fireEvent.submit(screen.getByRole('heading', { name: 'Continue with MMLU' }).closest('form')!)
   expect(api.createAssessmentRun).not.toHaveBeenCalled()

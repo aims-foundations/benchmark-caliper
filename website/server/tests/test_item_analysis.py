@@ -71,7 +71,7 @@ def client(tmp_path, monkeypatch, model):
     monkeypatch.setenv("ITEM_ANALYSIS_PREPARED_DIR", str(tmp_path / "not-configured"))
     monkeypatch.setattr(analysis.item_analysis_databank, "search_candidates", lambda assessment, query=None: {
         "candidates": [], "status": "ready", "message": "No matching public Data Bank snapshot.",
-        "repo": "aims-foundations/measurement-db", "revision": CATALOG_REVISION, "requires_confirmation": True,
+        "repo": "aims-foundations/measurement-db-pp", "revision": CATALOG_REVISION, "requires_confirmation": True,
     })
 
     @asynccontextmanager
@@ -754,8 +754,8 @@ def databank_catalog(monkeypatch, prepared=None, *, benchmark="mmlu"):
         "id": f"databank:{CATALOG_REVISION}:{benchmark}", "title": benchmark.upper(), "benchmark": benchmark,
         "item_count": read_json(prepared / "dataset.json")["item_count"] if prepared else 2,
         "available": True, "source_revision": CATALOG_REVISION, "revision": CATALOG_REVISION,
-        "source_label": "Public Data Bank full item table", "repo": "aims-foundations/measurement-db",
-        "source_url": f"https://huggingface.co/datasets/aims-foundations/measurement-db/blob/{CATALOG_REVISION}/{benchmark}/items.parquet",
+        "source_label": "Public Data Bank full item table", "repo": "aims-foundations/measurement-db-pp",
+        "source_url": f"https://huggingface.co/datasets/aims-foundations/measurement-db-pp/blob/{CATALOG_REVISION}/{benchmark}/items.parquet",
         "version": "test-v1", "split": "test", "match_reasons": ["Benchmark name matches"],
         "conflicts": [], "match_type": "exact_name", "requires_confirmation": True,
     }

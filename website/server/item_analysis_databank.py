@@ -28,7 +28,7 @@ from anthropic_api_package_release.item_analysis import data
 from anthropic_api_package_release.item_analysis.storage import write_json
 from . import db
 
-REPO = "aims-foundations/measurement-db"
+REPO = "aims-foundations/measurement-db-pp"
 BUNDLED_CATALOG = Path(__file__).with_name("item_analysis_databank_catalog.json")
 REFRESH_SECONDS = 3600
 MAX_TABLE_BYTES = 32 * 1024 * 1024
@@ -314,21 +314,33 @@ def _inspect_footer(path: str, revision: str, token) -> dict:
 def _build_entry(slug: str, revision: str, api, token) -> dict | None:
     files = {entry.path: entry for entry in api.list_repo_tree(REPO, repo_type="dataset", revision=revision, path_in_repo=slug)}
     meta_path = f"{slug}/metadata.yaml"
-    if meta_path not in files or getattr(files[meta_path], "size", MAX_METADATA_BYTES + 1) > MAX_METADATA_BYTES:
-        return None
-    metadata = yaml.safe_load(_metadata_file(meta_path, revision, token).read_text(encoding="utf-8"))
-    benchmark = metadata.get("benchmark", {}) if isinstance(metadata, dict) else {}
-    if benchmark.get("release") != "public":
+    metadata = {}
+    if meta_path in files:
+        if getattr(files[meta_path], "size", MAX_METADATA_BYTES + 1) > MAX_METADATA_BYTES:
+            return None
+        metadata = yaml.safe_load(_metadata_file(meta_path, revision, token).read_text(encoding="utf-8")) or {}
+    declared = metadata.get("benchmark", {}) if isinstance(metadata, dict) else {}
+    if not isinstance(declared, dict):
         return None
     for directory in (f"{slug}/formatted_tables",):
         if directory in files:
             files.update({entry.path: entry for entry in api.list_repo_tree(REPO, repo_type="dataset", revision=revision, path_in_repo=directory)})
-    table_path = next((p for p in (f"{slug}/formatted_tables/items.parquet", f"{slug}/items.parquet") if p in files), None)
-    parent = str(Path(table_path).parent) if table_path else f"{slug}/formatted_tables"
+    # The processed bank publishes its current tables directly under each slug.
+    # Older collections may still use formatted_tables. Read identity metadata
+    # alongside the selected item table; metadata.yaml is optional in this bank.
+    table_path = next((p for p in (f"{slug}/items.parquet", f"{slug}/formatted_tables/items.parquet") if p in files), None)
+    parent = str(Path(table_path).parent) if table_path else slug
     benchmark_path = f"{parent}/benchmarks.parquet"
     rows = []
     if benchmark_path in files and getattr(files[benchmark_path], "size", MAX_METADATA_BYTES + 1) <= MAX_METADATA_BYTES:
         rows = pq.read_table(_metadata_file(benchmark_path, revision, token)).to_pylist()
+    # A repository access token does not make private benchmark releases public.
+    # Neither metadata source may silently override a non-public declaration.
+    if (declared.get("release", "public") != "public"
+            or any(row.get("release") != "public" for row in rows)
+            or (not rows and declared.get("release") != "public")):
+        return None
+    benchmark = {**(rows[0] if rows else {}), **declared}
     character_path = f"{slug}/characterization.yaml"
     characterization = {}
     if character_path in files and getattr(files[character_path], "size", MAX_METADATA_BYTES + 1) <= MAX_METADATA_BYTES:
@@ -341,11 +353,15 @@ def _build_entry(slug: str, revision: str, api, token) -> dict | None:
     sha256 = getattr(lfs, "sha256", None) if lfs is not None else None
     aliases = sorted(set(_strings(benchmark.get("aliases")) + [str(row["name"]) for row in rows if row.get("name")]))
     ids = sorted({str(row["benchmark_id"]) for row in rows if row.get("benchmark_id") is not None})
-    paper_urls = _safe_urls(benchmark.get("paper_url"))
-    source_urls = _safe_urls(benchmark.get("data_source_url"))
+    paper_urls = sorted(set(_safe_urls(benchmark.get("paper_url"))
+                            + [url for row in rows for url in _safe_urls(row.get("paper_url"))]))
+    source_urls = sorted({url for record in [benchmark, *rows]
+                          for key in ("data_source_url", "source_url", "dataset_source")
+                          for url in _safe_urls(record.get(key))})
     title = str(benchmark.get("name") or slug)
     version = benchmark.get("version")
-    modality = _strings(benchmark.get("modality"))
+    modality = sorted(set(_strings(benchmark.get("modality"))
+                          + [value for row in rows for value in _strings(row.get("modality"))]))
     features = benchmark.get("benchmark_features") or {}
     if isinstance(features, str):
         try:
@@ -357,7 +373,7 @@ def _build_entry(slug: str, revision: str, api, token) -> dict | None:
         languages += _strings(features.get("languages")) + _strings(features.get("language"))
     reasons = []
     granularity = benchmark.get("granularity") or (rows[0].get("granularity") if rows else None)
-    if granularity != "item":
+    if granularity != "item" or any(row.get("granularity", granularity) != "item" for row in rows):
         reasons.append("This release is not verified as individual benchmark items.")
     if not table_path:
         reasons.append("No formatted item table is published for this release.")
@@ -393,8 +409,8 @@ def _build_entry(slug: str, revision: str, api, token) -> dict | None:
             "repo": REPO, "revision": revision, "source_revision": revision, "table_path": table_path,
             "sha256": sha256, "table_bytes": size, "item_count": count, "benchmark_ids": ids,
             "columns": footer.get("columns", []), "uncompressed_bytes": footer.get("uncompressed_bytes"),
-            "source_url": source_url, "source_label": f"Measurement Data Bank · {slug} · {count:,} items",
-            "metadata_url": f"https://huggingface.co/datasets/{REPO}/blob/{revision}/{meta_path}",
+            "source_url": source_url, "source_label": f"measurement-db-pp · {slug} · {count:,} items",
+            "metadata_url": f"https://huggingface.co/datasets/{REPO}/blob/{revision}/{meta_path if meta_path in files else benchmark_path}",
             "version": str(version) if version else None, "split": benchmark.get("split"),
             "testing_scope": str(benchmark.get("testing_condition") or "")[:2400] or None,
             "description": str(benchmark.get("one_line_description") or benchmark.get("description") or "")[:600],
