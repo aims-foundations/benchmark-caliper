@@ -70,7 +70,7 @@ def client(tmp_path, monkeypatch, model):
     monkeypatch.setattr(analysis, "jobs", {})
     monkeypatch.setenv("ITEM_ANALYSIS_PREPARED_DIR", str(tmp_path / "not-configured"))
     monkeypatch.setattr(analysis.item_analysis_databank, "search_candidates", lambda assessment, query=None: {
-        "candidates": [], "status": "ready", "message": "No matching public Data Bank snapshot.",
+        "candidates": [], "status": "ready", "message": "No matching Data Bank snapshot.",
         "repo": "aims-foundations/measurement-db-pp", "revision": CATALOG_REVISION, "requires_confirmation": True,
     })
 
@@ -748,13 +748,13 @@ def start_linked(client, assessment, *, source_id=None, rows=None, filename="ite
     return response.json()
 
 
-def databank_catalog(monkeypatch, prepared=None, *, benchmark="mmlu"):
+def databank_catalog(monkeypatch, prepared=None, *, benchmark="mmlu", release="public"):
     """Pinned Data Bank-only fixture; the API tests never contact the network."""
     candidate = {
         "id": f"databank:{CATALOG_REVISION}:{benchmark}", "title": benchmark.upper(), "benchmark": benchmark,
         "item_count": read_json(prepared / "dataset.json")["item_count"] if prepared else 2,
         "available": True, "source_revision": CATALOG_REVISION, "revision": CATALOG_REVISION,
-        "source_label": "Public Data Bank full item table", "repo": "aims-foundations/measurement-db-pp",
+        "source_label": "Data Bank full item table", "repo": "aims-foundations/measurement-db-pp", "release": release,
         "source_url": f"https://huggingface.co/datasets/aims-foundations/measurement-db-pp/blob/{CATALOG_REVISION}/{benchmark}/items.parquet",
         "version": "test-v1", "split": "test", "match_reasons": ["Benchmark name matches"],
         "conflicts": [], "match_type": "exact_name", "requires_confirmation": True,
@@ -1030,11 +1030,26 @@ def test_confirmed_databank_alias_preserves_source_and_original_assessment(clien
     assert read_json(analysis.jobs[access["run_id"]].directory / "profile.json")["benchmark_identity"]["requested"] == "mmlu"
 
 
+@pytest.mark.parametrize("release", ["private", None])
+def test_confirmed_eligible_source_is_not_filtered_by_release_flag(client, current_assessment, tmp_path, monkeypatch, model, release):
+    prepared = prepared_snapshot(tmp_path, monkeypatch, count=2, benchmark="mmlu")
+    candidate = databank_catalog(monkeypatch, prepared, release=release)
+    setup = client.get("/api/item-analysis/assessment", params={"kind": "run", "id": current_assessment["assessment_id"]})
+    assert setup.status_code == 200
+    assert setup.json()["sources"][0]["release"] == release
+    assert setup.json()["sources"][0]["available"]
+    access = start_linked(client, current_assessment, source_id=candidate["id"])
+    ready = settled(client, access)
+    assert ready["status"] == "ready" and ready["total"] == 2, ready
+    assert ready["example"]["release"] == release and len(model) == 1
+    assert ready["summary"]["original_assessment"]["input_form"]["score"] == 2
+
+
 def test_unavailable_snapshot_fails_safely_before_paid_generation(client, current_assessment, monkeypatch, model):
     candidate = databank_catalog(monkeypatch)
 
     def unavailable(*args, **kwargs):
-        raise analysis.item_analysis_databank.DataBankError("The confirmed public snapshot could not be loaded. No model calls were made.")
+        raise analysis.item_analysis_databank.DataBankError("The confirmed snapshot could not be loaded. No model calls were made.")
 
     monkeypatch.setattr(analysis.item_analysis_databank, "prepare_candidate", unavailable)
     access = start_linked(client, current_assessment, source_id=candidate["id"])

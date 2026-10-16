@@ -15,7 +15,7 @@ Items that depend on the deployed infrastructure (TLS, DNS, hosting accounts, mo
 
 The `/caliper?start=items` entry can reuse an existing report or accept new
 deployment requirements without creating a benchmark run. `POST
-/api/item-analysis/direct/setup` validates context and searches public catalog
+/api/item-analysis/direct/setup` validates context and searches Data Bank catalog
 metadata without calling a model or persisting a server job. Context is sent in
 the request body, never the URL. The accepted context is kept in this tab's
 session storage; its deterministic identifier is a context fingerprint, not
@@ -125,9 +125,10 @@ boundaries:
 - Users explicitly confirm a Data Bank benchmark snapshot or uploaded items.
   Searching metadata and confirming a source do not start model calls. The
   frontend clears confirmation when the candidate or file changes. Discovery
-  uses the fixed `aims-foundations/measurement-db-pp` repository, public releases,
-  and a pinned main-branch revision. It reads benchmark descriptors from
-  `benchmarks.parquet` and optional `metadata.yaml` files. Requests cannot choose
+  uses the fixed `aims-foundations/measurement-db-pp` repository and a pinned
+  main-branch revision. It reads benchmark descriptors from `benchmarks.parquet`
+  and optional `metadata.yaml` files regardless of release metadata, using the
+  server's configured Hugging Face access. Requests cannot choose
   arbitrary repositories, filesystem paths, models, or provider URLs. Saved paper
   identity or the directly declared benchmark name determines suggested matches;
   deployment requirements do not. Candidate versions and match reasons

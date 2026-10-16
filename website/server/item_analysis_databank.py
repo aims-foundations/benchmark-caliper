@@ -1,6 +1,6 @@
 """Metadata-only Data Bank discovery and confirmed, immutable item snapshots.
 
-Search never calls a model or reads item values. The bundled public-release
+Search never calls a model or reads item values. The bundled repository
 index makes setup immediate; a daemon refreshes metadata from main in the
 background. Every match is only a candidate and requires caller confirmation.
 """
@@ -29,6 +29,9 @@ from anthropic_api_package_release.item_analysis.storage import write_json
 from . import db
 
 REPO = "aims-foundations/measurement-db-pp"
+# The index now includes every release label. Reject earlier filtered caches
+# even when the repository revision has not changed.
+CATALOG_VERSION = 2
 BUNDLED_CATALOG = Path(__file__).with_name("item_analysis_databank_catalog.json")
 REFRESH_SECONDS = 3600
 MAX_TABLE_BYTES = 32 * 1024 * 1024
@@ -193,7 +196,9 @@ def _cache_dir() -> Path:
 
 
 def _valid_catalog(value: dict) -> bool:
-    return isinstance(value, dict) and value.get("repo") == REPO and bool(_REVISION.fullmatch(str(value.get("revision", "")))) and isinstance(value.get("entries"), list)
+    return (isinstance(value, dict) and value.get("version") == CATALOG_VERSION
+            and value.get("repo") == REPO and bool(_REVISION.fullmatch(str(value.get("revision", ""))))
+            and isinstance(value.get("entries"), list))
 
 
 def _load_catalog() -> dict | None:
@@ -261,7 +266,7 @@ def search_candidates(assessment: dict, query: str | None = None) -> dict:
         if score <= 0:
             continue
         candidate = deepcopy(entry)
-        # Public eligibility never claims a gated table can be read without access.
+        # Schema eligibility never claims a gated table can be read without access.
         if candidate["available"] and not has_access:
             candidate["available"] = False
             candidate["unavailable_reason"] = "Server-side Data Bank access is unavailable. Upload matching items or contact the maintainer."
@@ -334,12 +339,8 @@ def _build_entry(slug: str, revision: str, api, token) -> dict | None:
     rows = []
     if benchmark_path in files and getattr(files[benchmark_path], "size", MAX_METADATA_BYTES + 1) <= MAX_METADATA_BYTES:
         rows = pq.read_table(_metadata_file(benchmark_path, revision, token)).to_pylist()
-    # A repository access token does not make private benchmark releases public.
-    # Neither metadata source may silently override a non-public declaration.
-    if (declared.get("release", "public") != "public"
-            or any(row.get("release") != "public" for row in rows)
-            or (not rows and declared.get("release") != "public")):
-        return None
+    # The release label is descriptive metadata, not a search or access policy.
+    # Search the repository regardless of that label; HF enforces file access.
     benchmark = {**(rows[0] if rows else {}), **declared}
     character_path = f"{slug}/characterization.yaml"
     characterization = {}
@@ -377,8 +378,8 @@ def _build_entry(slug: str, revision: str, api, token) -> dict | None:
         reasons.append("This release is not verified as individual benchmark items.")
     if not table_path:
         reasons.append("No formatted item table is published for this release.")
-    if not ids or any(row.get("release", "public") != "public" for row in rows):
-        reasons.append("The public benchmark identity mapping is unavailable.")
+    if not ids:
+        reasons.append("The benchmark identity mapping is unavailable.")
     opaque = re.compile(r"(?:[a-fA-F0-9]{16,64}|[a-fA-F0-9]{8}(?:-[a-fA-F0-9]{4}){3}-[a-fA-F0-9]{12}|[0-9]+)")
     if any(value != slug and not opaque.fullmatch(value) for value in ids):
         reasons.append("This release uses named configurations requiring a dedicated item adapter.")
@@ -416,13 +417,13 @@ def _build_entry(slug: str, revision: str, api, token) -> dict | None:
             "description": str(benchmark.get("one_line_description") or benchmark.get("description") or "")[:600],
             "paper_urls": paper_urls, "source_urls": source_urls, "modality": modality, "languages": sorted(set(languages)),
             "identifiers": sorted({v for u in paper_urls + source_urls if (v := canonical_identifier(u))}),
-            "release": "public", "granularity": granularity, "available": not reasons,
+            "release": benchmark.get("release"), "granularity": granularity, "available": not reasons,
             "unavailable_reason": " ".join(reasons) + " Upload a supported matching snapshot to continue." if reasons else None,
             "requires_confirmation": True}
 
 
 def refresh_catalog(revision: str = "main", *, api=None, skip_if_unchanged=False) -> dict:
-    """Build an atomic index from public metadata and footers, never item rows."""
+    """Build an atomic index from repository metadata and footers, never item rows."""
     api = api or HfApi()
     try:
         # dataset_info returns a huge sibling list for this repository. Refs are
@@ -442,7 +443,7 @@ def refresh_catalog(revision: str = "main", *, api=None, skip_if_unchanged=False
         entries = sorted((entry for entry in entries if entry), key=lambda entry: entry["benchmark"])
         if not entries:
             raise ValueError("Empty catalog")
-        return {"version": 1, "repo": REPO, "branch": "main", "revision": resolved,
+        return {"version": CATALOG_VERSION, "repo": REPO, "branch": "main", "revision": resolved,
                 "generated_at": datetime.now(timezone.utc).isoformat(), "entries": entries}
     except Exception:
         raise DataBankError("Data Bank metadata could not be refreshed. The previous verified catalog remains available.") from None
@@ -490,7 +491,7 @@ def _prepare_candidate(directory: Path, candidate: dict, stopped=None) -> dict:
                                     source_repo=REPO, source_revision=pinned["revision"], source_table=pinned["table_path"])
         dataset["source"].pop("path", None)
         dataset["source"].update({"candidate_id": pinned["id"], "version": pinned["version"],
-                                  "benchmark_ids": pinned["benchmark_ids"], "identity_validation": "public_metadata_mapping",
+                                  "benchmark_ids": pinned["benchmark_ids"], "identity_validation": "repository_metadata_mapping",
                                   "testing_scope": pinned["testing_scope"]})
         write_json(directory / "dataset.json", dataset)
         check_stopped()
@@ -519,4 +520,4 @@ if __name__ == "__main__":
     options = parser.parse_args()
     result = refresh_catalog()
     options.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"Indexed {len(result['entries'])} public releases at {result['revision']}; no item rows saved.")
+    print(f"Indexed {len(result['entries'])} benchmark entries at {result['revision']}; no item rows saved.")

@@ -49,8 +49,9 @@ Set the server's `HF_TOKEN` to a credential with read access to
 `aims-foundations/measurement-db-pp`. The bundled metadata catalog supports fast
 search and background refresh; selected sources remain pinned to the displayed
 repository revision. Discovery reads `benchmarks.parquet` and optional
-`metadata.yaml` files, uses only main-branch public releases, and does not merge
-the historical migration branch or the separate `/items` sample.
+`metadata.yaml` files from the main branch regardless of release metadata,
+using the configured `HF_TOKEN`. It does not merge the historical migration
+branch or the separate `/items` sample.
 The source catalog displays versions, item counts, matching evidence, and
 unavailable reasons. Unsupported sources can be reviewed in search but cannot
 start model calls. See the [Data Bank setup](README.md#configure-data-bank-access)

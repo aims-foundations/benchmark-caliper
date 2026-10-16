@@ -39,7 +39,7 @@ def isolated(monkeypatch, tmp_path):
 
 
 def publish(entries):
-    catalog = {"repo": bank.REPO, "revision": REVISION, "entries": entries}
+    catalog = {"version": 2, "repo": bank.REPO, "revision": REVISION, "entries": entries}
     bank.BUNDLED_CATALOG.write_text(json.dumps(catalog))
     return catalog
 
@@ -132,7 +132,7 @@ def test_revision_bound_resolve_retains_previous_catalog(tmp_path):
     publish([original])
     assert bank.resolve_candidate(original["id"])["source_revision"] == REVISION
     new = "b" * 40
-    bank._catalogs[new] = {"repo": bank.REPO, "revision": new, "entries": []}
+    bank._catalogs[new] = {"version": 2, "repo": bank.REPO, "revision": new, "entries": []}
     bank._latest = new
     assert bank.resolve_candidate(original["id"])["id"] == original["id"]
     with pytest.raises(bank.DataBankError, match="expired"):
@@ -145,7 +145,7 @@ def test_old_repository_cache_and_saved_selection_cannot_be_reused():
     old_revision = "d" * 40
     old = entry("old-only", id=f"databank:{old_revision}:old-only", repo=OLD_REPO,
                 revision=old_revision, source_revision=old_revision)
-    cached = {"repo": OLD_REPO, "revision": old_revision, "entries": [old]}
+    cached = {"version": 2, "repo": OLD_REPO, "revision": old_revision, "entries": [old]}
     bank._cache_dir().mkdir()
     for filename in ("latest.json", f"{old_revision}.json"):
         (bank._cache_dir() / filename).write_text(json.dumps(cached))
@@ -160,12 +160,47 @@ def test_old_repository_cache_and_saved_selection_cannot_be_reused():
 
 
 def test_old_repository_cache_is_not_used_when_no_processed_catalog_exists():
-    old = {"repo": OLD_REPO, "revision": REVISION, "entries": [entry(repo=OLD_REPO)]}
+    old = {"version": 2, "repo": OLD_REPO, "revision": REVISION, "entries": [entry(repo=OLD_REPO)]}
     bank._cache_dir().mkdir()
     (bank._cache_dir() / "latest.json").write_text(json.dumps(old))
     bank.BUNDLED_CATALOG.write_text(json.dumps(old))
     assert bank.search_candidates(assessment())["status"] == "unavailable"
     assert not bank._catalogs
+    with pytest.raises(bank.DataBankError, match="expired"):
+        bank.resolve_candidate(entry()["id"])
+
+
+def test_old_public_only_catalog_at_same_repo_and_revision_is_replaced_by_expanded_bundle():
+    public_only = {"version": 1, "repo": PROCESSED_REPO, "revision": REVISION,
+                   "entries": [entry(release="public")]}
+    bank._cache_dir().mkdir()
+    for filename in ("latest.json", f"{REVISION}.json"):
+        (bank._cache_dir() / filename).write_text(json.dumps(public_only))
+    expanded = publish([entry(release="public"), entry("mathdial", title="MathDial", release="private", identifiers=[])])
+    result = bank.search_candidates(assessment("MathDial"))
+    assert result["revision"] == REVISION
+    assert result["candidates"][0]["benchmark"] == "mathdial"
+    assert result["candidates"][0]["available"] and result["candidates"][0]["release"] == "private"
+    assert bank._load_catalog() == expanded
+    assert not bank._valid_catalog(public_only)
+    assert bank._valid_catalog(expanded)
+    assert bank.resolve_candidate(f"databank:{REVISION}:mathdial")["release"] == "private"
+
+    class Api:
+        def list_repo_refs(self, *args, **kwargs):
+            return SimpleNamespace(branches=[SimpleNamespace(name="main", target_commit=REVISION)])
+
+        def list_repo_tree(self, *args, **kwargs):
+            pytest.fail("A matching expanded catalog is already available at this revision")
+
+    assert bank.refresh_catalog(api=Api(), skip_if_unchanged=True) == expanded
+
+
+def test_legacy_catalog_cannot_restore_a_revision_selection_without_an_expanded_catalog():
+    bank._cache_dir().mkdir()
+    (bank._cache_dir() / f"{REVISION}.json").write_text(json.dumps({
+        "version": 1, "repo": PROCESSED_REPO, "revision": REVISION, "entries": [entry()],
+    }))
     with pytest.raises(bank.DataBankError, match="expired"):
         bank.resolve_candidate(entry()["id"])
 
@@ -221,11 +256,12 @@ def discovery_fixture(tmp_path, monkeypatch, *, release="public", granularity="i
     return Api(), requests
 
 
-def test_refresh_uses_public_metadata_and_footers_not_item_rows(tmp_path, monkeypatch):
+def test_refresh_uses_repository_metadata_and_footers_not_item_rows(tmp_path, monkeypatch):
     api, requests = discovery_fixture(tmp_path, monkeypatch)
     result = bank.refresh_catalog(api=api)
     candidate = result["entries"][0]
     assert result["revision"] == REVISION
+    assert result["version"] == 2
     assert candidate["available"]
     assert candidate["item_count"] == 2
     assert candidate["sha256"] == "c" * 64
@@ -235,9 +271,13 @@ def test_refresh_uses_public_metadata_and_footers_not_item_rows(tmp_path, monkey
     assert "private-test-token" not in json.dumps(result)
 
 
-def test_private_release_excluded(tmp_path, monkeypatch):
+def test_private_release_is_eligible_and_keeps_original_metadata_label(tmp_path, monkeypatch):
     api, _ = discovery_fixture(tmp_path, monkeypatch, release="private")
-    assert bank._build_entry("mmlu", REVISION, api, "private-test-token") is None
+    candidate = bank._build_entry("mmlu", REVISION, api, "private-test-token")
+    assert candidate["available"] and candidate["release"] == "private"
+    publish([candidate])
+    match = bank.search_candidates(assessment())["candidates"][0]
+    assert match["available"] and match["release"] == "private"
 
 
 def processed_discovery_fixture(tmp_path, monkeypatch, *, rows=None, declared=None,
@@ -331,30 +371,34 @@ def test_processed_root_tables_without_yaml_provide_mmlu_identity_and_matching(t
 
 
 @pytest.mark.parametrize("release", ["private", "restricted", None, ""])
-def test_table_only_nonpublic_or_missing_release_is_excluded(tmp_path, monkeypatch, release):
+def test_table_only_nonpublic_or_missing_release_remains_eligible(tmp_path, monkeypatch, release):
     row = {"benchmark_id": "mmlu", "name": "MMLU", "granularity": "item", "modality": ["text"]}
     if release is not None:
         row["release"] = release
     api, requests, footer_requests, _, _ = processed_discovery_fixture(tmp_path, monkeypatch, rows=[row])
-    assert bank._build_entry("mmlu", REVISION, api, "private-test-token") is None
-    assert requests == ["mmlu/benchmarks.parquet"] and not footer_requests
+    candidate = bank._build_entry("mmlu", REVISION, api, "private-test-token")
+    assert candidate["available"] and candidate["release"] == release
+    assert requests == ["mmlu/benchmarks.parquet"] and footer_requests == [("mmlu/items.parquet", REVISION)]
 
 
 @pytest.mark.parametrize("rows", [
     [{"benchmark_id": "mmlu", "release": "public"}, {"benchmark_id": "12345", "release": "private"}],
     [{"benchmark_id": "mmlu", "release": "public"}, {"benchmark_id": "12345"}],
 ])
-def test_public_yaml_cannot_override_a_private_or_undeclared_table_release(tmp_path, monkeypatch, rows):
+def test_mixed_release_rows_are_eligible_when_identity_and_item_schema_are_valid(tmp_path, monkeypatch, rows):
+    rows = [{"granularity": "item", "modality": ["text"], **row} for row in rows]
     api, _, footer_requests, _, _ = processed_discovery_fixture(tmp_path, monkeypatch, rows=rows,
                                                                declared={"release": "public"})
-    assert bank._build_entry("mmlu", REVISION, api, "private-test-token") is None
-    assert not footer_requests
+    candidate = bank._build_entry("mmlu", REVISION, api, "private-test-token")
+    assert candidate["available"] and set(candidate["benchmark_ids"]) == {"mmlu", "12345"}
+    assert footer_requests == [("mmlu/items.parquet", REVISION)]
 
 
-def test_public_root_table_cannot_override_private_yaml(tmp_path, monkeypatch):
+def test_private_yaml_does_not_block_an_otherwise_eligible_root_table(tmp_path, monkeypatch):
     api, _, footer_requests, _, _ = processed_discovery_fixture(tmp_path, monkeypatch, declared={"release": "private"})
-    assert bank._build_entry("mmlu", REVISION, api, "private-test-token") is None
-    assert not footer_requests
+    candidate = bank._build_entry("mmlu", REVISION, api, "private-test-token")
+    assert candidate["available"] and candidate["release"] == "private"
+    assert footer_requests == [("mmlu/items.parquet", REVISION)]
 
 
 def test_root_item_table_uses_root_identity_instead_of_formatted_metadata(tmp_path, monkeypatch):
@@ -367,10 +411,16 @@ def test_root_item_table_uses_root_identity_instead_of_formatted_metadata(tmp_pa
     assert requests == ["mmlu/benchmarks.parquet"] and footer_requests == [("mmlu/items.parquet", REVISION)]
 
 
-def test_root_items_cannot_borrow_public_release_from_formatted_identity(tmp_path, monkeypatch):
+def test_root_items_without_identity_stay_visible_but_cannot_borrow_formatted_metadata(tmp_path, monkeypatch):
     api, requests, footer_requests, _, _ = processed_discovery_fixture(tmp_path, monkeypatch, formatted=True, root_benchmark=False)
-    assert bank._build_entry("mmlu", REVISION, api, "private-test-token") is None
-    assert not requests and not footer_requests
+    candidate = bank._build_entry("mmlu", REVISION, api, "private-test-token")
+    assert candidate is not None and not candidate["available"]
+    assert candidate["table_path"] == "mmlu/items.parquet" and candidate["benchmark_ids"] == []
+    assert "identity mapping" in candidate["unavailable_reason"]
+    assert not requests and footer_requests == [("mmlu/items.parquet", REVISION)]
+    publish([candidate])
+    match = bank.search_candidates(assessment())["candidates"][0]
+    assert match["id"] == candidate["id"] and not match["available"]
 
 
 def test_same_revision_refresh_avoids_corpus_scan():
@@ -434,7 +484,7 @@ def test_prepare_preserves_full_population_and_pinned_identity(tmp_path, monkeyp
     assert dataset["item_count"] == 2
     assert dataset["source"]["revision"] == REVISION
     assert dataset["source"]["repo"] == PROCESSED_REPO
-    assert dataset["source"]["identity_validation"] == "public_metadata_mapping"
+    assert dataset["source"]["identity_validation"] == "repository_metadata_mapping"
     assert "path" not in dataset["source"]
     assert len(list(bank.data.read_items(output / "items.jsonl"))) == 2
     assert not (output / "evidence.json").exists()
@@ -442,6 +492,20 @@ def test_prepare_preserves_full_population_and_pinned_identity(tmp_path, monkeyp
     assert calls[0]["revision"] == REVISION
     assert calls[0]["repo_id"] == PROCESSED_REPO
     assert calls[0]["repo_type"] == "dataset"
+    assert calls[0]["filename"] == candidate["table_path"]
+
+
+def test_prepare_accepts_eligible_nonpublic_snapshot_with_pinned_repository_and_revision(tmp_path, monkeypatch):
+    candidate, calls = prepared_fixture(tmp_path, monkeypatch)
+    candidate["release"] = "private"
+    publish([candidate])
+    selected = bank.search_candidates(assessment())["candidates"][0]
+    assert selected["available"] and selected["release"] == "private"
+    dataset = bank.prepare_candidate(tmp_path / "run", selected)
+    assert dataset["item_count"] == 2
+    assert dataset["source"]["repo"] == PROCESSED_REPO and dataset["source"]["revision"] == REVISION
+    assert dataset["source"]["identity_validation"] == "repository_metadata_mapping"
+    assert calls[0]["repo_id"] == PROCESSED_REPO and calls[0]["revision"] == REVISION
     assert calls[0]["filename"] == candidate["table_path"]
 
 
