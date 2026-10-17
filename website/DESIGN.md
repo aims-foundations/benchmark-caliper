@@ -12,7 +12,7 @@ If you only have ten minutes, read sections **1 (Overview)**, **4 (Security)**, 
 
 ### What the website does
 
-The homepage offers two tools. **Benchmark validity analysis** (`/caliper`) starts with a benchmark paper PDF and deployment context, produces a structured six-dimension assessment, and continues into the required item-analysis stage within the same report. Users confirm matching items from the Measurement Data Bank or an upload, generate criteria from that assessment, inspect a pilot, and classify the full snapshot before the analysis is marked complete. **Goal-conditioned item assessment** (`/items`) independently ranks a reproducible sample from the Measurement Data Bank against a deployment description.
+The homepage offers two tools. **Benchmark validity analysis** (`/caliper`) starts with a benchmark paper PDF and deployment context, produces a structured six-dimension assessment, and continues into the required item-analysis stage within the same report. Users confirm matching items from the Measurement Data Bank or an upload, generate criteria from that assessment, inspect a pilot, and classify the full snapshot before the analysis is marked complete. **Goal-conditioned item assessment** (`/items`) locally retrieves a shortlist from a reproducible Measurement Data Bank sample with Qwen3 embeddings, then uses the existing six-dimension GPT-6 Luna judge on that shortlist. Retrieval similarity stays separate from validity scores.
 
 Saved `/run/{run_id}` reports and gallery assessments provide the same item-analysis continuation. `/item-analysis` remains a compatibility entry into the main Caliper flow; it does not present a third top-level tool.
 
@@ -22,14 +22,14 @@ Researchers, practitioners, designers, and policymakers who need to know whether
 
 ### What the website does not do
 
-- It does not host an LLM. Users supply an Anthropic key for benchmark assessment and an OpenAI key for item analysis or goal-conditioned item assessment.
+- Benchmark assessment uses a visitor-supplied Anthropic key; item analysis and goal-conditioned item judgments use a visitor-supplied OpenAI key. Goal-conditioned retrieval hosts Qwen3-Embedding-0.6B locally for embeddings, with no generation or paid embedding API calls.
 - It does not persist provider keys on the server. Anthropic browser storage and the memory-only OpenAI key policy are described separately below.
 - It does not require an account in v0.
 - Item prevalence does not automatically revise the original benchmark scores or validate model judgments against human labels.
 
 ### Relationship to the existing pipeline
 
-The benchmark and item-analysis stages reuse [anthropic_api_package_release/](../anthropic_api_package_release/), while the separate item-review tool reuses [bayesian_auditing/](../bayesian_auditing/). FastAPI adds browser job lifecycles, report resolution, dataset selection and upload, access control, and exports. Shared code does not guarantee identical model outputs across runs.
+The benchmark and item-analysis stages reuse [anthropic_api_package_release/](../anthropic_api_package_release/), while the separate item-review tool reuses local retrieval and shortlisted judging from [bayesian_auditing/](../bayesian_auditing/). FastAPI adds browser job lifecycles, report resolution, dataset selection and upload, access control, and exports. Shared code does not guarantee identical model outputs across runs.
 
 ---
 

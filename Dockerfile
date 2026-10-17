@@ -26,10 +26,15 @@ RUN apt-get update \
       gosu \
     && rm -rf /var/lib/apt/lists/*
 
-COPY website/server/requirements.txt /tmp/server-requirements.txt
+# Render serves queries on CPU. Install the official CPU wheel first so the
+# generic retrieval requirements reuse it instead of adding CUDA libraries.
+RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu 'torch>=2.2'
+
+COPY website/server/requirements.txt /tmp/website/server/requirements.txt
+COPY bayesian_auditing/requirements-retrieval.txt /tmp/bayesian_auditing/requirements-retrieval.txt
 COPY anthropic_api_package_release/requirements.txt /tmp/release-requirements.txt
 RUN pip install --no-cache-dir \
-    -r /tmp/server-requirements.txt \
+    -r /tmp/website/server/requirements.txt \
     -r /tmp/release-requirements.txt
 
 COPY . .

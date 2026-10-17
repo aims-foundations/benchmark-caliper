@@ -16,7 +16,7 @@ import os
 from pathlib import Path
 import secrets
 import time
-from threading import Event
+from threading import Event, Lock
 from typing import Annotated
 
 from fastapi import APIRouter, Header, HTTPException, Query, Response
@@ -29,6 +29,8 @@ from bayesian_auditing.sampling import (
     SAMPLE_SIZE, iter_sample_items, prepare_samples, sample_upper_bound, sampling_policy,
 )
 from bayesian_auditing.scoring import SCORING_POLICY
+from bayesian_auditing.data import fingerprint
+from bayesian_auditing.retrieval import ItemIndex, RETRIEVAL_POLICY
 from bayesian_auditing.judge import (
     AsyncJudge, DEFAULT_MODEL, DEFAULT_REASONING_EFFORT, DEFAULT_MAX_OUTPUT_TOKENS, PROMPT_PATH,
 )
@@ -41,6 +43,8 @@ MAX_ACTIVE = 3
 MAX_RETAINED = 30
 RETENTION_SECONDS = 3600
 RESULTS_PAGE_SIZE = 20
+DEFAULT_RETRIEVE_K = 20
+MAX_RETRIEVE_K = 100
 REVIEW_CONCURRENCY = int(os.environ.get("ITEM_REVIEW_CONCURRENCY", "4"))
 if not 1 <= REVIEW_CONCURRENCY <= 16:
     raise ValueError("ITEM_REVIEW_CONCURRENCY must be between 1 and 16")
@@ -69,6 +73,11 @@ class Deployment(BaseModel):
 class ReviewRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     deployment: Deployment
+    retrieve_k: int = Field(default=DEFAULT_RETRIEVE_K, ge=1, le=MAX_RETRIEVE_K, strict=True)
+    retrieval_query: str = Field(default="", max_length=100_000)
+
+    def query(self) -> str:
+        return self.retrieval_query if self.retrieval_query.strip() else self.deployment.describe()
 
 
 @dataclass
@@ -82,9 +91,12 @@ class ReviewJob:
     finished_at: float | None = None
     task: asyncio.Task | None = field(default=None, repr=False)
     status: str = "preparing"
-    message: str = "Preparing the fixed sample from both dataset branches. No model calls yet."
+    message: str = "Preparing the fixed sample for local retrieval. No paid calls yet."
     source_rows: int = 0
     total: int = 0
+    indexed_items: int = 0
+    contentless_items: int = 0
+    retrieved_items: int = 0
     sample_complete: bool = False
     prepared_benchmarks: int = 0
     downloads: int = 0
@@ -93,6 +105,11 @@ class ReviewJob:
 
 
 jobs: dict[str, ReviewJob] = {}
+# Only dataset evidence/vectors are reusable. Deployment queries, keys,
+# and judgments stay with their private job. Serialize local model inference to
+# avoid allocating one model or inference batch per concurrent visitor.
+_retrieval_lock = Lock()
+_cached_index: tuple[str, ItemIndex] | None = None
 
 
 def sweep() -> None:
@@ -104,6 +121,7 @@ def sweep() -> None:
 
 
 async def shutdown() -> None:
+    global _cached_index
     tasks = [job.task for job in jobs.values() if job.task and not job.task.done()]
     for task in tasks:
         task.cancel()
@@ -111,6 +129,7 @@ async def shutdown() -> None:
     for job in jobs.values():
         job.results.close()
     jobs.clear()
+    _cached_index = None
 
 
 @router.get("/catalog")
@@ -122,6 +141,8 @@ async def catalog(response: Response) -> dict:
         "model": DEFAULT_MODEL, "reasoning_effort": DEFAULT_REASONING_EFFORT,
         "max_output_tokens": DEFAULT_MAX_OUTPUT_TOKENS,
         "scoring_policy": SCORING_POLICY,
+        "retrieval_policy": RETRIEVAL_POLICY,
+        "default_retrieve_k": DEFAULT_RETRIEVE_K, "max_retrieve_k": MAX_RETRIEVE_K,
         "branches": data["branches"], "dataset_access_configured": bool(get_token()),
         "table_count": len(data["tables"]),
         "source_rows": sum(table["row_count"] for table in data["tables"]),
@@ -155,11 +176,15 @@ def public_job(job: ReviewJob, page: int = 1, *, include_items: bool = True) -> 
         "model": DEFAULT_MODEL, "reasoning_effort": DEFAULT_REASONING_EFFORT,
         "deployment": job.request.deployment.model_dump(),
         "scoring_policy": SCORING_POLICY,
+        "retrieval_policy": RETRIEVAL_POLICY, "retrieval_query": job.request.query(),
+        "indexed_items": job.indexed_items, "retrieved_items": job.retrieved_items,
+        "contentless_items": job.contentless_items,
         "scope": {"benchmarks": sorted({t["benchmark"] for t in job.inventory["tables"]}),
                   "table_count": len(job.inventory["tables"]),
                   "source_rows": sum(t["row_count"] for t in job.inventory["tables"]),
                   "branches": job.inventory["branches"], "sample_only": True,
-                  "sampling": sampling_policy(), "sample_max_items": sample_upper_bound(job.inventory)},
+                  "sampling": sampling_policy(), "sample_max_items": sample_upper_bound(job.inventory),
+                  "retrieve_k": job.request.retrieve_k},
         "source_rows": job.source_rows, "total": job.total, "processed": processed,
         "sample_complete": job.sample_complete, "prepared_benchmarks": job.prepared_benchmarks,
         "complete": counts["complete"], "errors": counts["error"],
@@ -252,13 +277,26 @@ async def cancel_review(run_id: str, response: Response,
     return public_job(job)
 
 
+async def finish_worker(work: asyncio.Task) -> None:
+    """Drain a thread task even if Stop and shutdown cancel its parent twice."""
+    while not work.done():
+        try:
+            await asyncio.shield(work)
+        except asyncio.CancelledError:
+            continue
+        except Exception:
+            break
+    if not work.cancelled():
+        work.exception()  # Consume a worker failure; the parent preserves cancellation.
+
+
 async def prepare_review(job):
     cancelled = Event()
 
     def progress(benchmark, completed, rows):
         job.prepared_benchmarks = completed
         job.source_rows = rows
-        job.message = f"Preparing sample from {benchmark}. No model calls yet."
+        job.message = f"Preparing sample from {benchmark}. No paid calls yet."
 
     prepare = asyncio.create_task(asyncio.to_thread(
         prepare_samples, job.inventory, db.DEFAULT_DB_PATH.parent / "item-review-samples",
@@ -268,7 +306,7 @@ async def prepare_review(job):
         return await asyncio.shield(prepare)
     except asyncio.CancelledError:
         cancelled.set()
-        await asyncio.gather(prepare, return_exceptions=True)
+        await finish_worker(prepare)
         raise
 
 
@@ -277,13 +315,74 @@ async def review_items(job):
     return iter_sample_items(paths), total
 
 
+async def retrieve_items(job: ReviewJob, items) -> list[dict]:
+    """Select a small candidate set locally before opening a paid API client."""
+    cancelled = Event()
+
+    def select():
+        global _cached_index
+        acquired = False
+        try:
+            # Keep generator reads and close in the same thread, including when
+            # the coroutine is cancelled while a disk read is in progress.
+            rows = []
+            for item in items:
+                if cancelled.is_set():
+                    raise InterruptedError("Retrieval cancelled")
+                rows.append(item)
+            key = fingerprint({"policy": RETRIEVAL_POLICY, "items": [
+                {"hash": item["evidence_hash"], "sources": item.get("sources", [])}
+                for item in rows
+            ]})
+            while not acquired:
+                if cancelled.is_set():
+                    raise InterruptedError("Retrieval cancelled")
+                acquired = _retrieval_lock.acquire(timeout=0.1)
+            if _cached_index is None or _cached_index[0] != key:
+                job.message = "Embedding sample questions locally with Qwen3. No paid calls yet."
+
+                def progress(state):
+                    job.message = (f"Preparing local question vectors: {state['completed']:,} of "
+                                   f"{state['total']:,} ready ({state['cache_hits']:,} cached). No paid calls yet.")
+
+                index = ItemIndex(rows, cache_dir=db.DEFAULT_DB_PATH.parent / "item-review-embeddings",
+                                  cancelled=cancelled.is_set, progress=progress)
+                if cancelled.is_set():
+                    raise InterruptedError("Retrieval cancelled")
+                _cached_index = (key, index)
+            index = _cached_index[1]
+            job.indexed_items = index.indexed_items
+            job.contentless_items = index.contentless_items
+            job.message = "Finding reference items with normalized question vectors. No paid calls yet."
+            selected = index.search(job.request.query(), top_k=job.request.retrieve_k,
+                                    cancelled=cancelled.is_set)
+            if cancelled.is_set():
+                raise InterruptedError("Retrieval cancelled")
+            return selected
+        finally:
+            if acquired:
+                _retrieval_lock.release()
+            if hasattr(items, "close"):
+                items.close()
+
+    work = asyncio.create_task(asyncio.to_thread(select))
+    try:
+        return await asyncio.shield(work)
+    except asyncio.CancelledError:
+        cancelled.set()
+        # Let an in-flight local batch finish before releasing the shared index
+        # or allowing shutdown to delete files used by this worker.
+        await finish_worker(work)
+        raise
+
+
 async def next_item(items):
     # Wait for an in-flight read before closing its generator on cancellation.
     read = asyncio.create_task(asyncio.to_thread(next, items, None))
     try:
         return await asyncio.shield(read)
     except asyncio.CancelledError:
-        await read
+        await finish_worker(read)
         raise
 
 
@@ -310,6 +409,8 @@ async def assess_items(job: ReviewJob, items, judge) -> None:
                 assessment = await judge(item["evidence"])
                 # Never retain raw model output or provider exception text.
                 result = {"evidence_hash": key, "evidence": item["evidence"], **{
+                    field: item[field] for field in ("retrieval_rank", "retrieval_score", "exact_match")
+                    if field in item}, **{
                     field: assessment[field] for field in (
                         "status", "assessment", "overall_score", "response_model", "response_id",
                         "compatibility_score", "scored_dimensions", "needs_review",
@@ -341,14 +442,21 @@ async def evaluate(job: ReviewJob, api_key: str) -> None:
     items = None
     try:
         items, job.total = await review_items(job)
-        job.status, job.message = "running", "Assessing the selected sample."
+        selected = await retrieve_items(job, items)
+        items = iter(selected)
+        job.retrieved_items = job.total = len(selected)
+        job.status, job.message = "running", f"Assessing {job.total} retrieved items across all six validity dimensions."
+        if not selected:
+            job.sample_complete = True
+            job.status, job.message = "completed", "No items with question text were available for retrieval. No paid calls were made."
+            return
         async with AsyncOpenAI(api_key=api_key, base_url="https://api.openai.com/v1",
                                max_retries=2, timeout=600) as client:
             judge = AsyncJudge(client, job.request.deployment.describe(), PROMPT_PATH.read_text(encoding="utf-8"))
             await assess_items(job, items, judge)
         job.sample_complete = True
         job.status = "completed"
-        job.message = "The selected sample has been assessed."
+        job.message = "The retrieved shortlist has been assessed. Other sample items were not sent to the judge."
     except asyncio.CancelledError:
         job.status, job.message = "cancelled", "Review stopped. Completed assessments are retained."
     except AuthenticationError:

@@ -13,6 +13,7 @@ from .judge import DEFAULT_MAX_OUTPUT_TOKENS, DEFAULT_REASONING_EFFORT, request_
 from .scoring import Assessment, SCORING_VERSION, SCORING_POLICY
 
 DONE = {"complete", "preview"}
+RETRIEVAL_FIELDS = ("retrieval_rank", "retrieval_score", "exact_match")
 
 
 def write_json(path: Path, value):
@@ -55,7 +56,7 @@ def read_state(path: Path, *, repair_tail=False):
             statuses[key] = status
         if status in DONE:
             done.add(key)
-        if status in DONE or status == "duplicate":
+        if status in DONE or (status == "duplicate" and key in done):
             finished_sources.add(source_key)
         tokens = record.get("usage") or {}
         usage["input_tokens"] += tokens.get("input_tokens", 0)
@@ -84,19 +85,24 @@ def ranked_items(path: Path, top_k: int) -> list[dict]:
         "scored_dimensions": r["scored_dimensions"], "needs_review": r["needs_review"],
         "evidence": r["evidence"], "sources": list(sources[r["evidence_hash"]].values()),
         "response_id": r.get("response_id"), "response_model": r.get("response_model"),
+        **{field: r[field] for field in RETRIEVAL_FIELDS if field in r},
     } for rank, r in enumerate(best, 1)]
 
 
 def run(inventory, deployment, prompt, output_dir, *, model,
         reasoning_effort=DEFAULT_REASONING_EFFORT,
         max_output_tokens=DEFAULT_MAX_OUTPUT_TOKENS, top_k=10, limit_per_table=None, dry_run=False,
-        resume=False, judge=None):
+        resume=False, judge=None, candidate_items=None, retrieval=None):
     if not deployment.strip():
         raise ValueError("Deployment description must not be empty")
     if top_k <= 0 or max_output_tokens <= 0 or (limit_per_table is not None and limit_per_table <= 0):
         raise ValueError("top_k, max_output_tokens, and limit_per_table must be positive")
     if not dry_run and judge is None:
         raise ValueError("A judge is required for a live run")
+    if (candidate_items is None) != (retrieval is None):
+        raise ValueError("Retrieved candidates and retrieval metadata must be supplied together")
+    if candidate_items is not None:
+        candidate_items = list(candidate_items)
     config = {
         "format_version": 1, "data_version": DATA_VERSION, "scoring_version": SCORING_VERSION,
         "scoring_policy": SCORING_POLICY,
@@ -105,6 +111,11 @@ def run(inventory, deployment, prompt, output_dir, *, model,
         "prompt": prompt, "output_schema": Assessment.model_json_schema(),
         "limit_per_table": limit_per_table, "dry_run": dry_run,
     }
+    if retrieval is not None:
+        # Freeze the exact shortlist, its evidence/provenance, and retrieval
+        # settings so resume cannot mix different candidate populations.
+        config["retrieval"] = retrieval
+        config["retrieved_candidates"] = candidate_items
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     config_path = output_dir / "run.json"
@@ -121,19 +132,22 @@ def run(inventory, deployment, prompt, output_dir, *, model,
             raise ValueError("Use an empty output directory for a new run")
         write_json(config_path, config)
     done, finished_sources, _, _, _ = read_state(log_path, repair_tail=resume)
+    attempted = set()
     traversal_complete = False
     fatal_error = None
     processed = 0
     try:
         with log_path.open("a", encoding="utf-8") as log:
-            for item in iter_items(inventory, limit_per_table):
+            items = candidate_items if candidate_items is not None else iter_items(inventory, limit_per_table)
+            for item in items:
                 source_key = fingerprint(item["source"])
                 if source_key in finished_sources:
                     continue
                 key = item["evidence_hash"]
                 fatal = None
-                if key in done:
-                    record = {"source": item["source"], "evidence_hash": key, "status": "duplicate"}
+                if key in done or key in attempted:
+                    record = {"source": item["source"], "evidence_hash": key, "status": "duplicate",
+                              **{field: item[field] for field in RETRIEVAL_FIELDS if field in item}}
                 elif dry_run:
                     record = {**item, "status": "preview", "request_input": request_input(deployment, item["evidence"])}
                 else:
@@ -145,11 +159,13 @@ def run(inventory, deployment, prompt, output_dir, *, model,
                         # request for every remaining row. Resume retries this item.
                         record = {**item, "status": "error", "error": str(exc)}
                         fatal = exc
+                if record["status"] != "duplicate":
+                    attempted.add(key)
                 log.write(json.dumps(record, ensure_ascii=False, allow_nan=False) + "\n")
                 log.flush()
                 if record["status"] in DONE:
                     done.add(key)
-                if record["status"] in DONE or record["status"] == "duplicate":
+                if record["status"] in DONE or (record["status"] == "duplicate" and key in done):
                     finished_sources.add(source_key)
                 processed += 1
                 if processed == 1 or processed % 25 == 0 or record["status"] == "error":
@@ -165,6 +181,13 @@ def run(inventory, deployment, prompt, output_dir, *, model,
         counts = Counter(statuses.values())
         unranked = sum(r["overall_score"] is None for r in records(log_path) if r["status"] == "complete")
         full_traversal = traversal_complete and limit_per_table is None and not inventory["missing_item_tables"]
+        if retrieval is not None:
+            # Completing a shortlist is not evidence that omitted items were
+            # assessed. Indexing coverage and judgment coverage are separate.
+            full_traversal = full_traversal and retrieval.get("full_inventory_indexed", False) and not (
+                retrieval.get("contentless_items", 0)) and (
+                len({item["evidence_hash"] for item in candidate_items}) ==
+                retrieval.get("corpus_items", retrieval["indexed_items"]))
         summary = {
             "state": "finished" if traversal_complete else "interrupted",
             "dry_run": dry_run, "tables_in_inventory": len(inventory["tables"]),
@@ -182,6 +205,17 @@ def run(inventory, deployment, prompt, output_dir, *, model,
             "scoring_policy": SCORING_POLICY,
             "ranking_scope": "Confidence-adjusted support across all six dimensions: 1 + sum(confidence * (score - 1)) / 6. Missing dimensions contribute only the ranking floor of 1; the compatibility mean excludes them. Assessments with no scores remain in assessments.jsonl and are not ranked; failed calls are not ranked.",
         }
+        if retrieval is not None:
+            summary.update(
+                retrieval=retrieval,
+                full_inventory_indexed=retrieval["full_inventory_indexed"],
+                indexed_source_rows=retrieval["indexed_source_rows"],
+                indexed_items=retrieval["indexed_items"],
+                corpus_items=retrieval.get("corpus_items", retrieval["indexed_items"]),
+                retrieved_candidates=len({item["evidence_hash"] for item in candidate_items}),
+                shortlist_assessed=counts["complete"],
+            )
+            summary["ranking_scope"] = "Among the retrieved shortlist only. " + summary["ranking_scope"]
         write_json(output_dir / "ranked_items.json", ranked_items(log_path, top_k))
         write_json(output_dir / "summary.json", summary)
     return summary

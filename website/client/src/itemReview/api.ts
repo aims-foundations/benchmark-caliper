@@ -11,14 +11,19 @@ export interface Deployment {
 export interface SamplingPolicy {
   version: number; method: string; seed: number; items_per_benchmark: number
 }
+export interface RetrievalPolicy {
+  version: number; method: 'qwen3_embedding'; model: string; max_tokens: number; similarity: 'dot_product'
+  [key: string]: unknown
+}
 export interface Catalog {
   model: string; reasoning_effort: string; max_output_tokens: number
+  retrieval_policy: RetrievalPolicy; default_retrieve_k: number; max_retrieve_k: number
   branches: Record<string, string>; dataset_access_configured: boolean; table_count: number; source_rows: number
   sampling: SamplingPolicy; sample_max_items: number
   missing_item_tables: Array<{ branch: string; benchmark: string }>
   benchmarks: Array<{ id: string; name: string; table_count: number; source_rows: number; sample_max_items: number }>
 }
-export interface ReviewRequest { deployment: Deployment }
+export interface ReviewRequest { deployment: Deployment; retrieve_k: number; retrieval_query?: string }
 export interface RunAccess { run_id: string; run_secret: string }
 export type LegacyConfidence = 'high' | 'medium' | 'low' | 'insufficient'
 // Earlier reports keep their original labels; new assessments use numbers.
@@ -29,6 +34,7 @@ export interface DimensionScore {
 }
 export interface ReviewedItem {
   evidence_hash: string; rank?: number; status: string; overall_score?: number | null; error?: string
+  retrieval_rank?: number; retrieval_score?: number; exact_match?: boolean
   compatibility_score?: number | null; scored_dimensions?: number; needs_review?: boolean
   assessment?: Record<string, DimensionScore>
   evidence: { item: { content: string | null; grading_criterion: unknown }; [key: string]: unknown }
@@ -37,7 +43,8 @@ export interface ReviewedItem {
 export interface Review {
   run_id: string; status: 'preparing' | 'running' | 'completed' | 'cancelled' | 'failed'; message: string
   model: string; reasoning_effort: string; deployment: Deployment
-  scope: { benchmarks: string[]; table_count: number; source_rows: number; branches: Record<string, string>; sample_only: boolean; sampling: SamplingPolicy; sample_max_items: number }
+  scope: { benchmarks: string[]; table_count: number; source_rows: number; branches: Record<string, string>; sample_only: boolean; sampling: SamplingPolicy; sample_max_items: number; retrieve_k?: number }
+  indexed_items?: number; retrieved_items?: number; retrieval_policy?: RetrievalPolicy; retrieval_query?: string
   scoring_policy: { version: number; formula: string; confidence_role?: string; confidence_scale?: string; needs_review_rule?: string;
     ranking_floor?: number; compatibility_formula?: string; interpretation?: string;
     missing_dimensions?: string; no_scored_dimensions?: string; neutral_score?: number; confidence_weights?: Record<LegacyConfidence, number> }

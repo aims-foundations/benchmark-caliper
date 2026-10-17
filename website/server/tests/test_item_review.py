@@ -9,10 +9,12 @@ from threading import Event
 from fastapi.testclient import TestClient
 from openai import OpenAIError
 import pytest
+import numpy as np
 
 from bayesian_auditing.scoring import Assessment, DIMENSIONS, score_summary
 from website.server import app as app_module, db, item_review
 from bayesian_auditing import sampling
+from bayesian_auditing.retrieval import ItemIndex
 
 REAL_REVIEW_ITEMS = item_review.review_items
 
@@ -50,6 +52,12 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setattr(item_review, "jobs", {})
     monkeypatch.setattr(item_review, "get_token", lambda: HF_KEY)
     monkeypatch.setattr(item_review, "inventory", lambda: copy.deepcopy(INVENTORY))
+    monkeypatch.setattr(item_review, "_cached_index", None)
+    class FixtureEncoder:
+        def encode(self, texts):
+            return np.array([[1.0, 0.0] for _ in texts])
+    monkeypatch.setattr(item_review, "ItemIndex", lambda rows, **kwargs: ItemIndex(
+        rows, encoder=FixtureEncoder(), **kwargs))
     async def sample(job):
         job.source_rows = 3
         job.prepared_benchmarks = 3
@@ -110,6 +118,8 @@ def test_catalog_and_ranked_review(client, caplog):
     assert catalog["source_rows"] == 3 and catalog["table_count"] == 3
     assert catalog["sample_max_items"] == 3
     assert catalog["sampling"]["items_per_benchmark"] == 50
+    assert catalog["retrieval_policy"]["model"] == "Qwen/Qwen3-Embedding-0.6B"
+    assert catalog["default_retrieve_k"] == 20 and catalog["max_retrieve_k"] == 100
     assert HF_KEY not in json.dumps(catalog)
     access = start(client)
     response = finished(client, access)
@@ -118,6 +128,8 @@ def test_catalog_and_ranked_review(client, caplog):
     assert [row["overall_score"] for row in result["ranked_items"]] == pytest.approx([3.79, 2.86])
     assert [row["compatibility_score"] for row in result["ranked_items"]] == [4, 3]
     assert result["processed"] == 2 and result["source_rows"] == 3
+    assert result["indexed_items"] == result["retrieved_items"] == 2
+    assert all("retrieval_rank" in row and "retrieval_score" in row for row in result["ranked_items"])
     assert result["scope"]["sample_only"] is True
     assert result["sample_complete"] is True
     assert len(next(item for item in result["ranked_items"] if item["evidence_hash"] == "item-a")["sources"]) == 2
@@ -147,6 +159,7 @@ def test_missing_keys_and_invalid_scope_make_no_jobs(client, monkeypatch):
     assert client.post("/api/item-review/runs", json=BODY,
                        headers={"X-OpenAI-Key": KEY, "X-HuggingFace-Key": HF_KEY}).status_code == 503
     for body in ({**BODY, "benchmarks": ["arbitrary-path"]}, {**BODY, "items_per_table": 1000},
+                 {**BODY, "retrieve_k": 101}, {**BODY, "retrieve_k": 0}, {**BODY, "retrieve_k": True},
                  {**BODY, "deployment": {**BODY["deployment"], "task": " "}}):
         response = client.post("/api/item-review/runs", json=body, headers={"X-OpenAI-Key": KEY})
         assert response.status_code in {400, 422}
@@ -416,7 +429,7 @@ def test_sample_review_crosses_result_page_size_and_exports_every_rank(client, m
         return iter(rows), 45
     monkeypatch.setattr(item_review, "review_items", sample)
     monkeypatch.setattr(item_review, "AsyncJudge", Judge)
-    access = start(client)
+    access = start(client, {**BODY, "retrieve_k": 100})
     first = finished(client, access).json()
     assert first["processed"] == first["complete"] == len(calls) == 45
     assert first["source_rows"] == 46 and first["sample_complete"]
@@ -439,7 +452,7 @@ def test_sample_review_crosses_result_page_size_and_exports_every_rank(client, m
     assert "pagination" not in exported
 
 
-def test_item_failure_keeps_partial_results_and_does_not_claim_complete_sample(client, monkeypatch):
+def test_item_failure_makes_no_paid_calls_and_does_not_claim_complete_sample(client, monkeypatch):
     async def broken_items(job):
         job.source_rows = 3
         def rows():
@@ -450,7 +463,7 @@ def test_item_failure_keeps_partial_results_and_does_not_claim_complete_sample(c
     monkeypatch.setattr(item_review, "review_items", broken_items)
     result = finished(client, start(client)).json()
     assert result["status"] == "failed"
-    assert result["complete"] == 1 and result["sample_complete"] is False
+    assert result["complete"] == 0 and result["sample_complete"] is False
 
 
 def test_web_review_assesses_only_the_fixed_sample_and_reuses_it(client, monkeypatch):
@@ -475,7 +488,7 @@ def test_web_review_assesses_only_the_fixed_sample_and_reuses_it(client, monkeyp
     monkeypatch.setattr(item_review, "inventory", lambda: copy.deepcopy(data))
     monkeypatch.setattr(item_review, "review_items", REAL_REVIEW_ITEMS)
     monkeypatch.setattr(sampling, "iter_items", reader)
-    first = start(client)
+    first = start(client, {**BODY, "retrieve_k": 100})
     result = finished(client, first).json()
     assert result["processed"] == result["total"] == 50
     assert result["source_rows"] == 500 and result["prepared_benchmarks"] == 1
@@ -487,7 +500,7 @@ def test_web_review_assesses_only_the_fixed_sample_and_reuses_it(client, monkeyp
     assert any(int(key) < 200 for key in keys) and any(int(key) >= 250 for key in keys)
 
     monkeypatch.setattr(sampling, "iter_items", lambda *a, **kw: pytest.fail("Should reuse the cached sample"))
-    second = start(client, {"deployment": {**BODY["deployment"], "outputs": "Concise text explanations"}})
+    second = start(client, {"deployment": {**BODY["deployment"], "outputs": "Concise text explanations"}, "retrieve_k": 100})
     assert finished(client, second).json()["processed"] == 50
     exported_again = client.get(f"/api/item-review/runs/{second['run_id']}/export",
                                 headers={"X-Review-Token": second["run_secret"]}).json()
@@ -522,3 +535,133 @@ def test_preparation_failure_makes_no_provider_calls(client, monkeypatch):
     result = finished(client, start(client)).json()
     assert result["status"] == "failed" and result["processed"] == 0
     assert not result["sample_complete"]
+
+
+def test_retrieval_limits_paid_judgments_and_prioritizes_exact_questions(client, monkeypatch):
+    question = 'Solve this algebra question exactly.'
+    rows = [source_item('a-neighbor', content='A related algebra exercise.'),
+            source_item('z-exact', content=question),
+            source_item('z-exact', 'migration', question),
+            source_item('b-neighbor', content='Another exercise.')]
+    judged = []
+
+    async def sample(job):
+        job.source_rows = 4
+        return iter(rows), 3
+
+    class RecordingJudge:
+        def __init__(self, _client, deployment, _prompt):
+            assert 'mathematics tutor' in deployment
+
+        async def __call__(self, evidence):
+            judged.append(evidence)
+            return assessment()
+
+    monkeypatch.setattr(item_review, 'review_items', sample)
+    monkeypatch.setattr(item_review, 'AsyncJudge', RecordingJudge)
+    result = finished(client, start(client, {**BODY, 'retrieve_k': 1, 'retrieval_query': question})).json()
+    assert result['indexed_items'] == 3
+    assert result['retrieved_items'] == result['total'] == result['processed'] == 1
+    assert len(judged) == 1 and judged[0]['item']['content'] == question
+    exact = result['ranked_items'][0]
+    assert exact['evidence_hash'] == 'z-exact'
+    assert exact['exact_match'] is True and exact['retrieval_rank'] == 1
+    assert len(exact['sources']) == 2
+    assert set(exact['assessment']) == set(DIMENSIONS)
+    assert result['usage']['input_tokens'] == 100
+
+
+def test_retrieval_failure_does_not_open_paid_client(client, monkeypatch):
+    def broken_index(*args, **kwargs):
+        raise RuntimeError(f'Model cache error {HF_KEY}')
+    monkeypatch.setattr(item_review, 'ItemIndex', broken_index)
+    monkeypatch.setattr(item_review, 'AsyncOpenAI', lambda **kw: pytest.fail('Must retrieve before paid client'))
+    response = finished(client, start(client))
+    assert response.json()['status'] == 'failed'
+    assert response.json()['processed'] == 0
+    assert HF_KEY not in response.text
+
+
+def test_contentless_catalog_makes_no_paid_calls(client, monkeypatch):
+    async def sample(job):
+        return iter([source_item('empty', content='')]), 1
+    monkeypatch.setattr(item_review, 'review_items', sample)
+    monkeypatch.setattr(item_review, 'AsyncOpenAI', lambda **kw: pytest.fail('No questions to judge'))
+    result = finished(client, start(client)).json()
+    assert result['status'] == 'completed'
+    assert result['indexed_items'] == 0 and result['retrieved_items'] == 0
+    assert result['contentless_items'] == 1
+    assert result['processed'] == 0 and result['usage'] == {}
+
+
+def test_shared_index_reused_without_caching_deployment_queries(client, monkeypatch):
+    builds = []
+    base_factory = item_review.ItemIndex
+    def factory(rows, **kwargs):
+        builds.append(True)
+        return base_factory(rows, **kwargs)
+    monkeypatch.setattr(item_review, 'ItemIndex', factory)
+    first = finished(client, start(client)).json()
+    second = finished(client, start(client, {**BODY, 'retrieval_query': 'Another deployment query'})).json()
+    assert first['status'] == second['status'] == 'completed'
+    assert len(builds) == 1
+    assert first['retrieval_query'] != second['retrieval_query']
+
+
+def test_cancellation_reaches_local_retrieval_before_paid_calls(client, monkeypatch):
+    entered = Event()
+    def blocked_index(rows, *, cancelled, **kwargs):
+        entered.set()
+        deadline = time.monotonic() + 3
+        while not cancelled() and time.monotonic() < deadline:
+            time.sleep(.01)
+        assert cancelled(), 'Cancellation did not reach local index build'
+        raise InterruptedError('cancelled')
+    monkeypatch.setattr(item_review, 'ItemIndex', blocked_index)
+    monkeypatch.setattr(item_review, 'AsyncOpenAI', lambda **kw: pytest.fail('No paid calls while retrieving'))
+    access = start(client)
+    assert entered.wait(2)
+    response = client.post(f"/api/item-review/runs/{access['run_id']}/cancel",
+                           headers={'X-Review-Token': access['run_secret']})
+    assert response.json()['status'] == 'cancelled'
+    assert response.json()['processed'] == 0
+
+
+def test_repeated_cancellation_waits_for_local_worker(monkeypatch):
+    entered, release, exited = Event(), Event(), Event()
+
+    class BlockedIndex:
+        total = indexed_items = 1
+        contentless_items = 0
+        def __init__(self, *args, **kwargs):
+            pass
+        def search(self, query, top_k, *, cancelled):
+            entered.set()
+            try:
+                assert release.wait(3), 'Test did not release embedding worker'
+                return []
+            finally:
+                exited.set()
+
+    monkeypatch.setattr(item_review, '_cached_index', None)
+    monkeypatch.setattr(item_review, 'ItemIndex', BlockedIndex)
+
+    async def check():
+        job = item_review.ReviewJob('cancel-test', 'secret', 'owner', item_review.ReviewRequest(**BODY), inventory=INVENTORY)
+        work = asyncio.create_task(item_review.retrieve_items(job, iter([source_item()])))
+        try:
+            assert await asyncio.to_thread(entered.wait, 2)
+            work.cancel()
+            await asyncio.sleep(.01)
+            work.cancel()
+            await asyncio.sleep(.01)
+            assert not work.done() and not exited.is_set()
+            release.set()
+            with pytest.raises(asyncio.CancelledError):
+                await work
+            assert exited.is_set()
+        finally:
+            release.set()
+            await asyncio.gather(work, return_exceptions=True)
+            job.results.close()
+    asyncio.run(check())

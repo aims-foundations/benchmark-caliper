@@ -68,7 +68,7 @@ export function EvaluationSite() {
         </article>
         <article className="evaluation-choice">
           <h3>Goal-conditioned<br />item assessment <span className="review-badge">Demo</span></h3>
-          <p>Assess and rank evaluation items from the Measurement Data Bank according to their compatibility with a specified deployment context, with supporting evidence and assessment confidence.</p>
+          <p>Retrieve a shortlist of evaluation items locally from the Measurement Data Bank, then assess their compatibility with your deployment context. Paid model judgments cover only the shortlist, with supporting evidence and assessment confidence.</p>
           <dl className="evaluation-outcome"><div><dt>Input</dt><dd>Description of the AI system, task, and deployment context</dd></div><div><dt>Output</dt><dd>Ranked evaluation items with dimension-level assessments</dd></div></dl>
           <a className="evaluation-choice-link" href={appPath('/items')}>Assess evaluation items <span aria-hidden="true">→</span></a>
         </article>

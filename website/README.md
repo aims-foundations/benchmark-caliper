@@ -205,13 +205,22 @@ review workflow keeps its own sample and catalog.
 
 ## Goal-conditioned item review
 
-This separate tool asks for an OpenAI key, collects six concrete deployment questions,
-shows the catalog and fixed sample size before paid calls, and displays ranked items with all six
-validity judgments, per-dimension confidence and explanations, evidence,
-information gaps, and pinned source provenance. It
-uses the shared `bayesian_auditing` loader, rubric, schema, and arithmetic with
-GPT-6 Luna, high reasoning effort, and a 25,000-token ceiling. The initial
-questions are fixed and editable; they do not require an additional model call.
+This separate tool collects six deployment answers, retrieves relevant questions
+locally, and uses the visitor's OpenAI key to assess only the selected shortlist.
+It defaults to 20 retrieved items, with a maximum of 100 per web review. A
+reference question can guide retrieval; otherwise it uses the deployment answers.
+Retrieval uses `Qwen/Qwen3-Embedding-0.6B` on local hardware with question-only
+inputs, 8,192-token truncation, unit-normalized vectors and dot-product ranking.
+Exact question matches appear first. The pinned model/policy and source revisions
+are recorded with the results.
+
+This retrieval-augmented assessment makes no paid embedding API calls. GPT-6 Luna
+still performs the existing six validity judgments, using full item evidence and
+the deployment description. Its high reasoning effort and 25,000-token ceiling
+are unchanged. Retrieval similarity and order stay separate from final validity
+scores, per-dimension confidence, evidence, information gaps, and provenance.
+Similarity identifies candidates; it does not establish compatibility. The initial
+deployment questions are fixed and editable, without an extra model call.
 
 Scoring version 5 ranks items by a confidence-adjusted score. Each scored
 dimension contributes `1 + confidence * (compatibility - 1)`, and missing
@@ -249,8 +258,10 @@ The demo selects up to **50 distinct items per benchmark collection**, for at mo
 **5,407 selected items** in this snapshot. A fixed seed makes selection independent
 of row order and deployment description. Duplicate evidence gets one selection
 opportunity, and all provenance is retained. When a benchmark has branch-exclusive
-evidence in both branches, at least one selected item comes from each. Rankings
-describe the selected sample. The text judge does not inspect referenced media assets.
+evidence in both branches, at least one selected item comes from each. Retrieval
+searches only the selected sample; validity rankings describe the retrieved and
+assessed shortlist, not all sample items or the full catalog. The text judge does
+not inspect referenced media assets.
 The mathematics tutor is an optional form example, not a restriction on deployment.
 
 The gated dataset requires Hugging Face access. Configure an authorized
@@ -259,30 +270,36 @@ visitors supply only their OpenAI API key. If the server credential is missing,
 the UI disables new reviews and asks visitors to contact the site maintainer.
 The server never uses its own OpenAI key: each review requires the user's key.
 
-`server/item_review.py` prepares the complete sample before making model calls,
-then assesses up to four items concurrently per review. Set the server environment
-variable `ITEM_REVIEW_CONCURRENCY` (1–16, default 4) to tune this limit; 1 restores
-sequential assessment. A fixed worker pool bounds in-flight requests and memory,
-deduplicates evidence before calls, and cancels all workers on stop or provider
-failure while retaining completed results. The first preparation
+`server/item_review.py` prepares the complete sample and retrieves a shortlist
+before making paid calls, then assesses up to four shortlisted items concurrently.
+Set `ITEM_REVIEW_CONCURRENCY` (1–16, default 4) to tune the judge worker limit;
+1 restores sequential assessment. A fixed worker pool bounds in-flight requests,
+deduplicates evidence before calls, and cancels workers on stop or provider failure
+while retaining completed judgments. The first preparation
 scans all source rows without model calls, using a temporary SQLite index of hashes
 and source locations, keeping only the best 50 selection candidates in memory.
 Additional branch representatives are fetched through Parquet HTTP ranges if
 needed. `bayesian_auditing/sampling.py` caches selected dataset evidence under
 `WEBSITE_DATA_DIR/item-review-samples/`, keyed by pinned inventory, seed, sample
-size, and loader/sampling versions. Later reviews reuse that sample. The cache
+size, and loader/sampling versions. Later reviews reuse that sample. Question
+vectors are cached separately under
+`WEBSITE_DATA_DIR/item-review-embeddings/`; query vectors are not written to this
+reusable cache. Qwen model files use the standard Hugging Face cache. First-time
+model download and embedding can take substantial time, memory, and disk. The cache
 contains no deployment answers or provider keys. Source metadata may also be cached.
 `server/item_review_store.py` stores assessments, evidence, and source references
 in a private temporary SQLite file, with indexes for deduplication and ranking.
 The deployment answers and OpenAI key remain in process memory. Raw provider
-responses are not retained. This keeps dataset loading and ranking independent
-of the available RAM, without adding a worker queue or persistent job service.
+responses are not retained. Retrieval holds the selected records and vectors in
+memory; provision enough RAM for this index and the local Qwen runtime.
 
-The browser polls 20 results at a time; these are display pages, not review limits.
+The browser polls 20 results at a time; these are display pages, not shortlist limits.
 The authenticated `/api/item-review/runs/{id}/export` route streams every assessment
 available when the download begins. A read failure stops preparation or assessment
 and preserves completed results; it does not silently skip a table or claim a
-complete sample. Exports include the sampling policy and pinned source revisions.
+complete sample. Exports include retrieval and sampling policies, separate
+indexed, retrieved, and assessed counts, and pinned source revisions. Completion means the retrieved
+shortlist was processed, not that the entire sample was judged.
 Three reviews can run simultaneously, one per OpenAI key. Up to 30 jobs are retained.
 Completed/failed/cancelled jobs and their result files expire after one hour
 (checked each minute). A normal shutdown cancels jobs and deletes these files.
@@ -305,12 +322,13 @@ and counts after all tables are inspected successfully. No item content or
 credentials are committed. Prepare the reusable sample without an OpenAI key with:
 
 ```bash
-python -m website.server.item_review_sample
+python -m website.server.item_review_sample --build-index
 ```
 
-Preparation can take time on a cold cache. The cache is private to the server and
-can be regenerated; it survives normal shutdown. Temporary assessment files still
-expire after each review. Completion depends on provider quota, disk space, and
+Omit `--build-index` to prepare only the sample. With it, preparation also caches
+Qwen question vectors, without making paid calls. Preparation can take time on a
+cold cache. The caches are private to the server, can be regenerated, and survive
+normal shutdown. Temporary assessment files still expire after each review. Completion depends on provider quota, disk space, and
 the server staying alive.
 
 The sampling implementation is `bayesian_auditing/sampling.py`. It combines each
@@ -322,7 +340,10 @@ priority. Small collections contribute every distinct item. This balances
 collection coverage for the demo; it is not a sample proportional to catalog size
 or deployment workload. Source order and duplicate frequency do not affect selection.
 Changing a pinned revision or the sampling policy creates a new cache entry;
-changing deployment answers uses the same selected evidence with new judgments.
+changing deployment answers reuses the sampled evidence and question vectors,
+retrieves a new shortlist, and makes new judgments. Similarity, truncation, and
+shortlist limits can omit relevant items. Evaluate retrieval recall separately
+from judge quality.
 
 ---
 
@@ -356,6 +377,9 @@ classification volume depends on the connected dataset's size.
 ## Running it locally
 
 Requirements: Python 3.11+, Node 24+, and the API key for the selected workflow.
+Goal-conditioned review also downloads a local Qwen embedding model and needs
+sufficient RAM and disk for its weights, runtime, sample, and vector cache. See
+[deployment sizing](DEPLOYMENT.md#item-review-configuration) before hosting it.
 
 ```bash
 # Terminal 1 — backend (run from the repository root)
@@ -396,7 +420,7 @@ cd website/client
 npm test
 ```
 
-Run the shared item judge tests with `python -m pytest bayesian_auditing/tests/`.
+Run the shared retrieval and item judge tests with `python -m pytest bayesian_auditing/tests/`.
 Backend tests mock provider calls, including success, failures, cancellation,
 credential handling, retention, and per-run access control. Frontend tests cover
 both routing and the guided item-review flow.

@@ -22,14 +22,14 @@ The benchmark assessment runs on the Anthropic API with cost-routed model select
 |-----------|-------------|
 | [`anthropic_api_package_release/`](anthropic_api_package_release/) | The validity-analysis pipeline. Run it from the command line to inspect the assessments from the paper, reproduce one, or analyze your own benchmark. See its [README](anthropic_api_package_release/README.md). |
 | [`website/`](website/) | Two tools: benchmark validity analysis, with item analysis as its next required stage, and goal-conditioned item assessment. Existing report links can continue into item analysis. See its [README](website/README.md). |
-| [`bayesian_auditing/`](bayesian_auditing/) | Goal-conditioned item review: use GPT-6 Luna to score measurement-db items on six validity dimensions and rank their deployment compatibility. See its [README](bayesian_auditing/README.md). |
+| [`bayesian_auditing/`](bayesian_auditing/) | Goal-conditioned item review: retrieve a shortlist with local Qwen3 embeddings, then use GPT-6 Luna to judge those items on six validity dimensions. See its [README](bayesian_auditing/README.md). |
 | [`anthropic_api_package_release/item_analysis/`](anthropic_api_package_release/item_analysis/) | Post-assessment classification: generate criteria and label benchmark items with GPT-6 Luna, then report prevalence and review agreement. See its [README](anthropic_api_package_release/item_analysis/README.md). |
 
 ## Repository structure
 
 ```
 benchmark-caliper/
-├── bayesian_auditing/               # Goal-conditioned validity scoring of items
+├── bayesian_auditing/               # Local retrieval + goal-conditioned item scoring
 ├── anthropic_api_package_release/   # Validity-analysis pipeline
 │   ├── run_pipeline.py              # CLI entry point and orchestrator
 │   ├── run_expert_stage1.py         # Batch runner for expert assessments
@@ -61,6 +61,12 @@ benchmark-caliper/
 
 - **To analyze a benchmark through the web interface:** see [`website/README.md`](website/README.md).
 - **To run the pipeline from the command line** — inspect the assessments from the paper, reproduce one, or analyze your own benchmark — see [`anthropic_api_package_release/README.md`](anthropic_api_package_release/README.md).
+
+The goal-conditioned `/items` tool reduces per-item API calls by retrieving a
+shortlist locally before assessment. Its Qwen3 embedding model makes no paid API
+calls; GPT-6 Luna judgments still require an OpenAI key. Retrieval scores identify
+candidates and do not replace validity judgments. See
+[`bayesian_auditing/README.md`](bayesian_auditing/README.md) for CLI setup and scope.
 
 ## Deployment
 

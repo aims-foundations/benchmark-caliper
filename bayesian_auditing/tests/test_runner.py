@@ -198,3 +198,51 @@ def test_top_k_ranks_scores_and_can_expand_on_resume(corpus, assessment_dict, tm
     assert len(calls) == 3
     ranked = json.loads((output / "ranked_items.json").read_text())
     assert [r["overall_score"] for r in ranked] == pytest.approx([3.7, 1.8, 1])
+
+
+def test_retrieved_shortlist_preserves_judgments_provenance_and_resume(corpus, assessment_dict, tmp_path):
+    rows = list(runner.iter_items(corpus[0]))
+    selected_hash = rows[0]["evidence_hash"]
+    candidates = [
+        {**item, "retrieval_rank": 1, "retrieval_score": 0.98, "exact_match": True}
+        for item in rows if item["evidence_hash"] == selected_hash
+    ]
+    retrieval = {"policy": {"method": "test-embedding"}, "query": "Compute 1 + 1.",
+                 "requested_k": 1, "indexed_items": 3, "indexed_source_rows": 4,
+                 "full_inventory_indexed": True}
+    calls = []
+    output = tmp_path / "shortlist"
+    kwargs = dict(model=DEFAULT_MODEL, judge=fake_judge(assessment_dict, calls),
+                  candidate_items=candidates, retrieval=retrieval)
+    summary = runner.run(corpus[0], "deployment", "rubric", output, **kwargs)
+    assert len(calls) == summary["shortlist_assessed"] == 1
+    assert summary["full_inventory_indexed"]
+    assert not summary["full_inventory_traversed"]
+    assert not summary["full_inventory_scored"]
+    ranked = json.loads((output / "ranked_items.json").read_text())[0]
+    assert ranked["assessment"] == Assessment.model_validate(assessment_dict).model_dump()
+    assert ranked["retrieval_rank"] == 1 and ranked["retrieval_score"] == 0.98
+    assert ranked["exact_match"] is True and len(ranked["sources"]) == 2
+    runner.run(corpus[0], "deployment", "rubric", output, resume=True, **kwargs)
+    assert len(calls) == 1
+    with pytest.raises(ValueError, match="settings"):
+        runner.run(corpus[0], "deployment", "rubric", output, resume=True,
+                   **{**kwargs, "retrieval": {**retrieval, "query": "Different question"}})
+    with pytest.raises(ValueError, match="settings"):
+        runner.run(corpus[0], "deployment", "rubric", output, resume=True,
+                   **{**kwargs, "candidate_items": candidates[:1]})
+
+
+def test_invalid_judgment_is_attempted_once_per_unique_item_per_invocation(corpus, tmp_path):
+    calls = []
+
+    def invalid(evidence):
+        calls.append(evidence)
+        return {"status": "error", "error": "Invalid assessment"}
+
+    output = tmp_path / "invalid"
+    summary = runner.run(corpus[0], "deployment", "rubric", output, model=DEFAULT_MODEL, judge=invalid)
+    assert len(calls) == summary["errors"] == 3
+    assert len(list(runner.records(output / "assessments.jsonl"))) == 4
+    runner.run(corpus[0], "deployment", "rubric", output, model=DEFAULT_MODEL, judge=invalid, resume=True)
+    assert len(calls) == 6

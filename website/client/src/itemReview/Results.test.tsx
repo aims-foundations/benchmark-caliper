@@ -137,3 +137,23 @@ it('navigates result pages and returns directly to the highest scores', async ()
   await userEvent.click(screen.getByRole('button', { name: 'Back to top scores' }))
   expect(props.onPageChange).toHaveBeenLastCalledWith(1)
 })
+
+it('keeps judgment ordering while exposing local retrieval provenance', async () => {
+  const retrievedReview: Review = { ...review,
+    retrieval_policy: { version: 1, method: 'qwen3_embedding', model: 'Qwen/Qwen3-Embedding-0.6B', max_tokens: 8192, similarity: 'dot_product' },
+    indexed_items: 150, retrieved_items: 20, scope: { ...review.scope, retrieve_k: 20 },
+    retrieval_query: 'Solve 2x + 3 = 7. Explain your reasoning.',
+    ranked_items: [{ ...review.ranked_items[0], retrieval_rank: 8, retrieval_score: 0.912345, exact_match: true }],
+  }
+  render(<Results review={retrievedReview} {...props} />)
+  expect(screen.getByRole('heading', { name: 'Ranked shortlist items' })).toBeVisible()
+  const item = screen.getByRole('article', { name: 'Item 1' })
+  expect(within(item).getByText(/Retrieval rank 8/)).toHaveTextContent('Embedding dot product 0.9123')
+  expect(within(item).getByText('Exact question match')).toBeVisible()
+  expect(within(item).getByLabelText('Item score')).toHaveTextContent('Ranking score3.33 / 5')
+  expect(within(item).getByText('Validity dimensions')).toBeVisible()
+  await userEvent.click(screen.getByText('How these candidates were retrieved'))
+  expect(screen.getByText(/selected up to 20 candidates from 150 indexed sample items/)).toBeVisible()
+  expect(screen.getByText(/Embedding similarity is not assessment confidence/)).toBeVisible()
+  expect(screen.getByText(/Reported usage:/)).toBeVisible()
+})

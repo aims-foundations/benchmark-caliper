@@ -63,21 +63,30 @@ item-review workflow has the following implementation:
   Those files expire one hour after a run ends, with a minute-level cleanup timer,
   and are removed on normal shutdown. An abrupt kill can leave orphaned files
   until the host removes them. Jobs cannot resume after a restart.
-- Before model calls, requests use the pinned inventory to prepare a fixed sample
+- Before paid judgment calls, requests use the pinned inventory to prepare a fixed sample
   of up to 50 distinct items per benchmark collection. Selected dataset evidence
   and provenance are cached in a private server directory, without deployment
   answers or API keys. The reusable cache survives normal shutdown.
+  Local `Qwen/Qwen3-Embedding-0.6B` inference retrieves a shortlist (default 20,
+  maximum 100) before OpenAI judging. Question vectors are cached separately;
+  deployment/query vectors are not written to the reusable cache. Qwen weights
+  and tokenizer are downloaded from the pinned Hugging Face revision; local
+  embedding inference sends no question or deployment text to a model API.
+  The run records the retrieval query and selected items in its private results.
   Three jobs may run simultaneously, at most one per caller key. At most 30 jobs
   are retained. User-supplied model IDs, paths, API base
   URLs, and dataset repository IDs are not accepted by the web endpoint.
 - Provider exception bodies are not returned or logged. Model-generated content
   is rendered as React text. Review endpoints use `Cache-Control: no-store`.
 - Stopping a job cancels the awaited request and prevents subsequent requests.
-  A request already sent to OpenAI may still incur a charge. No email is sent.
+  Local preparation observes cancellation between work units; an in-progress
+  model download or embedding batch may finish first. A request already sent to
+  OpenAI may still incur a charge. No email is sent.
 
 Verification: `website/server/tests/test_item_review.py`,
 `website/client/src/itemReview/api.test.ts`, and `ItemReview.test.tsx` cover these
-boundaries. Shared synchronous/asynchronous judge requests are checked in
+boundaries. Local retrieval tests use an injected encoder and no paid API. Shared
+synchronous/asynchronous judge requests are checked in
 `bayesian_auditing/tests/test_judge.py`. OpenAI's own API retention policies apply
 to submitted content; `store=False` is not a promise of zero provider retention.
 

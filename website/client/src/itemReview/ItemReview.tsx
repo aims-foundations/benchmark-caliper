@@ -36,6 +36,8 @@ export function ItemReview() {
   const [step, setStep] = useState<'access' | 'deployment' | 'confirm'>('access')
   const [apiKey, setApiKey] = useState('')
   const [deployment, setDeployment] = useState<Deployment>(EMPTY)
+  const [retrieveK, setRetrieveK] = useState('20')
+  const [retrievalQuery, setRetrievalQuery] = useState('')
   const [page, setPage] = useState(1)
   const [access, setAccess] = useState<RunAccess | null>(savedRun)
   const [review, setReview] = useState<Review | null>(null)
@@ -55,7 +57,10 @@ export function ItemReview() {
 
   useEffect(() => {
     const controller = new AbortController()
-    getCatalog(controller.signal).then(setCatalog).catch(e => {
+    getCatalog(controller.signal).then(data => {
+      setCatalog(data)
+      setRetrieveK(String(data.default_retrieve_k))
+    }).catch(e => {
       if (!controller.signal.aborted) setError(e instanceof Error ? e.message : 'Could not load the demo catalog.')
     })
     return () => controller.abort()
@@ -91,10 +96,12 @@ export function ItemReview() {
   }
 
   async function start() {
+    if (!catalog || !Number.isInteger(Number(retrieveK)) || Number(retrieveK) < 1 || Number(retrieveK) > catalog.max_retrieve_k) return
     setBusy(true)
     setError('')
     try {
-      const run = await startReview({ deployment }, apiKey.trim())
+      const run = await startReview({ deployment, retrieve_k: Number(retrieveK),
+        ...(retrievalQuery.trim() ? { retrieval_query: retrievalQuery } : {}) }, apiKey.trim())
       // The OpenAI key stays in React memory only and is cleared once handed off.
       setApiKey('')
       try { sessionStorage.setItem(RUN_STORAGE, JSON.stringify(run)) } catch { /* current tab still works */ }
@@ -122,6 +129,7 @@ export function ItemReview() {
   }
 
   const active = access && (!review || ['preparing', 'running'].includes(review.status))
+  const validRetrieveK = !!catalog && Number.isInteger(Number(retrieveK)) && Number(retrieveK) >= 1 && Number(retrieveK) <= catalog.max_retrieve_k
 
   return <div className="rd-root item-review-site">
     <SiteHeader />
@@ -129,7 +137,7 @@ export function ItemReview() {
       <a className="review-back" href={appPath('/')}><span aria-hidden="true">← </span>Choose an evaluation</a>
       <div className="review-hero-heading"><div><p className="eyebrow">Goal-conditioned auditing <span className="review-badge">Demo</span></p>
         <h1>Find tests that fit.</h1></div>
-        <p>From your deployment context to relevant evaluation items, with evidence behind every judgment.</p></div>
+        <p>Retrieve candidate items locally, then assess the shortlist against your deployment with evidence behind every judgment.</p></div>
     </header></div>
     <main className="rd-container item-review-main">
       <div className="review-layout">
@@ -142,8 +150,8 @@ export function ItemReview() {
           </ol>
           {!access && <div className="review-guide-note"><p className="eyebrow">The framework</p><strong>One item.<br />Six perspectives.</strong>
             <div className="review-guide-dimensions"><span>Input</span><span>Output</span><p>Ontology · Content · Form</p></div>
-            <p>Every score includes a confidence judgment and the evidence behind it.</p>
-            <small>GPT-6 Luna · High reasoning</small>
+            <p>Local Qwen3 embeddings retrieve a shortlist. GPT-6 Luna assesses those items across all six validity dimensions.</p>
+            <small>Paid judgments only for the shortlist</small>
           </div>}
         </aside>
         <div className="review-workspace" ref={workspace} tabIndex={-1}>
@@ -154,12 +162,12 @@ export function ItemReview() {
 
           {!access && catalog && step === 'access' && <form onSubmit={moveToDeployment} className="review-panel">
             <p className="eyebrow">01 · Connect</p><h2>Connect your OpenAI API key</h2>
-            <p className="review-intro">Bring your own key to assess a broad, reproducible sample against your deployment. You’ll review the sample design and confirm before any paid calls begin.</p>
+            <p className="review-intro">Local retrieval narrows a broad, reproducible sample to a shortlist. Bring your own key for the six-dimension assessments of that shortlist. You’ll choose the maximum number of items before any paid calls begin.</p>
             {!catalog.dataset_access_configured && <div className="review-error" role="alert">Dataset access is not configured on this server. Please contact the site maintainer or try again later.</div>}
             <label className="review-field"><span>OpenAI API key</span><input type="password" autoComplete="off" spellCheck={false} maxLength={512}
               value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="sk-…" required /></label>
             <div className="review-access-note"><strong>Your OpenAI key stays temporary.</strong><p>We send it to our backend and hold it in memory during your review. It is never saved to browser storage or our database.</p></div>
-            <p className="help">The sample draws from {catalog.benchmarks.length} benchmark collections across both measurement-db branches. Starting a paid review sends your deployment description and selected item evidence to OpenAI.</p>
+            <p className="help">The sample draws from {catalog.benchmarks.length} benchmark collections across both measurement-db branches. Retrieval uses a local embedding model without a paid API. Starting a review sends your deployment description and shortlisted item evidence to OpenAI for assessment.</p>
             <button type="submit" disabled={!apiKey.trim() || !catalog.dataset_access_configured}>Continue to deployment</button>
           </form>}
 
@@ -181,15 +189,31 @@ export function ItemReview() {
           </form>}
 
           {!access && catalog && step === 'confirm' && <section className="review-panel">
-            <p className="eyebrow">03 · Review and run</p><h2>Review a broad item sample</h2>
-            <p className="review-intro">The demo selects up to {catalog.sampling.items_per_benchmark} distinct items from every benchmark collection, then assesses each selected item across the six validity dimensions.</p>
-            <div className="review-scope"><p className="eyebrow">Included in your review</p><strong>Up to {catalog.sample_max_items.toLocaleString()} <span>items</span></strong>
+            <p className="eyebrow">03 · Review and run</p><h2>Retrieve candidates, then assess the shortlist</h2>
+            <p className="review-intro">The demo selects up to {catalog.sampling.items_per_benchmark} distinct items from every benchmark collection. Local retrieval narrows this sample to your chosen shortlist; GPT-6 Luna then assesses each shortlisted item across all six validity dimensions.</p>
+            <div className="review-scope"><p className="eyebrow">Available for local retrieval</p><strong>Up to {catalog.sample_max_items.toLocaleString()} <span>items</span></strong>
               <p>{catalog.benchmarks.length} benchmark collections · {catalog.table_count} item tables · {Object.keys(catalog.branches).length} branches</p>
-              <p>The fixed random seed makes the sample reproducible. Duplicate evidence gets one chance of selection and is assessed once, with every source preserved. Both branches contribute when a benchmark has distinct items in each.</p>
-              <div className="review-run-facts"><span>GPT-6 Luna</span><span>High reasoning</span><span>One call per distinct item</span></div>
+              <p>The fixed random seed makes the sample reproducible. Duplicate evidence gets one chance of selection and is indexed once, with every source preserved. Both branches contribute when a benchmark has distinct items in each.</p>
+              <div className="review-run-facts"><span>Local Qwen3 retrieval</span><span>GPT-6 Luna · High reasoning</span><span>One judgment per shortlisted item</span></div>
               <p className="help">The full catalog contains {catalog.source_rows.toLocaleString()} source rows. The review uses selected item text, reference answers, and available metadata. Referenced images and audio are not inspected.</p></div>
             <details><summary>Browse all {catalog.benchmarks.length} benchmark collections</summary>
               <ul className="review-catalog">{catalog.benchmarks.map(b => <li key={b.id}><strong>{b.name}</strong><span>up to {b.sample_max_items} sampled · {b.source_rows.toLocaleString()} source rows</span></li>)}</ul>
+            </details>
+            <div className="review-field"><label htmlFor="retrieve-k">Maximum items to assess</label>
+              <p className="help" id="retrieve-k-hint">Choose 1–{catalog.max_retrieve_k} items. A smaller shortlist reduces paid assessments; the default is {catalog.default_retrieve_k}.</p>
+              <input id="retrieve-k" type="number" min={1} max={catalog.max_retrieve_k} step={1} value={retrieveK}
+                aria-describedby="retrieve-k-hint" onChange={e => setRetrieveK(e.target.value)} required />
+            </div>
+            <div className="review-field"><label htmlFor="retrieval-query">Reference question (optional)</label>
+              <p className="help" id="retrieval-query-hint">Paste an exact question or describe a question to retrieve similar items. Leave this blank to use your deployment description. The deployment still guides all six validity judgments.</p>
+              <textarea id="retrieval-query" rows={4} value={retrievalQuery} maxLength={100000}
+                aria-describedby="retrieval-query-hint" placeholder="Paste the question you want to find, or describe a relevant evaluation item…"
+                onChange={e => setRetrievalQuery(e.target.value)} />
+            </div>
+            <details><summary>How retrieval selects the shortlist</summary>
+              <p>Qwen3-Embedding-0.6B runs locally. Query and item embeddings are normalized and compared using dot products, with up to {catalog.retrieval_policy.max_tokens.toLocaleString()} tokens per text. Longer text is truncated for embedding; the original item evidence remains available for assessment.</p>
+              <p>Exact question text matches are selected first, followed by the most similar items. Semantic similarity helps find candidates; it does not establish that related questions, numbers, or answer choices are equivalent.</p>
+              <p>The final report ranks the assessed shortlist by its confidence-adjusted six-dimension validity score, independently of retrieval rank. Relevant items outside the sample or shortlist may be missed.</p>
             </details>
             <details><summary>How the sample is selected</summary>
               <p>Each benchmark contributes up to {catalog.sampling.items_per_benchmark} distinct items, or all its items if fewer are available. Items are drawn from across the collection after identical evidence and context are combined.</p>
@@ -199,17 +223,19 @@ export function ItemReview() {
             {catalog.missing_item_tables.length > 0 && <p className="help">{catalog.missing_item_tables.length} branch directories have no formatted item table and cannot supply items.</p>}
             <details><summary>Your deployment description</summary>{QUESTIONS.map(q => <section key={q.id}><h4>{q.title}</h4><p className="review-preserve">{deployment[q.id] || 'Unspecified'}</p></section>)}</details>
             <p className="help">The review continues if this tab closes. Use Stop review to cancel. Results are kept in temporary server storage for one hour after completion and are discarded on a server restart. Download all results to keep them.</p>
-            <p className="review-paid-note">Starting authorizes paid model calls for the selected sample after preparation completes.</p>
+            <p className="review-paid-note">Starting authorizes paid GPT-6 Luna assessments for up to {validRetrieveK ? Number(retrieveK) : 'your chosen number of'} retrieved items after local retrieval completes.</p>
             <div className="review-actions"><button type="button" className="secondary" onClick={() => setStep('deployment')} disabled={busy}>Edit deployment</button>
-              <button type="button" onClick={() => void start()} disabled={busy || catalog.table_count === 0}>{busy ? 'Starting…' : 'Start sampled review'}</button></div>
+              <button type="button" onClick={() => void start()} disabled={busy || catalog.table_count === 0 || !validRetrieveK}>{busy ? 'Starting…' : 'Retrieve and assess shortlist'}</button></div>
           </section>}
 
           {access && <>
             <section className="review-panel review-progress" aria-live="polite"><p className="eyebrow">04 · Results</p>
-              <h2>{!review || review.status === 'preparing' ? 'Preparing the item sample' : review.status === 'running' ? 'Reviewing sampled items' : review.status === 'completed' ? 'Your item review is ready' : review.status === 'cancelled' ? 'Review stopped' : 'Review interrupted'}</h2>
+              <h2>{!review || review.status === 'preparing' ? 'Preparing and retrieving candidate items' : review.status === 'running' ? 'Assessing shortlisted items' : review.status === 'completed' ? 'Your item review is ready' : review.status === 'cancelled' ? 'Review stopped' : 'Review interrupted'}</h2>
               <p className="review-intro">{review?.message || 'Connecting to your review…'}</p>
-              {review && review.status === 'preparing' && <><progress max={review.scope.source_rows || 1} value={review.source_rows} aria-label="Source rows considered for sampling" /><p>{review.prepared_benchmarks.toLocaleString()} of {review.scope.benchmarks.length.toLocaleString()} benchmark collections prepared · {review.source_rows.toLocaleString()} source rows considered · no model calls yet</p></>}
-              {review && review.status !== 'preparing' && <><progress max={review.total || 1} value={review.processed} aria-label="Sampled items assessed" /><p>{review.processed.toLocaleString()} of {review.total.toLocaleString()} distinct sampled items assessed</p></>}
+              {review && review.status === 'preparing' && <><progress max={review.scope.source_rows || 1} value={review.source_rows} aria-label="Source rows considered for sampling" /><p>{review.prepared_benchmarks.toLocaleString()} of {review.scope.benchmarks.length.toLocaleString()} benchmark collections prepared · {review.source_rows.toLocaleString()} source rows considered · no paid model calls yet</p></>}
+              {review && review.status === 'preparing' && <p className="help">Preparing the local index and retrieving candidates. Paid judgments start after the shortlist is selected.</p>}
+              {review?.indexed_items != null && review.retrieved_items != null && <p>{review.indexed_items.toLocaleString()} sampled items indexed · {review.retrieved_items.toLocaleString()} items shortlisted</p>}
+              {review && review.status !== 'preparing' && <><progress max={review.total || 1} value={review.processed} aria-label="Shortlisted items assessed" /><p>{review.processed.toLocaleString()} of {review.total.toLocaleString()} shortlisted items assessed</p></>}
               {active ? <button type="button" className="secondary" onClick={() => void stop()} disabled={busy}>Stop review</button> : <button type="button" className="secondary" onClick={restart}>Start another review</button>}
               {active && <p className="help">Stopping cancels pending assessments. Requests already sent may still incur charges.</p>}
               {error && <button type="button" className="link" onClick={restart}>Forget this review and return to setup</button>}

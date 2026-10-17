@@ -38,6 +38,13 @@ function ItemCard({ item, scoringVersion }: { item: ReviewedItem; scoringVersion
             <div><dt>Dimensions scored</dt><dd>{item.scored_dimensions} / 6</dd></div></dl></>}
       </aside>
     </div>
+    {item.retrieval_rank != null && <div className="review-assessment">
+      <p className="help">Retrieval rank {item.retrieval_rank}
+        {item.retrieval_score != null && <> · Embedding dot product {item.retrieval_score.toFixed(4)}</>}
+        {item.exact_match && <> · <strong>Exact question match</strong></>}
+      </p>
+      <p className="help">Retrieval selects candidates. This item’s final rank comes from the validity assessment below.</p>
+    </div>}
     {item.error && <p className="review-error" role="status">{item.error}</p>}
     {item.assessment && <div className="review-assessment">
       <div className="review-assessment-heading"><h4>Validity dimensions</h4></div>
@@ -100,7 +107,7 @@ export function Results({ review, run, onPageChange }: { review: Review; run: Ru
     finally { setDownloading(false) }
   }
   return <section className="review-results" aria-label="Review results">
-    <div className="review-result-title"><h2>Ranked sample items</h2>
+    <div className="review-result-title"><h2>{review.retrieval_policy ? 'Ranked shortlist items' : 'Ranked sample items'}</h2>
       <button type="button" className="secondary" disabled={downloading} onClick={() => void downloadAll()}>{downloading ? 'Downloading…' : 'Download all results'}</button>
     </div>
     {downloadError && <p className="review-error" role="alert">{downloadError}</p>}
@@ -109,6 +116,11 @@ export function Results({ review, run, onPageChange }: { review: Review; run: Ru
       <div><strong>{review.needs_review}</strong><span>{review.scoring_policy.version >= 4 ? 'Evidence gaps or missing scores' : 'Low confidence or missing scores'}</span></div>
       <div><strong>{review.errors}</strong><span>Failed assessments</span></div>
     </div>
+    {review.retrieval_policy && <details className="review-ranking-help"><summary>How these candidates were retrieved</summary>
+      <p>Local Qwen3-Embedding-0.6B retrieval selected up to {review.scope.retrieve_k ?? review.retrieved_items ?? review.total} candidates from {review.indexed_items?.toLocaleString() ?? 'the'} indexed sample items. Exact question text matches were selected first; other candidates were ordered by normalized embedding dot products.</p>
+      <p>Embedding similarity is not assessment confidence or proof of equivalent questions. The final order below uses the six-dimension validity judgments. Relevant items outside the sample or shortlist may be missed.</p>
+      {review.retrieval_query && <><h4>Retrieval query</h4><p className="review-preserve">{review.retrieval_query}</p></>}
+    </details>}
     <details className="review-ranking-help"><summary>How to read these scores</summary>
       <p>Compatibility runs from 1 (mismatch) to 5 (strong alignment). The model also reports confidence, supporting evidence, and information gaps for each dimension.</p>
       {legacy && weights ? <><p>This report uses an earlier scoring policy: scores are pulled toward {review.scoring_policy.neutral_score} with weights of {weights.high} (high), {weights.medium} (medium), and {weights.low} (low confidence). Missing scores contribute {review.scoring_policy.neutral_score}.</p>

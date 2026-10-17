@@ -110,8 +110,9 @@ live test with a visitor's key; offline tests use mocked model responses.
 
 ## Item-review configuration
 
-The website's Python requirements include the shared OpenAI judge and dataset
-loader. Keep **one instance and one Uvicorn worker** for the item-review jobs.
+The website's Python requirements include the shared OpenAI judge, dataset
+loader, and local Qwen3 embedding runtime. Keep **one instance and one Uvicorn
+worker** for the item-review jobs.
 Jobs and keys live in memory; results use private temporary SQLite files.
 A restart clears in-flight jobs and their results; users can download JSON
 before restarting the service. The CLI's disk-based resume is separate.
@@ -122,13 +123,21 @@ reviews; visitors supply only their OpenAI API key. Missing server dataset
 credentials disable new reviews and show a message to contact the maintainer.
 Do not put a maintainer's OpenAI key on the service.
 
-Each review assesses up to four items concurrently. Optionally set
+Each review retrieves a shortlist locally before paid judgment (default 20 items,
+maximum 100). `Qwen/Qwen3-Embedding-0.6B` embeds question content with an 8,192-token
+limit; it makes no paid embedding calls. Question vectors are unit-normalized,
+ranked by dot product, with exact question matches first. The existing GPT-6 Luna
+judge still uses the visitor's key and full original evidence for all six
+validity dimensions. Shortlisting reduces the number of judgments; it does not
+make judging free or impose a fixed dollar budget.
+
+Each review assesses up to four shortlisted items concurrently. Optionally set
 `ITEM_REVIEW_CONCURRENCY` to an integer from 1 to 16 (default 4). With the existing
 three-review limit, the default allows at most 12 simultaneous item requests
 across the service. Lower the limit for constrained provider quotas; 1 restores
 sequential assessment. Provider retries stay bounded by the same worker pool.
-Concurrency does not change the sample or number of intended assessments, and
-does not accelerate initial sample preparation. Stopping a run cancels every
+Concurrency does not change the sample or shortlist size, and does not accelerate
+initial sample preparation or local embedding. Stopping a run cancels every
 worker; requests already sent may still be billed.
 
 The Blueprint declares `HF_TOKEN` with `sync: false`, so its value stays out of
@@ -141,8 +150,10 @@ The hosted catalog uses all formatted item tables pinned in
 `website/server/item_review_inventory.json`. Refresh its revisions and row counts
 with `python -m website.server.item_review_catalog`. The demo selects up to 50
 distinct items per benchmark collection with a fixed seed. Prepare that cache
-with `python -m website.server.item_review_sample`; it is also prepared on demand
-before model calls. Item tables are read using HTTP ranges. Selected dataset
+with `python -m website.server.item_review_sample --build-index` to cache the
+sample and its question embeddings; omit `--build-index` for the sample only.
+Preparation also occurs on demand before paid calls. Item tables are read using
+HTTP ranges. Selected dataset
 evidence is cached in `WEBSITE_DATA_DIR/item-review-samples/`, with no provider keys
 or deployment descriptions. The first preparation needs temporary disk for a
 per-benchmark source index. No dataset content or local CLI artifacts are bundled
@@ -151,10 +162,30 @@ are deleted on normal shutdown. Provision writable disk for the reusable sample
 cache and temporary results. Reviews do not resume after a restart.
 The existing Caliper database and retention behavior are unchanged.
 
+Question vectors persist privately under
+`WEBSITE_DATA_DIR/item-review-embeddings/`. Query vectors are not written to that
+reusable cache. Model weights and tokenizer use the standard Hugging Face cache,
+which can be relocated with `HF_HOME`; provision its disk as well as the sample
+and vector caches. The pinned model revision and retrieval policy invalidate
+incompatible cached vectors. The model runs on CUDA when available and otherwise
+on CPU. It uses roughly 1.2 GB of FP16 weight memory on CUDA or 2.4 GB of FP32
+weight memory on CPU, plus framework, activation, sample, and index memory.
+Long inputs up to the 8,192-token limit can require substantially more runtime
+memory. Measure peak usage on representative items before production traffic.
+
+**Resize the existing Render Starter/1 GB disk setup before enabling this
+workflow.** The current blueprint does not provision enough memory/disk for the
+local Qwen runtime, downloaded weights, and dataset preparation. Select a service
+with several GB of RAM and sufficient persistent disk, with headroom verified by
+an actual cold preparation run. A cache-building machine can prepare vectors,
+but the serving process still needs the model to embed new user queries. These
+code changes do not resize the hosted plan or deploy the service.
+
 Cold sample preparation can use several GB of RAM while decoding large Parquet
 row groups. On a small hosted service, prepare the sample on a machine with enough
 memory and privately copy the resulting `item-review-samples/` cache into the
-service's data directory before starting reviews. Use the same pinned inventory
+service's data directory before starting reviews. Preserve the separately
+prepared question-vector cache as well if available. Use the same pinned inventory
 and sampling version. Cached reviews read only the selected items. Keep this
 gated dataset cache out of Git and public static assets.
 
@@ -168,8 +199,11 @@ curl -f https://aimslab.stanford.edu/benchmark-caliper/api/item-review/catalog
 Open `/benchmark-caliper/`, `/benchmark-caliper/caliper`, and
 `/benchmark-caliper/items` in the browser. Run a small real assessment with your
 own key, stopping when enough items have been judged, to validate account/model
-access and judge quality; automated tests use
-mocked OpenAI responses and do not establish scoring quality.
+access and judge quality, and confirm that only the displayed shortlist is
+judged. Verify local retrieval separately, including exact reference-question
+lookup and exported retrieval rank/similarity. Automated tests use injected
+embeddings and mocked OpenAI responses; they do not establish retrieval recall
+or scoring quality.
 
 ## Render
 
@@ -187,7 +221,7 @@ The repo root ships a `render.yaml` Blueprint that captures the whole service
 The Blueprint already sets these, so you do **not** type them by hand:
 
 - Branch `master`, Runtime Docker, Starter plan, 1 instance
-- Persistent disk `data` mounted at `/data`, 1 GB
+- Persistent disk `data` mounted at `/data`, 1 GB (increase for Qwen retrieval; see above)
 - Health check path `/healthz`
 - Env vars:
 
