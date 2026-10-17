@@ -72,6 +72,60 @@ it('continues the displayed assessment without choosing another deployment or st
   expect(sessionStorage.getItem(storageKey)).not.toContain('sk-private')
 })
 
+it('announces a slow start once, prevents duplicate submissions, and focuses progress only after acknowledgment', async () => {
+  let resolveStart!: (value: AnalysisRun & typeof access) => void
+  vi.mocked(api.createAssessmentRun).mockImplementationOnce(() => new Promise(resolve => { resolveStart = resolve }))
+  const generating: AnalysisRun = { ...ready, status: 'generating', spec: null, message: 'Generating the criteria.' }
+  vi.mocked(api.getRun).mockResolvedValueOnce(generating).mockResolvedValueOnce(ready)
+  const user = userEvent.setup()
+  render(<ItemAnalysis assessment={assessment} />)
+  await user.click(await screen.findByRole('button', { name: 'Confirm benchmark' }))
+  await user.type(screen.getByLabelText('OpenAI API key'), 'sk-waiting')
+  const form = screen.getByRole('button', { name: 'Generate item criteria' }).closest('form')!
+  vi.useFakeTimers()
+  try {
+    fireEvent.submit(form)
+    expect(screen.getByText('Starting item analysis. Waiting for the server to confirm your run…')).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Starting…' })).toBeDisabled()
+    await act(async () => { await vi.advanceTimersByTimeAsync(15000) })
+    expect(screen.getByText(/Still waiting for the server to confirm this run/)).toBeVisible()
+    fireEvent.submit(form)
+    expect(api.createAssessmentRun).toHaveBeenCalledTimes(1)
+    expect(api.classify).not.toHaveBeenCalled()
+    expect(api.getRun).not.toHaveBeenCalled()
+
+    await act(async () => { resolveStart({ ...generating, ...access }) })
+    const progress = screen.getByRole('region', { name: 'Run progress' })
+    expect(progress).toHaveFocus()
+    expect(screen.queryByText(/Still waiting for the server/)).not.toBeInTheDocument()
+    const contextSummary = screen.getByText('Context and usage')
+    contextSummary.focus()
+    await act(async () => { await vi.advanceTimersByTimeAsync(1000) })
+    expect(screen.getByRole('heading', { name: 'Your criteria are ready' })).toBeVisible()
+    expect(contextSummary).toHaveFocus()
+    expect(api.createAssessmentRun).toHaveBeenCalledTimes(1)
+  } finally { vi.useRealTimers() }
+})
+
+it.each([
+  new api.AnalysisApiError('The run could not start. Check the request and try again.', 400),
+  new TypeError('Failed to fetch'),
+])('brings a creation error into focus without automatically submitting again: %s', async problem => {
+  vi.mocked(api.createAssessmentRun).mockRejectedValueOnce(problem)
+  const user = userEvent.setup()
+  render(<ItemAnalysis assessment={assessment} />)
+  await user.click(await screen.findByRole('button', { name: 'Confirm benchmark' }))
+  await user.type(screen.getByLabelText('OpenAI API key'), 'sk-error')
+  await user.click(screen.getByRole('button', { name: 'Generate item criteria' }))
+  const error = await screen.findByRole('alert')
+  expect(error).toHaveTextContent(problem.message)
+  expect(error).toHaveFocus()
+  expect(screen.getByRole('button', { name: 'Generate item criteria' })).toBeEnabled()
+  expect(screen.queryByText(/Waiting for the server to confirm/)).not.toBeInTheDocument()
+  expect(api.createAssessmentRun).toHaveBeenCalledTimes(1)
+  expect(api.classify).not.toHaveBeenCalled()
+})
+
 it('supports a new benchmark through an uploaded dataset and carries the same assessment reference', async () => {
   vi.mocked(api.getAssessment).mockResolvedValue({ ...setup, assessment: { ...setup.assessment, benchmark: 'My new benchmark' }, sources: [] })
   const user = userEvent.setup()

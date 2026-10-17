@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { SiteHeader } from '../components/SiteHeader'
 import { SiteFooter } from '../components/SiteFooter'
 import { appPath } from '../paths'
@@ -58,14 +58,44 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
   const [page, setPage] = useState(1)
   const [pageLoading, setPageLoading] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [starting, setStarting] = useState(false)
+  const [startDelayed, setStartDelayed] = useState(false)
   const [error, setError] = useState('')
+  const [errorFocusVersion, setErrorFocusVersion] = useState(0)
   const [pollError, setPollError] = useState('')
   const [pollVersion, setPollVersion] = useState(0)
   const [catalogVersion, setCatalogVersion] = useState(0)
   const [downloading, setDownloading] = useState<Artifact | null>(null)
   const [privacyOpen, setPrivacyOpen] = useState(false)
   const [pilotReviewed, setPilotReviewed] = useState(false)
+  const progressRef = useRef<HTMLElement>(null)
+  const errorRef = useRef<HTMLDivElement>(null)
+  const focusStartedRun = useRef(false)
   const direct = assessment?.kind === 'direct'
+
+  useEffect(() => {
+    if (!starting) return
+    const timer = setTimeout(() => setStartDelayed(true), 15000)
+    return () => clearTimeout(timer)
+  }, [starting])
+
+  useEffect(() => {
+    if (!focusStartedRun.current || !progressRef.current) return
+    focusStartedRun.current = false
+    progressRef.current.focus({ preventScroll: true })
+    progressRef.current.scrollIntoView({ block: 'start' })
+  }, [run?.run_id])
+
+  useEffect(() => {
+    if (!errorFocusVersion || !errorRef.current) return
+    errorRef.current.focus({ preventScroll: true })
+    errorRef.current.scrollIntoView({ block: 'start' })
+  }, [errorFocusVersion])
+
+  function showRequestError(message: string) {
+    setError(message)
+    setErrorFocusVersion(value => value + 1)
+  }
 
   useEffect(() => {
     if (assessment) return
@@ -142,6 +172,8 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
       if (!setup || !apiKey.trim() || !confirmedDataset) return
     } else if (!selected?.available || (mode === 'provided' && selected.supplied_spec_available === false) || (mode === 'generate' && !apiKey.trim())) return
     setBusy(true)
+    setStarting(true)
+    setStartDelayed(false)
     setError('')
     try {
       const result = directContext
@@ -155,18 +187,19 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
       const nextAccess = { run_id: result.run_id, run_secret: result.run_secret }
       // Persist only the run's access token. API keys never enter browser storage.
       try { sessionStorage.setItem(storageKey, JSON.stringify(nextAccess)) } catch { /* The current tab can still use the run. */ }
+      focusStartedRun.current = true
       setRun(result)
       setPage(1)
       setAccess(nextAccess)
     } catch (problem) {
-      setError(problem instanceof Error ? problem.message : 'Could not start this analysis.')
+      showRequestError(problem instanceof Error ? problem.message : 'Could not start this analysis.')
       if (assessment && problem instanceof api.AnalysisApiError && problem.status === 409) {
         setConfirmedDataset(null)
         setSetup(null)
         setCatalogVersion(value => value + 1)
       }
     }
-    finally { setBusy(false) }
+    finally { setBusy(false); setStarting(false) }
   }
 
   async function classify(scope: RunScope) {
@@ -180,7 +213,7 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
         : api.classify(access, scope, apiKey.trim())))
       setPage(1)
       setPollVersion(value => value + 1)
-    } catch (problem) { setError(problem instanceof Error ? problem.message : 'Could not start classification.') }
+    } catch (problem) { showRequestError(problem instanceof Error ? problem.message : 'Could not start classification.') }
     finally { setBusy(false) }
   }
 
@@ -192,7 +225,7 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
       setError('')
       setPage(1)
       setPollVersion(value => value + 1)
-    } catch { setError('Could not confirm the stop. Try again; the run may still be processing.') }
+    } catch { showRequestError('Could not confirm the stop. Try again; the run may still be processing.') }
     finally { setBusy(false) }
   }
 
@@ -207,6 +240,7 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
     setPollError('')
     setPage(1)
     setPilotReviewed(false)
+    focusStartedRun.current = false
   }
 
   async function download(artifact: Artifact) {
@@ -222,7 +256,7 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
       link.click()
       link.remove()
       setTimeout(() => URL.revokeObjectURL(url), 1000)
-    } catch (problem) { setError(problem instanceof Error ? problem.message : 'Could not download this file.') }
+    } catch (problem) { showRequestError(problem instanceof Error ? problem.message : 'Could not download this file.') }
     finally { setDownloading(null) }
   }
 
@@ -253,13 +287,13 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
       </div>}
       <ol className="ia-steps" aria-label="Item analysis steps">{[assessment ? 'Confirm the benchmark' : 'Choose a context', 'Review the criteria', 'Classify and inspect'].map((label, index) =>
         <li key={label} aria-current={stage === index ? 'step' : undefined} data-done={stage > index || undefined}><span>{index + 1}</span>{label}</li>)}</ol>
-      {(error || pollError) && <div className="ia-error" role="alert"><p>{error || pollError}</p>
+      {(error || pollError) && <div className="ia-error ia-request-error" role="alert" ref={errorRef} tabIndex={-1}><p>{error || pollError}</p>
         {!(assessment ? setup || access : catalog) && <button className="ia-secondary" onClick={() => { setError(''); setCatalogVersion(value => value + 1) }}>{assessment ? 'Retry loading assessment' : 'Retry loading benchmarks'}</button>}
         {pollError && <div className="ia-actions"><button className="ia-secondary" onClick={() => setPollVersion(value => value + 1)}>Retry connection</button><button className="ia-secondary" onClick={reset}>Start a new analysis</button></div>}
       </div>}
       {!(assessment ? setup : catalog) && !access && !error && <p role="status">{assessment ? 'Connecting your benchmark assessment…' : 'Loading benchmarks…'}</p>}
 
-      {assessment && !access && setup && <form className="ia-panel ia-linked-setup" onSubmit={start} aria-busy={busy}>
+      {assessment && !access && setup && <form className="ia-panel ia-linked-setup" onSubmit={start}>
         <h3>Continue with {setup.assessment.benchmark_name || setup.assessment.benchmark}</h3>
         <p>{direct ? 'Your deployment, task requirements, and answer requirements will be used to generate the item criteria.' : 'The scores and deployment context from this report will be used to generate the item criteria.'}</p>
         <details className="ia-context"><summary>{direct ? 'Context and requirements' : 'Deployment context carried forward'}</summary><p>{setup.assessment.deployment}</p></details>
@@ -268,6 +302,9 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
         {confirmedDataset && <div className="ia-confirmed-next-step">
           <KeyInput value={apiKey} onChange={setApiKey} />
           <button className="ia-primary" type="submit" disabled={busy || !apiKey.trim()}>{busy ? 'Starting…' : 'Generate item criteria'}<span aria-hidden="true"> →</span></button>
+          {starting && <p className="ia-start-status" role="status">{startDelayed
+            ? 'Still waiting for the server to confirm this run. We’ll show progress here when it responds.'
+            : 'Starting item analysis. Waiting for the server to confirm your run…'}</p>}
           <p className="ia-small ia-cost-note">This stage uses your OpenAI key. Generating criteria starts paid model calls; review the criteria before starting item classification.</p>
         </div>}
         </fieldset>
@@ -291,6 +328,9 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
         <button className="ia-primary" type="submit" disabled={busy || !example?.available || (mode === 'generate' && !apiKey.trim())}>
           {busy ? 'Starting…' : mode === 'generate' ? 'Generate criteria with GPT-6 Luna' : 'Load supplied criteria'}<span aria-hidden="true"> →</span>
         </button>
+        {starting && <p className="ia-start-status" role="status">{startDelayed
+          ? 'Still waiting for the server to confirm this run. We’ll show progress here when it responds.'
+          : 'Starting item analysis. Waiting for the server to confirm your run…'}</p>}
         <p className="ia-small ia-cost-note">{!example?.available ? 'Dataset access is managed by the website. No Hugging Face key is needed from visitors.' : mode === 'generate' ? 'Starts a paid GPT-6 Luna request. Item classification begins separately.' : 'No API key needed to inspect criteria and browse the items.'}</p>
       </form><aside className="ia-guide"><p className="ia-eyebrow">A closer reading</p>
         <div className="ia-guide-graphic" aria-hidden="true"><span className="ia-sheet"><i /><i /><i /></span><span className="ia-graphic-arrow">→</span><span className="ia-item-grid">{Array.from({ length: 9 }, (_, index) => <i key={index} />)}</span></div>
@@ -301,7 +341,7 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
 
       {access && !run && !pollError && <p role="status">Restoring your analysis…</p>}
       {run && <div className="ia-run">
-        <section className="ia-panel ia-run-status" aria-label="Run progress"><div className="ia-section-heading"><div>
+        <section className="ia-panel ia-run-status" aria-label="Run progress" ref={progressRef} tabIndex={-1}><div className="ia-section-heading"><div>
           <p className="ia-eyebrow">{run.example.title}</p><h2>{incompleteResults ? 'Some items still need classification' : direct && run.status === 'complete' ? 'Item analysis complete' : runTitle(run)}</h2></div>
           <span className={`ia-tag ${active ? 'ia-tag-active' : ''}`}>{active ? 'In progress' : run.status === 'checkpoint' ? 'Review checkpoint' : incompleteResults ? 'Incomplete' : run.status === 'complete' ? 'Finished' : 'Your analysis'}</span></div>
           <p className={run.status === 'failed' ? 'ia-error' : 'ia-muted'} role="status">{runMessage}</p>

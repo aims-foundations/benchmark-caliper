@@ -79,6 +79,9 @@
 .ia-tag-muted { color: #766b60; background: #f1eee9; border-color: #e2dcd5; }
 .ia-tag-active { background: #f8eadc; color: #8a562c; border-color: #e8d2bd; }
 .ia-run-status progress { width: 100%; accent-color: var(--cardinal); height: .45rem; margin-top: .7rem; }
+.ia-run-status, .ia-request-error { scroll-margin-top: calc(var(--site-header-h, 5rem) + 1.5rem); }
+.ia-run-status:focus-visible, .ia-request-error:focus-visible { outline: 2px solid var(--cardinal); outline-offset: 4px; }
+.ia-start-status { padding: .75rem 1rem; margin: .85rem 0; border-left: 3px solid var(--cardinal); background: #f4f3ee; color: #554537; font-size: .85rem; }
 .ia-run-meta { display: flex; flex-wrap: wrap; gap: .5rem 1.1rem; color: #7c6c60; font-size: .72rem; margin-top: 1rem; }
 .ia-actions { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-top: 1rem; }
 .ia-source { border-top: 1px solid var(--ia-rule); padding-top: .9rem; margin-top: 1.1rem; font-size: .78rem; color: var(--ia-muted); }
