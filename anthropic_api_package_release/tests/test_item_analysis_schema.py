@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from item_analysis.schema import (  # noqa: E402
-    ROSTER, SPEC_SCHEMA, allowed_labels, apply_profile_gates, labels_schema,
+    LEGACY_ROSTER as ROSTER, SPEC_SCHEMA, allowed_labels, apply_profile_gates, labels_schema,
     validate_labels, validate_spec,
 )
 
@@ -172,3 +172,109 @@ def test_unknown_requires_explanation_and_known_requires_evidence(spec):
     value.update(label=0, justification="No supported dispute.")
     with pytest.raises(ValueError):
         validate_labels(payload, spec)
+
+
+@pytest.fixture
+def generic_spec():
+    from item_analysis.schema import join_context
+    context = json.loads((Path(__file__).parent / "fixtures" / "item_analysis_generic_context.json").read_text())
+    return join_context(context, profile={}, source_registry={
+        "deployment_description.txt": context["deployment_description"], "profile.json": {},
+    }, source_roles={"deployment_description.txt": "deployment_requirement", "profile.json": "dataset_profile"})
+
+
+def generic_prediction(spec):
+    payload = {"labels": {c["id"]: {"label": "insufficient_evidence", "evidence": ["Reference standard unavailable for the supplied question."], "justification": "The necessary comparison evidence is missing."} for c in spec["classifiers"]}}
+    payload["labels"]["input_ontology"].update(matched_category_ids=[], scope_exclusion_source_ids=[])
+    return payload
+
+
+def test_catalog_is_fixed_and_mcq_never_disables_generic_output_ontology(generic_spec):
+    from item_analysis.catalog import get_catalog
+    assert validate_spec(generic_spec)["classifiers"] == get_catalog()
+    modified = deepcopy(generic_spec)
+    modified["classifiers"][0]["question"] = "Invent a new question"
+    with pytest.raises(ValueError):
+        validate_spec(modified)
+    gated, changes = apply_profile_gates(generic_spec, {"output_format": {"is_multiple_choice": True}})
+    assert changes == [] and all(c["applicable"] for c in gated["classifiers"])
+    detached = get_catalog()
+    detached[0]["decision_rules"].clear()
+    assert get_catalog()[0]["decision_rules"]
+
+
+def test_required_categories_and_completeness_must_cite_deployment_sources(generic_spec):
+    for location in ("category", "completeness"):
+        changed = deepcopy(generic_spec)
+        inventory = changed["input_category_inventory"]
+        if location == "category":
+            inventory["categories"][0]["source_ids"] = ["profile.json"]
+        else:
+            inventory.update(completeness="complete", completeness_source_ids=["profile.json"])
+        with pytest.raises(ValueError, match="source role"):
+            validate_spec(changed)
+    changed = deepcopy(generic_spec)
+    changed["input_category_inventory"].update(completeness="complete", completeness_source_ids=[])
+    with pytest.raises(ValueError):
+        validate_spec(changed)
+
+
+def test_prior_conclusions_cannot_become_requirements_or_benchmark_facts(generic_spec):
+    generic_spec["source_registry"]["scoring.json#/concern"] = "Earlier concern"
+    generic_spec["source_roles"]["scoring.json#/concern"] = "prior_assessment"
+    statement = {"statement": "Earlier concern", "source_ids": ["scoring.json#/concern"]}
+    for field in ("deployment_requirements", "benchmark_evidence"):
+        changed = deepcopy(generic_spec)
+        changed["context_by_classifier"]["input_content"][field] = [statement]
+        with pytest.raises(ValueError, match="source role"):
+            validate_spec(changed)
+    generic_spec["context_by_classifier"]["input_content"]["prior_hypotheses"] = [statement]
+    validate_spec(generic_spec)
+
+
+def test_partial_inventory_no_match_needs_sourced_scope_exclusion(generic_spec):
+    payload = generic_prediction(generic_spec)
+    value = payload["labels"]["input_ontology"]
+    value["label"] = "no_match"
+    with pytest.raises(ValueError):
+        validate_labels(payload, generic_spec)
+    value["scope_exclusion_source_ids"] = ["profile.json"]
+    with pytest.raises(ValueError, match="source role"):
+        validate_labels(payload, generic_spec)
+    value["scope_exclusion_source_ids"] = ["deployment_description.txt"]
+    assert validate_labels(payload, generic_spec)["input_ontology"]["label"] == "no_match"
+    # Validation checks citations, not whether their semantics actually justify
+    # the exclusion; the immutable judge rules and human review assess that.
+    generic_spec["input_category_inventory"]["completeness"] = "complete"
+    value["scope_exclusion_source_ids"] = []
+    validate_labels(payload, generic_spec)
+
+
+def test_ontology_multimatch_and_empty_inventory(generic_spec):
+    inventory = generic_spec["input_category_inventory"]
+    inventory["categories"].append({**inventory["categories"][0], "id": "reasoning"})
+    payload = generic_prediction(generic_spec)
+    value = payload["labels"]["input_ontology"]
+    value.update(label="match", matched_category_ids=["math", "reasoning"])
+    validate_labels(payload, generic_spec)
+    for ids in ([], ["math", "math"], ["invented"]):
+        value["matched_category_ids"] = ids
+        with pytest.raises(ValueError):
+            validate_labels(payload, generic_spec)
+    inventory["categories"] = []
+    value.update(label="insufficient_evidence", matched_category_ids=[])
+    validate_labels(payload, generic_spec)
+    Draft202012Validator.check_schema(labels_schema(generic_spec))
+
+
+def test_all_generic_judgments_need_evidence_and_legacy_numbers_are_rejected(generic_spec):
+    payload = generic_prediction(generic_spec)
+    validate_labels(payload, generic_spec)
+    for label in (None, 0, 1, True, "unknown"):
+        changed = deepcopy(payload)
+        changed["labels"]["input_content"]["label"] = label
+        with pytest.raises(ValueError):
+            validate_labels(changed, generic_spec)
+    payload["labels"]["output_content"]["evidence"] = []
+    with pytest.raises(ValueError):
+        validate_labels(payload, generic_spec)

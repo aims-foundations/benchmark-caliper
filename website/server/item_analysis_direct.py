@@ -54,8 +54,6 @@ def resolve(context: DirectContext) -> dict:
     deployment = (f"Deployment context:\n{raw['deployment']}\n\n"
                   f"Task requirements:\n{raw['task_requirements']}\n\n"
                   f"Answer requirements:\n{raw['answer_requirements']}")
-    if raw["validity_concerns"]:
-        deployment += f"\n\nValidity concerns:\n{raw['validity_concerns']}"
     return {
         "kind": "direct", "id": f"direct-{identity}",
         "benchmark": raw["benchmark"], "benchmark_name": raw["benchmark"],

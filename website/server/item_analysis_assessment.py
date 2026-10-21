@@ -140,6 +140,7 @@ def benchmark_identity(scoring: dict, title: str, benchmark_yaml: str = "", meta
 
 def resolve(kind: str, assessment_id: str) -> dict:
     """Resolve by the existing bearer-run-ID or public gallery-ID access model."""
+    evidence_documents = {}
     if kind == "gallery":
         original = gallery.get_report(assessment_id)
         if original is None:
@@ -164,6 +165,14 @@ def resolve(kind: str, assessment_id: str) -> dict:
             raise HTTPException(404, "This benchmark assessment is not available.")
         active = active_runs.store.get(assessment_id)
         artifacts = active.artifacts if active else {}
+        # Retain actual in-memory source outputs before the upstream run expires.
+        # Select evidence fields explicitly; never copy credentials or PDF bytes.
+        for field, filename in (("paper_summary", "paper_summary.md"), ("region_yaml", "region.yaml"),
+                                ("scaffold_yaml", "region_scaffold.yaml"), ("quote_registry", "quote_registry.md"),
+                                ("elicitation_answers", "elicitation_answers.json"), ("elicitation_questions", "elicitation_questions.json")):
+            content = artifacts.get(field)
+            if content:
+                evidence_documents[filename] = content if isinstance(content, str) else json.dumps(content, ensure_ascii=False)
         # Read without creating a directory. Tuple files are the report's
         # session artifacts and do not depend on opt-in trace logging.
         directory = pipeline_runner._WORKSPACE_ROOT / assessment_id
@@ -196,6 +205,9 @@ def resolve(kind: str, assessment_id: str) -> dict:
         "benchmark_identity": benchmark_identity(scoring, title, benchmark_yaml, metadata),
         "elicitation_summary": summary or "Elicitation summary is unavailable for this original assessment.",
         "dataset_analysis_report": dataset_report or "No dataset analysis report was recorded for this original assessment.",
+        "evidence_directory": str(directory) if directory else None,
+        "missing_evidence": [name for name, value in (("elicitation_summary.md", summary), ("dataset_analysis_report.md", dataset_report)) if not value],
+        "evidence_documents": {**evidence_documents, **{name: value for name, value in (("benchmark.yaml", benchmark_yaml), ("metadata.yaml", metadata)) if value}},
     })
 
 
@@ -304,16 +316,24 @@ def attach_assessment(directory: Path, assessment: dict, *, confirmed_source: bo
         raise ValueError("The prepared snapshot does not match the selected assessment")
     dataset["source_benchmark"] = dataset["benchmark"]
     documents = {
+        **assessment.get("evidence_documents", {}),
         "deployment_description.txt": assessment["deployment"],
         "elicitation_summary.md": assessment["elicitation_summary"],
         "dataset_analysis_report.md": assessment["dataset_analysis_report"],
         "framework.yaml": (prepare.PIPELINE_DIR / "framework.yaml").read_text(encoding="utf-8"),
     }
+    for missing in assessment.get("missing_evidence", []):
+        documents.pop(missing, None)
+    registry, roles, gaps = prepare.build_sources(
+        directory, documents, scoring=assessment["scoring"],
+        assessment_dir=Path(assessment["evidence_directory"]) if assessment.get("evidence_directory") else None,
+    )
+    gaps.extend(f"The original assessment has no available {name} contents." for name in assessment.get("missing_evidence", []))
     evidence = {
         "benchmark": assessment["benchmark"], "deployment": assessment["deployment"],
         "scoring": assessment["scoring"], "elicitation_summary": assessment["elicitation_summary"],
         "dataset_analysis_report": assessment["dataset_analysis_report"],
-        "registry": prepare.evidence_registry(assessment["scoring"], documents),
+        "registry": registry, "source_roles": roles, "evidence_gaps": gaps,
         "assessment": {"kind": assessment["kind"], "id": assessment["id"]},
         "benchmark_identity": assessment.get("benchmark_identity"),
     }

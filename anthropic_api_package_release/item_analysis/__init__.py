@@ -1,1 +1,1 @@
-"""Post-assessment item classification and prevalence analysis for Caliper."""
+"""Generic rubric-based item classification, coverage, and human review for Caliper."""

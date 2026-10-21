@@ -1,0 +1,108 @@
+{
+  "family": "caliper_generic_items",
+  "version": "caliper_generic_items_v1",
+  "classifiers": [
+    {
+      "id": "input_ontology",
+      "component": "input_ontology",
+      "operation": "multilabel",
+      "aggregate": "coverage_vs_required",
+      "applicable": true,
+      "label_source": "model",
+      "question": "Which deployment-required input categories does this item instantiate?",
+      "decision_rules": [
+        "Input categories may describe tasks, domains, skills, scenarios, environmental conditions, or other explicitly required partitions of the input space. The later classifier identifies the demands or situation represented by an item and compares them with the supplied category definitions. It may match several categories when the item genuinely instantiates several. Shared vocabulary or a topic mentioned incidentally does not by itself establish a category match. A supporting skill counts when the supplied category definition includes it.",
+        "The later classifier returns matched category IDs and one of these judgments:   - match: at least one required category is supported by the item evidence;   - no_match: the item is interpretable and evidence places it outside the     stated deployment scope, or a complete required-category inventory is     available and none of its categories matches;   - insufficient_evidence: the item's demands or the category boundaries cannot     be established well enough to decide.",
+        "With a partial or unknown inventory, failure to match a listed category does not by itself justify no_match. A match does not establish that every aspect of the item is appropriate. Item assignments support later coverage analysis; one item cannot establish that the benchmark omits a required category.",
+        "For this classifier, prepare the deployment-required category inventory, its source-grounded definitions, and any explicit boundaries of deployment scope.",
+        "Input Content, Output Ontology, and Output Content use these fixed judgments:\n  - issue_identified: at least one concrete incompatibility in this dimension\n    is supported by item evidence and an applicable comparison standard;\n  - no_issue_identified: the evidence is sufficient to make the relevant\n    item-level comparison, and no incompatibility is supported;\n  - insufficient_evidence: essential item information, benchmark definitions,\n    deployment requirements, or comparison evidence is missing or ambiguous.\n\nNo issue identified is a bounded finding for the examined aspect and available\nevidence. It is not proof of full alignment, stakeholder agreement, or benchmark\nvalidity. Missing documentation must not become a negative judgment. Every\nlater item judgment requires item evidence and an explanation; a missing\nreference answer alone need not prevent judging a dimension that does not\nrequire that reference.\n"
+      ],
+      "labels": [
+        "match",
+        "no_match",
+        "insufficient_evidence"
+      ],
+      "response_contract": {
+        "label": "One of the fixed labels.",
+        "evidence": "Nonempty array of item quotations or concrete item observations; identify unavailable information explicitly.",
+        "justification": "Explain the comparison and its applicable sourced standard, preserving uncertainty.",
+        "matched_category_ids": "Unique supplied required-category IDs; at least one for match, empty for no_match or insufficient_evidence.",
+        "scope_exclusion_source_ids": "Exact supplied deployment requirement source IDs supporting explicit scope exclusion; required nonempty for no_match with a partial or unknown inventory, otherwise may be empty."
+      }
+    },
+    {
+      "id": "input_content",
+      "component": "input_content",
+      "operation": "judgment",
+      "aggregate": "judgment_distribution",
+      "applicable": true,
+      "label_source": "model",
+      "question": "Do the particular details of this input introduce a supported incompatibility with the intended construct or deployment requirements?",
+      "decision_rules": [
+        "The later classifier examines the concepts, entities, assumptions, references, background knowledge, and circumstances needed to interpret or solve the input. An item can belong to an appropriate category while introducing an unrelated cultural, institutional, geographic, socioeconomic, temporal, or domain-specific dependency. Such a dependency is an issue only when evidence connects it to a conflict with the intended construct or deployment needs. Foreign references and cultural specificity are not inherently inappropriate.",
+        "For this classifier, prepare the intended construct, relevant deployment expectations, and documented benchmark properties needed to interpret input dependencies. Keep language or script representation issues distinct from semantic or cultural assumptions; the former belong to Input Form.",
+        "Input Content, Output Ontology, and Output Content use these fixed judgments:\n  - issue_identified: at least one concrete incompatibility in this dimension\n    is supported by item evidence and an applicable comparison standard;\n  - no_issue_identified: the evidence is sufficient to make the relevant\n    item-level comparison, and no incompatibility is supported;\n  - insufficient_evidence: essential item information, benchmark definitions,\n    deployment requirements, or comparison evidence is missing or ambiguous.\n\nNo issue identified is a bounded finding for the examined aspect and available\nevidence. It is not proof of full alignment, stakeholder agreement, or benchmark\nvalidity. Missing documentation must not become a negative judgment. Every\nlater item judgment requires item evidence and an explanation; a missing\nreference answer alone need not prevent judging a dimension that does not\nrequire that reference.\n"
+      ],
+      "labels": [
+        "issue_identified",
+        "no_issue_identified",
+        "insufficient_evidence"
+      ],
+      "response_contract": {
+        "label": "One of the fixed labels.",
+        "evidence": "Nonempty array of item quotations or concrete item observations; identify unavailable information explicitly.",
+        "justification": "Explain the comparison and its applicable sourced standard, preserving uncertainty."
+      }
+    },
+    {
+      "id": "output_ontology",
+      "component": "output_ontology",
+      "operation": "judgment",
+      "aggregate": "judgment_distribution",
+      "applicable": true,
+      "label_source": "model",
+      "question": "Do the output categories or decision and scoring rules exercised by this item introduce a supported incompatibility with deployment requirements?",
+      "decision_rules": [
+        "The later classifier examines the benchmark's label space, acceptable response classes, rubric dimensions, preference criteria, or rules for interpreting and scoring outputs. It compares those distinctions with the decision structure required by the use case and target population. It does not reduce output ontology to surface answer format, such as numeric versus textual answers. Uniform multiple-choice representation does not by itself make this dimension inapplicable: label meanings and scoring distinctions may still matter.",
+        "Locate an issue here when the categories or judgment rules require revision. Keep the assignment of a particular reference label separate; that belongs to Output Content. A single item can illustrate a taxonomy or scoring problem, but cannot establish the completeness of the entire output taxonomy.",
+        "For this classifier, prepare the benchmark's applicable output categories and scoring criteria, together with sourced deployment requirements for appropriate output distinctions and acceptable responses.",
+        "Input Content, Output Ontology, and Output Content use these fixed judgments:\n  - issue_identified: at least one concrete incompatibility in this dimension\n    is supported by item evidence and an applicable comparison standard;\n  - no_issue_identified: the evidence is sufficient to make the relevant\n    item-level comparison, and no incompatibility is supported;\n  - insufficient_evidence: essential item information, benchmark definitions,\n    deployment requirements, or comparison evidence is missing or ambiguous.\n\nNo issue identified is a bounded finding for the examined aspect and available\nevidence. It is not proof of full alignment, stakeholder agreement, or benchmark\nvalidity. Missing documentation must not become a negative judgment. Every\nlater item judgment requires item evidence and an explanation; a missing\nreference answer alone need not prevent judging a dimension that does not\nrequire that reference.\n"
+      ],
+      "labels": [
+        "issue_identified",
+        "no_issue_identified",
+        "insufficient_evidence"
+      ],
+      "response_contract": {
+        "label": "One of the fixed labels.",
+        "evidence": "Nonempty array of item quotations or concrete item observations; identify unavailable information explicitly.",
+        "justification": "Explain the comparison and its applicable sourced standard, preserving uncertainty."
+      }
+    },
+    {
+      "id": "output_content",
+      "component": "output_content",
+      "operation": "judgment",
+      "aggregate": "judgment_distribution",
+      "applicable": true,
+      "label_source": "model",
+      "question": "Does the particular reference answer, label, annotation, or judgment attached to this item conflict with a supported standard for the target context?",
+      "decision_rules": [
+        "The later classifier examines the assignment made for this item, using the item's stated conditions and relevant domain or stakeholder evidence. A reference may be inconsistent with a supported domain standard or documented target-population judgment even when the benchmark uses appropriate categories. Conversely, an appropriate category definition does not establish that this particular reference assignment is appropriate.",
+        "Do not invent stakeholder consensus or predict a population's judgment from nationality, geography, or demographic identity alone. Topic irrelevance does not establish a reference-answer problem. An answer to an explicitly foreign legal or institutional question can be correct under its stated conditions. If the reference or the standard needed to evaluate it is unavailable, the later classifier must acknowledge the evidence gap.",
+        "For this classifier, prepare relevant reference/annotation documentation, domain standards, and documented stakeholder judgments or disagreements. Preserve disagreement when the evidence supports several perspectives.",
+        "Input Content, Output Ontology, and Output Content use these fixed judgments:\n  - issue_identified: at least one concrete incompatibility in this dimension\n    is supported by item evidence and an applicable comparison standard;\n  - no_issue_identified: the evidence is sufficient to make the relevant\n    item-level comparison, and no incompatibility is supported;\n  - insufficient_evidence: essential item information, benchmark definitions,\n    deployment requirements, or comparison evidence is missing or ambiguous.\n\nNo issue identified is a bounded finding for the examined aspect and available\nevidence. It is not proof of full alignment, stakeholder agreement, or benchmark\nvalidity. Missing documentation must not become a negative judgment. Every\nlater item judgment requires item evidence and an explanation; a missing\nreference answer alone need not prevent judging a dimension that does not\nrequire that reference.\n"
+      ],
+      "labels": [
+        "issue_identified",
+        "no_issue_identified",
+        "insufficient_evidence"
+      ],
+      "response_contract": {
+        "label": "One of the fixed labels.",
+        "evidence": "Nonempty array of item quotations or concrete item observations; identify unavailable information explicitly.",
+        "justification": "Explain the comparison and its applicable sourced standard, preserving uncertainty."
+      }
+    }
+  ]
+}

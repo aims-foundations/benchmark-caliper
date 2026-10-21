@@ -12,7 +12,7 @@ If you only have ten minutes, read sections **1 (Overview)**, **4 (Security)**, 
 
 ### What the website does
 
-The homepage offers two tools. **Benchmark validity analysis** (`/caliper`) starts with a benchmark paper PDF and deployment context, produces a structured six-dimension assessment, and continues into the required item-analysis stage within the same report. Users confirm matching items from the Measurement Data Bank or an upload, generate criteria from that assessment, inspect a pilot, and classify the full snapshot before the analysis is marked complete. **Goal-conditioned item assessment** (`/items`) locally retrieves a shortlist from a reproducible Measurement Data Bank sample with Qwen3 embeddings, then uses the existing six-dimension GPT-6 Luna judge on that shortlist. Retrieval similarity stays separate from validity scores.
+The homepage offers two tools. **Benchmark validity analysis** (`/caliper`) starts with a benchmark paper PDF and deployment context, produces a structured six-dimension assessment, and continues into the required item-analysis stage within the same report. Users confirm matching items from the Measurement Data Bank or an upload, prepare sourced context from that assessment, inspect a pilot, and classify the full snapshot before the analysis is marked complete. **Goal-conditioned item assessment** (`/items`) locally retrieves a shortlist from a reproducible Measurement Data Bank sample with Qwen3 embeddings, then uses the existing six-dimension GPT-6 Luna judge on that shortlist. Retrieval similarity stays separate from validity scores.
 
 Saved `/run/{run_id}` reports and gallery assessments provide the same item-analysis continuation. `/item-analysis` remains a compatibility entry into the main Caliper flow; it does not present a third top-level tool.
 
@@ -61,7 +61,7 @@ The pipeline interaction is one-way: the server emits step-completion events whi
 - **SQLite** for the structured event log (tier 1 + tier 2 in the four-tier model below).
 - **Local filesystem** for blob storage (tier 3 full content), with TTL via cron.
 - **Benchmark tuple workspaces** retain the report's deployment and assessment artifacts for saved-report continuation, independently of optional trace logging, under the existing workspace retention policy.
-- **Private temporary item-run directories** hold the connected dataset, copied assessment, generated criteria, classifications, and exports. Their in-memory access registry and one-hour expiry are separate from benchmark retention.
+- **Private temporary item-run directories** hold the connected dataset, copied assessment, prepared context, fixed classifier rules, classifications, and exports. Their in-memory access registry and one-hour expiry are separate from benchmark retention.
 - For v1+: migrate to Postgres + Cloudflare R2 once we have multiple concurrent users or want a real dashboard.
 
 ---
@@ -122,7 +122,7 @@ directly into item analysis before the full workflow is complete.
 
 8. **Benchmark report and dataset connection.** The report appears inline with downloads and the next required item-analysis stage. `/run/{run_id}` fetches the saved benchmark report and offers the same continuation. The run ID remains the bearer credential for the original report and its assessment setup, matching `/export`; public gallery reports use allowlisted gallery IDs. The server searches the Measurement Data Bank using the saved paper metadata: paper and dataset identifiers, names and aliases, then fuzzy name matches. Deployment descriptions do not influence identity matching. The user reviews the candidate’s match reasons, version, scope, item count, and source, then explicitly confirms the benchmark and snapshot. Search supports correcting a suggestion; CSV/JSON upload remains available when no usable source is found. Changing the source clears confirmation. Uploads allow up to 10 MiB and 50,000 rows; nonempty `content` is required, `item_id` is generated when omitted, and `reference_answer` is optional.
 
-9. **Criteria, pilot, and full item analysis.** The server copies the report's exact deployment, scores, elicitation summary, and available dataset report into a new private item run. Connecting a dataset never selects its historical assessment or supplied criteria. An explicit action with an OpenAI key generates fresh criteria using GPT-6 Luna. Users review those criteria, explicitly classify the first 100 items (or all items for a smaller dataset), inspect the checkpoint, and explicitly continue through the remaining items. Full classification marks the workflow complete. Distributions and per-item evidence supplement the unchanged six-dimension scores; criteria, labels, summary, HTML report, and a blind human-review worksheet can be downloaded.
+9. **Criteria, pilot, and full item analysis.** The server copies the report's exact deployment, scores, elicitation summary, and available dataset report into a new private item run. Connecting a dataset never selects its historical assessment or supplied criteria. An explicit action with an OpenAI key prepares sourced context for the immutable `caliper_generic_items_v1` catalog using GPT-6 Luna. Users review those criteria, explicitly classify the first 100 items (or all items for a smaller dataset), inspect the checkpoint, and explicitly continue through the remaining items. Full classification marks the workflow complete. Distributions and per-item evidence supplement the unchanged six-dimension scores; criteria, labels, summary, HTML report, and a blind human-review worksheet can be downloaded.
 
 10. **Cleanup.** The benchmark job drops its in-memory API key and PDF bytes when it ends; a safety-net sweeper removes stale entries after one hour. Existing 90-day benchmark workspace and trace retention remain separate. Item runs expire one hour after their last phase ends and do not survive a server restart; their input copies and outputs are removed on normal shutdown. Users must download item outputs before expiry.
 
@@ -138,7 +138,7 @@ Direct generation uses an evidence registry of explicit requirements and the
 framework, plus the actual dataset profile and sample items. It does not run
 paper analysis, elicitation synthesis, regional research, or benchmark scoring.
 The item generator uses the same fixed classifier roster and structural checks,
-including an explicit task-requirements reference for task coverage. Reports
+including source-role checks that ground required input categories in deployment evidence. Reports
 mark the benchmark assessment as not run; Input Form and Output Form remain
 unassessed and no six-dimension scores are generated. Both paths use confirmed
 dataset selection, reviewed criteria, a pilot, and full-snapshot classification.
@@ -166,7 +166,7 @@ accepts multipart `assessment_kind`, `assessment_id`, `benchmark_confirmed=true`
 and exactly one of `source_id` or `items_file`, with `X-OpenAI-Key`. Data Bank
 selections require the displayed `source_revision`. The backend resolves
 assessment artifacts itself, rejects unconfirmed or stale sources, validates uploads, and
-starts fresh criteria generation. Subsequent item endpoints require an independent
+starts fresh context preparation. Subsequent item endpoints require an independent
 `X-Review-Token`, stored in the tab alongside the item run ID and scoped to its
 original assessment.
 
@@ -202,7 +202,7 @@ The principle: **the server never writes the key to disk, ever, and only holds i
 The bullets below describe the Anthropic benchmark stage. Item-stage OpenAI keys
 travel in `X-OpenAI-Key` and stay in frontend memory and the active server phase;
 they are never put in browser storage. Only the independent item-run access
-token is saved in session storage. Criteria generation and each classification
+token is saved in session storage. Context preparation and each classification
 phase require explicit actions; a required product stage does not imply consent
 to start paid calls. See [SECURITY.md](SECURITY.md) for item-run boundaries.
 

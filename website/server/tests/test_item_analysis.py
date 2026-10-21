@@ -7,6 +7,7 @@ import csv
 from datetime import datetime, timezone
 import io
 import json
+import re
 from pathlib import Path
 import shutil
 from threading import Event
@@ -31,38 +32,63 @@ REMOTE_CONTEXTS = (
 )
 
 
+def request_payload(user):
+    """Decode the fixed generation template or the per-item JSON request."""
+    if user.lstrip().startswith('{'):
+        return json.JSONDecoder().raw_decode(user)[0]
+    payload = {}
+    for tag in ('benchmark', 'deployment_description', 'source_registry', 'dataset_profile', 'example_items'):
+        match = re.search(fr'<{tag}>\n(.*?)\n</{tag}>', user, re.S)
+        assert match, tag
+        payload[tag] = json.loads(match[1]) if tag in {'source_registry', 'dataset_profile', 'example_items'} else match[1]
+    payload["source_registry"] = {key: entry["content"] for key, entry in payload["source_registry"].items()}
+    return payload
+
+
+def context_response(payload):
+    registry = payload['source_registry']
+    source = 'direct_context.json#/task_requirements' if 'direct_context.json#/task_requirements' in registry else 'deployment_description.txt'
+    return {
+        'fixed_catalog_version': 'caliper_generic_items_v1', 'benchmark': payload['benchmark'],
+        'deployment_description': payload['deployment_description'],
+        'input_category_inventory': {'completeness': 'partial', 'completeness_source_ids': [],
+            'categories': [{'id': 'required_001', 'name': 'Declared deployment tasks',
+                            'definition': registry[source], 'source_ids': [source]}],
+            'evidence_gaps': ['No exhaustive category inventory supplied.']},
+        'context_by_classifier': {id: {'deployment_requirements': [{'statement': registry[source], 'source_ids': [source]}],
+            'benchmark_evidence': [], 'prior_hypotheses': [],
+            'evidence_gaps': ['Test fixture has no domain or stakeholder comparison evidence.']}
+            for id in ('input_ontology', 'input_content', 'output_ontology', 'output_content')},
+    }
+
+
 @pytest.fixture
 def model(monkeypatch):
     calls = []
 
     async def fake_call(**arguments):
         assert arguments["api_key"] == KEY
-        payload = json.loads(arguments["user"])
+        payload = request_payload(arguments["user"])
         calls.append((arguments["model"], payload))
         assert arguments["model"] == model_client.MODEL_ID
         assert arguments["reasoning_effort"] == model_client.REASONING_EFFORT
         if "item" not in payload:
-            spec = read_json(analysis.FIXTURE_PATH)["classifier_spec"]
-            spec["benchmark"], spec["deployment"] = payload["benchmark"], payload["deployment"]
-            if payload.get("analysis_basis") == "deployment_requirements":
-                for classifier in spec["classifiers"]:
-                    classifier["grounded_in"] = ["direct_context.json#/task_requirements", "deployment_description.txt"]
-            text = json.dumps(spec)
+            text = json.dumps(context_response(payload))
         else:
             slots = payload["output_schema"]["properties"]["labels"]["properties"]
             labels = {slot: {"label": definition["properties"]["label"]["enum"][0],
                              "evidence": ["The supplied question and answer choices."],
                              "justification": "Deterministic test response, not a genuine assessment."}
                       for slot, definition in slots.items()}
+            labels['input_ontology'].update(matched_category_ids=[payload['input_category_inventory']['categories'][0]['id']], scope_exclusion_source_ids=[])
             if payload["item"]["item_id"].endswith("01"):
-                labels["IC.region_fit"]["label"] = None
+                labels["input_content"]["label"] = 'insufficient_evidence'
             text = json.dumps({"labels": labels})
         return model_client.CallResult(text, arguments["model"], 100, 30, 1,
                                       cached_input_tokens=20, reasoning_tokens=7)
 
     monkeypatch.setattr(model_client, "call_text_async", fake_call)
     return calls
-
 
 @pytest.fixture
 def client(tmp_path, monkeypatch, model):
@@ -130,7 +156,7 @@ def prepared_snapshot(tmp_path, monkeypatch, count=105, *, benchmark=None, asses
         }
         fixture["deployment"] = f"The original deployment requirements for {context}."
         fixture["classifier_spec"]["benchmark"] = benchmark
-        fixture["classifier_spec"]["deployment"] = fixture["deployment"]
+        fixture["classifier_spec"]["deployment_description"] = fixture["deployment"]
         for item in fixture["items"]:
             item["benchmark_id"] = benchmark
             item["content"] = f"{benchmark} source item: {item['content']}"
@@ -258,8 +284,8 @@ def test_selected_context_drives_generation_classification_and_exports(
     generation = [payload for _, payload in model if "item" not in payload]
     assert len(generation) == 1
     assert generation[0]["benchmark"] == benchmark
-    assert generation[0]["deployment"] == evidence["deployment"]
-    assert generation[0]["evidence_registry"] == evidence["registry"]
+    assert generation[0]["deployment_description"] == evidence["deployment"]
+    assert generation[0]["source_registry"] == evidence["registry"]
     assert {item["item_id"]: item for item in generation[0]["example_items"]} == expected_items
 
     result = classify(client, access)
@@ -268,7 +294,7 @@ def test_selected_context_drives_generation_classification_and_exports(
     classification = [payload for _, payload in model if "item" in payload]
     assert len(classification) == 3
     assert {payload["item"]["item_id"]: payload["item"] for payload in classification} == expected_items
-    assert all(payload["deployment"] == payload["contextualized_deployment"] == evidence["deployment"]
+    assert all(payload["deployment_description"] == evidence["deployment"]
                for payload in classification)
     exports = {artifact: client.get(url(access) + f"/download/{artifact}", headers=headers(access))
                for artifact in analysis.ARTIFACTS}
@@ -358,7 +384,8 @@ def test_bundled_example_always_available_and_no_predictions(client, model):
     assert job["summary"]["original_assessment"]["input_form"]["score"] is None
     assert job["summary"]["specification"]["source"]["kind"] == "provided"
     assert not model
-    assert not next(c for c in job["spec"]["classifiers"] if c["id"] == "OO.output_category")["applicable"]
+    assert all(c["applicable"] for c in job["spec"]["classifiers"])
+    assert {c["id"] for c in job["spec"]["classifiers"]} == {"input_ontology", "input_content", "output_ontology", "output_content"}
 
 
 @pytest.mark.parametrize("mode", ["provided", "generate"])
@@ -376,8 +403,8 @@ def test_real_pipeline_generates_or_imports_then_classifies_and_exports(client, 
     assert result["status"] == "complete"
     assert result["complete"] == result["processed"] == result["total"] == 10
     assert result["errors"] == 0 and result["summary"]["complete_snapshot"]
-    regional = next(c for c in result["summary"]["classifiers"] if c["id"] == "IC.region_fit")
-    assert regional["unknown"] == 1 and regional["known"] == 9
+    regional = next(c for c in result["summary"]["classifiers"] if c["id"] == "input_content")
+    assert regional["insufficient_evidence"] == 1 and regional["determinate_judgments"] == 9
     call_count = 11 if mode == "generate" else 10
     assert result["usage"] == {"input_tokens": 100 * call_count, "output_tokens": 30 * call_count,
                                "cached_input_tokens": 20 * call_count, "reasoning_tokens": 7 * call_count}
@@ -388,7 +415,8 @@ def test_real_pipeline_generates_or_imports_then_classifies_and_exports(client, 
         assert filename in response.headers["content-disposition"]
         assert KEY not in response.text
     worksheet = client.get(url(access) + "/download/review", headers=headers(access)).text
-    assert "justification" not in worksheet and "Deterministic test" not in worksheet
+    assert "Deterministic test" not in worksheet
+    assert all(not row["input_content.justification"] for row in csv.DictReader(io.StringIO(worksheet)))
     assert client.get(url(access) + "/download/evidence", headers=headers(access)).status_code == 404
     directory = analysis.jobs[access["run_id"]].directory
     run = read_json(directory / "run.json")
@@ -803,9 +831,9 @@ def test_upload_continues_actual_assessment_without_matching_preset(client, curr
     assert {item["item_id"] for item in ready["items"]} == {"uploaded-1", "custom-id"}
     assert next(item for item in ready["items"] if item["item_id"] == "uploaded-1")["content"] == rows[0]["content"]
     payload = model[0][1]
-    assert payload["evidence_registry"]["elicitation_summary.md"] == "Current elicitation requires Spanish explanations."
-    assert payload["evidence_registry"]["dataset_analysis_report.md"] == "Current dataset review found English-only prompts."
-    assert payload["evidence_registry"]["scoring.json#/dimensions/input_form/score"] == 2
+    assert payload["source_registry"]["elicitation_summary.md"] == "Current elicitation requires Spanish explanations."
+    assert payload["source_registry"]["dataset_analysis_report.md"] == "Current dataset review found English-only prompts."
+    assert payload["source_registry"]["scoring.json#/dimensions/input_form/score"] == 2
     directory = analysis.jobs[access["run_id"]].directory
     dataset = read_json(directory / "dataset.json")
     assert dataset["source"]["repo"] == "user-upload" and "path" not in dataset["source"]
@@ -840,7 +868,7 @@ def test_linked_snapshot_replaces_every_preset_context_and_always_generates(clie
     assert ready["summary"]["specification"]["source"]["kind"] == "generated"
     assert len(model) == 1
     assert "old unrelated use case" not in json.dumps(model[0][1])
-    assert model[0][1]["evidence_registry"]["scoring.json#/dimensions/input_form/score"] == 2
+    assert model[0][1]["source_registry"]["scoring.json#/dimensions/input_form/score"] == 2
     directory = analysis.jobs[access["run_id"]].directory
     assert not (directory / "provided_spec.json").exists()
     assert read_json(directory / "dataset.json")["source"]["sha256"] == read_json(source / "dataset.json")["source"]["sha256"]
@@ -1133,7 +1161,7 @@ def test_deleting_benchmark_run_also_deletes_its_linked_item_data(client, curren
         assert stopped.is_set()
 
 
-@pytest.mark.parametrize("code", ["invalid_json", "schema", "evidence", "deployment", "provenance", "task_grounding"])
+@pytest.mark.parametrize("code", ["invalid_json", "schema", "evidence", "deployment"])
 def test_specification_validation_diagnostics_are_safe_and_specific(client, monkeypatch, code):
     calls = []
     private_marker = "PRIVATE-MODEL-CONTEXT-MUST-NOT-APPEAR-IN-PUBLIC-ERROR"
@@ -1141,27 +1169,19 @@ def test_specification_validation_diagnostics_are_safe_and_specific(client, monk
     async def invalid_specification(**arguments):
         # Repair feedback follows the first JSON object. Exercise the real
         # generator and validator, including the one allowed correction.
-        payload, _ = json.JSONDecoder().raw_decode(arguments["user"])
+        payload = request_payload(arguments["user"])
         assert "item" not in payload
         calls.append(payload)
-        spec = read_json(analysis.FIXTURE_PATH)["classifier_spec"]
-        spec["benchmark"], spec["deployment"] = payload["benchmark"], payload["deployment"]
-        for classifier in spec["classifiers"]:
-            classifier["grounded_in"] = ["deployment_description.txt"]
-        spec["classifiers"][0]["criterion"] += f" {private_marker} {KEY}"
+        spec = context_response(payload)
         if code == "invalid_json":
             text = f"Not JSON: {private_marker} {KEY}"
         else:
             if code == "schema":
-                del spec["classifiers"][0]["component"]
+                spec['invented_rules'] = f"{private_marker} {KEY}"
             elif code == "evidence":
-                spec["classifiers"][0]["grounded_in"] = [f"unknown-evidence-{private_marker}-{KEY}"]
+                spec['input_category_inventory']['categories'][0]['source_ids'] = [f"unknown-evidence-{private_marker}-{KEY}"]
             elif code == "deployment":
-                spec["deployment"] = f"An invented deployment: {private_marker} {KEY}"
-            elif code == "provenance":
-                spec.update(analysis_basis="deployment_requirements", assessment_status="not_run")
-            # task_grounding uses a direct run with deliberately missing task
-            # citations while the rest of the structure and references are valid.
+                spec["deployment_description"] = f"An invented deployment: {private_marker} {KEY}"
             text = json.dumps(spec)
         return model_client.CallResult(text, arguments["model"], 10, 5, 1)
 
@@ -1244,3 +1264,77 @@ def test_initialization_failure_is_cleared_before_a_later_classification_failure
     assert failed["status"] == "failed" and failed["provider_error"]["code"] == "authentication"
     assert failed["failure"] is None
     assert "results view" not in failed["message"]
+
+
+def test_generic_catalog_reaches_each_judge_and_counts_actual_judgments(client, model):
+    from anthropic_api_package_release.item_analysis.catalog import get_catalog
+
+    access = start(client)
+    ready = settled(client, access)
+    assert ready['spec']['schema_version'] == 'caliper_item_spec_v2'
+    assert ready['spec']['fixed_catalog_version'] == 'caliper_generic_items_v1'
+    assert ready['spec']['classifiers'] == get_catalog()
+    assert ready['spec']['semantic_validation'] == 'unreviewed'
+    assert 'profile.json' in ready['spec']['source_registry']
+    assert client.get(url(access) + '/download/review', headers=headers(access)).status_code == 404
+    result = classify(client, access)
+    item_calls = [payload for _, payload in model if 'item' in payload]
+    assert len(item_calls) == result['complete']
+    for payload in item_calls:
+        assert payload['classifiers'] == get_catalog()
+        assert payload['source_registry'] == ready['spec']['source_registry']
+        assert payload['context_by_classifier'] == ready['spec']['context_by_classifier']
+    experiment = result['summary']['experiment']
+    assert experiment['completed_item_classifier_judgments'] == result['complete'] * len(get_catalog())
+    assert experiment['selected_items'] == result['total']
+    content = next(c for c in result['summary']['classifiers'] if c['id'] == 'input_content')
+    assert content['percentages_among_valid']['insufficient_evidence'] == 10
+
+
+def test_browser_demo_catalog_is_identical_to_code_owned_rules():
+    from anthropic_api_package_release.item_analysis.catalog import get_catalog, CATALOG_VERSION
+
+    bundled = read_json(Path(__file__).parents[2] / 'client/src/demo/genericItemCatalog.json')
+    assert bundled['version'] == CATALOG_VERSION
+    assert bundled['classifiers'] == get_catalog()
+
+
+def test_linked_run_freezes_available_source_contents_and_keeps_secrets_out(client, current_assessment, monkeypatch):
+    from types import SimpleNamespace
+
+    artifacts = {
+        'paper_summary': 'Actual paper documentation: responses are scored for correctness and explanation.',
+        'region_yaml': 'target_standard: explain reasoning clearly',
+        'scaffold_yaml': 'stakeholder_disagreement: unresolved',
+        'elicitation_answers': [{'id': 'Q1', 'answer': 'Arithmetic explanations are required.'}],
+        'elicitation_questions': [{'id': 'Q1', 'question': 'Which tasks are required?'}],
+        'private_internal_value': KEY,
+    }
+    active = SimpleNamespace(artifacts=artifacts, deployment_description='', api_key=KEY)
+    monkeypatch.setattr(item_analysis_assessment.active_runs.store, 'get', lambda _run_id: active)
+    access = start_linked(client, current_assessment, rows=[{'content': 'Explain 2+2.'}])
+    state = settled(client, access)
+    assert state['status'] == 'ready', state
+    sources = state['spec']['source_registry']
+    assert sources['paper_summary.md'] == artifacts['paper_summary']
+    assert sources['region.yaml'] == artifacts['region_yaml']
+    assert sources['region_scaffold.yaml'] == artifacts['scaffold_yaml']
+    assert json.loads(sources['elicitation_answers.json']) == artifacts['elicitation_answers']
+    assert state['spec']['source_roles']['elicitation_answers.json'] == 'deployment_requirement'
+    assert 'profile.json' in sources and any(key.startswith('items.jsonl#/') for key in sources)
+    assert KEY not in json.dumps(state)
+
+
+def test_missing_assessment_documents_remain_gaps_not_fabricated_sources(client, current_assessment):
+    workspace = pipeline_runner._WORKSPACE_ROOT / current_assessment['assessment_id']
+    (workspace / 'elicitation_summary.md').unlink()
+    (workspace / 'dataset_analysis_report.md').unlink()
+    access = start_linked(client, current_assessment, rows=[{'content': 'Explain 2+2.'}])
+    state = settled(client, access)
+    assert state['status'] == 'ready', state
+    sources = state['spec']['source_registry']
+    assert 'elicitation_summary.md' not in sources
+    assert 'dataset_analysis_report.md' not in sources
+    for context in state['spec']['context_by_classifier'].values():
+        assert any('no available elicitation_summary.md contents' in gap for gap in context['evidence_gaps'])
+        assert any('no available dataset_analysis_report.md contents' in gap for gap in context['evidence_gaps'])

@@ -28,7 +28,7 @@ required tasks/topics, expected answers, and optional validity concerns. The
 website searches the same Measurement Data Bank catalog and requires explicit
 benchmark/snapshot confirmation, or confirmation of an uploaded CSV/JSON file.
 Neither entering context nor searching/confirming requires a key or model call.
-Generating criteria and classifying items require explicit actions and an
+Preparing classifier context and classifying items require explicit actions and an
 OpenAI key. The full-snapshot continuation also requires pilot review.
 
 Direct criteria use the frozen user requirements, framework, deterministic
@@ -86,7 +86,7 @@ not authorize automatic paid calls: each model phase requires a user action.
    Uploads accept 1–50,000 items and at most 10 MiB. Each item needs nonempty
    `content`; `item_id` is generated from its row number when omitted and must
    be unique when supplied. Include `reference_answer` when available.
-2. Generate fresh classifier instructions with GPT-6 Luna. The server carries
+2. Prepare sourced context for the four fixed rubric classifiers with GPT-6 Luna. The server carries
    forward the exact report's deployment description, scoring, elicitation
    summary, and available dataset evidence. Selecting a dataset does not select
    another deployment or reuse that source's supplied criteria. Review the
@@ -105,7 +105,7 @@ completed human reviews; the CLI supports comparison with a completed worksheet.
 
 An OpenAI key is required for generation and classification. Both steps use
 `gpt-6-luna` with low reasoning effort; each run records this model configuration.
-Opening the report and dataset setup makes no model calls. Generating criteria,
+Opening the report and dataset setup makes no model calls. Preparing classifier context,
 classifying the pilot, and continuing through the remaining items are separate
 paid actions. The key stays in memory; the item run's ID and separate access
 secret are kept in browser session storage, scoped to the source assessment.
@@ -132,7 +132,7 @@ request and prevents new calls; a request already submitted may still be billed.
   `source_id` or `items_file`, plus explicit `benchmark_confirmed=true` and
   `X-OpenAI-Key`. Remote sources also require the displayed `source_revision`.
   It validates confirmation, the assessment, and source or upload before starting
-  fresh criteria generation. Clients cannot submit replacement assessment text
+  fresh context preparation. Clients cannot submit replacement assessment text
   or arbitrary source URLs. Stale revisions must be reviewed and confirmed again.
 - Polling, classification, cancellation, and downloads use the existing item-run
   endpoints with `X-Review-Token`. Classification pauses at the 100-item review
@@ -179,7 +179,7 @@ Refresh the bundled catalog deliberately with:
 python -m website.server.item_analysis_databank --refresh --output website/server/item_analysis_databank_catalog.json
 ```
 
-The selected item table is downloaded only when criteria generation is started,
+The selected item table is downloaded only when context preparation is started,
 then checked for integrity, expected row count, schema, and benchmark identity
 before any model call. The complete supported snapshot is prepared; the first
 100 items form the review checkpoint, not the population for the final report.
@@ -362,14 +362,14 @@ A user pastes their Anthropic API key, uploads a benchmark paper PDF, and descri
 9. **Region YAML** — Haiku picks templates, Sonnet writes a regional scaffold, Sonnet+web search enriches it
 10. **Validity scoring** — single Opus call across the 6 dimensions
 11. **Benchmark report** — the six-dimension report is displayed with downloads and the required item-analysis stage below it. Saved `/run/{run_id}` reports offer the same continuation. Optional notification endpoints remain available to compatible clients when email delivery is configured.
-12. **Item analysis** — connect matching benchmark items, generate and review criteria, classify the first 100 items, inspect the pilot, then continue through the full snapshot. These explicit paid actions use a separately supplied OpenAI key.
+12. **Item analysis** — connect matching benchmark items, prepare and review sourced classifier context, classify the first 100 items, inspect the pilot, then continue through the full snapshot. These explicit paid actions use a separately supplied OpenAI key.
 
 The complete output combines the six-dimension validity report with item-level
 judgments, prevalence summaries, and exportable evidence. Item prevalence does
 not change the original benchmark scores.
 
 Benchmark-stage cost depends on paper length, model usage, and web search.
-Item criteria generation and classification incur separate OpenAI charges;
+Item context preparation and classification incur separate OpenAI charges;
 classification volume depends on the connected dataset's size.
 
 ---
@@ -499,3 +499,26 @@ website/
 ## License
 
 TBD.
+
+
+Item-analysis catalog and result contracts now use `caliper_generic_items_v1`
+and `caliper_item_spec_v2`. The judge receives the catalog's actual fixed rules,
+sourced context, category inventory, and source registry on every item request.
+Input Ontology records a judgment plus multiple matched required-category IDs;
+Input Content, Output Ontology, and Output Content use `issue_identified`,
+`no_issue_identified`, and `insufficient_evidence`. Multiple-choice items retain
+Output Ontology. Input Form and Output Form remain benchmark-level dimensions.
+
+The website displays source contents, prior hypotheses, inventory completeness,
+and evidence gaps for review. Prepared context is semantically unreviewed even
+when structure and source references pass validation. Distribution percentages
+include all valid judgments, including insufficient evidence; operational errors
+and pending items remain separate. Counts come from selected items and saved
+judgments, with one primary request per item covering every classifier.
+
+Historical induced specifications retain explicit legacy schema/catalog markers
+and their original label meanings. The old MMLU supplied specification is retained
+as a historical artifact, but is unavailable for new runs. The bundled exam demo
+and free MathDial walkthrough use the fixed generic catalog. The walkthrough's
+judgments are authored illustrations with explicit evidence gaps, not a study.
+Its catalog copy is checked against the Python catalog by the server tests.

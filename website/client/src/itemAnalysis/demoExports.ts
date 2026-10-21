@@ -1,5 +1,5 @@
 import { DEMO_ITEM_ANALYSIS_CLASSIFIER_NAMES, DEMO_ITEM_ANALYSIS_PILOT_SIZE, DEMO_ITEM_ANALYSIS_PROVENANCE } from '../demo/itemAnalysisFixture'
-import { classifierName, labelName } from './Criteria'
+import { classifierName, classifierQuestion, labelName } from './Criteria'
 import type { AnalysisRun, Artifact } from './types'
 
 export interface DemoExport {
@@ -44,6 +44,8 @@ function metadata(run: AnalysisRun) {
     sample_items: run.total,
     completed_demo_sample: run.status === 'complete' && run.complete === run.total,
     model_calls: 0,
+    schema_version: run.spec?.schema_version, fixed_catalog_version: run.spec?.fixed_catalog_version,
+    classifier_count: run.spec?.classifiers.length || 0, item_classifier_judgments: run.complete ? run.summary?.experiment?.completed_item_classifier_judgments || 0 : 0,
     classifier_names: DEMO_ITEM_ANALYSIS_CLASSIFIER_NAMES,
   }
 }
@@ -58,8 +60,8 @@ export function buildDemoExport(artifact: Artifact, run: AnalysisRun): DemoExpor
   }
 
   if (artifact === 'items' || artifact === 'review') {
-    const commonHeaders = ['judgment_origin', 'dataset_scope', 'sample_items', 'shown_items', 'scope', 'source_revision', 'source_url', 'license', 'source_provenance']
-    const common = [demo.judgment_origin, demo.dataset_scope, demo.sample_items, demo.shown_items, demo.scope,
+    const commonHeaders = ['schema_version', 'fixed_catalog_version', 'judgment_origin', 'dataset_scope', 'sample_items', 'shown_items', 'scope', 'source_revision', 'source_url', 'license', 'source_provenance']
+    const common = [demo.schema_version, demo.fixed_catalog_version, demo.judgment_origin, demo.dataset_scope, demo.sample_items, demo.shown_items, demo.scope,
       demo.revision, demo.source_url, demo.license, JSON.stringify(DEMO_ITEM_ANALYSIS_PROVENANCE)]
     const rows: unknown[][] = []
     if (artifact === 'items') {
@@ -67,19 +69,19 @@ export function buildDemoExport(artifact: Artifact, run: AnalysisRun): DemoExpor
       for (const item of run.items) rows.push([item.item_id, item.content, item.reference_answer,
         item.status === 'complete' ? 'authored example shown' : 'pending after pilot', item.labels || {}, ...common])
     } else {
-      rows.push(['item_id', 'content', 'reference_answer', 'classifier_id', 'criterion', 'human_label', 'human_justification', ...commonHeaders])
-      for (const item of run.items) for (const classifier of run.spec?.classifiers || []) {
-        if (classifier.applicable) rows.push([item.item_id, item.content, item.reference_answer, classifier.id, classifier.criterion, '', '', ...common])
+      rows.push(['item_id', 'content', 'reference_answer', 'classifier_id', 'question', 'decision_rules', 'allowed_labels', 'context', 'input_category_inventory', 'source_registry', 'human_label', 'human_matched_category_ids', 'human_scope_exclusion_source_ids', 'human_evidence', 'human_justification', ...commonHeaders])
+      for (const item of run.items.filter(item => item.status === 'complete')) for (const classifier of run.spec?.classifiers || []) {
+        if (classifier.applicable) rows.push([item.item_id, item.content, item.reference_answer, classifier.id, classifierQuestion(classifier), classifier.decision_rules, classifier.labels, run.spec?.context_by_classifier?.[classifier.id], run.spec?.input_category_inventory, run.spec?.source_registry, '', '', '', '', '', ...common])
       }
     }
     return { filename, mimeType: 'text/csv;charset=utf-8', content: csv(rows) }
   }
 
-  const criteria = (run.spec?.classifiers || []).map(classifier => `<li><strong>${escapeHtml(classifierName(classifier.id, DEMO_ITEM_ANALYSIS_CLASSIFIER_NAMES))}</strong>: ${escapeHtml(classifier.applicable ? classifier.criterion : classifier.na_reason)}</li>`).join('')
-  const distributions = (run.summary?.classifiers || []).filter(classifier => classifier.applicable).map(classifier => `<section><h3>${escapeHtml(classifierName(classifier.id, DEMO_ITEM_ANALYSIS_CLASSIFIER_NAMES))}</h3><p>${classifier.known || 0} known labels · ${classifier.unknown || 0} unknown · ${classifier.pending || 0} pending examples.</p><ul>${Object.entries(classifier.counts || {}).map(([label, count]) => `<li>${escapeHtml(labelName(classifier, label))}: ${count} (${classifier.percentages_among_known?.[label]?.toFixed(1) ?? '—'}%)</li>`).join('')}</ul></section>`).join('')
+  const criteria = (run.spec?.classifiers || []).map(classifier => `<li><strong>${escapeHtml(classifierName(classifier.id, DEMO_ITEM_ANALYSIS_CLASSIFIER_NAMES))}</strong>: ${escapeHtml(classifier.applicable ? classifierQuestion(classifier) : classifier.na_reason)}</li>`).join('')
+  const distributions = (run.summary?.classifiers || []).filter(classifier => classifier.applicable).map(classifier => `<section><h3>${escapeHtml(classifierName(classifier.id, DEMO_ITEM_ANALYSIS_CLASSIFIER_NAMES))}</h3><p>${classifier.determinate_judgments || 0} sufficient evidence · ${classifier.insufficient_evidence ?? classifier.unknown ?? 0} insufficient evidence · ${classifier.pending || 0} pending examples.</p><ul>${Object.entries(classifier.counts || {}).map(([label, count]) => `<li>${escapeHtml(labelName(classifier, label))}: ${count} (${classifier.percentages_among_valid?.[label]?.toFixed(1) ?? '—'}%)</li>`).join('')}</ul></section>`).join('')
   const items = run.items.map(item => `<article><h3>${escapeHtml(item.item_id)}</h3><pre>${escapeHtml(item.content)}</pre><p><strong>Reference answer:</strong> ${escapeHtml(item.reference_answer)}</p>${item.status !== 'complete' ? '<p>Pending after pilot review.</p>' : (run.spec?.classifiers || []).filter(classifier => classifier.applicable).map(classifier => {
     const judgment = item.labels?.[classifier.id]
-    return `<h4>${escapeHtml(classifierName(classifier.id, DEMO_ITEM_ANALYSIS_CLASSIFIER_NAMES))}: ${escapeHtml(judgment ? labelName(classifier, judgment.label) : 'Unknown')}</h4><p>${escapeHtml(judgment?.justification)}</p><ul>${(judgment?.evidence || []).map(evidence => `<li>${escapeHtml(evidence)}</li>`).join('')}</ul>`
+    return `<h4>${escapeHtml(classifierName(classifier.id, DEMO_ITEM_ANALYSIS_CLASSIFIER_NAMES))}: ${escapeHtml(judgment ? labelName(classifier, judgment.label) : 'Unknown')}</h4><p>${escapeHtml(judgment?.justification)}</p>${judgment?.matched_category_ids ? `<p>Matched categories: ${escapeHtml(judgment.matched_category_ids.join(', ') || 'None')}</p>` : ''}<ul>${(judgment?.evidence || []).map(evidence => `<li>${escapeHtml(evidence)}</li>`).join('')}</ul>`
   }).join('')}</article>`).join('')
   const content = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MathDial demo item analysis</title>
@@ -87,8 +89,8 @@ export function buildDemoExport(artifact: Artifact, run: AnalysisRun): DemoExpor
 <body><h1>MathDial demo item analysis</h1><p><strong>${run.status === 'complete' ? 'Full demo sample' : 'Demo pilot results'}: ${run.complete} of ${run.total} bundled item judgments shown.</strong></p>
 <p>These are ${escapeHtml(JUDGMENT_ORIGIN)}. Counts and percentages describe the ${escapeHtml(DATASET_SCOPE)}. No model calls were made.</p>
 <h2>Source and judgment provenance</h2><p>${escapeHtml(demo.citation)}</p><p><a href="${escapeHtml(demo.source_url)}">Pinned MathDial source</a> · <a href="${escapeHtml(demo.license_url)}">${escapeHtml(demo.license)}</a></p><p>${escapeHtml(demo.sample_description)}</p><p>${escapeHtml(demo.label_provenance)}</p><pre>${escapeHtml(JSON.stringify(demo, null, 2))}</pre>
-<h2>Deployment context</h2><pre>${escapeHtml(run.spec?.deployment)}</pre><h2>Example criteria</h2><ul>${criteria}</ul>
-<h2>Bundled sample summary</h2><p>Percentages use known authored example labels only. Unknown and pending examples are excluded from the denominator. A dash means there are no known labels.</p>${distributions}<h2>Original benchmark assessment</h2><p>Original benchmark-level scores are unchanged by these example item judgments.</p><pre>${escapeHtml(JSON.stringify(run.summary?.original_assessment || {}, null, 2))}</pre>
+<h2>Deployment context</h2><pre>${escapeHtml(run.spec?.deployment)}</pre><h2>Fixed classifier questions</h2><ul>${criteria}</ul><details><summary>Full fixed rules and sourced context</summary><pre>${escapeHtml(JSON.stringify(run.spec, null, 2))}</pre></details>
+<h2>Bundled sample summary</h2><p>Percentages use all valid authored example judgments, including insufficient evidence. Operational failures and pending examples are excluded from the denominator. No issue identified does not establish benchmark validity. A dash means there are no known labels.</p>${distributions}<h2>Original benchmark assessment</h2><p>Original benchmark-level scores are unchanged by these example item judgments.</p><pre>${escapeHtml(JSON.stringify(run.summary?.original_assessment || {}, null, 2))}</pre>
 <h2>Example judgments</h2>${items}</body></html>`
   return { filename, mimeType: 'text/html;charset=utf-8', content }
 }

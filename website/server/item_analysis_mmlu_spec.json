@@ -2,12 +2,22 @@
   "benchmark": "mmlu",
   "deployment": "North India Hindi-medium competitive exam preparation (UPSC/SSC/banking) feedback app: graduate-level aspirant submits an MCQ response, AI returns a correct/incorrect verdict plus a substantive Hindi-language explanation; mobile/enterprise application context, up to ~10% English code-mixing tolerated.",
   "dataset_profile": {
-    "columns": ["question", "subject", "choices", "answer"],
+    "columns": [
+      "question",
+      "subject",
+      "choices",
+      "answer"
+    ],
     "modality": "text-only (no image/audio fields; single-turn MCQ prompt)",
     "media_available": false,
     "observed_categories": {
       "subject_configs": "57 MMLU subject configs (e.g. high_school_government_and_politics, high_school_us_history, high_school_european_history, us_foreign_policy, professional_law, moral_scenarios, world_religions, global_facts, elementary_mathematics, high_school_mathematics, abstract_algebra, college_computer_science, high_school_biology, virology, professional_accounting, jurisprudence, security_studies, etc.)",
-      "answer_labels": ["A", "B", "C", "D"]
+      "answer_labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ]
     },
     "notes": "answer is a ClassLabel(4) encoded 0-3 mapping to label_names ['A','B','C','D']; no rationale/explanation field exists anywhere in the schema (DA-report Concern 3, D1 schema citation). subject is MMLU's own 57-way taxonomy and does NOT correspond to the deployment's required category set (Indian Polity, Indian History, Current Affairs, etc.) - it is US/Western-curriculum-anchored, so it can only serve as a weak hint, not a ground-truth label, for IO.task_category. Language is English only (languages:[en], monolingual per DA-report Concern 2); no Devanagari/Hindi content in any sampled item."
   },
@@ -143,5 +153,7 @@
       ],
       "aggregate": "prevalence"
     }
-  ]
+  ],
+  "schema_version": "caliper_item_spec_legacy_v1",
+  "fixed_catalog_version": "caliper_induced_items_legacy_v1"
 }

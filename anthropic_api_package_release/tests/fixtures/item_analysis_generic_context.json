@@ -1,0 +1,84 @@
+{
+  "fixed_catalog_version": "caliper_generic_items_v1",
+  "benchmark": "mmlu",
+  "deployment_description": "Hindi-medium exam preparation with mathematics tasks.",
+  "input_category_inventory": {
+    "completeness": "partial",
+    "completeness_source_ids": [],
+    "categories": [
+      {
+        "id": "math",
+        "name": "Mathematics",
+        "definition": "Mathematics tasks for exam preparation.",
+        "source_ids": [
+          "deployment_description.txt"
+        ]
+      }
+    ],
+    "evidence_gaps": [
+      "The deployment does not establish a complete category inventory."
+    ]
+  },
+  "context_by_classifier": {
+    "input_ontology": {
+      "deployment_requirements": [
+        {
+          "statement": "The deployment requires mathematics exam preparation.",
+          "source_ids": [
+            "deployment_description.txt"
+          ]
+        }
+      ],
+      "benchmark_evidence": [],
+      "prior_hypotheses": [],
+      "evidence_gaps": [
+        "No additional comparison standard supplied."
+      ]
+    },
+    "input_content": {
+      "deployment_requirements": [
+        {
+          "statement": "The deployment requires mathematics exam preparation.",
+          "source_ids": [
+            "deployment_description.txt"
+          ]
+        }
+      ],
+      "benchmark_evidence": [],
+      "prior_hypotheses": [],
+      "evidence_gaps": [
+        "No additional comparison standard supplied."
+      ]
+    },
+    "output_ontology": {
+      "deployment_requirements": [
+        {
+          "statement": "The deployment requires mathematics exam preparation.",
+          "source_ids": [
+            "deployment_description.txt"
+          ]
+        }
+      ],
+      "benchmark_evidence": [],
+      "prior_hypotheses": [],
+      "evidence_gaps": [
+        "No additional comparison standard supplied."
+      ]
+    },
+    "output_content": {
+      "deployment_requirements": [
+        {
+          "statement": "The deployment requires mathematics exam preparation.",
+          "source_ids": [
+            "deployment_description.txt"
+          ]
+        }
+      ],
+      "benchmark_evidence": [],
+      "prior_hypotheses": [],
+      "evidence_gaps": [
+        "No additional comparison standard supplied."
+      ]
+    }
+  }
+}

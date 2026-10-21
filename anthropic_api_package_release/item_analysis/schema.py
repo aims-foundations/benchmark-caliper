@@ -1,127 +1,59 @@
-"""Contracts for the fixed classifier roster and its item-level labels.
+"""Fixed generic contracts and explicit read compatibility for historical artifacts.
 
-Validation never changes an input artifact. Dataset gates and the explicit
-model-based execution policy are applied separately and return an audit trail.
+Structural and source-role validation is not semantic validation of a model's
+paraphrases. Specifications retain an unreviewed semantic-grounding status.
 """
-
-from __future__ import annotations
-
 from copy import deepcopy
 from typing import Any, Mapping
 
 from jsonschema import Draft202012Validator
 
+from . import legacy_schema
+from .catalog import (CATALOG_VERSION, SPEC_SCHEMA_VERSION, LEGACY_SCHEMA_VERSION,
+                      LEGACY_CATALOG_VERSION, get_catalog, is_generic_spec)
 
-ROSTER = {
-    "IO.task_category": {
-        "component": "input_ontology", "operation": "assignment",
-        "aggregate": "coverage_vs_required",
-    },
-    "OO.output_category": {
-        "component": "output_ontology", "operation": "assignment",
-        "aggregate": "category_distribution",
-    },
-    "OO.value_encoding": {
-        "component": "output_ontology", "operation": "flag",
-        "aggregate": "prevalence",
-    },
-    "IC.region_fit": {
-        "component": "input_content", "operation": "ordinal",
-        "aggregate": "category_distribution",
-    },
-    "OC.label_contestability": {
-        "component": "output_content", "operation": "flag",
-        "aggregate": "prevalence",
-    },
-}
-
+ROSTER = {c["id"]: {k: c[k] for k in ("component", "operation", "aggregate")} for c in get_catalog()}
+LEGACY_ROSTER = legacy_schema.ROSTER
 _TEXT = {"type": "string", "minLength": 1, "pattern": r"\S"}
 _TEXT_LIST = {"type": "array", "items": _TEXT}
-_COMMON_FIELDS = {
-    "id": {"enum": list(ROSTER)},
-    "component": {"type": "string"},
-    "operation": {"enum": ["assignment", "flag", "ordinal"]},
-    "applicable": {"type": "boolean"},
-    "na_reason": {"type": "string"},
-    "criterion": {"type": "string"},
-    "label_source": {
-        "type": "string",
-        # Accept the original pilot's provider-specific labels on import.
-        "pattern": r"^(model|data_then_model|haiku|data_then_haiku|data_column:[^\s:]+)$",
-    },
-    "grounded_in": {**_TEXT_LIST, "uniqueItems": True},
-    "example_items": _TEXT_LIST,
-    "aggregate": {"type": "string"},
-}
-
-
-def _slot_schema(slot_id: str, definition: dict) -> dict:
-    fields = deepcopy(_COMMON_FIELDS)
-    fields.update({name: {"const": value} for name, value in definition.items()})
-    fields["id"] = {"const": slot_id}
-    operation = definition["operation"]
-    if operation == "assignment":
-        operation_field = "category_set"
-        fields[operation_field] = {
-            **_TEXT_LIST, "uniqueItems": True,
-        }
-        operation_requirement = {"minItems": 1}
-        if slot_id == "IO.task_category":
-            operation_requirement.update({
-                "minItems": 2, "contains": {"const": "irrelevant_other"},
-            })
-    elif operation == "ordinal":
-        operation_field = "ordinal_anchors"
-        fields[operation_field] = {
-            "type": "object", "properties": {str(i): _TEXT for i in (1, 2, 3)},
-            "additionalProperties": False,
-        }
-        operation_requirement = {"required": ["1", "2", "3"]}
-    else:
-        operation_field = "positive_class"
-        fields[operation_field] = {"type": "string"}
-        operation_requirement = _TEXT
-    return {
-        "type": "object", "properties": fields,
-        "required": list(_COMMON_FIELDS), "additionalProperties": False,
-        "if": {"properties": {"applicable": {"const": True}}},
-        "then": {
-            "required": [operation_field],
-            "properties": {
-                "criterion": _TEXT, "na_reason": {"const": ""},
-                "grounded_in": {"minItems": 1},
-                operation_field: operation_requirement,
-            },
-        },
-        "else": {"properties": {"na_reason": _TEXT}},
-    }
-
-
-SPEC_SCHEMA = {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "type": "object",
+_REFS = {**_TEXT_LIST, "uniqueItems": True}
+_STATEMENT = {"type": "object", "properties": {"statement": _TEXT, "source_ids": {**_REFS, "minItems": 1}},
+              "required": ["statement", "source_ids"], "additionalProperties": False}
+_CONTEXT = {"type": "object", "properties": {
+    **{k: {"type": "array", "items": _STATEMENT} for k in ("deployment_requirements", "benchmark_evidence", "prior_hypotheses")},
+    "evidence_gaps": _TEXT_LIST,
+}, "required": ["deployment_requirements", "benchmark_evidence", "prior_hypotheses", "evidence_gaps"], "additionalProperties": False}
+_INVENTORY = {"type": "object", "properties": {
+    "completeness": {"enum": ["complete", "partial", "unknown"]},
+    "completeness_source_ids": _REFS,
+    "categories": {"type": "array", "items": {"type": "object", "properties": {
+        "id": _TEXT, "name": _TEXT, "definition": _TEXT, "source_ids": {**_REFS, "minItems": 1},
+    }, "required": ["id", "name", "definition", "source_ids"], "additionalProperties": False}},
+    "evidence_gaps": _TEXT_LIST,
+}, "required": ["completeness", "completeness_source_ids", "categories", "evidence_gaps"], "additionalProperties": False,
+    "if": {"properties": {"completeness": {"const": "complete"}}},
+    "then": {"properties": {"completeness_source_ids": {"minItems": 1}}}}
+CONTEXT_SCHEMA = {
+    "$schema": "https://json-schema.org/draft/2020-12/schema", "type": "object",
     "properties": {
-        "benchmark": _TEXT,
-        "deployment": _TEXT,
-        # Added by preparation for direct entry, never inferred by the model.
-        # Older assessment-linked specifications retain their original shape.
-        "analysis_basis": {"const": "deployment_requirements"},
-        "assessment_status": {"const": "not_run"},
-        # The profile can contain the complete deterministic counts/dtypes or
-        # the older pilot's summary. Runtime gates use the actual profile.
-        "dataset_profile": {"type": "object"},
-        "classifiers": {
-            "type": "array", "minItems": len(ROSTER), "maxItems": len(ROSTER),
-            "items": {"oneOf": [_slot_schema(i, d) for i, d in ROSTER.items()]},
-        },
-    },
-    "required": ["benchmark", "deployment", "dataset_profile", "classifiers"],
-    "dependentRequired": {
-        "analysis_basis": ["assessment_status"],
-        "assessment_status": ["analysis_basis"],
-    },
+        "fixed_catalog_version": {"const": CATALOG_VERSION}, "benchmark": _TEXT,
+        "deployment_description": _TEXT, "input_category_inventory": _INVENTORY,
+        "context_by_classifier": {"type": "object", "properties": {key: _CONTEXT for key in ROSTER},
+                                  "required": list(ROSTER), "additionalProperties": False},
+    }, "required": ["fixed_catalog_version", "benchmark", "deployment_description", "input_category_inventory", "context_by_classifier"],
     "additionalProperties": False,
 }
+SPEC_SCHEMA = deepcopy(CONTEXT_SCHEMA)
+SPEC_SCHEMA["properties"].update({
+    "schema_version": {"const": SPEC_SCHEMA_VERSION}, "deployment": _TEXT,
+    "dataset_profile": {"type": "object"}, "source_registry": {"type": "object", "minProperties": 1},
+    "source_roles": {"type": "object", "additionalProperties": {"enum": ["deployment_requirement", "benchmark_evidence", "domain_evidence", "stakeholder_evidence", "prior_assessment", "rubric", "dataset_profile", "example_item", "elicitation_question", "prior_hypothesis"]}},
+    "classifiers": {"const": get_catalog()},
+    "semantic_validation": {"const": "unreviewed"},
+    "analysis_basis": {"enum": ["benchmark_assessment", "deployment_requirements"]},
+    "assessment_status": {"enum": ["complete", "not_run"]},
+})
+SPEC_SCHEMA["required"] += ["schema_version", "deployment", "dataset_profile", "source_registry", "source_roles", "classifiers", "semantic_validation", "analysis_basis", "assessment_status"]
 
 
 def _validate_json(value: Any, schema: dict, description: str) -> None:
@@ -129,161 +61,122 @@ def _validate_json(value: Any, schema: dict, description: str) -> None:
     if errors:
         error = errors[0]
         path = ".".join(map(str, error.absolute_path)) or "<root>"
-        # oneOf failures otherwise echo an entire long classifier prompt. Pick
-        # errors from the matching slot so repair feedback remains readable.
-        if error.validator == "oneOf" and isinstance(error.instance, dict):
-            slot_id = error.instance.get("id")
-            if isinstance(slot_id, str) and slot_id in ROSTER:
-                slot_errors = list(Draft202012Validator(
-                    _slot_schema(slot_id, ROSTER[slot_id])
-                ).iter_errors(error.instance))
-                if slot_errors:
-                    error = slot_errors[0]
-                    suffix = ".".join(map(str, error.absolute_path))
-                    path += f".{suffix}" if suffix else ""
         raise ValueError(f"Invalid {description} at {path}: {error.message}")
 
 
-def _profile_columns(profile: dict) -> set[str]:
-    columns = {
-        column if isinstance(column, str) else column.get("name")
-        for column in profile.get("columns", [])
-        if isinstance(column, (str, dict))
-    }
-    columns.update(profile.get("available_fields", {}))
-    return {name for name in columns if isinstance(name, str)}
+def _references(refs, registry, roles, path, *, permitted=None):
+    missing = set(refs) - set(registry)
+    if missing:
+        return [f"{path}: unknown evidence identifiers: {sorted(missing)}"]
+    if permitted and any(roles.get(ref) not in permitted for ref in refs):
+        return [f"{path}: source role cannot ground this claim; required roles: {sorted(permitted)}"]
+    return []
 
 
-def validate_spec(
-    spec: dict, *, profile: dict | None = None,
-    evidence: Mapping[str, Any] | None = None, benchmark: str | None = None,
-) -> dict:
-    """Validate a spec and return a detached copy in roster order.
+def validate_context(context: dict, *, source_registry: Mapping[str, Any], source_roles: Mapping[str, str],
+                     benchmark=None, deployment_description=None) -> dict:
+    _validate_json(context, CONTEXT_SCHEMA, "context specification")
+    if benchmark is not None and context["benchmark"] != benchmark:
+        raise ValueError("Specification benchmark does not match prepared benchmark")
+    if deployment_description is not None and context["deployment_description"] != deployment_description:
+        raise ValueError("Generated deployment must copy the supplied deployment text exactly; contextual details belong in sourced statements")
+    inventory = context["input_category_inventory"]
+    ids = [category["id"] for category in inventory["categories"]]
+    if len(ids) != len(set(ids)):
+        raise ValueError("Required category IDs must be unique")
+    errors = []
+    deployment_roles = {"deployment_requirement"}
+    errors += _references(inventory["completeness_source_ids"], source_registry, source_roles, "inventory completeness", permitted=deployment_roles)
+    for category in inventory["categories"]:
+        errors += _references(category["source_ids"], source_registry, source_roles, f"category {category['id']}", permitted=deployment_roles)
+    if inventory["completeness"] != "complete" and not inventory["evidence_gaps"]:
+        errors.append("Incomplete or unknown inventory requires an explicit evidence gap")
+    for cid, content in context["context_by_classifier"].items():
+        if not content["deployment_requirements"] and not content["evidence_gaps"]:
+            errors.append(f"{cid}: missing requirements require an explicit evidence gap")
+        for field in ("deployment_requirements", "benchmark_evidence", "prior_hypotheses"):
+            permitted = deployment_roles if field == "deployment_requirements" else None
+            if field == "benchmark_evidence":
+                permitted = {"benchmark_evidence", "domain_evidence", "stakeholder_evidence", "dataset_profile", "example_item", "rubric"}
+            for statement in content[field]:
+                errors += _references(statement["source_ids"], source_registry, source_roles, f"{cid}.{field}", permitted=permitted)
+    if errors:
+        raise ValueError("\n".join(errors))
+    return deepcopy(context)
 
-    ``evidence`` is an optional registry of exact source identifiers. Supply it
-    for generated specifications. Omit it when importing the pilot artifact:
-    its historical free-text citations are preserved, not claimed verified.
-    ``profile`` validates explicit data-column references against real fields.
-    """
+
+def join_context(context: dict, *, profile: dict, source_registry: dict, source_roles: dict,
+                 analysis_basis="benchmark_assessment", assessment_status="complete") -> dict:
+    context = validate_context(context, source_registry=source_registry, source_roles=source_roles)
+    result = {**context, "schema_version": SPEC_SCHEMA_VERSION, "deployment": context["deployment_description"],
+              "dataset_profile": deepcopy(profile), "source_registry": deepcopy(source_registry),
+              "source_roles": deepcopy(source_roles), "classifiers": get_catalog(),
+              "semantic_validation": "unreviewed", "analysis_basis": analysis_basis, "assessment_status": assessment_status}
+    return validate_spec(result)
+
+
+def validate_spec(spec: dict, *, profile=None, evidence=None, benchmark=None) -> dict:
+    if not isinstance(spec, dict):
+        _validate_json(spec, SPEC_SCHEMA, "classifier specification")
+    if spec.get("fixed_catalog_version") in (None, LEGACY_CATALOG_VERSION) and spec.get("schema_version") in (None, LEGACY_SCHEMA_VERSION):
+        legacy = deepcopy(spec)
+        versions = {key: legacy.pop(key) for key in ("schema_version", "fixed_catalog_version") if key in legacy}
+        return {**legacy_schema.validate_spec(legacy, profile=profile, evidence=evidence, benchmark=benchmark), **versions}
     _validate_json(spec, SPEC_SCHEMA, "classifier specification")
-    by_id = {classifier["id"]: classifier for classifier in spec["classifiers"]}
-    if set(by_id) != set(ROSTER):
-        missing = sorted(set(ROSTER) - set(by_id))
-        raise ValueError(f"Each classifier must appear exactly once; missing: {missing}")
-    if benchmark is not None and spec["benchmark"] != benchmark:
-        raise ValueError(
-            f"Specification benchmark {spec['benchmark']!r} does not match {benchmark!r}"
-        )
-    columns = _profile_columns(profile) if profile is not None else None
-    reference_errors = []
-    for classifier in spec["classifiers"]:
-        slot_id = classifier["id"]
-        source = classifier["label_source"]
-        if source.startswith("data_column:") and columns is not None:
-            column = source.split(":", 1)[1]
-            if column not in columns:
-                raise ValueError(f"{slot_id}: label_source references absent column {column!r}")
-        if evidence is not None:
-            missing_refs = sorted(set(classifier["grounded_in"]) - set(evidence))
-            if missing_refs:
-                reference_errors.append(f"{slot_id}: unknown evidence identifiers: {missing_refs}")
-    if reference_errors:
-        # One structural repair must see every invalid reference, not just the
-        # first slot; all references remain subject to the same exact-key check.
-        raise ValueError("\n".join(reference_errors))
-    result = deepcopy(spec)
-    result["classifiers"] = [deepcopy(by_id[slot_id]) for slot_id in ROSTER]
-    return result
+    if spec["deployment"] != spec["deployment_description"]:
+        raise ValueError("Deployment alias differs from deployment_description")
+    if (spec["analysis_basis"] == "deployment_requirements") != (spec["assessment_status"] == "not_run"):
+        raise ValueError("Specification assessment provenance is inconsistent")
+    if profile is not None and profile != spec["dataset_profile"]:
+        raise ValueError("Specification dataset profile differs from prepared profile")
+    if evidence is not None and dict(evidence) != spec["source_registry"]:
+        raise ValueError("Specification source registry differs from prepared evidence")
+    if set(spec["source_roles"]) != set(spec["source_registry"]):
+        raise ValueError("Every registered source requires an explicit source role")
+    context = {key: spec[key] for key in CONTEXT_SCHEMA["properties"]}
+    validate_context(context, source_registry=spec["source_registry"], source_roles=spec["source_roles"], benchmark=benchmark)
+    return deepcopy(spec)
 
 
 def apply_profile_gates(spec: dict, profile: dict) -> tuple[dict, list[dict]]:
-    """Apply observable gates and return explicit changes alongside a copy.
-
-    MCQs have a uniform answer representation, so output-category assignment is
-    N/A under SPEC.md. This release runs every applicable slot through the model;
-    source-column suggestions in older artifacts are recorded before conversion.
-    Mixed/media items retain their slots: missing evidence becomes an item-level
-    unknown, not a benchmark-wide claim that the construct is inapplicable.
-    """
-    result = deepcopy(spec)
-    adjustments = []
-    if not isinstance(result, dict) or not isinstance(result.get("classifiers"), list):
-        return result, adjustments
-    is_mcq = profile.get("output_format", {}).get("is_multiple_choice", profile.get("is_mcq")) is True
-    for classifier in result["classifiers"]:
-        if not isinstance(classifier, dict):
-            continue
-        slot_id = classifier.get("id")
-        if slot_id == "OO.output_category" and is_mcq:
-            reason = (
-                "Fixed-choice items have a uniform answer representation; "
-                "SPEC.md keeps output-category assignment at benchmark level."
-            )
-            for field, value in (("applicable", False), ("na_reason", reason)):
-                if classifier.get(field) != value:
-                    adjustments.append({
-                        "id": slot_id, "field": field, "before": classifier.get(field),
-                        "after": value, "reason": "MCQ output-uniformity gate",
-                    })
-                    classifier[field] = value
-        source = classifier.get("label_source")
-        known_column = (
-            isinstance(source, str) and source.startswith("data_column:")
-            and source.split(":", 1)[1] in _profile_columns(profile)
-        )
-        if source in ("haiku", "data_then_haiku", "data_then_model") or known_column:
-            adjustments.append({
-                "id": slot_id, "field": "label_source", "before": source, "after": "model",
-                "reason": "This implementation evaluates every applicable classifier with the configured model.",
-            })
-            classifier["label_source"] = "model"
-    return result, adjustments
+    if is_generic_spec(spec):
+        return deepcopy(spec), []  # MCQ semantic categories/scoring remain relevant.
+    return legacy_schema.apply_profile_gates(spec, profile)
 
 
 def allowed_labels(classifier: dict) -> list[str | int]:
-    """Return substantive labels; ``None`` is always the separate unknown state."""
-    operation = classifier["operation"]
-    if operation == "assignment":
-        return list(classifier["category_set"])
-    return [0, 1] if operation == "flag" else [1, 2, 3]
+    return list(classifier["labels"]) if classifier["id"] in ROSTER else legacy_schema.allowed_labels(classifier)
 
 
 def labels_schema(spec: dict) -> dict:
-    """Build the per-item response schema from the frozen specification."""
+    if not is_generic_spec(spec):
+        return legacy_schema.labels_schema(spec)
+    category_ids = [c["id"] for c in spec["input_category_inventory"]["categories"]]
     slots = {}
-    for classifier in spec["classifiers"]:
-        if not classifier["applicable"]:
-            continue
-        slots[classifier["id"]] = {
-            "type": "object",
-            "properties": {
-                "label": {"enum": [*allowed_labels(classifier), None]},
-                "evidence": _TEXT_LIST,
-                "justification": _TEXT,
-            },
-            "required": ["label", "evidence", "justification"],
-            "additionalProperties": False,
-            "if": {"properties": {"label": {"type": "null"}}},
-            "else": {"properties": {"evidence": {"minItems": 1}}},
-        }
-    return {
-        "type": "object", "properties": {
-            "labels": {
-                "type": "object", "properties": slots, "required": list(slots),
-                "additionalProperties": False,
-            },
-        }, "required": ["labels"], "additionalProperties": False,
-    }
+    for classifier in get_catalog():
+        props = {"label": {"enum": classifier["labels"]}, "evidence": {**_TEXT_LIST, "minItems": 1}, "justification": _TEXT}
+        slot = {"type": "object", "properties": props, "required": list(props), "additionalProperties": False}
+        if classifier["id"] == "input_ontology":
+            props.update(matched_category_ids={"type": "array", "items": {"enum": category_ids} if category_ids else False, "uniqueItems": True},
+                         scope_exclusion_source_ids=_REFS)
+            slot["required"] += ["matched_category_ids", "scope_exclusion_source_ids"]
+            slot["allOf"] = [{"if": {"properties": {"label": {"const": "match"}}},
+                              "then": {"properties": {"matched_category_ids": {"minItems": 1}}},
+                              "else": {"properties": {"matched_category_ids": {"maxItems": 0}}}}]
+            if spec["input_category_inventory"]["completeness"] != "complete":
+                slot["allOf"].append({"if": {"properties": {"label": {"const": "no_match"}}},
+                                      "then": {"properties": {"scope_exclusion_source_ids": {"minItems": 1}}}})
+        slots[classifier["id"]] = slot
+    return {"type": "object", "properties": {"labels": {"type": "object", "properties": slots, "required": list(slots), "additionalProperties": False}},
+            "required": ["labels"], "additionalProperties": False}
 
 
 def validate_labels(payload: dict, spec: dict) -> dict:
-    """Validate all and only applicable labels, returning a detached label map."""
+    if not is_generic_spec(spec):
+        return legacy_schema.validate_labels(payload, spec)
     _validate_json(payload, labels_schema(spec), "item labels")
-    # JSON Schema's enum implementation rejects booleans; retain an explicit
-    # guard as Python considers True == 1 and downstream tallies must not.
-    for slot_id, value in payload["labels"].items():
-        if isinstance(value["label"], bool):
-            raise ValueError(f"{slot_id}: label must not be boolean")
-        if isinstance(value["label"], float):
-            raise ValueError(f"{slot_id}: numeric label must be an integer")
+    value = payload["labels"]["input_ontology"]
+    errors = _references(value["scope_exclusion_source_ids"], spec["source_registry"], spec["source_roles"], "scope exclusion", permitted={"deployment_requirement"})
+    if errors:
+        raise ValueError("\n".join(errors))
     return deepcopy(payload["labels"])

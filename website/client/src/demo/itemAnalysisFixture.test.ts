@@ -59,7 +59,7 @@ describe('free MathDial item walkthrough fixture', () => {
     expect(run.assessment?.scoring).toEqual(DEMO_SCORING)
     expect(run.summary?.original_assessment).toEqual(DEMO_SCORING.dimensions)
     expect(run.spec?.classifiers.map(classifier => classifier.component)).toEqual([
-      'input_ontology', 'output_ontology', 'output_ontology', 'input_content', 'output_content',
+      'input_ontology', 'input_content', 'output_ontology', 'output_content',
     ])
     expect(run.summary?.specification?.note).toContain('Input Form and Output Form remain benchmark-level')
   })
@@ -76,7 +76,7 @@ describe('free MathDial item walkthrough fixture', () => {
     expect(pilot.items.filter(item => item.status === 'pending')).toHaveLength(6)
     expect(pilot.items.slice(4).every(item => item.labels === undefined)).toBe(true)
     for (const classifier of pilot.summary!.classifiers) {
-      expect(classifier.known! + classifier.unknown!).toBe(4)
+      expect(classifier.determinate_judgments! + classifier.insufficient_evidence!).toBe(4)
       expect(classifier.pending).toBe(6)
     }
   })
@@ -93,32 +93,35 @@ describe('free MathDial item walkthrough fixture', () => {
       let unknown = 0
       for (const item of run.items) {
         const label = item.labels![classifier.id].label
-        if (label === null) unknown += 1
-        else observed[String(label)] += 1
+        if (label === 'insufficient_evidence') unknown += 1
+        observed[String(label)] += 1
       }
       expect(classifier.counts).toEqual(observed)
-      expect(classifier.unknown).toBe(unknown)
-      expect(classifier.known).toBe(10 - unknown)
+      expect(classifier.insufficient_evidence).toBe(unknown)
+      expect(classifier.determinate_judgments).toBe(10 - unknown)
       for (const [label, count] of Object.entries(observed)) {
-        expect(classifier.percentages_among_known![label]).toBe(unknown === 10 ? null : count / (10 - unknown) * 100)
+        expect(classifier.percentages_among_valid![label]).toBe(count / run.complete * 100)
       }
     }
     const byId = Object.fromEntries(run.summary!.classifiers.map(classifier => [classifier.id, classifier]))
-    expect(byId['IO.task_category'].counts).toEqual({ additive_reasoning: 4, proportional_reasoning: 4, percentages: 2 })
-    expect(byId['OO.value_encoding'].counts).toEqual({ '0': 6, '1': 4 })
-    expect(byId['IC.region_fit'].counts).toEqual({ '1': 5, '2': 5, '3': 0 })
-    expect(byId['OC.label_contestability'].known).toBe(0)
-    expect(byId['OC.label_contestability'].unknown).toBe(10)
-    expect(byId['OC.label_contestability'].percentages_among_known).toEqual({ '0': null, '1': null })
+    expect(run.spec?.fixed_catalog_version).toBe('caliper_generic_items_v1')
+    expect(byId.input_ontology.counts).toEqual({ match: 10, no_match: 0, insufficient_evidence: 0 })
+    expect(byId.input_ontology.category_counts).toEqual({ required_001: 10 })
+    for (const id of ['input_content', 'output_ontology', 'output_content']) {
+      expect(byId[id].determinate_judgments).toBe(0)
+      expect(byId[id].insufficient_evidence).toBe(10)
+      expect(byId[id].percentages_among_valid).toEqual({ issue_identified: 0, no_issue_identified: 0, insufficient_evidence: 100 })
+    }
+    expect(run.summary?.experiment?.completed_item_classifier_judgments).toBe(run.complete * run.spec!.classifiers.length)
   })
 
   it('replays without altering the fixture and reports no paid or model-generated run', () => {
     const pilot = buildDemoItemAnalysisRun('pilot')
-    pilot.items[0].labels!['IO.task_category'].label = 'edited'
-    pilot.spec!.classifiers[0].criterion = 'edited'
+    pilot.items[0].labels!.input_ontology.label = 'edited'
+    pilot.spec!.classifiers[0].question = 'edited'
     const replay = buildDemoItemAnalysisRun('sample')
-    expect(replay.items[0].labels!['IO.task_category'].label).toBe('additive_reasoning')
-    expect(replay.spec!.classifiers[0].criterion).not.toBe('edited')
+    expect(replay.items[0].labels!.input_ontology.label).toBe('match')
+    expect(replay.spec!.classifiers[0].question).not.toBe('edited')
     expect(replay.items.every(item => item.status === 'complete')).toBe(true)
     expect(replay.model).toBeUndefined()
     expect(replay.usage).toEqual({ input_tokens: 0, output_tokens: 0 })

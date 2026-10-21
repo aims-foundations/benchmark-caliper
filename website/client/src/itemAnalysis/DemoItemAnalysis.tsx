@@ -106,7 +106,7 @@ export function DemoItemAnalysis({ onStatusChange }: {
     </section>
 
     {stage === 'confirmed' && <section className="ia-demo-next ia-demo-stage" aria-label="Demo criteria preparation"><h3>Benchmark confirmed. Review the item criteria next.</h3>
-      <p>The demo criteria were authored for the same deployment and benchmark findings shown above. Open them to see the questions applied to each example.</p>
+      <p>The demo uses the fixed four-classifier catalog with authored, sourced context for the deployment shown above. Open them to see the questions applied to each example.</p>
       <button type="button" className="ia-primary" onClick={() => setStage('criteria')}>Show demo criteria</button></section>}
 
     {showingCriteria && <><Criteria spec={DEMO_ITEM_ANALYSIS_SPEC} metadata={run.summary?.specification} classifierNames={DEMO_ITEM_ANALYSIS_CLASSIFIER_NAMES} />

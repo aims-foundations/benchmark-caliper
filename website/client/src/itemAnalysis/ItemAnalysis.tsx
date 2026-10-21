@@ -20,7 +20,7 @@ function KeyInput({ value, onChange }: { value: string; onChange: (key: string) 
 }
 
 function runTitle(run: AnalysisRun): string {
-  const titles = { preparing: 'Preparing your benchmark', generating: 'Writing the classification criteria', ready: 'Your criteria are ready',
+  const titles = { preparing: 'Preparing your benchmark', generating: 'Preparing the classifier context', ready: 'Your criteria are ready',
     running: 'Reading the items', checkpoint: 'Pause here for a human review', complete: 'Your analysis is ready', cancelled: 'Analysis stopped', failed: 'This run needs attention' }
   return titles[run.status]
 }
@@ -281,7 +281,7 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
 
     <section id={assessment ? 'item-analysis' : undefined} className={assessment ? 'ia-main' : 'rd-container ia-main'} aria-label="Item analysis">
       {assessment && <div className="ia-integrated-heading"><p className="ia-eyebrow">{direct ? 'Starting from your requirements' : 'Next pipeline stage'}</p><h2>Item analysis</h2>
-        <p>{direct ? 'Generate item criteria from your deployment, task, and answer requirements. Review a pilot before classifying the full dataset.' : 'Apply the findings above to the benchmark’s items. Review the criteria and initial classifications, then complete the full dataset to finish this assessment.'}</p>
+        <p>{direct ? 'Prepare context for four fixed classifiers from your deployment, task, and answer requirements.' : 'Inspect whether item evidence supports or challenges the findings above using four fixed rubric classifiers.'} Run a pilot, then download the judgments and human review worksheet. Continuing through the full dataset is optional.</p>
         {direct && <p className="ia-assessment-not-run"><strong>Benchmark assessment: Not run.</strong> This path analyzes items against your requirements and does not produce benchmark-level validity scores.</p>}
         {onEditContext && <button type="button" className="ia-text-button" disabled={busy || active} onClick={onEditContext}>Edit context and start again</button>}
       </div>}
@@ -295,24 +295,24 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
 
       {assessment && !access && setup && <form className="ia-panel ia-linked-setup" onSubmit={start}>
         <h3>Continue with {setup.assessment.benchmark_name || setup.assessment.benchmark}</h3>
-        <p>{direct ? 'Your deployment, task requirements, and answer requirements will be used to generate the item criteria.' : 'The scores and deployment context from this report will be used to generate the item criteria.'}</p>
+        <p>{direct ? 'Your deployment, task requirements, and answer requirements will supply context for the four fixed rubric classifiers.' : 'The deployment evidence will supply context for four fixed rubric classifiers. Earlier scores remain hypotheses to examine.'}</p>
         <details className="ia-context"><summary>{direct ? 'Context and requirements' : 'Deployment context carried forward'}</summary><p>{setup.assessment.deployment}</p></details>
         <fieldset className="ia-linked-controls" disabled={busy}>
         <BenchmarkConfirmation assessment={assessment} setup={setup} directContext={directContext} confirmed={confirmedDataset} onConfirm={dataset => { setConfirmedDataset(dataset); if (dataset) setError('') }} />
         {confirmedDataset && <div className="ia-confirmed-next-step">
           <KeyInput value={apiKey} onChange={setApiKey} />
-          <button className="ia-primary" type="submit" disabled={busy || !apiKey.trim()}>{busy ? 'Starting…' : 'Generate item criteria'}<span aria-hidden="true"> →</span></button>
+          <button className="ia-primary" type="submit" disabled={busy || !apiKey.trim()}>{busy ? 'Starting…' : 'Prepare classifier context'}<span aria-hidden="true"> →</span></button>
           {starting && <p className="ia-start-status" role="status">{startDelayed
             ? 'Still waiting for the server to confirm this run. We’ll show progress here when it responds.'
             : 'Starting item analysis. Waiting for the server to confirm your run…'}</p>}
-          <p className="ia-small ia-cost-note">This stage uses your OpenAI key. Generating criteria starts paid model calls; review the criteria before starting item classification.</p>
+          <p className="ia-small ia-cost-note">This stage uses your OpenAI key. Preparing context starts paid model calls; review the criteria before starting item classification.</p>
         </div>}
         </fieldset>
       </form>}
 
       {!assessment && !access && catalog && <div className="ia-setup"><form className="ia-panel" onSubmit={start}>
         <p className="ia-eyebrow">Choose a benchmark</p><h2>A benchmark. A real use case.</h2>
-        <p className="ia-muted">Select a benchmark and its assessment context. Each analysis uses that context to generate criteria and inspect the benchmark’s items.</p>
+        <p className="ia-muted">Select a benchmark and its assessment context. Each analysis prepares sourced context for four fixed rubric classifiers and inspects the benchmark’s items.</p>
         <label className="ia-field"><span>Benchmark and assessment context</span><select value={exampleId} onChange={event => { setExampleId(event.target.value); setMode('generate') }}>
           {catalog.examples.map(entry => <option key={entry.id} value={entry.id}>{entry.title}{!entry.available ? ' — unavailable' : ''}</option>)}
         </select></label>
@@ -321,12 +321,12 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
           <p>{example.description}</p><details><summary>Deployment context</summary><p>{example.deployment}</p><DatasetSource example={example} /></details></div>}
         {example && !example.available && <p className="ia-error" role="status">{example.unavailable_reason || 'This dataset is not available on the server yet. The site maintainer needs to configure dataset access.'}</p>}
         <fieldset className="ia-mode" disabled={!example?.available}><legend>Classification criteria</legend>
-          <label><input type="radio" name="specification" value="generate" checked={mode === 'generate'} onChange={() => setMode('generate')} /><span><strong>Generate with GPT-6 Luna</strong><small>Create criteria from the assessment and dataset evidence.</small></span></label>
-          <label><input type="radio" name="specification" value="provided" checked={mode === 'provided'} disabled={example?.supplied_spec_available === false} onChange={() => setMode('provided')} /><span><strong>Use supplied criteria</strong><small>{example?.supplied_spec_available === false ? 'No supplied criteria for this context. Generate criteria from its assessment to continue.' : 'Inspect the supplied specification without a model call.'}</small></span></label>
+          <label><input type="radio" name="specification" value="generate" checked={mode === 'generate'} onChange={() => setMode('generate')} /><span><strong>Prepare with GPT-6 Luna</strong><small>Prepare sourced context for the four fixed rubric classifiers.</small></span></label>
+          <label><input type="radio" name="specification" value="provided" checked={mode === 'provided'} disabled={example?.supplied_spec_available === false} onChange={() => setMode('provided')} /><span><strong>Use supplied criteria</strong><small>{example?.supplied_spec_available === false ? 'No supplied context is available. Prepare sourced context from its assessment to continue.' : 'Inspect the supplied specification without a model call.'}</small></span></label>
         </fieldset>
         {mode === 'generate' && example?.available && <KeyInput value={apiKey} onChange={setApiKey} />}
         <button className="ia-primary" type="submit" disabled={busy || !example?.available || (mode === 'generate' && !apiKey.trim())}>
-          {busy ? 'Starting…' : mode === 'generate' ? 'Generate criteria with GPT-6 Luna' : 'Load supplied criteria'}<span aria-hidden="true"> →</span>
+          {busy ? 'Starting…' : mode === 'generate' ? 'Prepare context with GPT-6 Luna' : 'Load supplied criteria'}<span aria-hidden="true"> →</span>
         </button>
         {starting && <p className="ia-start-status" role="status">{startDelayed
           ? 'Still waiting for the server to confirm this run. We’ll show progress here when it responds.'
@@ -335,8 +335,8 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
       </form><aside className="ia-guide"><p className="ia-eyebrow">A closer reading</p>
         <div className="ia-guide-graphic" aria-hidden="true"><span className="ia-sheet"><i /><i /><i /></span><span className="ia-graphic-arrow">→</span><span className="ia-item-grid">{Array.from({ length: 9 }, (_, index) => <i key={index} />)}</span></div>
         <h3>From a finding<br />to a measured pattern.</h3><p>Caliper identifies possible validity issues. This analysis checks individual items to see how often each property appears.</p>
-        <ol><li><strong>Write the questions</strong><span>GPT-6 Luna translates the original assessment into specific criteria.</span></li><li><strong>Read each item</strong><span>GPT-6 Luna applies those criteria and records its evidence.</span></li><li><strong>Count and inspect</strong><span>Explore the distributions and review individual judgments.</span></li></ol>
-        <p className="ia-guide-note">{example && example.item_count <= 100 ? `Classify all ${example.item_count} example items, then inspect the judgments and export the results.` : 'Start with 100 items, review the results, then continue through the full snapshot.'}</p>
+        <ol><li><strong>Prepare sourced context</strong><span>GPT-6 Luna organizes evidence for four fixed rubric classifiers.</span></li><li><strong>Read each item</strong><span>GPT-6 Luna applies those criteria and records its evidence.</span></li><li><strong>Count and inspect</strong><span>Explore the distributions and review individual judgments.</span></li></ol>
+        <p className="ia-guide-note">{example && example.item_count <= pilotSize ? `Classify all ${example.item_count} example items, then inspect the judgments and export the results.` : `Start with ${pilotSize} items, review and download the results, and stop there for your pilot experiment. Continuing through the full snapshot is optional.`}</p>
       </aside></div>}
 
       {access && !run && !pollError && <p role="status">Restoring your analysis…</p>}
@@ -346,7 +346,7 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
           <span className={`ia-tag ${active ? 'ia-tag-active' : ''}`}>{active ? 'In progress' : run.status === 'checkpoint' ? 'Review checkpoint' : incompleteResults ? 'Incomplete' : run.status === 'complete' ? 'Finished' : 'Your analysis'}</span></div>
           <p className={run.status === 'failed' ? 'ia-error' : 'ia-muted'} role="status">{runMessage}</p>
           {run.status === 'failed' && run.failure && <p className="ia-small">Error reference: <code>{run.failure.stage}/{run.failure.code}</code></p>}
-          {run.status === 'checkpoint' && <p className="ia-small">Inspect the labels and evidence below, then continue through all remaining items to complete the {direct ? 'item analysis' : 'assessment'}. To regenerate the criteria, start a new item analysis so all items use the same instructions.</p>}
+          {run.status === 'checkpoint' && <p className="ia-small">Inspect the labels and evidence below, then continue through all remaining items to complete the {direct ? 'item analysis' : 'assessment'}. To change the sourced context, start a new item analysis so all items use the same frozen rules and evidence.</p>}
           {run.status === 'running' && <><progress max={run.scope === 'pilot' ? pilotSize : run.total} value={run.processed} aria-label="Classification progress" />
             <p className="ia-small">{run.processed.toLocaleString()} processed · {run.complete.toLocaleString()} classified · {run.errors.toLocaleString()} failed · {run.total.toLocaleString()} in snapshot</p></>}
           {run.status !== 'failed' && run.error && run.error !== runMessage && <p className="ia-error">{run.error}</p>}
@@ -360,12 +360,16 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
             <p className="ia-small">Model usage: {(run.usage?.input_tokens || 0).toLocaleString()} input tokens · {(run.usage?.output_tokens || 0).toLocaleString()} output tokens.</p></details>
         </section>
 
+        {run.status === 'checkpoint' && <p className="ia-guide-note">{run.complete === pilotSize && run.errors === 0
+          ? `Your ${pilotSize}-item pilot is complete.`
+          : `Your pilot has paused with ${run.complete} items classified and ${run.errors} failed.`} Download the item labels and Human review CSV below, then start another benchmark when ready. You can stop here; continuing through the full snapshot is optional.</p>}
+
         {run.spec && <Criteria spec={run.spec} metadata={run.summary?.specification} direct={direct} />}
 
         {canClassify && <form className="ia-classify-panel" onSubmit={event => { event.preventDefault(); void classify(scope) }}>
-          <div><p className="ia-eyebrow">{scope === 'all' ? 'Complete the snapshot' : 'Try the criteria'}</p>
+          <div><p className="ia-eyebrow">{scope === 'all' ? 'Optional: continue beyond the pilot' : 'Try the criteria'}</p>
             <h2>{scope === 'all' ? 'Classify the remaining items' : `Classify ${pilotSize < run.total ? `the first ${pilotSize}` : `all ${pilotSize}`} items`}</h2>
-            <p className="ia-small">{scope === 'all' ? 'Continue with the same criteria. Completed judgments are preserved.' : pilotSize < run.total ? 'The run pauses after this pilot for your review.' : 'This small example fits in a single run.'} Up to {remaining.toLocaleString()} paid GPT-6 Luna item requests; malformed responses may be retried.</p></div>
+            <p className="ia-small">{scope === 'all' ? 'Continue only if you want results for the full snapshot. Completed judgments are preserved.' : pilotSize < run.total ? 'The run pauses after this pilot for review and export.' : 'This small example fits in a single run.'} Up to {remaining.toLocaleString()} paid GPT-6 Luna item requests; malformed responses may be retried.</p></div>
           <div>{direct && scope === 'all' && <label className="ia-pilot-review"><input type="checkbox" checked={pilotReviewed} onChange={event => setPilotReviewed(event.target.checked)} /><span>I have reviewed the pilot labels, evidence, and criteria</span></label>}
             <KeyInput value={apiKey} onChange={setApiKey} /><button type="submit" className="ia-primary" disabled={busy || !apiKey.trim() || (direct && scope === 'all' && !pilotReviewed)}>
             {busy ? 'Starting…' : scope === 'all' ? 'Continue through all items' : ['cancelled', 'failed'].includes(run.status) ? 'Resume classification' : `Classify ${pilotSize} items with GPT-6 Luna`}</button></div>

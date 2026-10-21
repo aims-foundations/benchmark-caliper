@@ -9,8 +9,10 @@ This package supports three modes of engagement:
 3. **Run your own assessment**: Evaluate a benchmark of your choice against a custom deployment context
 
 After an assessment, the [item-level analysis module](item_analysis/README.md)
-can generate classifiers with Sonnet, apply them to benchmark items with Haiku,
-and report issue prevalence with traceable item labels and human-review exports.
+uses GPT-6 Luna to prepare sourced context for four fixed rubric classifiers and
+apply them to benchmark items, then reports category coverage, supported issues,
+evidence gaps, and human-review agreement. Input Form and Output Form remain in
+the original benchmark-level assessment.
 
 ---
 

@@ -63,7 +63,7 @@ def _call_and_save(directory: Path, api_key: str, **request):
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="Quantify Caliper validity findings over benchmark items.")
+    parser = argparse.ArgumentParser(description="Inspect benchmark items with Caliper's fixed rubric classifiers.")
     commands = parser.add_subparsers(dest="command", required=True)
     prep = commands.add_parser("prepare", help="Snapshot one dataset and its existing stage-7 assessment")
     prep.add_argument("--assessment-dir", type=Path, required=True)
@@ -74,10 +74,10 @@ def main(argv=None) -> int:
     prep.add_argument("--source-repo", default="aims-foundations/measurement-db")
     prep.add_argument("--source-revision", help="Pinned source revision; inferred from an HF cache path when available")
     prep.add_argument("--source-table", help="Source table path in the dataset repository")
-    generate = commands.add_parser("generate-spec", help="Generate with GPT-6 Luna, or import a supplied classifier JSON")
+    generate = commands.add_parser("generate-spec", help="Prepare sourced context with GPT-6 Luna, or import context JSON for the fixed catalog")
     generate.add_argument("--run-dir", type=Path, required=True)
     generate_mode = generate.add_mutually_exclusive_group()
-    generate_mode.add_argument("--spec", type=Path, help="Use an existing specification instead of calling the model")
+    generate_mode.add_argument("--spec", type=Path, help="Import a contextual specification for the current generic catalog")
     generate_mode.add_argument("--dry-run", action="store_true", help="Save the exact generation request only")
     generate.add_argument("--max-output-tokens", type=int, default=12000)
     classify = commands.add_parser("classify", help="Classify the first 100 random items, or continue to all items")

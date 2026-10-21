@@ -23,7 +23,7 @@ an authorization credential.
 
 `POST /api/item-analysis/runs/from-context` requires explicit dataset
 confirmation, a current pinned source revision or a validated upload, and an
-OpenAI key before generating criteria. It uses the existing private run token,
+OpenAI key before preparing classifier context. It uses the existing private run token,
 capacity limits, worker lifecycle, credential handling, and one-hour retention.
 Direct full-snapshot continuation requires a pilot-review acknowledgment.
 The frozen evidence records requirements without synthesizing benchmark scores.
@@ -111,7 +111,7 @@ boundaries:
   exactly one of a catalog-owned, revision-bound `source_id` or `items_file`.
   Missing confirmation, stale selections, unavailable sources, and invalid
   uploads are rejected before model calls. The new run copies the exact original assessment and always
-  generates fresh criteria; a source's historical deployment or supplied
+  prepares fresh sourced context; a source's historical deployment or supplied
   specification cannot replace the selected report's context.
 - Uploaded CSV or JSON arrays are limited to 10 MiB and 50,000 items and validated
   before any paid call. Each row requires nonempty `content`; `item_id` is

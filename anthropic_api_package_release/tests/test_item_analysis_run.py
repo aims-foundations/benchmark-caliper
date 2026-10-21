@@ -14,7 +14,7 @@ from item_analysis.prepare import prepare
 from item_analysis.report import generate_report
 from item_analysis.storage import parse_response, read_json, run_lock
 
-FIXTURE = Path(__file__).parent / "fixtures" / "item_analysis_spec.json"
+FIXTURE = Path(__file__).parent / "fixtures" / "item_analysis_generic_context.json"
 
 
 @pytest.fixture
@@ -52,12 +52,16 @@ class Judge:
         for classifier in self.spec["classifiers"]:
             if not classifier["applicable"]:
                 continue
-            operation = classifier["operation"]
-            label = classifier["category_set"][0] if operation == "assignment" else 2 if operation == "ordinal" else 0
+            label = "match" if classifier["id"] == "input_ontology" else "no_issue_identified"
             labels[classifier["id"]] = {
                 "label": label, "evidence": ["content: Question"],
                 "justification": "Fixture evidence supports this label.",
             }
+            if classifier["id"] == "input_ontology":
+                labels[classifier["id"]]["matched_category_ids"] = [
+                    self.spec["input_category_inventory"]["categories"][0]["id"]
+                ]
+                labels[classifier["id"]]["scope_exclusion_source_ids"] = []
         return json.dumps({"labels": labels})
 
 
@@ -70,6 +74,10 @@ def test_checkpoint_continues_to_all_without_repeating_completed_items(prepared)
     assert final["complete"] == 5 and final["full_dataset_complete"]
     assert final["attempted_this_invocation"] == 3
     assert len(judge.calls) == 5
+    assert first["target_item_classifier_judgments"] == 2 * len(judge.spec["classifiers"])
+    assert final["completed_item_classifier_judgments"] == 5 * len(judge.spec["classifiers"])
+    assert final["request_calls_this_invocation"] == 3
+    assert set(final["selected_item_ids"]) == set(read_results(prepared / "results.jsonl"))
     called_ids = [json.loads(request["user"])["item"]["item_id"] for request in judge.calls]
     assert len(set(called_ids)) == 5
     assert set(called_ids[:2]) == first_ids
@@ -94,7 +102,13 @@ def test_dry_run_saves_complete_requests_without_results_or_api_calls(prepared):
     assert len(previews) == 2
     payload = json.loads(previews[0]["request"]["user"])
     assert payload["item"]["reference_answer"] == "A"
-    assert len(payload["classifiers"]) == 4  # MCQ output-category slot is explicitly N/A.
+    assert {c["id"] for c in payload["classifiers"]} == {
+        "input_ontology", "input_content", "output_ontology", "output_content",
+    }
+    assert all(c["question"] and c["decision_rules"] for c in payload["classifiers"])
+    assert payload["context_by_classifier"] == judge.spec["context_by_classifier"]
+    assert payload["source_registry"] == judge.spec["source_registry"]
+    assert payload["input_category_inventory"] == judge.spec["input_category_inventory"]
 
 
 def test_api_failure_stops_preserves_progress_and_resume_retries_failed_item(prepared):
@@ -152,17 +166,21 @@ def test_invalid_labels_receive_only_one_repair_and_are_errors_not_negatives(pre
     summary = generate_report(prepared)
     for classifier in summary["classifiers"]:
         if classifier["applicable"]:
-            assert classifier["known"] == 0 and classifier["errors"] == 1
+            assert classifier["valid_judgments"] == 0 and classifier["errors"] == 1
 
 
-def test_null_is_completed_but_excluded_from_prevalence_denominator(prepared):
+def test_insufficient_evidence_is_completed_and_separate_from_determinate_judgments(prepared):
     response = json.loads(Judge(prepared)())
     for judgment in response["labels"].values():
-        judgment.update(label=None, evidence=[], justification="Required deployment evidence is missing.")
+        judgment.update(label="insufficient_evidence", evidence=["content: Question"],
+                        justification="Required comparison evidence is missing.")
+        if "matched_category_ids" in judgment:
+            judgment["matched_category_ids"] = []
     state = run(prepared, limit=1, call=Judge(prepared, [json.dumps(response)]))
     assert state["complete"] == 1
     summary = generate_report(prepared)
-    assert all(c["unknown"] == 1 and c["known"] == 0 for c in summary["classifiers"] if c["applicable"])
+    assert all(c["insufficient_evidence"] == 1 and c["determinate_judgments"] == 0
+               for c in summary["classifiers"] if c["applicable"])
 
 
 @pytest.mark.parametrize("change", ["model", "provider", "reasoning", "tokens", "spec", "dataset", "evidence"])
@@ -322,7 +340,75 @@ def test_report_rejects_mutated_specification_after_scoring(prepared):
     run(prepared, limit=1, call=Judge(prepared))
     path = prepared / "classifier_spec.json"
     changed = read_json(path)
-    changed["classifiers"][0]["criterion"] = "A different definition of relevance."
+    changed["classifiers"][0]["question"] = "A different definition of relevance."
     path.write_text(json.dumps(changed))
     with pytest.raises(ValueError, match="specification changed"):
         generate_report(prepared)
+
+
+@pytest.mark.parametrize("prompt_file", ["classify_item.md", "generate_spec.md", "generate_user.md"])
+def test_changed_prompt_blocks_resume_before_api(prepared, tmp_path, monkeypatch, prompt_file):
+    import shutil
+    from item_analysis import classify
+
+    run(prepared, limit=1, call=Judge(prepared))
+    prompts = tmp_path / "changed_prompts"
+    shutil.copytree(classify.PROMPT_PATH.parent, prompts)
+    path = prompts / prompt_file
+    path.write_text(path.read_text() + "\nChanged task instructions.\n")
+    monkeypatch.setattr(classify, "PROMPT_PATH", prompts / "classify_item.md")
+    judge = Judge(prepared)
+    with pytest.raises(ValueError, match="changed"):
+        run(prepared, limit=2, resume=True, call=judge)
+    assert not judge.calls
+
+
+def test_changed_catalog_contents_block_resume_even_without_version_bump(prepared, monkeypatch):
+    from item_analysis import classify
+
+    run(prepared, limit=1, call=Judge(prepared))
+    changed = classify.get_catalog()
+    changed[0]["question"] = "A different fixed question"
+    monkeypatch.setattr(classify, "get_catalog", lambda: changed)
+    judge = Judge(prepared)
+    with pytest.raises(ValueError, match="changed"):
+        run(prepared, limit=2, resume=True, call=judge)
+    assert not judge.calls
+
+
+def test_legacy_specification_is_readable_but_cannot_start_a_new_run(prepared):
+    from item_analysis.data import file_sha256
+    from item_analysis.schema import validate_spec
+    from item_analysis.storage import write_json
+
+    legacy_path = Path(__file__).parent / "fixtures" / "item_analysis_spec.json"
+    legacy = read_json(legacy_path)
+    assert validate_spec(legacy)["classifiers"]
+    write_json(prepared / "classifier_spec.json", legacy)
+    metadata = read_json(prepared / "specification.json")
+    metadata["spec_sha256"] = file_sha256(prepared / "classifier_spec.json")
+    write_json(prepared / "specification.json", metadata)
+    judge = Judge(prepared)
+    with pytest.raises(ValueError, match="Historical"):
+        run(prepared, call=judge)
+    assert not judge.calls
+
+
+def test_resume_rejects_result_from_a_different_catalog(prepared):
+    run(prepared, limit=1, call=Judge(prepared))
+    path = prepared / "results.jsonl"
+    record = json.loads(path.read_text())
+    record["fixed_catalog_version"] = "a_different_catalog"
+    path.write_text(json.dumps(record) + "\n")
+    judge = Judge(prepared)
+    with pytest.raises(ValueError, match="catalog changed"):
+        run(prepared, limit=2, resume=True, call=judge)
+    assert not judge.calls
+
+
+def test_resume_cannot_shrink_selected_population(prepared):
+    run(prepared, limit=3, call=Judge(prepared))
+    judge = Judge(prepared)
+    with pytest.raises(ValueError, match="only grow"):
+        run(prepared, limit=2, resume=True, call=judge)
+    assert not judge.calls

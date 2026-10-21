@@ -71,7 +71,7 @@ def test_context_identity_is_stable_after_trimming_and_changes_with_requirements
     changed = client.post("/api/item-analysis/direct/setup", json={**CONTEXT, "answer_requirements": "A numerical answer only."}).json()["assessment"]
     assert base == trimmed and changed["id"] != base["id"]
     assert base["deployment"] == (f"Deployment context:\n{CONTEXT['deployment']}\n\nTask requirements:\n{CONTEXT['task_requirements']}\n\n"
-                                   f"Answer requirements:\n{CONTEXT['answer_requirements']}\n\nValidity concerns:\n{CONTEXT['validity_concerns']}")
+                                   f"Answer requirements:\n{CONTEXT['answer_requirements']}")
     assert not model and not analysis.jobs
 
 
@@ -153,10 +153,9 @@ def test_direct_upload_freezes_requirements_and_completes_without_benchmark_scor
     assert set(ready["summary"]["unassessed_dimensions"]) == {"input_form", "output_form"}
     assert next(item for item in ready["items"] if item["item_id"] == "q1")["content"] == rows[0]["content"]
     payload = model[0][1]
-    assert payload["analysis_basis"] == "deployment_requirements"
-    assert payload["assessment_status"] == "not_run"
-    assert not any(key.startswith("scoring.json") for key in payload["evidence_registry"])
-    assert payload["evidence_registry"]["direct_context.json#/answer_requirements"] == CONTEXT["answer_requirements"]
+    assert "direct_context.json#/task_requirements" in payload["source_registry"]
+    assert not any(key.startswith("scoring.json") for key in payload["source_registry"])
+    assert payload["source_registry"]["direct_context.json#/answer_requirements"] == CONTEXT["answer_requirements"]
     directory = analysis.jobs[access["run_id"]].directory
     assert read_json(directory / "direct_context.json") == CONTEXT
     assert "scoring" not in read_json(directory / "evidence.json")
@@ -193,7 +192,7 @@ def test_direct_catalog_alias_preserves_full_source_without_old_assessment(clien
     assert dataset["source_benchmark"] == "mmlu" and dataset["benchmark"] == CONTEXT["benchmark"]
     assert dataset["source"]["sha256"] == read_json(source / "dataset.json")["source"]["sha256"]
     assert "path" not in dataset["source"]
-    assert not any(key.startswith("scoring.json") for key in model[0][1]["evidence_registry"])
+    assert not any(key.startswith("scoring.json") for key in model[0][1]["source_registry"])
     assert "Old unrelated deployment" not in json.dumps(model[0][1])
     assert ready["summary"].get("original_assessment") is None
 

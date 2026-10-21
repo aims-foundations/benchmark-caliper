@@ -1,0 +1,98 @@
+{
+  "benchmark": "caliper_illustrative_exam",
+  "deployment": "An illustrative Hindi-medium secondary-school exam tutor in India. Learners practise school-level mathematics, science, and Indian civics with written questions and multiple-choice answers. Success means identifying the correct answer and explaining it in Hindi. This authored example is for demonstrating the pipeline, not a validated exam syllabus or original-study benchmark.",
+  "dataset_profile": {},
+  "classifiers": [
+    {
+      "id": "IO.task_category",
+      "component": "input_ontology",
+      "operation": "assignment",
+      "aggregate": "coverage_vs_required",
+      "applicable": true,
+      "na_reason": "",
+      "criterion": "Assign mathematics, science, or indian_civics only when the main skill directly serves the described school tutoring task; otherwise use irrelevant_other. These are illustrative subject categories, not a validated syllabus. Use null when the tested task cannot be identified from item evidence.",
+      "label_source": "haiku",
+      "grounded_in": [
+        "scoring.json#/dimensions/input_ontology/justification",
+        "deployment_description.txt"
+      ],
+      "example_items": [],
+      "category_set": [
+        "mathematics",
+        "science",
+        "indian_civics",
+        "irrelevant_other"
+      ]
+    },
+    {
+      "id": "OO.output_category",
+      "component": "output_ontology",
+      "operation": "assignment",
+      "aggregate": "category_distribution",
+      "applicable": false,
+      "na_reason": "Fixed-choice items share the answer-letter representation; this slot is not applicable.",
+      "criterion": "Fixed-choice items share the answer-letter representation; this slot is not applicable.",
+      "label_source": "haiku",
+      "grounded_in": [
+        "scoring.json#/dimensions/output_ontology/justification",
+        "deployment_description.txt"
+      ],
+      "example_items": [],
+      "category_set": []
+    },
+    {
+      "id": "OO.value_encoding",
+      "component": "output_ontology",
+      "operation": "flag",
+      "aggregate": "prevalence",
+      "applicable": true,
+      "na_reason": "",
+      "criterion": "Flag 1 when the expected answer relies on a region-specific convention, jurisdiction, or value judgment that conflicts with or is unspecified for this deployment; flag 0 when no such dependence is supported. Explicitly scoped foreign facts do not automatically imply a conflict. Use null when evidence cannot establish the convention or its relevance. Quote the triggering assumption.",
+      "label_source": "haiku",
+      "grounded_in": [
+        "scoring.json#/dimensions/output_ontology/justification",
+        "deployment_description.txt"
+      ],
+      "example_items": [],
+      "positive_class": "The expected answer depends on a conflicting or unresolved regional convention."
+    },
+    {
+      "id": "IC.region_fit",
+      "component": "input_content",
+      "operation": "ordinal",
+      "aggregate": "category_distribution",
+      "applicable": true,
+      "na_reason": "",
+      "criterion": "Assign 1 for explicitly Indian or Hindi deployment-relevant context, 2 for region-neutral material, and 3 for content depending on a foreign setting outside the stated learning tasks. Do not infer that English language alone is cultural misalignment; language is evaluated in the retained Input Form finding. Use null where regional fit cannot be determined.",
+      "label_source": "haiku",
+      "grounded_in": [
+        "scoring.json#/dimensions/input_content/justification",
+        "deployment_description.txt"
+      ],
+      "example_items": [],
+      "ordinal_anchors": {
+        "1": "Explicitly relevant to the Indian/Hindi deployment",
+        "2": "Region-neutral",
+        "3": "Region-misaligned for the stated learning task"
+      }
+    },
+    {
+      "id": "OC.label_contestability",
+      "component": "output_content",
+      "operation": "flag",
+      "aggregate": "prevalence",
+      "applicable": true,
+      "na_reason": "",
+      "criterion": "Flag 1 only when the supplied question and reference answer provide a specific reason a knowledgeable learner in this deployment could dispute the answer, for example an unresolved jurisdiction or date convention; flag 0 when the answer is supported under the stated conditions. Foreign subject matter alone does not make an answer disputable. Use null when verifying the reference requires evidence not supplied. Do not invent stakeholder opinions.",
+      "label_source": "haiku",
+      "grounded_in": [
+        "scoring.json#/dimensions/output_content/justification",
+        "deployment_description.txt"
+      ],
+      "example_items": [],
+      "positive_class": "The reference answer is disputable under the question\u2019s stated conditions."
+    }
+  ],
+  "schema_version": "caliper_item_spec_legacy_v1",
+  "fixed_catalog_version": "caliper_induced_items_legacy_v1"
+}

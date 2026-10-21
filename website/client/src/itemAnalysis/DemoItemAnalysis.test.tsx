@@ -191,7 +191,9 @@ it('keeps the independent review worksheet free of supplied labels and escapes H
   const header = csv.split(/\r?\n/, 1)[0]
   expect(header).toContain('human_label')
   expect(header).toContain('human_justification')
-  expect(header).not.toMatch(/model_label|authored_label|prediction|evidence/)
+  expect(header).not.toMatch(/model_label|authored_label|prediction/)
+  expect(header).toContain('human_matched_category_ids')
+  expect(header).toContain('human_evidence')
   const dangerousContent = '<img src=x onerror=alert(1)>'
   const html = buildDemoExport('report', { ...run, items: [{ ...run.items[0], content: dangerousContent }] }).content
   expect(html).not.toContain(dangerousContent)

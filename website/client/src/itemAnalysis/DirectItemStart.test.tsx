@@ -27,7 +27,7 @@ const access = { run_id: 'direct-run-a', run_secret: 'private-direct-token' }
 const tokenKey = assessmentStorageKey(assessment)
 const ready: AnalysisRun = { run_id: access.run_id, assessment, status: 'ready', message: 'Ready to inspect.',
   example: { id: assessment.id, title: 'MathDial for tutoring', benchmark: 'MathDial', deployment: assessment.deployment, description: 'From deployment requirements.', item_count: 4, source_label: 'Measurement Data Bank', available: true },
-  spec: { benchmark: 'MathDial', deployment: assessment.deployment, classifiers: [
+  spec: { schema_version: 'caliper_item_spec_legacy_v1', fixed_catalog_version: 'caliper_induced_items_legacy_v1', benchmark: 'MathDial', deployment: assessment.deployment, classifiers: [
     { id: 'IO.task_category', component: 'input_ontology', operation: 'assignment', applicable: true, criterion: 'Which task is requested?', category_set: ['arithmetic', 'other'] },
     { id: 'IF', component: 'input_form', operation: 'flag', applicable: false, criterion: '' },
   ] },
@@ -78,7 +78,7 @@ it('requires declared context, dataset confirmation, explicit generation, and pi
   await user.click(screen.getByRole('button', { name: 'Confirm benchmark' }))
   await user.type(screen.getByLabelText('OpenAI API key'), 'sk-private-direct')
   expect(api.createDirectRun).not.toHaveBeenCalled()
-  await user.click(screen.getByRole('button', { name: /Generate item criteria/ }))
+  await user.click(screen.getByRole('button', { name: /Prepare classifier context/ }))
   await screen.findByRole('heading', { name: 'Your criteria are ready' })
   expect(api.createDirectRun).toHaveBeenCalledExactlyOnceWith(context, { benchmark_confirmed: true, source_id: source.id, source_revision: source.source_revision }, 'sk-private-direct')
   expect(api.classify).not.toHaveBeenCalled()
@@ -115,7 +115,7 @@ it('searches with the same direct requirements and resets benchmark confirmation
   await confirmContext(user)
   await user.type(screen.getByLabelText('OpenAI API key'), 'sk-not-sent')
   await user.type(screen.getByLabelText('Search the Data Bank'), 'MathDial test')
-  expect(screen.queryByRole('button', { name: /Generate item criteria/ })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /Prepare classifier context/ })).not.toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: 'Search Data Bank' }))
   expect(api.getDirectSetup).toHaveBeenLastCalledWith(context, 'MathDial test', expect.any(AbortSignal))
   await waitFor(() => expect(screen.getByRole('button', { name: 'Confirm benchmark' })).toBeEnabled())
@@ -198,7 +198,7 @@ it('allows an unavailable catalog to proceed only through an explicitly confirme
   expect(screen.queryByLabelText('OpenAI API key')).not.toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: 'Confirm benchmark' }))
   await user.type(screen.getByLabelText('OpenAI API key'), 'sk-upload')
-  await user.click(screen.getByRole('button', { name: /Generate item criteria/ }))
+  await user.click(screen.getByRole('button', { name: /Prepare classifier context/ }))
   await screen.findByRole('heading', { name: 'Your criteria are ready' })
   expect(api.createDirectRun).toHaveBeenCalledWith(context, { benchmark_confirmed: true, items_file: file }, 'sk-upload')
 })

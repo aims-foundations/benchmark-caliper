@@ -1,6 +1,7 @@
 """Load server-configured benchmarks and their matching Caliper assessments.
 
-Only source metadata and MMLU's example criteria ship with the website. Tables
+Source metadata and MMLU's historical criteria ship with the website. The
+historical induced criteria are retained for reading and are not used in new runs. Tables
 are pinned by revision and checksum and cached privately. HTTP clients select
 catalog IDs; they cannot choose repositories, revisions, or filesystem paths.
 """

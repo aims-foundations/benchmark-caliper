@@ -74,7 +74,7 @@ def test_catalog_uses_actual_snapshot_metadata_and_never_downloads(monkeypatch):
     monkeypatch.setattr(source, "hf_hub_download", lambda **kwargs: pytest.fail("Catalog must not download"))
     entry = source.source_entry()
     assert entry["id"] == "mmlu" and entry["item_count"] == 14015
-    assert entry["available"] and entry["supplied_spec_available"]
+    assert entry["available"] and not entry["supplied_spec_available"]
     assert source.source_definition("mmlu")["revision"] in entry["source_url"]
     assert "measurement-db-pp" in entry["source_url"]
     assert TOKEN not in json.dumps(entry)
@@ -93,9 +93,9 @@ def test_download_is_pinned_and_prepared_inputs_are_real_and_key_free(tmp_path, 
     assert dataset["source"]["revision"] == definition["revision"]
     assert dataset["source"]["sha256"] == source.file_sha256(table)
     assert (tmp_path / "data/item-analysis-sources").stat().st_mode & 0o777 == 0o700
-    assert supplied.read_bytes() == Path(source.__file__).with_name(definition["supplied_spec"]).read_bytes()
-    spec = generate_spec(directory, supplied=supplied)
-    assert sum(slot["applicable"] for slot in spec["classifiers"]) == 4
+    assert not supplied.exists()
+    historical = json.loads(Path(source.__file__).with_name(definition["historical_spec"]).read_text())
+    assert historical["fixed_catalog_version"] == "caliper_induced_items_legacy_v1"
     for path in directory.iterdir():
         if path.is_file():
             assert TOKEN not in path.read_text()
@@ -168,8 +168,8 @@ def test_registry_pins_match_complete_original_assessments():
         scoring = json.loads((assessment / "scoring.json").read_text())
         assert scoring["benchmark"] == definition["benchmark"]
         assert isinstance(scoring["dimensions"], dict) and scoring["dimensions"]
-        if definition.get("supplied_spec"):
-            spec = json.loads(Path(source.__file__).with_name(definition["supplied_spec"]).read_text())
+        if definition.get("historical_spec"):
+            spec = json.loads(Path(source.__file__).with_name(definition["historical_spec"]).read_text())
             assert spec["benchmark"] == definition["benchmark"]
             assert spec["classifiers"]
             # The historical criteria belong only to this original assessment.

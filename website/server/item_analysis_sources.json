@@ -12,7 +12,7 @@
     "sha256": "b1f8008870e1db4e8a0b9c98ec9be05b2d87715c42439d35b2618f9361bd6bad",
     "requires_token": true,
     "adapter": "measurement-db",
-    "supplied_spec": "item_analysis_mmlu_spec.json"
+    "historical_spec": "item_analysis_mmlu_spec.json"
   },
   {
     "id": "toxigen",

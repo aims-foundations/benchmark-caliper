@@ -243,3 +243,220 @@ def test_changed_review_or_predictions_hide_stale_agreement(prepared_run, change
     assert not summary["review_comparison_status"]["current"]
     assert "review_comparison" not in summary
     assert "comparison is stale" in (prepared_run / "report.html").read_text()
+
+
+@pytest.fixture
+def generic_run(prepared_run):
+    from item_analysis.catalog import CATALOG_VERSION, get_catalog
+    from item_analysis.schema import join_context
+
+    registry = {"deployment": "Requires algebra and geometry; excludes foreign tax advice."}
+    context = {
+        "fixed_catalog_version": CATALOG_VERSION, "benchmark": "test",
+        "deployment_description": registry["deployment"],
+        "input_category_inventory": {
+            "completeness": "partial", "completeness_source_ids": [],
+            "categories": [
+                {"id": value, "name": value.title(), "definition": value, "source_ids": ["deployment"]}
+                for value in ["algebra", "geometry"]
+            ], "evidence_gaps": ["No exhaustive category list is documented."],
+        },
+        "context_by_classifier": {
+            classifier["id"]: {
+                "deployment_requirements": [{"statement": registry["deployment"], "source_ids": ["deployment"]}],
+                "benchmark_evidence": [], "prior_hypotheses": [], "evidence_gaps": ["Scoring documentation unavailable."],
+            } for classifier in get_catalog()
+        },
+    }
+    spec = join_context(context, profile={}, source_registry=registry, source_roles={"deployment": "deployment_requirement"})
+    (prepared_run / "classifier_spec.json").write_text(json.dumps(spec))
+    return prepared_run
+
+
+def _generic_complete(item_id, label="match", categories=None, **overrides):
+    from item_analysis.catalog import CATALOG_VERSION, get_catalog
+    labels = {
+        classifier["id"]: {"label": "no_issue_identified", "evidence": ["The stated conditions"], "justification": "A supported comparison."}
+        for classifier in get_catalog()
+    }
+    labels["input_ontology"].update(label=label, matched_category_ids=categories if categories is not None else ["algebra", "geometry"],
+                                    scope_exclusion_source_ids=["deployment"] if label == "no_match" else [])
+    for classifier_id, value in overrides.items():
+        labels[classifier_id]["label"] = value
+    return {"item_id": item_id, "status": "complete", "labels": labels,
+            "schema_version": "caliper_item_result_v2", "fixed_catalog_version": CATALOG_VERSION}
+
+
+def _read_review(run):
+    with (run / "review.csv").open(newline="") as file:
+        return list(csv.DictReader(file))
+
+
+def _save_review(run, rows):
+    with (run / "review.csv").open("w", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def test_generic_counts_multilabel_missingness_and_selected_workload(generic_run):
+    items = [{"item_id": f"item-{index}", "content": "A question", "reference_answer": "A"} for index in range(6)]
+    _write_jsonl(generic_run / "items.jsonl", items)
+    invalid = _generic_complete("item-4", label="no_match", categories=[])
+    invalid["labels"]["input_ontology"]["scope_exclusion_source_ids"] = []
+    _write_jsonl(generic_run / "results.jsonl", [
+        _generic_complete("item-0"),
+        _generic_complete("item-1", label="insufficient_evidence", categories=[]),
+        _generic_complete("item-2", label="no_match", categories=[]),
+        {"item_id": "item-3", "status": "error", "error": "transport failed"}, invalid,
+    ])
+    (generic_run / "execution.json").write_text(json.dumps({"selected_item_ids": [item["item_id"] for item in items[:5]]}))
+    summary = generate_report(generic_run)
+    ontology = _by_id(summary, "input_ontology")
+    assert ontology["counts"] == {"match": 1, "no_match": 1, "insufficient_evidence": 1}
+    assert ontology["category_counts"] == {"algebra": 1, "geometry": 1}
+    assert (ontology["invalid"], ontology["errors"], ontology["pending"]) == (1, 1, 0)
+    assert ontology["inventory_completeness"] == "partial"
+    assert ontology["percentages_among_valid"]["match"] == pytest.approx(33.3333)
+    assert ontology["category_percentages_among_determinate"]["algebra"] == 50
+    assert summary["experiment"]["expected_item_classifier_judgments"] == 20
+    assert summary["experiment"]["completed_item_classifier_judgments"] == 15
+    assert summary["experiment"]["error_item_classifier_judgments"] == 4
+    assert summary["experiment"]["selected_items"] == 5
+    assert summary["pending_items"] == 1
+    assert summary["fixed_catalog_version"] == "caliper_generic_items_v1"
+    assert "not proof" in summary["interpretation"]
+    assert len(_read_review(generic_run)) == 5
+    with (generic_run / "items.csv").open(newline="") as file:
+        rows = list(csv.DictReader(file))
+    assert json.loads(rows[0]["input_ontology.matched_category_ids"]) == ["algebra", "geometry"]
+    assert rows[1]["input_ontology.label"] == "insufficient_evidence"
+    assert rows[3]["status"] == "error"
+    html = (generic_run / "report.html").read_text()
+    assert "operational errors" in html and "Output Ontology" in html
+    assert "MCQ" not in html
+
+
+def test_generic_review_agreement_includes_insufficient_and_category_sets(generic_run):
+    records = [_generic_complete("item-0"), _generic_complete("item-1", label="insufficient_evidence", categories=[]),
+               _generic_complete("item-2", label="no_match", categories=[])]
+    _write_jsonl(generic_run / "results.jsonl", records)
+    generate_report(generic_run)
+    rows = _read_review(generic_run)
+    for row, record in zip(rows, records):
+        for classifier_id, judgment in record["labels"].items():
+            row[classifier_id] = judgment["label"]
+            row[f"{classifier_id}.evidence"] = "Human observation of the item"
+            row[f"{classifier_id}.justification"] = "Independent comparison with the standard"
+        row["input_ontology.matched_category_ids"] = json.dumps(record["labels"]["input_ontology"]["matched_category_ids"])
+        row["input_ontology.scope_exclusion_source_ids"] = json.dumps(record["labels"]["input_ontology"]["scope_exclusion_source_ids"])
+    rows[0]["input_ontology.matched_category_ids"] = '["algebra"]'
+    rows[2]["input_ontology"] = "match"
+    rows[2]["input_ontology.matched_category_ids"] = '["geometry"]'
+    rows[2]["input_content"] = "insufficient_evidence"
+    _save_review(generic_run, rows)
+    comparison = compare_review(generic_run, generic_run / "review.csv")
+    assert comparison["overall"]["compared"] == 12
+    assert comparison["overall"]["accuracy"] == pytest.approx(10 / 12)
+    assert comparison["overall"]["judgment_agreement"]["accuracy"] == pytest.approx(10 / 12)
+    assert comparison["overall"]["judgment_and_category_set_agreement"]["accuracy"] == pytest.approx(9 / 12)
+    assert comparison["overall"]["fully_matching_items"] == 1
+    ontology = comparison["classifiers"]["input_ontology"]
+    assert ontology["accuracy"] == pytest.approx(2 / 3)
+    assert ontology["human_insufficient_evidence"] == 1
+    assert ontology["model_insufficient_evidence"] == 1
+    assert ontology["category_set_agreement"] == {
+        "compared": 2, "matches": 0, "accuracy": 0, "insufficient_evidence_excluded": 1,
+        "denominator": "paired determinate judgments; sets compared without order",
+    }
+    assert ontology["judgment_and_category_set_agreement"]["matches"] == 1
+    assert "Overall judgment agreement" in (generic_run / "report.html").read_text()
+
+
+def test_generic_review_requires_evidence_and_preserves_work(generic_run):
+    _write_jsonl(generic_run / "results.jsonl", [_generic_complete("item-0")])
+    generate_report(generic_run)
+    rows = _read_review(generic_run)
+    rows[0]["input_content"] = "no_issue_identified"
+    _save_review(generic_run, rows)
+    with pytest.raises(ValueError, match="requires item evidence"):
+        compare_review(generic_run, generic_run / "review.csv")
+    before = (generic_run / "review.csv").read_bytes()
+    generate_report(generic_run)
+    assert (generic_run / "review.csv").read_bytes() == before
+    assert not (generic_run / "review_comparison.json").exists()
+
+
+@pytest.mark.parametrize("mutation", ["version", "category", "numeric", "evidence"])
+def test_generic_malformed_labels_are_invalid_never_unknown_or_no_issue(generic_run, mutation):
+    record = _generic_complete("item-0")
+    if mutation == "version":
+        record.pop("schema_version")
+    elif mutation == "category":
+        record["labels"]["input_ontology"]["matched_category_ids"] = ["invented"]
+    elif mutation == "numeric":
+        record["labels"]["input_content"]["label"] = 1
+    else:
+        record["labels"]["input_content"]["evidence"] = []
+    _write_jsonl(generic_run / "results.jsonl", [record])
+    summary = generate_report(generic_run)
+    assert summary["experiment"]["invalid_item_classifier_judgments"] >= 1
+    assert not summary["complete_snapshot"]
+
+
+def test_legacy_report_explicitly_identifies_catalog_without_rewriting(prepared_run):
+    original = (prepared_run / "classifier_spec.json").read_bytes()
+    _write_jsonl(prepared_run / "results.jsonl", [_complete("item-0")])
+    summary = generate_report(prepared_run)
+    assert summary["fixed_catalog_version"] == "caliper_induced_items_legacy_v1"
+    assert summary["schema_version"] == "caliper_item_spec_legacy_v1"
+    assert _by_id(summary, "OO.value_encoding")["counts"] == {"0": 0, "1": 1}
+    assert (prepared_run / "classifier_spec.json").read_bytes() == original
+
+
+def test_generic_report_defers_review_until_actual_selection(generic_run):
+    summary = generate_report(generic_run)
+    assert summary["experiment"]["selected_items"] == 0
+    assert summary["review_selection"]["item_ids"] == []
+    assert not (generic_run / "review.csv").exists()
+    assert "href='review.csv'" not in (generic_run / "report.html").read_text()
+    (generic_run / "execution.json").write_text(json.dumps({"selected_item_ids": ["item-0", "item-1"]}))
+    summary = generate_report(generic_run)
+    assert summary["review_selection"]["item_ids"] == ["item-0", "item-1"]
+    assert len(_read_review(generic_run)) == 2
+    assert summary["experiment"]["expected_item_classifier_judgments"] == 8
+    assert summary["experiment"]["selected_pending_items"] == 2
+
+
+@pytest.mark.parametrize("changed_file", ["items.jsonl", "evidence.json", "profile.json"])
+def test_generic_report_checks_prepared_snapshot_before_writing(generic_run, changed_file):
+    from item_analysis.data import file_sha256
+
+    profile_path = generic_run / "profile.json"
+    profile_path.write_text("{}")
+    (generic_run / "evidence.json").write_text(json.dumps({"benchmark": "test", "deployment": "Deployment"}))
+    dataset_path = generic_run / "dataset.json"
+    dataset = json.loads(dataset_path.read_text())
+    dataset.update({
+        "items_sha256": file_sha256(generic_run / "items.jsonl"),
+        "profile_sha256": file_sha256(profile_path),
+        "evidence_sha256": file_sha256(generic_run / "evidence.json"),
+    })
+    dataset_path.write_text(json.dumps(dataset))
+    _write_jsonl(generic_run / "results.jsonl", [_generic_complete("item-0")])
+    generate_report(generic_run)
+    original_summary = (generic_run / "summary.json").read_bytes()
+    with (generic_run / changed_file).open("a") as stream:
+        stream.write("\n")
+    with pytest.raises(ValueError, match="changed"):
+        generate_report(generic_run)
+    assert (generic_run / "summary.json").read_bytes() == original_summary
+
+
+def test_generic_extra_judgment_keys_are_invalid(generic_run):
+    result = _generic_complete("item-0")
+    result["labels"]["input_content"]["invented_rule"] = "Always agree with earlier assessment"
+    _write_jsonl(generic_run / "results.jsonl", [result])
+    summary = generate_report(generic_run)
+    assert _by_id(summary, "input_content")["invalid"] == 1
+    assert _by_id(summary, "input_content")["counts"]["no_issue_identified"] == 0

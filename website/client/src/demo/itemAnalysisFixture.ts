@@ -4,6 +4,7 @@
  * Source records are unmodified; display formatting and judgments are additions.
  */
 import sample from './mathdialSample.json'
+import catalog from './genericItemCatalog.json'
 import {
   DEMO_DEPLOYMENT_DESCRIPTION, DEMO_ELICITATION_SUMMARY, DEMO_GALLERY_ID, DEMO_SCORING,
 } from './fixture'
@@ -38,48 +39,52 @@ export const DEMO_ITEM_ANALYSIS_PROVENANCE = {
 export type DemoItemAnalysisProvenance = typeof DEMO_ITEM_ANALYSIS_PROVENANCE
 
 export const DEMO_ITEM_ANALYSIS_CLASSIFIER_NAMES: Record<string, string> = {
-  'IO.task_category': 'Mathematical task',
-  'OO.output_category': 'Published teacher moves',
-  'OO.value_encoding': 'Teacher answer disclosure',
-  'IC.region_fit': 'Regional context cues',
-  'OC.label_contestability': 'Target teacher agreement',
+  input_ontology: 'Input Ontology', input_content: 'Input Content',
+  output_ontology: 'Output Ontology', output_content: 'Output Content',
+}
+
+const dimensions = DEMO_SCORING.dimensions as Record<string, { justification: string }>
+
+const demoProfile = { item_count: sample.items.length, fields: Object.keys(sample.items[0].record), reference_answers: sample.items.filter(item => item.record.ground_truth).length }
+
+const DEMO_CONTEXT = {
+  deployment_requirements: [{ statement: DEMO_DEPLOYMENT_DESCRIPTION, source_ids: ['deployment_description.txt'] }, { statement: 'Curriculum-agnostic math errors are sufficient for evaluating pedagogical quality; Indian curriculum specifics are not required.', source_ids: ['elicitation_summary.md'] }],
+  benchmark_evidence: [{ statement: 'The first bundled example contains a mathematical problem, a reference solution, and a tutoring conversation with teacher-move tags.', source_ids: ['sample/row-1'] }],
+  prior_hypotheses: [],
+  evidence_gaps: ['No independent target-teacher item judgments or complete scoring and annotation documentation are bundled.'],
 }
 
 export const DEMO_ITEM_ANALYSIS_SPEC: Specification = {
-  benchmark: 'mathdial',
-  deployment: DEMO_DEPLOYMENT_DESCRIPTION,
-  classifiers: [
-    {
-      id: 'IO.task_category', component: 'input_ontology', operation: 'assignment', applicable: true,
-      criterion: 'Assign the main mathematical task in the problem: additive reasoning (addition/subtraction, including repeated additions), proportional reasoning (rates, fractions, equal sharing, or unit costs), or percentages (including percentage interest). If categories overlap, prefer percentages, then proportional reasoning. This describes task coverage, not grade suitability or teaching quality.',
-      category_set: ['additive_reasoning', 'proportional_reasoning', 'percentages'],
-      grounded_in: ['Original Input Ontology assessment: the deployment accepts curriculum-agnostic mathematical errors. These broad example categories summarize this small sample; they do not replace the benchmark taxonomy.'],
-    },
-    {
-      id: 'OO.output_category', component: 'output_ontology', operation: 'assignment', applicable: true,
-      criterion: 'Summarize the teacher-move tags already published inside this dialogue. Use includes_telling if any Teacher turn is tagged (telling); otherwise use probing_without_telling if any is tagged (probing); otherwise use focus_without_probing_or_telling if any is tagged (focus). Unknown if the required tags are missing. These are descriptive categories, not a ranking of acceptable teaching styles.',
-      category_set: ['includes_telling', 'probing_without_telling', 'focus_without_probing_or_telling'],
-      grounded_in: ['Original Output Ontology assessment: the deployment prioritizes providing guidance and may accept direct correction. Inspecting the published move categories exposes this choice without declaring one style universally better.'],
-    },
-    {
-      id: 'OO.value_encoding', component: 'output_ontology', operation: 'flag', applicable: true,
-      criterion: 'Flag 1 when a teacher explicitly states the final numerical answer anywhere in the dialogue, even after the student has reached it. Use 0 when the complete teacher dialogue contains no explicit final answer. Intermediate values, hints, and affirmation alone do not count. This identifies examples to discuss with the tutor; it does not establish premature disclosure or unacceptable guidance.',
-      positive_class: 'teacher_explicitly_states_final_answer',
-      grounded_in: ['Original Output Ontology assessment: MathDial values guidance over telling; the deployment may allow more direct correction. An explicit answer is an observable discussion point, not proof of a regional mismatch.'],
-    },
-    {
-      id: 'IC.region_fit', component: 'input_content', operation: 'ordinal', applicable: true,
-      criterion: 'Record only observable regional context cues in the problem and dialogue. Use 1 for explicit non-Indian currency or measurement conventions; 3 for an explicitly stated Indian setting without conflicting cues; otherwise use 2 when the region is unspecified. Names alone do not establish region. This narrow context check does not measure classroom interaction norms, student ability, cultural familiarity, or overall deployment fit.',
-      ordinal_anchors: { '1': 'Explicit non-Indian currency or units', '2': 'Region unspecified', '3': 'Explicit Indian setting' },
-      grounded_in: ['Original Input Content assessment flags currency/context and simulated interaction style. This example checks visible context cues only; the original concerns about interaction style require separate review.'],
-    },
-    {
-      id: 'OC.label_contestability', component: 'output_content', operation: 'flag', applicable: true,
-      criterion: 'Flag 1 only when published item evidence documents disagreement from the deployment’s Indian metropolitan Grade 1–8 teachers about whether this tutoring exchange is acceptable; use 0 only for documented agreement from that target group. Return Unknown if target-group evaluation is absent. The source self-correctness rating and the presence of an Indian-sounding name do not establish local acceptance.',
-      positive_class: 'documented_target_teacher_disagreement',
-      grounded_in: ['Original Output Content assessment: agreement from the deployment’s target teachers is not disaggregated. These source rows have no target-group acceptability judgments, so all examples remain Unknown on this criterion.'],
-    },
-  ],
+  schema_version: 'caliper_item_spec_v2', fixed_catalog_version: 'caliper_generic_items_v1',
+  benchmark: 'mathdial', deployment: DEMO_DEPLOYMENT_DESCRIPTION,
+  deployment_description: DEMO_DEPLOYMENT_DESCRIPTION,
+  dataset_profile: demoProfile, semantic_validation: 'unreviewed',
+  analysis_basis: 'benchmark_assessment', assessment_status: 'complete',
+  source_roles: {
+    'deployment_description.txt': 'deployment_requirement', 'elicitation_summary.md': 'deployment_requirement', 'demo_profile.json': 'dataset_profile',
+    ...Object.fromEntries(Object.keys(dimensions).map(id => [`scoring.json#/dimensions/${id}`, 'prior_assessment'])),
+    ...Object.fromEntries(sample.items.map(item => [`sample/row-${item.source_row}`, 'example_item'])),
+  },
+  classifiers: catalog.classifiers as Classifier[],
+  input_category_inventory: {
+    completeness: 'partial', completeness_source_ids: [],
+    categories: [{ id: 'required_001', name: 'Curriculum-agnostic mathematical errors',
+      definition: 'Mathematical-error tutoring scenarios for evaluating pedagogical quality; Indian curriculum specifics are not required.',
+      source_ids: ['elicitation_summary.md'] }],
+    evidence_gaps: ['The deployment evidence does not establish an exhaustive input-category inventory.'],
+  },
+  context_by_classifier: Object.fromEntries(catalog.classifiers.map(classifier => [classifier.id, {
+    ...structuredClone(DEMO_CONTEXT),
+    prior_hypotheses: [{ statement: dimensions[classifier.id].justification,
+      source_ids: [`scoring.json#/dimensions/${classifier.id}`] }],
+  }])),
+  source_registry: {
+    'deployment_description.txt': DEMO_DEPLOYMENT_DESCRIPTION,
+    'elicitation_summary.md': DEMO_ELICITATION_SUMMARY,
+    'demo_profile.json': demoProfile,
+    ...Object.fromEntries(Object.entries(dimensions).map(([id, value]) => [`scoring.json#/dimensions/${id}`, value])),
+    ...Object.fromEntries(sample.items.map(item => [`sample/row-${item.source_row}`, item.record])),
+  },
 }
 
 type Label = NonNullable<Item['labels']>[string]
@@ -179,34 +184,28 @@ export const DEMO_ITEM_ANALYSIS_ITEMS: DemoItemAnalysisItem[] = sample.items.map
     original_record: record,
     judgment_provenance: DEMO_ITEM_ANALYSIS_PROVENANCE.label_provenance,
     labels: {
-      'IO.task_category': judgment(example.task, [example.taskEvidence], example.taskReason),
-      'OO.output_category': judgment(example.moves, [example.moveEvidence], example.moves === 'includes_telling'
-        ? 'At least one published teacher turn has a (telling) tag. The category reports the source tags, not a new assessment of teaching quality.'
-        : example.moves === 'probing_without_telling'
-          ? 'The published dialogue includes a (probing) tag and no (telling) tag.'
-          : 'The published dialogue includes (focus) tags, with neither (probing) nor (telling) tags. A tag does not by itself establish how directive the utterance is.'),
-      'OO.value_encoding': judgment(example.answer, [example.answerEvidence], example.answerReason),
-      'IC.region_fit': judgment(example.region, [example.regionEvidence], example.region === 1
-        ? 'Explicit currency or unit conventions provide a concrete context cue to discuss for the Indian deployment. This does not establish unfamiliarity or unsuitability for any learner.'
-        : 'The setting has no explicit regional marker under this criterion. The names and topic do not establish Indian relevance, and region-unspecified is not a positive fit finding.'),
-      'OC.label_contestability': judgment(null, [`Published self-correctness: ${record['self-correctness']}`], 'The record has a teacher self-correctness rating but no identified evaluation by the target Indian metropolitan teacher group. Local agreement or disagreement cannot be inferred, so this is Unknown.'),
+      input_ontology: { ...judgment('match', [example.taskEvidence], 'The item instantiates a mathematical-error tutoring scenario, a category established by the elicitation evidence. This match does not establish suitability in every dimension.'), matched_category_ids: ['required_001'], scope_exclusion_source_ids: [] },
+      input_content: judgment('insufficient_evidence', [example.regionEvidence], 'The scenario and dialogue are visible, but the bundled evidence does not establish whether their particular dependencies conflict with the intended pedagogical construct. Foreign currency or names alone are not an issue.'),
+      output_ontology: judgment('insufficient_evidence', [example.moveEvidence], 'Published teacher-move tags identify some output distinctions, but the applicable scoring criteria and their weighting are not sufficiently documented here for comparison with deployment needs.'),
+      output_content: judgment('insufficient_evidence', [`Published self-correctness: ${record['self-correctness']}`], 'A source self-correctness rating and numerical solution are available, but documented target-teacher judgments or applicable annotation standards for pedagogical quality are absent. Population agreement cannot be inferred.'),
     },
   }
 })
 
 function summarize(classifier: Classifier, completed: Item[], total: number) {
-  const categories = classifier.category_set || (classifier.operation === 'flag' ? ['0', '1'] : Object.keys(classifier.ordinal_anchors || {}))
-  const counts: Record<string, number> = Object.fromEntries(categories.map(category => [category, 0]))
+  const labels = classifier.labels || []
+  const counts: Record<string, number> = Object.fromEntries(labels.map(label => [label, 0]))
   let unknown = 0
   for (const item of completed) {
     const label = item.labels?.[classifier.id]?.label
-    if (label === null || label === undefined) unknown += 1
-    else counts[String(label)] = (counts[String(label)] || 0) + 1
+    if (label === 'insufficient_evidence') unknown += 1
+    if (label != null) counts[String(label)] = (counts[String(label)] || 0) + 1
   }
   const known = completed.length - unknown
   return {
-    ...classifier, counts, known, unknown, invalid: 0, errors: 0, pending: total - completed.length,
-    percentages_among_known: Object.fromEntries(Object.entries(counts).map(([label, count]) => [label, known ? count / known * 100 : null])),
+    ...classifier, counts, valid_judgments: completed.length, determinate_judgments: known, insufficient_evidence: unknown, invalid: 0, errors: 0, pending: total - completed.length,
+    ...(classifier.id === 'input_ontology' ? { category_counts: { required_001: completed.filter(item => item.labels?.input_ontology.matched_category_ids?.includes('required_001')).length } } : {}),
+    percentages_among_valid: Object.fromEntries(Object.entries(counts).map(([label, count]) => [label, completed.length ? count / completed.length * 100 : null])),
   }
 }
 
@@ -225,6 +224,8 @@ export function buildDemoItemAnalysisRun(scope: 'pilot' | 'sample'): AnalysisRun
   const completed = items.filter(item => item.status === 'complete')
   const spec = structuredClone(DEMO_ITEM_ANALYSIS_SPEC)
   const summary: AnalysisSummary = {
+    schema_version: 'caliper_item_spec_v2', report_schema_version: 'caliper_item_report_v2', fixed_catalog_version: DEMO_ITEM_ANALYSIS_SPEC.fixed_catalog_version,
+    experiment: { classifier_count: spec.classifiers.length, selected_items: completed.length, completed_item_classifier_judgments: completed.length * spec.classifiers.length, expected_item_classifier_judgments: completed.length * spec.classifiers.length },
     total_items: total, completed_items: completed.length, error_items: 0, pending_items: total - completed.length,
     complete_snapshot: scope === 'sample',
     classifiers: spec.classifiers.map(classifier => summarize(classifier, completed, total)),
@@ -236,7 +237,7 @@ export function buildDemoItemAnalysisRun(scope: 'pilot' | 'sample'): AnalysisRun
     },
     specification: {
       deployment_text_matches: true,
-      note: 'Authored example criteria use the exact deployment from the original MathDial report. Input Form and Output Form remain benchmark-level judgments. These five checks illustrate a workflow, not a complete operationalization of the original report or a newly validated instrument.',
+      note: 'Authored example criteria use the exact deployment from the original MathDial report. Input Form and Output Form remain benchmark-level judgments. The four fixed rubric classifiers use sourced context with explicit evidence gaps. These authored judgments illustrate a workflow and have not been validated as study findings.',
     },
   }
   return {

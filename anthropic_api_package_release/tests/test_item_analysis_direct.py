@@ -3,6 +3,7 @@
 from copy import deepcopy
 import csv
 import json
+import re
 
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -48,24 +49,22 @@ def direct(raw_dataset):
 
 def _spec(directory):
     evidence = read_json(directory / "evidence.json")
-    classifiers = []
-    for slot_id, definition in ROSTER.items():
-        classifier = {
-            "id": slot_id, **definition, "applicable": True, "na_reason": "",
-            "criterion": "Apply the explicit deployment requirements to the item; return unknown when evidence is missing.",
-            "label_source": "model", "grounded_in": ["deployment_description.txt"], "example_items": [],
-        }
-        if definition["operation"] == "assignment":
-            classifier["category_set"] = ["arithmetic", "indian_history", "irrelevant_other"] if slot_id == "IO.task_category" else ["short_answer"]
-        elif definition["operation"] == "ordinal":
-            classifier["ordinal_anchors"] = {"1": "region-relevant", "2": "region-neutral", "3": "region-misaligned"}
-        else:
-            classifier["positive_class"] = "supported_concern"
-        if slot_id == "IO.task_category":
-            classifier["grounded_in"].append("direct_context.json#/task_requirements")
-        classifiers.append(classifier)
-    return {"benchmark": "example", "deployment": evidence["deployment"],
-            "dataset_profile": {}, "classifiers": classifiers}
+    return {"fixed_catalog_version": "caliper_generic_items_v1", "benchmark": "example",
+            "deployment_description": evidence["deployment"],
+            "input_category_inventory": {
+                "completeness": "partial", "completeness_source_ids": [],
+                "categories": [{"id": "required_001", "name": "Arithmetic", "definition": "Arithmetic tasks.",
+                                "source_ids": ["direct_context.json#/task_requirements"]}],
+                "evidence_gaps": ["The requirements do not assert a complete inventory."]},
+            "context_by_classifier": {cid: {
+                "deployment_requirements": [{"statement": "The required tasks include arithmetic.",
+                                             "source_ids": ["direct_context.json#/task_requirements"]}],
+                "benchmark_evidence": [], "prior_hypotheses": [], "evidence_gaps": ["No additional standards supplied."]}
+                for cid in ROSTER}}
+
+
+def tagged(user, tag):
+    return re.search(rf"<{tag}>\n(.*?)\n</{tag}>", user, re.S).group(1)
 
 
 def test_direct_evidence_freezes_requirements_and_actual_items_without_scoring(direct):
@@ -109,30 +108,20 @@ def test_confirmed_alias_preserves_source_identity_and_context_cannot_be_replace
 
 def test_direct_generation_request_distinguishes_required_tasks_from_observed_subjects(direct):
     request = generation_request(direct)
-    payload = json.loads(request["user"])
-    assert payload["analysis_basis"] == "deployment_requirements"
-    assert payload["assessment_status"] == "not_run"
-    assert payload["requirements"]["task_requirements"] == CONTEXT["task_requirements"]
-    assert payload["dataset_profile"]["row_count"] == 2
-    assert {item["item_id"] for item in payload["example_items"]} == {"math", "physics"}
-    assert payload["unassessed_dimensions"] == ["input_form", "output_form"]
-    assert "scoring" not in payload
-    assert not any(key.startswith("scoring.json") for key in payload["evidence_registry"])
-    assert "Never replace the requested taxonomy" in request["system"]
-    assert "no benchmark assessment exists" in request["system"]
-    assert "Do not invent stage-7 findings, scores" in request["system"]
-    output_schema = payload["output_schema"]
-    Draft202012Validator.check_schema(output_schema)
-    provenance = {"analysis_basis": "deployment_requirements", "assessment_status": "not_run"}
-    for field, value in provenance.items():
-        assert output_schema["properties"][field] == {"const": value}
-    assert not list(Draft202012Validator(output_schema).iter_errors({**_spec(direct), **provenance}))
+    registry = json.loads(tagged(request["user"], "source_registry"))
+    assert registry["direct_context.json#/task_requirements"]["content"] == CONTEXT["task_requirements"]
+    assert registry["direct_context.json#/task_requirements"]["role"] == "deployment_requirement"
+    assert registry["direct_context.json#/validity_concerns"]["role"] == "prior_hypothesis"
+    assert json.loads(tagged(request["user"], "dataset_profile"))["row_count"] == 2
+    assert {item["item_id"] for item in json.loads(tagged(request["user"], "example_items"))} == {"math", "physics"}
+    assert not any(key.startswith("scoring.json") for key in registry)
+    assert "Dataset contents show what the benchmark contains" in request["system"]
 
 
-def test_direct_specification_requires_task_requirement_citation_and_retains_provenance(direct):
+def test_direct_specification_requires_deployment_grounding_and_retains_provenance(direct):
     valid = _spec(direct)
     invalid = deepcopy(valid)
-    invalid["classifiers"][0]["grounded_in"] = ["framework.yaml"]
+    invalid["input_category_inventory"]["categories"][0]["source_ids"] = ["framework.yaml"]
     calls = []
 
     def fake(**request):
@@ -140,12 +129,11 @@ def test_direct_specification_requires_task_requirement_citation_and_retains_pro
         return json.dumps(invalid if len(calls) == 1 else valid)
 
     canonical = generate_spec(direct, call=fake)
-    assert len(calls) == 2
-    assert "must cite direct_context.json#/task_requirements" in calls[1]["user"]
+    assert len(calls) == 2 and "source role cannot ground" in calls[1]["user"]
     assert canonical["analysis_basis"] == "deployment_requirements"
     assert canonical["assessment_status"] == "not_run"
     assert canonical["dataset_profile"] == read_json(direct / "profile.json")
-    assert canonical["classifiers"][0]["category_set"] == ["arithmetic", "indian_history", "irrelevant_other"]
+    assert canonical["input_category_inventory"]["categories"][0]["id"] == "required_001"
     metadata = read_json(direct / "specification.json")
     assert metadata["unassessed_dimensions"] == ["input_form", "output_form"]
     assert "No benchmark assessment was run" in metadata["note"]
@@ -153,7 +141,7 @@ def test_direct_specification_requires_task_requirement_citation_and_retains_pro
 
 def test_exhausted_direct_task_grounding_failure_has_safe_specific_diagnostic(direct):
     invalid = _spec(direct)
-    invalid["classifiers"][0]["grounded_in"] = ["framework.yaml"]
+    invalid["input_category_inventory"]["categories"][0]["source_ids"] = ["framework.yaml"]
     calls = []
 
     def fake(**request):
@@ -165,8 +153,7 @@ def test_exhausted_direct_task_grounding_failure_has_safe_specific_diagnostic(di
     assert caught.value.code == "task_grounding"
     assert "task requirements" in caught.value.public_message
     assert CONTEXT["task_requirements"] not in caught.value.public_message
-    assert len(calls) == 2
-    assert not (direct / "classifier_spec.json").exists()
+    assert len(calls) == 2 and not (direct / "classifier_spec.json").exists()
 
 
 @pytest.mark.parametrize("artifact", ["direct_context.json", "evidence.json"])
@@ -197,15 +184,12 @@ def test_direct_pilot_and_full_classification_export_item_only_provenance_withou
     def judge(**request):
         payload = json.loads(request["user"])
         calls.append(payload)
-        return json.dumps({"labels": {
-            classifier["id"]: {
-                "label": None if classifier["id"] == "OC.label_contestability" else
-                         "arithmetic" if classifier["operation"] == "assignment" else
-                         2 if classifier["operation"] == "ordinal" else 0,
-                "evidence": [payload["item"]["content"]], "justification": "Offline fixture response.",
-            }
-            for classifier in canonical["classifiers"] if classifier["applicable"]
-        }})
+        labels = {classifier["id"]: {
+            "label": "insufficient_evidence", "evidence": [payload["item"]["content"]],
+            "justification": "Offline fixture: the supplied standard is insufficient.",
+        } for classifier in canonical["classifiers"]}
+        labels["input_ontology"].update(matched_category_ids=[], scope_exclusion_source_ids=[])
+        return json.dumps({"labels": labels})
 
     pilot = run(direct, limit=1, call=judge)
     assert pilot["complete"] == 1 and not pilot["full_dataset_complete"]
@@ -228,18 +212,19 @@ def test_direct_pilot_and_full_classification_export_item_only_provenance_withou
     html = (direct / "report.html").read_text()
     assert "Benchmark assessment not run" in html
     assert "Input Form and Output Form are not assessed" in html
-    assert "Grounding in explicit deployment requirements" in html
+    assert "Fixed decision rules and sourced context" in html
     assert "<th>Original score</th>" not in html
     assert "These benchmark-level scores are retained" not in html
     for filename in ("items.csv", "review.csv"):
         with (direct / filename).open(newline="") as file:
             rows = list(csv.DictReader(file))
-        assert len(rows) == 2
+        # Existing blind review is preserved when later items are completed.
+        assert len(rows) == (2 if filename == "items.csv" else 1)
         assert all(row["analysis_basis"] == "deployment_requirements" for row in rows)
         assert all(row["assessment_status"] == "not_run" for row in rows)
         assert all(json.loads(row["unassessed_dimensions"]) == ["input_form", "output_form"] for row in rows)
         assert all(row["direct_context_sha256"] == summary["direct_context_sha256"] for row in rows)
-    assert all(row["IO.task_category"] == "" for row in rows)  # Blind review remains blank.
+    assert all(row["input_ontology"] == "" for row in rows)  # Blind review remains blank.
 
 
 def test_direct_report_rejects_mutated_frozen_context(direct):

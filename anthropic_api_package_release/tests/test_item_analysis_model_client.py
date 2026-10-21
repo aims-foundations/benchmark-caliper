@@ -227,16 +227,29 @@ def test_real_sdk_output_limit_retains_usage_and_specific_error(monkeypatch, asy
 def test_json_mode_adds_input_instruction_for_both_pipeline_stages(
         monkeypatch, tmp_path, asynchronous, stage):
     from item_analysis import classify, generate
+    from item_analysis.schema import CATALOG_VERSION, ROSTER, join_context
+
+    registry = {"framework.yaml": "Original rubric", "deployment_description.txt": "Exam preparation"}
+    roles = {"framework.yaml": "rubric", "deployment_description.txt": "deployment_requirement"}
 
     if stage == "generation":
         monkeypatch.setattr(generate, "check_prepared", lambda _: {"benchmark": "fixture"})
         monkeypatch.setattr(generate, "read_json", lambda path: (
-            {"deployment": "Exam preparation", "registry": {}}
+            {"deployment": "Exam preparation", "registry": registry, "source_roles": roles}
             if path.name == "evidence.json" else {}))
         monkeypatch.setattr(generate, "read_items", lambda _: iter([]))
         request = generate.generation_request(tmp_path)
     else:
-        spec = json.loads((Path(__file__).parent / "fixtures" / "item_analysis_spec.json").read_text())
+        spec = join_context({
+            "fixed_catalog_version": CATALOG_VERSION, "benchmark": "fixture",
+            "deployment_description": "Exam preparation",
+            "input_category_inventory": {"completeness": "unknown", "completeness_source_ids": [],
+                                         "categories": [], "evidence_gaps": ["No task inventory supplied."]},
+            "context_by_classifier": {cid: {
+                "deployment_requirements": [], "benchmark_evidence": [], "prior_hypotheses": [],
+                "evidence_gaps": ["Comparison evidence unavailable."],
+            } for cid in ROSTER},
+        }, profile={}, source_registry=registry, source_roles=roles)
         request = classify.classification_request(
             {"item_id": "test", "content": "What is one plus one?", "reference_answer": "2"},
             spec, "Exam preparation", classify.PROMPT_PATH.read_text())
@@ -262,12 +275,12 @@ def test_json_mode_adds_input_instruction_for_both_pipeline_stages(
                       "output_tokens_details": {"reasoning_tokens": 0}},
         })
 
-    # The previous adapter passed this original user payload directly. Prove
-    # that system-only JSON instructions reproduce the HTTP 400 regression.
+    # The approved generation template itself asks for JSON. Classification
+    # still relies on the adapter's explicit input instruction for JSON mode.
     previous = httpx.Request("POST", "https://api.openai.com/v1/responses", json={
         "instructions": request["system"], "input": request["user"],
     })
-    assert require_json_in_input(previous).status_code == 400
+    assert require_json_in_input(previous).status_code == (200 if stage == "generation" else 400)
     requests, transports = install_transport(monkeypatch, asynchronous, handler=require_json_in_input)
     arguments = {key: value for key, value in request.items() if key != "step"}
     arguments["api_key"] = "private-test-key"

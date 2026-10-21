@@ -109,99 +109,183 @@
     }
   ],
   "classifier_spec": {
+    "fixed_catalog_version": "caliper_generic_items_v1",
     "benchmark": "caliper_illustrative_exam",
-    "deployment": "An illustrative Hindi-medium secondary-school exam tutor in India. Learners practise school-level mathematics, science, and Indian civics with written questions and multiple-choice answers. Success means identifying the correct answer and explaining it in Hindi. This authored example is for demonstrating the pipeline, not a validated exam syllabus or original-study benchmark.",
-    "dataset_profile": {},
-    "classifiers": [
-      {
-        "id": "IO.task_category",
-        "component": "input_ontology",
-        "operation": "assignment",
-        "aggregate": "coverage_vs_required",
-        "applicable": true,
-        "na_reason": "",
-        "criterion": "Assign mathematics, science, or indian_civics only when the main skill directly serves the described school tutoring task; otherwise use irrelevant_other. These are illustrative subject categories, not a validated syllabus. Use null when the tested task cannot be identified from item evidence.",
-        "label_source": "haiku",
-        "grounded_in": [
-          "scoring.json#/dimensions/input_ontology/justification",
-          "deployment_description.txt"
+    "deployment_description": "An illustrative Hindi-medium secondary-school exam tutor in India. Learners practise school-level mathematics, science, and Indian civics with written questions and multiple-choice answers. Success means identifying the correct answer and explaining it in Hindi. This authored example is for demonstrating the pipeline, not a validated exam syllabus or original-study benchmark.",
+    "input_category_inventory": {
+      "completeness": "partial",
+      "completeness_source_ids": [],
+      "categories": [
+        {
+          "id": "required_001",
+          "name": "School-level mathematics",
+          "definition": "School-level mathematics practice for the secondary-school tutor.",
+          "source_ids": [
+            "deployment_description.txt"
+          ]
+        },
+        {
+          "id": "required_002",
+          "name": "School-level science",
+          "definition": "School-level science practice for the secondary-school tutor.",
+          "source_ids": [
+            "deployment_description.txt"
+          ]
+        },
+        {
+          "id": "required_003",
+          "name": "Indian civics",
+          "definition": "Indian civics practice for the secondary-school tutor.",
+          "source_ids": [
+            "deployment_description.txt"
+          ]
+        }
+      ],
+      "evidence_gaps": [
+        "The deployment lists subjects without explicitly establishing an exhaustive inventory."
+      ]
+    },
+    "context_by_classifier": {
+      "input_ontology": {
+        "deployment_requirements": [
+          {
+            "statement": "An illustrative Hindi-medium secondary-school exam tutor in India. Learners practise school-level mathematics, science, and Indian civics with written questions and multiple-choice answers. Success means identifying the correct answer and explaining it in Hindi. This authored example is for demonstrating the pipeline, not a validated exam syllabus or original-study benchmark.",
+            "source_ids": [
+              "deployment_description.txt"
+            ]
+          }
         ],
-        "example_items": [],
-        "category_set": [
-          "mathematics",
-          "science",
-          "indian_civics",
-          "irrelevant_other"
+        "benchmark_evidence": [
+          {
+            "statement": "The deterministic dataset profile records available fields and item counts.",
+            "source_ids": [
+              "profile.json"
+            ]
+          }
+        ],
+        "prior_hypotheses": [
+          {
+            "statement": "Illustrative hypothesis: mathematics, science, and Indian civics serve the stated tutoring tasks; foreign law may fall outside them.",
+            "source_ids": [
+              "scoring.json#/dimensions/input_ontology/justification"
+            ]
+          },
+          {
+            "statement": "Ten authored text multiple-choice items with explicit answer options and reference letters. This fixture demonstrates regional relevance and convention ambiguity; it is not a representative benchmark sample. Item features record a human-authored topic only, not model predictions. No media are included.",
+            "source_ids": [
+              "dataset_analysis_report.md"
+            ]
+          }
+        ],
+        "evidence_gaps": [
+          "No independent domain-standard or target-stakeholder evidence is supplied for the authored demonstration."
         ]
       },
-      {
-        "id": "OO.output_category",
-        "component": "output_ontology",
-        "operation": "assignment",
-        "aggregate": "category_distribution",
-        "applicable": false,
-        "na_reason": "Fixed-choice items share the answer-letter representation; this slot is not applicable.",
-        "criterion": "Fixed-choice items share the answer-letter representation; this slot is not applicable.",
-        "label_source": "haiku",
-        "grounded_in": [
-          "scoring.json#/dimensions/output_ontology/justification",
-          "deployment_description.txt"
+      "input_content": {
+        "deployment_requirements": [
+          {
+            "statement": "An illustrative Hindi-medium secondary-school exam tutor in India. Learners practise school-level mathematics, science, and Indian civics with written questions and multiple-choice answers. Success means identifying the correct answer and explaining it in Hindi. This authored example is for demonstrating the pipeline, not a validated exam syllabus or original-study benchmark.",
+            "source_ids": [
+              "deployment_description.txt"
+            ]
+          }
         ],
-        "example_items": [],
-        "category_set": []
+        "benchmark_evidence": [
+          {
+            "statement": "The deterministic dataset profile records available fields and item counts.",
+            "source_ids": [
+              "profile.json"
+            ]
+          }
+        ],
+        "prior_hypotheses": [
+          {
+            "statement": "Illustrative hypothesis: some scenarios explicitly fit Indian learners, some are region-neutral, and others assume foreign context.",
+            "source_ids": [
+              "scoring.json#/dimensions/input_content/justification"
+            ]
+          },
+          {
+            "statement": "Ten authored text multiple-choice items with explicit answer options and reference letters. This fixture demonstrates regional relevance and convention ambiguity; it is not a representative benchmark sample. Item features record a human-authored topic only, not model predictions. No media are included.",
+            "source_ids": [
+              "dataset_analysis_report.md"
+            ]
+          }
+        ],
+        "evidence_gaps": [
+          "No independent domain-standard or target-stakeholder evidence is supplied for the authored demonstration."
+        ]
       },
-      {
-        "id": "OO.value_encoding",
-        "component": "output_ontology",
-        "operation": "flag",
-        "aggregate": "prevalence",
-        "applicable": true,
-        "na_reason": "",
-        "criterion": "Flag 1 when the expected answer relies on a region-specific convention, jurisdiction, or value judgment that conflicts with or is unspecified for this deployment; flag 0 when no such dependence is supported. Explicitly scoped foreign facts do not automatically imply a conflict. Use null when evidence cannot establish the convention or its relevance. Quote the triggering assumption.",
-        "label_source": "haiku",
-        "grounded_in": [
-          "scoring.json#/dimensions/output_ontology/justification",
-          "deployment_description.txt"
+      "output_ontology": {
+        "deployment_requirements": [
+          {
+            "statement": "An illustrative Hindi-medium secondary-school exam tutor in India. Learners practise school-level mathematics, science, and Indian civics with written questions and multiple-choice answers. Success means identifying the correct answer and explaining it in Hindi. This authored example is for demonstrating the pipeline, not a validated exam syllabus or original-study benchmark.",
+            "source_ids": [
+              "deployment_description.txt"
+            ]
+          }
         ],
-        "example_items": [],
-        "positive_class": "The expected answer depends on a conflicting or unresolved regional convention."
+        "benchmark_evidence": [
+          {
+            "statement": "The deterministic dataset profile records available fields and item counts.",
+            "source_ids": [
+              "profile.json"
+            ]
+          }
+        ],
+        "prior_hypotheses": [
+          {
+            "statement": "Illustrative hypothesis: answer conventions may depend on an unstated jurisdiction or date format.",
+            "source_ids": [
+              "scoring.json#/dimensions/output_ontology/justification"
+            ]
+          },
+          {
+            "statement": "Ten authored text multiple-choice items with explicit answer options and reference letters. This fixture demonstrates regional relevance and convention ambiguity; it is not a representative benchmark sample. Item features record a human-authored topic only, not model predictions. No media are included.",
+            "source_ids": [
+              "dataset_analysis_report.md"
+            ]
+          }
+        ],
+        "evidence_gaps": [
+          "No independent domain-standard or target-stakeholder evidence is supplied for the authored demonstration."
+        ]
       },
-      {
-        "id": "IC.region_fit",
-        "component": "input_content",
-        "operation": "ordinal",
-        "aggregate": "category_distribution",
-        "applicable": true,
-        "na_reason": "",
-        "criterion": "Assign 1 for explicitly Indian or Hindi deployment-relevant context, 2 for region-neutral material, and 3 for content depending on a foreign setting outside the stated learning tasks. Do not infer that English language alone is cultural misalignment; language is evaluated in the retained Input Form finding. Use null where regional fit cannot be determined.",
-        "label_source": "haiku",
-        "grounded_in": [
-          "scoring.json#/dimensions/input_content/justification",
-          "deployment_description.txt"
+      "output_content": {
+        "deployment_requirements": [
+          {
+            "statement": "An illustrative Hindi-medium secondary-school exam tutor in India. Learners practise school-level mathematics, science, and Indian civics with written questions and multiple-choice answers. Success means identifying the correct answer and explaining it in Hindi. This authored example is for demonstrating the pipeline, not a validated exam syllabus or original-study benchmark.",
+            "source_ids": [
+              "deployment_description.txt"
+            ]
+          }
         ],
-        "example_items": [],
-        "ordinal_anchors": {
-          "1": "Explicitly relevant to the Indian/Hindi deployment",
-          "2": "Region-neutral",
-          "3": "Region-misaligned for the stated learning task"
-        }
-      },
-      {
-        "id": "OC.label_contestability",
-        "component": "output_content",
-        "operation": "flag",
-        "aggregate": "prevalence",
-        "applicable": true,
-        "na_reason": "",
-        "criterion": "Flag 1 only when the supplied question and reference answer provide a specific reason a knowledgeable learner in this deployment could dispute the answer, for example an unresolved jurisdiction or date convention; flag 0 when the answer is supported under the stated conditions. Foreign subject matter alone does not make an answer disputable. Use null when verifying the reference requires evidence not supplied. Do not invent stakeholder opinions.",
-        "label_source": "haiku",
-        "grounded_in": [
-          "scoring.json#/dimensions/output_content/justification",
-          "deployment_description.txt"
+        "benchmark_evidence": [
+          {
+            "statement": "The deterministic dataset profile records available fields and item counts.",
+            "source_ids": [
+              "profile.json"
+            ]
+          }
         ],
-        "example_items": [],
-        "positive_class": "The reference answer is disputable under the question’s stated conditions."
+        "prior_hypotheses": [
+          {
+            "statement": "Illustrative hypothesis: a reference answer can be contested where the question leaves a required convention unstated. Foreign subject matter alone does not make an answer incorrect.",
+            "source_ids": [
+              "scoring.json#/dimensions/output_content/justification"
+            ]
+          },
+          {
+            "statement": "Ten authored text multiple-choice items with explicit answer options and reference letters. This fixture demonstrates regional relevance and convention ambiguity; it is not a representative benchmark sample. Item features record a human-authored topic only, not model predictions. No media are included.",
+            "source_ids": [
+              "dataset_analysis_report.md"
+            ]
+          }
+        ],
+        "evidence_gaps": [
+          "No independent domain-standard or target-stakeholder evidence is supplied for the authored demonstration."
+        ]
       }
-    ]
+    }
   }
 }

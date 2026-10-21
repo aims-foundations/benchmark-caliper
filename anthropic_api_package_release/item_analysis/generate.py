@@ -1,24 +1,25 @@
-"""Generate a classifier specification once, or import a reviewed specification."""
+"""Prepare sourced context once, then join it to the immutable classifier catalog."""
 
-from copy import deepcopy
 from itertools import islice
 import json
 from pathlib import Path
 
 from .data import file_sha256, read_items
 from .model_client import MODEL_ID, PROVIDER, REASONING_EFFORT
-from .schema import SPEC_SCHEMA, apply_profile_gates, validate_spec
+from .schema import (CONTEXT_SCHEMA, CATALOG_VERSION, SPEC_SCHEMA_VERSION, is_generic_spec,
+                     join_context, validate_context, validate_spec)
 from .storage import check_prepared, parse_response, read_json, run_lock, write_json
 
 PROMPT_PATH = Path(__file__).parent / "prompts" / "generate_spec.md"
+USER_PROMPT_PATH = PROMPT_PATH.with_name("generate_user.md")
 
 
 _VALIDATION_MESSAGES = {
-    "invalid_json": "The model returned invalid JSON after one repair. No items were classified; start a new analysis to generate the rules again.",
-    "schema": "The model returned classifier rules that still failed the required format after one repair. No items were classified; start a new analysis.",
-    "evidence": "The generated classifier rules cited evidence outside the supplied context after one repair. No items were classified; start a new analysis.",
-    "deployment": "The generated classifier rules changed the supplied deployment text after one repair. No items were classified; start a new analysis.",
-    "provenance": "The generated classifier rules misstated whether a benchmark assessment was run after one repair. No items were classified; start a new analysis.",
+    "invalid_json": "The model returned invalid JSON after one repair. No items were classified; start a new analysis to prepare the context again.",
+    "schema": "The model returned context that still failed the required format after one repair. No items were classified; start a new analysis.",
+    "evidence": "The generated contextual specification cited evidence outside the supplied context after one repair. No items were classified; start a new analysis.",
+    "deployment": "The generated contextual specification changed the supplied deployment text after one repair. No items were classified; start a new analysis.",
+    "provenance": "The generated contextual specification misstated whether a benchmark assessment was run after one repair. No items were classified; start a new analysis.",
     "task_grounding": "The generated task categories did not cite your task requirements after one repair. No items were classified; start a new analysis.",
 }
 
@@ -33,25 +34,18 @@ class SpecificationValidationError(ValueError):
 
 
 def _validation_code(error: ValueError) -> str:
-    """Classify validator-owned messages without exposing their model values."""
+    """Classify validator-owned prefixes without exposing arbitrary model text."""
     message = str(error)
     if isinstance(error, json.JSONDecodeError) or message == "Expected JSON or one complete JSON code block":
         return "invalid_json"
-    if message == "An assessment-linked specification cannot claim direct item-only provenance":
-        return "provenance"
-    if message.startswith("IO.task_category must cite direct_context.json#/task_requirements;"):
-        return "task_grounding"
-    if message.startswith("Generated deployment must copy the supplied deployment text exactly;"):
+    if message.startswith("Generated deployment must copy"):
         return "deployment"
-    # Schema errors can quote arbitrary model text. Only classify the exact
-    # validator prefix, never matching phrases inside that quoted text.
-    if message.startswith("Invalid classifier specification at "):
+    if message.startswith(("Invalid context specification at ", "Invalid classifier specification at ")):
         return "schema"
-    if any(message.startswith(f"{slot}: unknown evidence identifiers: ") for slot in (
-        "IO.task_category", "OO.output_category", "OO.value_encoding",
-        "IC.region_fit", "OC.label_contestability",
-    )):
+    if "unknown evidence identifiers:" in message:
         return "evidence"
+    if "source role cannot ground this claim" in message:
+        return "task_grounding"
     return "schema"
 
 
@@ -59,77 +53,70 @@ def generation_request(directory: Path, max_tokens=12000, *, model_id=MODEL_ID,
                        reasoning_effort=REASONING_EFFORT) -> dict:
     dataset = check_prepared(directory)
     evidence = read_json(directory / "evidence.json")
-    output_schema = deepcopy(SPEC_SCHEMA)
-    if evidence.get("analysis_basis") != "deployment_requirements":
-        # The stored specification schema also supports direct entry. A linked
-        # assessment must not advertise provenance fields that its validator
-        # correctly rejects, even though those fields are optional in storage.
-        for field in ("analysis_basis", "assessment_status"):
-            output_schema["properties"].pop(field)
-        output_schema.pop("dependentRequired")
-    payload = {
-        "benchmark": dataset["benchmark"], "deployment": evidence["deployment"],
-        "analysis_basis": evidence.get("analysis_basis", "benchmark_assessment"),
-        "assessment_status": evidence.get("assessment_status", "complete"),
-        "dataset_profile": read_json(directory / "profile.json"),
-        "evidence_registry": evidence["registry"],
-        "example_items": list(islice(read_items(directory / "items.jsonl"), 8)),
-        "output_schema": output_schema,
+    registry = evidence["registry"]
+    roles = evidence.get("source_roles")
+    if not roles:
+        raise ValueError("Prepared evidence predates generic sourced context; prepare a new run directory")
+    values = {
+        "benchmark": dataset["benchmark"], "deployment_description": evidence["deployment"],
+        "original_rubric": registry["framework.yaml"],
+        "source_registry_json": json.dumps({key: {"role": roles[key], "content": content} for key, content in registry.items()}, ensure_ascii=False, allow_nan=False),
+        "dataset_profile_json": json.dumps(read_json(directory / "profile.json"), ensure_ascii=False, allow_nan=False),
+        "example_items_json": json.dumps(list(islice(read_items(directory / "items.jsonl"), 8)), ensure_ascii=False, allow_nan=False),
     }
-    if evidence.get("analysis_basis") == "deployment_requirements":
-        payload["requirements"] = evidence["requirements"]
-        payload["unassessed_dimensions"] = ["input_form", "output_form"]
+    # One substitution pass: supplied documents cannot inject template tokens.
+    import re
+    user = re.sub(r"{{([a-z_]+)}}", lambda match: values[match.group(1)], USER_PROMPT_PATH.read_text(encoding="utf-8"))
     return {
         "model": model_id, "reasoning_effort": reasoning_effort,
-        "system": PROMPT_PATH.read_text(encoding="utf-8"),
-        "user": json.dumps(payload, ensure_ascii=False, allow_nan=False),
+        "system": PROMPT_PATH.read_text(encoding="utf-8"), "user": user,
         "max_tokens": max_tokens, "step": "item_specification",
     }
 
 
-def _save_spec(directory, raw_spec, *, source, validate_references):
+def _save_spec(directory, raw_spec, *, source):
     dataset = check_prepared(directory)
     profile = read_json(directory / "profile.json")
     evidence = read_json(directory / "evidence.json")
     direct = evidence.get("analysis_basis") == "deployment_requirements"
-    canonical, adjustments = apply_profile_gates(raw_spec, profile)
-    if direct and isinstance(canonical, dict):
-        canonical.update(analysis_basis="deployment_requirements", assessment_status="not_run")
-    elif isinstance(canonical, dict) and any(key in canonical for key in ("analysis_basis", "assessment_status")):
-        raise ValueError("An assessment-linked specification cannot claim direct item-only provenance")
-    canonical = validate_spec(
-        canonical, profile=profile, benchmark=dataset["benchmark"],
-        evidence=evidence["registry"] if validate_references else None,
-    )
-    if direct and validate_references:
-        task = next(classifier for classifier in canonical["classifiers"] if classifier["id"] == "IO.task_category")
-        if task["applicable"] and "direct_context.json#/task_requirements" not in task["grounded_in"]:
-            raise ValueError("IO.task_category must cite direct_context.json#/task_requirements; dataset categories are not deployment requirements")
-    deployment_matches = canonical["deployment"].strip() == evidence["deployment"].strip()
-    if validate_references and not deployment_matches:
-        raise ValueError("Generated deployment must copy the supplied deployment text exactly; contextual details belong in classifier criteria")
-    # The factual profile comes from code, even when importing a historical pilot.
-    # Keep the original JSON alongside it so the replacement is visible.
-    if canonical.get("dataset_profile") != profile:
-        adjustments.append({"field": "dataset_profile", "reason": "Use the prepared full-table profile; preserve original in classifier_spec.original.json"})
-    canonical["dataset_profile"] = profile
+    if not is_generic_spec(raw_spec):
+        raise ValueError("New runs require caliper_generic_items_v1 contextual specifications; historical specifications are readable only")
+    if "schema_version" in raw_spec and source.get("kind") == "provided":
+        # A supplied effective spec is accepted only when its full catalog,
+        # profile, deployment and registered sources match this prepared run.
+        checked = validate_spec(raw_spec, profile=profile, evidence=evidence["registry"], benchmark=dataset["benchmark"])
+        context = {key: checked[key] for key in CONTEXT_SCHEMA["properties"]}
+        if checked["source_roles"] != evidence["source_roles"]:
+            raise ValueError("Imported source roles differ from prepared evidence")
+    else:
+        context = raw_spec
+    context = validate_context(context, source_registry=evidence["registry"], source_roles=evidence["source_roles"],
+                               benchmark=dataset["benchmark"], deployment_description=evidence["deployment"])
+    adjustments = []
+    # Deterministic availability gaps cannot disappear in generated prose.
+    for cid, content in context["context_by_classifier"].items():
+        for gap in evidence.get("evidence_gaps", []):
+            if gap not in content["evidence_gaps"]:
+                content["evidence_gaps"].append(gap)
+                adjustments.append({"classifier": cid, "field": "evidence_gaps", "added": gap,
+                                    "reason": "Preserve deterministic source availability gap"})
+    canonical = join_context(context, profile=profile, source_registry=evidence["registry"], source_roles=evidence["source_roles"],
+                             analysis_basis="deployment_requirements" if direct else "benchmark_assessment",
+                             assessment_status="not_run" if direct else "complete")
     write_json(directory / "classifier_spec.original.json", raw_spec)
     write_json(directory / "classifier_spec.json", canonical)
     metadata = {
-        "source": source, "adjustments": adjustments,
-        "evidence_references_checked": validate_references,
-        "deployment_text_matches": deployment_matches,
-        "note": ("Structure and source IDs checked; semantic correctness still needs review."
-                 if validate_references else
-                 "Imported references and deployment alignment are not automatically verified. Compare the original and specification deployments and review the criteria before interpreting results."),
+        "schema_version": SPEC_SCHEMA_VERSION, "fixed_catalog_version": CATALOG_VERSION,
+        "source": source, "adjustments": adjustments, "evidence_references_checked": True,
+        "deployment_text_matches": True, "semantic_validation": "unreviewed",
+        "note": "Structure, immutable catalog, source IDs and source roles checked; semantic grounding remains unreviewed and requires human review.",
         "spec_sha256": file_sha256(directory / "classifier_spec.json"),
         "dataset_sha256": file_sha256(directory / "dataset.json"),
     }
     if direct:
         metadata.update(analysis_basis="deployment_requirements", assessment_status="not_run",
                         unassessed_dimensions=["input_form", "output_form"])
-        metadata["note"] += (" This is item-only analysis based on explicit deployment requirements. "
-                             "No benchmark assessment was run; Input Form and Output Form are not assessed.")
+        metadata["note"] += " No benchmark assessment was run; Input Form and Output Form are not assessed."
     write_json(directory / "specification.json", metadata)
     return canonical
 
@@ -149,7 +136,7 @@ def generate_spec(directory: Path, *, supplied: Path | None = None, dry_run=Fals
                 raise ValueError("Use --dry-run to preview specification generation, or --spec to import; choose one")
             return _save_spec(directory, read_json(supplied), source={
                 "kind": "provided", "path": str(supplied.resolve()), "sha256": file_sha256(supplied),
-            }, validate_references=False)
+            })
         request = generation_request(directory, max_tokens, model_id=model_id,
                                      reasoning_effort=reasoning_effort)
         write_json(directory / "generation_request.json", request)
@@ -176,7 +163,7 @@ def generate_spec(directory: Path, *, supplied: Path | None = None, dry_run=Fals
                     "kind": "generated", "provider": provider, "model": model_id,
                     "model_id": model_id, "reasoning_effort": reasoning_effort,
                     "max_tokens": max_tokens,
-                }, validate_references=True)
+                })
             except ValueError as exc:
                 entry["error"] = str(exc)
                 attempts.append(entry)

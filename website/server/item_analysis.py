@@ -31,6 +31,7 @@ from starlette.background import BackgroundTask
 
 from anthropic_api_package_release.item_analysis import classify, generate, model_client, prepare, report
 from anthropic_api_package_release.item_analysis.data import file_sha256
+from anthropic_api_package_release.item_analysis.catalog import CATALOG_VERSION
 from anthropic_api_package_release.item_analysis.storage import check_prepared, read_json, write_json
 from . import db, item_analysis_assessment, item_analysis_databank, item_analysis_direct, item_analysis_source
 
@@ -110,6 +111,14 @@ def prepared_directory() -> Path | None:
     return Path(configured).expanduser() if configured else None
 
 
+def usable_context_file(path: Path) -> bool:
+    """Historical induced rules remain downloadable artifacts, never new-run rules."""
+    try:
+        return read_json(path).get("fixed_catalog_version") == CATALOG_VERSION
+    except (OSError, ValueError, TypeError):
+        return False
+
+
 def examples() -> list[dict]:
     fixture = read_json(FIXTURE_PATH)
     illustrative = {"id": "illustrative", **{key: fixture[key] for key in (
@@ -133,7 +142,7 @@ def examples() -> list[dict]:
                 "benchmark": dataset["benchmark"], "deployment": evidence["deployment"],
                 "source_label": "Prepared benchmark snapshot with its original assessment; counts apply to this snapshot.",
                 "item_count": dataset["item_count"], "available": True,
-                "supplied_spec_available": (directory / "classifier_spec.original.json").is_file(),
+                "supplied_spec_available": usable_context_file(directory / "classifier_spec.original.json"),
             })
     except (OSError, ValueError, KeyError, TypeError):
         pass  # The bundled example remains runnable on a fresh checkout.
@@ -398,9 +407,9 @@ async def initialize(job: AnalysisJob, mode: str, api_key: str | None, upload: d
         phase = "specification"
         if mode == "generate":
             job.status = "generating"
-            job.message = ("GPT-6 Luna is turning your deployment requirements into item-level classification rules."
+            job.message = ("GPT-6 Luna is preparing sourced context for the four fixed item classifiers."
                            if job.assessment and job.assessment["kind"] == "direct" else
-                           "GPT-6 Luna is turning the assessment into item-level classification rules.")
+                           "GPT-6 Luna is preparing sourced context; earlier assessment findings remain hypotheses.")
         job.spec = await drained_thread(
             generate.generate_spec, job.directory,
             supplied=supplied if mode == "provided" else None,
@@ -412,7 +421,7 @@ async def initialize(job: AnalysisJob, mode: str, api_key: str | None, upload: d
         metadata.get("source", {}).pop("path", None)
         write_json(job.directory / "specification.json", metadata)
         await refresh_report(job)
-        job.status, job.message = "ready", "Review the classifier rules, then classify the first items."
+        job.status, job.message = "ready", "Review the fixed rules, sourced context, and evidence gaps, then classify the first items."
     except (item_analysis_source.DatasetAccessError, item_analysis_source.DatasetPreparationError,
             item_analysis_databank.DataBankError) as error:
         job.status, job.message = "failed", str(error)

@@ -93,10 +93,14 @@ export type Artifact = 'spec' | 'items' | 'summary' | 'report' | 'review'
 export interface Classifier {
   id: string
   component: string
-  operation: 'assignment' | 'flag' | 'ordinal'
+  operation: 'multilabel' | 'judgment' | 'assignment' | 'flag' | 'ordinal'
   applicable: boolean
   na_reason?: string
-  criterion: string
+  criterion?: string
+  question?: string
+  decision_rules?: string[]
+  labels?: string[]
+  response_contract?: Record<string, unknown>
   category_set?: string[]
   ordinal_anchors?: Record<string, string>
   positive_class?: string
@@ -104,7 +108,31 @@ export interface Classifier {
   example_items?: string[]
 }
 
+export interface SourcedStatement { statement: string; source_ids: string[] }
+export interface ClassifierContext {
+  deployment_requirements: SourcedStatement[]
+  benchmark_evidence: SourcedStatement[]
+  prior_hypotheses: SourcedStatement[]
+  evidence_gaps: string[]
+}
+export interface CategoryInventory {
+  completeness: 'complete' | 'partial' | 'unknown'
+  completeness_source_ids: string[]
+  categories: { id: string; name: string; definition: string; source_ids: string[] }[]
+  evidence_gaps: string[]
+}
 export interface Specification {
+  schema_version?: string
+  fixed_catalog_version?: string
+  deployment_description?: string
+  dataset_profile?: Record<string, unknown>
+  semantic_validation?: string
+  analysis_basis?: string
+  assessment_status?: string
+  input_category_inventory?: CategoryInventory
+  context_by_classifier?: Record<string, ClassifierContext>
+  source_registry?: Record<string, unknown>
+  source_roles?: Record<string, string>
   benchmark: string
   deployment: string
   classifiers: Classifier[]
@@ -116,6 +144,11 @@ export interface ClassifierSummary extends Classifier {
   unknown?: number
   invalid?: number
   errors?: number
+  insufficient_evidence?: number
+  valid_judgments?: number
+  determinate_judgments?: number
+  percentages_among_valid?: Record<string, number | null>
+  category_counts?: Record<string, number>
   pending?: number
   percentages_among_known?: Record<string, number | null>
 }
@@ -128,6 +161,19 @@ export interface OriginalAssessment {
 }
 
 export interface AnalysisSummary {
+  report_schema_version?: string
+  schema_version?: string
+  fixed_catalog_version?: string
+  classifier_count?: number
+  completed_judgments?: number
+  expected_judgments?: number
+  experiment?: {
+    classifier_count: number
+    selected_items: number
+    completed_item_classifier_judgments: number
+    expected_item_classifier_judgments: number
+    [key: string]: unknown
+  }
   total_items: number
   completed_items: number
   error_items: number
@@ -149,7 +195,7 @@ export interface Item {
   reference_answer: unknown
   status: string
   error?: string
-  labels?: Record<string, { label: string | number | null; evidence: string[]; justification: string }>
+  labels?: Record<string, { label: string | number | null; evidence: string[]; justification: string; matched_category_ids?: string[]; scope_exclusion_source_ids?: string[] }>
 }
 
 export interface AnalysisRun {

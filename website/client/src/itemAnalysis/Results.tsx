@@ -37,6 +37,8 @@ function ItemCard({ item, classifiers, demo, classifierNames }: { item: Item; cl
         return <section key={classifier.id} className="ia-judgment"><div className="ia-judgment-heading">
           <h4>{classifierName(classifier.id, classifierNames)}</h4><span>{!classifier.applicable ? 'Not applicable' : judgment ? labelName(classifier, judgment.label) : 'Unknown'}</span></div>
           {judgment && classifier.applicable && <><p>{judgment.justification}</p>
+            {judgment.matched_category_ids && <p className="ia-small">Matched categories: {judgment.matched_category_ids.join(', ') || 'None'}</p>}
+            {!!judgment.scope_exclusion_source_ids?.length && <p className="ia-small">Scope exclusion sources: {judgment.scope_exclusion_source_ids.join(', ')}</p>}
             {!!judgment.evidence?.length && <ul className="ia-evidence">{judgment.evidence.map((evidence, i) => <li key={i}>{evidence}</li>)}</ul>}</>}
         </section>
       })}
@@ -56,6 +58,7 @@ export function Results({ run, page, setPage, onDownload, downloading, pageLoadi
   classifierNames?: Record<string, string>
 }) {
   const summary = run.summary
+  const generic = run.spec?.fixed_catalog_version === 'caliper_generic_items_v1'
   const active = ['preparing', 'generating', 'running'].includes(run.status)
   return <section className="ia-results" aria-label="Analysis results">
     {active && <p className="ia-small">Summary statistics and exports update when this phase finishes. You can inspect completed item judgments below.</p>}
@@ -65,16 +68,18 @@ export function Results({ run, page, setPage, onDownload, downloading, pageLoadi
       <div className="ia-stats"><div><strong>{run.complete.toLocaleString()}</strong><span>{demo ? 'Demo judgments shown' : 'Items classified'}</span></div>
         <div><strong>{run.total.toLocaleString()}</strong><span>{demo ? 'Items in demo sample' : 'Items in snapshot'}</span></div>
         <div><strong>{run.errors.toLocaleString()}</strong><span>Failed assessments</span></div></div>
-      <p className="ia-small">{demo ? 'Percentages describe authored walkthrough judgments among known labels in this bundled sample only. They are not model outputs or estimates for the full MathDial benchmark. Unknown and pending examples are excluded.' : 'Percentages describe model judgments among known labels. Unknowns, failures, and pending items are excluded. Human review is needed to check accuracy.'}</p>
+      <p className="ia-small">{demo ? 'Percentages describe all valid authored walkthrough judgments, including insufficient evidence, in this bundled sample only. They are not model outputs or estimates for the full MathDial benchmark. Operational failures and pending examples are excluded.' : generic ? 'Percentages include all valid judgments, including insufficient evidence. Invalid responses, operational failures, and pending items are excluded. No issue identified is a bounded finding, not proof of benchmark validity. Human review is needed to check accuracy.' : 'Percentages describe model judgments among known labels. Unknowns, failures, and pending items are excluded. Human review is needed to check accuracy.'}</p>
+      <p className="ia-small">{summary.experiment?.completed_item_classifier_judgments ?? summary.classifiers.reduce((total, classifier) => total + (classifier.valid_judgments ?? ((classifier.known || 0) + (classifier.unknown || 0))), 0)} completed item-classifier judgments across {run.spec?.classifiers.length || 0} classifiers.</p>
       <div className="ia-distributions">{summary.classifiers.filter(c => c.applicable).map(classifier => <article key={classifier.id} className="ia-distribution">
         <h3>{classifierName(classifier.id, classifierNames)}</h3>
-        <p className="ia-small">{(classifier.known || 0).toLocaleString()} known labels · {(classifier.unknown || 0).toLocaleString()} unknown · {(classifier.invalid || 0).toLocaleString()} invalid</p>
+        <p className="ia-small">{(classifier.determinate_judgments ?? classifier.known ?? 0).toLocaleString()} {generic ? 'sufficient evidence' : 'known labels'} · {(classifier.insufficient_evidence ?? classifier.unknown ?? 0).toLocaleString()} {generic ? 'insufficient evidence' : 'unknown'} · {(classifier.invalid || 0).toLocaleString()} invalid</p>
         <div className="ia-bars">{Object.entries(classifier.counts || {}).map(([label, count]) => {
-          const pct = classifier.percentages_among_known?.[label]
+          const pct = generic ? classifier.percentages_among_valid?.[label] : classifier.percentages_among_known?.[label]
           return <div className="ia-bar-row" key={label}><div className="ia-bar-label"><span>{labelName(classifier, label)}</span>
             <span>{count.toLocaleString()} <small>{pct == null ? '—' : `${pct.toFixed(1)}%`}</small></span></div>
             <div className="ia-bar-track" aria-hidden="true"><span style={{ width: `${pct || 0}%` }} /></div></div>
         })}</div>
+        {classifier.category_counts && <div><h4>Required-category matches</h4><ul>{Object.entries(classifier.category_counts).map(([id, count]) => <li key={id}>{id}: {count}</li>)}</ul><p className="ia-small">An item may match multiple categories. These counts describe the selected items; they do not establish omitted categories in the full benchmark.</p></div>}
         <p className="ia-small ia-distribution-note">{(classifier.errors || 0).toLocaleString()} failed · {(classifier.pending || 0).toLocaleString()} pending</p>
       </article>)}</div>
     </>}
@@ -99,7 +104,7 @@ export function Results({ run, page, setPage, onDownload, downloading, pageLoadi
       <button type="button" className="ia-secondary" disabled={page >= run.pagination.total_pages || pageLoading} onClick={() => setPage(page + 1)}>Next</button>
     </nav>}
     {summary && <div className="ia-exports"><h3>Take the results with you</h3><div>{ARTIFACTS.map(([artifact, label]) => <button key={artifact} type="button" className="ia-secondary"
-      onClick={() => onDownload(artifact)} disabled={downloading !== null || active}>{downloading === artifact ? 'Downloading…' : label}<span aria-hidden="true"> ↓</span></button>)}</div>
+      onClick={() => onDownload(artifact)} disabled={downloading !== null || active || (artifact === 'review' && generic && !(summary.experiment?.selected_items))}>{downloading === artifact ? 'Downloading…' : label}<span aria-hidden="true"> ↓</span></button>)}</div>
       <p className="ia-small">{demo ? 'Downloads cover this bundled demo sample only and include source and judgment provenance. The human review worksheet omits example judgments for independent review.' : 'The human review worksheet omits model predictions for independent review.'}</p></div>}
   </section>
 }

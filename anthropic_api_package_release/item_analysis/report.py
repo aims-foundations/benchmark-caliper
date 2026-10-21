@@ -1,7 +1,8 @@
 """Summarize saved classifications and export a blind human-review worksheet.
 
-Percentages describe model labels among known classifications. Unknown judgments,
-failed calls, and pending items are separate; none count as negative labels.
+Generic percentages describe valid model judgments, including insufficient evidence.
+Operational failures and pending items are separate. Legacy numeric labels retain
+their historical meanings and denominators.
 """
 
 from __future__ import annotations
@@ -15,7 +16,23 @@ from typing import Any
 
 from . import storage
 from .data import file_sha256
-from .schema import allowed_labels
+from .catalog import CATALOG_VERSION, SPEC_SCHEMA_VERSION, LEGACY_SCHEMA_VERSION, LEGACY_CATALOG_VERSION, is_generic_spec
+from .schema import allowed_labels, validate_spec
+
+
+GENERIC_IDS = {"input_ontology", "input_content", "output_ontology", "output_content"}
+
+
+def _generic(classifier: dict) -> bool:
+    return classifier.get("id") in GENERIC_IDS
+
+
+def _versions(spec: dict) -> dict:
+    generic = is_generic_spec(spec)
+    return {
+        "schema_version": spec.get("schema_version", SPEC_SCHEMA_VERSION if generic else LEGACY_SCHEMA_VERSION),
+        "fixed_catalog_version": spec.get("fixed_catalog_version", LEGACY_CATALOG_VERSION),
+    }
 
 
 DIMENSIONS = (
@@ -61,6 +78,11 @@ def _load_run(run_dir: Path) -> tuple[dict, list[dict], dict[str, dict]]:
     spec = _read_json(run_dir / "classifier_spec.json")
     if not isinstance(spec, dict) or not isinstance(spec.get("classifiers"), list):
         raise ValueError("classifier_spec.json must contain classifiers")
+    if "fixed_catalog_version" in spec:
+        # Reject unsupported versions and mutated rules; historical specs remain untouched.
+        validate_spec(spec)
+        if all(key in dataset for key in ("items_sha256", "profile_sha256", "evidence_sha256")):
+            storage.check_prepared(run_dir)
     items = _read_jsonl(run_dir / "items.jsonl")
     item_ids = {item["item_id"] for item in items}
     if len(item_ids) != len(items):
@@ -84,11 +106,27 @@ def _valid_model_label(label: Any, classifier: dict) -> bool:
 
 
 def _judgment(result: dict, classifier: dict) -> tuple[Any, dict, bool]:
-    judgment = result.get("labels", {}).get(classifier["id"])
+    if _generic(classifier) and (
+        result.get("schema_version") != "caliper_item_result_v2"
+        or result.get("fixed_catalog_version") != CATALOG_VERSION
+    ):
+        return None, {}, True
+    labels = result.get("labels")
+    if not isinstance(labels, dict):
+        return None, {}, True
+    if _generic(classifier) and set(labels) != GENERIC_IDS:
+        return None, {}, True
+    judgment = labels.get(classifier["id"])
     if not isinstance(judgment, dict) or "label" not in judgment:
         return None, {}, True
+    if _generic(classifier):
+        fields = {"label", "evidence", "justification"}
+        if classifier["id"] == "input_ontology":
+            fields |= {"matched_category_ids", "scope_exclusion_source_ids"}
+        if set(judgment) != fields:
+            return None, judgment, True
     label = judgment["label"]
-    if label is not None and not _valid_model_label(label, classifier):
+    if (label is None and _generic(classifier)) or (label is not None and not _valid_model_label(label, classifier)):
         return None, judgment, True
     evidence = judgment.get("evidence")
     justification = judgment.get("justification")
@@ -99,6 +137,27 @@ def _judgment(result: dict, classifier: dict) -> tuple[Any, dict, bool]:
     )
     if not valid_evidence or not isinstance(justification, str) or not justification.strip():
         return None, judgment, True
+    if classifier["id"] == "input_ontology":
+        matched = judgment.get("matched_category_ids")
+        if (not isinstance(matched, list) or any(not isinstance(value, str) for value in matched)
+                or len(matched) != len(set(matched)) or bool(matched) != (label == "match")):
+            return None, judgment, True
+        exclusions = judgment.get("scope_exclusion_source_ids")
+        if (not isinstance(exclusions, list) or any(not isinstance(value, str) for value in exclusions)
+                or len(exclusions) != len(set(exclusions))):
+            return None, judgment, True
+        if any(classifier.get("source_roles", {}).get(ref) != "deployment_requirement" for ref in exclusions):
+            return None, judgment, True
+        inventory = classifier.get("input_category_inventory", {})
+        if inventory:
+            allowed = {category["id"] for category in inventory.get("categories", [])}
+            if set(matched) - allowed:
+                return None, judgment, True
+            if label == "no_match" and inventory.get("completeness") != "complete":
+                exclusions = judgment.get("scope_exclusion_source_ids", [])
+                if (not exclusions or not set(exclusions).issubset(classifier.get("source_registry", {}))
+                        or any(classifier.get("source_roles", {}).get(ref) != "deployment_requirement" for ref in exclusions)):
+                    return None, judgment, True
     return label, judgment, False
 
 
@@ -134,7 +193,10 @@ def _write_items_csv(run_dir: Path, items: list[dict], results: dict, classifier
     provenance = provenance or {}
     columns = ["item_id", "status", "content", "reference_answer", "grading_criterion", "error"]
     for classifier in classifiers:
-        columns.extend(f"{classifier['id']}.{suffix}" for suffix in ("label", "evidence", "justification"))
+        suffixes = ["label", "evidence", "justification"]
+        if classifier["id"] == "input_ontology":
+            suffixes += ["matched_category_ids", "scope_exclusion_source_ids"]
+        columns.extend(f"{classifier['id']}.{suffix}" for suffix in suffixes)
     columns.extend(provenance)
     with (run_dir / "items.csv").open("w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=columns)
@@ -153,6 +215,9 @@ def _write_items_csv(run_dir: Path, items: list[dict], results: dict, classifier
                     row[f"{prefix}.label"] = "invalid" if invalid else "unknown" if label is None else label
                     row[f"{prefix}.evidence"] = judgment.get("evidence", [])
                     row[f"{prefix}.justification"] = judgment.get("justification", "")
+                    if prefix == "input_ontology":
+                        row[f"{prefix}.matched_category_ids"] = judgment.get("matched_category_ids", [])
+                        row[f"{prefix}.scope_exclusion_source_ids"] = judgment.get("scope_exclusion_source_ids", [])
             writer.writerow({key: _csv_text(value) for key, value in row.items()})
 
 
@@ -163,6 +228,42 @@ def _export_review(run_dir: Path, items: list[dict], classifiers: list[dict],
     selection_path = run_dir / "review_selection.json"
     if path.exists():
         return _read_json(selection_path, {"method": "existing worksheet preserved"})
+    generic = any(_generic(classifier) for classifier in classifiers)
+    if generic and not items:
+        return {
+            "schema_version": "caliper_item_review_v2", "fixed_catalog_version": provenance.get("fixed_catalog_version"),
+            "method": "awaiting experiment selection", "purpose": "review worksheet deferred until items are selected",
+            "item_ids": [], "instructions": "Run classification to record the selected items before exporting the review worksheet.",
+        }
+    if generic:
+        selection = {
+            "schema_version": "caliper_item_review_v2",
+            "fixed_catalog_version": provenance.get("fixed_catalog_version"),
+            "method": "all selected items in the saved shuffled order",
+            "purpose": "independent human review of the selected experiment items; not a tuning holdout",
+            "item_ids": [item["item_id"] for item in items],
+            "instructions": (
+                "Enter a fixed judgment label for each classifier, including insufficient_evidence when warranted. "
+                "Blank means unreviewed. For Input Ontology also enter a JSON array of matched category IDs "
+                "([] for no_match or insufficient_evidence). Consult the fixed rules and sourced context in "
+                "classifier_spec.json. Predictions are intentionally omitted."
+            ),
+        }
+        columns = ["item_id", "content", "reference_answer", "grading_criterion"]
+        for classifier in classifiers:
+            columns.append(classifier["id"])
+            if classifier["id"] == "input_ontology":
+                columns.extend(["input_ontology.matched_category_ids", "input_ontology.scope_exclusion_source_ids"])
+            columns.extend([f"{classifier['id']}.evidence", f"{classifier['id']}.justification"])
+        columns.extend(["review_notes", *provenance])
+        with path.open("w", newline="", encoding="utf-8") as file:
+            writer = csv.DictWriter(file, fieldnames=columns)
+            writer.writeheader()
+            for item in items:
+                row = {key: item.get(key, "") for key in columns[:4]}
+                writer.writerow({key: _csv_text(value) for key, value in {**row, **provenance}.items()})
+        _write_json(selection_path, selection)
+        return selection
     # Items are already seed-shuffled by preparation. Reserve these IDs even if
     # the pilot has not classified them yet, to avoid reviewing pilot examples.
     holdout = len(items) > 100
@@ -190,6 +291,8 @@ def _export_review(run_dir: Path, items: list[dict], classifiers: list[dict],
 
 
 def _summarize_classifier(classifier: dict, results: dict, total: int) -> dict:
+    if _generic(classifier):
+        return _summarize_generic(classifier, results, total)
     definition_fields = (
         "id", "component", "operation", "applicable", "na_reason", "criterion", "aggregate", "grounded_in",
     )
@@ -238,6 +341,56 @@ def _summarize_classifier(classifier: dict, results: dict, total: int) -> dict:
     return summary
 
 
+
+def _summarize_generic(classifier: dict, results: dict, total: int) -> dict:
+    summary = dict(classifier)
+    summary["criterion"] = classifier["question"]
+    counts = {label: 0 for label in allowed_labels(classifier)}
+    invalid = errors = completed = 0
+    inventory = classifier.get("input_category_inventory", {})
+    category_counts = {category["id"]: 0 for category in inventory.get("categories", [])}
+    for result in results.values():
+        if result["status"] == "error":
+            errors += 1
+            continue
+        completed += 1
+        label, judgment, bad = _judgment(result, classifier)
+        if bad:
+            invalid += 1
+            continue
+        counts[label] += 1
+        for category_id in judgment.get("matched_category_ids", []):
+            category_counts[category_id] += 1
+    valid = sum(counts.values())
+    insufficient = counts["insufficient_evidence"]
+    determinate = valid - insufficient
+    summary.update(
+        counts=counts, valid_judgments=valid, determinate_judgments=determinate,
+        insufficient_evidence=insufficient, invalid=invalid, errors=errors,
+        pending=total - completed - errors, completed=completed,
+        percentages_among_valid={label: _percent(count, valid) for label, count in counts.items()},
+        percentage_denominator="all valid judgments, including insufficient_evidence",
+        not_observed_labels=[label for label, count in counts.items() if count == 0],
+    )
+    if classifier["id"] == "input_ontology":
+        summary.update(
+            category_counts=category_counts,
+            category_percentages_among_determinate={key: _percent(count, determinate) for key, count in category_counts.items()},
+            category_percentage_denominator="match and no_match judgments; category assignments may overlap",
+            required_categories_not_observed=[key for key, count in category_counts.items() if not count],
+            inventory_completeness=inventory.get("completeness", "unknown"),
+            completeness_source_ids=inventory.get("completeness_source_ids", []),
+            coverage_interpretation=(
+                "Counts record supported matches to the supplied category inventory. Categories may overlap. "
+                "A category not observed in these items is not established absent from the benchmark. "
+                "Partial or unknown inventories do not establish complete deployment coverage."
+            ),
+        )
+    else:
+        summary["issue_percent_among_determinate"] = _percent(counts["issue_identified"], determinate)
+        summary["determinate_percentage_denominator"] = "issue_identified and no_issue_identified judgments"
+    return summary
+
 def generate_report(run_dir: Path) -> dict:
     """Write summary.json, items.csv, blind review.csv, and standalone report.html."""
     run_dir = Path(run_dir)
@@ -249,15 +402,46 @@ def generate_report(run_dir: Path) -> dict:
     original_dimensions = original.get("dimensions", original) if isinstance(original, dict) else {}
     completed = sum(result["status"] == "complete" for result in results.values())
     errors = sum(result["status"] == "error" for result in results.values())
-    classifiers = [_summarize_classifier(classifier, results, len(items)) for classifier in spec["classifiers"]]
+    generic = is_generic_spec(spec)
+    execution = _read_json(run_dir / "execution.json", {})
+    if generic and "selected_item_ids" in execution:
+        selected_ids = set(execution["selected_item_ids"])
+        if selected_ids - {item["item_id"] for item in items}:
+            raise ValueError("Execution selection contains items outside the prepared dataset")
+        selected_items = [item for item in items if item["item_id"] in selected_ids]
+    elif generic and "target_items" in execution:
+        selected_items = items[:execution["target_items"]]
+    elif generic and results:
+        selected_items = [item for item in items if item["item_id"] in results]
+    else:
+        selected_items = [] if generic else items
+    selected_ids = {item["item_id"] for item in selected_items}
+    selected_results = {item_id: result for item_id, result in results.items() if item_id in selected_ids}
+    definitions = []
+    for classifier in spec["classifiers"]:
+        definition = dict(classifier)
+        if generic:
+            definition["context"] = spec["context_by_classifier"][classifier["id"]]
+            if classifier["id"] == "input_ontology":
+                definition["input_category_inventory"] = spec["input_category_inventory"]
+                definition["source_registry"] = spec["source_registry"]
+                definition["source_roles"] = spec["source_roles"]
+        definitions.append(definition)
+    reporting_results = selected_results if generic else results
+    reporting_total = len(selected_items) if generic else len(items)
+    classifiers = [_summarize_classifier(classifier, reporting_results, reporting_total) for classifier in definitions]
     complete_snapshot = (
         bool(items) and completed == len(items)
         and not any(classifier.get("invalid", 0) for classifier in classifiers)
+        and (not generic or all(not _judgment(result, classifier)[2]
+                                for result in results.values() for classifier in definitions))
     )
     run_config = _read_json(run_dir / "run.json", {})
     summary = {
+        **_versions(spec),
+        "report_schema_version": "caliper_item_report_v2" if generic else "legacy_item_report_v1",
         "benchmark": spec.get("benchmark", dataset.get("benchmark")),
-        "deployment": spec.get("deployment"),
+        "deployment": spec.get("deployment_description", spec.get("deployment")),
         "original_deployment": evidence.get("deployment"),
         "specification": _read_json(run_dir / "specification.json", {}),
         "classification": {
@@ -279,13 +463,38 @@ def generate_report(run_dir: Path) -> dict:
         "original_assessment": None if direct else {dimension: original_dimensions.get(dimension) for dimension in DIMENSIONS},
         "classifiers": classifiers,
     }
-    provenance = {}
+    active_count = sum(classifier["applicable"] for classifier in definitions)
+    selected_completed = sum(result["status"] == "complete" for result in selected_results.values())
+    summary["experiment"] = {
+        "classifier_count": active_count,
+        "benchmark_classifier_combinations": active_count,
+        "selected_items": len(selected_items),
+        "selected_completed_items": selected_completed,
+        "selected_error_items": sum(result["status"] == "error" for result in selected_results.values()),
+        "selected_pending_items": len(selected_items) - len(selected_results),
+        "expected_item_classifier_judgments": len(selected_items) * active_count,
+        "completed_item_classifier_judgments": sum(classifier.get("valid_judgments", classifier.get("known", 0) + classifier.get("unknown", 0)) for classifier in classifiers),
+        "error_item_classifier_judgments": sum(classifier.get("errors", 0) for classifier in classifiers),
+        "invalid_item_classifier_judgments": sum(classifier.get("invalid", 0) for classifier in classifiers),
+        "pending_item_classifier_judgments": sum(classifier.get("pending", 0) for classifier in classifiers),
+        "request_policy": "one primary request per item covers every configured classifier; repairs and retries add calls",
+        "recorded_api_calls": sum(len(record.get("attempts", [])) for record in _read_jsonl(run_dir / "results.jsonl")),
+    }
+    if generic:
+        summary["interpretation"] = (
+            "Counts describe model judgments, not verified prevalence. Judgment percentages include insufficient_evidence; "
+            "any determinate-only percentage states its denominator. Invalid responses, operational errors, and pending "
+            "items remain separate. No issue identified is a bounded finding for the examined aspect and available "
+            "evidence, not proof of alignment, stakeholder agreement, or benchmark validity. No item statistics are "
+            "converted into 1–5 scores."
+        )
+    provenance = _versions(spec)
     if direct:
-        provenance = {
+        provenance.update({
             "analysis_basis": "deployment_requirements", "assessment_status": "not_run",
             "unassessed_dimensions": ["input_form", "output_form"],
             "direct_context_sha256": dataset.get("direct_context_sha256"),
-        }
+        })
         summary.update(**provenance, analysis_scope="item_only",
                        requirements=evidence.get("requirements", {}), direct_context=evidence.get("direct_context"))
         summary["interpretation"] += (
@@ -293,8 +502,8 @@ def generate_report(run_dir: Path) -> dict:
             "No benchmark assessment was run; Input Form and Output Form are not assessed. "
             "Completion refers only to classifying this item snapshot, not to a complete benchmark validity assessment."
         )
-    _write_items_csv(run_dir, items, results, spec["classifiers"], provenance)
-    summary["review_selection"] = _export_review(run_dir, items, spec["classifiers"], provenance)
+    _write_items_csv(run_dir, items, results, definitions, provenance)
+    summary["review_selection"] = _export_review(run_dir, selected_items if generic else items, definitions, provenance)
     comparison = _read_json(run_dir / "review_comparison.json")
     if comparison:
         review_path = Path(comparison.get("review_path", ""))
@@ -312,7 +521,7 @@ def generate_report(run_dir: Path) -> dict:
         if current:
             summary["review_comparison"] = comparison
     _write_json(run_dir / "summary.json", summary)
-    (run_dir / "report.html").write_text(_render_html(summary, items, results), encoding="utf-8")
+    (run_dir / "report.html").write_text(_render_html(summary, items, reporting_results), encoding="utf-8")
     return summary
 
 
@@ -338,6 +547,17 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}small{color:#465368
         f"<p><strong>Classifier deployment:</strong> {_escape(summary['deployment'])}</p>"
         "<details><summary>Original deployment requirements</summary>"
         f"<pre>{_escape(summary['original_deployment'] or 'Not supplied')}</pre></details>"
+    )
+    parts.append(
+        f"<p><strong>Schema:</strong> {_escape(summary['schema_version'])}; "
+        f"<strong>catalog:</strong> {_escape(summary['fixed_catalog_version'])}.</p>"
+    )
+    experiment = summary["experiment"]
+    parts.append(
+        f"<p>{experiment['selected_items']} selected items × {experiment['classifier_count']} classifiers = "
+        f"{experiment['expected_item_classifier_judgments']} expected judgments; "
+        f"{experiment['completed_item_classifier_judgments']} valid judgments saved. "
+        "One primary request per item covers all configured classifiers; repair and retry requests are additional.</p>"
     )
     metadata = summary["specification"]
     if summary.get("classification"):
@@ -367,8 +587,8 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}small{color:#465368
         "A category not observed in a partial run is not demonstrated absent from the benchmark.</p>"
     )
     parts.append(
-        "<p><a href='items.csv'>All items and predictions (CSV)</a> · "
-        "<a href='review.csv'>Blind review worksheet</a> · "
+        "<p><a href='items.csv'>All items and predictions (CSV)</a> · " +
+        ("<a href='review.csv'>Blind review worksheet</a> · " if summary["review_selection"].get("item_ids") else "") +
         "<a href='classifier_spec.json'>Classifier specification</a> · "
         "<a href='summary.json'>Summary JSON</a></p>"
     )
@@ -393,6 +613,9 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}small{color:#465368
         parts.append("</table></section>")
     item_by_id = {item["item_id"]: item for item in items}
     for classifier in summary["classifiers"]:
+        if _generic(classifier):
+            parts.append(_render_generic_classifier(classifier, item_by_id, results))
+            continue
         parts.append(f"<section><h2>{_escape(classifier['id'])}</h2>")
         if not classifier["applicable"]:
             parts.append(f"<p>Not applicable to {classifier['na_count']} prepared items: {_escape(classifier['na_reason'])}</p></section>")
@@ -444,9 +667,23 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}small{color:#465368
         f"{_escape(selection.get('instructions', ''))}</p>"
     )
     if "review_comparison" in summary:
+        overall = summary["review_comparison"].get("overall", {})
+        if overall:
+            parts.append(
+                f"<p>Overall judgment agreement: {_display_percent(overall['accuracy'] * 100 if overall['accuracy'] is not None else None)} "
+                f"over {overall['compared']} item-classifier pairs. "
+                "Insufficient evidence is an explicit judgment and participates in agreement. "
+                "Operational errors are excluded and reported separately.</p>"
+            )
+        joint = overall.get("judgment_and_category_set_agreement")
+        if joint:
+            parts.append(
+                f"<p>Overall agreement including Input Ontology category sets: "
+                f"{_display_percent(joint['accuracy'] * 100 if joint['accuracy'] is not None else None)} "
+                f"over {joint['compared']} item-classifier pairs.</p>"
+            )
         parts.append(
-            "<p>Agreement with the supplied human labels. "
-            "Model unknowns count as disagreements with a known human label.</p>"
+            "<p>Agreement with independently supplied human labels.</p>"
             "<table><tr><th>Classifier</th><th>Compared</th><th>Agreement</th><th>Cohen’s κ</th></tr>"
         )
         for classifier_id, comparison in summary["review_comparison"]["classifiers"].items():
@@ -458,7 +695,16 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}small{color:#465368
                 f"<tr><td>{_escape(classifier_id)}</td><td>{comparison['compared']}</td>"
                 f"<td>{agreement}</td><td>{kappa_display}</td></tr>"
             )
-        parts.append("</table><p><a href='review_comparison.json'>Comparison details and confusion counts</a></p>")
+        parts.append("</table>")
+        ontology = summary["review_comparison"]["classifiers"].get("input_ontology", {}).get("category_set_agreement")
+        if ontology:
+            parts.append(
+                f"<p>Input Ontology exact category-set agreement: "
+                f"{_display_percent(ontology['accuracy'] * 100 if ontology['accuracy'] is not None else None)} "
+                f"over {ontology['compared']} paired determinate judgments; "
+                f"{ontology['insufficient_evidence_excluded']} pairs with insufficient evidence excluded.</p>"
+            )
+        parts.append("<p><a href='review_comparison.json'>Comparison details and confusion counts</a></p>")
     else:
         note = summary.get("review_comparison_status", {}).get(
             "note", "No human-label comparison has been supplied yet."
@@ -467,13 +713,58 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}small{color:#465368
     return "\n".join([*parts, "</section></body></html>"])
 
 
+
+def _render_generic_classifier(classifier: dict, item_by_id: dict, results: dict) -> str:
+    parts = [f"<section><h2>{_escape(classifier['id'].replace('_', ' ').title())}</h2>",
+             f"<p>{_escape(classifier['question'])}</p>",
+             f"<p>{classifier['determinate_judgments']} determinate judgments; "
+             f"{classifier['insufficient_evidence']} insufficient evidence; {classifier['invalid']} invalid; "
+             f"{classifier['errors']} operational errors; {classifier['pending']} pending.</p>",
+             "<table><tr><th>Judgment</th><th>Count</th><th>Percent of valid judgments</th></tr>"]
+    for label, count in classifier["counts"].items():
+        parts.append(f"<tr><td>{_escape(label)}</td><td>{count}</td>"
+                     f"<td>{_display_percent(classifier['percentages_among_valid'][label])}</td></tr>")
+    parts.append("</table>")
+    if classifier["id"] == "input_ontology":
+        parts.append(f"<p><strong>Required-category inventory:</strong> {_escape(classifier['inventory_completeness'])}. "
+                     f"{_escape(classifier['coverage_interpretation'])}</p>")
+        parts.append("<table><tr><th>Category ID</th><th>Name</th><th>Matched items</th></tr>")
+        for category in classifier["input_category_inventory"]["categories"]:
+            parts.append(f"<tr><td>{_escape(category['id'])}</td><td>{_escape(category['name'])}</td>"
+                         f"<td>{classifier['category_counts'][category['id']]}</td></tr>")
+        parts.append("</table>")
+        parts.append(f"<p>Required categories not observed: {_escape(classifier['required_categories_not_observed'])}.</p>")
+        parts.append("<details><summary>Required-category definitions, sources, and inventory gaps</summary>"
+                     f"<pre>{_escape(classifier['input_category_inventory'])}</pre></details>")
+    parts.append("<details><summary>Fixed decision rules and sourced context</summary>"
+                 f"<pre>{_escape({'decision_rules': classifier.get('decision_rules'), 'context': classifier.get('context')})}</pre></details>")
+    parts.append("<h3>Examples</h3><p><small>First item for each observed judgment; inspect the CSV for all items.</small></p>")
+    seen = set()
+    for item_id, result in results.items():
+        if result["status"] != "complete":
+            continue
+        label, judgment, invalid = _judgment(result, classifier)
+        key = "invalid" if invalid else label
+        if key in seen:
+            continue
+        seen.add(key)
+        item = item_by_id[item_id]
+        parts.append(f"<details><summary>{_escape(key)} · {_escape(item_id)}</summary>"
+                     f"<pre>{_escape(_text(item.get('content'))[:2000])}</pre>"
+                     f"<p><strong>Reference:</strong> {_escape(item.get('reference_answer'))}</p>"
+                     f"<p><strong>Matched category IDs:</strong> {_escape(judgment.get('matched_category_ids', []))}</p>"
+                     f"<p><strong>Item evidence:</strong> {_escape(judgment.get('evidence'))}</p>"
+                     f"<p>{_escape(judgment.get('justification'))}</p></details>")
+    return "\n".join([*parts, "</section>"])
+
 def _parse_human_label(raw: str, classifier: dict) -> Any:
-    if raw == "unknown":
+    if raw == "unknown" and not _generic(classifier):
         return None
     for option in allowed_labels(classifier):
         if raw == str(option):
             return option
-    raise ValueError(f"Invalid human label {raw!r} for {classifier['id']}; expected {allowed_labels(classifier)} or 'unknown'")
+    suffix = "" if _generic(classifier) else " or 'unknown'"
+    raise ValueError(f"Invalid human label {raw!r} for {classifier['id']}; expected {allowed_labels(classifier)}{suffix}")
 
 
 def compare_review(run_dir: Path, review_path: Path) -> dict:
@@ -496,7 +787,16 @@ def compare_review(run_dir: Path, review_path: Path) -> dict:
         if item_id in seen:
             raise ValueError(f"Duplicate review item ID: {item_id!r}")
         seen.add(item_id)
+    if spec.get("fixed_catalog_version"):
+        comparison = _compare_generic_review(spec, rows, results)
+        comparison.update(review_path=str(review_path), reviewed_rows=len(rows),
+                          input_hashes=_comparison_inputs(run_dir, review_path))
+        _write_json(run_dir / "review_comparison.json", comparison)
+        generate_report(run_dir)
+        return comparison
     comparison = {
+        **_versions(spec),
+        "review_schema_version": "legacy_item_review_v1",
         "review_path": str(review_path), "reviewed_rows": len(rows),
         "input_hashes": _comparison_inputs(run_dir, review_path), "classifiers": {},
     }
@@ -539,4 +839,128 @@ def compare_review(run_dir: Path, review_path: Path) -> dict:
         }
     _write_json(run_dir / "review_comparison.json", comparison)
     generate_report(run_dir)
+    return comparison
+
+
+def _agreement(pairs: list[tuple[str, str]]) -> dict:
+    total = len(pairs)
+    matches = sum(human == model for human, model in pairs)
+    accuracy = matches / total if total else None
+    human_counts = Counter(human for human, _ in pairs)
+    model_counts = Counter(model for _, model in pairs)
+    expected = sum(human_counts[label] * model_counts[label] for label in human_counts) / total**2 if total else 0
+    return {
+        "compared": total, "matches": matches, "accuracy": accuracy,
+        "cohen_kappa": (accuracy - expected) / (1 - expected) if total and expected < 1 else None,
+        "confusion": [{"human": human, "model": model, "count": count}
+                      for (human, model), count in sorted(Counter(pairs).items())],
+    }
+
+
+def _human_ids(row: dict, field: str) -> list[str]:
+    try:
+        value = json.loads(row.get(field) or "[]")
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Review {row['item_id']}: {field} must be a JSON array of IDs") from exc
+    if (not isinstance(value, list) or any(not isinstance(entry, str) for entry in value)
+            or len(value) != len(set(value))):
+        raise ValueError(f"Review {row['item_id']}: {field} must contain unique string IDs")
+    return value
+
+
+def _compare_generic_review(spec: dict, rows: list[dict], results: dict) -> dict:
+    comparison = {**_versions(spec), "review_schema_version": "caliper_item_review_v2", "classifiers": {}}
+    inventory = spec["input_category_inventory"]
+    category_ids = {category["id"] for category in inventory["categories"]}
+    item_agreement = {row["item_id"]: [] for row in rows}
+    for original in spec["classifiers"]:
+        classifier = dict(original)
+        classifier.update(input_category_inventory=inventory, source_registry=spec["source_registry"], source_roles=spec["source_roles"])
+        classifier_id = classifier["id"]
+        pairs = []
+        counts = Counter()
+        category_pairs = []
+        joint_matches = 0
+        for row in rows:
+            raw = (row.get(classifier_id) or "").strip()
+            if not raw:
+                counts["unreviewed"] += 1
+                continue
+            human = _parse_human_label(raw, classifier)
+            for field in ("evidence", "justification"):
+                if not (row.get(f"{classifier_id}.{field}") or "").strip():
+                    raise ValueError(f"Review {row['item_id']}: {classifier_id} requires item evidence and justification")
+            human_categories = []
+            if classifier_id == "input_ontology":
+                field = "input_ontology.matched_category_ids"
+                if not (row.get(field) or "").strip():
+                    raise ValueError(f"Review {row['item_id']}: enter a JSON array in {field}, including [] when empty")
+                human_categories = _human_ids(row, field)
+                if set(human_categories) - category_ids or bool(human_categories) != (human == "match"):
+                    raise ValueError(f"Review {row['item_id']}: category IDs must be in the inventory and nonempty only for match")
+                if human == "no_match" and inventory["completeness"] != "complete":
+                    exclusions = _human_ids(row, "input_ontology.scope_exclusion_source_ids")
+                    if (not exclusions or set(exclusions) - set(spec["source_registry"])
+                            or any(spec["source_roles"].get(ref) != "deployment_requirement" for ref in exclusions)):
+                        raise ValueError(f"Review {row['item_id']}: partial/unknown inventory no_match needs scope exclusion source IDs")
+            counts["human_insufficient_evidence"] += human == "insufficient_evidence"
+            result = results.get(row["item_id"], {})
+            if result.get("status") != "complete":
+                counts["model_unavailable"] += 1
+                counts["model_errors" if result.get("status") == "error" else "model_pending"] += 1
+                continue
+            model, judgment, invalid = _judgment(result, classifier)
+            if invalid:
+                counts["invalid_model_labels"] += 1
+                continue
+            counts["model_insufficient_evidence"] += model == "insufficient_evidence"
+            pairs.append((human, model))
+            equal = human == model
+            if classifier_id == "input_ontology":
+                same_categories = set(human_categories) == set(judgment["matched_category_ids"])
+                if "insufficient_evidence" in (human, model):
+                    counts["category_insufficient_evidence_excluded"] += 1
+                else:
+                    category_pairs.append(same_categories)
+                equal = equal and same_categories
+                joint_matches += equal
+            item_agreement[row["item_id"]].append(equal)
+        result = _agreement(pairs)
+        for name in ("unreviewed", "model_unavailable", "model_errors", "model_pending", "invalid_model_labels",
+                     "human_insufficient_evidence", "model_insufficient_evidence"):
+            result[name] = counts[name]
+        if classifier_id == "input_ontology":
+            total = len(category_pairs)
+            result["category_set_agreement"] = {
+                "compared": total, "matches": sum(category_pairs),
+                "accuracy": sum(category_pairs) / total if total else None,
+                "insufficient_evidence_excluded": counts["category_insufficient_evidence_excluded"],
+                "denominator": "paired determinate judgments; sets compared without order",
+            }
+            result["judgment_and_category_set_agreement"] = {
+                "compared": len(pairs), "matches": joint_matches,
+                "accuracy": joint_matches / len(pairs) if pairs else None,
+            }
+        comparison["classifiers"][classifier_id] = result
+    by_classifier = list(comparison["classifiers"].values())
+    compared = sum(result["compared"] for result in by_classifier)
+    matches = sum(result["matches"] for result in by_classifier)
+    accuracies = [result["accuracy"] for result in by_classifier if result["accuracy"] is not None]
+    item_pairs = [all(labels) for labels in item_agreement.values() if len(labels) == len(spec["classifiers"])]
+    joint_matches = sum(result.get("judgment_and_category_set_agreement", result)["matches"] for result in by_classifier)
+    comparison["overall"] = {
+        "judgment_agreement": {"compared": compared, "matches": matches, "accuracy": matches / compared if compared else None},
+        "judgment_and_category_set_agreement": {
+            "compared": compared, "matches": joint_matches, "accuracy": joint_matches / compared if compared else None,
+            "definition": "pooled item-classifier agreement; Input Ontology requires both judgment and category-set agreement",
+        },
+        "compared": compared, "matches": matches, "accuracy": matches / compared if compared else None,
+        "macro_classifier_accuracy": sum(accuracies) / len(accuracies) if accuracies else None,
+        "denominator": "judgment labels on reviewed item-classifier pairs with valid model results, including insufficient_evidence",
+        "fully_compared_items": len(item_pairs), "fully_matching_items": sum(item_pairs),
+        "item_exact_agreement": sum(item_pairs) / len(item_pairs) if item_pairs else None,
+        "item_exact_agreement_definition": "all classifier judgments and the Input Ontology category set agree",
+        **{name: sum(result[name] for result in by_classifier)
+           for name in ("model_errors", "model_pending", "invalid_model_labels", "unreviewed")},
+    }
     return comparison
