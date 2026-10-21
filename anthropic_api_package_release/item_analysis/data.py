@@ -7,6 +7,7 @@ The saved order is a seeded shuffle: a pilot is a prefix of the full population.
 from __future__ import annotations
 
 import base64
+from array import array
 from collections import Counter, defaultdict
 from datetime import date, datetime
 from decimal import Decimal
@@ -16,7 +17,10 @@ import math
 from pathlib import Path
 import random
 import re
-from typing import Iterator
+from tempfile import TemporaryFile
+from typing import Iterable, Iterator
+
+PREPARATION_BATCH_ROWS = 1024
 
 EVIDENCE_FIELDS = (
     "content", "reference_answer", "grading_criterion", "verifier",
@@ -151,15 +155,14 @@ def _choice_evidence(content) -> tuple[bool, bool]:
     return explicit, choice_lines
 
 
-def _benchmark_identity(table, benchmark: str) -> dict:
+def _benchmark_identity(observed: set[str], benchmark: str) -> dict:
     """Check named benchmark IDs without treating opaque hashes as names.
 
     The supported MMLU snapshot identifies every row with the name ``mmlu``.
     Other tables may use hashes, UUIDs, or numeric IDs. Those need an external
     ID-to-name mapping and are explicitly recorded as unverified here.
     """
-    values = sorted({str(value) for value in table["benchmark_id"].to_pylist()
-                     if _present(value)}) if "benchmark_id" in table.column_names else []
+    values = sorted(observed)
     opaque = re.compile(r"(?:[a-fA-F0-9]{16,64}|[a-fA-F0-9]{8}(?:-[a-fA-F0-9]{4}){3}-[a-fA-F0-9]{12}|[0-9]+)")
     mismatched = [value for value in values
                   if value != benchmark and not opaque.fullmatch(value)]
@@ -175,14 +178,16 @@ def _benchmark_identity(table, benchmark: str) -> dict:
     }
 
 
-def _profile(items: list[dict], schema) -> dict:
+def _profile(items: Iterable[dict], schema) -> dict:
+    """Count every item incrementally; retain all observed scalar categories."""
     counts = defaultdict(Counter)
     skipped = set()
     media_counts = Counter()
     media_fields = set()
     available = Counter()
-    explicit_count = line_count = mcq_count = assets_count = 0
+    explicit_count = line_count = mcq_count = assets_count = row_count = 0
     for item in items:
+        row_count += 1
         for name in EVIDENCE_FIELDS:
             if _present(item[name]):
                 available[name] += 1
@@ -218,9 +223,9 @@ def _profile(items: list[dict], schema) -> dict:
                             item_media.add(kind)
                             media_fields.add(name)
         media_counts.update(item_media)
-    all_mcq = bool(items) and mcq_count == len(items)
+    all_mcq = bool(row_count) and mcq_count == row_count
     return {
-        "row_count": len(items),
+        "row_count": row_count,
         "columns": [{"name": field.name, "dtype": str(field.type)} for field in schema],
         "available_fields": {name: available[name] for name in EVIDENCE_FIELDS},
         "item_feature_value_counts": {
@@ -234,7 +239,7 @@ def _profile(items: list[dict], schema) -> dict:
         "output_format": {
             "is_multiple_choice": all_mcq,
             "status": "all" if all_mcq else "some" if mcq_count else "not_established",
-            "item_count": len(items),
+            "item_count": row_count,
             "items_with_explicit_choices": explicit_count,
             "items_with_choice_lines": line_count,
             "items_with_either_choice_evidence": mcq_count,
@@ -260,7 +265,10 @@ def prepare_data(items_path: Path, output_dir: Path, *, benchmark: str, seed: in
     A local file is pinned by its checksum even if its repository revision is
     unknown. Snapshot-path provenance records historical cache availability;
     this function makes no claim that the revision can still be downloaded.
-    Existing prepared artifacts are never overwritten.
+    Existing prepared artifacts are never overwritten. Parquet content is read
+    in batches and spooled to disk; only byte offsets, identity sets and complete
+    profile counts remain in memory. Shuffling offsets produces the same order
+    as shuffling the full item list with the same seed.
     Populated named benchmark IDs must match ``benchmark`` exactly; opaque
     IDs are retained with an explicit unverified-identity status in the profile.
     """
@@ -279,36 +287,54 @@ def prepare_data(items_path: Path, output_dir: Path, *, benchmark: str, seed: in
     if inferred and source_table is not None and source_table != inferred.group(2):
         raise ValueError("Provided source_table contradicts the local cache snapshot path")
     source_hash = file_sha256(items_path)
-    table = pq.read_table(items_path)
-    if "item_id" not in table.column_names:
-        raise ValueError("Source table must have an item_id column")
-    identity = _benchmark_identity(table, benchmark)
-    items = [_normalize(row, number) for number, row in enumerate(table.to_pylist(), 1)]
-    if not items:
-        raise ValueError("Source table contains no items")
+    offsets = array("Q")
     seen = set()
-    for item in items:
-        if item["item_id"] in seen:
-            raise ValueError(f"Duplicate item_id {item['item_id']!r}; source population must have unique IDs")
-        seen.add(item["item_id"])
-    profile = _profile(items, table.schema)
-    profile["benchmark_identity"] = identity
-    if file_sha256(items_path) != source_hash:
-        raise ValueError("Source table changed while preparing data")
-    random.Random(seed).shuffle(items)
-    # Serialize before creating output files, so unsupported evidence fails cleanly.
-    item_lines = [_json(item) + "\n" for item in items]
-    profile_text = json.dumps(profile, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False)
-    revision_origin = "provided" if source_revision else "cache_path" if inferred else "unknown"
-    source_revision = source_revision or (inferred.group(1) if inferred else None)
-    source_table = source_table or (inferred.group(2) if inferred else items_path.name)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    with destinations[0].open("x", encoding="utf-8") as stream:
-        stream.writelines(item_lines)
-    with destinations[1].open("x", encoding="utf-8") as stream:
-        stream.write(profile_text + "\n")
+    observed_benchmarks = set()
+    # Keep source-order records on disk until every row, source identity, and
+    # serialized value passes validation. No prepared outputs exist on failure.
+    with TemporaryFile(mode="w+b") as spool:
+        with pq.ParquetFile(items_path) as parquet:
+            if "item_id" not in parquet.schema_arrow.names:
+                raise ValueError("Source table must have an item_id column")
+
+            def normalized_items():
+                row_number = 0
+                for batch in parquet.iter_batches(batch_size=PREPARATION_BATCH_ROWS):
+                    for row in batch.to_pylist():
+                        row_number += 1
+                        if _present(row.get("benchmark_id")):
+                            observed_benchmarks.add(str(row["benchmark_id"]))
+                        item = _normalize(row, row_number)
+                        if item["item_id"] in seen:
+                            raise ValueError(f"Duplicate item_id {item['item_id']!r}; source population must have unique IDs")
+                        seen.add(item["item_id"])
+                        serialized = (_json(item) + "\n").encode("utf-8")
+                        offsets.append(spool.tell())
+                        spool.write(serialized)
+                        yield item
+
+            profile = _profile(normalized_items(), parquet.schema_arrow)
+        if not offsets:
+            raise ValueError("Source table contains no items")
+        profile["benchmark_identity"] = _benchmark_identity(observed_benchmarks, benchmark)
+        if file_sha256(items_path) != source_hash:
+            raise ValueError("Source table changed while preparing data")
+        # Fisher–Yates uses only positions, so shuffling offsets exactly preserves
+        # the former seeded permutation while retaining all rows and evidence.
+        random.Random(seed).shuffle(offsets)
+        profile_text = json.dumps(profile, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False)
+        revision_origin = "provided" if source_revision else "cache_path" if inferred else "unknown"
+        source_revision = source_revision or (inferred.group(1) if inferred else None)
+        source_table = source_table or (inferred.group(2) if inferred else items_path.name)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        with destinations[0].open("xb") as stream:
+            for offset in offsets:
+                spool.seek(offset)
+                stream.write(spool.readline())
+        with destinations[1].open("x", encoding="utf-8") as stream:
+            stream.write(profile_text + "\n")
     manifest = {
-        "version": 1, "benchmark": benchmark, "item_count": len(items), "seed": seed,
+        "version": 1, "benchmark": benchmark, "item_count": len(offsets), "seed": seed,
         "source": {
             "repo": source_repo, "revision": source_revision, "table": source_table,
             "path": str(items_path), "sha256": source_hash,

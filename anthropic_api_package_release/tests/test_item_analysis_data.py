@@ -170,3 +170,116 @@ def test_explicit_provenance_cannot_contradict_cache_path(tmp_path, claim):
     with pytest.raises(ValueError, match="contradicts the local cache snapshot path"):
         prepare_data(source, tmp_path / "run", benchmark="mmlu", **claim)
     assert not (tmp_path / "run/items.jsonl").exists()
+
+
+def test_batched_preparation_preserves_legacy_permutation_and_full_profile(tmp_path, monkeypatch):
+    import random
+    from item_analysis import data
+
+    rows = [{"item_id": f"item-{i}", "benchmark_id": "fixture", "content": f"प्रश्न {i}\nA. सही\nB. गलत\u2028more",
+             "reference_answer": "A", "item_features": json.dumps({"language": "hi", "category": i % 5})}
+            for i in range(23)]
+    source = write_table(tmp_path / "items.parquet", rows)
+    monkeypatch.setattr(data, "PREPARATION_BATCH_ROWS", 4)
+    # A bulk table read would regress the content-memory bound.
+    monkeypatch.setattr(pq, "read_table", lambda *args, **kwargs: pytest.fail("Whole-table materialization is forbidden"))
+    directory = tmp_path / "run"
+    manifest = prepare_data(source, directory, benchmark="fixture", seed=17)
+    expected = list(range(len(rows)))
+    random.Random(17).shuffle(expected)
+    items = list(read_items(directory / "items.jsonl"))
+    assert [item["item_id"] for item in items] == [rows[index]["item_id"] for index in expected]
+    assert [item["source"]["row"] for item in items] == [index + 1 for index in expected]
+    assert [item["content"] for item in items] == [rows[index]["content"] for index in expected]
+    profile = json.loads((directory / "profile.json").read_text())
+    assert profile["row_count"] == manifest["item_count"] == len(rows)
+    assert profile["available_fields"]["reference_answer"] == len(rows)
+    assert profile["output_format"]["items_with_choice_lines"] == len(rows)
+    assert profile["item_feature_value_counts"]["category"] == [
+        {"value": category, "count": sum(row % 5 == category for row in range(len(rows)))}
+        for category in range(5)
+    ]
+
+
+def test_large_snapshot_retains_all_items_without_retaining_normalized_population(tmp_path, monkeypatch):
+    import weakref
+    from item_analysis import data
+
+    count = 50_001
+    source = tmp_path / "large.parquet"
+    schema = pa.schema([("item_id", pa.string()), ("content", pa.string()), ("item_features", pa.string())])
+    with pq.ParquetWriter(source, schema) as writer:
+        for start in range(0, count, 1000):
+            writer.write_table(pa.Table.from_pylist([
+                {"item_id": str(i), "content": "Complete evidence remains available.",
+                 "item_features": f"language={'hi' if i % 2 else 'en'}"}
+                for i in range(start, min(start + 1000, count))
+            ], schema=schema))
+    original = data._normalize
+    live = 0
+    peak = 0
+
+    class TrackedItem(dict):
+        pass
+
+    def release():
+        nonlocal live
+        live -= 1
+
+    def tracked(row, row_number):
+        nonlocal live, peak
+        item = TrackedItem(original(row, row_number))
+        live += 1
+        peak = max(peak, live)
+        weakref.finalize(item, release)
+        assert live <= 3, "Normalized item population must not accumulate in memory"
+        return item
+
+    monkeypatch.setattr(data, "_normalize", tracked)
+    monkeypatch.setattr(pq, "read_table", lambda *args, **kwargs: pytest.fail("Whole-table materialization is forbidden"))
+    directory = tmp_path / "run"
+    manifest = prepare_data(source, directory, benchmark="fixture")
+    profile = json.loads((directory / "profile.json").read_text())
+    assert peak <= 3 and live == 0
+    assert manifest["item_count"] == profile["row_count"] == count
+    assert sum(1 for _ in read_items(directory / "items.jsonl")) == count
+    assert profile["item_feature_value_counts"]["language"] == [
+        {"value": "en", "count": 25_001}, {"value": "hi", "count": 25_000},
+    ]
+
+
+@pytest.mark.parametrize("fault", ["duplicate", "identity", "unsupported", "changed_source"])
+def test_late_batch_failure_leaves_no_prepared_artifacts(tmp_path, monkeypatch, fault):
+    from item_analysis import data
+
+    rows = [{"item_id": f"item-{i}", "benchmark_id": "fixture", "content": "Question"} for i in range(8)]
+    if fault == "duplicate":
+        rows[-1]["item_id"] = rows[0]["item_id"]
+    elif fault == "identity":
+        rows[-1]["benchmark_id"] = "other"
+    source = write_table(tmp_path / "items.parquet", rows)
+    monkeypatch.setattr(data, "PREPARATION_BATCH_ROWS", 2)
+    if fault == "unsupported":
+        original = data._normalize
+
+        def unsupported(row, number):
+            item = original(row, number)
+            if number == len(rows):
+                item["additional_fields"]["invalid"] = object()
+            return item
+
+        monkeypatch.setattr(data, "_normalize", unsupported)
+    elif fault == "changed_source":
+        original = data.file_sha256
+        calls = 0
+
+        def changed(path):
+            nonlocal calls
+            calls += 1
+            return original(path) if calls == 1 else "different-source-sha256"
+
+        monkeypatch.setattr(data, "file_sha256", changed)
+    directory = tmp_path / "run"
+    with pytest.raises((ValueError, TypeError)):
+        prepare_data(source, directory, benchmark="fixture")
+    assert not directory.exists()

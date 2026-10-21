@@ -11,6 +11,8 @@ import csv
 import html
 import json
 from collections import Counter
+from collections.abc import Iterable, Iterator
+from itertools import islice
 from pathlib import Path
 from typing import Any
 
@@ -49,10 +51,9 @@ def _write_json(path: Path, value: Any) -> None:
     path.write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def _read_jsonl(path: Path) -> list[dict]:
+def _iter_jsonl(path: Path) -> Iterator[dict]:
     if not path.exists():
-        return []
-    records = []
+        return
     # File iteration splits physical newlines only. str.splitlines() would also
     # split Unicode separators that legitimately occur inside JSON item text.
     with path.open(encoding="utf-8") as file:
@@ -65,11 +66,48 @@ def _read_jsonl(path: Path) -> list[dict]:
                 raise ValueError(f"Invalid JSON in {path.name} line {number}") from exc
             if not isinstance(record, dict):
                 raise ValueError(f"Expected an object in {path.name} line {number}")
-            records.append(record)
-    return records
+            yield record
 
 
-def _load_run(run_dir: Path) -> tuple[dict, list[dict], dict[str, dict]]:
+def _read_jsonl(path: Path) -> list[dict]:
+    return list(_iter_jsonl(path))
+
+
+class _ItemPopulation:
+    """Validated, repeatable on-disk population; retain IDs, not all item content."""
+
+    def __init__(self, path: Path):
+        self.path = path
+        self.item_ids: set[str] = set()
+        for item in self:
+            item_id = item["item_id"]
+            if item_id in self.item_ids:
+                raise ValueError("Duplicate item IDs in items.jsonl")
+            self.item_ids.add(item_id)
+
+    def __iter__(self) -> Iterator[dict]:
+        return _iter_jsonl(self.path)
+
+    def __len__(self) -> int:
+        return len(self.item_ids)
+
+
+def _items_with_ids(items: Iterable[dict], item_ids: set[str]) -> list[dict]:
+    """Keep the saved order and stop reading once every requested item is found."""
+    remaining = set(item_ids)
+    selected = []
+    if not remaining:
+        return selected
+    for item in items:
+        if item["item_id"] in remaining:
+            selected.append(item)
+            remaining.remove(item["item_id"])
+            if not remaining:
+                break
+    return selected
+
+
+def _load_run(run_dir: Path) -> tuple[dict, _ItemPopulation, dict[str, dict]]:
     dataset = _read_json(run_dir / "dataset.json", {})
     if dataset.get("analysis_basis") == "deployment_requirements":
         storage.check_prepared(run_dir)
@@ -83,14 +121,11 @@ def _load_run(run_dir: Path) -> tuple[dict, list[dict], dict[str, dict]]:
         validate_spec(spec)
         if all(key in dataset for key in ("items_sha256", "profile_sha256", "evidence_sha256")):
             storage.check_prepared(run_dir)
-    items = _read_jsonl(run_dir / "items.jsonl")
-    item_ids = {item["item_id"] for item in items}
-    if len(item_ids) != len(items):
-        raise ValueError("Duplicate item IDs in items.jsonl")
+    items = _ItemPopulation(run_dir / "items.jsonl")
     results: dict[str, dict] = {}
     for result in _read_jsonl(run_dir / "results.jsonl"):
         item_id = result.get("item_id")
-        if item_id not in item_ids:
+        if item_id not in items.item_ids:
             raise ValueError(f"Result contains an item outside the prepared dataset: {item_id!r}")
         if result.get("status") not in {"complete", "error"}:
             raise ValueError(f"Unrecognized result status for {item_id}")
@@ -188,7 +223,7 @@ def _csv_text(value: Any) -> str:
     return "'" + text if text.lstrip().startswith(("=", "+", "-", "@")) else text
 
 
-def _write_items_csv(run_dir: Path, items: list[dict], results: dict, classifiers: list[dict],
+def _write_items_csv(run_dir: Path, items: Iterable[dict], results: dict, classifiers: list[dict],
                      provenance: dict | None = None) -> None:
     provenance = provenance or {}
     columns = ["item_id", "status", "content", "reference_answer", "grading_criterion", "error"]
@@ -221,7 +256,7 @@ def _write_items_csv(run_dir: Path, items: list[dict], results: dict, classifier
             writer.writerow({key: _csv_text(value) for key, value in row.items()})
 
 
-def _export_review(run_dir: Path, items: list[dict], classifiers: list[dict],
+def _export_review(run_dir: Path, items: list[dict] | _ItemPopulation, classifiers: list[dict],
                    provenance: dict | None = None) -> dict:
     provenance = provenance or {}
     path = run_dir / "review.csv"
@@ -267,7 +302,7 @@ def _export_review(run_dir: Path, items: list[dict], classifiers: list[dict],
     # Items are already seed-shuffled by preparation. Reserve these IDs even if
     # the pilot has not classified them yet, to avoid reviewing pilot examples.
     holdout = len(items) > 100
-    selected = items[100:150] if holdout else items[:50]
+    selected = list(islice(items, 100, 150)) if holdout else list(islice(items, 50))
     selection = {
         "method": "prepared shuffled items 101–150" if holdout else "first up to 50 prepared shuffled items",
         "purpose": "holdout after the 100-item pilot" if holdout else "pilot debugging; not an independent holdout",
@@ -406,13 +441,13 @@ def generate_report(run_dir: Path) -> dict:
     execution = _read_json(run_dir / "execution.json", {})
     if generic and "selected_item_ids" in execution:
         selected_ids = set(execution["selected_item_ids"])
-        if selected_ids - {item["item_id"] for item in items}:
+        if selected_ids - items.item_ids:
             raise ValueError("Execution selection contains items outside the prepared dataset")
-        selected_items = [item for item in items if item["item_id"] in selected_ids]
+        selected_items = _items_with_ids(items, selected_ids)
     elif generic and "target_items" in execution:
-        selected_items = items[:execution["target_items"]]
+        selected_items = list(islice(items, execution["target_items"]))
     elif generic and results:
-        selected_items = [item for item in items if item["item_id"] in results]
+        selected_items = _items_with_ids(items, set(results))
     else:
         selected_items = [] if generic else items
     selected_ids = {item["item_id"] for item in selected_items}
@@ -533,7 +568,7 @@ def _display_percent(value: float | None) -> str:
     return "—" if value is None else f"{value:.1f}%"
 
 
-def _render_html(summary: dict, items: list[dict], results: dict) -> str:
+def _render_html(summary: dict, items: Iterable[dict], results: dict) -> str:
     parts = ["""<!doctype html><html lang="en"><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Caliper item analysis</title><style>
@@ -611,7 +646,22 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}small{color:#465368
             finding = assessment.get("justification", "") if isinstance(assessment, dict) else ""
             parts.append(f"<tr><td>{_escape(dimension.replace('_', ' ').title())}</td><td>{_escape(score)}</td><td>{_escape(finding)}</td></tr>")
         parts.append("</table></section>")
-    item_by_id = {item["item_id"]: item for item in items}
+    # The HTML shows one example per observed judgment. Keep only those records,
+    # even when exporting a large population or a fully classified run.
+    example_ids = set()
+    for classifier in summary["classifiers"]:
+        if not classifier.get("applicable", True):
+            continue
+        seen = set()
+        for item_id, result in results.items():
+            if result["status"] != "complete":
+                continue
+            label, _, invalid = _judgment(result, classifier)
+            key = "invalid" if invalid else label
+            if key not in seen:
+                seen.add(key)
+                example_ids.add(item_id)
+    item_by_id = {item["item_id"]: item for item in _items_with_ids(items, example_ids)}
     for classifier in summary["classifiers"]:
         if _generic(classifier):
             parts.append(_render_generic_classifier(classifier, item_by_id, results))
@@ -772,7 +822,7 @@ def compare_review(run_dir: Path, review_path: Path) -> dict:
     run_dir, review_path = Path(run_dir), Path(review_path).resolve()
     spec, items, results = _load_run(run_dir)
     classifiers = [classifier for classifier in spec["classifiers"] if classifier["applicable"]]
-    item_ids = {item["item_id"] for item in items}
+    item_ids = items.item_ids
     with review_path.open(newline="", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         required = {"item_id", *(classifier["id"] for classifier in classifiers)}
@@ -787,7 +837,7 @@ def compare_review(run_dir: Path, review_path: Path) -> dict:
         if item_id in seen:
             raise ValueError(f"Duplicate review item ID: {item_id!r}")
         seen.add(item_id)
-    if spec.get("fixed_catalog_version"):
+    if is_generic_spec(spec):
         comparison = _compare_generic_review(spec, rows, results)
         comparison.update(review_path=str(review_path), reviewed_rows=len(rows),
                           input_hashes=_comparison_inputs(run_dir, review_path))

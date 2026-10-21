@@ -29,14 +29,13 @@ from anthropic_api_package_release.item_analysis.storage import write_json
 from . import db
 
 REPO = "aims-foundations/measurement-db-pp"
-# The index now includes every release label. Reject earlier filtered caches
-# even when the repository revision has not changed.
-CATALOG_VERSION = 2
+# Eligibility no longer limits the number of items. Reject earlier caches with
+# row-count rejections even when the repository revision has not changed.
+CATALOG_VERSION = 3
 BUNDLED_CATALOG = Path(__file__).with_name("item_analysis_databank_catalog.json")
 REFRESH_SECONDS = 3600
 MAX_TABLE_BYTES = 32 * 1024 * 1024
 MAX_UNCOMPRESSED_BYTES = 96 * 1024 * 1024
-MAX_ITEMS = 50_000
 MAX_METADATA_BYTES = 8 * 1024 * 1024
 _REVISION = re.compile(r"^[0-9a-f]{40}$")
 _SLUG = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,150}$")
@@ -389,10 +388,8 @@ def _build_entry(slug: str, revision: str, api, token) -> dict | None:
         reasons.append("This item analysis supports text evidence; this release requires other media or has unspecified modality.")
     if size > MAX_TABLE_BYTES:
         reasons.append("The full item table exceeds this service's 32 MiB download limit.")
-    if count > MAX_ITEMS:
-        reasons.append("The full snapshot exceeds this service's 50,000-item limit.")
     footer = {}
-    if table_path and size <= MAX_TABLE_BYTES and count <= MAX_ITEMS:
+    if table_path and size <= MAX_TABLE_BYTES:
         footer = _inspect_footer(table_path, revision, token)
         if count and count != footer["item_count"]:
             reasons.append("Published item counts disagree; the snapshot requires maintainer review.")
@@ -401,8 +398,6 @@ def _build_entry(slug: str, revision: str, api, token) -> dict | None:
             reasons.append("The formatted item table lacks required identity or content columns.")
         if footer["uncompressed_bytes"] > MAX_UNCOMPRESSED_BYTES:
             reasons.append("The full snapshot exceeds this service's 96 MiB decoded-data limit.")
-        if count > MAX_ITEMS:
-            reasons.append("The full snapshot exceeds this service's 50,000-item limit.")
     if not count:
         reasons.append("This release has no verified nonempty item population.")
     source_url = f"https://huggingface.co/datasets/{REPO}/blob/{revision}/{table_path or meta_path}"
@@ -461,7 +456,7 @@ def _prepare_candidate(directory: Path, candidate: dict, stopped=None) -> dict:
         raise DataBankError("The confirmed dataset metadata changed. Search again and confirm its revision.")
     if not pinned["available"]:
         raise DataBankError(pinned["unavailable_reason"])
-    if (pinned["item_count"] > MAX_ITEMS or pinned["table_bytes"] > MAX_TABLE_BYTES
+    if (pinned["table_bytes"] > MAX_TABLE_BYTES
             or (pinned.get("uncompressed_bytes") or 0) > MAX_UNCOMPRESSED_BYTES):
         raise DataBankError("The full confirmed snapshot exceeds this service's preparation limits. Upload a supported matching snapshot.")
     if not get_token():
@@ -479,13 +474,20 @@ def _prepare_candidate(directory: Path, candidate: dict, stopped=None) -> dict:
             if (parquet.metadata.num_rows != pinned["item_count"] or actual_bytes > MAX_UNCOMPRESSED_BYTES
                     or parquet.schema_arrow.names != pinned["columns"]):
                 raise ValueError("Source schema or population changed")
-        # Validate the external ID mapping; opaque IDs alone cannot prove identity.
-        observed_ids = pq.read_table(path, columns=["benchmark_id"])["benchmark_id"].to_pylist()
-        if any(value is None or not str(value).strip() for value in observed_ids):
-            raise ValueError("Every item requires a verified benchmark identity")
-        ids = {str(value) for value in observed_ids}
-        if not ids or not ids.issubset(set(pinned["benchmark_ids"])):
-            raise ValueError("Source benchmark identity changed")
+            # Validate every external ID without loading a whole Arrow table or
+            # retaining all row values. Opaque IDs alone cannot prove identity.
+            allowed_ids = set(pinned["benchmark_ids"])
+            observed_ids = set()
+            for batch in parquet.iter_batches(columns=["benchmark_id"], batch_size=1024):
+                check_stopped()
+                for value in batch.column(0).to_pylist():
+                    if value is None or not str(value).strip():
+                        raise ValueError("Every item requires a verified benchmark identity")
+                    if str(value) not in allowed_ids:
+                        raise ValueError("Source benchmark identity changed")
+                    observed_ids.add(str(value))
+            if not observed_ids:
+                raise ValueError("Source benchmark identity changed")
         check_stopped()
         dataset = data.prepare_data(path, directory, benchmark=pinned["benchmark"],
                                     source_repo=REPO, source_revision=pinned["revision"], source_table=pinned["table_path"])

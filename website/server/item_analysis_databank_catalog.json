@@ -1,9 +1,9 @@
 {
-  "version": 2,
+  "version": 3,
   "repo": "aims-foundations/measurement-db-pp",
   "branch": "main",
   "revision": "65afce216b86e945bfe96cf13f1949cd490332f7",
-  "generated_at": "2026-10-16T16:46:19.375588+00:00",
+  "generated_at": "2026-10-21T13:49:29.864775+00:00",
   "entries": [
     {
       "id": "databank:65afce216b86e945bfe96cf13f1949cd490332f7:aaar",
@@ -3758,7 +3758,7 @@
       "release": "private",
       "granularity": "not_released",
       "available": false,
-      "unavailable_reason": "This release is not verified as individual benchmark items. The full snapshot exceeds this service's 50,000-item limit. Upload a supported matching snapshot to continue.",
+      "unavailable_reason": "This release is not verified as individual benchmark items. Upload a supported matching snapshot to continue.",
       "requires_confirmation": true
     },
     {
@@ -6750,8 +6750,18 @@
       "benchmark_ids": [
         "flores200"
       ],
-      "columns": [],
-      "uncompressed_bytes": null,
+      "columns": [
+        "item_id",
+        "benchmark_id",
+        "raw_item_id",
+        "content",
+        "asset_manifest",
+        "grading_criterion",
+        "verifier",
+        "content_hash",
+        "item_features"
+      ],
+      "uncompressed_bytes": 18169959,
       "source_url": "https://huggingface.co/datasets/aims-foundations/measurement-db-pp/blob/65afce216b86e945bfe96cf13f1949cd490332f7/flores200/items.parquet",
       "source_label": "measurement-db-pp · flores200 · 163,944 items",
       "metadata_url": "https://huggingface.co/datasets/aims-foundations/measurement-db-pp/blob/65afce216b86e945bfe96cf13f1949cd490332f7/flores200/metadata.yaml",
@@ -6775,8 +6785,8 @@
       ],
       "release": "private",
       "granularity": "item",
-      "available": false,
-      "unavailable_reason": "The full snapshot exceeds this service's 50,000-item limit. Upload a supported matching snapshot to continue.",
+      "available": true,
+      "unavailable_reason": null,
       "requires_confirmation": true
     },
     {
@@ -9282,7 +9292,7 @@
       "release": "private",
       "granularity": "not_released",
       "available": false,
-      "unavailable_reason": "This release is not verified as individual benchmark items. This item analysis supports text evidence; this release requires other media or has unspecified modality. The full snapshot exceeds this service's 50,000-item limit. Upload a supported matching snapshot to continue.",
+      "unavailable_reason": "This release is not verified as individual benchmark items. This item analysis supports text evidence; this release requires other media or has unspecified modality. Upload a supported matching snapshot to continue.",
       "requires_confirmation": true
     },
     {
@@ -13993,8 +14003,8 @@
       ],
       "release": "private",
       "granularity": "item",
-      "available": false,
-      "unavailable_reason": "The full snapshot exceeds this service's 50,000-item limit. Upload a supported matching snapshot to continue.",
+      "available": true,
+      "unavailable_reason": null,
       "requires_confirmation": true
     },
     {
@@ -16745,7 +16755,7 @@
       "release": "private",
       "granularity": "not_released",
       "available": false,
-      "unavailable_reason": "This release is not verified as individual benchmark items. This item analysis supports text evidence; this release requires other media or has unspecified modality. The full snapshot exceeds this service's 50,000-item limit. Upload a supported matching snapshot to continue.",
+      "unavailable_reason": "This release is not verified as individual benchmark items. This item analysis supports text evidence; this release requires other media or has unspecified modality. Upload a supported matching snapshot to continue.",
       "requires_confirmation": true
     },
     {
@@ -18898,7 +18908,7 @@
       "release": "private",
       "granularity": "item",
       "available": false,
-      "unavailable_reason": "This item analysis supports text evidence; this release requires other media or has unspecified modality. The full snapshot exceeds this service's 96 MiB decoded-data limit. The full snapshot exceeds this service's 50,000-item limit. Upload a supported matching snapshot to continue.",
+      "unavailable_reason": "This item analysis supports text evidence; this release requires other media or has unspecified modality. The full snapshot exceeds this service's 96 MiB decoded-data limit. Upload a supported matching snapshot to continue.",
       "requires_confirmation": true
     },
     {
@@ -19881,8 +19891,8 @@
       ],
       "release": "private",
       "granularity": "item",
-      "available": false,
-      "unavailable_reason": "The full snapshot exceeds this service's 50,000-item limit. Upload a supported matching snapshot to continue.",
+      "available": true,
+      "unavailable_reason": null,
       "requires_confirmation": true
     },
     {
@@ -21033,7 +21043,7 @@
       "release": "private",
       "granularity": "item",
       "available": false,
-      "unavailable_reason": "The full snapshot exceeds this service's 96 MiB decoded-data limit. The full snapshot exceeds this service's 50,000-item limit. Upload a supported matching snapshot to continue.",
+      "unavailable_reason": "The full snapshot exceeds this service's 96 MiB decoded-data limit. Upload a supported matching snapshot to continue.",
       "requires_confirmation": true
     },
     {

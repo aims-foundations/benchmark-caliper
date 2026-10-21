@@ -337,6 +337,32 @@ def test_generic_counts_multilabel_missingness_and_selected_workload(generic_run
     assert "MCQ" not in html
 
 
+def test_large_population_report_streams_content_and_keeps_full_export(generic_run):
+    import tracemalloc
+
+    # A small pilot over a text-heavy snapshot must not retain the full payload.
+    count, selected = 2000, 100
+    with (generic_run / "items.jsonl").open("w") as file:
+        for index in range(count):
+            file.write(json.dumps({"item_id": f"item-{index}", "content": "x" * 16384}) + "\n")
+    _write_jsonl(generic_run / "results.jsonl", [_generic_complete(f"item-{index}") for index in range(selected)])
+    (generic_run / "execution.json").write_text(json.dumps({"target_items": selected}))
+    tracemalloc.start()
+    try:
+        summary = generate_report(generic_run)
+        _, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    assert peak < 12 * 1024 * 1024
+    assert summary["total_items"] == count
+    assert summary["pending_items"] == count - selected
+    assert summary["experiment"]["selected_items"] == selected
+    assert len(_read_review(generic_run)) == selected
+    with (generic_run / "items.csv").open(newline="") as file:
+        rows = csv.DictReader(file)
+        assert sum(1 for _ in rows) == count
+
+
 def test_generic_review_agreement_includes_insufficient_and_category_sets(generic_run):
     records = [_generic_complete("item-0"), _generic_complete("item-1", label="insufficient_evidence", categories=[]),
                _generic_complete("item-2", label="no_match", categories=[])]
@@ -460,3 +486,41 @@ def test_generic_extra_judgment_keys_are_invalid(generic_run):
     summary = generate_report(generic_run)
     assert _by_id(summary, "input_content")["invalid"] == 1
     assert _by_id(summary, "input_content")["counts"]["no_issue_identified"] == 0
+
+
+def test_explicitly_versioned_legacy_review_keeps_numeric_and_unknown_semantics(prepared_run):
+    from pathlib import Path
+    from item_analysis.catalog import LEGACY_CATALOG_VERSION, LEGACY_SCHEMA_VERSION
+    from item_analysis.schema import allowed_labels
+
+    spec = json.loads((Path(__file__).parent / "fixtures" / "item_analysis_spec.json").read_text())
+    spec.update(schema_version=LEGACY_SCHEMA_VERSION, fixed_catalog_version=LEGACY_CATALOG_VERSION)
+    spec_path = prepared_run / "classifier_spec.json"
+    spec_path.write_text(json.dumps(spec))
+    original = spec_path.read_bytes()
+    records = []
+    for index, flag in enumerate((1, None)):
+        labels = {classifier["id"]: {"label": allowed_labels(classifier)[0], "evidence": ["Item evidence"],
+                                    "justification": "Legacy interpretation retained."}
+                  for classifier in spec["classifiers"] if classifier["applicable"]}
+        labels["OO.value_encoding"]["label"] = flag
+        records.append({"item_id": f"item-{index}", "status": "complete", "labels": labels})
+    _write_jsonl(prepared_run / "results.jsonl", records)
+    generate_report(prepared_run)
+    with (prepared_run / "review.csv").open(newline="") as file:
+        rows = list(csv.DictReader(file))
+    rows[0]["OO.value_encoding"] = "1"
+    rows[1]["OO.value_encoding"] = "0"
+    with (prepared_run / "review.csv").open("w", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+    comparison = compare_review(prepared_run, prepared_run / "review.csv")
+    assert comparison["review_schema_version"] == "legacy_item_review_v1"
+    assert comparison["fixed_catalog_version"] == LEGACY_CATALOG_VERSION
+    flag = comparison["classifiers"]["OO.value_encoding"]
+    assert flag["compared"] == 2 and flag["accuracy"] == .5
+    assert flag["model_unknown_included_as_disagreement"] == 1
+    assert flag["confusion"] == [{"human": "0", "model": "unknown", "count": 1},
+                                  {"human": "1", "model": "1", "count": 1}]
+    assert spec_path.read_bytes() == original

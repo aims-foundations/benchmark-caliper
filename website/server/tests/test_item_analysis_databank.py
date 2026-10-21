@@ -39,7 +39,7 @@ def isolated(monkeypatch, tmp_path):
 
 
 def publish(entries):
-    catalog = {"version": 2, "repo": bank.REPO, "revision": REVISION, "entries": entries}
+    catalog = {"version": bank.CATALOG_VERSION, "repo": bank.REPO, "revision": REVISION, "entries": entries}
     bank.BUNDLED_CATALOG.write_text(json.dumps(catalog))
     return catalog
 
@@ -132,7 +132,7 @@ def test_revision_bound_resolve_retains_previous_catalog(tmp_path):
     publish([original])
     assert bank.resolve_candidate(original["id"])["source_revision"] == REVISION
     new = "b" * 40
-    bank._catalogs[new] = {"version": 2, "repo": bank.REPO, "revision": new, "entries": []}
+    bank._catalogs[new] = {"version": bank.CATALOG_VERSION, "repo": bank.REPO, "revision": new, "entries": []}
     bank._latest = new
     assert bank.resolve_candidate(original["id"])["id"] == original["id"]
     with pytest.raises(bank.DataBankError, match="expired"):
@@ -196,10 +196,11 @@ def test_old_public_only_catalog_at_same_repo_and_revision_is_replaced_by_expand
     assert bank.refresh_catalog(api=Api(), skip_if_unchanged=True) == expanded
 
 
-def test_legacy_catalog_cannot_restore_a_revision_selection_without_an_expanded_catalog():
+@pytest.mark.parametrize("version", [1, 2])
+def test_legacy_catalog_cannot_restore_a_revision_selection_without_an_expanded_catalog(version):
     bank._cache_dir().mkdir()
     (bank._cache_dir() / f"{REVISION}.json").write_text(json.dumps({
-        "version": 1, "repo": PROCESSED_REPO, "revision": REVISION, "entries": [entry()],
+        "version": version, "repo": PROCESSED_REPO, "revision": REVISION, "entries": [entry()],
     }))
     with pytest.raises(bank.DataBankError, match="expired"):
         bank.resolve_candidate(entry()["id"])
@@ -215,13 +216,13 @@ def test_background_failure_preserves_existing_catalog(monkeypatch):
     assert not bank._refreshing
 
 
-def discovery_fixture(tmp_path, monkeypatch, *, release="public", granularity="item", modality=None, footer=None):
+def discovery_fixture(tmp_path, monkeypatch, *, release="public", granularity="item", modality=None, footer=None, row_count=2):
     metadata = tmp_path / "metadata.yaml"
     metadata.write_text(yaml.safe_dump({"benchmark": {"name": "MMLU", "release": release,
         "granularity": granularity, "modality": ["text"] if modality is None else modality,
         "paper_url": "https://arxiv.org/abs/2009.03300", "version": "v1", "testing_condition": "Original test release"}}))
     characterization = tmp_path / "characterization.yaml"
-    characterization.write_text(yaml.safe_dump({"tables": {"items": {"rows": 2}}}))
+    characterization.write_text(yaml.safe_dump({"tables": {"items": {"rows": row_count}}}))
     benchmarks = tmp_path / "benchmarks.parquet"
     pq.write_table(pa.Table.from_pylist([{"benchmark_id": "mmlu", "name": "MMLU", "release": release}]), benchmarks)
     paths = {"mmlu/metadata.yaml": metadata, "mmlu/characterization.yaml": characterization,
@@ -236,7 +237,7 @@ def discovery_fixture(tmp_path, monkeypatch, *, release="public", granularity="i
 
     monkeypatch.setattr(bank, "_metadata_file", download)
     monkeypatch.setattr(bank, "_inspect_footer", lambda *args: footer or {
-        "item_count": 2, "columns": ["item_id", "benchmark_id", "content"], "uncompressed_bytes": 1000})
+        "item_count": row_count, "columns": ["item_id", "benchmark_id", "content"], "uncompressed_bytes": 1000})
 
     class Api:
         def list_repo_refs(self, *args, **kwargs):
@@ -261,7 +262,7 @@ def test_refresh_uses_repository_metadata_and_footers_not_item_rows(tmp_path, mo
     result = bank.refresh_catalog(api=api)
     candidate = result["entries"][0]
     assert result["revision"] == REVISION
-    assert result["version"] == 2
+    assert result["version"] == bank.CATALOG_VERSION
     assert candidate["available"]
     assert candidate["item_count"] == 2
     assert candidate["sha256"] == "c" * 64
@@ -445,7 +446,6 @@ def test_source_links_only_allow_http_and_https():
     ({"granularity": "aggregate"}, "not verified as individual"),
     ({"modality": ["text", "image"]}, "requires other media"),
     ({"footer": {"item_count": 2, "columns": ["item_id"], "uncompressed_bytes": 10}}, "lacks required"),
-    ({"footer": {"item_count": 50_001, "columns": ["item_id", "benchmark_id", "content"], "uncompressed_bytes": 10}}, "50,000"),
     ({"footer": {"item_count": 2, "columns": ["item_id", "benchmark_id", "content"], "uncompressed_bytes": bank.MAX_UNCOMPRESSED_BYTES + 1}}, "96 MiB"),
 ])
 def test_unsupported_candidates_visible_with_reason(tmp_path, monkeypatch, changes, reason):
@@ -453,6 +453,42 @@ def test_unsupported_candidates_visible_with_reason(tmp_path, monkeypatch, chang
     candidate = bank._build_entry("mmlu", REVISION, api, "private-test-token")
     assert not candidate["available"]
     assert reason in candidate["unavailable_reason"]
+
+
+@pytest.mark.parametrize("row_count", [50_001, 163_944])
+def test_large_population_is_available_when_bytes_schema_and_identity_are_supported(tmp_path, monkeypatch, row_count):
+    api, requests = discovery_fixture(tmp_path, monkeypatch, row_count=row_count)
+    candidate = bank._build_entry("mmlu", REVISION, api, "private-test-token")
+    assert candidate["available"] and candidate["unavailable_reason"] is None
+    assert candidate["item_count"] == row_count
+    assert candidate["columns"] == ["item_id", "benchmark_id", "content"]
+    assert candidate["uncompressed_bytes"] == 1000
+    assert all(not path.endswith("items.parquet") for path in requests)
+
+
+def test_row_limited_catalog_at_same_revision_is_replaced_by_current_bundle():
+    old_entry = entry(item_count=163_944, available=False,
+                      unavailable_reason="The full snapshot exceeds this service's 50,000-item limit.")
+    old = {"version": 2, "repo": bank.REPO, "revision": REVISION, "entries": [old_entry]}
+    bank._cache_dir().mkdir()
+    (bank._cache_dir() / "latest.json").write_text(json.dumps(old))
+    current = publish([entry(item_count=163_944)])
+    result = bank.search_candidates(assessment())
+    assert result["candidates"][0]["available"]
+    assert result["candidates"][0]["item_count"] == 163_944
+    assert bank._load_catalog() == current
+    assert not bank._valid_catalog(old)
+
+
+def test_bundled_catalog_supports_flores_without_stale_population_exclusions():
+    bundled = json.loads(Path(bank.__file__).with_name("item_analysis_databank_catalog.json").read_text())
+    assert bank._valid_catalog(bundled)
+    assert all("50,000" not in str(candidate.get("unavailable_reason") or "") for candidate in bundled["entries"])
+    flores = next(candidate for candidate in bundled["entries"] if candidate["benchmark"] == "flores200")
+    assert flores["available"] and flores["item_count"] > 50_000
+    assert flores["uncompressed_bytes"] and flores["uncompressed_bytes"] <= bank.MAX_UNCOMPRESSED_BYTES
+    assert {"item_id", "benchmark_id", "content"}.issubset(flores["columns"])
+    assert flores["source_revision"] == bundled["revision"]
 
 
 def prepared_fixture(tmp_path, monkeypatch, *, benchmark_id="mmlu"):
@@ -479,6 +515,7 @@ def prepared_fixture(tmp_path, monkeypatch, *, benchmark_id="mmlu"):
 
 def test_prepare_preserves_full_population_and_pinned_identity(tmp_path, monkeypatch):
     candidate, calls = prepared_fixture(tmp_path, monkeypatch)
+    monkeypatch.setattr(bank.pq, "read_table", lambda *args, **kwargs: pytest.fail("Snapshot preparation must stream Parquet batches"))
     output = tmp_path / "run"
     dataset = bank.prepare_candidate(output, candidate)
     assert dataset["item_count"] == 2
@@ -493,6 +530,26 @@ def test_prepare_preserves_full_population_and_pinned_identity(tmp_path, monkeyp
     assert calls[0]["repo_id"] == PROCESSED_REPO
     assert calls[0]["repo_type"] == "dataset"
     assert calls[0]["filename"] == candidate["table_path"]
+
+
+def test_prepare_preserves_population_larger_than_previous_item_limit(tmp_path, monkeypatch):
+    candidate, calls = prepared_fixture(tmp_path, monkeypatch)
+    count = 50_001
+    source = tmp_path / "source.parquet"
+    pq.write_table(pa.table({
+        "item_id": [f"item-{index}" for index in range(count)],
+        "benchmark_id": ["mmlu"] * count,
+        "content": ["Question"] * count,
+        "reference_answer": ["Answer"] * count,
+    }), source)
+    candidate.update(item_count=count, table_bytes=source.stat().st_size, sha256=bank.data.file_sha256(source))
+    publish([candidate])
+    output = tmp_path / "run"
+    dataset = bank.prepare_candidate(output, candidate)
+    assert dataset["item_count"] == count
+    assert dataset["source"]["identity_validation"] == "repository_metadata_mapping"
+    assert sum(1 for _ in bank.data.read_items(output / "items.jsonl")) == count
+    assert len(calls) == 1
 
 
 def test_prepare_accepts_eligible_nonpublic_snapshot_with_pinned_repository_and_revision(tmp_path, monkeypatch):
