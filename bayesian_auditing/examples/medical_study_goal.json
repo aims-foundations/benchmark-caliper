@@ -1,0 +1,8 @@
+{
+  "task": "Answer self-contained clinical questions for medical exam study, using multiple-choice or short-answer responses as specified by each question.",
+  "users": "English-speaking medical students use the assistant for educational practice across adult and pediatric cases; a teacher can review answers.",
+  "inputs": "A self-contained English text clinical case and its question, with explicitly labeled answer options when the question is multiple choice; no images or external tools.",
+  "outputs": "Provide the source-referenced answer for questions asking for diagnosis, investigation, or initial management. Select one supplied option for a multiple-choice question; give a concise answer for a short-answer question.",
+  "success": "Identify the likely diagnosis, choose the appropriate investigation, or choose the indicated initial management based on the supplied clinical information. Include at least three initial management cases where a stated allergy, medication, or contraindication materially constrains the management choice.",
+  "constraints": "Follow the response format requested by the question: one supplied option identifier or a concise short answer. This is an educational workflow; it does not provide treatment instructions for real patients."
+}

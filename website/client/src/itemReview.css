@@ -134,6 +134,21 @@
 .review-progress progress { width: 100%; height: .4rem; accent-color: var(--cardinal); }
 .review-progress > p:not(.eyebrow):not(.review-intro) { font-size: .8rem; color: var(--review-muted); }
 
+/* Requirements keep extracted claims beside their literal source quotations. */
+.requirements-results { overflow-wrap: anywhere; }
+.requirements-results h3 { font-size: 1.05rem; font-weight: 550; margin: 1.4rem 0 .4rem; }
+.requirements-results h4 { font-size: .95rem; font-weight: 550; margin: 1.3rem 0 .4rem; }
+.requirements-value > p { margin: .4rem 0 .8rem; }
+.requirements-evidence { list-style: none; padding: 0; margin: .6rem 0 1.4rem; }
+.requirements-evidence li { border-left: 2px solid #dacec1; padding: .4rem .9rem; margin: .65rem 0; background: #fbf9f5; }
+.requirements-evidence a { font-size: .75rem; line-height: 1.5; color: #79533e; }
+.requirements-evidence blockquote { font-size: .86rem; line-height: 1.6; margin: .5rem 0 .2rem; color: #51483f; }
+.requirements-facet .review-result-title h3 { margin: 0; }
+.requirements-summary > section + section, .requirements-original > section + section,
+.requirements-coverage + .requirements-coverage { border-top: 1px solid var(--review-border); padding-top: .3rem; }
+.requirements-original > section, .requirements-facet { scroll-margin-top: 6rem; }
+.requirements-results li + li { margin-top: .6rem; }
+
 /* Results: item text first; scores and supporting material have distinct roles. */
 .review-result-title { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 .review-result-title h2 { margin: .4rem 0 0; font-size: 1.6rem; font-weight: 500; letter-spacing: -.03em; }
@@ -189,6 +204,12 @@
 .review-dimension-detail p { margin: .6rem 0; }
 .review-detail-confidence { margin: 1rem 0; }
 .review-detail-confidence .review-confidence { font-size: .8rem; padding: .3rem .5rem; }
+.grounding-record { margin: 1.25rem 0; padding-top: 1rem; border-top: 1px solid var(--review-border); }
+.grounding-record blockquote { margin: .8rem 0; padding-left: 1rem; border-left: 3px solid var(--review-border); }
+.grounding-record h4, .grounding-record h5 { margin-bottom: .5rem; }
+.grounding-facet code, .grounding-candidates code { overflow-wrap: anywhere; }
+.grounding-candidates { padding-left: 1.2rem; }
+.grounding-candidates > li { padding-block: .75rem; border-bottom: 1px solid var(--review-border); }
 .review-detail-confidence p { color: var(--review-muted); margin: .4rem 0 0; }
 .review-dimension-detail h5 { font-size: .9rem; font-weight: 600; margin: 1rem 0 .4rem; }
 .review-dimension-detail ul { padding-left: 1.2rem; margin: .4rem 0; }

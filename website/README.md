@@ -205,6 +205,51 @@ review workflow keeps its own sample and catalog.
 
 ## Goal-conditioned item review
 
+The six-answer form also offers **Extract requirements**, an independent paid
+GPT-6 Luna request implementing Step 2 of *Goal-Conditioned Adaptive Composite
+Benchmarks*. It shows the extracted deployment summary, task facets, essential
+status, supporting quotations, explicit collection coverage requirements, and
+unresolved details beside the original answers. This action works without dataset
+access and stops at the preview; it does not run retrieval or item assessments.
+
+The action uses `POST /api/item-review/runs` with
+`{"mode": "requirements", "deployment": {"task": "...", "users": "...", "inputs": "...", "outputs": "...", "success": "...", "constraints": ""}}`.
+It shares the existing run-secret polling, cancellation, expiry, and export
+endpoints. Its export contains the original answers, validated requirements,
+prompt/schema, model/settings, and available usage. Invalid extraction produces a
+failed run without accepted requirements or downstream calls. Source-quotation
+checks establish traceability; human review still assesses the interpretation.
+The schema and prompt live in `bayesian_auditing/requirements.py` and
+`bayesian_auditing/prompts/extract_requirements.md`.
+
+The requirements preview offers **Ground with O*NET**. It searches the supplied
+local healthcare catalog using BGE embeddings and BM25, then asks GPT-6 Luna to
+map shortlisted records to each existing task. The preview shows adopted record
+IDs, exact supporting passages, applicability, rationale, search vocabulary,
+goal-supported refinements, and unresolved details. Retrieved rankings and
+rejected mappings are expandable. Original requirements remain unchanged, and a
+task may have no applicable O*NET record. This stage stops before benchmark-item
+retrieval or assessment.
+
+`POST /api/item-review/runs/{run_id}/ground` takes `X-Review-Token` for a finished
+requirements or grounding run and a fresh `X-OpenAI-Key`. It creates a separate
+`mode: "grounding"` run without repeating extraction. The key stays in memory
+only. Polling, cancellation, JSON export, and expiry use the existing endpoints;
+completed mappings survive cancellation or later failures. The export includes
+the original extraction, candidates/ranks, mapping evidence, prompts, settings,
+reference-file checksums, and grounding token usage. A failed or stopped mapping
+can be retried as a new run, which maps all facets again.
+
+The default reference directory is the repository's `materials/`; override it
+with `ITEM_REVIEW_ONET_DIR`. Keep `ONET_index.csv` and `ONET_embeddings.npz`
+together and restart the server after replacing them. The retrieval dependencies
+are included by `website/server/requirements.txt`. The first local search loads
+the pinned `BAAI/bge-small-en-v1.5` model (downloading it if needed) and verifies
+sampled vectors against the supplied index. Dataset authorization is not needed
+for extraction or O*NET grounding. See
+[`bayesian_auditing/README.md`](../bayesian_auditing/README.md) for the exact search
+settings, data scope, mapping contract, and source attribution.
+
 This separate tool collects six deployment answers, retrieves relevant questions
 locally, and uses the visitor's OpenAI key to assess only the selected shortlist.
 It defaults to 20 retrieved items, with a maximum of 100 per web review. A
@@ -221,6 +266,11 @@ are unchanged. Retrieval similarity and order stay separate from final validity
 scores, per-dimension confidence, evidence, information gaps, and provenance.
 Similarity identifies candidates; it does not establish compatibility. The initial
 deployment questions are fixed and editable, without an extra model call.
+
+The first five deployment answers must contain non-whitespace text; constraints
+is optional. There are no minimum or maximum answer-length limits. Submitted
+answers remain fixed for each run and are included verbatim in its JSON export.
+Submitting revised answers creates a separate run.
 
 Scoring version 5 ranks items by a confidence-adjusted score. Each scored
 dimension contributes `1 + confidence * (compatibility - 1)`, and missing

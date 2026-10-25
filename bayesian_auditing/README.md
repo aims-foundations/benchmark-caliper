@@ -1,5 +1,127 @@
 # Goal-conditioned item review
 
+## Step 2: extract deployment requirements
+
+The website's **Extract requirements** action implements Step 2 of *Goal-Conditioned
+Adaptive Composite Benchmarks* (§1.1 and §2.2). It sends the six original answers
+to GPT-6 Luna in one structured extraction request and stops at a reviewable
+requirements preview. It does not load the item bank, retrieve items, or assess
+their compatibility. No Hugging Face access is needed for this action.
+
+[`requirements.py`](requirements.py) defines the output and validates references;
+[`extract_requirements.md`](prompts/extract_requirements.md) is the complete prompt.
+The output contains the workflow, primary user, input/output types, authority,
+task facets, explicit collection coverage requirements, and unresolved details.
+Each known text field includes its supporting answer identifiers and verbatim
+quotations. Unknown text stays `null` with no fabricated evidence. Facets retain
+required inputs, required output behavior, and essential status; an ambiguous
+essential status stays `null`.
+
+Source identifiers match the existing form: `task`, `users`, `inputs`, `outputs`,
+`success`, and `constraints` correspond to the paper's answers 1–6. Pydantic
+validates the structure, unique facet identifiers, and coverage references;
+Python checks each quotation against its named original answer. These checks
+establish literal provenance, not semantic correctness. Review the interpretation
+alongside the original answers.
+
+Collection targets are separate from individual response requirements. For
+example, the [paper's medical study goal](examples/medical_study_goal.json) asks
+for at least three medication-constrained management cases; this becomes a
+coverage requirement linked to `initial_management` with `minimum_items: 3`.
+Other explicit quota forms are preserved as supported text with a null minimum
+and an unresolved enforcement detail. No default quotas are invented.
+
+`RequirementExtractor` and `AsyncRequirementExtractor` reuse the existing OpenAI
+Responses settings (GPT-6 Luna, high reasoning effort, 25,000 maximum output
+tokens, `store=False`). Incomplete responses, refusals, invalid schemas, and
+invalid quotations produce an error with no accepted requirements. Invalid output
+is not automatically re-prompted; the website retains the SDK's existing two
+transport retries. Provider errors are sanitized and cancellation is supported.
+
+The existing run/export mechanism saves the original answers, validated
+requirements, prompt, schema, model/settings, response identifier, and available
+token usage in downloadable JSON. Website runs remain temporary; export before
+they expire. The preview can continue to O*NET grounding below. Tests use
+mocked model responses, including a human-authored
+extraction of the paper's worked example; they do not measure live LLM quality.
+
+## Step 3: ground task vocabulary with O*NET
+
+After a successful extraction, choose **Ground with O*NET** in the requirements
+preview. Enter an OpenAI key again because the extraction key has been cleared.
+This creates a separate run using a copy of the accepted requirements and exact
+original answers; it does not repeat extraction. The original run stays available
+until its normal expiry. Grounding uses local reference search followed by one
+paid GPT-6 Luna mapping request per task facet with candidates, and stops at an
+inspectable mapping preview. It does not retrieve or judge benchmark questions.
+
+[`onet.py`](onet.py) reads `materials/ONET_index.csv` and
+`materials/ONET_embeddings.npz`. The supplied table contains 3,197 records from
+a healthcare-focused O*NET catalog, including occupations, skills/abilities,
+knowledge, and work activities. The companion `skill_bank.json` supplies the
+richer source catalog; its metadata identifies O*NET 30.3, retrieved 2026-08-22,
+with attribution to the U.S. Department of Labor/ETA and the National Center for
+O*NET Development under CC BY 4.0. These materials are a healthcare subset, not
+the entire O*NET database. `deployment_goal.txt` supplies 15 six-answer scenarios
+for manual pipeline review, without expected extracted or mapped outputs.
+
+Local retrieval uses:
+
+- **Meaning-based search:** `BAAI/bge-small-en-v1.5`, pinned to revision
+  `5c38ec7c405ec4b44b94cc5a9bb96e735b38267a`, with CLS pooling, L2 normalization,
+  and right truncation at 512 tokens. Documents use the CSV `text` field;
+  queries use BGE's documented retrieval instruction. Before its first dense
+  search, the index re-encodes eight evenly spaced records and requires a cosine
+  match of at least 0.9999 with their saved vectors. Incompatible vectors fail
+  explicitly. This is a sampled compatibility check, not a complete reconstruction
+  of the original index-generation process.
+- **Keyword search:** `rank-bm25` BM25Okapi, with Unicode word tokens after
+  casefolding, `k1=1.5`, `b=0.75`, and `epsilon=0.25`.
+- **Combined ranking:** up to 50 candidates from each method, reciprocal-rank
+  fusion with `k=60`, and the top 20 unique records per facet. Record IDs break
+  ties deterministically. These depths and Step 3 fusion settings are implementation
+  choices; the paper specifies the two search methods but not these parameters.
+
+Install `requirements-retrieval.txt` for NumPy, Torch, Transformers, and BM25.
+The first dense search downloads the pinned model if it is not cached. Subsequent
+searches reuse the local reference index and encoder; user queries and mappings
+remain with their individual runs. `ITEM_REVIEW_ONET_DIR` can point the website
+to another directory containing the two prepared files. Restart the server when
+replacing the reference files, since the index is cached for the process lifetime.
+
+[`onet_mapping.py`](onet_mapping.py) uses each facet's task text as its O*NET
+search query. Shared answer-format and educational wording is kept out of this
+query so it does not overwhelm the task vocabulary. The mapper still receives
+the full deployment context when assessing applicability.
+[`map_onet.md`](prompts/map_onet.md) contains the
+complete mapping instructions. The mapper receives the original answers,
+requirements, facet, and shortlisted record text. For every record it assesses,
+it returns an exact supporting passage, applicability (`applicable`,
+`partially_applicable`, or `not_applicable`), a rationale, and supported search
+phrases. Applicable and partially applicable records are adopted; rejected
+records contribute no phrases. It may also return up to three refinements with
+literal evidence from the original deployment answers. The original tasks,
+authority, answer formats, and collection targets stay unchanged.
+
+Pydantic and Python reject unknown/duplicate IDs, changed facet references,
+nonliteral passages or search phrases, and invalid goal-source quotations. An
+empty mapping with an explanation is valid: the task remains unchanged without
+added O*NET vocabulary. These checks establish provenance, while the preview
+lets a human assess semantic applicability. Invalid output fails without another
+model attempt; transport retries retain the existing SDK policy. Cancellation or
+a provider failure preserves completed facet mappings.
+
+The JSON export includes the original answers and extraction snapshot, source run
+ID, local search queries and shortlisted records/ranks, validated mappings,
+reference-file checksums, retrieval settings, sampled embedding compatibility
+result, mapping prompt/schema, response metadata, and available token usage for
+the grounding run. Results use the existing one-hour temporary retention policy.
+Tests cover local search and mocked LLM responses. Real local BGE searches have
+also been checked against the supplied vectors; no live mapping quality is
+claimed by these checks.
+
+## Retrieve and assess items
+
 Describe an AI deployment, retrieve a bounded shortlist of evaluation questions
 with local **Qwen3-Embedding-0.6B** embeddings, then assess only that shortlist with
 **GPT-6 Luna**. The existing six validity judgments, evidence, confidence, and final

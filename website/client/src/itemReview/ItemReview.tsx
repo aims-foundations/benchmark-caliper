@@ -2,8 +2,11 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { SiteHeader } from '../components/SiteHeader'
 import { SiteFooter } from '../components/SiteFooter'
 import { appPath } from '../paths'
-import { cancelReview, getCatalog, getReview, startReview, type Catalog, type Deployment, type Review, type RunAccess } from './api'
+import { cancelReview, getCatalog, getReview, startReview, startGrounding, type Catalog, type Deployment, type RunResult, type RunAccess } from './api'
 import { Results } from './Results'
+import { RequirementsResults } from './RequirementsResults'
+import { GroundingResults } from './GroundingResults'
+import { QUESTIONS } from './deployment'
 
 const RUN_STORAGE = 'item_review_run_v1'
 const EMPTY: Deployment = { task: '', users: '', inputs: '', outputs: '', success: '', constraints: '' }
@@ -15,14 +18,6 @@ const EXAMPLE: Deployment = {
   success: 'Both mathematical correctness and a helpful explanation of the reasoning are required.',
   constraints: 'Text only. The tutor does not receive images or audio. Check misleading or incorrect explanations.',
 }
-const QUESTIONS: Array<{ id: keyof Deployment; title: string; hint: string }> = [
-  { id: 'task', title: 'What will the AI system do?', hint: 'Describe its task, domain, and the setting where people will use it.' },
-  { id: 'users', title: 'Who will use it?', hint: 'Include relevant users, languages, locations, and expertise. Say when a detail is unspecified.' },
-  { id: 'inputs', title: 'What inputs will it receive?', hint: 'Describe text, images, audio, tools, and whether users can ask follow-up questions.' },
-  { id: 'outputs', title: 'What should its responses look like?', hint: 'Describe the expected language, format, explanation, decision, or other output.' },
-  { id: 'success', title: 'What counts as a successful response?', hint: 'What should an evaluation measure: correctness, helpfulness, safe refusal, or other outcomes?' },
-  { id: 'constraints', title: 'What constraints or failures matter? (optional)', hint: 'Include situations the system must handle carefully, or capabilities outside its scope.' },
-]
 
 function savedRun(): RunAccess | null {
   try {
@@ -40,7 +35,7 @@ export function ItemReview() {
   const [retrievalQuery, setRetrievalQuery] = useState('')
   const [page, setPage] = useState(1)
   const [access, setAccess] = useState<RunAccess | null>(savedRun)
-  const [review, setReview] = useState<Review | null>(null)
+  const [review, setReview] = useState<RunResult | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const workspace = useRef<HTMLDivElement>(null)
@@ -90,32 +85,58 @@ export function ItemReview() {
 
   function moveToDeployment(e: FormEvent) {
     e.preventDefault()
-    if (!apiKey.trim() || !catalog?.dataset_access_configured) return
+    if (!apiKey.trim()) return
     setError('')
     setStep('deployment')
   }
 
-  async function start() {
-    if (!catalog || !Number.isInteger(Number(retrieveK)) || Number(retrieveK) < 1 || Number(retrieveK) > catalog.max_retrieve_k) return
+  async function start(mode: 'item_review' | 'requirements' = 'item_review') {
+    if (busy || !apiKey.trim()) return
+    if (mode === 'item_review' && (!catalog?.dataset_access_configured || !validRetrieveK)) return
     setBusy(true)
     setError('')
     try {
-      const run = await startReview({ deployment, retrieve_k: Number(retrieveK),
-        ...(retrievalQuery.trim() ? { retrieval_query: retrievalQuery } : {}) }, apiKey.trim())
+      const run = await startReview(mode === 'requirements' ? { deployment, mode }
+        : { deployment, retrieve_k: Number(retrieveK), ...(retrievalQuery.trim() ? { retrieval_query: retrievalQuery } : {}) }, apiKey.trim())
       // The OpenAI key stays in React memory only and is cleared once handed off.
       setApiKey('')
       try { sessionStorage.setItem(RUN_STORAGE, JSON.stringify(run)) } catch { /* current tab still works */ }
       setAccess(run)
+      setReview(null)
       setPage(1)
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not start the review.') }
+    } catch (e) { setError(e instanceof Error ? e.message : 'Could not start the run.') }
     finally { setBusy(false) }
+  }
+
+  async function ground(key: string): Promise<boolean> {
+    if (!access || busy) return false
+    setBusy(true)
+    setError('')
+    try {
+      const run = await startGrounding(access, key)
+      try { sessionStorage.setItem(RUN_STORAGE, JSON.stringify(run)) } catch { /* current tab still works */ }
+      setReview(null)
+      setAccess(run)
+      setPage(1)
+      return true
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Could not start O*NET grounding.')
+      return false
+    } finally { setBusy(false) }
+  }
+
+  function submitDeployment(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const submitter = (e.nativeEvent as SubmitEvent).submitter
+    if (submitter instanceof HTMLButtonElement && submitter.value === 'requirements') void start('requirements')
+    else setStep('confirm')
   }
 
   async function stop() {
     if (!access) return
     setBusy(true)
     try { setReview(await cancelReview(access)); setPage(1); setError('') }
-    catch { setError('Could not confirm cancellation. The review may still be running; try Stop review again.') }
+    catch { setError('Could not confirm cancellation. The run may still be running; please try stopping it again.') }
     finally { setBusy(false) }
   }
 
@@ -137,21 +158,21 @@ export function ItemReview() {
       <a className="review-back" href={appPath('/')}><span aria-hidden="true">← </span>Choose an evaluation</a>
       <div className="review-hero-heading"><div><p className="eyebrow">Goal-conditioned auditing <span className="review-badge">Demo</span></p>
         <h1>Find tests that fit.</h1></div>
-        <p>Retrieve candidate items locally, then assess the shortlist against your deployment with evidence behind every judgment.</p></div>
+        <p>Describe your deployment, inspect extracted requirements, or retrieve and assess candidate test items.</p></div>
     </header></div>
     <main className="rd-container item-review-main">
       <div className="review-layout">
         <aside className="review-guide">
           <p className="eyebrow">Your review</p>
           <ol className="review-steps">
-            {['Connect your key', 'Describe deployment', 'Review and run', 'Inspect results'].map((label, i) => <li key={label}
+            {['Connect your key', 'Describe deployment', 'Choose an action', 'Inspect results'].map((label, i) => <li key={label}
               aria-current={(access ? 3 : ['access', 'deployment', 'confirm'].indexOf(step)) === i ? 'step' : undefined}>
               <span>{String(i + 1).padStart(2, '0')}</span>{label}</li>)}
           </ol>
-          {!access && <div className="review-guide-note"><p className="eyebrow">The framework</p><strong>One item.<br />Six perspectives.</strong>
+          {!access && <div className="review-guide-note"><p className="eyebrow">The framework</p><strong>Start with your deployment.</strong>
             <div className="review-guide-dimensions"><span>Input</span><span>Output</span><p>Ontology · Content · Form</p></div>
-            <p>Local Qwen3 embeddings retrieve a shortlist. GPT-6 Luna assesses those items across all six validity dimensions.</p>
-            <small>Paid judgments only for the shortlist</small>
+            <p>Extract requirements to inspect your goal, or use local retrieval and six-dimension item assessment.</p>
+            <small>Extraction and item assessment use paid GPT-6 Luna calls.</small>
           </div>}
         </aside>
         <div className="review-workspace" ref={workspace} tabIndex={-1}>
@@ -162,30 +183,33 @@ export function ItemReview() {
 
           {!access && catalog && step === 'access' && <form onSubmit={moveToDeployment} className="review-panel">
             <p className="eyebrow">01 · Connect</p><h2>Connect your OpenAI API key</h2>
-            <p className="review-intro">Local retrieval narrows a broad, reproducible sample to a shortlist. Bring your own key for the six-dimension assessments of that shortlist. You’ll choose the maximum number of items before any paid calls begin.</p>
-            {!catalog.dataset_access_configured && <div className="review-error" role="alert">Dataset access is not configured on this server. Please contact the site maintainer or try again later.</div>}
+            <p className="review-intro">Bring your own key to extract requirements from your deployment answers or assess a shortlist of benchmark items. You’ll choose an action before any paid calls begin.</p>
+            {!catalog.dataset_access_configured && <div className="review-error" role="alert">Dataset access is not configured on this server. Requirements extraction is available; item retrieval and assessment are unavailable.</div>}
             <label className="review-field"><span>OpenAI API key</span><input type="password" autoComplete="off" spellCheck={false} maxLength={512}
               value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="sk-…" required /></label>
             <div className="review-access-note"><strong>Your OpenAI key stays temporary.</strong><p>We send it to our backend and hold it in memory during your review. It is never saved to browser storage or our database.</p></div>
-            <p className="help">The sample draws from {catalog.benchmarks.length} benchmark collections across both measurement-db branches. Retrieval uses a local embedding model without a paid API. Starting a review sends your deployment description and shortlisted item evidence to OpenAI for assessment.</p>
-            <button type="submit" disabled={!apiKey.trim() || !catalog.dataset_access_configured}>Continue to deployment</button>
+            <p className="help">Requirements extraction sends your six answers to OpenAI in one paid call. Item review retrieves locally from {catalog.benchmarks.length} benchmark collections, then sends your deployment description and shortlisted item evidence to OpenAI for paid assessment.</p>
+            <button type="submit" disabled={!apiKey.trim()}>Continue to deployment</button>
           </form>}
 
-          {!access && catalog && step === 'deployment' && <form className="review-panel review-deployment" onSubmit={e => { e.preventDefault(); setStep('confirm') }}>
+          {!access && catalog && step === 'deployment' && <form className="review-panel review-deployment" onSubmit={submitDeployment}>
             <p className="eyebrow">02 · Your deployment</p><h2>What are you building?</h2>
             <p className="review-intro">Help us understand the real setting. Your answers guide what a relevant test should measure.</p>
             <div className="review-example"><div><strong>Need a starting point?</strong><p>Fill in a mathematics tutor scenario, then make it your own. Filling the form is free.</p></div>
-              <button type="button" className="secondary" onClick={() => setDeployment(EXAMPLE)}>Use mathematics tutor example</button></div>
+              <button type="button" className="secondary" disabled={busy} onClick={() => setDeployment(EXAMPLE)}>Use mathematics tutor example</button></div>
             <div className="review-questions">{QUESTIONS.map((q, i) => <div className={`review-question review-question-${q.id}`} key={q.id}>
               <span className="review-question-number" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
               <div className="review-field"><label htmlFor={`deployment-${q.id}`}>{q.title}</label><p id={`hint-${q.id}`}>{q.hint}</p>
               <textarea id={`deployment-${q.id}`} aria-describedby={`hint-${q.id}`} placeholder={q.id === 'task' ? 'For example, an AI tutor helping secondary-school students learn mathematics…' : 'Describe what matters for your setting…'}
                 value={deployment[q.id]} onChange={e => setDeployment({ ...deployment, [q.id]: e.target.value })}
-                rows={3} required={q.id !== 'constraints'} minLength={q.id === 'task' ? 10 : q.id === 'constraints' ? 0 : 3} maxLength={q.id === 'task' ? 4000 : 2000} />
+                rows={3} required={q.id !== 'constraints'} disabled={busy} />
               </div>
             </div>)}</div>
-            <p className="help">If a detail is unknown, say “unspecified.” The assessment will record the resulting uncertainty.</p>
-            <div className="review-actions"><button type="button" className="secondary" onClick={() => setStep('access')}>Back</button><button type="submit">Review catalog and settings</button></div>
+            <p className="help">If a detail is unknown, say “unspecified.” The extraction or assessment will record the resulting uncertainty.</p>
+            <p className="review-paid-note">Extract requirements starts one paid GPT-6 Luna call using your six answers. The preview shows the deployment summary, task facets, source quotations, coverage requirements, and unresolved details.</p>
+            <div className="review-actions"><button type="button" className="secondary" disabled={busy} onClick={() => setStep('access')}>Back</button>
+              <button type="submit" name="action" value="requirements" disabled={busy}>{busy ? 'Starting…' : 'Extract requirements'}</button>
+              <button type="submit" className="secondary" name="action" value="item_review" disabled={busy}>Review catalog and settings</button></div>
           </form>}
 
           {!access && catalog && step === 'confirm' && <section className="review-panel">
@@ -224,13 +248,16 @@ export function ItemReview() {
             <details><summary>Your deployment description</summary>{QUESTIONS.map(q => <section key={q.id}><h4>{q.title}</h4><p className="review-preserve">{deployment[q.id] || 'Unspecified'}</p></section>)}</details>
             <p className="help">The review continues if this tab closes. Use Stop review to cancel. Results are kept in temporary server storage for one hour after completion and are discarded on a server restart. Download all results to keep them.</p>
             <p className="review-paid-note">Starting authorizes paid GPT-6 Luna assessments for up to {validRetrieveK ? Number(retrieveK) : 'your chosen number of'} retrieved items after local retrieval completes.</p>
+            {!catalog.dataset_access_configured && <p className="review-error" role="alert">Dataset access is not configured on this server. Return to your deployment to extract requirements.</p>}
             <div className="review-actions"><button type="button" className="secondary" onClick={() => setStep('deployment')} disabled={busy}>Edit deployment</button>
-              <button type="button" onClick={() => void start()} disabled={busy || catalog.table_count === 0 || !validRetrieveK}>{busy ? 'Starting…' : 'Retrieve and assess shortlist'}</button></div>
+              <button type="button" onClick={() => void start()} disabled={busy || !catalog.dataset_access_configured || catalog.table_count === 0 || !validRetrieveK}>{busy ? 'Starting…' : 'Retrieve and assess shortlist'}</button></div>
           </section>}
 
-          {access && <>
+          {access && review?.mode === 'requirements' && <RequirementsResults review={review} run={access} busy={busy} onCancel={() => void stop()} onRestart={restart} onGround={ground} />}
+          {access && review?.mode === 'grounding' && <GroundingResults review={review} run={access} busy={busy} onCancel={() => void stop()} onRestart={restart} onGround={ground} />}
+          {access && review?.mode !== 'requirements' && review?.mode !== 'grounding' && <>
             <section className="review-panel review-progress" aria-live="polite"><p className="eyebrow">04 · Results</p>
-              <h2>{!review || review.status === 'preparing' ? 'Preparing and retrieving candidate items' : review.status === 'running' ? 'Assessing shortlisted items' : review.status === 'completed' ? 'Your item review is ready' : review.status === 'cancelled' ? 'Review stopped' : 'Review interrupted'}</h2>
+              <h2>{!review ? 'Connecting to your run' : review.status === 'preparing' ? 'Preparing and retrieving candidate items' : review.status === 'running' ? 'Assessing shortlisted items' : review.status === 'completed' ? 'Your item review is ready' : review.status === 'cancelled' ? 'Review stopped' : 'Review interrupted'}</h2>
               <p className="review-intro">{review?.message || 'Connecting to your review…'}</p>
               {review && review.status === 'preparing' && <><progress max={review.scope.source_rows || 1} value={review.source_rows} aria-label="Source rows considered for sampling" /><p>{review.prepared_benchmarks.toLocaleString()} of {review.scope.benchmarks.length.toLocaleString()} benchmark collections prepared · {review.source_rows.toLocaleString()} source rows considered · no paid model calls yet</p></>}
               {review && review.status === 'preparing' && <p className="help">Preparing the local index and retrieving candidates. Paid judgments start after the shortlist is selected.</p>}

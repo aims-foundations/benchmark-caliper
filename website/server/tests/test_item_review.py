@@ -7,7 +7,8 @@ import time
 from threading import Event
 
 from fastapi.testclient import TestClient
-from openai import OpenAIError
+import httpx
+from openai import AsyncOpenAI, OpenAIError
 import pytest
 import numpy as np
 
@@ -125,6 +126,7 @@ def test_catalog_and_ranked_review(client, caplog):
     response = finished(client, access)
     result = response.json()
     assert result["status"] == "completed"
+    assert result["deployment"] == BODY["deployment"]
     assert [row["overall_score"] for row in result["ranked_items"]] == pytest.approx([3.79, 2.86])
     assert [row["compatibility_score"] for row in result["ranked_items"]] == [4, 3]
     assert result["processed"] == 2 and result["source_rows"] == 3
@@ -138,6 +140,172 @@ def test_catalog_and_ranked_review(client, caplog):
     assert KEY not in response.text + caplog.text
     assert HF_KEY not in response.text + caplog.text
     assert access["run_secret"] not in response.text
+
+
+@pytest.mark.parametrize("answer_length", [1, 5001])
+def test_submitted_answers_survive_review_export_and_later_runs(client, monkeypatch, answer_length):
+    answers = {name: " \n" + "é" * answer_length + "\t " for name in BODY["deployment"]}
+    judge_inputs = []
+
+    class RecordingJudge:
+        def __init__(self, _client, deployment, _prompt):
+            judge_inputs.append(deployment)
+
+        async def __call__(self, _evidence):
+            return assessment()
+
+    monkeypatch.setattr(item_review, "AsyncJudge", RecordingJudge)
+    first = start(client, {"deployment": answers})
+    result = finished(client, first).json()
+    assert result["status"] == "completed"
+    assert result["deployment"] == answers
+    assert all(value in judge_inputs[0] for value in answers.values())
+
+    revised_answers = {**answers, "success": "A revised success criterion"}
+    second = start(client, {"deployment": revised_answers})
+    assert finished(client, second).json()["status"] == "completed"
+    assert second["run_id"] != first["run_id"]
+
+    for access, expected in ((first, answers), (second, revised_answers)):
+        exported = client.get(f"/api/item-review/runs/{access['run_id']}/export",
+                              headers={"X-Review-Token": access["run_secret"]})
+        assert exported.status_code == 200
+        assert exported.json()["run_id"] == access["run_id"]
+        assert exported.json()["deployment"] == expected
+
+
+@pytest.mark.parametrize("field", ["task", "users", "inputs", "outputs", "success"])
+@pytest.mark.parametrize("blank", ["", " \n\t "])
+def test_required_deployment_answers_cannot_be_blank(client, field, blank):
+    body = {"deployment": {**BODY["deployment"], field: blank}}
+    response = client.post("/api/item-review/runs", json=body, headers={"X-OpenAI-Key": KEY})
+    assert response.status_code == 422
+    assert not item_review.jobs
+
+
+def extracted_requirements(answers):
+    def supported(name):
+        return {"text": answers[name], "evidence": [{"answer_id": name, "quote": answers[name]}]}
+
+    return {
+        "workflow": supported("task"), "primary_user": supported("users"),
+        "input_types": supported("inputs"), "output_types": supported("outputs"),
+        "authority": {"text": None, "evidence": []},
+        "task_facets": [{"facet_id": "tutoring", "task": supported("task"),
+                         "required_input_evidence": supported("inputs"),
+                         "required_output_behavior": supported("outputs"), "essential": True}],
+        "coverage_requirements": [], "unresolved_details": ["Authority is unspecified."],
+    }
+
+
+def mock_extraction_provider(monkeypatch, requirements, *, incomplete=False):
+    requests = []
+
+    def respond(request):
+        requests.append(json.loads(request.content))
+        return httpx.Response(200, json={
+            "id": "resp_extraction", "object": "response", "created_at": 1, "model": "gpt-6-luna",
+            "status": "incomplete" if incomplete else "completed",
+            "incomplete_details": {"reason": "max_output_tokens"} if incomplete else None,
+            "output": [{"type": "message", "id": "msg_extraction", "status": "completed", "role": "assistant",
+                        "content": [{"type": "output_text", "text": json.dumps(requirements), "annotations": []}]}],
+            "usage": {"input_tokens": 100, "output_tokens": 90, "total_tokens": 190,
+                      "input_tokens_details": {"cached_tokens": 10},
+                      "output_tokens_details": {"reasoning_tokens": 30}},
+        })
+
+    monkeypatch.setattr(item_review, "AsyncOpenAI", lambda **kwargs: AsyncOpenAI(
+        **kwargs, http_client=httpx.AsyncClient(transport=httpx.MockTransport(respond))))
+    return requests
+
+
+def test_requirements_run_without_dataset_access_and_export_exact_inputs(client, monkeypatch):
+    answers = {**BODY["deployment"], "task": " \nA mathematics tutor for secondary school.\t "}
+    expected = extracted_requirements(answers)
+    requests = mock_extraction_provider(monkeypatch, expected)
+    monkeypatch.setattr(item_review, "get_token", lambda: None)
+    monkeypatch.setattr(item_review, "inventory", lambda: pytest.fail("Extraction does not read the item inventory"))
+    monkeypatch.setattr(item_review, "review_items", lambda *args: pytest.fail("Extraction must not prepare items"))
+    monkeypatch.setattr(item_review, "AsyncJudge", lambda *args: pytest.fail("Extraction must not judge items"))
+
+    access = start(client, {"deployment": answers, "mode": "requirements"})
+    result = finished(client, access).json()
+    assert result["mode"] == "requirements" and result["status"] == "completed"
+    assert result["requirements"] == expected
+    assert result["deployment"] == answers
+    assert len(requests) == 1
+    assert json.loads(requests[0]["input"]) == {"answers": answers}
+    assert requests[0]["store"] is False
+    assert result["extraction"]["prompt"] == requests[0]["instructions"]
+    assert result["extraction"]["output_schema"] == requests[0]["text"]["format"]["schema"]
+    assert result["extraction"]["response_id"] == "resp_extraction"
+    assert result["usage"] == {"input_tokens": 100, "output_tokens": 90,
+                               "reasoning_tokens": 30, "cached_input_tokens": 10}
+    assert "scope" not in result and "ranked_items" not in result
+    url = f"/api/item-review/runs/{access['run_id']}/export"
+    assert client.get(url).status_code == 404
+    exported = client.get(url, headers={"X-Review-Token": access["run_secret"]})
+    assert exported.status_code == 200 and exported.json() == result
+    assert exported.headers["cache-control"] == "no-store"
+    assert "requirements-" in exported.headers["content-disposition"]
+    for secret in (KEY, HF_KEY, access["run_secret"]):
+        assert secret not in exported.text
+
+
+@pytest.mark.parametrize("failure", ["quote", "schema", "incomplete"])
+def test_invalid_requirements_fail_without_downstream_calls(client, monkeypatch, failure):
+    requirements = extracted_requirements(BODY["deployment"])
+    if failure == "quote":
+        requirements["workflow"]["evidence"][0]["quote"] = "A fabricated quotation"
+    elif failure == "schema":
+        requirements = {"provider_output": KEY}
+    requests = mock_extraction_provider(monkeypatch, requirements, incomplete=failure == "incomplete")
+    monkeypatch.setattr(item_review, "review_items", lambda *args: pytest.fail("Invalid extraction cannot retrieve items"))
+    access = start(client, {**BODY, "mode": "requirements"})
+    response = finished(client, access)
+    result = response.json()
+    assert result["status"] == "failed" and result["requirements"] is None
+    assert len(requests) == 1
+    assert result["usage"]["output_tokens"] == 90
+    assert "Requirement extraction failed" in result["message"]
+    assert "raw_output" not in response.text and KEY not in response.text
+    assert item_review.jobs[access["run_id"]].finished_at is not None
+
+
+def test_requirements_provider_error_is_sanitized(client, monkeypatch):
+    def fail(**kwargs):
+        raise OpenAIError(f"Provider error containing {KEY}")
+
+    monkeypatch.setattr(item_review, "AsyncOpenAI", fail)
+    response = finished(client, start(client, {**BODY, "mode": "requirements"}))
+    assert response.json()["status"] == "failed"
+    assert response.json()["requirements"] is None
+    assert KEY not in response.text
+
+
+def test_requirements_cancellation_stops_the_provider_request(client, monkeypatch):
+    entered, cancelled = Event(), Event()
+
+    async def slow_response(request):
+        entered.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            cancelled.set()
+            raise
+
+    monkeypatch.setattr(item_review, "AsyncOpenAI", lambda **kwargs: AsyncOpenAI(
+        **kwargs, http_client=httpx.AsyncClient(transport=httpx.MockTransport(slow_response))))
+    access = start(client, {**BODY, "mode": "requirements"})
+    assert entered.wait(2)
+    assert client.post("/api/item-review/runs", json={**BODY, "mode": "requirements"},
+                       headers={"X-OpenAI-Key": KEY}).status_code == 429
+    response = client.post(f"/api/item-review/runs/{access['run_id']}/cancel",
+                           headers={"X-Review-Token": access["run_secret"]})
+    assert response.json()["status"] == "cancelled"
+    assert response.json()["requirements"] is None
+    assert response.json()["message"] == "Requirement extraction stopped."
+    assert cancelled.is_set() and item_review.jobs[access["run_id"]].task.done()
 
 
 def test_access_token_required_for_results_and_cancel(client):

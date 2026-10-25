@@ -8,6 +8,24 @@ export const DIMENSIONS = [
 export interface Deployment {
   task: string; users: string; inputs: string; outputs: string; success: string; constraints: string
 }
+export interface EvidenceRef { answer_id: keyof Deployment; quote: string }
+export interface SupportedText { text: string | null; evidence: EvidenceRef[] }
+export interface TaskFacet {
+  facet_id: string; task: SupportedText; required_input_evidence: SupportedText
+  required_output_behavior: SupportedText; essential: boolean | null
+}
+export interface CoverageRequirement {
+  facet_ids: string[]; minimum_items: number | null; requirement: SupportedText
+}
+export interface Requirements {
+  workflow: SupportedText; primary_user: SupportedText; input_types: SupportedText
+  output_types: SupportedText; authority: SupportedText; task_facets: TaskFacet[]
+  coverage_requirements: CoverageRequirement[]; unresolved_details: string[]
+}
+export interface ExtractionPolicy {
+  version: number; model: string; reasoning_effort: string; max_output_tokens: number
+  prompt: string; output_schema: Record<string, unknown>; response_id?: string; response_model?: string
+}
 export interface SamplingPolicy {
   version: number; method: string; seed: number; items_per_benchmark: number
 }
@@ -23,7 +41,9 @@ export interface Catalog {
   missing_item_tables: Array<{ branch: string; benchmark: string }>
   benchmarks: Array<{ id: string; name: string; table_count: number; source_rows: number; sample_max_items: number }>
 }
-export interface ReviewRequest { deployment: Deployment; retrieve_k: number; retrieval_query?: string }
+export type ReviewRequest = { deployment: Deployment } & (
+  { mode: 'requirements' } | { mode?: 'item_review'; retrieve_k: number; retrieval_query?: string }
+)
 export interface RunAccess { run_id: string; run_secret: string }
 export type LegacyConfidence = 'high' | 'medium' | 'low' | 'insufficient'
 // Earlier reports keep their original labels; new assessments use numbers.
@@ -42,6 +62,7 @@ export interface ReviewedItem {
 }
 export interface Review {
   run_id: string; status: 'preparing' | 'running' | 'completed' | 'cancelled' | 'failed'; message: string
+  mode?: 'item_review'
   model: string; reasoning_effort: string; deployment: Deployment
   scope: { benchmarks: string[]; table_count: number; source_rows: number; branches: Record<string, string>; sample_only: boolean; sampling: SamplingPolicy; sample_max_items: number; retrieve_k?: number }
   indexed_items?: number; retrieved_items?: number; retrieval_policy?: RetrievalPolicy; retrieval_query?: string
@@ -53,6 +74,30 @@ export interface Review {
   sample_complete: boolean; prepared_benchmarks: number; pagination: { page: number; page_size: number; total_pages: number }
   usage: Record<string, number>; ranked_items: ReviewedItem[]; unranked_items?: ReviewedItem[]; failed_items: ReviewedItem[]
 }
+export interface RequirementsReview {
+  run_id: string; status: Review['status']; message: string; mode: 'requirements'
+  model: string; reasoning_effort: string; deployment: Deployment; requirements: Requirements | null
+  extraction: ExtractionPolicy | null; usage: Record<string, number>
+}
+export interface OnetCandidate {
+  doc_id: string; kind: string; name: string; text: string; occupation_id: string | null
+  dense_rank: number | null; bm25_rank: number | null; rrf_score: number
+}
+export interface OnetRecordMapping {
+  record_id: string; supporting_passage: string
+  applicability: 'applicable' | 'partially_applicable' | 'not_applicable'
+  rationale: string; search_terms: string[]
+}
+export interface OnetFacetResult {
+  facet_id: string; query: string; candidates: OnetCandidate[]; status: 'complete' | 'error'
+  mapping: { facet_id: string; records: OnetRecordMapping[]; refinements: SupportedText[]; unresolved_details: string[] } | null
+  error?: string; response_id?: string; response_model?: string; usage?: Record<string, number>
+}
+export interface GroundingReview extends Omit<RequirementsReview, 'mode'> {
+  mode: 'grounding'; source_run_id: string
+  grounding: { retrieval: Record<string, unknown> | null; mapping: ExtractionPolicy; facets: OnetFacetResult[] } | null
+}
+export type RunResult = Review | RequirementsReview | GroundingReview
 
 async function fetchResponse(path: string, options: RequestInit = {}): Promise<Response> {
   const response = await fetch(appPath(`/api/item-review${path}`), { cache: 'no-store', ...options })
@@ -70,12 +115,15 @@ export const getCatalog = (signal?: AbortSignal) => request<Catalog>('/catalog',
 export const startReview = (body: ReviewRequest, apiKey: string) => request<RunAccess>('/runs', {
   method: 'POST', headers: { 'Content-Type': 'application/json', 'X-OpenAI-Key': apiKey }, body: JSON.stringify(body),
 })
-export const getReview = (run: RunAccess, page = 1, signal?: AbortSignal) => request<Review>(`/runs/${run.run_id}?page=${page}`, {
+export const startGrounding = (run: RunAccess, apiKey: string) => request<RunAccess>(`/runs/${run.run_id}/ground`, {
+  method: 'POST', headers: { 'X-Review-Token': run.run_secret, 'X-OpenAI-Key': apiKey },
+})
+export const getReview = (run: RunAccess, page = 1, signal?: AbortSignal) => request<RunResult>(`/runs/${run.run_id}?page=${page}`, {
   headers: { 'X-Review-Token': run.run_secret }, signal,
 })
 export const getReviewExport = async (run: RunAccess) => (await fetchResponse(`/runs/${run.run_id}/export`, {
   headers: { 'X-Review-Token': run.run_secret },
 })).blob()
-export const cancelReview = (run: RunAccess) => request<Review>(`/runs/${run.run_id}/cancel`, {
+export const cancelReview = (run: RunAccess) => request<RunResult>(`/runs/${run.run_id}/cancel`, {
   method: 'POST', headers: { 'X-Review-Token': run.run_secret },
 })
