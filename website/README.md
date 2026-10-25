@@ -281,7 +281,8 @@ the same retrieval order. Browse candidates by task and collection, or download
 the complete retrieval JSON. The export contains the original answers,
 requirements and grounding snapshots, pinned scope, retrieval settings, queries,
 candidates, and queue memberships. Stopping a run preserves completed task
-results. The next screening/adaptive-selection stages are not invoked.
+results. Retrieval ends here; **Screen initial candidates** starts Step 5
+separately.
 
 `POST /api/item-review/runs/{run_id}/retrieve` accepts an empty JSON object `{}`
 and requires only the source run's `X-Review-Token`. Scope overrides such as
@@ -301,6 +302,59 @@ answers or query vectors. SQLite FTS5 and bounded embedding/vector-scan batches
 keep the full corpus off the Python heap. Budget for substantial disk and local
 inference time for the complete bank. Full-bank performance and retrieval
 quality have not been measured end to end.
+
+A completed retrieval offers **Screen initial candidates** (Step 5). It uses
+GPT-6 Luna to assess at most **50 distinct candidates**. The allocator takes one
+next unseen item per task's all-source queue on each pass, in existing task
+order. Three sufficiently populated queues receive 17, 17, and 16 items.
+Overlapping items count once globally, exhausted queues leave their remaining
+share to other tasks, and a union smaller than 50 produces an explicit shortfall.
+The fixed budget of 50 is the agreed choice, replacing the paper's 48-item
+example. Per-collection queues do not receive extra allocations.
+
+Each model request contains the six original answers, extracted requirements,
+and complete original item row, without the retrieval query, acquisition task,
+or scores. The model identifies the decision the question actually requests,
+matches it to extracted task facets, gives six independent 1–5 or null ratings,
+and reports true/false/null coverage findings indexed to the explicit coverage
+requirements. The preview shows the task, excerpts, justifications, information
+gaps, ratings, and coverage. Python checks that evidence excerpts occur literally
+in original item string values; semantic support still needs human review.
+Null ratings and the prompt's score anchors are explicit implementation choices.
+Clinical answer correctness is not established by an LLM screening judgment.
+
+Python computes the gate: a matched task and scores of at least 3 on input
+ontology, input content, input form, and output ontology are required to pass.
+A known low gated score or clear task mismatch fails; otherwise an unknown
+required finding leaves the gate unresolved. Output content and output form
+are reported separately, and coverage does not change the gate. Invalid model
+responses are errors, distinct from valid fail or unresolved assessments. This
+step adds no confidence aggregate, final benchmark selection, or adaptive
+allocation; Steps 6 and 7 are not implemented.
+
+`POST /api/item-review/runs/{run_id}/screen` accepts `{}` or an omitted body and
+requires the source run's `X-Review-Token` and a fresh `X-OpenAI-Key`. Budget and
+other request overrides are rejected. The source must be completed retrieval
+or a finished screening run, and the new run has `mode: "screening"`. Saved
+retrieval artifacts supply all item evidence; no Hugging Face access or new
+retrieval is needed. The model uses high reasoning effort and a 25,000-token
+output ceiling, with the full prompt, schema, settings, and gate policy saved.
+
+Stopping or failing a screening run preserves completed assessments. **Continue
+screening** keeps its original 50-item allocation and prompt/settings snapshot,
+retains all valid pass/fail/unresolved results, and retries only pending or
+errored items. A completed run with no items left to retry cannot be continued.
+Incompatible saved schema versions require starting again from retrieval.
+The displayed run usage covers new calls only; retained items preserve their
+individual response usage and originating `screened_run_id`. The JSON export
+contains the full screening result plus the original answers, requirements,
+grounding, and retrieval artifacts. Existing token authorization, cancellation,
+candidate paging, and temporary expiry still apply.
+
+See [`bayesian_auditing/README.md`](../bayesian_auditing/README.md#step-5-screen-the-initial-50-candidates)
+for the prompt, schemas, and Python library entry points. Allocation and provider
+handling are tested with offline/mocked fixtures. Live provider judgment quality
+has not been validated, and no complete-bank end-to-end run has been performed.
 
 The existing **Review catalog** assessment option collects six deployment answers, retrieves relevant questions
 locally, and uses the visitor's OpenAI key to assess only the selected shortlist.

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getCandidates, getReviewExport, type BenchmarkRetrievalReview, type CandidatePage, type Catalog, type RunAccess } from './api'
 import { BenchmarkRetrievalForm } from './BenchmarkRetrievalForm'
 import { RequirementsContent, SupportedValue } from './RequirementsResults'
+import { ScreeningForm } from './ScreeningForm'
 
 function CandidateBrowser({ review, run, catalog }: { review: BenchmarkRetrievalReview; run: RunAccess; catalog: Catalog | null }) {
   const queues = review.retrieval?.queues ?? []
@@ -66,9 +67,10 @@ function CandidateBrowser({ review, run, catalog }: { review: BenchmarkRetrieval
   </section>
 }
 
-export function BenchmarkRetrievalResults({ review, run, catalog, busy, onCancel, onRestart, onRetrieve }: {
+export function BenchmarkRetrievalResults({ review, run, catalog, busy, onCancel, onRestart, onRetrieve, onScreen }: {
   review: BenchmarkRetrievalReview; run: RunAccess; catalog: Catalog | null; busy: boolean
   onCancel: () => void; onRestart: () => void; onRetrieve: () => Promise<boolean>
+  onScreen: (apiKey: string) => Promise<boolean>
 }) {
   const [downloading, setDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState('')
@@ -115,6 +117,7 @@ export function BenchmarkRetrievalResults({ review, run, catalog, busy, onCancel
       <p className="help">Results expire one hour after the run ends. The JSON export includes all completed candidate rankings and their evidence, original answers, requirements, and O*NET mappings.</p>
       {downloadError && <p className="review-error" role="alert">{downloadError}</p>}
     </section>
+    {review.status === 'completed' && retrieval?.queues.some(queue => queue.source == null && queue.item_count > 0) && <ScreeningForm busy={busy} onScreen={onScreen} />}
     {retrieval && <section className="review-panel" aria-labelledby="retrieval-queries-title">
       <h2 id="retrieval-queries-title">Task search queries</h2>
       {retrieval.queries.length === 0 && <p>No task query has completed yet.</p>}

@@ -2,11 +2,12 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { SiteHeader } from '../components/SiteHeader'
 import { SiteFooter } from '../components/SiteFooter'
 import { appPath } from '../paths'
-import { cancelReview, getCatalog, getReview, startReview, startGrounding, startBenchmarkRetrieval, type Catalog, type Deployment, type RunResult, type RunAccess } from './api'
+import { cancelReview, getCatalog, getReview, startReview, startGrounding, startBenchmarkRetrieval, startScreening, type Catalog, type Deployment, type RunResult, type RunAccess } from './api'
 import { Results } from './Results'
 import { RequirementsResults } from './RequirementsResults'
 import { GroundingResults } from './GroundingResults'
 import { BenchmarkRetrievalResults } from './BenchmarkRetrievalResults'
+import { ScreeningResults } from './ScreeningResults'
 import { QUESTIONS } from './deployment'
 
 const RUN_STORAGE = 'item_review_run_v1'
@@ -143,6 +144,23 @@ export function ItemReview() {
     } finally { setBusy(false) }
   }
 
+  async function screen(key: string): Promise<boolean> {
+    if (!access || busy) return false
+    setBusy(true)
+    setError('')
+    try {
+      const run = await startScreening(access, key)
+      try { sessionStorage.setItem(RUN_STORAGE, JSON.stringify(run)) } catch { /* current tab still works */ }
+      setReview(null)
+      setAccess(run)
+      setPage(1)
+      return true
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Could not start initial screening.')
+      return false
+    } finally { setBusy(false) }
+  }
+
   function submitDeployment(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const submitter = (e.nativeEvent as SubmitEvent).submitter
@@ -273,8 +291,9 @@ export function ItemReview() {
 
           {access && review?.mode === 'requirements' && <RequirementsResults review={review} run={access} busy={busy} onCancel={() => void stop()} onRestart={restart} onGround={ground} />}
           {access && review?.mode === 'grounding' && <GroundingResults review={review} run={access} catalog={catalog} busy={busy} onCancel={() => void stop()} onRestart={restart} onGround={ground} onRetrieve={retrieve} />}
-          {access && review?.mode === 'retrieval' && <BenchmarkRetrievalResults key={access.run_id} review={review} run={access} catalog={catalog} busy={busy} onCancel={() => void stop()} onRestart={restart} onRetrieve={retrieve} />}
-          {access && review?.mode !== 'requirements' && review?.mode !== 'grounding' && review?.mode !== 'retrieval' && <>
+          {access && review?.mode === 'retrieval' && <BenchmarkRetrievalResults key={access.run_id} review={review} run={access} catalog={catalog} busy={busy} onCancel={() => void stop()} onRestart={restart} onRetrieve={retrieve} onScreen={screen} />}
+          {access && review?.mode === 'screening' && <ScreeningResults key={access.run_id} review={review} run={access} busy={busy} onCancel={() => void stop()} onRestart={restart} onScreen={screen} />}
+          {access && review?.mode !== 'requirements' && review?.mode !== 'grounding' && review?.mode !== 'retrieval' && review?.mode !== 'screening' && <>
             <section className="review-panel review-progress" aria-live="polite"><p className="eyebrow">04 · Results</p>
               <h2>{!review ? 'Connecting to your run' : review.status === 'preparing' ? 'Preparing and retrieving candidate items' : review.status === 'running' ? 'Assessing shortlisted items' : review.status === 'completed' ? 'Your item review is ready' : review.status === 'cancelled' ? 'Review stopped' : 'Review interrupted'}</h2>
               <p className="review-intro">{review?.message || 'Connecting to your review…'}</p>

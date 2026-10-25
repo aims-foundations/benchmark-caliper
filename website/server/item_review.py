@@ -31,7 +31,7 @@ from bayesian_auditing.sampling import (
 )
 from bayesian_auditing.scoring import SCORING_POLICY
 from bayesian_auditing.data import fingerprint
-from bayesian_auditing.benchmark_data import iter_benchmark_items
+from bayesian_auditing.benchmark_data import iter_benchmark_items, row_fingerprint
 from bayesian_auditing.benchmark_index import prepare_benchmark_index
 from bayesian_auditing.benchmark_queries import build_benchmark_queries, build_screening_queues
 from bayesian_auditing.retrieval import ItemIndex, RETRIEVAL_POLICY
@@ -41,6 +41,10 @@ from bayesian_auditing.judge import (
 from bayesian_auditing.requirements import AsyncRequirementExtractor, EXTRACTION_VERSION, Requirements
 from bayesian_auditing.onet import OnetIndex, DEFAULT_MATERIALS_DIR
 from bayesian_auditing.onet_mapping import AsyncOnetMapper, OnetMapping, MAPPING_VERSION, build_onet_query
+from bayesian_auditing.screening import (
+    AsyncItemScreener, ScreeningAssessment, SCREENING_VERSION, GATED_DIMENSIONS,
+)
+from bayesian_auditing.screening_queue import allocate_initial_screening, INITIAL_SCREENING_BUDGET
 from .item_review_store import ReviewStore
 from . import db
 
@@ -88,7 +92,7 @@ class Deployment(BaseModel):
 class ReviewRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     deployment: Deployment
-    mode: Literal["item_review", "requirements", "grounding", "retrieval"] = "item_review"
+    mode: Literal["item_review", "requirements", "grounding", "retrieval", "screening"] = "item_review"
     retrieve_k: int = Field(default=DEFAULT_RETRIEVE_K, ge=1, le=MAX_RETRIEVE_K, strict=True)
     retrieval_query: str = Field(default="", max_length=100_000)
 
@@ -98,6 +102,11 @@ class ReviewRequest(BaseModel):
 
 class BenchmarkRetrievalRequest(BaseModel):
     """Step 4 always searches the complete pinned main inventory."""
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+
+class ScreeningRequest(BaseModel):
+    """The initial budget is fixed; continuations reuse the same allocation."""
     model_config = ConfigDict(extra="forbid", strict=True)
 
 
@@ -128,6 +137,7 @@ class ReviewJob:
     source_run_id: str | None = None
     grounding: dict | None = field(default=None, repr=False)
     benchmark_retrieval: dict | None = field(default=None, repr=False)
+    screening: dict | None = field(default=None, repr=False)
 
 
 jobs: dict[str, ReviewJob] = {}
@@ -185,7 +195,7 @@ async def catalog(response: Response) -> dict:
 
 
 def public_job(job: ReviewJob, page: int = 1, *, include_items: bool = True) -> dict:
-    if job.request.mode in {"requirements", "grounding", "retrieval"}:
+    if job.request.mode in {"requirements", "grounding", "retrieval", "screening"}:
         result = {
             "run_id": job.run_id, "status": job.status, "message": job.message,
             "mode": job.request.mode, "model": DEFAULT_MODEL,
@@ -194,9 +204,9 @@ def public_job(job: ReviewJob, page: int = 1, *, include_items: bool = True) -> 
             "requirements": job.requirements, "extraction": job.extraction,
             "usage": dict(job.usage),
         }
-        if job.request.mode in {"grounding", "retrieval"}:
+        if job.request.mode in {"grounding", "retrieval", "screening"}:
             result.update(source_run_id=job.source_run_id, grounding=job.grounding)
-        if job.request.mode == "retrieval":
+        if job.request.mode in {"retrieval", "screening"}:
             retrieval = job.benchmark_retrieval
             result["retrieval"] = None
             if retrieval is not None:
@@ -206,6 +216,11 @@ def public_job(job: ReviewJob, page: int = 1, *, include_items: bool = True) -> 
                                 "source": queue["source"], "item_count": len(queue["item_ids"])}
                                for queue in retrieval["queues"]],
                 }
+        if job.request.mode == "screening":
+            result["screening"] = job.screening
+            if job.screening:
+                result["model"] = job.screening["model"]["model"]
+                result["reasoning_effort"] = job.screening["model"]["reasoning_effort"]
         return result
     counts = job.results.counts
     processed = job.results.processed
@@ -281,8 +296,8 @@ def check_owner_capacity(owner: str) -> None:
 async def start_review(body: ReviewRequest, response: Response,
                        x_openai_key: Annotated[str | None, Header()] = None) -> dict:
     response.headers["Cache-Control"] = "no-store"
-    if body.mode in {"grounding", "retrieval"}:
-        raise HTTPException(400, "Continue grounding or retrieval from its preceding pipeline run.")
+    if body.mode in {"grounding", "retrieval", "screening"}:
+        raise HTTPException(400, "Continue grounding, retrieval, or screening from its preceding pipeline run.")
     key, owner = check_run_capacity(x_openai_key)
     if body.mode == "item_review" and not get_token():
         raise HTTPException(503, "Dataset access is not configured on this server. Please contact the site maintainer or try again later.")
@@ -364,13 +379,101 @@ async def start_benchmark_retrieval(run_id: str, body: BenchmarkRetrievalRequest
     return {"run_id": job.run_id, "run_secret": job.secret}
 
 
+def screening_candidates(retrieval: dict, requirements: Requirements) -> dict[tuple[str, str], dict]:
+    """Check the saved queues and full-row identities before opening a paid client."""
+    rankings = retrieval["rankings"]
+    facet_ids = [facet.facet_id for facet in requirements.task_facets]
+    if not facet_ids or [ranking["facet_id"] for ranking in rankings] != facet_ids:
+        raise ValueError("Every extracted task needs a completed ranking.")
+    if retrieval["queues"] != build_screening_queues(rankings):
+        raise ValueError("Saved queues do not match the candidate rankings.")
+    candidates = {}
+    for ranking in rankings:
+        for candidate in ranking["candidates"]:
+            item_id = candidate["item_id"]
+            if (item_id != row_fingerprint(candidate["evidence"]["item"])
+                    or candidate["evidence_hash"] != item_id):
+                raise ValueError("A candidate does not retain its original row identity.")
+            candidates[ranking["facet_id"], item_id] = candidate
+    return candidates
+
+
+@router.post("/runs/{run_id}/screen", status_code=202)
+async def start_screening(run_id: str, response: Response,
+                          body: ScreeningRequest = ScreeningRequest(),
+                          x_review_token: Annotated[str | None, Header()] = None,
+                          x_openai_key: Annotated[str | None, Header()] = None) -> dict:
+    response.headers["Cache-Control"] = "no-store"
+    source = authorize(run_id, x_review_token)
+    if (source.request.mode not in {"retrieval", "screening"} or source.finished_at is None
+            or (source.request.mode == "retrieval" and source.status != "completed")
+            or not source.requirements or not source.grounding or not source.benchmark_retrieval):
+        raise HTTPException(409, "Complete benchmark retrieval before screening its candidates.")
+    try:
+        requirements = Requirements.model_validate(source.requirements)
+        build_benchmark_queries(source.request.deployment.model_dump(), requirements, source.grounding)
+        screening_candidates(source.benchmark_retrieval, requirements)
+        allocation = allocate_initial_screening(source.benchmark_retrieval["queues"])
+    except (ValueError, TypeError, KeyError):
+        raise HTTPException(409, "Screening requires valid requirements, grounding, and complete candidate queues.") from None
+
+    # A continuation finishes the same initial set, without paying again for
+    # successful assessments (including valid fail and unresolved gate outcomes).
+    retained = []
+    if source.request.mode == "screening":
+        if not source.screening or source.screening["allocation"] != allocation:
+            raise HTTPException(409, "The saved screening allocation cannot be continued.")
+        if (source.screening["policy"]["version"] != SCREENING_VERSION
+                or source.screening["model"]["output_schema"] != ScreeningAssessment.model_json_schema()):
+            raise HTTPException(409, "The saved screening schema has changed. Start screening from the retrieval run.")
+        retained = [deepcopy(item) for item in source.screening["items"] if item["status"] == "complete"]
+        if len(retained) == allocation["allocated"]:
+            raise HTTPException(409, "Every allocated item already has a valid screening result.")
+    key, owner = check_run_capacity(x_openai_key)
+    screener = AsyncItemScreener(None)
+    job = ReviewJob(
+        secrets.token_hex(16), secrets.token_urlsafe(32), owner,
+        ReviewRequest(deployment=source.request.deployment, mode="screening"),
+        inventory=deepcopy(source.inventory), source_run_id=source.run_id,
+        requirements=deepcopy(source.requirements), extraction=deepcopy(source.extraction),
+        grounding=deepcopy(source.grounding), benchmark_retrieval=deepcopy(source.benchmark_retrieval),
+        message="Preparing the initial candidates for screening with GPT-6 Luna.",
+        screening={
+            "policy": {
+                "version": SCREENING_VERSION, "initial_budget": INITIAL_SCREENING_BUDGET,
+                "initial_allocation": "round_robin_all_source_queues",
+                "allocation_order": "saved_task_order", "exhausted_queue_share": "redistributed",
+                "gated_dimensions": list(GATED_DIMENSIONS), "minimum_score": 3,
+                "task_match": "actual_requested_decision_matches_an_extracted_task",
+                "unknown_gate": "unresolved_unless_another_gate_definitely_fails",
+                "reported_only_dimensions": ["output_content", "output_form"],
+            },
+            "model": {
+                "version": SCREENING_VERSION, "model": screener.model,
+                "reasoning_effort": screener.reasoning_effort,
+                "max_output_tokens": screener.max_output_tokens,
+                "prompt": screener.prompt, "output_schema": ScreeningAssessment.model_json_schema(),
+            },
+            "allocation": allocation, "items": retained,
+        },
+    )
+    if source.request.mode == "screening":
+        # Continue with the exact prompt/settings used for retained assessments,
+        # even if the prompt file has been edited since the first attempt.
+        job.screening["model"] = deepcopy(source.screening["model"])
+        job.screening["policy"] = deepcopy(source.screening["policy"])
+    jobs[job.run_id] = job
+    job.task = asyncio.create_task(evaluate(job, key))
+    return {"run_id": job.run_id, "run_secret": job.secret}
+
+
 @router.get("/runs/{run_id}/candidates")
 async def benchmark_candidates(run_id: str, queue_id: str, response: Response,
                                x_review_token: Annotated[str | None, Header()] = None,
                                page: Annotated[int, Query(ge=1)] = 1) -> dict:
     response.headers["Cache-Control"] = "no-store"
     job = authorize(run_id, x_review_token)
-    retrieval = job.benchmark_retrieval if job.request.mode == "retrieval" else None
+    retrieval = job.benchmark_retrieval if job.request.mode in {"retrieval", "screening"} else None
     queue = next((queue for queue in retrieval["queues"] if queue["queue_id"] == queue_id), None) if retrieval else None
     if queue is None:
         raise HTTPException(404, "Candidate queue not found.")
@@ -397,7 +500,7 @@ async def get_review(run_id: str, response: Response,
 async def export_review(run_id: str, x_review_token: Annotated[str | None, Header()] = None):
     job = authorize(run_id, x_review_token)
     snapshot = public_job(job, include_items=False)
-    if job.request.mode == "retrieval":
+    if job.request.mode in {"retrieval", "screening"}:
         # The worker replaces its snapshot after each completed facet. Holding
         # this reference keeps a download consistent while retrieval continues.
         retrieval = job.benchmark_retrieval
@@ -424,7 +527,7 @@ async def export_review(run_id: str, x_review_token: Annotated[str | None, Heade
 
         return StreamingResponse(retrieval_content(), media_type="application/json", headers={
             "Cache-Control": "no-store",
-            "Content-Disposition": f'attachment; filename="benchmark-retrieval-{run_id}.json"',
+            "Content-Disposition": f'attachment; filename="benchmark-{job.request.mode}-{run_id}.json"',
         })
     if job.request.mode in {"requirements", "grounding"}:
         name = "onet-grounding" if job.request.mode == "grounding" else "requirements"
@@ -476,6 +579,7 @@ def stopped_message(job: ReviewJob) -> str:
         "requirements": "Requirement extraction stopped.",
         "grounding": "O*NET grounding stopped. Completed facet mappings are retained.",
         "retrieval": "Benchmark retrieval stopped. Completed task rankings and queues are retained.",
+        "screening": "Screening stopped. Completed item results are retained; continue to finish the initial set.",
         "item_review": "Review stopped. Completed assessments are retained.",
     }[job.request.mode]
 
@@ -813,6 +917,64 @@ async def retrieve_benchmarks(job: ReviewJob) -> None:
     job.message = "Benchmark candidates and task/source queues are ready for review. Relevance screening is the next step."
 
 
+async def screen_benchmarks(job: ReviewJob, api_key: str) -> None:
+    """Screen the fixed initial allocation; collection selection comes later."""
+    requirements = Requirements.model_validate(job.requirements)
+    answers = job.request.deployment.model_dump()
+    requirements.validate_evidence(answers)
+    candidates = screening_candidates(job.benchmark_retrieval, requirements)
+    allocation = job.screening["allocation"]
+    done = {item["item_id"] for item in job.screening["items"]}
+    pending = iter(item for item in allocation["items"] if item["item_id"] not in done)
+    order = {item["item_id"]: index for index, item in enumerate(allocation["items"])}
+    job.status = "running"
+    if not allocation["allocated"]:
+        job.status, job.message = "completed", "No candidates were available to screen. No paid calls were made."
+        return
+
+    async with AsyncOpenAI(api_key=api_key, base_url="https://api.openai.com/v1",
+                           max_retries=2, timeout=600) as client:
+        settings = job.screening["model"]
+        screener = AsyncItemScreener(client, prompt=settings["prompt"], model=settings["model"],
+                                     reasoning_effort=settings["reasoning_effort"],
+                                     max_output_tokens=settings["max_output_tokens"])
+
+        async def worker():
+            # next() and the result update contain no awaits, so workers cannot
+            # reserve the same item or overwrite one another's saved results.
+            for acquisition in pending:
+                candidate = candidates[acquisition["facet_id"], acquisition["item_id"]]
+                result = await screener(answers, requirements, candidate["evidence"]["item"])
+                saved = {
+                    **candidate, "acquisition": {key: acquisition[key] for key in ("queue_id", "facet_id")},
+                    "screened_run_id": job.run_id,
+                    **{key: result[key] for key in (
+                        "status", "assessment", "gate", "response_id", "response_model", "usage",
+                    ) if key in result},
+                }
+                if result["status"] == "error":
+                    saved["error"] = result["error"]
+                record_usage(job, result.get("usage"))
+                items = sorted([*job.screening["items"], saved], key=lambda item: order[item["item_id"]])
+                job.screening = {**job.screening, "items": items}
+                job.message = f"Screening initial candidates: {len(items)} of {allocation['allocated']} processed."
+
+        workers = [asyncio.create_task(worker()) for _ in range(REVIEW_CONCURRENCY)]
+        try:
+            await asyncio.gather(*workers)
+        finally:
+            for task in workers:
+                if not task.done():
+                    task.cancel()
+            await asyncio.gather(*workers, return_exceptions=True)
+    errors = sum(item["status"] == "error" for item in job.screening["items"])
+    job.status = "completed"
+    job.message = (
+        f"Initial screening finished with {errors} response error{'s' if errors != 1 else ''}. Continue to retry the affected items."
+        if errors else "Initial screening is ready. Review task matches, ratings, and construction gate outcomes."
+    )
+
+
 async def evaluate(job: ReviewJob, api_key: str) -> None:
     items = None
     try:
@@ -824,6 +986,9 @@ async def evaluate(job: ReviewJob, api_key: str) -> None:
             return
         if job.request.mode == "retrieval":
             await retrieve_benchmarks(job)
+            return
+        if job.request.mode == "screening":
+            await screen_benchmarks(job, api_key)
             return
         items, job.total = await review_items(job)
         selected = await retrieve_items(job, items)
@@ -858,6 +1023,8 @@ async def evaluate(job: ReviewJob, api_key: str) -> None:
             job.message = "Could not extract requirements. Please try again later or contact the site maintainer."
         elif job.request.mode == "retrieval":
             job.message = "Could not complete benchmark retrieval. Check dataset access, local model setup, and disk space. Completed task rankings are retained."
+        elif job.request.mode == "screening":
+            job.message = "Could not complete screening. Completed item results are retained; continue to retry unfinished items."
         else:
             job.message = "Could not load or process evaluation items. Please try again later or contact the site maintainer."
     finally:

@@ -121,7 +121,33 @@ export interface CandidatePage {
   queue_id: string; facet_id: string; page: number; page_size: number; total_pages: number; total_items: number
   items: BenchmarkCandidate[]
 }
-export type RunResult = Review | RequirementsReview | GroundingReview | BenchmarkRetrievalReview
+export type ValidityDimension = typeof DIMENSIONS[number][0]
+export interface ScreeningRating {
+  score: number | null; evidence: string[]; justification: string; information_gaps: string[]
+}
+export interface ScreeningAssessment {
+  task: { status: 'matched' | 'no_match' | 'unresolved'; decision: string | null; matched_facet_ids: string[]
+    evidence: string[]; justification: string; information_gaps: string[] }
+  ratings: Record<ValidityDimension, ScreeningRating>
+  coverage: Array<{ requirement_index: number; satisfied: boolean | null; evidence: string[]; justification: string; information_gaps: string[] }>
+}
+export interface ScreenedItem extends BenchmarkCandidate {
+  acquisition: { queue_id: string; facet_id: string }; status: 'complete' | 'error'
+  assessment?: ScreeningAssessment; gate?: { status: 'pass' | 'fail' | 'unresolved'; reasons: string[] }
+  error?: string; usage?: Record<string, number>; screened_run_id?: string
+}
+export interface ScreeningReview extends Omit<BenchmarkRetrievalReview, 'mode'> {
+  mode: 'screening'
+  screening: {
+    policy: { version: number; initial_budget: number; gated_dimensions: ValidityDimension[]; minimum_score: number; [key: string]: unknown }
+    model: ExtractionPolicy
+    allocation: { budget: number; allocated: number; shortfall: number
+      allocations: Array<{ queue_id: string; facet_id: string; target: number; allocated: number }>
+      items: Array<{ item_id: string; queue_id: string; facet_id: string }> }
+    items: ScreenedItem[]
+  } | null
+}
+export type RunResult = Review | RequirementsReview | GroundingReview | BenchmarkRetrievalReview | ScreeningReview
 
 async function fetchResponse(path: string, options: RequestInit = {}): Promise<Response> {
   const response = await fetch(appPath(`/api/item-review${path}`), { cache: 'no-store', ...options })
@@ -145,6 +171,9 @@ export const startGrounding = (run: RunAccess, apiKey: string) => request<RunAcc
 export const startBenchmarkRetrieval = (run: RunAccess) => request<RunAccess>(`/runs/${run.run_id}/retrieve`, {
   method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Review-Token': run.run_secret },
   body: JSON.stringify({}),
+})
+export const startScreening = (run: RunAccess, apiKey: string) => request<RunAccess>(`/runs/${run.run_id}/screen`, {
+  method: 'POST', headers: { 'X-Review-Token': run.run_secret, 'X-OpenAI-Key': apiKey },
 })
 export const getCandidates = (run: RunAccess, queueId: string, page = 1, signal?: AbortSignal) => request<CandidatePage>(
   `/runs/${run.run_id}/candidates?${new URLSearchParams({ queue_id: queueId, page: String(page) })}`,

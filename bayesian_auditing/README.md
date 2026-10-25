@@ -180,7 +180,8 @@ order by benchmark collection produces one queue per source collection. An item
 may occur in several queues, with the same stable evidence identifier. The
 `ScreeningQueues` helper supports later selection of the next unseen items using
 a shared set of successfully screened IDs; retrieving or stopping a run does not
-mark candidates as screened. No adaptive allocation or screening is run here.
+mark candidates as screened. Step 4 ends at retrieval; the completed preview
+offers a separate action to start the initial screening below.
 
 The first index build reads the complete bank and computes local BGE
 vectors, so it can require substantial time and disk. Evidence, source references,
@@ -211,6 +212,88 @@ EngiBench rows with every source column preserved and verified cache reuse.
 Long-row checks also confirmed that text beyond token 512 affects the embedding.
 These checks do not establish performance or
 retrieval quality across the whole bank, which has not been run end to end.
+
+## Step 5: screen the initial 50 candidates
+
+After completed retrieval, choose **Screen initial candidates**. This step
+assesses at most **50 distinct items** using GPT-6 Luna. The fixed budget of 50
+is the agreed implementation choice; the paper's worked example uses 48 items
+across three tasks. This stage does not perform adaptive allocation, assemble a
+final benchmark, or implement Steps 6 and 7.
+
+[`screening_queue.py`](screening_queue.py) allocates the budget deterministically
+across the tasks' all-source queues. Each pass takes the next unseen item from
+each task in the existing task order, preserving retrieval rank within each
+queue. Three queues with enough distinct items receive 17, 17, and 16 items.
+An overlapping item counts once globally; the next queue skips it and continues
+to its next unseen candidate. When a queue is exhausted, the remaining queues
+use the available budget. If their combined union has fewer than 50 items, the
+allocation records the shortfall. Per-collection queues do not receive separate
+initial allocations, and the original queues are unchanged.
+
+[`screening.py`](screening.py) sends one request per allocated item using the
+[`screen_item.md`](prompts/screen_item.md) prompt and a strict structured-output
+schema. Inputs are the six original answers, validated extracted requirements,
+and the complete original row under `item`. Retrieval queries, queue labels,
+and retrieval scores are not model inputs. The model identifies the decision
+actually requested by the question and matches it against any extracted task
+facet, independently of which queue supplied it. It returns:
+
+- A task finding: matched facet IDs, no match, or unresolved, with supporting
+  item excerpts, justification, and information gaps.
+- Separate 1–5 or null ratings for input ontology, input content, input form,
+  output ontology, output content, and output form, each with the same evidence
+  and explanation fields. There is no numerical confidence or aggregate score.
+- One true, false, or null coverage finding for each explicit coverage
+  requirement, identified by its zero-based `requirement_index`. This describes
+  an item's contribution; collection-wide numerical minimums are not imposed
+  on a single item.
+
+The prompt defines score anchors from fundamental mismatch (1) to strong
+alignment supported by positive evidence (5), and uses null when the supplied
+evidence cannot support a rating. These anchors and explicit unknown handling
+are implementation choices that make the paper's ratings operational. The
+default model settings are `gpt-6-luna`, high reasoning effort, and a 25,000-token
+output ceiling. Calls use the Responses API with `store=False` and no tools.
+
+Python validates task references, coverage indices and scope, and literal
+evidence excerpts against original string values in the item, including nested
+values. It does not verify whether an excerpt semantically supports a judgment.
+A resolved task, numerical rating, or true/false coverage finding needs an item
+excerpt; an unknown finding needs a stated information gap. Invalid responses
+remain errors without an accepted assessment or an automatic model repair.
+Reference answers are evidence to inspect, not proof of correctness, and the
+output-content rating is not expert validation of clinical answers.
+
+The construction gate is computed by Python. It passes only with a matched task
+and ratings of at least 3 for **input ontology, input content, input form, and
+output ontology**. A clear task mismatch or any known score below 3 in these
+four dimensions fails, even if other findings are unknown. Otherwise an
+unresolved task or a null gated rating leaves the gate unresolved. Output
+content, output form, and coverage findings remain inspectable but do not
+change this gate. A passing gate is eligibility for later construction, not
+final selection or a performance result.
+
+The website uses the existing run token and a fresh OpenAI key for each
+screening run. No dataset fetch or retrieval rerun is needed. Cancellation or a
+provider failure retains completed assessments. **Continue screening** reuses
+the same allocation and its original prompt/settings snapshot, retaining all
+valid pass, fail, and unresolved assessments and retrying only pending or errored
+items. Incompatible saved schema versions require a new run from retrieval.
+Run-level token totals cover only new calls; each item keeps its own usage,
+response metadata, and originating `screened_run_id`.
+
+The export includes the complete screening allocation and results alongside the
+original answers, extraction, grounding, retrieval inventory, candidates, and
+queues. The prompt, schema, model settings, and gate policy are inspectable.
+Temporary run expiry still applies. The allocator and synchronous/asynchronous
+screener are also available as Python library functions/classes; there is no
+new Step 5 CLI command.
+
+Tests exercise allocation, strict response/evidence validation, gate behavior,
+mocked provider requests, and website continuation, cancellation, and export.
+Live provider judgment quality has not been validated, and these tests do not
+constitute an end-to-end run over the complete bank.
 
 ## Existing Qwen retrieval and six-dimension assessment
 

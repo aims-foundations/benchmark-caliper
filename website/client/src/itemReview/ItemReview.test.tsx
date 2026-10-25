@@ -6,7 +6,7 @@ import * as api from './api'
 
 vi.mock('./api', async importOriginal => ({
   ...await importOriginal<typeof import('./api')>(),
-  getCatalog: vi.fn(), startReview: vi.fn(), startGrounding: vi.fn(), startBenchmarkRetrieval: vi.fn(), getCandidates: vi.fn(), getReview: vi.fn(), cancelReview: vi.fn(), getReviewExport: vi.fn(),
+  getCatalog: vi.fn(), startReview: vi.fn(), startGrounding: vi.fn(), startBenchmarkRetrieval: vi.fn(), startScreening: vi.fn(), getCandidates: vi.fn(), getReview: vi.fn(), cancelReview: vi.fn(), getReviewExport: vi.fn(),
 }))
 
 const catalog: api.Catalog = { model: 'gpt-6-luna', reasoning_effort: 'high', max_output_tokens: 25000,
@@ -82,6 +82,34 @@ const candidates: api.CandidatePage = {
     rank: 1, dense_rank: 2, bm25_rank: 1, dense_score: 0.85, bm25_score: 4.5, rrf_score: 0.0325 }],
 }
 
+const rating = (score: number | null): api.ScreeningRating => ({ score, evidence: ['Reference answer'], justification: 'The supplied item evidence supports this rating.', information_gaps: score == null ? ['The response format is not established.'] : [] })
+const assessment: api.ScreeningAssessment = {
+  task: { status: 'matched', decision: 'Choose the indicated first treatment.', matched_facet_ids: ['management'], evidence: ['What is the indicated first treatment?'], justification: 'The item asks for a treatment decision.', information_gaps: [] },
+  ratings: { input_ontology: rating(4), input_content: rating(4), input_form: rating(4), output_ontology: rating(4), output_content: rating(2), output_form: rating(null) },
+  coverage: [{ requirement_index: 0, satisfied: true, evidence: ['Reference answer'], justification: 'The allergy requirement is met in this assessment fixture.', information_gaps: [] }],
+}
+const screeningItem: api.ScreenedItem = {
+  ...candidates.items[0], acquisition: { queue_id: 'opaque/all', facet_id: 'management' }, status: 'complete', assessment,
+  gate: { status: 'pass', reasons: ['A deployment task is matched and all four gate scores meet the threshold.'] }, screened_run_id: 'screen-run', usage: { input_tokens: 100, output_tokens: 200 },
+}
+const screened: api.ScreeningReview = {
+  ...retrieved, mode: 'screening', run_id: 'screen-run', source_run_id: 'retrieve-run', message: 'Initial screening completed with one assessment error.', usage: { input_tokens: 400, output_tokens: 800 },
+  screening: {
+    policy: { version: 1, initial_budget: 50, gated_dimensions: ['input_ontology', 'input_content', 'input_form', 'output_ontology'], minimum_score: 3 },
+    model: { version: 1, model: 'gpt-6-luna', reasoning_effort: 'high', max_output_tokens: 25000, prompt: 'Identify the tested task and rate all six dimensions.', output_schema: { title: 'ScreeningAssessment' } },
+    allocation: { budget: 50, allocated: 4, shortfall: 46, allocations: [{ queue_id: 'opaque/all', facet_id: 'management', target: 50, allocated: 4 }],
+      items: ['item-1', 'item-2', 'item-3', 'item-4'].map(item_id => ({ item_id, queue_id: 'opaque/all', facet_id: 'management' })) },
+    items: [screeningItem,
+      { ...screeningItem, item_id: 'item-2', assessment: { ...assessment, task: { ...assessment.task, status: 'no_match', decision: 'Recall an unrelated fact.', matched_facet_ids: [], justification: 'The tested task is outside the deployment.' },
+        coverage: [{ ...assessment.coverage[0], satisfied: false, justification: 'This item does not test the required management task.' }] },
+        gate: { status: 'fail', reasons: ['The actual task does not match a deployment task.'] } },
+      { ...screeningItem, item_id: 'item-3', assessment: { ...assessment, ratings: { ...assessment.ratings, input_ontology: rating(null) }, coverage: [{ ...assessment.coverage[0], satisfied: null, information_gaps: ['No allergy evidence is supplied.'] }] },
+        gate: { status: 'unresolved', reasons: ['Input ontology could not be established.'] } },
+      { ...candidates.items[0], item_id: 'item-4', acquisition: { queue_id: 'opaque/all', facet_id: 'management' }, status: 'error', error: 'The response did not match the required schema.' },
+    ],
+  },
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   sessionStorage.clear()
@@ -90,6 +118,7 @@ beforeEach(() => {
   vi.mocked(api.startReview).mockResolvedValue({ run_id: 'test-run', run_secret: 'temporary-access' })
   vi.mocked(api.startGrounding).mockResolvedValue({ run_id: 'ground-run', run_secret: 'ground-access' })
   vi.mocked(api.startBenchmarkRetrieval).mockResolvedValue({ run_id: 'retrieve-run', run_secret: 'retrieve-access' })
+  vi.mocked(api.startScreening).mockResolvedValue({ run_id: 'screen-run', run_secret: 'screen-access' })
   vi.mocked(api.getCandidates).mockResolvedValue(candidates)
   vi.mocked(api.getReview).mockResolvedValue(completed)
 })
@@ -593,4 +622,173 @@ it('keeps rows without a labeled question inspectable through their complete sea
   await user.click(within(candidate).getByText('Inspect full item evidence and sources'))
   expect(within(candidate).getByText(searchText)).toBeVisible()
   expect(within(candidate).getByText(/"release": "older-release"/)).toBeVisible()
+})
+
+it('starts initial screening only after a fresh-key submission and preserves private run access', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'retrieve-run', run_secret: 'retrieve-access' }))
+  vi.mocked(api.getCatalog).mockResolvedValue({ ...catalog, dataset_access_configured: false })
+  vi.mocked(api.getReview).mockResolvedValueOnce(retrieved).mockResolvedValue(screened)
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  const key = await screen.findByLabelText('OpenAI API key for initial screening')
+  expect(key).toHaveValue('')
+  expect(key).toHaveAttribute('type', 'password')
+  expect(screen.getByRole('button', { name: 'Screen initial candidates' })).toBeDisabled()
+  expect(screen.getByText(/Up to 50 distinct candidates/)).toHaveTextContent('distributed as evenly as the available task queues allow')
+  await user.type(key, 'sk-screen-private')
+  expect(api.startScreening).not.toHaveBeenCalled()
+  expect(screen.getByText(/Starting authorizes up to 50 paid/)).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Screen initial candidates' }))
+  await screen.findByRole('heading', { name: 'Your initial screening is ready' })
+  expect(api.startScreening).toHaveBeenCalledWith({ run_id: 'retrieve-run', run_secret: 'retrieve-access' }, 'sk-screen-private')
+  expect(api.startBenchmarkRetrieval).not.toHaveBeenCalled()
+  expect(api.startGrounding).not.toHaveBeenCalled()
+  expect(api.startReview).not.toHaveBeenCalled()
+  expect(screen.getByLabelText('OpenAI API key for initial screening')).toHaveValue('')
+  expect(sessionStorage.getItem('item_review_run_v1')).toBe(JSON.stringify({ run_id: 'screen-run', run_secret: 'screen-access' }))
+  expect(localStorage.length).toBe(0)
+  expect(api.getReview).toHaveBeenLastCalledWith({ run_id: 'screen-run', run_secret: 'screen-access' }, 1, expect.any(AbortSignal))
+})
+
+it('shows actual task matching, six ratings, four-dimension gates, coverage, and assessment errors distinctly', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'screen-run', run_secret: 'screen-access' }))
+  vi.mocked(api.getReview).mockResolvedValue(screened)
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Your initial screening is ready' })
+  expect(screen.getByText('Budget: 50 distinct items · Allocated: 4 · Shortfall: 46')).toBeVisible()
+  expect(screen.getByText('Passed gate').parentElement).toHaveTextContent('1')
+  expect(screen.getByText('Failed gate').parentElement).toHaveTextContent('1')
+  expect(screen.getByText('Unresolved gate').parentElement).toHaveTextContent('1')
+  expect(screen.getByText(/4 of 4 allocated items processed/)).toHaveTextContent('3 valid assessments · 1 assessment errors')
+  const passed = screen.getByRole('article', { name: 'Screened item 1' })
+  expect(within(passed).getByRole('heading', { name: 'Screening gate: Pass' })).toBeVisible()
+  expect(within(passed).getByText('Output content').parentElement).toHaveTextContent('Reported dimension2 / 5')
+  expect(within(passed).getByText('Output form').parentElement).toHaveTextContent('Reported dimensionUnknown')
+  expect(within(passed).getAllByText('Gate dimension')).toHaveLength(4)
+  expect(within(passed).getByText('Choose the indicated first treatment.')).toBeVisible()
+  await user.click(within(passed).getByText('Inspect task interpretation and six validity ratings'))
+  expect(within(passed).getByRole('heading', { name: 'Input ontology · 4 / 5' })).toBeVisible()
+  expect(within(passed).getByRole('heading', { name: 'Output form · Unknown' })).toBeVisible()
+  expect(within(passed).getByText('The response format is not established.')).toBeVisible()
+  await user.click(within(passed).getByText('Inspect coverage requirements (1)'))
+  expect(within(passed).getByRole('heading', { name: 'Coverage requirement 1 · Satisfied' })).toBeVisible()
+  const failed = screen.getByRole('article', { name: 'Screened item 2' })
+  expect(within(failed).getByText(/Acquired from:/).parentElement).toHaveTextContent('Task 1 queue')
+  expect(within(failed).getByText(/Task match:/).parentElement).toHaveTextContent('No deployment task matched')
+  expect(within(failed).getByRole('heading', { name: 'Screening gate: Fail' })).toBeVisible()
+  const unresolved = screen.getByRole('article', { name: 'Screened item 3' })
+  expect(within(unresolved).getByRole('heading', { name: 'Screening gate: Unresolved' })).toBeVisible()
+  const errored = screen.getByRole('article', { name: 'Screened item 4' })
+  expect(within(errored).getByRole('alert')).toHaveTextContent('The response did not match the required schema.')
+  expect(within(errored).queryByRole('heading', { name: /Screening gate:/ })).not.toBeInTheDocument()
+  expect(screen.queryByText(/confidence-adjusted/i)).not.toBeInTheDocument()
+  expect(screen.getByText(/No final benchmark has been selected/)).toBeVisible()
+})
+
+it('retains completed screening assessments when stopped and continues only pending or errored items', async () => {
+  const access = { run_id: 'screen-run', run_secret: 'screen-access' }
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify(access))
+  const partial: api.ScreeningReview = { ...screened, status: 'running', message: 'Screening initial items.', screening: { ...screened.screening!, items: [screeningItem] } }
+  vi.mocked(api.getReview).mockResolvedValue(partial)
+  vi.mocked(api.cancelReview).mockResolvedValue({ ...partial, status: 'cancelled', message: 'Initial screening stopped.' })
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Screening initial candidates' })
+  expect(screen.getByRole('progressbar', { name: 'Initial items processed' })).toHaveAttribute('value', '1')
+  expect(screen.queryByRole('button', { name: 'Continue screening' })).not.toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Stop screening' }))
+  await screen.findByRole('heading', { name: 'Screening stopped' })
+  expect(api.cancelReview).toHaveBeenCalledWith(access)
+  expect(screen.getByRole('article', { name: 'Screened item 1' })).toBeVisible()
+  expect(screen.getByText(/1 completed assessments are retained/)).toHaveTextContent('up to 3 items')
+  await user.type(screen.getByLabelText('OpenAI API key for initial screening'), 'sk-continue')
+  await user.click(screen.getByRole('button', { name: 'Continue screening' }))
+  expect(api.startScreening).toHaveBeenCalledWith(access, 'sk-continue')
+})
+
+it('does not offer another paid screening once every allocated item has a valid assessment', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'screen-run', run_secret: 'screen-access' }))
+  vi.mocked(api.getReview).mockResolvedValue({ ...screened, screening: { ...screened.screening!,
+    allocation: { ...screened.screening!.allocation, allocated: 3, shortfall: 47 }, items: screened.screening!.items.slice(0, 3) } })
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Your initial screening is ready' })
+  expect(screen.getByRole('heading', { name: 'Screening gate: Fail' })).toBeVisible()
+  expect(screen.getByRole('heading', { name: 'Screening gate: Unresolved' })).toBeVisible()
+  expect(screen.queryByLabelText('OpenAI API key for initial screening')).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Continue screening' })).not.toBeInTheDocument()
+})
+
+it('requires a completed retrieval with available candidates before offering initial screening', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'retrieve-run', run_secret: 'retrieve-access' }))
+  vi.mocked(api.getReview).mockResolvedValue({ ...retrieved, status: 'cancelled' })
+  const { unmount } = render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Retrieval stopped' })
+  expect(screen.queryByRole('button', { name: 'Screen initial candidates' })).not.toBeInTheDocument()
+  unmount()
+  vi.mocked(api.getReview).mockResolvedValue({ ...retrieved, retrieval: { ...retrieved.retrieval!, queues: [] } })
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Your benchmark candidates are ready' })
+  expect(screen.queryByLabelText('OpenAI API key for initial screening')).not.toBeInTheDocument()
+})
+
+it('exports retained screening results and makes prompt, schema, and complete item evidence inspectable', async () => {
+  const access = { run_id: 'screen-run', run_secret: 'screen-access' }
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify(access))
+  vi.mocked(api.getReview).mockResolvedValue({ ...screened, status: 'failed', message: 'The provider interrupted screening.' })
+  const blob = new Blob([JSON.stringify(screened)], { type: 'application/json' })
+  vi.mocked(api.getReviewExport).mockResolvedValue(blob)
+  vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:screening')
+  const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Screening interrupted' })
+  const first = screen.getByRole('article', { name: 'Screened item 1' })
+  await user.click(within(first).getByText('Inspect original row and sources'))
+  expect(within(first).getByText(/"release": "2025"/)).toBeVisible()
+  expect(within(first).getByText(candidates.items[0].search_text)).toBeVisible()
+  await user.click(screen.getByText('Inspect screening prompt and output schema'))
+  expect(screen.getByText('Identify the tested task and rate all six dimensions.')).toBeVisible()
+  expect(screen.getByText(/"title": "ScreeningAssessment"/)).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Download screening JSON' }))
+  expect(api.getReviewExport).toHaveBeenCalledWith(access)
+  expect(click.mock.instances[0]).toHaveAttribute('download', 'initial-screening-screen-run.json')
+  expect(screen.getByRole('heading', { name: 'Original deployment answers' })).toBeVisible()
+})
+
+it('keeps retrieval visible on screening start errors and prevents competing starts while accepting a request', async () => {
+  const access = { run_id: 'retrieve-run', run_secret: 'retrieve-access' }
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify(access))
+  vi.mocked(api.getReview).mockResolvedValue(retrieved)
+  vi.mocked(api.startScreening).mockRejectedValueOnce(new Error('This key is already running a job.'))
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await user.type(await screen.findByLabelText('OpenAI API key for initial screening'), 'sk-private')
+  await user.click(screen.getByRole('button', { name: 'Screen initial candidates' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('This key is already running a job.')
+  expect(screen.getByRole('heading', { name: 'Your benchmark candidates are ready' })).toBeVisible()
+  let accept!: (run: api.RunAccess) => void
+  vi.mocked(api.startScreening).mockImplementationOnce(() => new Promise(resolve => { accept = resolve }))
+  await user.click(screen.getByRole('button', { name: 'Screen initial candidates' }))
+  expect(screen.getByLabelText('OpenAI API key for initial screening')).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Start another run' })).toBeDisabled()
+  expect(screen.getAllByRole('button', { name: 'Starting…' }).every(button => (button as HTMLButtonElement).disabled)).toBe(true)
+  vi.mocked(api.getReview).mockResolvedValue(screened)
+  accept({ run_id: 'screen-run', run_secret: 'screen-access' })
+  await screen.findByRole('heading', { name: 'Your initial screening is ready' })
+  expect(sessionStorage.getItem('item_review_run_v1')).not.toContain('sk-private')
+})
+
+it('renders model text as text and identifies reused assessments without changing allocation order', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'screen-run', run_secret: 'screen-access' }))
+  const htmlText = '<img src=x onerror=alert(1)>'
+  vi.mocked(api.getReview).mockResolvedValue({ ...screened, screening: { ...screened.screening!, items: [
+    screened.screening!.items[1], { ...screeningItem, screened_run_id: 'earlier-run', assessment: { ...assessment, task: { ...assessment.task, decision: htmlText } } },
+  ] } })
+  render(<ItemReview />)
+  const first = await screen.findByRole('article', { name: 'Screened item 1' })
+  expect(within(first).getByText(htmlText)).toBeVisible()
+  expect(first.querySelector('img')).toBeNull()
+  expect(within(first).getByText('Retained assessment from an earlier screening run.')).toBeVisible()
+  expect(within(first).getByRole('heading', { name: 'Screening gate: Pass' })).toBeVisible()
 })

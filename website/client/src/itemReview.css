@@ -213,6 +213,22 @@
 .retrieval-candidate { border-top: 1px solid var(--review-border); padding-block: 1rem; overflow-wrap: anywhere; }
 .retrieval-results pre { max-height: 24rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .8rem; }
 .retrieval-results select { width: 100%; min-width: 0; max-width: 100%; padding: .7rem; border: 1px solid var(--review-border); border-radius: 5px; background: white; font: inherit; }
+.screening-results pre { max-height: 24rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .8rem; }
+.screening-item { overflow-wrap: anywhere; }
+.screening-item blockquote { margin: .75rem 0; padding-left: 1rem; border-left: 3px solid var(--review-border); }
+.screening-pass { background: #e7edde; color: #3d562a; }
+.screening-fail { background: #f4e3e0; color: #7d3029; }
+.screening-unresolved, .screening-error { background: #f8ebd5; color: #795313; }
+.screening-ratings, .screening-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; margin: 1.5rem 0; }
+.screening-ratings > div, .screening-totals > div { padding: .8rem; border: 1px solid var(--review-border); border-radius: 5px; }
+.screening-ratings dt, .screening-totals dt { font-size: .85rem; }
+.screening-ratings small { display: block; margin-top: .2rem; color: var(--review-muted); font-weight: 400; }
+.screening-ratings dd, .screening-totals dd { margin: .6rem 0 0; font-size: 1.2rem; }
+.screening-explanation { padding: .75rem 0; border-top: 1px solid var(--review-border); }
+.screening-explanation h4, .screening-explanation h5 { margin-bottom: .5rem; }
+.screening-table-scroll { overflow-x: auto; }
+.screening-allocation { width: 100%; border-collapse: collapse; }
+.screening-allocation th, .screening-allocation td { text-align: left; padding: .8rem .5rem; border-bottom: 1px solid var(--review-border); }
 .review-detail-confidence p { color: var(--review-muted); margin: .4rem 0 0; }
 .review-dimension-detail h5 { font-size: .9rem; font-weight: 600; margin: 1rem 0 .4rem; }
 .review-dimension-detail ul { padding-left: 1.2rem; margin: .4rem 0; }
@@ -249,6 +265,9 @@
   .item-review-main { padding-top: 1.5rem; }
 }
 @media (max-width: 500px) {
+  .screening-ratings { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .screening-totals { gap: .4rem; }
+  .screening-totals > div { padding: .65rem .4rem; }
   .evaluation-framework { padding: 1rem; }
   .review-question { gap: .4rem; grid-template-columns: 1.3rem 1fr; }
   .review-question label { font-size: 1.15rem; }

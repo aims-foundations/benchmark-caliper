@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { startReview, startGrounding, startBenchmarkRetrieval, getCandidates, getReview } from './api'
+import { startReview, startGrounding, startBenchmarkRetrieval, startScreening, getCandidates, getReview } from './api'
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -61,4 +61,13 @@ it('requests a candidate page using the opaque queue ID and private run token', 
   expect(parsed.searchParams.get('page')).toBe('2')
   expect(options.headers).toEqual({ 'X-Review-Token': 'access' })
   expect(options.cache).toBe('no-store')
+})
+
+it('starts screening with the private source token and fresh API key, without resending evidence', async () => {
+  const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ run_id: 'screen', run_secret: 'screen-access' })))
+  vi.stubGlobal('fetch', fetchMock)
+  await startScreening({ run_id: 'retrieve', run_secret: 'source-access' }, 'sk-private')
+  expect(fetchMock.mock.calls[0]).toEqual(['/api/item-review/runs/retrieve/screen', {
+    cache: 'no-store', method: 'POST', headers: { 'X-Review-Token': 'source-access', 'X-OpenAI-Key': 'sk-private' },
+  }])
 })
