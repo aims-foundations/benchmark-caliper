@@ -2,10 +2,11 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { SiteHeader } from '../components/SiteHeader'
 import { SiteFooter } from '../components/SiteFooter'
 import { appPath } from '../paths'
-import { cancelReview, getCatalog, getReview, startReview, startGrounding, type Catalog, type Deployment, type RunResult, type RunAccess } from './api'
+import { cancelReview, getCatalog, getReview, startReview, startGrounding, startBenchmarkRetrieval, type Catalog, type Deployment, type RunResult, type RunAccess } from './api'
 import { Results } from './Results'
 import { RequirementsResults } from './RequirementsResults'
 import { GroundingResults } from './GroundingResults'
+import { BenchmarkRetrievalResults } from './BenchmarkRetrievalResults'
 import { QUESTIONS } from './deployment'
 
 const RUN_STORAGE = 'item_review_run_v1'
@@ -121,6 +122,23 @@ export function ItemReview() {
       return true
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Could not start O*NET grounding.')
+      return false
+    } finally { setBusy(false) }
+  }
+
+  async function retrieve(): Promise<boolean> {
+    if (!access || busy || !catalog?.dataset_access_configured || catalog.table_count === 0) return false
+    setBusy(true)
+    setError('')
+    try {
+      const run = await startBenchmarkRetrieval(access)
+      try { sessionStorage.setItem(RUN_STORAGE, JSON.stringify(run)) } catch { /* current tab still works */ }
+      setReview(null)
+      setAccess(run)
+      setPage(1)
+      return true
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Could not start benchmark retrieval.')
       return false
     } finally { setBusy(false) }
   }
@@ -254,8 +272,9 @@ export function ItemReview() {
           </section>}
 
           {access && review?.mode === 'requirements' && <RequirementsResults review={review} run={access} busy={busy} onCancel={() => void stop()} onRestart={restart} onGround={ground} />}
-          {access && review?.mode === 'grounding' && <GroundingResults review={review} run={access} busy={busy} onCancel={() => void stop()} onRestart={restart} onGround={ground} />}
-          {access && review?.mode !== 'requirements' && review?.mode !== 'grounding' && <>
+          {access && review?.mode === 'grounding' && <GroundingResults review={review} run={access} catalog={catalog} busy={busy} onCancel={() => void stop()} onRestart={restart} onGround={ground} onRetrieve={retrieve} />}
+          {access && review?.mode === 'retrieval' && <BenchmarkRetrievalResults key={access.run_id} review={review} run={access} catalog={catalog} busy={busy} onCancel={() => void stop()} onRestart={restart} onRetrieve={retrieve} />}
+          {access && review?.mode !== 'requirements' && review?.mode !== 'grounding' && review?.mode !== 'retrieval' && <>
             <section className="review-panel review-progress" aria-live="polite"><p className="eyebrow">04 · Results</p>
               <h2>{!review ? 'Connecting to your run' : review.status === 'preparing' ? 'Preparing and retrieving candidate items' : review.status === 'running' ? 'Assessing shortlisted items' : review.status === 'completed' ? 'Your item review is ready' : review.status === 'cancelled' ? 'Review stopped' : 'Review interrupted'}</h2>
               <p className="review-intro">{review?.message || 'Connecting to your review…'}</p>
@@ -272,7 +291,7 @@ export function ItemReview() {
         </div>
       </div>
       <section className="review-privacy"><h2>Data and privacy</h2>
-        <p>Your OpenAI API key is held in memory for the active review and is never saved to our database or browser storage. A separate temporary access token is stored in this tab so you can reload your results. Deployment answers stay in server memory; assessment results use private temporary server files. These are deleted one hour after the review ends or during a normal server shutdown. Results cannot be resumed after a server restart. The reusable dataset sample and source metadata are cached separately, without your deployment answers or API key. OpenAI processes the submitted text under its own API data policies.</p>
+        <p>Your OpenAI API key is held in memory for the active review and is never saved to our database or browser storage. A separate temporary access token is stored in this tab so you can reload your results. Deployment answers stay in server memory; item results use private temporary server files. These are deleted one hour after the review ends or during a normal server shutdown. Results cannot be resumed after a server restart. Reusable dataset indexes, samples, and source metadata are cached separately, without your deployment answers or API key. OpenAI processes the submitted text under its own API data policies.</p>
       </section>
     </main><SiteFooter />
   </div>

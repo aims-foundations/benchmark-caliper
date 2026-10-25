@@ -1,6 +1,7 @@
 """Refresh the hosted inventory without downloading item bodies.
 
 Run from the repository root: python -m website.server.item_review_catalog
+All item tables on main are included, without filtering benchmark release fields.
 Only paths, pinned revisions, and row counts are saved; credentials stay in HF.
 """
 
@@ -16,13 +17,14 @@ INVENTORY_PATH = Path(__file__).with_name("item_review_inventory.json")
 
 
 def refresh_inventory() -> dict:
-    data = discover_inventory()
+    data = discover_inventory(branches=("main",))
     token = get_token()
 
     def inspect(table):
         with open_item_table(data, table, token=token, streaming=True) as parquet:
-            if not {"item_id", "content"}.issubset(parquet.schema_arrow.names):
-                raise ValueError(f"Missing item_id/content columns: {table['items_path']}")
+            names = parquet.schema_arrow.names
+            if len(set(names)) != len(names):
+                raise ValueError(f"Item table column names must be unique: {table['items_path']}")
             return {**table, "row_count": parquet.metadata.num_rows}
 
     with ThreadPoolExecutor(max_workers=4) as workers:

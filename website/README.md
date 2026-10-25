@@ -250,7 +250,59 @@ for extraction or O*NET grounding. See
 [`bayesian_auditing/README.md`](../bayesian_auditing/README.md) for the exact search
 settings, data scope, mapping contract, and source attribution.
 
-This separate tool collects six deployment answers, retrieves relevant questions
+A completed O*NET grounding preview now offers **Retrieve benchmark items**
+(Step 4). This searches the whole Measurement Data Bank at a pinned `main`
+commit: every row from every discovered `items.parquet` table, including every
+benchmark collection and release. There are no collection or release filters.
+The preview displays the complete bank's collection and source-row counts.
+The first index build can be expensive: the server reads the whole bank,
+computes BGE vectors locally, and stores the index on disk. Later searches reuse
+the completed cache for that pinned inventory. Dataset access and the existing
+BGE retrieval dependencies are required; this action needs no OpenAI key and
+makes no paid model calls.
+
+For each extracted task, a deterministic query combines its required behavior,
+deployment context, adopted O*NET vocabulary, and goal-supported refinements.
+Local BGE and SQLite FTS5 BM25 each return up to 600 items. Reciprocal-rank fusion
+retains their complete union, up to 1,200 distinct candidates per task. Every
+source-row field is preserved in `evidence.item` and serialized into
+`search_text`, including identifiers, questions, answers, grading criteria, and
+other source columns. Both searches use this complete row text. BGE encodes all
+nonoverlapping token chunks and combines their normalized CLS vectors into one
+normalized mean vector; BM25 indexes the full text. Only identical complete
+rows are deduplicated, including their identifiers, while preserving every
+source reference. The preview shows the exact queries, ranks, supporting O*NET
+IDs, complete searchable text, original row evidence, and provenance. A separate
+question field is optional and used only as a convenient display preview.
+These candidates are not validity assessments or final benchmark selections.
+
+Each task has a fixed all-source queue and per-collection queues that preserve
+the same retrieval order. Browse candidates by task and collection, or download
+the complete retrieval JSON. The export contains the original answers,
+requirements and grounding snapshots, pinned scope, retrieval settings, queries,
+candidates, and queue memberships. Stopping a run preserves completed task
+results. The next screening/adaptive-selection stages are not invoked.
+
+`POST /api/item-review/runs/{run_id}/retrieve` accepts an empty JSON object `{}`
+and requires only the source run's `X-Review-Token`. Scope overrides such as
+`benchmarks` are rejected. It creates a separate `mode: "retrieval"` run.
+Polling returns a compact summary;
+`GET /api/item-review/runs/{run_id}/candidates?queue_id=...&page=1` returns
+20 candidates per display page, and the existing export route returns the full
+retrieval artifact. The existing run-token authorization, cancellation, and
+temporary expiry policy apply.
+
+Completed indexes live under `WEBSITE_DATA_DIR/benchmark-retrieval-index/`,
+keyed by the complete pinned main-branch inventory and loader/encoding policy.
+Failed or cancelled builds never become reusable caches; a retry starts that
+build again.
+The cache contains dataset evidence and document vectors, but no deployment
+answers or query vectors. SQLite FTS5 and bounded embedding/vector-scan batches
+keep the full corpus off the Python heap. Budget for substantial disk and local
+inference time for the complete bank. Full-bank performance and retrieval
+quality have not been measured end to end.
+
+The existing **Review catalog** assessment option collects six deployment answers, retrieves relevant questions
 locally, and uses the visitor's OpenAI key to assess only the selected shortlist.
 It defaults to 20 retrieved items, with a maximum of 100 per web review. A
 reference question can guide retrieval; otherwise it uses the deployment answers.
@@ -301,14 +353,16 @@ labels and scoring explanations. Version-4 reports retain their numerical
 confidence and unadjusted ranking. Version-1
 reports have no recorded confidence and require a new review to obtain it.
 
-The catalog includes every available formatted `items.parquet` table from both
-measurement-db branches, pinned to the revisions in the inventory. The current
-snapshot has **113 benchmark collections, 119 tables, and 1,804,733 source rows**.
-The demo selects up to **50 distinct items per benchmark collection**, for at most
-**5,407 selected items** in this snapshot. A fixed seed makes selection independent
+The catalog includes every available formatted `items.parquet` table from
+measurement-db's `main` branch, pinned to
+`54074453da7b9911be0f48e4c560be547bc84d21`. The current snapshot has **281 benchmark
+collections, 281 tables, and 8,471,422 source rows**, without a release filter.
+The inventory refresh reads table metadata; the complete Step 4 retrieval index
+has not yet been built or searched end to end.
+The existing Qwen assessment demo selects up to **50 distinct items per benchmark collection**, for at most
+**13,602 selected items** in this snapshot. A fixed seed makes selection independent
 of row order and deployment description. Duplicate evidence gets one selection
-opportunity, and all provenance is retained. When a benchmark has branch-exclusive
-evidence in both branches, at least one selected item comes from each. Retrieval
+opportunity, and all provenance is retained. Retrieval
 searches only the selected sample; validity rankings describe the retrieved and
 assessed shortlist, not all sample items or the full catalog. The text judge does
 not inspect referenced media assets.
@@ -366,7 +420,7 @@ The router and UI live in `server/item_review.py` and `client/src/itemReview/`;
 python -m website.server.item_review_catalog
 ```
 
-The refresh command discovers both branches and reads Parquet footers to validate
+The refresh command discovers all item tables on `main` and reads Parquet footers to validate
 the required columns and record source-row counts. It saves only paths, revisions,
 and counts after all tables are inspected successfully. No item content or
 credentials are committed. Prepare the reusable sample without an OpenAI key with:

@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { getReviewExport, type GroundingReview, type OnetCandidate, type OnetRecordMapping, type RunAccess } from './api'
+import { getReviewExport, type Catalog, type GroundingReview, type OnetCandidate, type OnetRecordMapping, type RunAccess } from './api'
 import { GroundingForm } from './GroundingForm'
+import { BenchmarkRetrievalForm } from './BenchmarkRetrievalForm'
 import { RequirementsContent, SupportedValue } from './RequirementsResults'
 
 function RecordMapping({ record, candidates }: { record: OnetRecordMapping; candidates: OnetCandidate[] }) {
@@ -15,9 +16,9 @@ function RecordMapping({ record, candidates }: { record: OnetRecordMapping; cand
   </section>
 }
 
-export function GroundingResults({ review, run, busy, onCancel, onRestart, onGround }: {
+export function GroundingResults({ review, run, catalog, busy, onCancel, onRestart, onGround, onRetrieve }: {
   review: GroundingReview; run: RunAccess; busy: boolean; onCancel: () => void; onRestart: () => void
-  onGround: (apiKey: string) => Promise<boolean>
+  catalog: Catalog | null; onGround: (apiKey: string) => Promise<boolean>; onRetrieve: () => Promise<boolean>
 }) {
   const [downloading, setDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState('')
@@ -62,6 +63,7 @@ export function GroundingResults({ review, run, busy, onCancel, onRestart, onGro
       {downloadError && <p className="review-error" role="alert">{downloadError}</p>}
     </section>
 
+    {review.status === 'completed' && total > 0 && catalog && <BenchmarkRetrievalForm catalog={catalog} busy={busy} onRetrieve={onRetrieve} />}
     {facets.length > 0 && <section aria-labelledby="grounding-facets-title">
       <h2 id="grounding-facets-title">O*NET mappings</h2>
       {facets.map(facet => {

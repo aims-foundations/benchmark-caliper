@@ -97,7 +97,31 @@ export interface GroundingReview extends Omit<RequirementsReview, 'mode'> {
   mode: 'grounding'; source_run_id: string
   grounding: { retrieval: Record<string, unknown> | null; mapping: ExtractionPolicy; facets: OnetFacetResult[] } | null
 }
-export type RunResult = Review | RequirementsReview | GroundingReview
+export interface BenchmarkQuery {
+  facet_id: string; query: string; onet_record_ids: string[]; search_terms: string[]
+  refinements: SupportedText[]; candidate_count?: number
+}
+export interface CandidateQueue { queue_id: string; facet_id: string; source: string | null; item_count: number }
+export interface BenchmarkRetrievalReview extends Omit<GroundingReview, 'mode'> {
+  mode: 'retrieval'
+  retrieval: {
+    policy: Record<string, unknown> | null
+    scope: { repo: string; branches: Record<string, string>; benchmarks: string[]; table_count: number; source_rows: number; sample_only: false }
+    stats: { source_rows?: number; total_items?: number; indexed_items?: number; contentless_items?: number; [key: string]: unknown }
+    queries: BenchmarkQuery[]; queues: CandidateQueue[]
+  } | null
+}
+export interface BenchmarkCandidate {
+  item_id: string; evidence_hash: string; question_text?: string | null; search_text: string; evidence: Record<string, unknown>
+  sources: Array<{ benchmark: string; branch: string; [key: string]: unknown }>
+  rank: number; dense_rank: number | null; bm25_rank: number | null
+  dense_score: number | null; bm25_score: number | null; rrf_score: number
+}
+export interface CandidatePage {
+  queue_id: string; facet_id: string; page: number; page_size: number; total_pages: number; total_items: number
+  items: BenchmarkCandidate[]
+}
+export type RunResult = Review | RequirementsReview | GroundingReview | BenchmarkRetrievalReview
 
 async function fetchResponse(path: string, options: RequestInit = {}): Promise<Response> {
   const response = await fetch(appPath(`/api/item-review${path}`), { cache: 'no-store', ...options })
@@ -118,6 +142,14 @@ export const startReview = (body: ReviewRequest, apiKey: string) => request<RunA
 export const startGrounding = (run: RunAccess, apiKey: string) => request<RunAccess>(`/runs/${run.run_id}/ground`, {
   method: 'POST', headers: { 'X-Review-Token': run.run_secret, 'X-OpenAI-Key': apiKey },
 })
+export const startBenchmarkRetrieval = (run: RunAccess) => request<RunAccess>(`/runs/${run.run_id}/retrieve`, {
+  method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Review-Token': run.run_secret },
+  body: JSON.stringify({}),
+})
+export const getCandidates = (run: RunAccess, queueId: string, page = 1, signal?: AbortSignal) => request<CandidatePage>(
+  `/runs/${run.run_id}/candidates?${new URLSearchParams({ queue_id: queueId, page: String(page) })}`,
+  { headers: { 'X-Review-Token': run.run_secret }, signal },
+)
 export const getReview = (run: RunAccess, page = 1, signal?: AbortSignal) => request<RunResult>(`/runs/${run.run_id}?page=${page}`, {
   headers: { 'X-Review-Token': run.run_secret }, signal,
 })

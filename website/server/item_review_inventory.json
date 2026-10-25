@@ -1,67 +1,12 @@
 {
   "repo": "aims-foundations/measurement-db",
   "branches": {
-    "main": "bc8204d811823da849c6686bf124d4ca9f82e4de",
-    "migration/tabular-builders-20260924": "582d3daea1f680311fa1d1be502ea206b2979371"
+    "main": "54074453da7b9911be0f48e4c560be547bc84d21"
   },
   "tables": [
     {
       "branch": "main",
-      "commit": "bc8204d811823da849c6686bf124d4ca9f82e4de",
-      "benchmark": "matharena",
-      "items_path": "matharena/items.parquet",
-      "benchmarks_path": "matharena/benchmarks.parquet",
-      "metadata_path": "matharena/metadata.yaml",
-      "row_count": 1755
-    },
-    {
-      "branch": "main",
-      "commit": "bc8204d811823da849c6686bf124d4ca9f82e4de",
-      "benchmark": "mmdocrag",
-      "items_path": "mmdocrag/items.parquet",
-      "benchmarks_path": "mmdocrag/benchmarks.parquet",
-      "metadata_path": "mmdocrag/metadata.yaml",
-      "row_count": 2000
-    },
-    {
-      "branch": "main",
-      "commit": "bc8204d811823da849c6686bf124d4ca9f82e4de",
-      "benchmark": "multi_swebench",
-      "items_path": "multi_swebench/items.parquet",
-      "benchmarks_path": "multi_swebench/benchmarks.parquet",
-      "metadata_path": "multi_swebench/metadata.yaml",
-      "row_count": 2126
-    },
-    {
-      "branch": "main",
-      "commit": "bc8204d811823da849c6686bf124d4ca9f82e4de",
-      "benchmark": "real_webagents",
-      "items_path": "real_webagents/items.parquet",
-      "benchmarks_path": "real_webagents/benchmarks.parquet",
-      "metadata_path": "real_webagents/metadata.yaml",
-      "row_count": 233
-    },
-    {
-      "branch": "main",
-      "commit": "bc8204d811823da849c6686bf124d4ca9f82e4de",
-      "benchmark": "researchcodebench",
-      "items_path": "researchcodebench/items.parquet",
-      "benchmarks_path": "researchcodebench/benchmarks.parquet",
-      "metadata_path": "researchcodebench/metadata.yaml",
-      "row_count": 212
-    },
-    {
-      "branch": "main",
-      "commit": "bc8204d811823da849c6686bf124d4ca9f82e4de",
-      "benchmark": "swe_rebench",
-      "items_path": "swe_rebench/items.parquet",
-      "benchmarks_path": "swe_rebench/benchmarks.parquet",
-      "metadata_path": "swe_rebench/metadata.yaml",
-      "row_count": 6306
-    },
-    {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "abstract_reason",
       "items_path": "abstract_reason/formatted_tables/items.parquet",
       "benchmarks_path": "abstract_reason/formatted_tables/benchmarks.parquet",
@@ -69,8 +14,8 @@
       "row_count": 9089
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "adaptivestep",
       "items_path": "adaptivestep/formatted_tables/items.parquet",
       "benchmarks_path": "adaptivestep/formatted_tables/benchmarks.parquet",
@@ -78,8 +23,8 @@
       "row_count": 4525
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "advprompter",
       "items_path": "advprompter/formatted_tables/items.parquet",
       "benchmarks_path": "advprompter/formatted_tables/benchmarks.parquet",
@@ -87,8 +32,26 @@
       "row_count": 50
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "aegis",
+      "items_path": "aegis/formatted_tables/items.parquet",
+      "benchmarks_path": "aegis/formatted_tables/benchmarks.parquet",
+      "metadata_path": "aegis/metadata.yaml",
+      "row_count": 11500
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "afrieval",
+      "items_path": "afrieval/formatted_tables/items.parquet",
+      "benchmarks_path": "afrieval/formatted_tables/benchmarks.parquet",
+      "metadata_path": "afrieval/metadata.yaml",
+      "row_count": 35205
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "afrimedqa",
       "items_path": "afrimedqa/formatted_tables/items.parquet",
       "benchmarks_path": "afrimedqa/formatted_tables/benchmarks.parquet",
@@ -96,8 +59,8 @@
       "row_count": 42494
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "agc_bench",
       "items_path": "agc_bench/formatted_tables/items.parquet",
       "benchmarks_path": "agc_bench/formatted_tables/benchmarks.parquet",
@@ -105,8 +68,8 @@
       "row_count": 8600
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "agentdojo",
       "items_path": "agentdojo/formatted_tables/items.parquet",
       "benchmarks_path": "agentdojo/formatted_tables/benchmarks.parquet",
@@ -114,8 +77,8 @@
       "row_count": 1081
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "agentic_review_perturbation",
       "items_path": "agentic_review_perturbation/formatted_tables/items.parquet",
       "benchmarks_path": "agentic_review_perturbation/formatted_tables/benchmarks.parquet",
@@ -123,8 +86,8 @@
       "row_count": 105
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "agi_elo",
       "items_path": "agi_elo/formatted_tables/items.parquet",
       "benchmarks_path": "agi_elo/formatted_tables/benchmarks.parquet",
@@ -132,8 +95,8 @@
       "row_count": 13953
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "ai2d_test",
       "items_path": "ai2d_test/formatted_tables/items.parquet",
       "benchmarks_path": "ai2d_test/formatted_tables/benchmarks.parquet",
@@ -141,8 +104,8 @@
       "row_count": 3088
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "aider",
       "items_path": "aider/formatted_tables/items.parquet",
       "benchmarks_path": "aider/formatted_tables/benchmarks.parquet",
@@ -150,8 +113,8 @@
       "row_count": 26
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "algotune",
       "items_path": "algotune/formatted_tables/items.parquet",
       "benchmarks_path": "algotune/formatted_tables/benchmarks.parquet",
@@ -159,8 +122,8 @@
       "row_count": 154
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "alignment_faking",
       "items_path": "alignment_faking/formatted_tables/items.parquet",
       "benchmarks_path": "alignment_faking/formatted_tables/benchmarks.parquet",
@@ -168,8 +131,8 @@
       "row_count": 1464
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "alpacaeval",
       "items_path": "alpacaeval/formatted_tables/items.parquet",
       "benchmarks_path": "alpacaeval/formatted_tables/benchmarks.parquet",
@@ -177,8 +140,8 @@
       "row_count": 805
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "alpha_sql",
       "items_path": "alpha_sql/formatted_tables/items.parquet",
       "benchmarks_path": "alpha_sql/formatted_tables/benchmarks.parquet",
@@ -186,8 +149,8 @@
       "row_count": 1534
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "annotating_errors_wcf",
       "items_path": "annotating_errors_wcf/formatted_tables/items.parquet",
       "benchmarks_path": "annotating_errors_wcf/formatted_tables/benchmarks.parquet",
@@ -195,8 +158,8 @@
       "row_count": 15344
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "appworld",
       "items_path": "appworld/formatted_tables/items.parquet",
       "benchmarks_path": "appworld/formatted_tables/benchmarks.parquet",
@@ -204,8 +167,8 @@
       "row_count": 585
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "arcagi",
       "items_path": "arcagi/formatted_tables/items.parquet",
       "benchmarks_path": "arcagi/formatted_tables/benchmarks.parquet",
@@ -213,8 +176,8 @@
       "row_count": 526
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "atmossci_bench",
       "items_path": "atmossci_bench/formatted_tables/items.parquet",
       "benchmarks_path": "atmossci_bench/formatted_tables/benchmarks.parquet",
@@ -222,8 +185,8 @@
       "row_count": 2802
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "auditing_sabotage_bench",
       "items_path": "auditing_sabotage_bench/formatted_tables/items.parquet",
       "benchmarks_path": "auditing_sabotage_bench/formatted_tables/benchmarks.parquet",
@@ -231,8 +194,8 @@
       "row_count": 68
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "autoresearchbench",
       "items_path": "autoresearchbench/formatted_tables/items.parquet",
       "benchmarks_path": "autoresearchbench/formatted_tables/benchmarks.parquet",
@@ -240,8 +203,8 @@
       "row_count": 60
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "averimatec",
       "items_path": "averimatec/formatted_tables/items.parquet",
       "benchmarks_path": "averimatec/formatted_tables/benchmarks.parquet",
@@ -249,8 +212,8 @@
       "row_count": 152
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "babilong",
       "items_path": "babilong/formatted_tables/items.parquet",
       "benchmarks_path": "babilong/formatted_tables/benchmarks.parquet",
@@ -258,8 +221,8 @@
       "row_count": 526202
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "bbq",
       "items_path": "bbq/formatted_tables/items.parquet",
       "benchmarks_path": "bbq/formatted_tables/benchmarks.parquet",
@@ -267,8 +230,8 @@
       "row_count": 204201
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "beavertails",
       "items_path": "beavertails/formatted_tables/items.parquet",
       "benchmarks_path": "beavertails/formatted_tables/benchmarks.parquet",
@@ -276,8 +239,8 @@
       "row_count": 420
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "bedd_basalt",
       "items_path": "bedd_basalt/formatted_tables/items.parquet",
       "benchmarks_path": "bedd_basalt/formatted_tables/benchmarks.parquet",
@@ -285,8 +248,8 @@
       "row_count": 46266
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "benger",
       "items_path": "benger/formatted_tables/items.parquet",
       "benchmarks_path": "benger/formatted_tables/benchmarks.parquet",
@@ -294,8 +257,8 @@
       "row_count": 760
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "bertaqa",
       "items_path": "bertaqa/formatted_tables/items.parquet",
       "benchmarks_path": "bertaqa/formatted_tables/benchmarks.parquet",
@@ -303,8 +266,8 @@
       "row_count": 51760
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "bigfinancebench",
       "items_path": "bigfinancebench/formatted_tables/items.parquet",
       "benchmarks_path": "bigfinancebench/formatted_tables/benchmarks.parquet",
@@ -312,8 +275,8 @@
       "row_count": 600
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "biggen",
       "items_path": "biggen/formatted_tables/items.parquet",
       "benchmarks_path": "biggen/formatted_tables/benchmarks.parquet",
@@ -321,8 +284,8 @@
       "row_count": 4589
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "bird_sql",
       "items_path": "bird_sql/formatted_tables/items.parquet",
       "benchmarks_path": "bird_sql/formatted_tables/benchmarks.parquet",
@@ -330,8 +293,8 @@
       "row_count": 360
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "brace",
       "items_path": "brace/formatted_tables/items.parquet",
       "benchmarks_path": "brace/formatted_tables/benchmarks.parquet",
@@ -339,8 +302,17 @@
       "row_count": 12631
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "braveguard",
+      "items_path": "braveguard/formatted_tables/items.parquet",
+      "benchmarks_path": "braveguard/formatted_tables/benchmarks.parquet",
+      "metadata_path": "braveguard/metadata.yaml",
+      "row_count": 536
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "bridging_gap",
       "items_path": "bridging_gap/formatted_tables/items.parquet",
       "benchmarks_path": "bridging_gap/formatted_tables/benchmarks.parquet",
@@ -348,8 +320,8 @@
       "row_count": 132418
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "care_enzymes",
       "items_path": "care_enzymes/formatted_tables/items.parquet",
       "benchmarks_path": "care_enzymes/formatted_tables/benchmarks.parquet",
@@ -357,8 +329,8 @@
       "row_count": 4136
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "causal_axioms",
       "items_path": "causal_axioms/formatted_tables/items.parquet",
       "benchmarks_path": "causal_axioms/formatted_tables/benchmarks.parquet",
@@ -366,8 +338,8 @@
       "row_count": 4500
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "cellverse",
       "items_path": "cellverse/formatted_tables/items.parquet",
       "benchmarks_path": "cellverse/formatted_tables/benchmarks.parquet",
@@ -375,8 +347,8 @@
       "row_count": 748
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "ceobench",
       "items_path": "ceobench/formatted_tables/items.parquet",
       "benchmarks_path": "ceobench/formatted_tables/benchmarks.parquet",
@@ -384,8 +356,8 @@
       "row_count": 3
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "ceval",
       "items_path": "ceval/formatted_tables/items.parquet",
       "benchmarks_path": "ceval/formatted_tables/benchmarks.parquet",
@@ -393,8 +365,8 @@
       "row_count": 13951
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "chartmuseum",
       "items_path": "chartmuseum/formatted_tables/items.parquet",
       "benchmarks_path": "chartmuseum/formatted_tables/benchmarks.parquet",
@@ -402,8 +374,8 @@
       "row_count": 162
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "chatgpt_drift",
       "items_path": "chatgpt_drift/formatted_tables/items.parquet",
       "benchmarks_path": "chatgpt_drift/formatted_tables/benchmarks.parquet",
@@ -411,8 +383,8 @@
       "row_count": 11479
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "chi_bench",
       "items_path": "chi_bench/formatted_tables/items.parquet",
       "benchmarks_path": "chi_bench/formatted_tables/benchmarks.parquet",
@@ -420,8 +392,8 @@
       "row_count": 775
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "chipbench",
       "items_path": "chipbench/formatted_tables/items.parquet",
       "benchmarks_path": "chipbench/formatted_tables/benchmarks.parquet",
@@ -429,8 +401,8 @@
       "row_count": 230
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "clasheval",
       "items_path": "clasheval/formatted_tables/items.parquet",
       "benchmarks_path": "clasheval/formatted_tables/benchmarks.parquet",
@@ -438,8 +410,8 @@
       "row_count": 12495
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "classroom_ai",
       "items_path": "classroom_ai/formatted_tables/items.parquet",
       "benchmarks_path": "classroom_ai/formatted_tables/benchmarks.parquet",
@@ -447,8 +419,8 @@
       "row_count": 734
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "cmmlu",
       "items_path": "cmmlu/formatted_tables/items.parquet",
       "benchmarks_path": "cmmlu/formatted_tables/benchmarks.parquet",
@@ -456,8 +428,8 @@
       "row_count": 23160
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "coffeebench",
       "items_path": "coffeebench/formatted_tables/items.parquet",
       "benchmarks_path": "coffeebench/formatted_tables/benchmarks.parquet",
@@ -465,8 +437,8 @@
       "row_count": 1
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "complexbench",
       "items_path": "complexbench/formatted_tables/items.parquet",
       "benchmarks_path": "complexbench/formatted_tables/benchmarks.parquet",
@@ -474,8 +446,8 @@
       "row_count": 1150
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "confagents",
       "items_path": "confagents/formatted_tables/items.parquet",
       "benchmarks_path": "confagents/formatted_tables/benchmarks.parquet",
@@ -483,8 +455,8 @@
       "row_count": 16
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "corebench",
       "items_path": "corebench/formatted_tables/items.parquet",
       "benchmarks_path": "corebench/formatted_tables/benchmarks.parquet",
@@ -492,8 +464,8 @@
       "row_count": 270
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "critic_discernment_game",
       "items_path": "critic_discernment_game/formatted_tables/items.parquet",
       "benchmarks_path": "critic_discernment_game/formatted_tables/benchmarks.parquet",
@@ -501,8 +473,8 @@
       "row_count": 1819
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "crow",
       "items_path": "crow/formatted_tables/items.parquet",
       "benchmarks_path": "crow/formatted_tables/benchmarks.parquet",
@@ -510,8 +482,8 @@
       "row_count": 1984
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "cruxeval",
       "items_path": "cruxeval/formatted_tables/items.parquet",
       "benchmarks_path": "cruxeval/formatted_tables/benchmarks.parquet",
@@ -519,8 +491,8 @@
       "row_count": 4000
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "csedb",
       "items_path": "csedb/formatted_tables/items.parquet",
       "benchmarks_path": "csedb/formatted_tables/benchmarks.parquet",
@@ -528,8 +500,8 @@
       "row_count": 2069
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "cseo_bench",
       "items_path": "cseo_bench/formatted_tables/items.parquet",
       "benchmarks_path": "cseo_bench/formatted_tables/benchmarks.parquet",
@@ -537,8 +509,8 @@
       "row_count": 242265
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "das_med_hallucination",
       "items_path": "das_med_hallucination/formatted_tables/items.parquet",
       "benchmarks_path": "das_med_hallucination/formatted_tables/benchmarks.parquet",
@@ -546,8 +518,8 @@
       "row_count": 108
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "data_juicer2",
       "items_path": "data_juicer2/formatted_tables/items.parquet",
       "benchmarks_path": "data_juicer2/formatted_tables/benchmarks.parquet",
@@ -555,8 +527,8 @@
       "row_count": 12
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "dataclawbench",
       "items_path": "dataclawbench/formatted_tables/items.parquet",
       "benchmarks_path": "dataclawbench/formatted_tables/benchmarks.parquet",
@@ -564,8 +536,8 @@
       "row_count": 492
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "dave",
       "items_path": "dave/formatted_tables/items.parquet",
       "benchmarks_path": "dave/formatted_tables/benchmarks.parquet",
@@ -573,8 +545,53 @@
       "row_count": 3922
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "dbpa",
+      "items_path": "dbpa/formatted_tables/items.parquet",
+      "benchmarks_path": "dbpa/formatted_tables/benchmarks.parquet",
+      "metadata_path": "dbpa/metadata.yaml",
+      "row_count": 59
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "decodingtrust",
+      "items_path": "decodingtrust/formatted_tables/items.parquet",
+      "benchmarks_path": "decodingtrust/formatted_tables/benchmarks.parquet",
+      "metadata_path": "decodingtrust/metadata.yaml",
+      "row_count": 437586
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "decompile_bench",
+      "items_path": "decompile_bench/formatted_tables/items.parquet",
+      "benchmarks_path": "decompile_bench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "decompile_bench/metadata.yaml",
+      "row_count": 72059
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "devbench",
+      "items_path": "devbench/formatted_tables/items.parquet",
+      "benchmarks_path": "devbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "devbench/metadata.yaml",
+      "row_count": 271
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "disco",
+      "items_path": "disco/formatted_tables/items.parquet",
+      "benchmarks_path": "disco/formatted_tables/benchmarks.parquet",
+      "metadata_path": "disco/metadata.yaml",
+      "row_count": 28000
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "donotanswer",
       "items_path": "donotanswer/formatted_tables/items.parquet",
       "benchmarks_path": "donotanswer/formatted_tables/benchmarks.parquet",
@@ -582,8 +599,44 @@
       "row_count": 1876
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "doris_mae",
+      "items_path": "doris_mae/formatted_tables/items.parquet",
+      "benchmarks_path": "doris_mae/formatted_tables/benchmarks.parquet",
+      "metadata_path": "doris_mae/metadata.yaml",
+      "row_count": 165104
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "dpai",
+      "items_path": "dpai/formatted_tables/items.parquet",
+      "benchmarks_path": "dpai/formatted_tables/benchmarks.parquet",
+      "metadata_path": "dpai/metadata.yaml",
+      "row_count": 306
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "dqvis",
+      "items_path": "dqvis/formatted_tables/items.parquet",
+      "benchmarks_path": "dqvis/formatted_tables/benchmarks.parquet",
+      "metadata_path": "dqvis/metadata.yaml",
+      "row_count": 356
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "dtap_bench",
+      "items_path": "dtap_bench/formatted_tables/items.parquet",
+      "benchmarks_path": "dtap_bench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "dtap_bench/metadata.yaml",
+      "row_count": 13392
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "editbench",
       "items_path": "editbench/formatted_tables/items.parquet",
       "benchmarks_path": "editbench/formatted_tables/benchmarks.parquet",
@@ -591,8 +644,80 @@
       "row_count": 540
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "edu_circuit_hw",
+      "items_path": "edu_circuit_hw/formatted_tables/items.parquet",
+      "benchmarks_path": "edu_circuit_hw/formatted_tables/benchmarks.parquet",
+      "metadata_path": "edu_circuit_hw/metadata.yaml",
+      "row_count": 513
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "eduguardbench",
+      "items_path": "eduguardbench/formatted_tables/items.parquet",
+      "benchmarks_path": "eduguardbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "eduguardbench/metadata.yaml",
+      "row_count": 7494
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "edumath",
+      "items_path": "edumath/formatted_tables/items.parquet",
+      "benchmarks_path": "edumath/formatted_tables/benchmarks.parquet",
+      "metadata_path": "edumath/metadata.yaml",
+      "row_count": 76
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "egoschema",
+      "items_path": "egoschema/formatted_tables/items.parquet",
+      "benchmarks_path": "egoschema/formatted_tables/benchmarks.parquet",
+      "metadata_path": "egoschema/metadata.yaml",
+      "row_count": 4500
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "ehrflowbench",
+      "items_path": "ehrflowbench/formatted_tables/items.parquet",
+      "benchmarks_path": "ehrflowbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "ehrflowbench/metadata.yaml",
+      "row_count": 20
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "elicitation_game",
+      "items_path": "elicitation_game/formatted_tables/items.parquet",
+      "benchmarks_path": "elicitation_game/formatted_tables/benchmarks.parquet",
+      "metadata_path": "elicitation_game/metadata.yaml",
+      "row_count": 2960
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "embodied_agent_interface",
+      "items_path": "embodied_agent_interface/formatted_tables/items.parquet",
+      "benchmarks_path": "embodied_agent_interface/formatted_tables/benchmarks.parquet",
+      "metadata_path": "embodied_agent_interface/metadata.yaml",
+      "row_count": 100
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "emoji_attack",
+      "items_path": "emoji_attack/formatted_tables/items.parquet",
+      "benchmarks_path": "emoji_attack/formatted_tables/benchmarks.parquet",
+      "metadata_path": "emoji_attack/metadata.yaml",
+      "row_count": 15153
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "engdesign",
       "items_path": "engdesign/formatted_tables/items.parquet",
       "benchmarks_path": "engdesign/formatted_tables/benchmarks.parquet",
@@ -600,8 +725,8 @@
       "row_count": 101
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "engibench",
       "items_path": "engibench/formatted_tables/items.parquet",
       "benchmarks_path": "engibench/formatted_tables/benchmarks.parquet",
@@ -609,8 +734,26 @@
       "row_count": 9
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "enginemt_qa",
+      "items_path": "enginemt_qa/formatted_tables/items.parquet",
+      "benchmarks_path": "enginemt_qa/formatted_tables/benchmarks.parquet",
+      "metadata_path": "enginemt_qa/metadata.yaml",
+      "row_count": 676
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "erbench",
+      "items_path": "erbench/formatted_tables/items.parquet",
+      "benchmarks_path": "erbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "erbench/metadata.yaml",
+      "row_count": 32163
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "evouna",
       "items_path": "evouna/formatted_tables/items.parquet",
       "benchmarks_path": "evouna/formatted_tables/benchmarks.parquet",
@@ -618,8 +761,44 @@
       "row_count": 5609
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "exploitgym",
+      "items_path": "exploitgym/formatted_tables/items.parquet",
+      "benchmarks_path": "exploitgym/formatted_tables/benchmarks.parquet",
+      "metadata_path": "exploitgym/metadata.yaml",
+      "row_count": 1737
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "faithcot",
+      "items_path": "faithcot/formatted_tables/items.parquet",
+      "benchmarks_path": "faithcot/formatted_tables/benchmarks.parquet",
+      "metadata_path": "faithcot/metadata.yaml",
+      "row_count": 687
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "felm",
+      "items_path": "felm/formatted_tables/items.parquet",
+      "benchmarks_path": "felm/formatted_tables/benchmarks.parquet",
+      "metadata_path": "felm/metadata.yaml",
+      "row_count": 4412
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "fetv",
+      "items_path": "fetv/formatted_tables/items.parquet",
+      "benchmarks_path": "fetv/formatted_tables/benchmarks.parquet",
+      "metadata_path": "fetv/metadata.yaml",
+      "row_count": 20788
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "fewshot_ttt_bbh",
       "items_path": "fewshot_ttt_bbh/formatted_tables/items.parquet",
       "benchmarks_path": "fewshot_ttt_bbh/formatted_tables/benchmarks.parquet",
@@ -627,8 +806,8 @@
       "row_count": 1310
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "fgbench",
       "items_path": "fgbench/formatted_tables/items.parquet",
       "benchmarks_path": "fgbench/formatted_tables/benchmarks.parquet",
@@ -636,8 +815,8 @@
       "row_count": 7146
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "financebench",
       "items_path": "financebench/formatted_tables/items.parquet",
       "benchmarks_path": "financebench/formatted_tables/benchmarks.parquet",
@@ -645,8 +824,98 @@
       "row_count": 150
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "find_interp",
+      "items_path": "find_interp/formatted_tables/items.parquet",
+      "benchmarks_path": "find_interp/formatted_tables/benchmarks.parquet",
+      "metadata_path": "find_interp/metadata.yaml",
+      "row_count": 10397
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "finegrain_t2i",
+      "items_path": "finegrain_t2i/formatted_tables/items.parquet",
+      "benchmarks_path": "finegrain_t2i/formatted_tables/benchmarks.parquet",
+      "metadata_path": "finegrain_t2i/metadata.yaml",
+      "row_count": 760
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "frontieror",
+      "items_path": "frontieror/formatted_tables/items.parquet",
+      "benchmarks_path": "frontieror/formatted_tables/benchmarks.parquet",
+      "metadata_path": "frontieror/metadata.yaml",
+      "row_count": 180
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "genai_learning",
+      "items_path": "genai_learning/formatted_tables/items.parquet",
+      "benchmarks_path": "genai_learning/formatted_tables/benchmarks.parquet",
+      "metadata_path": "genai_learning/metadata.yaml",
+      "row_count": 162
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "ghosts_math",
+      "items_path": "ghosts_math/formatted_tables/items.parquet",
+      "benchmarks_path": "ghosts_math/formatted_tables/benchmarks.parquet",
+      "metadata_path": "ghosts_math/metadata.yaml",
+      "row_count": 478
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "goodai_ltm_benchmark",
+      "items_path": "goodai_ltm_benchmark/formatted_tables/items.parquet",
+      "benchmarks_path": "goodai_ltm_benchmark/formatted_tables/benchmarks.parquet",
+      "metadata_path": "goodai_ltm_benchmark/metadata.yaml",
+      "row_count": 452
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "haiid",
+      "items_path": "haiid/formatted_tables/items.parquet",
+      "benchmarks_path": "haiid/formatted_tables/benchmarks.parquet",
+      "metadata_path": "haiid/metadata.yaml",
+      "row_count": 152
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "hallusionbench",
+      "items_path": "hallusionbench/formatted_tables/items.parquet",
+      "benchmarks_path": "hallusionbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "hallusionbench/metadata.yaml",
+      "row_count": 1205
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "harmbench",
+      "items_path": "harmbench/formatted_tables/items.parquet",
+      "benchmarks_path": "harmbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "harmbench/metadata.yaml",
+      "row_count": 62160
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "healthadminbench",
+      "items_path": "healthadminbench/formatted_tables/items.parquet",
+      "benchmarks_path": "healthadminbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "healthadminbench/metadata.yaml",
+      "row_count": 540
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "helm_afr",
       "items_path": "helm_afr/formatted_tables/items.parquet",
       "benchmarks_path": "helm_afr/formatted_tables/benchmarks.parquet",
@@ -654,8 +923,8 @@
       "row_count": 72223
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "helm_airbench",
       "items_path": "helm_airbench/formatted_tables/items.parquet",
       "benchmarks_path": "helm_airbench/formatted_tables/benchmarks.parquet",
@@ -663,8 +932,8 @@
       "row_count": 7723
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "helm_anthropic_redteam",
       "items_path": "helm_anthropic_redteam/formatted_tables/items.parquet",
       "benchmarks_path": "helm_anthropic_redteam/formatted_tables/benchmarks.parquet",
@@ -672,8 +941,8 @@
       "row_count": 995
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "helm_bbq",
       "items_path": "helm_bbq/formatted_tables/items.parquet",
       "benchmarks_path": "helm_bbq/formatted_tables/benchmarks.parquet",
@@ -681,8 +950,8 @@
       "row_count": 2000
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "helm_bold",
       "items_path": "helm_bold/formatted_tables/items.parquet",
       "benchmarks_path": "helm_bold/formatted_tables/benchmarks.parquet",
@@ -690,8 +959,8 @@
       "row_count": 2028
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "helm_cleva",
       "items_path": "helm_cleva/formatted_tables/items.parquet",
       "benchmarks_path": "helm_cleva/formatted_tables/benchmarks.parquet",
@@ -699,8 +968,8 @@
       "row_count": 7536
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "helm_harmbench",
       "items_path": "helm_harmbench/formatted_tables/items.parquet",
       "benchmarks_path": "helm_harmbench/formatted_tables/benchmarks.parquet",
@@ -708,8 +977,8 @@
       "row_count": 403
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "helm_real_toxicity_prompts",
       "items_path": "helm_real_toxicity_prompts/formatted_tables/items.parquet",
       "benchmarks_path": "helm_real_toxicity_prompts/formatted_tables/benchmarks.parquet",
@@ -717,8 +986,8 @@
       "row_count": 2006
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "helm_simple_safety_tests",
       "items_path": "helm_simple_safety_tests/formatted_tables/items.parquet",
       "benchmarks_path": "helm_simple_safety_tests/formatted_tables/benchmarks.parquet",
@@ -726,8 +995,8 @@
       "row_count": 100
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "helm_thaiexam",
       "items_path": "helm_thaiexam/formatted_tables/items.parquet",
       "benchmarks_path": "helm_thaiexam/formatted_tables/benchmarks.parquet",
@@ -735,8 +1004,8 @@
       "row_count": 565
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "helm_xstest",
       "items_path": "helm_xstest/formatted_tables/items.parquet",
       "benchmarks_path": "helm_xstest/formatted_tables/benchmarks.parquet",
@@ -744,8 +1013,26 @@
       "row_count": 450
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "hivmedqa",
+      "items_path": "hivmedqa/formatted_tables/items.parquet",
+      "benchmarks_path": "hivmedqa/formatted_tables/benchmarks.parquet",
+      "metadata_path": "hivmedqa/metadata.yaml",
+      "row_count": 2570
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "hle",
+      "items_path": "hle/formatted_tables/items.parquet",
+      "benchmarks_path": "hle/formatted_tables/benchmarks.parquet",
+      "metadata_path": "hle/metadata.yaml",
+      "row_count": 2249
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "icpc2_code_selector",
       "items_path": "icpc2_code_selector/formatted_tables/items.parquet",
       "benchmarks_path": "icpc2_code_selector/formatted_tables/benchmarks.parquet",
@@ -753,8 +1040,26 @@
       "row_count": 2175
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "igakuqa",
+      "items_path": "igakuqa/formatted_tables/items.parquet",
+      "benchmarks_path": "igakuqa/formatted_tables/benchmarks.parquet",
+      "metadata_path": "igakuqa/metadata.yaml",
+      "row_count": 2942
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "igakuqa119",
+      "items_path": "igakuqa119/formatted_tables/items.parquet",
+      "benchmarks_path": "igakuqa119/formatted_tables/benchmarks.parquet",
+      "metadata_path": "igakuqa119/metadata.yaml",
+      "row_count": 400
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "ikp",
       "items_path": "ikp/formatted_tables/items.parquet",
       "benchmarks_path": "ikp/formatted_tables/benchmarks.parquet",
@@ -762,8 +1067,170 @@
       "row_count": 1400
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "image2struct",
+      "items_path": "image2struct/formatted_tables/items.parquet",
+      "benchmarks_path": "image2struct/formatted_tables/benchmarks.parquet",
+      "metadata_path": "image2struct/metadata.yaml",
+      "row_count": 30636
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "imagenet_hard",
+      "items_path": "imagenet_hard/formatted_tables/items.parquet",
+      "benchmarks_path": "imagenet_hard/formatted_tables/benchmarks.parquet",
+      "metadata_path": "imagenet_hard/metadata.yaml",
+      "row_count": 7496
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "imgedit",
+      "items_path": "imgedit/formatted_tables/items.parquet",
+      "benchmarks_path": "imgedit/formatted_tables/benchmarks.parquet",
+      "metadata_path": "imgedit/metadata.yaml",
+      "row_count": 737
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "indeterminacy",
+      "items_path": "indeterminacy/formatted_tables/items.parquet",
+      "benchmarks_path": "indeterminacy/formatted_tables/benchmarks.parquet",
+      "metadata_path": "indeterminacy/metadata.yaml",
+      "row_count": 4284
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "ineqmath",
+      "items_path": "ineqmath/formatted_tables/items.parquet",
+      "benchmarks_path": "ineqmath/formatted_tables/benchmarks.parquet",
+      "metadata_path": "ineqmath/metadata.yaml",
+      "row_count": 1000
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "infibench",
+      "items_path": "infibench/formatted_tables/items.parquet",
+      "benchmarks_path": "infibench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "infibench/metadata.yaml",
+      "row_count": 369
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "interchangeable_token_embeddings",
+      "items_path": "interchangeable_token_embeddings/formatted_tables/items.parquet",
+      "benchmarks_path": "interchangeable_token_embeddings/formatted_tables/benchmarks.parquet",
+      "metadata_path": "interchangeable_token_embeddings/metadata.yaml",
+      "row_count": 199978
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "intercode",
+      "items_path": "intercode/formatted_tables/items.parquet",
+      "benchmarks_path": "intercode/formatted_tables/benchmarks.parquet",
+      "metadata_path": "intercode/metadata.yaml",
+      "row_count": 2484
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "jailbreakbench",
+      "items_path": "jailbreakbench/formatted_tables/items.parquet",
+      "benchmarks_path": "jailbreakbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "jailbreakbench/metadata.yaml",
+      "row_count": 2001
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "jetts",
+      "items_path": "jetts/formatted_tables/items.parquet",
+      "benchmarks_path": "jetts/formatted_tables/benchmarks.parquet",
+      "metadata_path": "jetts/metadata.yaml",
+      "row_count": 5940
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "judgetuning",
+      "items_path": "judgetuning/formatted_tables/items.parquet",
+      "benchmarks_path": "judgetuning/formatted_tables/benchmarks.parquet",
+      "metadata_path": "judgetuning/metadata.yaml",
+      "row_count": 3000
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "katakomba",
+      "items_path": "katakomba/formatted_tables/items.parquet",
+      "benchmarks_path": "katakomba/formatted_tables/benchmarks.parquet",
+      "metadata_path": "katakomba/metadata.yaml",
+      "row_count": 38
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "kernelbench",
+      "items_path": "kernelbench/formatted_tables/items.parquet",
+      "benchmarks_path": "kernelbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "kernelbench/metadata.yaml",
+      "row_count": 250
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "kmmlu",
+      "items_path": "kmmlu/formatted_tables/items.parquet",
+      "benchmarks_path": "kmmlu/formatted_tables/benchmarks.parquet",
+      "metadata_path": "kmmlu/metadata.yaml",
+      "row_count": 35015
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "kormedmcqa",
+      "items_path": "kormedmcqa/formatted_tables/items.parquet",
+      "benchmarks_path": "kormedmcqa/formatted_tables/benchmarks.parquet",
+      "metadata_path": "kormedmcqa/metadata.yaml",
+      "row_count": 3009
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "kris_bench",
+      "items_path": "kris_bench/formatted_tables/items.parquet",
+      "benchmarks_path": "kris_bench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "kris_bench/metadata.yaml",
+      "row_count": 8941
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "lambda_fp_course",
+      "items_path": "lambda_fp_course/formatted_tables/items.parquet",
+      "benchmarks_path": "lambda_fp_course/formatted_tables/benchmarks.parquet",
+      "metadata_path": "lambda_fp_course/metadata.yaml",
+      "row_count": 152
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "lawbench",
+      "items_path": "lawbench/formatted_tables/items.parquet",
+      "benchmarks_path": "lawbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "lawbench/metadata.yaml",
+      "row_count": 233168
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "legal_rag_bench",
       "items_path": "legal_rag_bench/formatted_tables/items.parquet",
       "benchmarks_path": "legal_rag_bench/formatted_tables/benchmarks.parquet",
@@ -771,8 +1238,98 @@
       "row_count": 300
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "legalbench",
+      "items_path": "legalbench/formatted_tables/items.parquet",
+      "benchmarks_path": "legalbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "legalbench/metadata.yaml",
+      "row_count": 9393
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "lexeval",
+      "items_path": "lexeval/formatted_tables/items.parquet",
+      "benchmarks_path": "lexeval/formatted_tables/benchmarks.parquet",
+      "metadata_path": "lexeval/metadata.yaml",
+      "row_count": 39908
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "lingoly",
+      "items_path": "lingoly/formatted_tables/items.parquet",
+      "benchmarks_path": "lingoly/formatted_tables/benchmarks.parquet",
+      "metadata_path": "lingoly/metadata.yaml",
+      "row_count": 12463
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "live_agent_risk",
+      "items_path": "live_agent_risk/formatted_tables/items.parquet",
+      "benchmarks_path": "live_agent_risk/formatted_tables/benchmarks.parquet",
+      "metadata_path": "live_agent_risk/metadata.yaml",
+      "row_count": 73
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "liveaopsbench",
+      "items_path": "liveaopsbench/formatted_tables/items.parquet",
+      "benchmarks_path": "liveaopsbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "liveaopsbench/metadata.yaml",
+      "row_count": 5323
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "livebench",
+      "items_path": "livebench/formatted_tables/items.parquet",
+      "benchmarks_path": "livebench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "livebench/metadata.yaml",
+      "row_count": 1286
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "llm4ir",
+      "items_path": "llm4ir/formatted_tables/items.parquet",
+      "benchmarks_path": "llm4ir/formatted_tables/benchmarks.parquet",
+      "metadata_path": "llm4ir/metadata.yaml",
+      "row_count": 1804
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "llm_bp_tag",
+      "items_path": "llm_bp_tag/formatted_tables/items.parquet",
+      "benchmarks_path": "llm_bp_tag/formatted_tables/benchmarks.parquet",
+      "metadata_path": "llm_bp_tag/metadata.yaml",
+      "row_count": 152139
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "llm_survey_simulation",
+      "items_path": "llm_survey_simulation/formatted_tables/items.parquet",
+      "benchmarks_path": "llm_survey_simulation/formatted_tables/benchmarks.parquet",
+      "metadata_path": "llm_survey_simulation/metadata.yaml",
+      "row_count": 797
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "llm_uncertainty_bench",
+      "items_path": "llm_uncertainty_bench/formatted_tables/items.parquet",
+      "benchmarks_path": "llm_uncertainty_bench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "llm_uncertainty_bench/metadata.yaml",
+      "row_count": 149793
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "llmail_inject",
       "items_path": "llmail_inject/formatted_tables/items.parquet",
       "benchmarks_path": "llmail_inject/formatted_tables/benchmarks.parquet",
@@ -780,17 +1337,44 @@
       "row_count": 207291
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "llms_lean_formalization",
+      "items_path": "llms_lean_formalization/formatted_tables/items.parquet",
+      "benchmarks_path": "llms_lean_formalization/formatted_tables/benchmarks.parquet",
+      "metadata_path": "llms_lean_formalization/metadata.yaml",
+      "row_count": 588
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "lohi_drug_discovery",
+      "items_path": "lohi_drug_discovery/formatted_tables/items.parquet",
+      "benchmarks_path": "lohi_drug_discovery/formatted_tables/benchmarks.parquet",
+      "metadata_path": "lohi_drug_discovery/metadata.yaml",
+      "row_count": 42080
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "matharena",
-      "items_path": "matharena/items.parquet",
-      "benchmarks_path": "matharena/benchmarks.parquet",
+      "items_path": "matharena/formatted_tables/items.parquet",
+      "benchmarks_path": "matharena/formatted_tables/benchmarks.parquet",
       "metadata_path": "matharena/metadata.yaml",
       "row_count": 1755
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "matharena_platform",
+      "items_path": "matharena_platform/formatted_tables/items.parquet",
+      "benchmarks_path": "matharena_platform/formatted_tables/benchmarks.parquet",
+      "metadata_path": "matharena_platform/metadata.yaml",
+      "row_count": 1414
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "mathconstraint",
       "items_path": "mathconstraint/formatted_tables/items.parquet",
       "benchmarks_path": "mathconstraint/formatted_tables/benchmarks.parquet",
@@ -798,8 +1382,26 @@
       "row_count": 504
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "mathvista_mini",
+      "items_path": "mathvista_mini/formatted_tables/items.parquet",
+      "benchmarks_path": "mathvista_mini/formatted_tables/benchmarks.parquet",
+      "metadata_path": "mathvista_mini/metadata.yaml",
+      "row_count": 1000
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "medagentboard",
+      "items_path": "medagentboard/formatted_tables/items.parquet",
+      "benchmarks_path": "medagentboard/formatted_tables/benchmarks.parquet",
+      "metadata_path": "medagentboard/metadata.yaml",
+      "row_count": 2301
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "medhelm_ehr_sql",
       "items_path": "medhelm_ehr_sql/formatted_tables/items.parquet",
       "benchmarks_path": "medhelm_ehr_sql/formatted_tables/benchmarks.parquet",
@@ -807,8 +1409,8 @@
       "row_count": 1000
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "medhelm_head_qa",
       "items_path": "medhelm_head_qa/formatted_tables/items.parquet",
       "benchmarks_path": "medhelm_head_qa/formatted_tables/benchmarks.parquet",
@@ -816,8 +1418,8 @@
       "row_count": 1000
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "medhelm_med_mcqa",
       "items_path": "medhelm_med_mcqa/formatted_tables/items.parquet",
       "benchmarks_path": "medhelm_med_mcqa/formatted_tables/benchmarks.parquet",
@@ -825,8 +1427,8 @@
       "row_count": 1000
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "medhelm_med_qa",
       "items_path": "medhelm_med_qa/formatted_tables/items.parquet",
       "benchmarks_path": "medhelm_med_qa/formatted_tables/benchmarks.parquet",
@@ -834,8 +1436,8 @@
       "row_count": 1000
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "medhelm_medbullets",
       "items_path": "medhelm_medbullets/formatted_tables/items.parquet",
       "benchmarks_path": "medhelm_medbullets/formatted_tables/benchmarks.parquet",
@@ -843,8 +1445,8 @@
       "row_count": 298
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "medhelm_medcalc_bench",
       "items_path": "medhelm_medcalc_bench/formatted_tables/items.parquet",
       "benchmarks_path": "medhelm_medcalc_bench/formatted_tables/benchmarks.parquet",
@@ -852,8 +1454,8 @@
       "row_count": 992
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "medhelm_medec",
       "items_path": "medhelm_medec/formatted_tables/items.parquet",
       "benchmarks_path": "medhelm_medec/formatted_tables/benchmarks.parquet",
@@ -861,8 +1463,8 @@
       "row_count": 597
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "medhelm_medhallu",
       "items_path": "medhelm_medhallu/formatted_tables/items.parquet",
       "benchmarks_path": "medhelm_medhallu/formatted_tables/benchmarks.parquet",
@@ -870,8 +1472,8 @@
       "row_count": 2000
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "medhelm_pubmed_qa",
       "items_path": "medhelm_pubmed_qa/formatted_tables/items.parquet",
       "benchmarks_path": "medhelm_pubmed_qa/formatted_tables/benchmarks.parquet",
@@ -879,8 +1481,8 @@
       "row_count": 1500
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "medhelm_race_based_med",
       "items_path": "medhelm_race_based_med/formatted_tables/items.parquet",
       "benchmarks_path": "medhelm_race_based_med/formatted_tables/benchmarks.parquet",
@@ -888,8 +1490,53 @@
       "row_count": 167
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "medwatermark_fws",
+      "items_path": "medwatermark_fws/formatted_tables/items.parquet",
+      "benchmarks_path": "medwatermark_fws/formatted_tables/benchmarks.parquet",
+      "metadata_path": "medwatermark_fws/metadata.yaml",
+      "row_count": 2376
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "mergebench",
+      "items_path": "mergebench/formatted_tables/items.parquet",
+      "benchmarks_path": "mergebench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "mergebench/metadata.yaml",
+      "row_count": 1813
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "mind2web",
+      "items_path": "mind2web/formatted_tables/items.parquet",
+      "benchmarks_path": "mind2web/formatted_tables/benchmarks.parquet",
+      "metadata_path": "mind2web/metadata.yaml",
+      "row_count": 17153
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "mj_bench",
+      "items_path": "mj_bench/formatted_tables/items.parquet",
+      "benchmarks_path": "mj_bench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "mj_bench/metadata.yaml",
+      "row_count": 26564
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "mlip_arena",
+      "items_path": "mlip_arena/formatted_tables/items.parquet",
+      "benchmarks_path": "mlip_arena/formatted_tables/benchmarks.parquet",
+      "metadata_path": "mlip_arena/metadata.yaml",
+      "row_count": 13706
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "mlrbench",
       "items_path": "mlrbench/formatted_tables/items.parquet",
       "benchmarks_path": "mlrbench/formatted_tables/benchmarks.parquet",
@@ -897,26 +1544,206 @@
       "row_count": 5226
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "mmbench_v11",
+      "items_path": "mmbench_v11/formatted_tables/items.parquet",
+      "benchmarks_path": "mmbench_v11/formatted_tables/benchmarks.parquet",
+      "metadata_path": "mmbench_v11/metadata.yaml",
+      "row_count": 12175
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "mmdocrag",
-      "items_path": "mmdocrag/items.parquet",
-      "benchmarks_path": "mmdocrag/benchmarks.parquet",
+      "items_path": "mmdocrag/formatted_tables/items.parquet",
+      "benchmarks_path": "mmdocrag/formatted_tables/benchmarks.parquet",
       "metadata_path": "mmdocrag/metadata.yaml",
       "row_count": 2000
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
-      "benchmark": "multi_swebench",
-      "items_path": "multi_swebench/items.parquet",
-      "benchmarks_path": "multi_swebench/benchmarks.parquet",
-      "metadata_path": "multi_swebench/metadata.yaml",
-      "row_count": 2126
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "mmedbench",
+      "items_path": "mmedbench/formatted_tables/items.parquet",
+      "benchmarks_path": "mmedbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "mmedbench/metadata.yaml",
+      "row_count": 300
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "mmlu",
+      "items_path": "mmlu/formatted_tables/items.parquet",
+      "benchmarks_path": "mmlu/formatted_tables/benchmarks.parquet",
+      "metadata_path": "mmlu/metadata.yaml",
+      "row_count": 14015
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "mmlupro",
+      "items_path": "mmlupro/formatted_tables/items.parquet",
+      "benchmarks_path": "mmlupro/formatted_tables/benchmarks.parquet",
+      "metadata_path": "mmlupro/metadata.yaml",
+      "row_count": 14226
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "mmmu_dev_val",
+      "items_path": "mmmu_dev_val/formatted_tables/items.parquet",
+      "benchmarks_path": "mmmu_dev_val/formatted_tables/benchmarks.parquet",
+      "metadata_path": "mmmu_dev_val/metadata.yaml",
+      "row_count": 1050
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "mmoral_bench",
+      "items_path": "mmoral_bench/formatted_tables/items.parquet",
+      "benchmarks_path": "mmoral_bench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "mmoral_bench/metadata.yaml",
+      "row_count": 1069
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "mochi",
+      "items_path": "mochi/formatted_tables/items.parquet",
+      "benchmarks_path": "mochi/formatted_tables/benchmarks.parquet",
+      "metadata_path": "mochi/metadata.yaml",
+      "row_count": 3717
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "moe_cap",
+      "items_path": "moe_cap/formatted_tables/items.parquet",
+      "benchmarks_path": "moe_cap/formatted_tables/benchmarks.parquet",
+      "metadata_path": "moe_cap/metadata.yaml",
+      "row_count": 10065
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "monkey_power_laws",
+      "items_path": "monkey_power_laws/formatted_tables/items.parquet",
+      "benchmarks_path": "monkey_power_laws/formatted_tables/benchmarks.parquet",
+      "metadata_path": "monkey_power_laws/metadata.yaml",
+      "row_count": 525
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "morphkv",
+      "items_path": "morphkv/formatted_tables/items.parquet",
+      "benchmarks_path": "morphkv/formatted_tables/benchmarks.parquet",
+      "metadata_path": "morphkv/metadata.yaml",
+      "row_count": 537
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "morqa",
+      "items_path": "morqa/formatted_tables/items.parquet",
+      "benchmarks_path": "morqa/formatted_tables/benchmarks.parquet",
+      "metadata_path": "morqa/metadata.yaml",
+      "row_count": 5443
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "mtbbench",
+      "items_path": "mtbbench/formatted_tables/items.parquet",
+      "benchmarks_path": "mtbbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "mtbbench/metadata.yaml",
+      "row_count": 573
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "mtbench",
+      "items_path": "mtbench/formatted_tables/items.parquet",
+      "benchmarks_path": "mtbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "mtbench/metadata.yaml",
+      "row_count": 2716
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "multi_moe",
+      "items_path": "multi_moe/formatted_tables/items.parquet",
+      "benchmarks_path": "multi_moe/formatted_tables/benchmarks.parquet",
+      "metadata_path": "multi_moe/metadata.yaml",
+      "row_count": 5140
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "multi_swebench",
+      "items_path": "multi_swebench/formatted_tables/items.parquet",
+      "benchmarks_path": "multi_swebench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "multi_swebench/metadata.yaml",
+      "row_count": 2127
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "multimodal_stem_ai",
+      "items_path": "multimodal_stem_ai/formatted_tables/items.parquet",
+      "benchmarks_path": "multimodal_stem_ai/formatted_tables/benchmarks.parquet",
+      "metadata_path": "multimodal_stem_ai/metadata.yaml",
+      "row_count": 249
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "mypcbench",
+      "items_path": "mypcbench/formatted_tables/items.parquet",
+      "benchmarks_path": "mypcbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "mypcbench/metadata.yaml",
+      "row_count": 118
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "naep_llm_students",
+      "items_path": "naep_llm_students/formatted_tables/items.parquet",
+      "benchmarks_path": "naep_llm_students/formatted_tables/benchmarks.parquet",
+      "metadata_path": "naep_llm_students/metadata.yaml",
+      "row_count": 488
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "nanobaselib",
+      "items_path": "nanobaselib/formatted_tables/items.parquet",
+      "benchmarks_path": "nanobaselib/formatted_tables/benchmarks.parquet",
+      "metadata_path": "nanobaselib/metadata.yaml",
+      "row_count": 45970
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "naturalreasoning",
+      "items_path": "naturalreasoning/formatted_tables/items.parquet",
+      "benchmarks_path": "naturalreasoning/formatted_tables/benchmarks.parquet",
+      "metadata_path": "naturalreasoning/metadata.yaml",
+      "row_count": 1145824
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "naturebench",
+      "items_path": "naturebench/formatted_tables/items.parquet",
+      "benchmarks_path": "naturebench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "naturebench/metadata.yaml",
+      "row_count": 181
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "nester",
       "items_path": "nester/formatted_tables/items.parquet",
       "benchmarks_path": "nester/formatted_tables/benchmarks.parquet",
@@ -924,8 +1751,53 @@
       "row_count": 356
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "nis3d",
+      "items_path": "nis3d/formatted_tables/items.parquet",
+      "benchmarks_path": "nis3d/formatted_tables/benchmarks.parquet",
+      "metadata_path": "nis3d/metadata.yaml",
+      "row_count": 30
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "nyu_ctf_bench",
+      "items_path": "nyu_ctf_bench/formatted_tables/items.parquet",
+      "benchmarks_path": "nyu_ctf_bench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "nyu_ctf_bench/metadata.yaml",
+      "row_count": 400
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "oasst",
+      "items_path": "oasst/formatted_tables/items.parquet",
+      "benchmarks_path": "oasst/formatted_tables/benchmarks.parquet",
+      "metadata_path": "oasst/metadata.yaml",
+      "row_count": 1742
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "ocrbench_v2",
+      "items_path": "ocrbench_v2/formatted_tables/items.parquet",
+      "benchmarks_path": "ocrbench_v2/formatted_tables/benchmarks.parquet",
+      "metadata_path": "ocrbench_v2/metadata.yaml",
+      "row_count": 9868
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "ood_prediction",
+      "items_path": "ood_prediction/formatted_tables/items.parquet",
+      "benchmarks_path": "ood_prediction/formatted_tables/benchmarks.parquet",
+      "metadata_path": "ood_prediction/metadata.yaml",
+      "row_count": 142805
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "openbiorq",
       "items_path": "openbiorq/formatted_tables/items.parquet",
       "benchmarks_path": "openbiorq/formatted_tables/benchmarks.parquet",
@@ -933,8 +1805,35 @@
       "row_count": 657
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "os_harm",
+      "items_path": "os_harm/formatted_tables/items.parquet",
+      "benchmarks_path": "os_harm/formatted_tables/benchmarks.parquet",
+      "metadata_path": "os_harm/metadata.yaml",
+      "row_count": 512
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "perfcodebench",
+      "items_path": "perfcodebench/formatted_tables/items.parquet",
+      "benchmarks_path": "perfcodebench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "perfcodebench/metadata.yaml",
+      "row_count": 1854
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "perumedqa",
+      "items_path": "perumedqa/formatted_tables/items.parquet",
+      "benchmarks_path": "perumedqa/formatted_tables/benchmarks.parquet",
+      "metadata_path": "perumedqa/metadata.yaml",
+      "row_count": 8259
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "phyblock",
       "items_path": "phyblock/formatted_tables/items.parquet",
       "benchmarks_path": "phyblock/formatted_tables/benchmarks.parquet",
@@ -942,8 +1841,62 @@
       "row_count": 1362
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "pku_saferlhf",
+      "items_path": "pku_saferlhf/formatted_tables/items.parquet",
+      "benchmarks_path": "pku_saferlhf/formatted_tables/benchmarks.parquet",
+      "metadata_path": "pku_saferlhf/metadata.yaml",
+      "row_count": 39994
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "planbench",
+      "items_path": "planbench/formatted_tables/items.parquet",
+      "benchmarks_path": "planbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "planbench/metadata.yaml",
+      "row_count": 11076
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "preference_dissection",
+      "items_path": "preference_dissection/formatted_tables/items.parquet",
+      "benchmarks_path": "preference_dissection/formatted_tables/benchmarks.parquet",
+      "metadata_path": "preference_dissection/metadata.yaml",
+      "row_count": 5239
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "prism",
+      "items_path": "prism/formatted_tables/items.parquet",
+      "benchmarks_path": "prism/formatted_tables/benchmarks.parquet",
+      "metadata_path": "prism/metadata.yaml",
+      "row_count": 53926
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "prm800k",
+      "items_path": "prm800k/formatted_tables/items.parquet",
+      "benchmarks_path": "prm800k/formatted_tables/benchmarks.parquet",
+      "metadata_path": "prm800k/metadata.yaml",
+      "row_count": 973120
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "programbench",
+      "items_path": "programbench/formatted_tables/items.parquet",
+      "benchmarks_path": "programbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "programbench/metadata.yaml",
+      "row_count": 1317
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "proofaug",
       "items_path": "proofaug/formatted_tables/items.parquet",
       "benchmarks_path": "proofaug/formatted_tables/benchmarks.parquet",
@@ -951,8 +1904,17 @@
       "row_count": 244
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "proteininvbench",
+      "items_path": "proteininvbench/formatted_tables/items.parquet",
+      "benchmarks_path": "proteininvbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "proteininvbench/metadata.yaml",
+      "row_count": 7410
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "prox",
       "items_path": "prox/formatted_tables/items.parquet",
       "benchmarks_path": "prox/formatted_tables/benchmarks.parquet",
@@ -960,8 +1922,17 @@
       "row_count": 12052
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "psychosis_bench",
+      "items_path": "psychosis_bench/formatted_tables/items.parquet",
+      "benchmarks_path": "psychosis_bench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "psychosis_bench/metadata.yaml",
+      "row_count": 2688
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "putnam_axiom",
       "items_path": "putnam_axiom/formatted_tables/items.parquet",
       "benchmarks_path": "putnam_axiom/formatted_tables/benchmarks.parquet",
@@ -969,26 +1940,125 @@
       "row_count": 2500
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "pxplore",
+      "items_path": "pxplore/formatted_tables/items.parquet",
+      "benchmarks_path": "pxplore/formatted_tables/benchmarks.parquet",
+      "metadata_path": "pxplore/metadata.yaml",
+      "row_count": 787
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "qatch",
+      "items_path": "qatch/formatted_tables/items.parquet",
+      "benchmarks_path": "qatch/formatted_tables/benchmarks.parquet",
+      "metadata_path": "qatch/metadata.yaml",
+      "row_count": 36458
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "radar",
+      "items_path": "radar/formatted_tables/items.parquet",
+      "benchmarks_path": "radar/formatted_tables/benchmarks.parquet",
+      "metadata_path": "radar/metadata.yaml",
+      "row_count": 1
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "rakuda",
+      "items_path": "rakuda/formatted_tables/items.parquet",
+      "benchmarks_path": "rakuda/formatted_tables/benchmarks.parquet",
+      "metadata_path": "rakuda/metadata.yaml",
+      "row_count": 280
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "rclicks",
+      "items_path": "rclicks/formatted_tables/items.parquet",
+      "benchmarks_path": "rclicks/formatted_tables/benchmarks.parquet",
+      "metadata_path": "rclicks/metadata.yaml",
+      "row_count": 29035
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "real_pocqi",
+      "items_path": "real_pocqi/formatted_tables/items.parquet",
+      "benchmarks_path": "real_pocqi/formatted_tables/benchmarks.parquet",
+      "metadata_path": "real_pocqi/metadata.yaml",
+      "row_count": 3100
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "real_webagents",
-      "items_path": "real_webagents/items.parquet",
-      "benchmarks_path": "real_webagents/benchmarks.parquet",
+      "items_path": "real_webagents/formatted_tables/items.parquet",
+      "benchmarks_path": "real_webagents/formatted_tables/benchmarks.parquet",
       "metadata_path": "real_webagents/metadata.yaml",
       "row_count": 233
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "realtimeqa",
+      "items_path": "realtimeqa/formatted_tables/items.parquet",
+      "benchmarks_path": "realtimeqa/formatted_tables/benchmarks.parquet",
+      "metadata_path": "realtimeqa/metadata.yaml",
+      "row_count": 7954
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "reasoning_gym",
+      "items_path": "reasoning_gym/formatted_tables/items.parquet",
+      "benchmarks_path": "reasoning_gym/formatted_tables/benchmarks.parquet",
+      "metadata_path": "reasoning_gym/metadata.yaml",
+      "row_count": 56181
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "refgrader",
+      "items_path": "refgrader/formatted_tables/items.parquet",
+      "benchmarks_path": "refgrader/formatted_tables/benchmarks.parquet",
+      "metadata_path": "refgrader/metadata.yaml",
+      "row_count": 3597
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "reliancescope",
+      "items_path": "reliancescope/formatted_tables/items.parquet",
+      "benchmarks_path": "reliancescope/formatted_tables/benchmarks.parquet",
+      "metadata_path": "reliancescope/metadata.yaml",
+      "row_count": 1200
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "researchclawbench",
+      "items_path": "researchclawbench/formatted_tables/items.parquet",
+      "benchmarks_path": "researchclawbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "researchclawbench/metadata.yaml",
+      "row_count": 40
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "researchcodebench",
-      "items_path": "researchcodebench/items.parquet",
-      "benchmarks_path": "researchcodebench/benchmarks.parquet",
+      "items_path": "researchcodebench/formatted_tables/items.parquet",
+      "benchmarks_path": "researchcodebench/formatted_tables/benchmarks.parquet",
       "metadata_path": "researchcodebench/metadata.yaml",
       "row_count": 212
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "revolve",
       "items_path": "revolve/formatted_tables/items.parquet",
       "benchmarks_path": "revolve/formatted_tables/benchmarks.parquet",
@@ -996,8 +2066,17 @@
       "row_count": 310
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "rewardbench",
+      "items_path": "rewardbench/formatted_tables/items.parquet",
+      "benchmarks_path": "rewardbench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "rewardbench/metadata.yaml",
+      "row_count": 4045
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "risebench",
       "items_path": "risebench/formatted_tables/items.parquet",
       "benchmarks_path": "risebench/formatted_tables/benchmarks.parquet",
@@ -1005,8 +2084,17 @@
       "row_count": 1080
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "robust_reasoning_benchmark",
+      "items_path": "robust_reasoning_benchmark/formatted_tables/items.parquet",
+      "benchmarks_path": "robust_reasoning_benchmark/formatted_tables/benchmarks.parquet",
+      "metadata_path": "robust_reasoning_benchmark/metadata.yaml",
+      "row_count": 4895
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "safeagentbench",
       "items_path": "safeagentbench/formatted_tables/items.parquet",
       "benchmarks_path": "safeagentbench/formatted_tables/benchmarks.parquet",
@@ -1014,8 +2102,35 @@
       "row_count": 665
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "scale_mrt",
+      "items_path": "scale_mrt/formatted_tables/items.parquet",
+      "benchmarks_path": "scale_mrt/formatted_tables/benchmarks.parquet",
+      "metadata_path": "scale_mrt/metadata.yaml",
+      "row_count": 34698
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "scbench_long",
+      "items_path": "scbench_long/formatted_tables/items.parquet",
+      "benchmarks_path": "scbench_long/formatted_tables/benchmarks.parquet",
+      "metadata_path": "scbench_long/metadata.yaml",
+      "row_count": 4
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "sciarena",
+      "items_path": "sciarena/formatted_tables/items.parquet",
+      "benchmarks_path": "sciarena/formatted_tables/benchmarks.parquet",
+      "metadata_path": "sciarena/metadata.yaml",
+      "row_count": 8393
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "scigym",
       "items_path": "scigym/formatted_tables/items.parquet",
       "benchmarks_path": "scigym/formatted_tables/benchmarks.parquet",
@@ -1023,8 +2138,35 @@
       "row_count": 959
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "sgrades",
+      "items_path": "sgrades/formatted_tables/items.parquet",
+      "benchmarks_path": "sgrades/formatted_tables/benchmarks.parquet",
+      "metadata_path": "sgrades/metadata.yaml",
+      "row_count": 40509
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "sib200",
+      "items_path": "sib200/formatted_tables/items.parquet",
+      "benchmarks_path": "sib200/formatted_tables/benchmarks.parquet",
+      "metadata_path": "sib200/metadata.yaml",
+      "row_count": 83640
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "sketchjudge",
+      "items_path": "sketchjudge/formatted_tables/items.parquet",
+      "benchmarks_path": "sketchjudge/formatted_tables/benchmarks.parquet",
+      "metadata_path": "sketchjudge/metadata.yaml",
+      "row_count": 4053
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "software_world_models",
       "items_path": "software_world_models/formatted_tables/items.parquet",
       "benchmarks_path": "software_world_models/formatted_tables/benchmarks.parquet",
@@ -1032,8 +2174,62 @@
       "row_count": 434
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "stanford_orb",
+      "items_path": "stanford_orb/formatted_tables/items.parquet",
+      "benchmarks_path": "stanford_orb/formatted_tables/benchmarks.parquet",
+      "metadata_path": "stanford_orb/metadata.yaml",
+      "row_count": 630
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "statqa",
+      "items_path": "statqa/formatted_tables/items.parquet",
+      "benchmarks_path": "statqa/formatted_tables/benchmarks.parquet",
+      "metadata_path": "statqa/metadata.yaml",
+      "row_count": 1183
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "subjective_qa",
+      "items_path": "subjective_qa/formatted_tables/items.parquet",
+      "benchmarks_path": "subjective_qa/formatted_tables/benchmarks.parquet",
+      "metadata_path": "subjective_qa/metadata.yaml",
+      "row_count": 10921
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "sugarcrepe",
+      "items_path": "sugarcrepe/formatted_tables/items.parquet",
+      "benchmarks_path": "sugarcrepe/formatted_tables/benchmarks.parquet",
+      "metadata_path": "sugarcrepe/metadata.yaml",
+      "row_count": 15024
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "summeval",
+      "items_path": "summeval/formatted_tables/items.parquet",
+      "benchmarks_path": "summeval/formatted_tables/benchmarks.parquet",
+      "metadata_path": "summeval/metadata.yaml",
+      "row_count": 800
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "sustainable_food",
+      "items_path": "sustainable_food/formatted_tables/items.parquet",
+      "benchmarks_path": "sustainable_food/formatted_tables/benchmarks.parquet",
+      "metadata_path": "sustainable_food/metadata.yaml",
+      "row_count": 500
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "svrpbench",
       "items_path": "svrpbench/formatted_tables/items.parquet",
       "benchmarks_path": "svrpbench/formatted_tables/benchmarks.parquet",
@@ -1041,17 +2237,107 @@
       "row_count": 40
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "swe_rebench",
-      "items_path": "swe_rebench/items.parquet",
-      "benchmarks_path": "swe_rebench/benchmarks.parquet",
+      "items_path": "swe_rebench/formatted_tables/items.parquet",
+      "benchmarks_path": "swe_rebench/formatted_tables/benchmarks.parquet",
       "metadata_path": "swe_rebench/metadata.yaml",
       "row_count": 6306
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "swe_smith",
+      "items_path": "swe_smith/formatted_tables/items.parquet",
+      "benchmarks_path": "swe_smith/formatted_tables/benchmarks.parquet",
+      "metadata_path": "swe_smith/metadata.yaml",
+      "row_count": 15616
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "swe_together",
+      "items_path": "swe_together/formatted_tables/items.parquet",
+      "benchmarks_path": "swe_together/formatted_tables/benchmarks.parquet",
+      "metadata_path": "swe_together/metadata.yaml",
+      "row_count": 109
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "swebench_live",
+      "items_path": "swebench_live/formatted_tables/items.parquet",
+      "benchmarks_path": "swebench_live/formatted_tables/benchmarks.parquet",
+      "metadata_path": "swebench_live/metadata.yaml",
+      "row_count": 2202
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "swepolybench",
+      "items_path": "swepolybench/formatted_tables/items.parquet",
+      "benchmarks_path": "swepolybench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "swepolybench/metadata.yaml",
+      "row_count": 547
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "synthpai",
+      "items_path": "synthpai/formatted_tables/items.parquet",
+      "benchmarks_path": "synthpai/formatted_tables/benchmarks.parquet",
+      "metadata_path": "synthpai/metadata.yaml",
+      "row_count": 9220
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "tabarena",
+      "items_path": "tabarena/formatted_tables/items.parquet",
+      "benchmarks_path": "tabarena/formatted_tables/benchmarks.parquet",
+      "metadata_path": "tabarena/metadata.yaml",
+      "row_count": 346195
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "tau2_bench",
+      "items_path": "tau2_bench/formatted_tables/items.parquet",
+      "benchmarks_path": "tau2_bench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "tau2_bench/metadata.yaml",
+      "row_count": 2388
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "taubench",
+      "items_path": "taubench/formatted_tables/items.parquet",
+      "benchmarks_path": "taubench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "taubench/metadata.yaml",
+      "row_count": 201
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "tengu",
+      "items_path": "tengu/formatted_tables/items.parquet",
+      "benchmarks_path": "tengu/formatted_tables/benchmarks.parquet",
+      "metadata_path": "tengu/metadata.yaml",
+      "row_count": 840
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "tensortrust",
+      "items_path": "tensortrust/formatted_tables/items.parquet",
+      "benchmarks_path": "tensortrust/formatted_tables/benchmarks.parquet",
+      "metadata_path": "tensortrust/metadata.yaml",
+      "row_count": 570791
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "theagentcompany",
       "items_path": "theagentcompany/formatted_tables/items.parquet",
       "benchmarks_path": "theagentcompany/formatted_tables/benchmarks.parquet",
@@ -1059,8 +2345,107 @@
       "row_count": 175
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "threeeed",
+      "items_path": "threeeed/formatted_tables/items.parquet",
+      "benchmarks_path": "threeeed/formatted_tables/benchmarks.parquet",
+      "metadata_path": "threeeed/metadata.yaml",
+      "row_count": 8616
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "truthfulqa_mc",
+      "items_path": "truthfulqa_mc/formatted_tables/items.parquet",
+      "benchmarks_path": "truthfulqa_mc/formatted_tables/benchmarks.parquet",
+      "metadata_path": "truthfulqa_mc/metadata.yaml",
+      "row_count": 817
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "tulu_human_eval",
+      "items_path": "tulu_human_eval/formatted_tables/items.parquet",
+      "benchmarks_path": "tulu_human_eval/formatted_tables/benchmarks.parquet",
+      "metadata_path": "tulu_human_eval/metadata.yaml",
+      "row_count": 1028
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "tumlu",
+      "items_path": "tumlu/formatted_tables/items.parquet",
+      "benchmarks_path": "tumlu/formatted_tables/benchmarks.parquet",
+      "metadata_path": "tumlu/metadata.yaml",
+      "row_count": 133944
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "txbench_pp",
+      "items_path": "txbench_pp/formatted_tables/items.parquet",
+      "benchmarks_path": "txbench_pp/formatted_tables/benchmarks.parquet",
+      "metadata_path": "txbench_pp/metadata.yaml",
+      "row_count": 12
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "ultrafeedback",
+      "items_path": "ultrafeedback/formatted_tables/items.parquet",
+      "benchmarks_path": "ultrafeedback/formatted_tables/benchmarks.parquet",
+      "metadata_path": "ultrafeedback/metadata.yaml",
+      "row_count": 255820
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "vhelm",
+      "items_path": "vhelm/formatted_tables/items.parquet",
+      "benchmarks_path": "vhelm/formatted_tables/benchmarks.parquet",
+      "metadata_path": "vhelm/metadata.yaml",
+      "row_count": 93127
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "visit_bench",
+      "items_path": "visit_bench/formatted_tables/items.parquet",
+      "benchmarks_path": "visit_bench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "visit_bench/metadata.yaml",
+      "row_count": 2391
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "visual_memory",
+      "items_path": "visual_memory/formatted_tables/items.parquet",
+      "benchmarks_path": "visual_memory/formatted_tables/benchmarks.parquet",
+      "metadata_path": "visual_memory/metadata.yaml",
+      "row_count": 47500
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "visual_riddles",
+      "items_path": "visual_riddles/formatted_tables/items.parquet",
+      "benchmarks_path": "visual_riddles/formatted_tables/benchmarks.parquet",
+      "metadata_path": "visual_riddles/metadata.yaml",
+      "row_count": 793
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "visualwebarena",
+      "items_path": "visualwebarena/formatted_tables/items.parquet",
+      "benchmarks_path": "visualwebarena/formatted_tables/benchmarks.parquet",
+      "metadata_path": "visualwebarena/metadata.yaml",
+      "row_count": 200
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "vl_rewardbench",
       "items_path": "vl_rewardbench/formatted_tables/items.parquet",
       "benchmarks_path": "vl_rewardbench/formatted_tables/benchmarks.parquet",
@@ -1068,13 +2453,85 @@
       "row_count": 1532
     },
     {
-      "branch": "migration/tabular-builders-20260924",
-      "commit": "582d3daea1f680311fa1d1be502ea206b2979371",
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "weavebench",
+      "items_path": "weavebench/formatted_tables/items.parquet",
+      "benchmarks_path": "weavebench/formatted_tables/benchmarks.parquet",
+      "metadata_path": "weavebench/metadata.yaml",
+      "row_count": 114
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "wikihow_agent",
+      "items_path": "wikihow_agent/formatted_tables/items.parquet",
+      "benchmarks_path": "wikihow_agent/formatted_tables/benchmarks.parquet",
+      "metadata_path": "wikihow_agent/metadata.yaml",
+      "row_count": 14287
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "wildvision",
+      "items_path": "wildvision/formatted_tables/items.parquet",
+      "benchmarks_path": "wildvision/formatted_tables/benchmarks.parquet",
+      "metadata_path": "wildvision/metadata.yaml",
+      "row_count": 500
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "wmt_mqm",
+      "items_path": "wmt_mqm/formatted_tables/items.parquet",
+      "benchmarks_path": "wmt_mqm/formatted_tables/benchmarks.parquet",
+      "metadata_path": "wmt_mqm/metadata.yaml",
+      "row_count": 207090
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "wonderbread",
+      "items_path": "wonderbread/formatted_tables/items.parquet",
+      "benchmarks_path": "wonderbread/formatted_tables/benchmarks.parquet",
+      "metadata_path": "wonderbread/metadata.yaml",
+      "row_count": 9091
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "workarena",
+      "items_path": "workarena/formatted_tables/items.parquet",
+      "benchmarks_path": "workarena/formatted_tables/benchmarks.parquet",
+      "metadata_path": "workarena/metadata.yaml",
+      "row_count": 385
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
       "benchmark": "workbench_revisited",
       "items_path": "workbench_revisited/formatted_tables/items.parquet",
       "benchmarks_path": "workbench_revisited/formatted_tables/benchmarks.parquet",
       "metadata_path": "workbench_revisited/metadata.yaml",
       "row_count": 690
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "worldcentralbanks",
+      "items_path": "worldcentralbanks/formatted_tables/items.parquet",
+      "benchmarks_path": "worldcentralbanks/formatted_tables/benchmarks.parquet",
+      "metadata_path": "worldcentralbanks/metadata.yaml",
+      "row_count": 119925
+    },
+    {
+      "branch": "main",
+      "commit": "54074453da7b9911be0f48e4c560be547bc84d21",
+      "benchmark": "xstest",
+      "items_path": "xstest/formatted_tables/items.parquet",
+      "benchmarks_path": "xstest/formatted_tables/benchmarks.parquet",
+      "metadata_path": "xstest/metadata.yaml",
+      "row_count": 2250
     }
   ],
   "missing_item_tables": []

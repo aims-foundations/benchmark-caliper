@@ -120,7 +120,99 @@ Tests cover local search and mocked LLM responses. Real local BGE searches have
 also been checked against the supplied vectors; no live mapping quality is
 claimed by these checks.
 
-## Retrieve and assess items
+## Step 4: retrieve benchmark items
+
+After a completed O*NET grounding run, choose **Retrieve benchmark items**.
+This step searches the whole Measurement Data Bank on a pinned `main` commit:
+every row of every discovered `items.parquet` table, across all benchmark
+collections and releases. There is no collection selector or release filter.
+It makes no paid model calls and needs no OpenAI key. The output is a set of
+candidate queues for later screening, without validity judgments or a final
+benchmark selection.
+
+The hosted inventory pins `main` at
+`54074453da7b9911be0f48e4c560be547bc84d21`, with **281 benchmark collections,
+281 item tables, and 8,471,422 source rows**. Refreshing this inventory reads
+table metadata; it does not build the full retrieval index. The complete bank
+has not yet been indexed and searched end to end.
+
+[`benchmark_queries.py`](benchmark_queries.py) creates one deterministic query
+per extracted task. The query combines the task, required input/output behavior,
+deployment context, adopted O*NET phrases, and validated goal-supported
+refinements. Rejected O*NET records contribute no phrases. A completed mapping
+with no adopted record is valid and searches using the existing task context.
+The exact query, adopted record IDs, and refinement evidence remain inspectable.
+There is no additional LLM query-generation request.
+
+[`benchmark_index.py`](benchmark_index.py) streams the whole item bank into a
+local SQLite index. Every column of each `items.parquet` row is preserved under
+`evidence.item`, and the complete row is serialized as `search_text` for both
+search methods using sorted field labels and original string values, including
+literal whitespace. Canonical JSON is used separately for exact-row identity;
+JSON stored inside a string cell is preserved without parsing or normalizing it.
+This includes identifiers, questions, answers, grading criteria,
+and any other fields present in the source row. A row without a conventional
+question field is still searchable. Rows are duplicates only when their complete
+contents match, including identifiers; matching question text alone does not
+combine them. Every distinct source reference is retained. The separate
+`question_text` field is only a convenient display preview.
+
+Each task uses two searches:
+
+- **Dense:** up to 600 items using the same pinned BGE model as Step 3. Each
+  complete row is split into nonoverlapping token chunks that fit the model's
+  512-token window, including special tokens. Each chunk uses CLS pooling and
+  L2 normalization; their mean is normalized again to produce one row vector.
+  This includes the full row instead of dropping fields beyond one model
+  window. Queries use the same chunking and pooling, with the BGE retrieval
+  instruction prefixed once to the complete query. Documents have no instruction
+  prefix. Disk vectors are scanned in bounded batches.
+- **BM25:** up to 600 matching items through SQLite FTS5, with its built-in
+  `k1=1.2`, `b=0.75`, and `unicode61` tokenizer with diacritic removal. Quoted
+  query words are joined with OR; user text cannot become FTS query operators.
+  This disk-backed implementation differs from Step 3's `rank-bm25` settings.
+- **Fusion:** reciprocal-rank fusion with `k=60`, preserving the complete union
+  of both lists (up to 1,200 distinct items per task). Evidence hashes resolve
+  score ties. There is no additional truncation of the fused ranking.
+
+The task's complete ranking becomes its all-source queue. Filtering that same
+order by benchmark collection produces one queue per source collection. An item
+may occur in several queues, with the same stable evidence identifier. The
+`ScreeningQueues` helper supports later selection of the next unseen items using
+a shared set of successfully screened IDs; retrieving or stopping a run does not
+mark candidates as screened. No adaptive allocation or screening is run here.
+
+The first index build reads the complete bank and computes local BGE
+vectors, so it can require substantial time and disk. Evidence, source references,
+and vectors remain on disk instead of materializing the full corpus in memory.
+The website caches completed indexes under
+`WEBSITE_DATA_DIR/benchmark-retrieval-index/`; direct Python use defaults to
+`~/.cache/benchmark-caliper/benchmark-index/`. Cache identity includes the complete
+pinned main-branch inventory, loader version, and indexing/encoding policy.
+Updated source commits or policies create a separate cache. Interrupted or
+failed builds are not published and must be restarted. Cached indexes contain
+dataset evidence and vectors, not
+user deployment answers, query vectors, or provider keys.
+
+Install the existing retrieval dependencies and configure authorized Hugging
+Face dataset access on the server. The pinned BGE model is downloaded once if
+absent from the local Hugging Face cache. The index needs SQLite with FTS5.
+The preview shows task queries, queue membership, complete searchable row text,
+original source fields, source provenance, dense/BM25 ranks, and RRF scores.
+The JSON export preserves the original answers, requirements, grounding, pinned
+inventory, policies, queries, candidates, and queues. Stopping a run preserves
+completed task results. Runs retain the existing
+temporary expiry policy; download the export to keep the result.
+
+Tests cover retrieval, complete-row identity and field preservation,
+cache/cancellation behavior, query assembly, queue ordering, and website
+integration with offline fixtures. A real BGE smoke check retrieved all nine
+EngiBench rows with every source column preserved and verified cache reuse.
+Long-row checks also confirmed that text beyond token 512 affects the embedding.
+These checks do not establish performance or
+retrieval quality across the whole bank, which has not been run end to end.
+
+## Existing Qwen retrieval and six-dimension assessment
 
 Describe an AI deployment, retrieve a bounded shortlist of evaluation questions
 with local **Qwen3-Embedding-0.6B** embeddings, then assess only that shortlist with
@@ -133,10 +225,13 @@ local hardware without paid embedding API calls. It does not use Qwen to generat
 answers. Embedding similarity selects candidates; it is not a validity score,
 calibrated confidence, or a guarantee of deployment compatibility.
 
-The [website](../website/README.md) provides the guided demo at
-`/benchmark-caliper/items`. It retrieves from a fixed, reproducible sample of up
-to 50 distinct items per benchmark collection across both pinned branches. The
-CLI can index the full saved inventory or use explicit source-row limits. The
+The [website](../website/README.md) retains this separate assessment option at
+`/benchmark-caliper/items`. This option retrieves from a fixed, reproducible sample of up
+to 50 distinct items per benchmark collection from the hosted main-branch
+inventory, currently at most **13,602 sampled items**. The CLI still defaults to
+discovering both `main` and the historical migration branch; `--branches main`
+restricts CLI inventory discovery to main. It can index the full saved inventory
+or use explicit source-row limits. The
 website and CLI keep retrieval relevance separate from the original
 [six-dimensional framework](../anthropic_api_package_release/framework.yaml).
 

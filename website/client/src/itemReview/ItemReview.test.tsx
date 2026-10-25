@@ -6,7 +6,7 @@ import * as api from './api'
 
 vi.mock('./api', async importOriginal => ({
   ...await importOriginal<typeof import('./api')>(),
-  getCatalog: vi.fn(), startReview: vi.fn(), startGrounding: vi.fn(), getReview: vi.fn(), cancelReview: vi.fn(), getReviewExport: vi.fn(),
+  getCatalog: vi.fn(), startReview: vi.fn(), startGrounding: vi.fn(), startBenchmarkRetrieval: vi.fn(), getCandidates: vi.fn(), getReview: vi.fn(), cancelReview: vi.fn(), getReviewExport: vi.fn(),
 }))
 
 const catalog: api.Catalog = { model: 'gpt-6-luna', reasoning_effort: 'high', max_output_tokens: 25000,
@@ -65,6 +65,23 @@ const grounded: api.GroundingReview = {
   },
 }
 
+const retrieved: api.BenchmarkRetrievalReview = {
+  ...grounded, mode: 'retrieval', run_id: 'retrieve-run', source_run_id: 'ground-run', usage: {}, message: 'Benchmark retrieval complete.',
+  retrieval: {
+    policy: { method: 'dense_bm25_rrf', model: 'BAAI/bge-small-en-v1.5' },
+    scope: { repo: 'benchmark-catalog', branches: { main: 'a' }, benchmarks: catalog.benchmarks.map(benchmark => benchmark.id), table_count: 4, source_rows: 1200, sample_only: false },
+    stats: { source_rows: 1200, total_items: 1160, indexed_items: 1160, contentless_items: 0 },
+    queries: [{ facet_id: 'management', query: 'Choose initial management. treatment options', onet_record_ids: ['dwa:treatment'], search_terms: ['treatment options'], refinements: grounded.grounding!.facets[0].mapping!.refinements, candidate_count: 750 }],
+    queues: [{ queue_id: 'opaque/all', facet_id: 'management', source: null, item_count: 750 }, { queue_id: 'opaque/source', facet_id: 'management', source: 'matharena', item_count: 290 }],
+  },
+}
+const candidates: api.CandidatePage = {
+  queue_id: 'opaque/all', facet_id: 'management', page: 1, page_size: 20, total_pages: 38, total_items: 750,
+  items: [{ item_id: 'item-1', evidence_hash: 'hash-1', question_text: 'What is the indicated first treatment?', search_text: '{"content":"What is the indicated first treatment?","grading_criterion":"Reference answer","item_id":"source-id","release":"2025"}', evidence: { item: { content: 'What is the indicated first treatment?', grading_criterion: 'Reference answer', item_id: 'source-id', release: '2025' } },
+    sources: [{ benchmark: 'matharena', branch: 'main', commit: 'a', row: 12 }, { benchmark: 'coding', branch: 'main', commit: 'a', row: 23 }],
+    rank: 1, dense_rank: 2, bm25_rank: 1, dense_score: 0.85, bm25_score: 4.5, rrf_score: 0.0325 }],
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   sessionStorage.clear()
@@ -72,6 +89,8 @@ beforeEach(() => {
   vi.mocked(api.getCatalog).mockResolvedValue(catalog)
   vi.mocked(api.startReview).mockResolvedValue({ run_id: 'test-run', run_secret: 'temporary-access' })
   vi.mocked(api.startGrounding).mockResolvedValue({ run_id: 'ground-run', run_secret: 'ground-access' })
+  vi.mocked(api.startBenchmarkRetrieval).mockResolvedValue({ run_id: 'retrieve-run', run_secret: 'retrieve-access' })
+  vi.mocked(api.getCandidates).mockResolvedValue(candidates)
   vi.mocked(api.getReview).mockResolvedValue(completed)
 })
 afterEach(() => vi.restoreAllMocks())
@@ -407,4 +426,171 @@ it('explicitly shows no adopted match while keeping the original task', async ()
   await screen.findByRole('heading', { name: 'Your O*NET grounding is ready' })
   expect(screen.getByText(/No applicable O\*NET record was adopted/)).toBeVisible()
   expect(screen.getByRole('article', { name: 'Task 1' })).toHaveTextContent('Choose the indicated initial management')
+})
+
+it('retrieves the whole main-branch bank after grounding without scope controls or another paid call', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'ground-run', run_secret: 'ground-access' }))
+  vi.mocked(api.getReview).mockResolvedValueOnce(grounded).mockResolvedValue(retrieved)
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Your O*NET grounding is ready' })
+  expect(screen.getByText('3 benchmark collections · 1,200 source rows · whole bank')).toBeVisible()
+  expect(screen.getByText(/Every field of every item row is included/)).toHaveTextContent('all benchmark collections and releases in scope')
+  expect(screen.getByText(/Retrieval makes no paid model calls and needs no OpenAI key/)).toBeVisible()
+  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+  expect(screen.queryByRole('searchbox')).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Clear selection' })).not.toBeInTheDocument()
+  await user.click(screen.getByText('Browse all 3 benchmark collections'))
+  expect(screen.getByText('Customer Support')).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Retrieve benchmark items' }))
+  await screen.findByRole('heading', { name: 'Your benchmark candidates are ready' })
+  expect(api.startBenchmarkRetrieval).toHaveBeenCalledWith({ run_id: 'ground-run', run_secret: 'ground-access' })
+  expect(api.startGrounding).not.toHaveBeenCalled()
+  expect(api.startReview).not.toHaveBeenCalled()
+  expect(screen.queryByLabelText('OpenAI API key for O*NET mapping')).not.toBeInTheDocument()
+  expect(sessionStorage.getItem('item_review_run_v1')).toBe(JSON.stringify({ run_id: 'retrieve-run', run_secret: 'retrieve-access' }))
+  expect(localStorage.length).toBe(0)
+  expect(screen.getByText(/1,160 searchable items/)).toHaveTextContent('0 items without searchable row data')
+  expect(screen.getByText(/whole main-branch bank/)).toHaveTextContent('3 benchmark collections · 1,200 source rows')
+  expect(screen.getByText(/These are retrieval ranks/)).toBeVisible()
+  await user.click(screen.getByText('Task 1 · 750 candidates'))
+  expect(screen.getByText('Choose initial management. treatment options')).toBeVisible()
+  expect(screen.getByText('treatment options', { exact: true })).toBeVisible()
+  expect(screen.getByText(/O\*NET records: dwa:treatment/)).toBeVisible()
+})
+
+it('browses private candidate pages and source queues with inspectable evidence and original ranking', async () => {
+  const access = { run_id: 'retrieve-run', run_secret: 'retrieve-access' }
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify(access))
+  vi.mocked(api.getReview).mockResolvedValue(retrieved)
+  vi.mocked(api.getCandidates).mockImplementation(async (_run, queueId, page = 1) => ({
+    ...candidates, queue_id: queueId, page, items: candidates.items.map(item => ({ ...item, rank: page === 2 ? 21 : 1 })),
+  }))
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  const first = await screen.findByRole('article', { name: 'Candidate 1' })
+  expect(within(first).getByText('What is the indicated first treatment?')).toBeVisible()
+  expect(within(first).getByText(/Sources:/).parentElement).toHaveTextContent('matharena, coding')
+  expect(within(first).getByText(/Combined rank:/)).toHaveTextContent('Combined rank: 1 · Meaning search rank: 2 · Keyword rank: 1')
+  await user.click(within(first).getByText('Inspect full item evidence and sources'))
+  expect(within(first).getByText(/"grading_criterion": "Reference answer"/)).toBeVisible()
+  expect(within(first).getByText(/"commit": "a"/)).toBeVisible()
+  expect(within(first).getByRole('heading', { name: 'Full row text used for search' })).toBeVisible()
+  expect(within(first).getByText(candidates.items[0].search_text)).toBeVisible()
+  expect(screen.getByRole('button', { name: 'Previous candidates' })).toBeDisabled()
+  await user.click(screen.getByRole('button', { name: 'Next candidates' }))
+  await screen.findByRole('article', { name: 'Candidate 21' })
+  expect(api.getCandidates).toHaveBeenLastCalledWith(access, 'opaque/all', 2, expect.any(AbortSignal))
+  await user.selectOptions(screen.getByLabelText('Candidate queue'), 'opaque/source')
+  await screen.findByRole('article', { name: 'Candidate 1' })
+  expect(api.getCandidates).toHaveBeenLastCalledWith(access, 'opaque/source', 1, expect.any(AbortSignal))
+  expect(screen.getByText('Page 1 of 38')).toBeVisible()
+})
+
+it('retains completed retrieval queues when stopped and retries the whole bank', async () => {
+  const access = { run_id: 'retrieve-run', run_secret: 'retrieve-access' }
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify(access))
+  vi.mocked(api.getReview).mockResolvedValue({ ...retrieved, status: 'running', message: 'Searching remaining tasks.' })
+  vi.mocked(api.cancelReview).mockResolvedValue({ ...retrieved, status: 'cancelled', message: 'Benchmark retrieval stopped.' })
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Retrieving benchmark candidates' })
+  expect(screen.getByRole('progressbar', { name: 'Task queries completed' })).toHaveAttribute('value', '1')
+  expect(screen.queryByRole('button', { name: 'Retrieve benchmark items' })).not.toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Stop retrieval' }))
+  await screen.findByRole('heading', { name: 'Retrieval stopped' })
+  expect(api.cancelReview).toHaveBeenCalledWith(access)
+  expect(screen.getByRole('article', { name: 'Candidate 1' })).toBeVisible()
+  expect(screen.getByText('3 benchmark collections · 1,200 source rows · whole bank')).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Retrieve benchmark items' }))
+  expect(api.startBenchmarkRetrieval).toHaveBeenCalledWith(access)
+})
+
+it('disables Step 4 when dataset access is unavailable and does not offer it for incomplete grounding', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'ground-run', run_secret: 'ground-access' }))
+  vi.mocked(api.getCatalog).mockResolvedValue({ ...catalog, dataset_access_configured: false })
+  vi.mocked(api.getReview).mockResolvedValue(grounded)
+  const { unmount } = render(<ItemReview />)
+  expect(await screen.findByRole('button', { name: 'Retrieve benchmark items' })).toBeDisabled()
+  expect(screen.getByRole('alert')).toHaveTextContent('Dataset access is not configured')
+  unmount()
+  vi.mocked(api.getReview).mockResolvedValue({ ...grounded, status: 'cancelled' })
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Grounding stopped' })
+  expect(screen.queryByRole('button', { name: 'Retrieve benchmark items' })).not.toBeInTheDocument()
+})
+
+it('keeps the grounding preview when retrieval cannot start', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'ground-run', run_secret: 'ground-access' }))
+  vi.mocked(api.getReview).mockResolvedValue(grounded)
+  vi.mocked(api.startBenchmarkRetrieval).mockRejectedValueOnce(new Error('The retrieval worker is busy.'))
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await user.click(await screen.findByRole('button', { name: 'Retrieve benchmark items' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('The retrieval worker is busy.')
+  expect(screen.getByRole('heading', { name: 'Your O*NET grounding is ready' })).toBeVisible()
+  expect(screen.getByRole('button', { name: 'Retrieve benchmark items' })).toBeEnabled()
+  expect(sessionStorage.getItem('item_review_run_v1')).toContain('ground-access')
+})
+
+it('shows failures and exports the retained retrieval result without dropping original requirements', async () => {
+  const access = { run_id: 'retrieve-run', run_secret: 'retrieve-access' }
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify(access))
+  vi.mocked(api.getReview).mockResolvedValue({ ...retrieved, status: 'failed', message: 'Index preparation failed.' })
+  const blob = new Blob([JSON.stringify(retrieved)], { type: 'application/json' })
+  vi.mocked(api.getReviewExport).mockResolvedValue(blob)
+  vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:retrieval')
+  const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Retrieval interrupted' })
+  expect(screen.getByRole('alert')).toHaveTextContent('Index preparation failed.')
+  expect(screen.getByRole('heading', { name: 'Original deployment answers' })).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Download retrieval JSON' }))
+  expect(api.getReviewExport).toHaveBeenCalledWith(access)
+  expect(click.mock.instances[0]).toHaveAttribute('download', 'benchmark-retrieval-retrieve-run.json')
+})
+
+it('retries a failed candidate page and explains an empty queue', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'retrieve-run', run_secret: 'retrieve-access' }))
+  vi.mocked(api.getReview).mockResolvedValue(retrieved)
+  vi.mocked(api.getCandidates).mockRejectedValueOnce(new Error('Candidate page unavailable.')).mockResolvedValueOnce({ ...candidates, items: [], total_items: 0, total_pages: 0 })
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  expect(await screen.findByRole('alert')).toHaveTextContent('Candidate page unavailable.')
+  await user.click(screen.getByRole('button', { name: 'Retry loading candidates' }))
+  expect(await screen.findByText('No candidates are available in this queue.')).toBeVisible()
+  expect(screen.queryByRole('button', { name: 'Next candidates' })).not.toBeInTheDocument()
+})
+
+it('shows planned queries while the first index is preparing and statistics are not yet available', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'retrieve-run', run_secret: 'retrieve-access' }))
+  const { candidate_count: _count, ...query } = retrieved.retrieval!.queries[0]
+  vi.mocked(api.getReview).mockResolvedValue({ ...retrieved, status: 'preparing', message: 'Preparing the local index.',
+    retrieval: { ...retrieved.retrieval!, stats: {}, queries: [query], queues: [] } })
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Retrieving benchmark candidates' })
+  expect(screen.getByText(/0 source rows read/)).toBeVisible()
+  expect(screen.getByText('0 of 1 task queries completed.')).toBeVisible()
+  expect(screen.getByRole('progressbar', { name: 'Task queries completed' })).toHaveAttribute('value', '0')
+  await user.click(screen.getByText('Task 1 · Awaiting retrieval'))
+  expect(screen.getByText('Choose initial management. treatment options')).toBeVisible()
+  expect(api.getCandidates).not.toHaveBeenCalled()
+  expect(screen.queryByText('No searchable candidates were found in the bank.')).not.toBeInTheDocument()
+})
+
+it('keeps rows without a labeled question inspectable through their complete search text and evidence', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'retrieve-run', run_secret: 'retrieve-access' }))
+  vi.mocked(api.getReview).mockResolvedValue(retrieved)
+  const searchText = '{"item_id":"unlabeled-case","clinical_context":"Risk assessment","release":"older-release"}'
+  vi.mocked(api.getCandidates).mockResolvedValue({ ...candidates, items: [{ ...candidates.items[0], question_text: '', search_text: searchText,
+    evidence: { item: { item_id: 'unlabeled-case', clinical_context: 'Risk assessment', release: 'older-release' } } }] })
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  const candidate = await screen.findByRole('article', { name: 'Candidate 1' })
+  expect(within(candidate).getByText(/This item has no separately labeled question/)).toBeVisible()
+  await user.click(within(candidate).getByText('Inspect full item evidence and sources'))
+  expect(within(candidate).getByText(searchText)).toBeVisible()
+  expect(within(candidate).getByText(/"release": "older-release"/)).toBeVisible()
 })

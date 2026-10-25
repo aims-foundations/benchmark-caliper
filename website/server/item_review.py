@@ -1,4 +1,4 @@
-"""Requirement extraction and seeded sample reviews with temporary results.
+"""Goal-conditioned pipeline and seeded sample reviews with temporary results.
 
 Keys and deployment answers remain in memory. A run secret protects polling,
 downloads, and cancellation. No worker queue or durable resume is required.
@@ -31,6 +31,9 @@ from bayesian_auditing.sampling import (
 )
 from bayesian_auditing.scoring import SCORING_POLICY
 from bayesian_auditing.data import fingerprint
+from bayesian_auditing.benchmark_data import iter_benchmark_items
+from bayesian_auditing.benchmark_index import prepare_benchmark_index
+from bayesian_auditing.benchmark_queries import build_benchmark_queries, build_screening_queues
 from bayesian_auditing.retrieval import ItemIndex, RETRIEVAL_POLICY
 from bayesian_auditing.judge import (
     AsyncJudge, DEFAULT_MODEL, DEFAULT_REASONING_EFFORT, DEFAULT_MAX_OUTPUT_TOKENS, PROMPT_PATH,
@@ -85,12 +88,17 @@ class Deployment(BaseModel):
 class ReviewRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     deployment: Deployment
-    mode: Literal["item_review", "requirements", "grounding"] = "item_review"
+    mode: Literal["item_review", "requirements", "grounding", "retrieval"] = "item_review"
     retrieve_k: int = Field(default=DEFAULT_RETRIEVE_K, ge=1, le=MAX_RETRIEVE_K, strict=True)
     retrieval_query: str = Field(default="", max_length=100_000)
 
     def query(self) -> str:
         return self.retrieval_query if self.retrieval_query.strip() else self.deployment.describe()
+
+
+class BenchmarkRetrievalRequest(BaseModel):
+    """Step 4 always searches the complete pinned main inventory."""
+    model_config = ConfigDict(extra="forbid", strict=True)
 
 
 @dataclass
@@ -119,6 +127,7 @@ class ReviewJob:
     extraction: dict | None = field(default=None, repr=False)
     source_run_id: str | None = None
     grounding: dict | None = field(default=None, repr=False)
+    benchmark_retrieval: dict | None = field(default=None, repr=False)
 
 
 jobs: dict[str, ReviewJob] = {}
@@ -176,7 +185,7 @@ async def catalog(response: Response) -> dict:
 
 
 def public_job(job: ReviewJob, page: int = 1, *, include_items: bool = True) -> dict:
-    if job.request.mode in {"requirements", "grounding"}:
+    if job.request.mode in {"requirements", "grounding", "retrieval"}:
         result = {
             "run_id": job.run_id, "status": job.status, "message": job.message,
             "mode": job.request.mode, "model": DEFAULT_MODEL,
@@ -185,8 +194,18 @@ def public_job(job: ReviewJob, page: int = 1, *, include_items: bool = True) -> 
             "requirements": job.requirements, "extraction": job.extraction,
             "usage": dict(job.usage),
         }
-        if job.request.mode == "grounding":
+        if job.request.mode in {"grounding", "retrieval"}:
             result.update(source_run_id=job.source_run_id, grounding=job.grounding)
+        if job.request.mode == "retrieval":
+            retrieval = job.benchmark_retrieval
+            result["retrieval"] = None
+            if retrieval is not None:
+                result["retrieval"] = {
+                    **{key: retrieval[key] for key in ("policy", "scope", "stats", "queries")},
+                    "queues": [{"queue_id": queue["queue_id"], "facet_id": queue["facet_id"],
+                                "source": queue["source"], "item_count": len(queue["item_ids"])}
+                               for queue in retrieval["queues"]],
+                }
         return result
     counts = job.results.counts
     processed = job.results.processed
@@ -242,23 +261,28 @@ def check_run_capacity(api_key: str | None) -> tuple[str, str]:
         raise HTTPException(401, "An OpenAI API key is required.")
     if len(api_key) > 512:
         raise HTTPException(400, "Invalid credential length.")
-    sweep()
     key = api_key.strip()
     owner = hashlib.sha256(key.encode()).hexdigest()
+    check_owner_capacity(owner)
+    return key, owner
+
+
+def check_owner_capacity(owner: str) -> None:
+    """Continuations inherit their source owner, including local-only runs."""
+    sweep()
     active = [job for job in jobs.values() if job.finished_at is None]
     if len(active) >= MAX_ACTIVE or any(job.owner_hash == owner for job in active):
         raise HTTPException(429, "A review is already running for this key, or the demo is busy. Try again shortly.")
     if len(jobs) >= MAX_RETAINED:
         raise HTTPException(429, "The demo is at capacity. Please try again later.")
-    return key, owner
 
 
 @router.post("/runs", status_code=202)
 async def start_review(body: ReviewRequest, response: Response,
                        x_openai_key: Annotated[str | None, Header()] = None) -> dict:
     response.headers["Cache-Control"] = "no-store"
-    if body.mode == "grounding":
-        raise HTTPException(400, "Start O*NET grounding from an existing requirements run.")
+    if body.mode in {"grounding", "retrieval"}:
+        raise HTTPException(400, "Continue grounding or retrieval from its preceding pipeline run.")
     key, owner = check_run_capacity(x_openai_key)
     if body.mode == "item_review" and not get_token():
         raise HTTPException(503, "Dataset access is not configured on this server. Please contact the site maintainer or try again later.")
@@ -295,6 +319,72 @@ async def start_grounding(run_id: str, response: Response,
     return {"run_id": job.run_id, "run_secret": job.secret}
 
 
+@router.post("/runs/{run_id}/retrieve", status_code=202)
+async def start_benchmark_retrieval(run_id: str, body: BenchmarkRetrievalRequest, response: Response,
+                                   x_review_token: Annotated[str | None, Header()] = None) -> dict:
+    response.headers["Cache-Control"] = "no-store"
+    source = authorize(run_id, x_review_token)
+    if (source.request.mode not in {"grounding", "retrieval"} or source.finished_at is None
+            or (source.request.mode == "grounding" and source.status != "completed")
+            or not source.requirements or not source.grounding):
+        raise HTTPException(409, "Complete O*NET grounding before retrieving benchmark items.")
+    try:
+        requirements = Requirements.model_validate(source.requirements)
+        queries = build_benchmark_queries(source.request.deployment.model_dump(), requirements, source.grounding)
+        if not queries:
+            raise ValueError("No extracted tasks")
+    except (ValueError, TypeError, KeyError):
+        raise HTTPException(409, "Complete valid O*NET mappings for every extracted task before retrieval.") from None
+    data = inventory()
+    if (set(data["branches"]) != {"main"} or not data["tables"]
+            or any(table["branch"] != "main" or table["commit"] != data["branches"]["main"]
+                   for table in data["tables"])):
+        raise HTTPException(503, "The benchmark inventory must use one pinned main revision. Refresh the server catalog.")
+    if not get_token():
+        raise HTTPException(503, "Dataset access is not configured on this server. Please contact the site maintainer or try again later.")
+    check_owner_capacity(source.owner_hash)
+    job = ReviewJob(
+        secrets.token_hex(16), secrets.token_urlsafe(32), source.owner_hash,
+        ReviewRequest(deployment=source.request.deployment, mode="retrieval"), inventory=data,
+        requirements=deepcopy(source.requirements), extraction=deepcopy(source.extraction),
+        grounding=deepcopy(source.grounding), source_run_id=source.run_id,
+        message="Preparing all benchmark collections from the pinned main revision for local retrieval.",
+        benchmark_retrieval={
+            "policy": None, "stats": {}, "queries": queries, "queues": [], "rankings": [],
+            "inventory": deepcopy(data),
+            "scope": {"repo": data["repo"], "branches": data["branches"],
+                      "benchmarks": sorted({table["benchmark"] for table in data["tables"]}),
+                      "table_count": len(data["tables"]),
+                      "source_rows": sum(table["row_count"] for table in data["tables"]),
+                      "sample_only": False, "release_filter": None},
+        },
+    )
+    jobs[job.run_id] = job
+    job.task = asyncio.create_task(evaluate(job, ""))
+    return {"run_id": job.run_id, "run_secret": job.secret}
+
+
+@router.get("/runs/{run_id}/candidates")
+async def benchmark_candidates(run_id: str, queue_id: str, response: Response,
+                               x_review_token: Annotated[str | None, Header()] = None,
+                               page: Annotated[int, Query(ge=1)] = 1) -> dict:
+    response.headers["Cache-Control"] = "no-store"
+    job = authorize(run_id, x_review_token)
+    retrieval = job.benchmark_retrieval if job.request.mode == "retrieval" else None
+    queue = next((queue for queue in retrieval["queues"] if queue["queue_id"] == queue_id), None) if retrieval else None
+    if queue is None:
+        raise HTTPException(404, "Candidate queue not found.")
+    ranking = next(ranking for ranking in retrieval["rankings"] if ranking["facet_id"] == queue["facet_id"])
+    candidates = {item["item_id"]: item for item in ranking["candidates"]}
+    total = len(queue["item_ids"])
+    pages = max(1, (total + RESULTS_PAGE_SIZE - 1) // RESULTS_PAGE_SIZE)
+    page = min(page, pages)
+    start = (page - 1) * RESULTS_PAGE_SIZE
+    return {"queue_id": queue_id, "facet_id": queue["facet_id"], "page": page,
+            "page_size": RESULTS_PAGE_SIZE, "total_pages": pages, "total_items": total,
+            "items": [candidates[key] for key in queue["item_ids"][start:start + RESULTS_PAGE_SIZE]]}
+
+
 @router.get("/runs/{run_id}")
 async def get_review(run_id: str, response: Response,
                x_review_token: Annotated[str | None, Header()] = None,
@@ -307,6 +397,35 @@ async def get_review(run_id: str, response: Response,
 async def export_review(run_id: str, x_review_token: Annotated[str | None, Header()] = None):
     job = authorize(run_id, x_review_token)
     snapshot = public_job(job, include_items=False)
+    if job.request.mode == "retrieval":
+        # The worker replaces its snapshot after each completed facet. Holding
+        # this reference keeps a download consistent while retrieval continues.
+        retrieval = job.benchmark_retrieval
+        snapshot.pop("retrieval")
+        job.downloads += 1
+
+        async def retrieval_content():
+            try:
+                yield json.dumps(snapshot)[:-1] + ', "retrieval": '
+                if retrieval is None:
+                    yield "null}"
+                    return
+                yield json.dumps({key: value for key, value in retrieval.items() if key != "rankings"})[:-1]
+                yield ', "rankings": ['
+                for number, ranking in enumerate(retrieval["rankings"]):
+                    yield ("," if number else "") + json.dumps({key: value for key, value in ranking.items() if key != "candidates"})[:-1]
+                    yield ', "candidates": ['
+                    for index, candidate in enumerate(ranking["candidates"]):
+                        yield ("," if index else "") + json.dumps(candidate)
+                    yield "]}"
+                yield "]}}"
+            finally:
+                job.downloads -= 1
+
+        return StreamingResponse(retrieval_content(), media_type="application/json", headers={
+            "Cache-Control": "no-store",
+            "Content-Disposition": f'attachment; filename="benchmark-retrieval-{run_id}.json"',
+        })
     if job.request.mode in {"requirements", "grounding"}:
         name = "onet-grounding" if job.request.mode == "grounding" else "requirements"
         return JSONResponse(snapshot, headers={
@@ -356,6 +475,7 @@ def stopped_message(job: ReviewJob) -> str:
     return {
         "requirements": "Requirement extraction stopped.",
         "grounding": "O*NET grounding stopped. Completed facet mappings are retained.",
+        "retrieval": "Benchmark retrieval stopped. Completed task rankings and queues are retained.",
         "item_review": "Review stopped. Completed assessments are retained.",
     }[job.request.mode]
 
@@ -633,6 +753,66 @@ async def ground_requirements(job: ReviewJob, api_key: str) -> None:
     job.message = "O*NET grounding is ready. Review the supporting passages and applicability for each task."
 
 
+async def retrieve_benchmarks(job: ReviewJob) -> None:
+    """Build one disk index, then retain bounded rankings for each parent task."""
+    cancelled = Event()
+
+    def progress(state):
+        stage = {"loading": "Loading benchmark rows", "embedding": "Embedding benchmark questions locally",
+                 "cache": "Reusing cached benchmark questions"}[state["stage"]]
+        job.message = f"{stage}: {state['completed']:,} of {state['total']:,}."
+
+    def search():
+        acquired, items, index = False, None, None
+        try:
+            while not acquired:
+                if cancelled.is_set():
+                    raise InterruptedError("Benchmark retrieval cancelled")
+                acquired = _retrieval_lock.acquire(timeout=0.1)
+            items = iter_benchmark_items(job.inventory, token=get_token(), streaming=True)
+            index = prepare_benchmark_index(
+                items, cache_dir=db.DEFAULT_DB_PATH.parent / "benchmark-retrieval-index",
+                inventory=job.inventory, cancelled=cancelled.is_set, progress=progress,
+            )
+            state = {**job.benchmark_retrieval, "policy": index.policy, "stats": index.stats}
+            job.benchmark_retrieval = state
+            job.status = "running"
+            queries = state["queries"]
+            for number, query in enumerate(queries, 1):
+                if cancelled.is_set():
+                    raise InterruptedError("Benchmark retrieval cancelled")
+                job.message = f"Retrieving benchmark candidates for task {number} of {len(queries)}."
+                candidates = index.search(query["query"], cancelled=cancelled.is_set)
+                if cancelled.is_set():
+                    raise InterruptedError("Benchmark retrieval cancelled")
+                rankings = [*state["rankings"], {**query, "candidates": candidates}]
+                state = {**state, "rankings": rankings, "queues": build_screening_queues(rankings),
+                         "queries": [*state["queries"]]}
+                state["queries"][number - 1] = {**query, "candidate_count": len(candidates)}
+                job.benchmark_retrieval = state
+        finally:
+            try:
+                if index is not None:
+                    index.close()
+            finally:
+                try:
+                    if hasattr(items, "close"):
+                        items.close()
+                finally:
+                    if acquired:
+                        _retrieval_lock.release()
+
+    work = asyncio.create_task(asyncio.to_thread(search))
+    try:
+        await asyncio.shield(work)
+    except asyncio.CancelledError:
+        cancelled.set()
+        await finish_worker(work)
+        raise
+    job.status = "completed"
+    job.message = "Benchmark candidates and task/source queues are ready for review. Relevance screening is the next step."
+
+
 async def evaluate(job: ReviewJob, api_key: str) -> None:
     items = None
     try:
@@ -641,6 +821,9 @@ async def evaluate(job: ReviewJob, api_key: str) -> None:
             return
         if job.request.mode == "grounding":
             await ground_requirements(job, api_key)
+            return
+        if job.request.mode == "retrieval":
+            await retrieve_benchmarks(job)
             return
         items, job.total = await review_items(job)
         selected = await retrieve_items(job, items)
@@ -673,6 +856,8 @@ async def evaluate(job: ReviewJob, api_key: str) -> None:
             job.message = "Could not complete O*NET grounding. Check the local catalog and embedding model setup, or contact the site maintainer."
         elif job.request.mode == "requirements":
             job.message = "Could not extract requirements. Please try again later or contact the site maintainer."
+        elif job.request.mode == "retrieval":
+            job.message = "Could not complete benchmark retrieval. Check dataset access, local model setup, and disk space. Completed task rankings are retained."
         else:
             job.message = "Could not load or process evaluation items. Please try again later or contact the site maintainer."
     finally:

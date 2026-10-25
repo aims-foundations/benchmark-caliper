@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { startReview, startGrounding, getReview } from './api'
+import { startReview, startGrounding, startBenchmarkRetrieval, getCandidates, getReview } from './api'
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -39,4 +39,26 @@ it('starts grounding with the source run token and fresh API key without resendi
   expect(options.method).toBe('POST')
   expect(options.headers).toEqual({ 'X-Review-Token': 'access', 'X-OpenAI-Key': 'sk-secret' })
   expect(options.body).toBeUndefined()
+})
+
+it('starts whole-bank retrieval with an empty body and only the source run token', async () => {
+  const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ run_id: 'retrieve', run_secret: 'new-access' }))))
+  vi.stubGlobal('fetch', fetchMock)
+  const run = { run_id: 'grounded', run_secret: 'access' }
+  await startBenchmarkRetrieval(run)
+  expect(fetchMock.mock.calls[0]).toEqual(['/api/item-review/runs/grounded/retrieve', {
+    cache: 'no-store', method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Review-Token': 'access' }, body: '{}',
+  }])
+})
+
+it('requests a candidate page using the opaque queue ID and private run token', async () => {
+  const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ items: [] })))
+  vi.stubGlobal('fetch', fetchMock)
+  await getCandidates({ run_id: 'retrieve', run_secret: 'access' }, 'task/all + other', 2)
+  const [url, options] = fetchMock.mock.calls[0]
+  const parsed = new URL(url, 'https://example.test')
+  expect(parsed.searchParams.get('queue_id')).toBe('task/all + other')
+  expect(parsed.searchParams.get('page')).toBe('2')
+  expect(options.headers).toEqual({ 'X-Review-Token': 'access' })
+  expect(options.cache).toBe('no-store')
 })

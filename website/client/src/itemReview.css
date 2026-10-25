@@ -210,6 +210,9 @@
 .grounding-facet code, .grounding-candidates code { overflow-wrap: anywhere; }
 .grounding-candidates { padding-left: 1.2rem; }
 .grounding-candidates > li { padding-block: .75rem; border-bottom: 1px solid var(--review-border); }
+.retrieval-candidate { border-top: 1px solid var(--review-border); padding-block: 1rem; overflow-wrap: anywhere; }
+.retrieval-results pre { max-height: 24rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .8rem; }
+.retrieval-results select { width: 100%; min-width: 0; max-width: 100%; padding: .7rem; border: 1px solid var(--review-border); border-radius: 5px; background: white; font: inherit; }
 .review-detail-confidence p { color: var(--review-muted); margin: .4rem 0 0; }
 .review-dimension-detail h5 { font-size: .9rem; font-weight: 600; margin: 1rem 0 .4rem; }
 .review-dimension-detail ul { padding-left: 1.2rem; margin: .4rem 0; }
