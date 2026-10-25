@@ -3,3 +3,4 @@ openai>=2.48
 huggingface_hub>=1.2
 pydantic>=2.7
 PyYAML>=6
+scipy>=1.11,<2

@@ -45,6 +45,7 @@ from bayesian_auditing.screening import (
     AsyncItemScreener, ScreeningAssessment, SCREENING_VERSION, GATED_DIMENSIONS,
 )
 from bayesian_auditing.screening_queue import allocate_initial_screening, INITIAL_SCREENING_BUDGET
+from bayesian_auditing.selection import select_collection, SelectionIncomplete
 from .item_review_store import ReviewStore
 from . import db
 
@@ -92,7 +93,7 @@ class Deployment(BaseModel):
 class ReviewRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     deployment: Deployment
-    mode: Literal["item_review", "requirements", "grounding", "retrieval", "screening"] = "item_review"
+    mode: Literal["item_review", "requirements", "grounding", "retrieval", "screening", "selection"] = "item_review"
     retrieve_k: int = Field(default=DEFAULT_RETRIEVE_K, ge=1, le=MAX_RETRIEVE_K, strict=True)
     retrieval_query: str = Field(default="", max_length=100_000)
 
@@ -107,6 +108,11 @@ class BenchmarkRetrievalRequest(BaseModel):
 
 class ScreeningRequest(BaseModel):
     """The initial budget is fixed; continuations reuse the same allocation."""
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+
+class SelectionRequest(BaseModel):
+    """Collection construction uses the agreed total limit of 30 items."""
     model_config = ConfigDict(extra="forbid", strict=True)
 
 
@@ -138,6 +144,8 @@ class ReviewJob:
     grounding: dict | None = field(default=None, repr=False)
     benchmark_retrieval: dict | None = field(default=None, repr=False)
     screening: dict | None = field(default=None, repr=False)
+    selection: dict | None = field(default=None, repr=False)
+    selection_run_id: str | None = None
 
 
 jobs: dict[str, ReviewJob] = {}
@@ -195,7 +203,7 @@ async def catalog(response: Response) -> dict:
 
 
 def public_job(job: ReviewJob, page: int = 1, *, include_items: bool = True) -> dict:
-    if job.request.mode in {"requirements", "grounding", "retrieval", "screening"}:
+    if job.request.mode in {"requirements", "grounding", "retrieval", "screening", "selection"}:
         result = {
             "run_id": job.run_id, "status": job.status, "message": job.message,
             "mode": job.request.mode, "model": DEFAULT_MODEL,
@@ -204,9 +212,9 @@ def public_job(job: ReviewJob, page: int = 1, *, include_items: bool = True) -> 
             "requirements": job.requirements, "extraction": job.extraction,
             "usage": dict(job.usage),
         }
-        if job.request.mode in {"grounding", "retrieval", "screening"}:
+        if job.request.mode in {"grounding", "retrieval", "screening", "selection"}:
             result.update(source_run_id=job.source_run_id, grounding=job.grounding)
-        if job.request.mode in {"retrieval", "screening"}:
+        if job.request.mode in {"retrieval", "screening", "selection"}:
             retrieval = job.benchmark_retrieval
             result["retrieval"] = None
             if retrieval is not None:
@@ -216,11 +224,22 @@ def public_job(job: ReviewJob, page: int = 1, *, include_items: bool = True) -> 
                                 "source": queue["source"], "item_count": len(queue["item_ids"])}
                                for queue in retrieval["queues"]],
                 }
-        if job.request.mode == "screening":
+        if job.request.mode in {"screening", "selection"}:
             result["screening"] = job.screening
             if job.screening:
                 result["model"] = job.screening["model"]["model"]
                 result["reasoning_effort"] = job.screening["model"]["reasoning_effort"]
+        if job.request.mode == "selection" or job.selection is not None:
+            result.update(selection=job.selection, selection_run_id=job.selection_run_id)
+        if job.request.mode == "selection":
+            screening = job.screening
+            items = screening["items"]
+            result["selection_input"] = {
+                "allocated": screening["allocation"]["allocated"],
+                "screened": sum(item["status"] == "complete" for item in items),
+                "errors": sum(item["status"] == "error" for item in items),
+                "pending": screening["allocation"]["allocated"] - len(items),
+            }
         return result
     counts = job.results.counts
     processed = job.results.processed
@@ -296,8 +315,8 @@ def check_owner_capacity(owner: str) -> None:
 async def start_review(body: ReviewRequest, response: Response,
                        x_openai_key: Annotated[str | None, Header()] = None) -> dict:
     response.headers["Cache-Control"] = "no-store"
-    if body.mode in {"grounding", "retrieval", "screening"}:
-        raise HTTPException(400, "Continue grounding, retrieval, or screening from its preceding pipeline run.")
+    if body.mode in {"grounding", "retrieval", "screening", "selection"}:
+        raise HTTPException(400, "Continue grounding, retrieval, screening, or selection from its preceding pipeline run.")
     key, owner = check_run_capacity(x_openai_key)
     if body.mode == "item_review" and not get_token():
         raise HTTPException(503, "Dataset access is not configured on this server. Please contact the site maintainer or try again later.")
@@ -405,7 +424,7 @@ async def start_screening(run_id: str, response: Response,
                           x_openai_key: Annotated[str | None, Header()] = None) -> dict:
     response.headers["Cache-Control"] = "no-store"
     source = authorize(run_id, x_review_token)
-    if (source.request.mode not in {"retrieval", "screening"} or source.finished_at is None
+    if (source.request.mode not in {"retrieval", "screening", "selection"} or source.finished_at is None
             or (source.request.mode == "retrieval" and source.status != "completed")
             or not source.requirements or not source.grounding or not source.benchmark_retrieval):
         raise HTTPException(409, "Complete benchmark retrieval before screening its candidates.")
@@ -420,7 +439,7 @@ async def start_screening(run_id: str, response: Response,
     # A continuation finishes the same initial set, without paying again for
     # successful assessments (including valid fail and unresolved gate outcomes).
     retained = []
-    if source.request.mode == "screening":
+    if source.request.mode in {"screening", "selection"}:
         if not source.screening or source.screening["allocation"] != allocation:
             raise HTTPException(409, "The saved screening allocation cannot be continued.")
         if (source.screening["policy"]["version"] != SCREENING_VERSION
@@ -437,6 +456,7 @@ async def start_screening(run_id: str, response: Response,
         inventory=deepcopy(source.inventory), source_run_id=source.run_id,
         requirements=deepcopy(source.requirements), extraction=deepcopy(source.extraction),
         grounding=deepcopy(source.grounding), benchmark_retrieval=deepcopy(source.benchmark_retrieval),
+        selection=deepcopy(source.selection), selection_run_id=source.selection_run_id,
         message="Preparing the initial candidates for screening with GPT-6 Luna.",
         screening={
             "policy": {
@@ -457,7 +477,7 @@ async def start_screening(run_id: str, response: Response,
             "allocation": allocation, "items": retained,
         },
     )
-    if source.request.mode == "screening":
+    if source.request.mode in {"screening", "selection"}:
         # Continue with the exact prompt/settings used for retained assessments,
         # even if the prompt file has been edited since the first attempt.
         job.screening["model"] = deepcopy(source.screening["model"])
@@ -467,13 +487,70 @@ async def start_screening(run_id: str, response: Response,
     return {"run_id": job.run_id, "run_secret": job.secret}
 
 
+def validate_selection_source(source: ReviewJob) -> Requirements:
+    """Check the saved screening against its original allocation and evidence."""
+    requirements = Requirements.model_validate(source.requirements)
+    build_benchmark_queries(source.request.deployment.model_dump(), requirements, source.grounding)
+    candidates = screening_candidates(source.benchmark_retrieval, requirements)
+    screening = source.screening
+    if (screening["policy"]["version"] != SCREENING_VERSION
+            or screening["model"]["output_schema"] != ScreeningAssessment.model_json_schema()
+            or screening["allocation"] != allocate_initial_screening(source.benchmark_retrieval["queues"])):
+        raise ValueError("The saved screening contract has changed.")
+    allocated = {item["item_id"]: item for item in screening["allocation"]["items"]}
+    seen = set()
+    for item in screening["items"]:
+        item_id = item["item_id"]
+        if item_id in seen or item_id not in allocated or item["status"] not in {"complete", "error"}:
+            raise ValueError("Screening results do not match the original allocation.")
+        seen.add(item_id)
+        original = candidates[allocated[item_id]["facet_id"], item_id]
+        if (item["evidence"] != original["evidence"] or item["evidence_hash"] != item_id
+                or item["sources"] != original["sources"]):
+            raise ValueError("Screening must retain original item evidence and sources.")
+        if item["status"] == "complete":
+            assessment = ScreeningAssessment.model_validate(item["assessment"])
+            assessment.validate_context(requirements, item["evidence"]["item"])
+    return requirements
+
+
+@router.post("/runs/{run_id}/select", status_code=202)
+async def start_selection(run_id: str, response: Response,
+                           body: SelectionRequest = SelectionRequest(),
+                           x_review_token: Annotated[str | None, Header()] = None) -> dict:
+    response.headers["Cache-Control"] = "no-store"
+    source = authorize(run_id, x_review_token)
+    if (source.request.mode not in {"screening", "selection"} or source.finished_at is None
+            or not source.screening or not source.requirements or not source.grounding
+            or not source.benchmark_retrieval):
+        raise HTTPException(409, "Finish or stop screening before selecting from its saved results.")
+    try:
+        validate_selection_source(source)
+    except (ValueError, KeyError, TypeError):
+        raise HTTPException(409, "Selection requires valid saved screening results and original item evidence.") from None
+    check_owner_capacity(source.owner_hash)
+    job = ReviewJob(
+        secrets.token_hex(16), secrets.token_urlsafe(32), source.owner_hash,
+        ReviewRequest(deployment=source.request.deployment, mode="selection"),
+        inventory=deepcopy(source.inventory), source_run_id=source.run_id,
+        requirements=deepcopy(source.requirements), extraction=deepcopy(source.extraction),
+        grounding=deepcopy(source.grounding), benchmark_retrieval=deepcopy(source.benchmark_retrieval),
+        screening=deepcopy(source.screening), selection=deepcopy(source.selection),
+        selection_run_id=source.selection_run_id,
+        message="Selecting up to 30 total items using saved ratings and coverage requirements.",
+    )
+    jobs[job.run_id] = job
+    job.task = asyncio.create_task(evaluate(job, ""))
+    return {"run_id": job.run_id, "run_secret": job.secret}
+
+
 @router.get("/runs/{run_id}/candidates")
 async def benchmark_candidates(run_id: str, queue_id: str, response: Response,
                                x_review_token: Annotated[str | None, Header()] = None,
                                page: Annotated[int, Query(ge=1)] = 1) -> dict:
     response.headers["Cache-Control"] = "no-store"
     job = authorize(run_id, x_review_token)
-    retrieval = job.benchmark_retrieval if job.request.mode in {"retrieval", "screening"} else None
+    retrieval = job.benchmark_retrieval if job.request.mode in {"retrieval", "screening", "selection"} else None
     queue = next((queue for queue in retrieval["queues"] if queue["queue_id"] == queue_id), None) if retrieval else None
     if queue is None:
         raise HTTPException(404, "Candidate queue not found.")
@@ -500,7 +577,7 @@ async def get_review(run_id: str, response: Response,
 async def export_review(run_id: str, x_review_token: Annotated[str | None, Header()] = None):
     job = authorize(run_id, x_review_token)
     snapshot = public_job(job, include_items=False)
-    if job.request.mode in {"retrieval", "screening"}:
+    if job.request.mode in {"retrieval", "screening", "selection"}:
         # The worker replaces its snapshot after each completed facet. Holding
         # this reference keeps a download consistent while retrieval continues.
         retrieval = job.benchmark_retrieval
@@ -580,6 +657,7 @@ def stopped_message(job: ReviewJob) -> str:
         "grounding": "O*NET grounding stopped. Completed facet mappings are retained.",
         "retrieval": "Benchmark retrieval stopped. Completed task rankings and queues are retained.",
         "screening": "Screening stopped. Completed item results are retained; continue to finish the initial set.",
+        "selection": "Selection stopped. Any previously accepted collection is retained.",
         "item_review": "Review stopped. Completed assessments are retained.",
     }[job.request.mode]
 
@@ -975,6 +1053,34 @@ async def screen_benchmarks(job: ReviewJob, api_key: str) -> None:
     )
 
 
+async def select_benchmarks(job: ReviewJob) -> None:
+    """Run local optimization off the event loop and publish only a complete solve."""
+    requirements = validate_selection_source(job)
+    previous_ids = job.selection["selected_item_ids"] if job.selection is not None else None
+    cancelled = Event()
+    job.status, job.message = "running", "Choosing up to 30 items while enforcing coverage and rating priorities."
+    work = asyncio.create_task(asyncio.to_thread(
+        select_collection, requirements, job.screening["items"],
+        previous_selected_ids=previous_ids, cancelled=cancelled.is_set,
+    ))
+    try:
+        selection = await asyncio.shield(work)
+    except asyncio.CancelledError:
+        cancelled.set()
+        await finish_worker(work)
+        raise
+    # A cancelled or incomplete solve cannot replace an accepted collection.
+    job.selection = selection
+    job.selection_run_id = job.run_id
+    job.status = "completed"
+    count = selection["selected_count"]
+    job.message = (
+        f"Selected {count} items in total. All specified coverage requirements are satisfied."
+        if selection["fully_satisfied"] else
+        f"Selected {count} items in total. Review the reported coverage gaps and unresolved requirements."
+    )
+
+
 async def evaluate(job: ReviewJob, api_key: str) -> None:
     items = None
     try:
@@ -989,6 +1095,9 @@ async def evaluate(job: ReviewJob, api_key: str) -> None:
             return
         if job.request.mode == "screening":
             await screen_benchmarks(job, api_key)
+            return
+        if job.request.mode == "selection":
+            await select_benchmarks(job)
             return
         items, job.total = await review_items(job)
         selected = await retrieve_items(job, items)
@@ -1009,6 +1118,9 @@ async def evaluate(job: ReviewJob, api_key: str) -> None:
     except asyncio.CancelledError:
         job.status = "cancelled"
         job.message = stopped_message(job)
+    except SelectionIncomplete:
+        job.status = "failed"
+        job.message = "Selection did not finish proving the best collection. Any previously accepted collection is retained; retry selection to try again."
     except AuthenticationError:
         job.status, job.message = "failed", "OpenAI rejected the API key. Check its access and start a new review."
     except RateLimitError:
@@ -1025,6 +1137,8 @@ async def evaluate(job: ReviewJob, api_key: str) -> None:
             job.message = "Could not complete benchmark retrieval. Check dataset access, local model setup, and disk space. Completed task rankings are retained."
         elif job.request.mode == "screening":
             job.message = "Could not complete screening. Completed item results are retained; continue to retry unfinished items."
+        elif job.request.mode == "selection":
+            job.message = "Could not complete collection selection. Saved screening results and any previously accepted collection are retained."
         else:
             job.message = "Could not load or process evaluation items. Please try again later or contact the site maintainer."
     finally:

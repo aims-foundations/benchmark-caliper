@@ -147,7 +147,20 @@ export interface ScreeningReview extends Omit<BenchmarkRetrievalReview, 'mode'> 
     items: ScreenedItem[]
   } | null
 }
-export type RunResult = Review | RequirementsReview | GroundingReview | BenchmarkRetrievalReview | ScreeningReview
+export interface SelectionInput { allocated: number; screened: number; errors: number; pending: number }
+export interface SelectionReview extends Omit<ScreeningReview, 'mode'> {
+  mode: 'selection'; selection_input: SelectionInput; selection_run_id: string | null
+  selection: {
+    policy: Record<string, unknown>; limit: number; eligible_count: number; selected_count: number; selected_item_ids: string[]
+    items: Array<{ item_id: string; quality_score: number; rating_sum: number; matched_facet_ids: string[]; coverage_requirement_indices: number[] }>
+    total_quality: number
+    task_coverage: Array<{ facet_id: string; minimum: number; eligible_count: number; selected_count: number; shortfall: number }>
+    quota_coverage: Array<{ requirement_index: number; minimum_items: number | null; eligible_count: number; selected_count: number; shortfall: number | null }>
+    constraints_feasible: boolean; fully_satisfied: boolean; gaps: string[]; unresolved_requirement_indices: number[]
+    excluded_counts: Record<string, number>; solver: Record<string, unknown>
+  } | null
+}
+export type RunResult = Review | RequirementsReview | GroundingReview | BenchmarkRetrievalReview | ScreeningReview | SelectionReview
 
 async function fetchResponse(path: string, options: RequestInit = {}): Promise<Response> {
   const response = await fetch(appPath(`/api/item-review${path}`), { cache: 'no-store', ...options })
@@ -174,6 +187,9 @@ export const startBenchmarkRetrieval = (run: RunAccess) => request<RunAccess>(`/
 })
 export const startScreening = (run: RunAccess, apiKey: string) => request<RunAccess>(`/runs/${run.run_id}/screen`, {
   method: 'POST', headers: { 'X-Review-Token': run.run_secret, 'X-OpenAI-Key': apiKey },
+})
+export const startSelection = (run: RunAccess) => request<RunAccess>(`/runs/${run.run_id}/select`, {
+  method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Review-Token': run.run_secret }, body: JSON.stringify({}),
 })
 export const getCandidates = (run: RunAccess, queueId: string, page = 1, signal?: AbortSignal) => request<CandidatePage>(
   `/runs/${run.run_id}/candidates?${new URLSearchParams({ queue_id: queueId, page: String(page) })}`,

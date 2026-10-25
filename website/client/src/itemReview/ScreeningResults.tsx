@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { DIMENSIONS, getReviewExport, type ScreenedItem, type ScreeningReview, type RunAccess } from './api'
 import { RequirementsContent } from './RequirementsResults'
 import { ScreeningForm } from './ScreeningForm'
+import { SelectionForm } from './SelectionForm'
 
 function EvidenceNotes({ evidence, justification, information_gaps }: { evidence: string[]; justification: string; information_gaps: string[] }) {
   return <>
@@ -11,16 +12,18 @@ function EvidenceNotes({ evidence, justification, information_gaps }: { evidence
   </>
 }
 
-function ScreeningItem({ item, index, review, taskName }: {
-  item: ScreenedItem; index: number; review: ScreeningReview; taskName: (facetId: string) => string
+export function ScreeningItem({ item, index, review, taskName, label = 'Screened item', qualityScore }: {
+  item: ScreenedItem; index: number; review: Pick<ScreeningReview, 'run_id' | 'requirements' | 'screening'>; taskName: (facetId: string) => string
+  label?: string; qualityScore?: number
 }) {
   const assessment = item.assessment
   const gateLabel = item.gate?.status === 'pass' ? 'Pass' : item.gate?.status === 'fail' ? 'Fail' : 'Unresolved'
   return <article className="review-panel screening-item" aria-labelledby={`screened-${item.item_id}`}>
-    <div className="review-result-title"><h3 id={`screened-${item.item_id}`}>Screened item {index + 1}</h3>
+    <div className="review-result-title"><h3 id={`screened-${item.item_id}`}>{label} {index + 1}</h3>
       <span className={`review-confidence screening-${item.status === 'error' ? 'error' : item.gate?.status ?? 'unresolved'}`}>
         {item.status === 'error' ? 'Assessment error' : `Screening gate: ${gateLabel}`}
       </span></div>
+    {qualityScore != null && <p className="selection-quality"><strong>Quality Q: {qualityScore.toFixed(2)} / 5</strong></p>}
     <p className="review-preserve">{item.question_text || 'This item has no separately labeled question. Its full source row is available below.'}</p>
     <p className="help"><strong>Acquired from:</strong> {taskName(item.acquisition.facet_id)} queue · <strong>Sources:</strong> {[...new Set(item.sources.map(source => source.benchmark))].join(', ')}</p>
     {item.screened_run_id && item.screened_run_id !== review.run_id && <p className="help">Retained assessment from an earlier screening run.</p>}
@@ -63,8 +66,9 @@ function ScreeningItem({ item, index, review, taskName }: {
   </article>
 }
 
-export function ScreeningResults({ review, run, busy, onCancel, onRestart, onScreen }: {
+export function ScreeningResults({ review, run, busy, onCancel, onRestart, onScreen, onSelect }: {
   review: ScreeningReview; run: RunAccess; busy: boolean; onCancel: () => void; onRestart: () => void; onScreen: (apiKey: string) => Promise<boolean>
+  onSelect: () => Promise<boolean>
 }) {
   const [downloading, setDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState('')
@@ -118,6 +122,7 @@ export function ScreeningResults({ review, run, busy, onCancel, onRestart, onScr
       <p className="help">Results expire one hour after the run ends. The export retains original answers, requirements, grounding, retrieval, allocation, assessments, and screening settings.</p>
       {downloadError && <p className="review-error" role="alert">{downloadError}</p>}
     </section>
+    {!active && screening && <SelectionForm busy={busy} onSelect={onSelect} input={{ allocated: allocation?.allocated ?? 0, screened: complete, errors, pending: Math.max(0, (allocation?.allocated ?? 0) - items.length) }} />}
     {allocation && <section className="review-panel" aria-labelledby="screening-allocation-title">
       <h2 id="screening-allocation-title">Initial screening allocation</h2>
       <p>Budget: {allocation.budget} distinct items · Allocated: {allocation.allocated} · Shortfall: {allocation.shortfall}</p>

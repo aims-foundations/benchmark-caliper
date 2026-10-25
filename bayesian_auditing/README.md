@@ -219,7 +219,8 @@ After completed retrieval, choose **Screen initial candidates**. This step
 assesses at most **50 distinct items** using GPT-6 Luna. The fixed budget of 50
 is the agreed implementation choice; the paper's worked example uses 48 items
 across three tasks. This stage does not perform adaptive allocation, assemble a
-final benchmark, or implement Steps 6 and 7.
+collection, or implement Step 7. Collection selection follows separately in
+Step 6.
 
 [`screening_queue.py`](screening_queue.py) allocates the budget deterministically
 across the tasks' all-source queues. Each pass takes the next unseen item from
@@ -294,6 +295,83 @@ Tests exercise allocation, strict response/evidence validation, gate behavior,
 mocked provider requests, and website continuation, cancellation, and export.
 Live provider judgment quality has not been validated, and these tests do not
 constitute an end-to-end run over the complete bank.
+
+## Step 6: select a collection under coverage constraints
+
+After screening finishes, **Select up to 30 items** builds a collection from the
+valid assessments already available. This is a local calculation with no new
+LLM request or dataset fetch. A stopped or failed screening run can still
+provide its completed assessments; pending and errored items are reported
+separately and cannot be selected. This stage does not start adaptive screening
+or freeze the collection for expert validation.
+
+[`selection.py`](selection.py) revalidates the original item identities and
+screening assessments, recomputes the four-dimension gate, and considers only
+passing items. Exact full-row duplicates count once; conflicting assessments
+for the same row are rejected. Neither retrieval scores nor the saved gate
+label determine eligibility. For each eligible item, its construction-fit score
+`Q` is the mean of input ontology, input content, input form, and output
+ontology. Output content and output form remain reported separately. This score
+does not use confidence or establish clinical answer correctness.
+
+The selected collection contains **at most 30 distinct items in total**, across
+all tasks. Every extracted task has a default minimum of one selected item;
+the `essential` flag does not remove a task from this policy. There is no
+automatic equal split or larger per-task minimum. Each explicit positive
+`minimum_items` coverage requirement supplies an additional constraint. An item
+counts for a task only when its screened question requests that decision, and
+counts toward a conditional quota only when its corresponding coverage finding
+is true. One item may contribute to multiple supported tasks or conditions
+while occupying one place. False and unknown coverage findings do not satisfy
+a quota. Requirements with `minimum_items: null` remain visible as unresolved
+rules rather than receiving an invented numerical minimum.
+
+Selection uses SciPy's mixed-integer optimizer with the HiGHS solver. One binary
+variable represents each eligible item. Constraints enforce the size limit and
+coverage minimums, and the objective maximizes the sum of the four gated
+ratings, exactly equivalent to maximizing total `Q`. Scores are positive, so
+available places are filled when enough eligible items exist; smaller pools
+produce smaller collections. Among equally rated feasible collections, repeated
+solver checks choose the lexicographically smallest sorted item-ID list. This
+handles overlapping tasks and quotas without relying on a greedy per-task
+selection or an approximate ID-rank tie breaker.
+
+When the current screened pool cannot satisfy every constraint, the original
+targets remain unchanged and gaps remain explicit. The documented fallback
+first maximizes the number of represented tasks, then minimizes the sum of
+shortfalls across explicit numerical quotas, then maximizes the same rating
+total, followed by the item-ID tie break. The quota-shortfall ordering is an
+implementation choice for otherwise unspecified infeasible cases. Missing
+candidates and coverage that cannot fit within 30 are reported, without lowering
+rating thresholds or treating unknown findings as successes.
+
+The selector can reconsider all eligible items as more screening results become
+available. Its optional `previous_selected_ids` preserves achieved task coverage
+and numerical-quota counts up to their stated minimums, while allowing higher
+rated items to replace earlier ones. It does not lock individual items or
+preserve excess counts beyond a minimum. A solver timeout or cancellation does
+not prove infeasibility: an interrupted computation produces no new accepted
+collection, and the website retains the preceding accepted selection when one
+exists.
+
+The website's **Select up to 30 items** action requires the existing run token, not
+an OpenAI key. It saves a separate selection run with the input artifacts,
+selected IDs, item quality values, coverage counts, gaps, exclusions, policy,
+and solver outcome. `selection_input` distinguishes allocated, completed,
+errored, and pending screening items; `selection_run_id` identifies the run
+that produced the accepted collection, including one retained after a retry.
+Its export retains the original answers, requirements,
+grounding, retrieval, and screening. **Continue screening** from a selection
+can finish pending or errored items from the original 50-item allocation;
+reselect afterward to incorporate the new results. It does not add adaptive
+batches. The Python `select_collection` function supports reuse by a future
+Step 7 implementation; there is no new CLI command.
+
+Tests compare small random problems with an independent exhaustive enumeration
+of every possible collection, alongside overlapping task/quota cases, exact-ID
+ties, partial results, preserved coverage, cancellation, and solver limits.
+These checks establish implementation behavior, not the validity of model
+ratings or performance across the complete item bank.
 
 ## Existing Qwen retrieval and six-dimension assessment
 

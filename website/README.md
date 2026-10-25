@@ -330,7 +330,8 @@ required finding leaves the gate unresolved. Output content and output form
 are reported separately, and coverage does not change the gate. Invalid model
 responses are errors, distinct from valid fail or unresolved assessments. This
 step adds no confidence aggregate, final benchmark selection, or adaptive
-allocation; Steps 6 and 7 are not implemented.
+allocation. Collection selection is a separate Step 6 action; Step 7 is not
+implemented.
 
 `POST /api/item-review/runs/{run_id}/screen` accepts `{}` or an omitted body and
 requires the source run's `X-Review-Token` and a fresh `X-OpenAI-Key`. Budget and
@@ -355,6 +356,55 @@ See [`bayesian_auditing/README.md`](../bayesian_auditing/README.md#step-5-screen
 for the prompt, schemas, and Python library entry points. Allocation and provider
 handling are tested with offline/mocked fixtures. Live provider judgment quality
 has not been validated, and no complete-bank end-to-end run has been performed.
+
+After a screening run finishes, **Select up to 30 items** performs Step 6 locally,
+using its saved valid assessments. It needs no OpenAI key or new dataset fetch.
+A stopped or failed screening run can also supply its completed assessments;
+pending and errored items remain visible and are excluded from selection.
+
+The collection contains at most **30 distinct items across all tasks**, with
+one selected item per extracted task by default, regardless of the facet's
+`essential` flag. Larger minimums and scenario quotas apply only through
+explicit numerical coverage requirements. Conditional quotas count only items
+whose screened coverage finding is true; false/null findings do not count.
+An item may cover multiple requested tasks or conditions while using one place.
+Rules without a numerical minimum remain unresolved rather than being inferred.
+
+The selector verifies full-row identities, rejects conflicting duplicate
+assessments, and recomputes the four-dimension gate. Each item's quality is the
+mean of those four ratings; the selector maximizes their total subject to
+coverage constraints and the size limit,
+using a SciPy/HiGHS mixed-integer optimizer and exact deterministic item-ID ties.
+Output content and output form remain separate findings; retrieval rank and
+confidence do not enter this score. Fewer than 30 eligible items yield a smaller
+collection.
+
+If full coverage is impossible in the screened pool, a partial collection first
+represents as many tasks as possible, then minimizes total explicit quota
+shortfall, then prefers higher ratings. The targets and remaining gaps are
+reported without relaxing the gate. Later selections preserve previously
+achieved task coverage and quota counts up to their targets while allowing
+replacement of individual items. A solver timeout or cancellation is an
+interruption, not proof that the requirements are infeasible; a preceding
+accepted selection remains available.
+
+`POST /api/item-review/runs/{run_id}/select` accepts `{}` or an omitted body and
+requires only `X-Review-Token`. The source is a finished screening or selection
+run. It creates a separate `mode: "selection"` run with the fixed 30-item cap;
+request overrides are rejected. The preview and JSON export include selected
+items, construction-fit scores, coverage counts, unmet or unresolved rules,
+exclusions, and solver status alongside the earlier pipeline artifacts.
+`selection_input` reports allocated, screened, errored, and pending counts;
+`selection_run_id` identifies the run that produced the accepted collection.
+Existing authorization, cancellation, and expiry behavior apply.
+
+**Continue screening** from a selection run can finish pending or errored items
+in its original 50-item allocation, using a fresh OpenAI key and the original
+screening prompt/settings. Select again afterward to include the additional
+results. Step 6 itself makes no model calls and does not start adaptive batches,
+freeze a final benchmark, or validate clinical correctness. See the
+[`Step 6 implementation notes`](../bayesian_auditing/README.md#step-6-select-a-collection-under-coverage-constraints)
+for the optimization and fallback policy. Step 7 remains unimplemented.
 
 The existing **Review catalog** assessment option collects six deployment answers, retrieves relevant questions
 locally, and uses the visitor's OpenAI key to assess only the selected shortlist.

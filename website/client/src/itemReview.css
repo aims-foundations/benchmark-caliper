@@ -229,6 +229,10 @@
 .screening-table-scroll { overflow-x: auto; }
 .screening-allocation { width: 100%; border-collapse: collapse; }
 .screening-allocation th, .screening-allocation td { text-align: left; padding: .8rem .5rem; border-bottom: 1px solid var(--review-border); }
+.selection-notice { margin: 1rem 0; padding: .9rem 1rem; border-left: 3px solid #a07832; background: #fbf5e9; overflow-wrap: anywhere; }
+.selection-notice p:last-child, .selection-notice ul:last-child { margin-bottom: 0; }
+.selection-quality { color: #3d562a; font-variant-numeric: tabular-nums; }
+.selection-coverage { padding-block: .75rem; border-top: 1px solid var(--review-border); }
 .review-detail-confidence p { color: var(--review-muted); margin: .4rem 0 0; }
 .review-dimension-detail h5 { font-size: .9rem; font-weight: 600; margin: 1rem 0 .4rem; }
 .review-dimension-detail ul { padding-left: 1.2rem; margin: .4rem 0; }

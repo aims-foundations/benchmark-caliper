@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { startReview, startGrounding, startBenchmarkRetrieval, startScreening, getCandidates, getReview } from './api'
+import { startReview, startGrounding, startBenchmarkRetrieval, startScreening, startSelection, getCandidates, getReview } from './api'
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -69,5 +69,14 @@ it('starts screening with the private source token and fresh API key, without re
   await startScreening({ run_id: 'retrieve', run_secret: 'source-access' }, 'sk-private')
   expect(fetchMock.mock.calls[0]).toEqual(['/api/item-review/runs/retrieve/screen', {
     cache: 'no-store', method: 'POST', headers: { 'X-Review-Token': 'source-access', 'X-OpenAI-Key': 'sk-private' },
+  }])
+})
+
+it('starts collection selection with only the source token and an empty JSON body', async () => {
+  const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ run_id: 'select', run_secret: 'select-access' })))
+  vi.stubGlobal('fetch', fetchMock)
+  await startSelection({ run_id: 'screen', run_secret: 'screen-access' })
+  expect(fetchMock.mock.calls[0]).toEqual(['/api/item-review/runs/screen/select', {
+    cache: 'no-store', method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Review-Token': 'screen-access' }, body: '{}',
   }])
 })

@@ -6,7 +6,7 @@ import * as api from './api'
 
 vi.mock('./api', async importOriginal => ({
   ...await importOriginal<typeof import('./api')>(),
-  getCatalog: vi.fn(), startReview: vi.fn(), startGrounding: vi.fn(), startBenchmarkRetrieval: vi.fn(), startScreening: vi.fn(), getCandidates: vi.fn(), getReview: vi.fn(), cancelReview: vi.fn(), getReviewExport: vi.fn(),
+  getCatalog: vi.fn(), startReview: vi.fn(), startGrounding: vi.fn(), startBenchmarkRetrieval: vi.fn(), startScreening: vi.fn(), startSelection: vi.fn(), getCandidates: vi.fn(), getReview: vi.fn(), cancelReview: vi.fn(), getReviewExport: vi.fn(),
 }))
 
 const catalog: api.Catalog = { model: 'gpt-6-luna', reasoning_effort: 'high', max_output_tokens: 25000,
@@ -110,6 +110,19 @@ const screened: api.ScreeningReview = {
   },
 }
 
+const selected: api.SelectionReview = {
+  ...screened, mode: 'selection', run_id: 'select-run', source_run_id: 'screen-run', message: 'Collection selected with coverage gaps.', usage: {},
+  selection_input: { allocated: 4, screened: 3, errors: 1, pending: 0 }, selection_run_id: 'select-run',
+  selection: {
+    policy: { version: 1, method: 'constrained_selection', quality: 'mean_four_gate_scores' }, limit: 30, eligible_count: 1, selected_count: 1, selected_item_ids: ['item-1'],
+    items: [{ item_id: 'item-1', quality_score: 4, rating_sum: 16, matched_facet_ids: ['management'], coverage_requirement_indices: [0] }], total_quality: 4,
+    task_coverage: [{ facet_id: 'management', minimum: 1, eligible_count: 1, selected_count: 1, shortfall: 0 }],
+    quota_coverage: [{ requirement_index: 0, minimum_items: 3, eligible_count: 1, selected_count: 1, shortfall: 2 }],
+    constraints_feasible: false, fully_satisfied: false, gaps: ['The allergy-constrained management requirement is short by 2 items.'], unresolved_requirement_indices: [],
+    excluded_counts: { failed_gate: 1, unresolved_gate: 1, assessment_error: 1 }, solver: { status: 'optimal_partial' },
+  },
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   sessionStorage.clear()
@@ -119,6 +132,7 @@ beforeEach(() => {
   vi.mocked(api.startGrounding).mockResolvedValue({ run_id: 'ground-run', run_secret: 'ground-access' })
   vi.mocked(api.startBenchmarkRetrieval).mockResolvedValue({ run_id: 'retrieve-run', run_secret: 'retrieve-access' })
   vi.mocked(api.startScreening).mockResolvedValue({ run_id: 'screen-run', run_secret: 'screen-access' })
+  vi.mocked(api.startSelection).mockResolvedValue({ run_id: 'select-run', run_secret: 'select-access' })
   vi.mocked(api.getCandidates).mockResolvedValue(candidates)
   vi.mocked(api.getReview).mockResolvedValue(completed)
 })
@@ -791,4 +805,166 @@ it('renders model text as text and identifies reused assessments without changin
   expect(first.querySelector('img')).toBeNull()
   expect(within(first).getByText('Retained assessment from an earlier screening run.')).toBeVisible()
   expect(within(first).getByRole('heading', { name: 'Screening gate: Pass' })).toBeVisible()
+})
+
+it('selects at most 30 items across the whole collection without a key or another screening call', async () => {
+  const source = { run_id: 'screen-run', run_secret: 'screen-access' }
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify(source))
+  vi.mocked(api.getCatalog).mockResolvedValue({ ...catalog, dataset_access_configured: false })
+  vi.mocked(api.getReview).mockResolvedValueOnce(screened).mockResolvedValue(selected)
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Your initial screening is ready' })
+  expect(screen.getByText(/one shared limit of 30 items across all tasks/)).toBeVisible()
+  expect(screen.getByText(/Selection runs locally, makes no model calls, and needs no API key/)).toBeVisible()
+  expect(screen.getByLabelText('OpenAI API key for initial screening')).toHaveValue('')
+  expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Select up to 30 items' })).toBeEnabled()
+  expect(api.startSelection).not.toHaveBeenCalled()
+  await user.click(screen.getByRole('button', { name: 'Select up to 30 items' }))
+  await screen.findByRole('heading', { name: 'Selection has coverage gaps' })
+  expect(api.startSelection).toHaveBeenCalledWith(source)
+  expect(api.startScreening).not.toHaveBeenCalled()
+  expect(api.startBenchmarkRetrieval).not.toHaveBeenCalled()
+  expect(screen.getByText('Selected items').parentElement).toHaveTextContent('1 / 30')
+  expect(screen.getByText('Eligible items').parentElement).toHaveTextContent('1')
+  expect(screen.getByText('Total quality Q').parentElement).toHaveTextContent('4.00')
+  expect(sessionStorage.getItem('item_review_run_v1')).toBe(JSON.stringify({ run_id: 'select-run', run_secret: 'select-access' }))
+  expect(localStorage.length).toBe(0)
+})
+
+it('shows task and quota shortfalls, unresolved quota minima, and the selected item rating evidence', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'select-run', run_secret: 'select-access' }))
+  const originalRequirements = selected.requirements!
+  const uncoveredTask = { ...originalRequirements.task_facets[0], facet_id: 'diagnosis', essential: false }
+  vi.mocked(api.getReview).mockResolvedValue({ ...selected, requirements: { ...originalRequirements,
+    task_facets: [...originalRequirements.task_facets, uncoveredTask],
+    coverage_requirements: [...originalRequirements.coverage_requirements, { ...originalRequirements.coverage_requirements[0], minimum_items: null }],
+  }, selection: { ...selected.selection!,
+    task_coverage: [...selected.selection!.task_coverage, { facet_id: 'diagnosis', minimum: 1, eligible_count: 0, selected_count: 0, shortfall: 1 }],
+    quota_coverage: [...selected.selection!.quota_coverage, { requirement_index: 1, minimum_items: null, eligible_count: 0, selected_count: 0, shortfall: null }],
+    unresolved_requirement_indices: [1],
+  } })
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  expect(await screen.findByText('Coverage remains incomplete.')).toBeVisible()
+  expect(screen.getByText('The allergy-constrained management requirement is short by 2 items.')).toBeVisible()
+  const taskCoverage = screen.getByRole('region', { name: 'Task coverage' })
+  const rows = within(taskCoverage).getAllByRole('row')
+  expect(within(rows[1]).getAllByRole('cell').map(cell => cell.textContent)).toEqual(['1', '1', '1', '0'])
+  expect(within(rows[2]).getAllByRole('cell').map(cell => cell.textContent)).toEqual(['1', '0', '0', '1'])
+  const quotaCoverage = screen.getByRole('region', { name: 'Coverage requirements in this collection' })
+  expect(within(quotaCoverage).getByRole('heading', { name: 'Coverage requirement 1' }).parentElement).toHaveTextContent('Minimum items: 3 · Eligible: 1 · Selected: 1 · Shortfall: 2')
+  expect(within(quotaCoverage).getByText('This requirement remains unresolved and cannot be claimed as satisfied.')).toBeVisible()
+  expect(within(quotaCoverage).getByRole('heading', { name: 'Coverage requirement 2' }).parentElement).toHaveTextContent('Minimum items: Unresolved · Eligible: 0 · Selected: 0 · Shortfall: Unresolved')
+  const item = screen.getByRole('article', { name: 'Selected item 1' })
+  expect(within(item).getByText('Quality Q: 4.00 / 5')).toBeVisible()
+  expect(within(item).getByText('Output content').parentElement).toHaveTextContent('2 / 5')
+  expect(within(item).getByText('Output form').parentElement).toHaveTextContent('Unknown')
+  expect(within(item).getAllByText('Gate dimension')).toHaveLength(4)
+  expect(within(item).getByText('Choose the indicated first treatment.')).toBeVisible()
+  await user.click(within(item).getByText('Inspect original row and sources'))
+  expect(within(item).getByText(candidates.items[0].search_text)).toBeVisible()
+  expect(within(item).getByText(/"grading_criterion": "Reference answer"/)).toBeVisible()
+})
+
+it('allows selection from stopped partial screening and can later continue the same initial allocation', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'screen-run', run_secret: 'screen-access' }))
+  vi.mocked(api.getReview).mockResolvedValueOnce({ ...screened, status: 'cancelled', screening: { ...screened.screening!, items: [screeningItem] } })
+    .mockResolvedValue({ ...selected, selection_input: { allocated: 4, screened: 1, errors: 0, pending: 3 } })
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Screening stopped' })
+  expect(screen.getByText(/Initial screening is incomplete/)).toHaveTextContent('available so far')
+  expect(screen.getByText(/1 valid assessments · 0 assessment errors · 3 pending items/)).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Select up to 30 items' }))
+  await screen.findByRole('heading', { name: 'Selection has coverage gaps' })
+  expect(screen.getByText(/This selection uses the valid assessments available so far/)).toBeVisible()
+  expect(screen.getByText(/1 completed assessments are retained/)).toHaveTextContent('up to 3 items')
+  await user.type(screen.getByLabelText('OpenAI API key for initial screening'), 'sk-continue')
+  await user.click(screen.getByRole('button', { name: 'Continue screening' }))
+  expect(api.startScreening).toHaveBeenCalledWith({ run_id: 'select-run', run_secret: 'select-access' }, 'sk-continue')
+})
+
+it('shows a fully covered collection without offering to reassess valid items', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'select-run', run_secret: 'select-access' }))
+  vi.mocked(api.getReview).mockResolvedValue({ ...selected,
+    selection_input: { allocated: 1, screened: 1, errors: 0, pending: 0 },
+    selection: { ...selected.selection!, constraints_feasible: true, fully_satisfied: true, gaps: [], quota_coverage: [] },
+  })
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Your candidate collection is ready' })
+  expect(screen.queryByText('Coverage remains incomplete.')).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Continue screening' })).not.toBeInTheDocument()
+  expect(screen.queryByLabelText('OpenAI API key for initial screening')).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Select up to 30 items' })).toBeEnabled()
+})
+
+it('labels retained selection results as previous when a new selection is stopped', async () => {
+  const access = { run_id: 'select-retry', run_secret: 'retry-access' }
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify(access))
+  const retry: api.SelectionReview = { ...selected, run_id: 'select-retry', status: 'running', selection_run_id: 'select-run', message: 'Selecting again.' }
+  vi.mocked(api.getReview).mockResolvedValue(retry)
+  vi.mocked(api.cancelReview).mockResolvedValue({ ...retry, status: 'cancelled', message: 'Selection stopped.' })
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Selecting the benchmark collection' })
+  expect(screen.getByText(/This run has not produced a new completed selection/)).toBeVisible()
+  expect(screen.getByRole('heading', { name: 'Previously selected collection' })).toBeVisible()
+  expect(screen.getByRole('article', { name: 'Selected item 1' })).toBeVisible()
+  expect(screen.queryByRole('button', { name: 'Select up to 30 items' })).not.toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Stop selection' }))
+  await screen.findByRole('heading', { name: 'Selection stopped' })
+  expect(api.cancelReview).toHaveBeenCalledWith(access)
+  expect(screen.getByText(/This run has not produced a new completed selection/)).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Select up to 30 items' }))
+  expect(api.startSelection).toHaveBeenCalledWith(access)
+})
+
+it('exports selection evidence and preserves a previous collection after a solver failure', async () => {
+  const access = { run_id: 'select-failed', run_secret: 'failed-access' }
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify(access))
+  vi.mocked(api.getReview).mockResolvedValue({ ...selected, run_id: 'select-failed', status: 'failed', message: 'Selection could not complete.', selection_run_id: 'select-run' })
+  vi.mocked(api.getReviewExport).mockResolvedValue(new Blob([JSON.stringify(selected)], { type: 'application/json' }))
+  vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:selection')
+  const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Selection interrupted' })
+  expect(screen.getByRole('alert')).toHaveTextContent('Selection could not complete.')
+  expect(screen.getByRole('heading', { name: 'Previously selected collection' })).toBeVisible()
+  await user.click(screen.getByText('Inspect selection policy, exclusions, and solver result'))
+  expect(screen.getByText(/"selection_run_id": "select-run"/)).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Download selection JSON' }))
+  expect(api.getReviewExport).toHaveBeenCalledWith(access)
+  expect(click.mock.instances[0]).toHaveAttribute('download', 'benchmark-selection-select-failed.json')
+})
+
+it('keeps the screening report available if collection selection cannot start', async () => {
+  const access = { run_id: 'screen-run', run_secret: 'screen-access' }
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify(access))
+  vi.mocked(api.getReview).mockResolvedValue({ ...screened, screening: { ...screened.screening!, items: [screeningItem] } })
+  vi.mocked(api.startSelection).mockRejectedValueOnce(new Error('The selection worker is busy.'))
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await user.click(await screen.findByRole('button', { name: 'Select up to 30 items' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('The selection worker is busy.')
+  expect(screen.getByRole('article', { name: 'Screened item 1' })).toBeVisible()
+  expect(screen.getByRole('button', { name: 'Select up to 30 items' })).toBeEnabled()
+  expect(sessionStorage.getItem('item_review_run_v1')).toBe(JSON.stringify(access))
+})
+
+it('renders an initial selection without a result and keeps selection unavailable during active screening', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'screen-run', run_secret: 'screen-access' }))
+  vi.mocked(api.getReview).mockResolvedValue({ ...screened, status: 'running' })
+  const { unmount } = render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Screening initial candidates' })
+  expect(screen.queryByRole('button', { name: 'Select up to 30 items' })).not.toBeInTheDocument()
+  unmount()
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'select-run', run_secret: 'select-access' }))
+  vi.mocked(api.getReview).mockResolvedValue({ ...selected, status: 'preparing', selection: null, selection_run_id: null })
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Selecting the benchmark collection' })
+  expect(screen.getByRole('progressbar', { name: 'Collection selection in progress' })).toBeVisible()
+  expect(screen.queryByRole('article', { name: 'Selected item 1' })).not.toBeInTheDocument()
 })
