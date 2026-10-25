@@ -1,23 +1,29 @@
 """Search all pinned benchmark items without keeping the corpus in memory.
 
-The completed SQLite cache holds original evidence, source references, an FTS5
-keyword index, and BGE vectors. Building streams source rows and embeds bounded
-batches. Searching scans vectors in batches and retains only the best matches.
+The SQLite cache holds row fingerprints, source references, contentless FTS5
+postings, and BGE vectors. Original rows are streamed through bounded embedding
+batches and fetched again only for the final dense/BM25 candidate union.
 """
 
 from __future__ import annotations
 
 from copy import deepcopy
+from contextlib import contextmanager
+import fcntl
+import hashlib
 import heapq
-from itertools import chain
+from itertools import chain, islice
 import json
+import os
 from pathlib import Path
 import re
+import shutil
 import sqlite3
 import tempfile
-from typing import Iterable
+import time
+from typing import Callable, Iterable
 
-from .benchmark_data import BENCHMARK_DATA_VERSION, row_fingerprint, row_search_text
+from .benchmark_data import BENCHMARK_DATA_VERSION, row_fingerprint, row_search_text, row_text
 from .benchmark_encoding import FullRowBGEEncoder
 from .data import fingerprint
 from .onet import MAX_TOKENS, MODEL_ID, MODEL_REVISION, QUERY_INSTRUCTION, RRF_K
@@ -29,7 +35,8 @@ DEFAULT_DENSE_K = 600
 DEFAULT_BM25_K = 600
 ENCODING_BATCH_SIZE = 64
 SCAN_BATCH_SIZE = 2048
-INDEX_VERSION = 2
+INDEX_VERSION = 3
+DEFAULT_MINIMUM_FREE_BYTES = 15_000_000_000
 
 
 def _check_cancelled(cancelled):
@@ -49,6 +56,11 @@ def _policy(encoder) -> dict:
         "method": "bge_bm25_rrf",
         "corpus": "All rows in the selected pinned inventory; no sampling",
         "deduplication": "Exact complete original row; source provenance is outside identity",
+        "storage": {
+            "original_rows": "Fetched from pinned source tables only for the final candidate union",
+            "collision_check": "Independent SHA-512 of the complete canonical original row",
+            "keyword_index": "Contentless FTS5 with default full detail and column-size statistics",
+        },
         "embedding": {
             "model": "custom" if custom else MODEL_ID,
             "revision": None if custom else MODEL_REVISION,
@@ -91,10 +103,10 @@ def _report(progress, stage, completed, total, *, cache_hits=0):
 
 def _schema(connection):
     connection.executescript("""
+        BEGIN;
         CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
         CREATE TABLE items (
-            item_id TEXT PRIMARY KEY, evidence TEXT NOT NULL,
-            search_text TEXT NOT NULL, question_text TEXT NOT NULL
+            item_id TEXT PRIMARY KEY, row_digest BLOB NOT NULL
         );
         CREATE TABLE vectors (item_id TEXT PRIMARY KEY, vector BLOB NOT NULL);
         CREATE TABLE sources (
@@ -102,24 +114,32 @@ def _schema(connection):
             PRIMARY KEY (item_id, source_hash)
         );
         CREATE VIRTUAL TABLE search_fts USING fts5(
-            search_text, content='items', content_rowid='rowid',
+            search_text, content='',
             tokenize='unicode61 remove_diacritics 2'
         );
     """)
 
 
+def _row_digest(row):
+    return hashlib.sha512(row_text(row).encode("utf-8")).digest()
+
+
 def _add_item(connection, item):
+    """Add hashes, postings and provenance within the current batch transaction.
+
+    Return new searchable text only until its vector is computed; raw row text
+    is never stored in the database or its rollback journal.
+    """
     evidence = item["evidence"]
     if not isinstance(evidence, dict) or not isinstance(evidence.get("item"), dict):
         raise ValueError("Benchmark evidence must contain its complete original row")
     row = evidence["item"]
-    text = row_search_text(row)
-    encoded_evidence = _json({"item": row})
     key = row_fingerprint(row)
+    digest = _row_digest(row)
     if item.get("evidence_hash") is not None and item["evidence_hash"] != key:
         raise ValueError("Benchmark evidence_hash must match the complete original row")
-    existing = connection.execute("SELECT evidence FROM items WHERE item_id = ?", (key,)).fetchone()
-    if existing is not None and existing[0] != encoded_evidence:
+    existing = connection.execute("SELECT row_digest FROM items WHERE item_id = ?", (key,)).fetchone()
+    if existing is not None and existing[0] != digest:
         raise ValueError(f"Conflicting original rows for evidence_hash {key}")
     sources = list(item.get("sources", []))
     if "source" in item:
@@ -127,71 +147,81 @@ def _add_item(connection, item):
     if not sources or any(not isinstance(source, dict) or not isinstance(source.get("benchmark"), str)
                           or not source["benchmark"].strip() for source in sources):
         raise ValueError("Every benchmark item requires source provenance with a benchmark identifier")
+    text = None
     if existing is None:
-        # Keep the original row unchanged; source/benchmark context is not part
-        # of row identity, searched text, or the canonical evidence payload.
-        saved_evidence = {"item": row}
+        text = row_search_text(row)
         cursor = connection.execute(
-            "INSERT INTO items(item_id, evidence, search_text, question_text) VALUES (?, ?, ?, ?)",
-            (key, encoded_evidence, text, question_text(saved_evidence)),
+            "INSERT INTO items(item_id, row_digest) VALUES (?, ?)", (key, digest),
         )
         connection.execute("INSERT INTO search_fts(rowid, search_text) VALUES (?, ?)", (cursor.lastrowid, text))
-    connection.executemany(
+    inserted = connection.executemany(
         "INSERT OR IGNORE INTO sources(item_id, source_hash, source) VALUES (?, ?, ?)",
         ((key, fingerprint(source), _json(source)) for source in sources),
     )
+    return key, text, inserted.rowcount
+
+
+def _checkpoint(connection, state):
+    # Source offset, identities, postings, provenance and vectors commit
+    # together. An interrupted batch is retried without losing any raw rows.
+    connection.execute("INSERT OR REPLACE INTO metadata(key, value) VALUES ('build_state', ?)",
+                       (_json(state),))
+    connection.commit()
 
 
 def _build(connection, items, inventory, encoder, policy, cancelled, progress):
-    _schema(connection)
-    source_rows = 0
-    estimated_rows = sum(table.get("row_count", 0) for table in inventory.get("tables", []))
-    _report(progress, "loading", 0, estimated_rows)
-    for item in items:
-        _check_cancelled(cancelled)
-        _add_item(connection, item)
-        source_rows += 1
-        if source_rows % 1024 == 0:
-            connection.commit()
-            _report(progress, "loading", source_rows, estimated_rows)
-    expected_counts = [table.get("row_count") for table in inventory["tables"]]
-    if all(type(value) is int and value >= 0 for value in expected_counts):
-        if source_rows != sum(expected_counts):
-            raise ValueError("Loaded benchmark row count differs from the pinned inventory")
-    connection.commit()
-    _report(progress, "loading", source_rows, source_rows)
-    count = lambda sql: connection.execute(sql).fetchone()[0]
-    stats = {
-        "source_rows": source_rows,
-        "total_items": count("SELECT COUNT(*) FROM items"),
-        "indexed_items": count("SELECT COUNT(*) FROM items"),
-        "contentless_items": 0,
-        "source_references": count("SELECT COUNT(*) FROM sources"),
-        "unique_documents": count("SELECT COUNT(*) FROM items"),
-        "embedded_documents": 0, "cache_hit": False,
+    saved = connection.execute("SELECT value FROM metadata WHERE key = 'build_state'").fetchone()
+    state = json.loads(saved[0]) if saved else {
+        "source_rows": 0, "dimensions": policy["embedding"]["dimensions"],
+        "stats": {"source_rows": 0, "total_items": 0, "indexed_items": 0,
+                  "contentless_items": 0, "source_references": 0, "unique_documents": 0,
+                  "embedded_documents": 0, "cache_hit": False},
     }
-    dimensions = policy["embedding"]["dimensions"]
-    _report(progress, "embedding", 0, stats["unique_documents"])
-    last_id = 0
-    while True:
+    stats, source_rows = state["stats"], state["source_rows"]
+    estimated_rows = sum(table.get("row_count", 0) for table in inventory.get("tables", []))
+    _report(progress, "indexing", source_rows, estimated_rows)
+    pending = []
+
+    def flush():
         _check_cancelled(cancelled)
-        batch = connection.execute(
-            "SELECT rowid, item_id, search_text FROM items WHERE rowid > ? ORDER BY rowid LIMIT ?",
-            (last_id, ENCODING_BATCH_SIZE),
-        ).fetchall()
-        if not batch:
-            break
-        vectors = _encode(encoder, [text for _, _, text in batch], dimensions, cancelled)
-        dimensions = vectors.shape[1]
-        connection.executemany(
-            "INSERT INTO vectors(item_id, vector) VALUES (?, ?)",
-            ((row[1], vector.astype("<f4").tobytes()) for row, vector in zip(batch, vectors)),
-        )
-        connection.commit()
-        last_id = batch[-1][0]
-        stats["embedded_documents"] += len(batch)
-        _report(progress, "embedding", stats["embedded_documents"], stats["unique_documents"])
-    policy["embedding"]["dimensions"] = dimensions
+        if pending:
+            vectors = _encode(encoder, [text for _, text in pending], state["dimensions"], cancelled)
+            state["dimensions"] = vectors.shape[1]
+            connection.executemany(
+                "INSERT INTO vectors(item_id, vector) VALUES (?, ?)",
+                ((row[0], vector.astype("<f4").tobytes()) for row, vector in zip(pending, vectors)),
+            )
+            stats["embedded_documents"] += len(pending)
+        state["source_rows"] = stats["source_rows"] = source_rows
+        _check_cancelled(cancelled)
+        _checkpoint(connection, state)
+        pending.clear()
+        _report(progress, "indexing", source_rows, estimated_rows)
+
+    # Factories can skip committed tables/row groups without fetching them.
+    remaining = items(source_rows) if callable(items) else islice(items, source_rows, None)
+    try:
+        for item in remaining:
+            _check_cancelled(cancelled)
+            key, text, references = _add_item(connection, item)
+            source_rows += 1
+            stats["source_references"] += references
+            if text is not None:
+                pending.append((key, text))
+                for field in ("total_items", "indexed_items", "unique_documents"):
+                    stats[field] += 1
+            if len(pending) == ENCODING_BATCH_SIZE or source_rows % 1024 == 0:
+                flush()
+        expected_counts = [table.get("row_count") for table in inventory["tables"]]
+        if all(type(value) is int and value >= 0 for value in expected_counts):
+            if source_rows != sum(expected_counts):
+                raise ValueError("Loaded benchmark row count differs from the pinned inventory")
+        estimated_rows = source_rows
+        flush()
+    finally:
+        if callable(items) and hasattr(remaining, "close"):
+            remaining.close()
+    policy["embedding"]["dimensions"] = state["dimensions"]
     _check_cancelled(cancelled)
     connection.execute("INSERT INTO search_fts(search_fts) VALUES ('optimize')")
     connection.commit()
@@ -205,7 +235,7 @@ class BenchmarkIndex:
     Only shortlisted records are decoded into full evidence objects in memory.
     """
 
-    def __init__(self, path, encoder=None, *, cache_hit=True):
+    def __init__(self, path, encoder=None, *, cache_hit=True, row_loader=None):
         self.path = Path(path)
         self._connection = sqlite3.connect(self.path.resolve().as_uri() + "?mode=ro", uri=True)
         try:
@@ -213,13 +243,22 @@ class BenchmarkIndex:
             if json.loads(metadata.get("complete", "false")) is not True:
                 raise ValueError("Benchmark cache is incomplete")
             self._policy = json.loads(metadata["policy"])
+            if self._policy["version"] != INDEX_VERSION:
+                raise ValueError("Benchmark cache storage version differs; prepare a new index")
             self._stats = json.loads(metadata["stats"])
             self._cache_key = json.loads(metadata["cache_key"])
+            self._inventory = json.loads(metadata["inventory"])
         except Exception:
             self._connection.close()
             raise
         self._stats["cache_hit"] = cache_hit
         self._encoder = encoder if encoder is not None else FullRowBGEEncoder()
+        self._row_loader = row_loader if row_loader is not None else self._fetch_rows
+
+    def _fetch_rows(self, requests, *, cancelled=None):
+        from .benchmark_rows import fetch_benchmark_rows
+
+        return fetch_benchmark_rows(self._inventory, requests, cancelled=cancelled)
 
     @property
     def policy(self):
@@ -293,15 +332,32 @@ class BenchmarkIndex:
                     candidate[f"{method}_score"] = score
                     candidate["rrf_score"] += 1.0 / (RRF_K + rank)
             ordered = sorted(candidates.values(), key=lambda row: (-row["rrf_score"], row["item_id"]))
+            requests, digests = [], {}
             for rank, candidate in enumerate(ordered, 1):
                 _check_cancelled(cancelled)
                 key = candidate["item_id"]
-                evidence, text, preview = self._connection.execute(
-                    "SELECT evidence, search_text, question_text FROM items WHERE item_id = ?", (key,)
-                ).fetchone()
-                candidate.update(rank=rank, evidence=json.loads(evidence), search_text=text, question_text=preview,
-                                 sources=[json.loads(row[0]) for row in self._connection.execute(
-                                     "SELECT source FROM sources WHERE item_id = ? ORDER BY source_hash", (key,))])
+                digests[key] = self._connection.execute(
+                    "SELECT row_digest FROM items WHERE item_id = ?", (key,),
+                ).fetchone()[0]
+                sources = [json.loads(row[0]) for row in self._connection.execute(
+                    "SELECT source FROM sources WHERE item_id = ? ORDER BY source_hash", (key,),
+                )]
+                candidate.update(rank=rank, sources=sources)
+                requests.append({"item_id": key, "sources": deepcopy(sources)})
+            if requests:
+                rows = self._row_loader(requests, cancelled=cancelled)
+                _check_cancelled(cancelled)
+                if not isinstance(rows, dict) or set(rows) != set(candidates):
+                    raise ValueError("Fetched benchmark rows must exactly match the shortlisted item IDs")
+                for candidate in ordered:
+                    _check_cancelled(cancelled)
+                    key = candidate["item_id"]
+                    row = rows[key]
+                    if row_fingerprint(row) != key or _row_digest(row) != digests[key]:
+                        raise ValueError(f"Fetched benchmark row does not match its indexed identity: {key}")
+                    evidence = {"item": deepcopy(row)}
+                    candidate.update(evidence=evidence, search_text=row_search_text(row),
+                                     question_text=question_text(evidence))
             self._policy["candidate_limits"] = {"dense_k": dense_k, "bm25_k": bm25_k}
             return ordered
         except sqlite3.OperationalError:
@@ -311,28 +367,72 @@ class BenchmarkIndex:
             self._connection.set_progress_handler(None, 0)
 
 
-def prepare_benchmark_index(items: Iterable[dict], cache_dir=None, inventory=None,
-                            encoder=None, cancelled=None, progress=None) -> BenchmarkIndex:
+@contextmanager
+def _build_lock(directory, cancelled):
+    """Serialize builders across website and preparation processes.
+
+    Locking the directory inode avoids stale lock files and unlink races. The
+    kernel releases the lock if a worker exits, including an abrupt termination.
+    """
+    descriptor = os.open(directory, os.O_RDONLY)
+    try:
+        while True:
+            _check_cancelled(cancelled)
+            try:
+                fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                time.sleep(0.1)
+        yield
+    finally:
+        os.close(descriptor)
+
+
+def prepare_benchmark_index(items: Iterable[dict] | Callable[[int], Iterable[dict]],
+                            cache_dir=None, inventory=None, encoder=None,
+                            cancelled=None, progress=None, *, resume=False,
+                            minimum_free_bytes=0, row_loader=None) -> BenchmarkIndex:
     """Reuse a completed cache or atomically build one from all supplied rows.
 
     Cache identity includes the pinned inventory, loader version, and complete
     indexing/encoding policy. A cache hit does not consume ``items``. The caller
-    retains ownership of the source iterator and must close it when appropriate.
-    Cancellation or failure removes the unpublished temporary database.
+    retains ownership of a supplied iterator. Alternatively, ``items`` can be a
+    factory taking the committed source-row offset; its iterator is closed here.
+    With ``resume=True``, committed rows and embeddings survive interruption in
+    an unpublished checkpoint. The same pinned inventory and policy must be
+    supplied on retry. Incomplete checkpoints are never opened for search.
+    ``row_loader(requests, *, cancelled=None)`` may supply shortlisted original
+    rows for offline use; the default fetches them from the pinned inventory.
     """
     if not isinstance(inventory, dict) or not inventory.get("tables"):
         raise ValueError("A pinned benchmark inventory with tables is required")
     if any(not table.get("commit") for table in inventory["tables"]):
         raise ValueError("Every benchmark table must identify its pinned commit")
+    if type(minimum_free_bytes) is not int or minimum_free_bytes < 0:
+        raise ValueError("Minimum free disk bytes must be a nonnegative integer")
     _check_cancelled(cancelled)
     policy = _policy(encoder)
     cache_key = fingerprint({"inventory": inventory, "policy": policy})
     directory = Path(cache_dir) if cache_dir is not None else DEFAULT_CACHE_DIR
     directory.mkdir(parents=True, exist_ok=True, mode=0o700)
     directory.chmod(0o700)
+
+    def guarded_progress(state):
+        if state["stage"] != "cache" and shutil.disk_usage(directory).free < minimum_free_bytes:
+            raise OSError(f"Free disk space is below the {minimum_free_bytes / 1e9:g} GB reserve")
+        if progress is not None:
+            progress(state)
+
+    with _build_lock(directory, cancelled):
+        return _prepare_locked(items, directory, inventory, encoder, cancelled,
+                               guarded_progress, resume, policy, cache_key, row_loader)
+
+
+def _prepare_locked(items, directory, inventory, encoder, cancelled, progress,
+                    resume, policy, cache_key, row_loader):
     path = directory / f"{cache_key}.sqlite3"
     if path.exists():
-        index = BenchmarkIndex(path, encoder, cache_hit=True)
+        index = BenchmarkIndex(path, encoder, cache_hit=True, row_loader=row_loader)
         if index._cache_key != cache_key:
             index.close()
             raise ValueError("Benchmark cache identity does not match the pinned inventory")
@@ -340,29 +440,53 @@ def prepare_benchmark_index(items: Iterable[dict], cache_dir=None, inventory=Non
                 cache_hits=index.stats["unique_documents"])
         return index
     encoder = encoder if encoder is not None else FullRowBGEEncoder()
-    with tempfile.NamedTemporaryFile(prefix="building-", suffix=".sqlite3", dir=directory, delete=False) as handle:
-        temporary = Path(handle.name)
+    if resume:
+        temporary = directory / f"{cache_key}.building.sqlite3"
+        temporary.touch(mode=0o600, exist_ok=True)
+    else:
+        with tempfile.NamedTemporaryFile(prefix="building-", suffix=".sqlite3", dir=directory, delete=False) as handle:
+            temporary = Path(handle.name)
     connection = None
     try:
         connection = sqlite3.connect(temporary)
+        connection.execute("PRAGMA cache_size = -262144")  # Bound build page cache to 256 MiB.
         connection.set_progress_handler(lambda: int(bool(cancelled and cancelled())), 1000)
+        if not connection.execute("SELECT name FROM sqlite_master WHERE name = 'metadata'").fetchone():
+            _schema(connection)
+            connection.execute("INSERT INTO metadata(key, value) VALUES ('cache_key', ?)", (_json(cache_key),))
+            connection.commit()
+        else:
+            saved = connection.execute("SELECT value FROM metadata WHERE key = 'cache_key'").fetchone()
+            if saved is None or json.loads(saved[0]) != cache_key:
+                raise ValueError("Benchmark checkpoint identity does not match the pinned inventory")
+            complete = connection.execute("SELECT value FROM metadata WHERE key = 'complete'").fetchone()
+            if complete and json.loads(complete[0]) is True:
+                # Recover a termination between final commit and publication.
+                connection.close()
+                connection = None
+                _check_cancelled(cancelled)
+                temporary.replace(path)
+                return BenchmarkIndex(path, encoder, cache_hit=False, row_loader=row_loader)
         stats = _build(connection, items, inventory, encoder, policy, cancelled, progress)
         _check_cancelled(cancelled)
-        connection.executemany("INSERT INTO metadata(key, value) VALUES (?, ?)",
+        connection.execute("DELETE FROM metadata WHERE key = 'build_state'")
+        connection.executemany("INSERT OR REPLACE INTO metadata(key, value) VALUES (?, ?)",
                                ((key, _json(value)) for key, value in {
-                                   "complete": True, "policy": policy, "stats": stats, "cache_key": cache_key,
+                                   "complete": True, "policy": policy, "stats": stats,
+                                   "cache_key": cache_key, "inventory": inventory,
                                }.items()))
         connection.commit()
         connection.close()
         connection = None
         _check_cancelled(cancelled)
         temporary.replace(path)
-        return BenchmarkIndex(path, encoder, cache_hit=False)
+        return BenchmarkIndex(path, encoder, cache_hit=False, row_loader=row_loader)
     except sqlite3.OperationalError:
         _check_cancelled(cancelled)
         raise
     finally:
         if connection is not None:
             connection.close()
-        temporary.unlink(missing_ok=True)
-        Path(str(temporary) + "-journal").unlink(missing_ok=True)
+        if not resume:
+            temporary.unlink(missing_ok=True)
+            Path(str(temporary) + "-journal").unlink(missing_ok=True)

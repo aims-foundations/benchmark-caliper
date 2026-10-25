@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ItemReview } from './ItemReview'
 import * as api from './api'
 
 vi.mock('./api', async importOriginal => ({
   ...await importOriginal<typeof import('./api')>(),
-  getCatalog: vi.fn(), startReview: vi.fn(), startGrounding: vi.fn(), startBenchmarkRetrieval: vi.fn(), startScreening: vi.fn(), startSelection: vi.fn(), startAdaptive: vi.fn(), getCandidates: vi.fn(), getReview: vi.fn(), cancelReview: vi.fn(), getReviewExport: vi.fn(),
+  getCatalog: vi.fn(), startReview: vi.fn(), startGrounding: vi.fn(), startBenchmarkRetrieval: vi.fn(), startScreening: vi.fn(), startSelection: vi.fn(), startAdaptive: vi.fn(), getCandidates: vi.fn(), getReview: vi.fn(), cancelReview: vi.fn(), getReviewExport: vi.fn(), getReviewPackage: vi.fn(),
 }))
 
 const catalog: api.Catalog = { model: 'gpt-6-luna', reasoning_effort: 'high', max_output_tokens: 25000,
@@ -161,6 +161,108 @@ beforeEach(() => {
   vi.mocked(api.getReview).mockResolvedValue(completed)
 })
 afterEach(() => vi.restoreAllMocks())
+
+it('submits an optional run name separately from the six deployment answers', async () => {
+  vi.mocked(api.getReview).mockResolvedValue({ ...extracted, metadata: {
+    export_version: 1, run_name: 'Medical goal · first attempt', created_at: '2026-10-25T12:00:00Z',
+    finished_at: '2026-10-25T12:01:00Z', result_state: 'stage_complete' as const, usage_scope: 'current_run' as const,
+  } })
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await user.type(await screen.findByLabelText('OpenAI API key'), 'sk-test-private')
+  await user.click(screen.getByRole('button', { name: 'Continue to deployment' }))
+  await user.click(screen.getByRole('button', { name: 'Use mathematics tutor example' }))
+  await user.type(screen.getByLabelText('Run name (optional)'), '  Medical goal · first attempt  ')
+  await user.click(screen.getByRole('button', { name: 'Extract requirements' }))
+  await screen.findByRole('heading', { name: 'Your extracted requirements are ready' })
+  expect(api.startReview).toHaveBeenCalledWith({
+    deployment: expect.objectContaining({ task: expect.stringContaining('mathematics tutor') }),
+    mode: 'requirements', run_name: 'Medical goal · first attempt',
+  }, 'sk-test-private')
+  expect(screen.getByText('Run name:').parentElement).toHaveTextContent('Medical goal · first attempt')
+  expect(screen.queryByLabelText('Run name (optional)')).not.toBeInTheDocument()
+  expect(sessionStorage.getItem('item_review_run_v1')).not.toContain('sk-test-private')
+  expect(sessionStorage.getItem('item_review_run_v1')).not.toContain('Medical goal')
+})
+
+it.each([extracted, grounded, retrieved, screened, selected, adapted])('offers one package download for the $mode stage alongside its JSON export', async review => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: review.run_id, run_secret: 'private-access' }))
+  vi.mocked(api.getReview).mockResolvedValue(review)
+  render(<ItemReview />)
+  const packagePanel = await screen.findByRole('region', { name: 'Save and share results' })
+  expect(screen.getAllByRole('button', { name: 'Download results package' })).toHaveLength(1)
+  expect(screen.getByRole('button', { name: /Download .* JSON/ })).toBeEnabled()
+  expect(within(packagePanel).getByText(/HTML report/)).toHaveTextContent('CSV of the selected items, and the complete JSON record')
+  expect(within(packagePanel).getByText(/Download before results expire/)).toHaveTextContent('one hour after this run ends')
+  expect(within(packagePanel).getByText(review.mode === 'adaptive' ? 'Frozen collection' : 'Stage complete')).toBeVisible()
+})
+
+it.each(['running', 'cancelled', 'failed'] as const)('labels a %s stage as a partial snapshot and keeps its package available', async status => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: extracted.run_id, run_secret: 'private-access' }))
+  vi.mocked(api.getReview).mockResolvedValue({ ...extracted, status })
+  render(<ItemReview />)
+  const packagePanel = await screen.findByRole('region', { name: 'Save and share results' })
+  expect(within(packagePanel).getByText('Partial snapshot')).toBeVisible()
+  expect(within(packagePanel).getByRole('button', { name: 'Download results package' })).toBeEnabled()
+  expect(within(packagePanel).queryByText('Stage complete')).not.toBeInTheDocument()
+})
+
+it('keeps one package panel when the catalog arrives after a restored selection', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: selected.run_id, run_secret: 'private-access' }))
+  let resolveCatalog!: (value: api.Catalog) => void
+  vi.mocked(api.getCatalog).mockReturnValue(new Promise(resolve => { resolveCatalog = resolve }))
+  vi.mocked(api.getReview).mockResolvedValue(selected)
+  render(<ItemReview />)
+  await screen.findByRole('button', { name: 'Download results package' })
+  expect(screen.getByText('Loading the demo…')).toBeVisible()
+  await act(async () => { resolveCatalog(catalog) })
+  expect(screen.queryByText('Loading the demo…')).not.toBeInTheDocument()
+  expect(screen.getAllByRole('region', { name: 'Save and share results' })).toHaveLength(1)
+  expect(screen.getAllByRole('button', { name: 'Download results package' })).toHaveLength(1)
+  expect(screen.getByRole('button', { name: 'Download selection JSON' })).toBeEnabled()
+})
+
+it('uses the package response filename and releases its browser download URL', async () => {
+  const access = { run_id: extracted.run_id, run_secret: 'private-access' }
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify(access))
+  vi.mocked(api.getReview).mockResolvedValue(extracted)
+  const blob = new Blob(['zip'], { type: 'application/zip' })
+  vi.mocked(api.getReviewPackage).mockResolvedValue({ blob, filename: 'medical-goal-requirements.zip' })
+  const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:package')
+  const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+  const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await user.click(await screen.findByRole('button', { name: 'Download results package' }))
+  expect(api.getReviewPackage).toHaveBeenCalledWith(access)
+  expect(create).toHaveBeenCalledWith(blob)
+  expect(click.mock.instances[0]).toHaveAttribute('download', 'medical-goal-requirements.zip')
+  expect(revoke).not.toHaveBeenCalledWith('blob:package')
+  await waitFor(() => expect(revoke).toHaveBeenCalledWith('blob:package'), { timeout: 1500 })
+  expect(screen.getByRole('button', { name: 'Download results package' })).toBeEnabled()
+})
+
+it('keeps results and JSON export available when the package download fails', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: extracted.run_id, run_secret: 'private-access' }))
+  vi.mocked(api.getReview).mockResolvedValue(extracted)
+  vi.mocked(api.getReviewPackage).mockRejectedValue(new Error('The package could not be prepared. Try again.'))
+  const create = vi.spyOn(URL, 'createObjectURL')
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await user.click(await screen.findByRole('button', { name: 'Download results package' }))
+  expect(screen.getByRole('alert')).toHaveTextContent('The package could not be prepared. Try again.')
+  expect(screen.getByRole('heading', { name: 'Task facets' })).toBeVisible()
+  expect(screen.getByRole('button', { name: 'Download results package' })).toBeEnabled()
+  expect(screen.getByRole('button', { name: 'Download requirements JSON' })).toBeEnabled()
+  expect(create).not.toHaveBeenCalled()
+})
+
+it('does not offer pipeline packages for the separate sample item review', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: completed.run_id, run_secret: 'private-access' }))
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Your item review is ready' })
+  expect(screen.queryByRole('button', { name: 'Download results package' })).not.toBeInTheDocument()
+})
 
 it('explains the sample and paid shortlist, and starts only on submission', async () => {
   const user = userEvent.setup()
@@ -1039,6 +1141,8 @@ it('validates user-supplied ceiling, prices, and seed before authorizing adaptiv
   render(<ItemReview />)
   await user.type(await screen.findByLabelText('OpenAI API key for adaptive screening'), 'sk-priced')
   await user.click(screen.getByRole('checkbox', { name: 'Set an additional screening cost ceiling' }))
+  expect(screen.getByText(/Cache writes use 1.25×/)).toHaveTextContent('Reservations include the default 30-minute write rate')
+  expect(screen.getByText(/Above 272,000 input tokens/)).toHaveTextContent('all input and cache rates double')
   const button = screen.getByRole('button', { name: 'Start adaptive screening' })
   expect(button).toBeDisabled()
   await user.type(screen.getByLabelText('Additional screening cost ceiling (USD)'), '1.25')
@@ -1183,5 +1287,7 @@ it('reports supplied token prices and estimated spending when no cost ceiling wa
   await screen.findByRole('heading', { name: 'Benchmark collection frozen' })
   expect(screen.getByText(/Estimated spent:/)).toHaveTextContent('Estimated spent: $0.5000 · Reserved: $0.0000 · Ceiling: Not set')
   expect(screen.getByText(/Prices per million tokens:/)).toHaveTextContent('input $2, cached input $1, output $8')
+  expect(screen.getByText(/Cached input means cache reads/)).toHaveTextContent('2.5× for 12 hours, replacing the ordinary input charge')
+  expect(screen.getByText(/Requests above 272,000 input tokens/)).toHaveTextContent('1.5× the output rate for the whole request')
   expect(screen.queryByText(/without an assumed dollar price/)).not.toBeInTheDocument()
 })

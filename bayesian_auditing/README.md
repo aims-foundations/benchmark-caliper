@@ -45,6 +45,15 @@ they expire. The preview can continue to O*NET grounding below. Tests use
 mocked model responses, including a human-authored
 extraction of the paper's worked example; they do not measure live LLM quality.
 
+Steps 2–7 also offer **Download results package**: a standalone HTML report,
+selected-item CSV, and complete `results.json` in one ZIP. An optional run name
+carries through continuations; exports record UTC dates and partial/stage/frozen
+status. `stage_usage` retains available token counts from preceding runs while
+top-level `usage` continues to cover only the current run. Step 7 dollar estimates
+remain separate from earlier-stage costs. Download before the one-hour expiry;
+the ZIP can be reviewed offline but cannot restore a website session. See the
+[website export documentation](../website/README.md#saving-and-sharing-construction-results).
+
 ## Step 3: ground task vocabulary with O*NET
 
 After a successful extraction, choose **Ground with O*NET** in the requirements
@@ -144,10 +153,11 @@ with no adopted record is valid and searches using the existing task context.
 The exact query, adopted record IDs, and refinement evidence remain inspectable.
 There is no additional LLM query-generation request.
 
-[`benchmark_index.py`](benchmark_index.py) streams the whole item bank into a
-local SQLite index. Every column of each `items.parquet` row is preserved under
-`evidence.item`, and the complete row is serialized as `search_text` for both
-search methods using sorted field labels and original string values, including
+[`benchmark_index.py`](benchmark_index.py) streams the whole item bank to build
+a local SQLite search index. It saves vectors, keyword postings, row hashes,
+and pinned source locations. Original rows and rendered text are not stored in
+this corpus cache. Both search methods use every field of the complete row,
+rendered using sorted field labels and original string values, including
 literal whitespace. Canonical JSON is used separately for exact-row identity;
 JSON stored inside a string cell is preserved without parsing or normalizing it.
 This includes identifiers, questions, answers, grading criteria,
@@ -155,7 +165,17 @@ and any other fields present in the source row. A row without a conventional
 question field is still searchable. Rows are duplicates only when their complete
 contents match, including identifiers; matching question text alone does not
 combine them. Every distinct source reference is retained. The separate
-`question_text` field is only a convenient display preview.
+`question_text` field in retrieved candidates is only a convenient display preview.
+
+After ranking, [`benchmark_rows.py`](benchmark_rows.py) fetches the shortlisted
+rows from the same pinned Hugging Face commits. Requests share table reads and
+only the required Parquet row groups are read, with every original column kept.
+Source references and complete-row hashes are checked before a candidate is
+returned. Each candidate then contains the original row under `evidence.item`,
+its reconstructed `search_text`, and its display preview. These complete
+candidates remain in the run's retrieval artifact for screening and export.
+Dataset access is therefore needed during Step 4 even when the index is cached;
+later steps use the saved candidates without further dataset reads.
 
 Each task uses two searches:
 
@@ -183,17 +203,43 @@ a shared set of successfully screened IDs; retrieving or stopping a run does not
 mark candidates as screened. Step 4 ends at retrieval; the completed preview
 offers a separate action to start the initial screening below.
 
-The first index build reads the complete bank and computes local BGE
-vectors, so it can require substantial time and disk. Evidence, source references,
-and vectors remain on disk instead of materializing the full corpus in memory.
+The first index build reads the complete bank and computes local BGE vectors,
+so it can require substantial time and disk. Bounded batches of original rows
+are encoded and indexed, then released. The corpus cache retains vectors,
+contentless FTS5 keyword postings and document lengths, row hashes, and source
+references; it does not retain original rows, rendered search text, or previews.
 The website caches completed indexes under
 `WEBSITE_DATA_DIR/benchmark-retrieval-index/`; direct Python use defaults to
 `~/.cache/benchmark-caliper/benchmark-index/`. Cache identity includes the complete
 pinned main-branch inventory, loader version, and indexing/encoding policy.
-Updated source commits or policies create a separate cache. Interrupted or
-failed builds are not published and must be restarted. Cached indexes contain
-dataset evidence and vectors, not
-user deployment answers, query vectors, or provider keys.
+Updated source commits or policies create a separate cache. Website builds keep
+unpublished checkpoints after interruptions or failures. Retrying the same
+inventory resumes after the last batch of committed source references, keyword
+entries, and vectors; it skips completed source tables and row groups. Only a
+fully completed index becomes searchable. A
+filesystem lock prevents the website and an administrative preparation process
+from building duplicate copies simultaneously. Both stop building if available
+disk space falls below a 15 GB reserve. User deployment answers, query vectors,
+and provider keys are not part of the corpus cache. The storage version is part
+of cache identity, so earlier indexes containing full rows are not reused.
+
+To prepare the full index before opening Step 4 on the website, use the same
+data directory as the server:
+
+```bash
+CUDA_VISIBLE_DEVICES=4 .venv/bin/python -m bayesian_auditing.prepare_benchmark_index \
+  --cache-dir results/local-website/benchmark-retrieval-index \
+  --device cuda --batch-size 64
+```
+
+Choose an available device for your server. This command reads the website's
+pinned inventory, uses every original row, and makes no paid API calls. It
+writes progress and stage-time estimates to `preparation-status.json` in the
+cache directory. Repeating it resumes saved work. After completion it verifies
+a real dense/BM25 search, original row hashes, and cache reuse, then records
+those checks in the same status file. The command's `--help` describes device,
+batch, inventory, and disk-reserve options. These operational settings do not
+change the retrieval policy or the cache identity.
 
 Install the existing retrieval dependencies and configure authorized Hugging
 Face dataset access on the server. The pinned BGE model is downloaded once if
@@ -440,13 +486,28 @@ screening; its gaps remain visible for expert review. Freezing does not establis
 model performance or validate the screening judgments.
 
 An optional dollar ceiling is set before starting, together with explicit input,
-cached-input, and output prices per million tokens. Prices are supplied by the
-caller, never inferred from a model name. The ceiling covers **new Step 7
+cached-input, and output prices per million tokens. Supply base prices for up to
+272,000 input tokens, including the account's processing tier and regional rates.
+Dollar prices are supplied by the caller, never inferred from a model name. The ceiling covers **new Step 7
 screening calls only**, excluding the earlier extraction, grounding, and initial
 screening costs. Request admission reserves a conservative estimate from the
-serialized request size and maximum output tokens; provider-reported usage then
-settles that reservation, counting cached input separately and output reasoning
-tokens within output tokens. This is an admission estimate, not a guaranteed
+serialized request size and maximum output tokens, pricing reserved input at
+GPT-6 Luna's default 30-minute cache-write rate (1.25 times the supplied input
+price). Provider-reported usage settles that reservation: ordinary input, cache
+reads, 30-minute writes (1.25 times input), and 12-hour writes (2.5 times input)
+are disjoint charges; output includes reasoning tokens. The write rates replace
+ordinary input charges, rather than adding to them. Positive cache writes
+without a valid lifetime breakdown remain unknown and keep their reservation.
+The multipliers follow the [OpenAI prompt-caching documentation](https://developers.openai.com/api/docs/guides/prompt-caching).
+For more than 272,000 total input tokens, all input and cache rates double and
+output rates multiply by 1.5 for the entire request, following the
+[GPT-6 Luna pricing policy](https://developers.openai.com/api/docs/models/gpt-6-luna).
+Reservations apply that tier using the conservative input estimate; returned
+usage determines the tier for the settled charge.
+Cost-policy version 2 is saved separately from the adaptive policy; pre-fix
+ledgers cannot resume with silently changed accounting. The reservation policy
+supports the configured GPT-6 Luna model with default caching; changed models
+or cache settings require a reviewed cost policy. This is an admission estimate, not a guaranteed
 provider bill. Unknown usage remains explicitly recorded with its reservation;
 it is never silently assigned zero cost. SDK retries are disabled so retries are
 explicit attempts in this ledger. Without configured prices, dollar amounts

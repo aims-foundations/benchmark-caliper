@@ -10,6 +10,7 @@ import { BenchmarkRetrievalResults } from './BenchmarkRetrievalResults'
 import { ScreeningResults } from './ScreeningResults'
 import { SelectionResults } from './SelectionResults'
 import { AdaptiveResults } from './AdaptiveResults'
+import { ResultPackage } from './ResultPackage'
 import { QUESTIONS } from './deployment'
 
 const RUN_STORAGE = 'item_review_run_v1'
@@ -35,6 +36,7 @@ export function ItemReview() {
   const [step, setStep] = useState<'access' | 'deployment' | 'confirm'>('access')
   const [apiKey, setApiKey] = useState('')
   const [deployment, setDeployment] = useState<Deployment>(EMPTY)
+  const [runName, setRunName] = useState('')
   const [retrieveK, setRetrieveK] = useState('20')
   const [retrievalQuery, setRetrievalQuery] = useState('')
   const [page, setPage] = useState(1)
@@ -100,7 +102,7 @@ export function ItemReview() {
     setBusy(true)
     setError('')
     try {
-      const run = await startReview(mode === 'requirements' ? { deployment, mode }
+      const run = await startReview(mode === 'requirements' ? { deployment, mode, ...(runName.trim() ? { run_name: runName.trim() } : {}) }
         : { deployment, retrieve_k: Number(retrieveK), ...(retrievalQuery.trim() ? { retrieval_query: retrievalQuery } : {}) }, apiKey.trim())
       // The OpenAI key stays in React memory only and is cleared once handed off.
       setApiKey('')
@@ -267,6 +269,10 @@ export function ItemReview() {
           {!access && catalog && step === 'deployment' && <form className="review-panel review-deployment" onSubmit={submitDeployment}>
             <p className="eyebrow">02 · Your deployment</p><h2>What are you building?</h2>
             <p className="review-intro">Help us understand the real setting. Your answers guide what a relevant test should measure.</p>
+            <label className="review-field"><span>Run name (optional)</span>
+              <input value={runName} onChange={e => setRunName(e.target.value)} disabled={busy} aria-describedby="run-name-hint" placeholder="For example, Medical study goal · first run" />
+            </label>
+            <p className="help" id="run-name-hint">Name the benchmark-construction run so its downloaded results are easy to identify. The name carries through requirements extraction and later stages.</p>
             <div className="review-example"><div><strong>Need a starting point?</strong><p>Fill in a mathematics tutor scenario, then make it your own. Filling the form is free.</p></div>
               <button type="button" className="secondary" disabled={busy} onClick={() => setDeployment(EXAMPLE)}>Use mathematics tutor example</button></div>
             <div className="review-questions">{QUESTIONS.map((q, i) => <div className={`review-question review-question-${q.id}`} key={q.id}>
@@ -325,6 +331,7 @@ export function ItemReview() {
               <button type="button" onClick={() => void start()} disabled={busy || !catalog.dataset_access_configured || catalog.table_count === 0 || !validRetrieveK}>{busy ? 'Starting…' : 'Retrieve and assess shortlist'}</button></div>
           </section>}
 
+          {access && review && 'requirements' in review && <ResultPackage key={`package-${access.run_id}`} review={review} run={access} />}
           {access && review?.mode === 'requirements' && <RequirementsResults review={review} run={access} busy={busy} onCancel={() => void stop()} onRestart={restart} onGround={ground} />}
           {access && review?.mode === 'grounding' && <GroundingResults review={review} run={access} catalog={catalog} busy={busy} onCancel={() => void stop()} onRestart={restart} onGround={ground} onRetrieve={retrieve} />}
           {access && review?.mode === 'retrieval' && <BenchmarkRetrievalResults key={access.run_id} review={review} run={access} catalog={catalog} busy={busy} onCancel={() => void stop()} onRestart={restart} onRetrieve={retrieve} onScreen={screen} />}

@@ -37,8 +37,32 @@ class FakeEncoder:
         return np.asarray([self.vectors.get(text, [3, 4]) for text in texts], dtype=np.float32)
 
 
+OFFLINE_ROWS = {}
+
+
+@pytest.fixture(autouse=True)
+def reset_offline_rows():
+    OFFLINE_ROWS.clear()
+
+
+def load_rows(requests, *, cancelled=None):
+    return {request["item_id"]: deepcopy(OFFLINE_ROWS[request["item_id"]]) for request in requests}
+
+
 def prepare(tmp_path, items, encoder=None, **kwargs):
-    return prepare_benchmark_index(items, tmp_path, INVENTORY,
+    def capture(rows):
+        try:
+            for row in rows:
+                original = row["evidence"]["item"]
+                OFFLINE_ROWS[row_fingerprint(original)] = deepcopy(original)
+                yield row
+        finally:
+            if hasattr(rows, "close"):
+                rows.close()
+
+    source = (lambda offset: capture(items(offset))) if callable(items) else capture(items)
+    kwargs.setdefault("row_loader", load_rows)
+    return prepare_benchmark_index(source, tmp_path, INVENTORY,
                                    encoder=encoder if encoder is not None else FakeEncoder(), **kwargs)
 
 
@@ -194,7 +218,8 @@ def test_cache_hit_never_consumes_source_and_queries_are_not_saved(tmp_path):
     finally:
         index.close()
     with sqlite3.connect(path) as connection:
-        assert connection.execute("SELECT search_text FROM items").fetchall() == [(row_search_text(record["evidence"]["item"]),)]
+        assert [column[1] for column in connection.execute("PRAGMA table_info(items)")] == ["item_id", "row_digest"]
+        assert connection.execute("SELECT search_text FROM search_fts").fetchall() == [(None,)]
         assert connection.execute("SELECT COUNT(*) FROM vectors").fetchone()[0] == 1
     assert stat.S_IMODE(path.stat().st_mode) == 0o600
     assert stat.S_IMODE(tmp_path.stat().st_mode) == 0o700
@@ -298,10 +323,10 @@ def test_build_and_scan_batches_are_bounded_and_policy_is_a_snapshot(tmp_path, m
     index = prepare(tmp_path, iter(rows), encoder, progress=progress.append)
     try:
         assert [len(batch) for batch in encoder.calls] == [3, 3, 3, 2]
-        assert progress[-1] == {"stage": "embedding", "completed": 11, "total": 11, "cache_hits": 0}
+        assert progress[-1] == {"stage": "indexing", "completed": 11, "total": 11, "cache_hits": 0}
         assert [row["item_id"] for row in index.search("query", dense_k=5, bm25_k=0)] == sorted(row["evidence_hash"] for row in rows)[:5]
         policy = index.policy
-        assert policy["version"] == 2 and policy["embedding"]["truncation"] == "none"
+        assert policy["version"] == 3 and policy["embedding"]["truncation"] == "none"
         policy["embedding"]["model"] = "changed"
         assert index.policy["embedding"]["model"] == "custom"
     finally:
@@ -376,3 +401,406 @@ def test_row_hash_collision_checks_original_evidence_not_search_text(tmp_path, m
     with pytest.raises(ValueError, match="Conflicting original rows"):
         prepare(tmp_path, rows)
     assert list(tmp_path.iterdir()) == []
+
+
+def test_resume_loading_uses_only_committed_offset_and_retains_original_sources(tmp_path):
+    rows = [item(f"row {i}", row=i + 1) for i in range(1030)]
+    offsets, closed = [], []
+
+    def source(offset):
+        offsets.append(offset)
+        try:
+            yield from rows[offset:]
+        finally:
+            closed.append(offset)
+
+    def interrupt(state):
+        if state['stage'] == 'indexing' and state['completed'] == 1024:
+            raise InterruptedError('fixture stop')
+
+    with pytest.raises(InterruptedError):
+        prepare(tmp_path, source, resume=True, progress=interrupt)
+    checkpoint, = tmp_path.glob('*.building.sqlite3')
+    with pytest.raises(ValueError, match='incomplete'):
+        module.BenchmarkIndex(checkpoint, FakeEncoder())
+    with sqlite3.connect(checkpoint) as connection:
+        assert connection.execute('SELECT COUNT(*) FROM items').fetchone()[0] == 1024
+    index = prepare(tmp_path, source, resume=True)
+    try:
+        assert offsets == closed == [0, 1024]
+        assert index.stats['source_rows'] == index.stats['unique_documents'] == 1030
+        assert index.stats['source_references'] == 1030
+        assert not checkpoint.exists()
+    finally:
+        index.close()
+
+
+def test_resume_loading_rolls_back_uncommitted_source_rows(tmp_path):
+    rows = [item(f"row {i}", row=i + 1) for i in range(1030)]
+
+    def broken(offset):
+        yield from rows[offset:1027]
+        raise RuntimeError('fixture source outage')
+
+    with pytest.raises(RuntimeError, match='source outage'):
+        prepare(tmp_path, broken, resume=True)
+    offsets = []
+
+    def source(offset):
+        offsets.append(offset)
+        return iter(rows[offset:])
+
+    index = prepare(tmp_path, source, resume=True)
+    try:
+        assert offsets == [1024]
+        assert index.stats['source_rows'] == index.stats['source_references'] == 1030
+    finally:
+        index.close()
+
+
+def test_resume_streaming_skips_committed_rows_and_vectors(tmp_path, monkeypatch):
+    monkeypatch.setattr(module, 'ENCODING_BATCH_SIZE', 2)
+    rows = [item(f'row {i}') for i in range(5)]
+    first = FakeEncoder()
+
+    def interrupt(state):
+        if state['stage'] == 'indexing' and state['completed'] == 2:
+            raise InterruptedError('fixture stop')
+
+    with pytest.raises(InterruptedError):
+        prepare(tmp_path, rows, first, resume=True, progress=interrupt)
+    assert first.calls == [[row_search_text(row['evidence']['item']) for row in rows[:2]]]
+
+    offsets = []
+
+    def remaining(offset):
+        offsets.append(offset)
+        return iter(rows[offset:])
+
+    second = FakeEncoder()
+    index = prepare(tmp_path, remaining, second, resume=True)
+    try:
+        assert offsets == [2]
+        assert [text for batch in second.calls for text in batch] == [row_search_text(row['evidence']['item']) for row in rows[2:]]
+        assert index.stats['embedded_documents'] == 5
+        assert len(index.search('row')) == 5
+    finally:
+        index.close()
+
+
+def test_resume_publishes_checkpoint_finalized_before_prior_process_exit(tmp_path):
+    index = prepare(tmp_path, [item('one')], resume=True)
+    complete = index.path
+    index.close()
+    checkpoint = complete.with_name(complete.stem + '.building.sqlite3')
+    complete.replace(checkpoint)
+
+    def forbidden(offset):
+        pytest.fail('A finalized checkpoint must not be rebuilt')
+
+    index = prepare(tmp_path, forbidden, resume=True)
+    try:
+        assert index.path == complete and not checkpoint.exists()
+        assert index.stats['embedded_documents'] == 1
+    finally:
+        index.close()
+
+
+def test_resume_rejects_checkpoint_identity_mismatch(tmp_path):
+    def interrupt(state):
+        raise InterruptedError('fixture stop')
+
+    with pytest.raises(InterruptedError):
+        prepare(tmp_path, [item('one')], resume=True, progress=interrupt)
+    checkpoint, = tmp_path.glob('*.building.sqlite3')
+    with sqlite3.connect(checkpoint) as connection:
+        connection.execute("UPDATE metadata SET value = '\"wrong-key\"' WHERE key = 'cache_key'")
+    with pytest.raises(ValueError, match='checkpoint identity'):
+        prepare(tmp_path, [item('one')], resume=True)
+    assert checkpoint.exists()
+
+
+def test_build_lock_wait_is_cancellable_and_does_not_touch_checkpoint(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Event
+    import fcntl
+    import os
+
+    descriptor = os.open(tmp_path, os.O_RDONLY)
+    fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    stopped = Event()
+    try:
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            task = pool.submit(prepare, tmp_path, [item('one')], cancelled=stopped.is_set, resume=True)
+            assert not stopped.wait(.15)
+            assert not task.done()
+            stopped.set()
+            with pytest.raises(InterruptedError):
+                task.result(timeout=2)
+    finally:
+        os.close(descriptor)
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_disk_reserve_retains_checkpoint_and_allows_cached_reads(tmp_path, monkeypatch):
+    from collections import namedtuple
+    usage = namedtuple('usage', 'total used free')
+    monkeypatch.setattr(module.shutil, 'disk_usage', lambda path: usage(100, 95, 5))
+    with pytest.raises(OSError, match='reserve'):
+        prepare(tmp_path, [item('one')], resume=True, minimum_free_bytes=10)
+    assert len(list(tmp_path.glob('*.building.sqlite3'))) == 1
+    monkeypatch.setattr(module.shutil, 'disk_usage', lambda path: usage(100, 80, 20))
+    index = prepare(tmp_path, [item('one')], resume=True, minimum_free_bytes=10)
+    index.close()
+    monkeypatch.setattr(module.shutil, 'disk_usage', lambda path: usage(100, 95, 5))
+    index = prepare(tmp_path, [], resume=True, minimum_free_bytes=10)
+    try:
+        assert index.stats['cache_hit'] is True
+    finally:
+        index.close()
+
+
+def test_contentless_bm25_exactly_matches_external_content_reference(tmp_path):
+    import re
+
+    texts = [
+        'needle needle CAFÉ Straße', 'needle café', 'other topic',
+        'Blood\npressure is measured repeatedly. Pressure, pressure!',
+        'Unicode Ελληνικά Straße naïve résumé', '',
+        'context ' * 1200 + 'rareword café',
+        'short needle', 'unrelated ' * 500,
+    ]
+    rows = [item(text, identifier=str(number), answer='grading\ncontext')
+            for number, text in enumerate(texts)]
+    index = prepare(tmp_path, rows)
+    reference = sqlite3.connect(':memory:')
+    reference.executescript("""
+        CREATE TABLE items (item_id TEXT, search_text TEXT);
+        CREATE VIRTUAL TABLE search_fts USING fts5(
+            search_text, content='items', content_rowid='rowid',
+            tokenize='unicode61 remove_diacritics 2'
+        );
+    """)
+    for row in rows:
+        text = row_search_text(row['evidence']['item'])
+        cursor = reference.execute('INSERT INTO items VALUES (?, ?)', (row['evidence_hash'], text))
+        reference.execute('INSERT INTO search_fts(rowid, search_text) VALUES (?, ?)', (cursor.lastrowid, text))
+    try:
+        for query in ('needle', 'needle cafe', 'Straße', 'pressure', 'Ελληνικά résumé',
+                      'rareword context', '"needle" OR (absent)', 'grading', 'missing'):
+            words = list(dict.fromkeys(re.findall(r'\b\w+\b', query)))
+            expression = ' OR '.join('"' + word + '"' for word in words)
+            expected = [(key, -score) for key, score in reference.execute(
+                'SELECT i.item_id, bm25(search_fts) AS score FROM search_fts '
+                'JOIN items i ON i.rowid = search_fts.rowid WHERE search_fts MATCH ? '
+                'ORDER BY score ASC, i.item_id ASC LIMIT 600', (expression,))]
+            assert index._keyword(query, 600) == expected
+    finally:
+        index.close()
+        reference.close()
+
+
+def test_contentless_storage_does_not_keep_original_rows_or_rendered_copies(tmp_path):
+    from bayesian_auditing.benchmark_data import row_text
+
+    row = item('A complete distinctive sentence: not stored as a raw row!\nSecond line.',
+               answer='Reference answer with punctuation; and literal spacing.  ', arbitrary=[None, 1, True])
+    index = prepare(tmp_path, [row])
+    path = index.path
+    try:
+        with sqlite3.connect(path) as connection:
+            assert [column[1] for column in connection.execute('PRAGMA table_info(items)')] == ['item_id', 'row_digest']
+            digest, = connection.execute('SELECT row_digest FROM items').fetchone()
+            assert isinstance(digest, bytes) and len(digest) == 64
+            assert connection.execute('SELECT search_text FROM search_fts').fetchall() == [(None,)]
+            assert not connection.execute("SELECT name FROM sqlite_master WHERE name = 'search_fts_content'").fetchall()
+            # Token counts and positions remain available to the same BM25 formula.
+            assert connection.execute('SELECT COUNT(*) FROM search_fts_docsize').fetchone()[0] == 1
+        raw = path.read_bytes()
+        assert row_text(row['evidence']['item']).encode() not in raw
+        assert row_search_text(row['evidence']['item']).encode() not in raw
+        assert row['evidence']['item']['content'].encode() not in raw
+        assert index.search('distinctive', dense_k=0)[0]['evidence'] == row['evidence']
+    finally:
+        index.close()
+
+
+def test_streaming_embeds_before_exhausting_source_and_commits_all_artifacts_together(tmp_path, monkeypatch):
+    monkeypatch.setattr(module, 'ENCODING_BATCH_SIZE', 2)
+    rows = [item(f'row {i}', row=i + 1) for i in range(5)]
+    encoder = FakeEncoder()
+    observed = []
+
+    def source(offset):
+        for number, row in enumerate(rows[offset:], offset):
+            if number == 2:
+                assert len(encoder.calls) == 1
+            yield row
+
+    def inspect(state):
+        if state['completed'] == 2:
+            checkpoint, = tmp_path.glob('*.building.sqlite3')
+            with sqlite3.connect(checkpoint) as connection:
+                counts = [connection.execute(f'SELECT COUNT(*) FROM {table}').fetchone()[0]
+                          for table in ('items', 'sources', 'vectors', 'search_fts')]
+                observed.append(counts)
+
+    index = prepare(tmp_path, source, encoder, resume=True, progress=inspect)
+    try:
+        assert observed == [[2, 2, 2, 2]]
+        assert [len(batch) for batch in encoder.calls] == [2, 2, 1]
+        assert index.stats['source_rows'] == index.stats['embedded_documents'] == 5
+    finally:
+        index.close()
+
+
+def test_failed_embedding_rolls_back_identity_postings_sources_and_offset(tmp_path, monkeypatch):
+    import json
+
+    monkeypatch.setattr(module, 'ENCODING_BATCH_SIZE', 2)
+    rows = [item(f'row {i}', row=i + 1) for i in range(5)]
+
+    class FailingEncoder(FakeEncoder):
+        def encode(self, texts):
+            if self.calls:
+                raise RuntimeError('fixture embedding failure')
+            return super().encode(texts)
+
+    with pytest.raises(RuntimeError, match='embedding failure'):
+        prepare(tmp_path, rows, FailingEncoder(), resume=True)
+    checkpoint, = tmp_path.glob('*.building.sqlite3')
+    with sqlite3.connect(checkpoint) as connection:
+        for table in ('items', 'sources', 'vectors', 'search_fts'):
+            assert connection.execute(f'SELECT COUNT(*) FROM {table}').fetchone()[0] == 2
+        state = json.loads(connection.execute("SELECT value FROM metadata WHERE key = 'build_state'").fetchone()[0])
+        assert state['source_rows'] == state['stats']['embedded_documents'] == 2
+    offsets = []
+
+    def source(offset):
+        offsets.append(offset)
+        return iter(rows[offset:])
+
+    encoder = FakeEncoder()
+    index = prepare(tmp_path, source, encoder, resume=True)
+    try:
+        assert offsets == [2]
+        assert sum(map(len, encoder.calls)) == 3
+        assert index.stats['source_rows'] == index.stats['embedded_documents'] == 5
+    finally:
+        index.close()
+
+
+def test_duplicates_across_committed_batches_add_sources_without_reembedding(tmp_path, monkeypatch):
+    monkeypatch.setattr(module, 'ENCODING_BATCH_SIZE', 2)
+    a, b, c = item('first', row=1), item('second', row=2), item('third', row=4)
+    duplicate = item('first', benchmark='another', row=3)
+    encoder = FakeEncoder()
+    index = prepare(tmp_path, [a, b, duplicate, c], encoder)
+    try:
+        assert [len(batch) for batch in encoder.calls] == [2, 1]
+        assert index.stats['source_rows'] == index.stats['source_references'] == 4
+        assert index.stats['embedded_documents'] == 3
+        match, = index.search('first', dense_k=0)
+        assert {source['benchmark'] for source in match['sources']} == {'medicine', 'another'}
+    finally:
+        index.close()
+
+
+def test_hydration_fetches_only_final_union_once_and_preserves_complete_contract(tmp_path):
+    rows = [item('semantic answer', identifier='semantic'), item('keyword answer', identifier='lexical'),
+            item('neither', identifier='excluded')]
+    encoder = FakeEncoder({row_search_text(row['evidence']['item']): vector
+                           for row, vector in zip(rows, ([1, 0], [-1, 0], [0, 1]))})
+    encoder.vectors[QUERY_INSTRUCTION + 'keyword'] = [1, 0]
+    calls = []
+
+    def loader(requests, *, cancelled=None):
+        calls.append(deepcopy(requests))
+        result = load_rows(requests)
+        # Resolver inputs cannot mutate returned provenance.
+        requests[0]['sources'].clear()
+        return result
+
+    index = prepare(tmp_path, rows, encoder, row_loader=loader)
+    try:
+        matches = index.search('keyword', dense_k=1, bm25_k=1)
+        selected = {rows[0]['evidence_hash'], rows[1]['evidence_hash']}
+        assert len(calls) == 1 and {request['item_id'] for request in calls[0]} == selected
+        assert all(set(request) == {'item_id', 'sources'} and request['sources'] for request in calls[0])
+        assert {match['item_id'] for match in matches} == selected
+        for match in matches:
+            assert match['sources']
+            original = OFFLINE_ROWS[match['item_id']]
+            assert match['evidence'] == {'item': original}
+            assert match['search_text'] == row_search_text(original)
+            assert set(match) == {'item_id', 'evidence_hash', 'dense_rank', 'bm25_rank', 'dense_score',
+                                  'bm25_score', 'rrf_score', 'rank', 'sources', 'evidence', 'search_text', 'question_text'}
+        assert index.search('absent', dense_k=0) == []
+        assert len(calls) == 1
+    finally:
+        index.close()
+
+
+@pytest.mark.parametrize('mode', ['missing', 'extra', 'changed', 'digest'])
+def test_hydration_rejects_missing_extra_or_mismatched_rows(tmp_path, mode):
+    record = item('original')
+
+    def loader(requests, *, cancelled=None):
+        rows = load_rows(requests)
+        if mode == 'missing':
+            return {}
+        if mode == 'extra':
+            rows['unexpected'] = {'content': 'unrelated'}
+        if mode == 'changed':
+            rows[record['evidence_hash']]['content'] = 'changed'
+        return rows
+
+    index = prepare(tmp_path, [record], row_loader=loader)
+    try:
+        if mode == 'digest':
+            with sqlite3.connect(index.path) as connection:
+                connection.execute('UPDATE items SET row_digest = ?', (b'wrong digest',))
+        with pytest.raises(ValueError, match='shortlisted|indexed identity'):
+            index.search('original')
+    finally:
+        index.close()
+
+
+def test_hydration_cancellation_never_returns_partial_candidates(tmp_path):
+    stopped = False
+
+    def loader(requests, *, cancelled=None):
+        nonlocal stopped
+        assert cancelled is not None
+        stopped = True
+        return load_rows(requests)
+
+    index = prepare(tmp_path, [item('first'), item('second')], row_loader=loader)
+    try:
+        with pytest.raises(InterruptedError, match='cancelled'):
+            index.search('first', cancelled=lambda: stopped)
+    finally:
+        index.close()
+
+
+def test_default_hydrator_uses_saved_pinned_inventory_only_when_needed(tmp_path, monkeypatch):
+    from bayesian_auditing import benchmark_rows
+
+    record = item('needle')
+    calls = []
+
+    def fetch(inventory, requests, *, cancelled=None):
+        calls.append((deepcopy(inventory), deepcopy(requests)))
+        return {record['evidence_hash']: deepcopy(record['evidence']['item'])}
+
+    monkeypatch.setattr(benchmark_rows, 'fetch_benchmark_rows', fetch)
+    index = prepare_benchmark_index([record], tmp_path, INVENTORY, FakeEncoder())
+    try:
+        assert calls == []
+        assert index.search('absent', dense_k=0) == []
+        assert calls == []
+        match, = index.search('needle', dense_k=0)
+        assert match['evidence'] == record['evidence']
+        assert calls == [(INVENTORY, [{'item_id': record['evidence_hash'], 'sources': [record['source']]}])]
+    finally:
+        index.close()

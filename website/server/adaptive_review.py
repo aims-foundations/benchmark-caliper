@@ -18,7 +18,7 @@ from bayesian_auditing.benchmark_queries import ScreeningQueues
 from bayesian_auditing.requirements import Requirements
 from bayesian_auditing.screening import ItemScreener, ScreeningAssessment, GATED_DIMENSIONS, gate_for
 from bayesian_auditing.screening_budget import (
-    AdaptiveSettings, can_afford, cost_summary, request_reservation, usage_cost,
+    COST_POLICY, AdaptiveSettings, can_afford, cost_summary, request_reservation, usage_cost,
 )
 
 
@@ -101,6 +101,8 @@ def validate_history(job) -> None:
     validate_collection(job)
     if state["version"] != ADAPTIVE_VERSION or state["policy"] != ADAPTIVE_POLICY:
         raise ValueError("The saved adaptive policy has changed.")
+    if state["cost"].get("policy") != COST_POLICY:
+        raise ValueError("The saved cost accounting policy has changed. Start a new adaptive run from the selection.")
     fields = AdaptiveSettings.model_fields
     settings = AdaptiveSettings.model_validate({key: value for key, value in state["settings"].items() if key in fields})
     if state["settings"] != settings_record(settings):

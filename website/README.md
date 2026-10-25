@@ -295,13 +295,38 @@ temporary expiry policy apply.
 
 Completed indexes live under `WEBSITE_DATA_DIR/benchmark-retrieval-index/`,
 keyed by the complete pinned main-branch inventory and loader/encoding policy.
-Failed or cancelled builds never become reusable caches; a retry starts that
-build again.
-The cache contains dataset evidence and document vectors, but no deployment
-answers or query vectors. SQLite FTS5 and bounded embedding/vector-scan batches
-keep the full corpus off the Python heap. Budget for substantial disk and local
+Failed or cancelled builds keep unpublished checkpoints; a retry resumes after
+the last committed batch of source references, keyword entries, and embeddings.
+Only complete indexes are searchable.
+Cross-process filesystem locking prevents simultaneous website and CLI builds
+from duplicating the index. A 15 GB free-disk reserve stops both builders safely
+while preserving the checkpoint.
+The cache contains document vectors, contentless SQLite FTS5 keyword postings
+and document lengths, original-row hashes, and pinned source locations. It
+does not contain original rows, rendered search text, question previews,
+deployment answers, or query vectors. After ranking, Step 4 fetches the complete
+shortlisted rows from Hugging Face at the indexed commits, grouping reads by
+table and Parquet row group and verifying their hashes. These complete
+candidates are retained in the run for screening and export, so later steps
+need no further dataset reads. A cached index still requires dataset access to
+retrieve candidates. Bounded embedding/vector-scan batches keep the full corpus
+off the Python heap. Budget for substantial disk and local
 inference time for the complete bank. Full-bank performance and retrieval
 quality have not been measured end to end.
+
+Prepare the same complete cache in advance from the repository root:
+
+```bash
+CUDA_VISIBLE_DEVICES=4 .venv/bin/python -m bayesian_auditing.prepare_benchmark_index \
+  --cache-dir results/local-website/benchmark-retrieval-index \
+  --device cuda --batch-size 64
+```
+
+Use the server's actual `WEBSITE_DATA_DIR` and an available device. The command
+defaults to `website/server/item_review_inventory.json`, preserves the full
+inventory and retrieval policy, and makes no paid API calls. Progress is saved
+in `preparation-status.json`; rerun the same command to resume. Completion also
+checks dense/BM25 retrieval, original row hashes, and reuse of the finished cache.
 
 A completed retrieval offers **Screen initial candidates** (Step 5). It uses
 GPT-6 Luna to assess at most **50 distinct candidates**. The allocator takes one
@@ -430,10 +455,20 @@ outcomes remain fixed if a later batch replaces an earlier selected item.
 `X-OpenAI-Key`. A new run accepts a seed (default 0) and an optional dollar cap
 with input, cached-input, and output prices per million tokens. All three prices
 must accompany a cap; they are supplied explicitly rather than inferred from
-the model name. The fixed 160-candidate and eight-per-batch limits cannot be
+the model name. Use base prices for up to 272,000 input tokens, including the
+account's processing tier and regional rates. The fixed 160-candidate and eight-per-batch limits cannot be
 overridden. The cost scope is **new Step 7 calls only**, excluding sunk costs
 from earlier stages. Conservative request reservations are settled against
-returned token usage, with cached input accounted separately. Unknown charges
+returned token usage, with ordinary input, cache reads, and cache writes counted
+separately. GPT-6 Luna writes cost 1.25 times the supplied input rate for 30 minutes
+or 2.5 times for 12 hours; these replace ordinary input charges. Reservations use
+the default 30-minute write rate. Positive writes with missing or invalid lifetime
+details retain their reservation. See the [OpenAI prompt-caching documentation](https://developers.openai.com/api/docs/guides/prompt-caching).
+Above 272,000 total input tokens, all input and cache rates double and the output
+rate multiplies by 1.5 for the entire request, per [GPT-6 Luna pricing](https://developers.openai.com/api/docs/models/gpt-6-luna).
+Reservations determine this tier from the input estimate; settlements use actual usage.
+The exported cost-policy version is separate from adaptive queue decisions;
+older ledgers cannot resume under silently changed accounting. Unknown charges
 remain visible and reserved; without configured prices, dollar amounts remain
 unknown. This admission estimate is not a guaranteed provider bill.
 
@@ -456,6 +491,38 @@ does not validate the model's judgments or evaluate a deployed AI system. Runs
 retain the existing temporary expiry and do not survive server restarts. See
 the [Step 7 implementation notes](../bayesian_auditing/README.md#step-7-adapt-screening-and-freeze-the-collection)
 for the priority formula and conditional-quota extension.
+
+### Saving and sharing construction results
+
+An optional **Run name** entered with the deployment carries through Steps 2–7.
+Every stage offers **Download results package**, alongside its existing JSON
+download. The authenticated `GET /api/item-review/runs/{run_id}/package` endpoint
+creates one ZIP from a consistent snapshot, without model or dataset calls:
+
+- `report.html` opens offline and supports browser printing to PDF. It shows the
+  goal, status, selected items with six ratings and supporting evidence, task and
+  quota coverage, gaps, construction history, and usage/cost scope.
+- `selected_items.csv` provides spreadsheet columns for selected IDs, question
+  previews, matched tasks, sources, ratings, quality, and reviewer notes. Previews
+  are limited to 1,000 characters; complete original rows remain in the JSON.
+  Before selection, this CSV contains only its headers.
+- `results.json` preserves the complete pipeline export, including full retrieved
+  and screened rows, source revisions, prompts, policies, and adaptive history.
+
+Metadata records the run name, run creation/finish times in UTC, and whether the
+snapshot is partial, a completed stage, or a frozen collection. Packages also
+record their export time. Partial downloads have `-partial` in their filename;
+frozen collections prominently retain any unmet or unresolved requirements.
+Names and dates identify files; they do not change model inputs or selection.
+
+`stage_usage` preserves each ancestor run's available token counts, plus the
+current run, including retries/continuations without recounting retained item
+assessments. The existing top-level `usage` remains current-run usage. Adaptive
+dollar estimates cover Step 7 only; no overall pipeline dollar total is inferred.
+
+Download packages before the one-hour expiry or server restart. Packages are
+portable records, not resumable website sessions: this feature adds no permanent
+run library, upload/reopen action, public share link, or human-validation workflow.
 
 The existing **Review catalog** assessment option collects six deployment answers, retrieves relevant questions
 locally, and uses the visitor's OpenAI key to assess only the selected shortlist.

@@ -102,7 +102,9 @@ export function AdaptiveResults({ review, run, busy, onCancel, onRestart, onAdap
       <section className="review-panel"><h2>Adaptive screening cost</h2>
         {adaptive.settings.input_price_per_million == null ? <p>No additional screening cost ceiling was configured. Token usage is recorded without an assumed dollar price.</p> : <>
           <p>Estimated spent: ${adaptive.cost.spent_usd?.toFixed(4) ?? 'Unknown'} · Reserved: ${adaptive.cost.reserved_usd?.toFixed(4) ?? 'Unknown'} · Ceiling: {adaptive.settings.max_cost_usd == null ? 'Not set' : `$${adaptive.settings.max_cost_usd.toFixed(4)}`}</p>
-          <p>Prices per million tokens: input ${adaptive.settings.input_price_per_million}, cached input ${adaptive.settings.cached_input_price_per_million}, output ${adaptive.settings.output_price_per_million}.</p>
+          <p>Prices per million tokens: input ${adaptive.settings.input_price_per_million}, cached input ${adaptive.settings.cached_input_price_per_million}, output ${adaptive.settings.output_price_per_million}. These are the supplied base rates for prompts up to 272,000 input tokens.</p>
+          <p className="help">Cached input means cache reads. Cache writes use 1.25× the input price for 30 minutes or 2.5× for 12 hours, replacing the ordinary input charge for those tokens. Reservations include the default 30-minute write rate.</p>
+          <p className="help">Requests above 272,000 input tokens use 2× all input and cache rates and 1.5× the output rate for the whole request. Reservations use the input estimate to select this tier; returned usage determines the settled tier.</p>
           <p className="help">This covers Step 7 calls and retries only. Earlier calls are excluded. Reservations and reported usage estimate cost; they do not guarantee the final provider invoice.</p>
         </>}
         {adaptive.cost.unknown_attempts > 0 && <p className="selection-notice">Usage is unknown for {adaptive.cost.unknown_attempts} attempts. Those attempts may still incur charges.</p>}

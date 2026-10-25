@@ -126,7 +126,7 @@ def open_item_table(inventory: dict, table: dict, *, token=None, streaming=False
             yield parquet
 
 
-def _table_rows(parquet, columns, selected_rows=None):
+def _table_rows(parquet, columns, selected_rows=None, *, start_row=1):
     """Keep original 1-based row numbers, reading only needed row groups."""
     wanted = None if selected_rows is None else set(selected_rows)
     if wanted is not None and any(row < 1 or row > parquet.metadata.num_rows for row in wanted):
@@ -134,11 +134,11 @@ def _table_rows(parquet, columns, selected_rows=None):
     start = 1
     for group in range(parquet.metadata.num_row_groups):
         end = start + parquet.metadata.row_group(group).num_rows
-        if wanted is None or any(start <= row < end for row in wanted):
+        if end > start_row and (wanted is None or any(start <= row < end for row in wanted)):
             row_number = start
             for batch in parquet.iter_batches(batch_size=128, columns=columns, row_groups=[group]):
                 for row in batch.to_pylist():
-                    if wanted is None or row_number in wanted:
+                    if row_number >= start_row and (wanted is None or row_number in wanted):
                         yield row_number, row
                     row_number += 1
         start = end

@@ -214,6 +214,7 @@ app.add_middleware(
     allow_credentials=False,  # we never use cookies for auth
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type", "X-Anthropic-Key", "X-OpenAI-Key", "X-Review-Token"],
+    expose_headers=["Content-Disposition"],
 )
 app.include_router(item_review.router)
 app.include_router(item_analysis.router)

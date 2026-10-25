@@ -209,6 +209,58 @@ def test_cost_uses_cached_tokens_and_only_new_calls(client, monkeypatch):
     assert len(result["adaptive"]["attempts"]) == 8
 
 
+@pytest.mark.parametrize("complete_breakdown", [True, False])
+def test_cache_write_usage_survives_sdk_and_export_and_settles_only_when_known(client, monkeypatch, complete_breakdown):
+    source = seed_selected(per_facet=51)
+
+    def respond(request):
+        row = json.loads(json.loads(request.content)["input"])["item"]
+        body = response_body(assessment(row))
+        details = body["usage"]["input_tokens_details"]
+        details.update(cache_write_tokens=70)
+        if complete_breakdown:
+            details["cache_write_tokens_details"] = {"ttl_30m_tokens": 30, "ttl_12h_tokens": 40}
+        return httpx.Response(200, json=body)
+
+    monkeypatch.setattr(item_review, "AsyncOpenAI", lambda **kwargs: AsyncOpenAI(
+        **kwargs, http_client=httpx.AsyncClient(transport=httpx.MockTransport(respond))))
+    access = start_adaptive(client, source, {
+        "max_cost_usd": 10, "input_price_per_million": 1,
+        "cached_input_price_per_million": .5, "output_price_per_million": 2,
+    })
+    result = finished(client, access).json()
+    assert result["status"] == "completed", result["message"]
+    adaptive = result["adaptive"]
+    attempt = adaptive["attempts"][0]
+    assert attempt["usage"]["input_tokens_details"]["cache_write_tokens"] == 70
+    assert adaptive["cost"]["policy"]["version"] == 2
+    if complete_breakdown:
+        # 20 ordinary, 10 reads, 30 short writes, 40 long writes, 90 output.
+        assert adaptive["cost"]["spent_usd"] == pytest.approx((20 + 10 * .5 + 30 * 1.25 + 40 * 2.5 + 90 * 2) / 1_000_000)
+        assert adaptive["cost"]["reserved_usd"] == 0
+        assert adaptive["cost"]["unknown_attempts"] == 0
+    else:
+        assert attempt["cost_usd"] is None and adaptive["cost"]["spent_usd"] == 0
+        assert adaptive["cost"]["reserved_usd"] == attempt["reserved_usd"] > 0
+        assert adaptive["cost"]["unknown_attempts"] == 1
+    assert export(client, access).json()["adaptive"] == adaptive
+
+
+def test_older_cost_policy_cannot_resume_with_silently_repriced_ledger(client, monkeypatch):
+    source = seed_selected()
+    mock_screener(monkeypatch, lambda value, row: {**value, "coverage": ["invalid"]})
+    access = start_adaptive(client, source)
+    assert finished(client, access).json()["status"] == "failed"
+    job = item_review.jobs[access["run_id"]]
+    job.adaptive["cost"].pop("policy")
+    original = deepcopy(job.adaptive)
+    monkeypatch.setattr(item_review, "AsyncOpenAI", lambda **kwargs: pytest.fail("Obsolete cost policy"))
+    response = client.post(f"/api/item-review/runs/{access['run_id']}/adapt", json={}, headers={
+        "X-Review-Token": access["run_secret"], "X-OpenAI-Key": KEY})
+    assert response.status_code == 409
+    assert job.adaptive == original
+
+
 def test_frozen_result_cannot_resume_or_bypass_history_with_screen_or_select(client, monkeypatch):
     source = seed_selected(per_facet=2)
     access = start_adaptive(client, source)

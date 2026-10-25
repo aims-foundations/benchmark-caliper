@@ -79,14 +79,20 @@ def row_search_text(row: dict) -> str:
 
 
 def iter_benchmark_items(inventory: dict, *, token: str | None = None,
-                         streaming: bool = True):
+                         streaming: bool = True, skip_rows: int = 0):
     """Yield every complete row and its pinned source; never fetch other tables.
 
     The inventory establishes the branch and collection scope. This reader
     neither filters release labels nor samples rows. It closes the current
     Parquet source when exhausted, cancelled through generator.close(), or failed.
     """
+    if type(skip_rows) is not int or skip_rows < 0:
+        raise ValueError("Committed source row count must be a nonnegative integer")
     for table in inventory["tables"]:
+        expected = table.get("row_count")
+        if skip_rows and type(expected) is int and expected >= 0 and skip_rows >= expected:
+            skip_rows -= expected
+            continue
         with open_item_table(inventory, table, token=token, streaming=streaming) as parquet:
             names = parquet.schema_arrow.names
             if len(set(names)) != len(names):
@@ -97,7 +103,12 @@ def iter_benchmark_items(inventory: dict, *, token: str | None = None,
                     raise ValueError("Pinned benchmark table row counts must be nonnegative integers.")
                 if parquet.metadata.num_rows != expected:
                     raise ValueError(f"Benchmark table row count differs from the pinned inventory: {table['items_path']}")
-            for row_number, row in _table_rows(parquet, columns=None):
+            if skip_rows >= parquet.metadata.num_rows:
+                skip_rows -= parquet.metadata.num_rows
+                continue
+            first_row = skip_rows + 1
+            skip_rows = 0
+            for row_number, row in _table_rows(parquet, columns=None, start_row=first_row):
                 yield {
                     "evidence": {"item": row},
                     "evidence_hash": row_fingerprint(row),
@@ -108,3 +119,5 @@ def iter_benchmark_items(inventory: dict, *, token: str | None = None,
                         "row": row_number,
                     },
                 }
+    if skip_rows:
+        raise ValueError("Committed source row count exceeds the pinned inventory")

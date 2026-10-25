@@ -11,6 +11,7 @@ from collections import Counter
 from contextlib import closing
 from copy import deepcopy
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 import hashlib
 import json
 import os
@@ -22,6 +23,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Header, HTTPException, Query, Response
 from fastapi.responses import JSONResponse, StreamingResponse
+from starlette.concurrency import run_in_threadpool
 from huggingface_hub import get_token
 from openai import AsyncOpenAI, AuthenticationError, RateLimitError, OpenAIError
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -32,7 +34,8 @@ from bayesian_auditing.sampling import (
 from bayesian_auditing.scoring import SCORING_POLICY
 from bayesian_auditing.data import fingerprint
 from bayesian_auditing.benchmark_data import iter_benchmark_items, row_fingerprint
-from bayesian_auditing.benchmark_index import prepare_benchmark_index
+from bayesian_auditing.benchmark_index import DEFAULT_MINIMUM_FREE_BYTES, prepare_benchmark_index
+from bayesian_auditing.benchmark_rows import fetch_benchmark_rows
 from bayesian_auditing.benchmark_queries import build_benchmark_queries, build_screening_queues
 from bayesian_auditing.retrieval import ItemIndex, RETRIEVAL_POLICY
 from bayesian_auditing.judge import (
@@ -49,6 +52,7 @@ from bayesian_auditing.selection import select_collection, SelectionIncomplete
 from bayesian_auditing.screening_budget import AdaptiveSettings
 from . import adaptive_review
 from .item_review_store import ReviewStore
+from .result_package import build_results_package, package_filename
 from . import db
 
 router = APIRouter(prefix="/api/item-review", tags=["Item review"])
@@ -95,6 +99,7 @@ class Deployment(BaseModel):
 class ReviewRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     deployment: Deployment
+    run_name: str = ""
     mode: Literal["item_review", "requirements", "grounding", "retrieval", "screening", "selection", "adaptive"] = "item_review"
     retrieve_k: int = Field(default=DEFAULT_RETRIEVE_K, ge=1, le=MAX_RETRIEVE_K, strict=True)
     retrieval_query: str = Field(default="", max_length=100_000)
@@ -127,6 +132,9 @@ class ReviewJob:
     inventory: dict = field(default_factory=lambda: inventory(), repr=False)
     created_at: float = field(default_factory=time.monotonic)
     finished_at: float | None = None
+    created_at_utc: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    finished_at_utc: str | None = None
+    usage_history: list[dict] = field(default_factory=list, repr=False)
     task: asyncio.Task | None = field(default=None, repr=False)
     status: str = "preparing"
     message: str = "Preparing the fixed sample for local retrieval. No paid calls yet."
@@ -205,6 +213,26 @@ async def catalog(response: Response) -> dict:
     }
 
 
+def usage_record(job: ReviewJob) -> dict:
+    """One run's new calls, without counting retained assessments again."""
+    return {"run_id": job.run_id, "mode": job.request.mode, "status": job.status,
+            "created_at": job.created_at_utc, "finished_at": job.finished_at_utc,
+            "usage": dict(job.usage)}
+
+
+def continued_usage(source: ReviewJob) -> list[dict]:
+    return deepcopy([*source.usage_history, usage_record(source)])
+
+
+def result_metadata(job: ReviewJob) -> dict:
+    state = "partial"
+    if job.status == "completed":
+        state = "frozen" if job.adaptive and job.adaptive.get("frozen") else "stage_complete"
+    return {"export_version": 1, "run_name": job.request.run_name,
+            "created_at": job.created_at_utc, "finished_at": job.finished_at_utc,
+            "result_state": state, "usage_scope": "current_run"}
+
+
 def public_job(job: ReviewJob, page: int = 1, *, include_items: bool = True) -> dict:
     if job.request.mode in {"requirements", "grounding", "retrieval", "screening", "selection", "adaptive"}:
         result = {
@@ -214,6 +242,8 @@ def public_job(job: ReviewJob, page: int = 1, *, include_items: bool = True) -> 
             "deployment": job.request.deployment.model_dump(),
             "requirements": job.requirements, "extraction": job.extraction,
             "usage": dict(job.usage),
+            "metadata": result_metadata(job),
+            "stage_usage": [*deepcopy(job.usage_history), usage_record(job)],
         }
         if job.request.mode in {"grounding", "retrieval", "screening", "selection", "adaptive"}:
             result.update(source_run_id=job.source_run_id, grounding=job.grounding)
@@ -349,10 +379,10 @@ async def start_grounding(run_id: str, response: Response,
     key, owner = check_run_capacity(x_openai_key)
     # Copy the accepted extraction; a grounding run never repeats Step 2 or
     # rewrites its source run, even when the user retries a stopped mapping.
-    request = ReviewRequest(deployment=source.request.deployment, mode="grounding")
+    request = ReviewRequest(deployment=source.request.deployment, mode="grounding", run_name=source.request.run_name)
     job = ReviewJob(secrets.token_hex(16), secrets.token_urlsafe(32), owner, request, inventory={},
                     requirements=deepcopy(source.requirements), extraction=deepcopy(source.extraction),
-                    source_run_id=source.run_id,
+                    source_run_id=source.run_id, usage_history=continued_usage(source),
                     message="Preparing local O*NET search for your extracted tasks.")
     jobs[job.run_id] = job
     job.task = asyncio.create_task(evaluate(job, key))
@@ -385,7 +415,8 @@ async def start_benchmark_retrieval(run_id: str, body: BenchmarkRetrievalRequest
     check_owner_capacity(source.owner_hash)
     job = ReviewJob(
         secrets.token_hex(16), secrets.token_urlsafe(32), source.owner_hash,
-        ReviewRequest(deployment=source.request.deployment, mode="retrieval"), inventory=data,
+        ReviewRequest(deployment=source.request.deployment, mode="retrieval", run_name=source.request.run_name), inventory=data,
+        usage_history=continued_usage(source),
         requirements=deepcopy(source.requirements), extraction=deepcopy(source.extraction),
         grounding=deepcopy(source.grounding), source_run_id=source.run_id,
         message="Preparing all benchmark collections from the pinned main revision for local retrieval.",
@@ -458,7 +489,8 @@ async def start_screening(run_id: str, response: Response,
     screener = AsyncItemScreener(None)
     job = ReviewJob(
         secrets.token_hex(16), secrets.token_urlsafe(32), owner,
-        ReviewRequest(deployment=source.request.deployment, mode="screening"),
+        ReviewRequest(deployment=source.request.deployment, mode="screening", run_name=source.request.run_name),
+        usage_history=continued_usage(source),
         inventory=deepcopy(source.inventory), source_run_id=source.run_id,
         requirements=deepcopy(source.requirements), extraction=deepcopy(source.extraction),
         grounding=deepcopy(source.grounding), benchmark_retrieval=deepcopy(source.benchmark_retrieval),
@@ -541,7 +573,8 @@ async def start_selection(run_id: str, response: Response,
     check_owner_capacity(source.owner_hash)
     job = ReviewJob(
         secrets.token_hex(16), secrets.token_urlsafe(32), source.owner_hash,
-        ReviewRequest(deployment=source.request.deployment, mode="selection"),
+        ReviewRequest(deployment=source.request.deployment, mode="selection", run_name=source.request.run_name),
+        usage_history=continued_usage(source),
         inventory=deepcopy(source.inventory), source_run_id=source.run_id,
         requirements=deepcopy(source.requirements), extraction=deepcopy(source.extraction),
         grounding=deepcopy(source.grounding), benchmark_retrieval=deepcopy(source.benchmark_retrieval),
@@ -584,7 +617,8 @@ async def start_adaptive_screening(run_id: str, response: Response,
     check_owner_capacity(source.owner_hash)
     job = ReviewJob(
         secrets.token_hex(16), secrets.token_urlsafe(32), source.owner_hash,
-        ReviewRequest(deployment=source.request.deployment, mode="adaptive"),
+        ReviewRequest(deployment=source.request.deployment, mode="adaptive", run_name=source.request.run_name),
+        usage_history=continued_usage(source),
         inventory=deepcopy(source.inventory), source_run_id=source.run_id,
         requirements=deepcopy(source.requirements), extraction=deepcopy(source.extraction),
         grounding=deepcopy(source.grounding), benchmark_retrieval=deepcopy(source.benchmark_retrieval),
@@ -689,6 +723,67 @@ async def export_review(run_id: str, x_review_token: Annotated[str | None, Heade
     })
 
 
+@router.get("/runs/{run_id}/package")
+async def export_package(run_id: str, x_review_token: Annotated[str | None, Header()] = None):
+    job = authorize(run_id, x_review_token)
+    if job.request.mode == "item_review":
+        raise HTTPException(409, "Results packages are available for the goal-conditioned construction pipeline.")
+    # Capture all fields together before yielding to a running pipeline worker.
+    # The package includes full rankings, not the paginated polling preview.
+    snapshot = public_job(job, include_items=False)
+    if "retrieval" in snapshot:
+        snapshot["retrieval"] = job.benchmark_retrieval
+    snapshot["metadata"]["exported_at"] = datetime.now(timezone.utc).isoformat()
+    snapshot = deepcopy(snapshot)
+    job.downloads += 1
+    package = None
+    closed = False
+
+    def close_package():
+        nonlocal closed
+        if not closed:
+            closed = True
+            if package is not None:
+                package.close()
+            job.downloads -= 1
+
+    worker = asyncio.create_task(asyncio.to_thread(build_results_package, snapshot))
+    try:
+        # Compression runs off the event loop. A disconnected client must not
+        # leave a thread writing an unowned temporary file.
+        try:
+            package = await asyncio.shield(worker)
+        except asyncio.CancelledError:
+            await finish_worker(worker)
+            if not worker.cancelled() and worker.exception() is None:
+                package = worker.result()
+            raise
+
+        async def contents():
+            try:
+                while chunk := await run_in_threadpool(package.read, 64 * 1024):
+                    yield chunk
+            finally:
+                close_package()
+
+        class PackageResponse(StreamingResponse):
+            async def __call__(self, scope, receive, send):
+                # Header/send failures can precede the generator's first yield;
+                # response background tasks do not run on every disconnect.
+                try:
+                    await super().__call__(scope, receive, send)
+                finally:
+                    close_package()
+
+        return PackageResponse(contents(), media_type="application/zip", headers={
+            "Cache-Control": "no-store",
+            "Content-Disposition": f'attachment; filename="{package_filename(snapshot)}"',
+        })
+    except BaseException:
+        close_package()
+        raise
+
+
 @router.post("/runs/{run_id}/cancel")
 async def cancel_review(run_id: str, response: Response,
                         x_review_token: Annotated[str | None, Header()] = None) -> dict:
@@ -701,6 +796,7 @@ async def cancel_review(run_id: str, response: Response,
         job.status = "cancelled"
         job.message = stopped_message(job)
         job.finished_at = time.monotonic()
+        job.finished_at_utc = datetime.now(timezone.utc).isoformat()
     return public_job(job)
 
 
@@ -896,6 +992,7 @@ async def extract_requirements(job: ReviewJob, api_key: str) -> None:
     record_usage(job, result.get("usage"))
     for name in ("response_id", "response_model"):
         job.extraction[name] = result.get(name)
+    job.extraction["usage"] = deepcopy(result.get("usage"))
     if result["status"] != "complete":
         job.status = "failed"
         job.message = f"Requirement extraction failed: {result['error']} Start a new extraction to retry."
@@ -994,8 +1091,8 @@ async def retrieve_benchmarks(job: ReviewJob) -> None:
     cancelled = Event()
 
     def progress(state):
-        stage = {"loading": "Loading benchmark rows", "embedding": "Embedding benchmark questions locally",
-                 "cache": "Reusing cached benchmark questions"}[state["stage"]]
+        stage = {"indexing": "Preparing benchmark search",
+                 "cache": "Using the prepared benchmark index"}[state["stage"]]
         job.message = f"{stage}: {state['completed']:,} of {state['total']:,}."
 
     def search():
@@ -1005,10 +1102,18 @@ async def retrieve_benchmarks(job: ReviewJob) -> None:
                 if cancelled.is_set():
                     raise InterruptedError("Benchmark retrieval cancelled")
                 acquired = _retrieval_lock.acquire(timeout=0.1)
-            items = iter_benchmark_items(job.inventory, token=get_token(), streaming=True)
+            token = get_token()
+            items = lambda offset: iter_benchmark_items(
+                job.inventory, token=token, streaming=True, skip_rows=offset,
+            )
+
+            def load_rows(requests, *, cancelled=None):
+                return fetch_benchmark_rows(job.inventory, requests, token=token, cancelled=cancelled)
+
             index = prepare_benchmark_index(
                 items, cache_dir=db.DEFAULT_DB_PATH.parent / "benchmark-retrieval-index",
-                inventory=job.inventory, cancelled=cancelled.is_set, progress=progress,
+                inventory=job.inventory, cancelled=cancelled.is_set, progress=progress, resume=True,
+                minimum_free_bytes=DEFAULT_MINIMUM_FREE_BYTES, row_loader=load_rows,
             )
             state = {**job.benchmark_retrieval, "policy": index.policy, "stats": index.stats}
             job.benchmark_retrieval = state
@@ -1207,3 +1312,4 @@ async def evaluate(job: ReviewJob, api_key: str) -> None:
             items.close()
         api_key = ""
         job.finished_at = time.monotonic()
+        job.finished_at_utc = datetime.now(timezone.utc).isoformat()

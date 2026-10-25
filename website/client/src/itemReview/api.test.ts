@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { startReview, startGrounding, startBenchmarkRetrieval, startScreening, startSelection, startAdaptive, getCandidates, getReview } from './api'
+import { startReview, startGrounding, startBenchmarkRetrieval, startScreening, startSelection, startAdaptive, getCandidates, getReview, getReviewPackage } from './api'
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -101,4 +101,34 @@ it('resumes adaptive screening with an empty body to preserve its original setti
   expect(options.body).toBe('{}')
   expect(options.headers['X-OpenAI-Key']).toBe('sk-fresh')
   expect(options.headers['X-Review-Token']).toBe('adapt-access')
+})
+
+it('downloads a package with the private run token and the server filename', async () => {
+  const fetchMock = vi.fn().mockResolvedValue(new Response('zip-content', {
+    headers: { 'Content-Type': 'application/zip', 'Content-Disposition': 'attachment; filename="medical-goal-adaptive-20261025.zip"' },
+  }))
+  vi.stubGlobal('fetch', fetchMock)
+  const result = await getReviewPackage({ run_id: 'adapt', run_secret: 'private-access' })
+  expect(fetchMock.mock.calls[0]).toEqual(['/api/item-review/runs/adapt/package', {
+    cache: 'no-store', headers: { 'X-Review-Token': 'private-access' },
+  }])
+  expect(result.filename).toBe('medical-goal-adaptive-20261025.zip')
+  expect(await result.blob.text()).toBe('zip-content')
+})
+
+it.each([
+  ["attachment; filename*=UTF-8''%C3%A9tude.zip", 'étude.zip'],
+  ['attachment; filename="../report.zip"', 'benchmark-results-run.zip'],
+  ['attachment; filename="report.html"', 'benchmark-results-run.zip'],
+  ["attachment; filename*=UTF-8''%broken; filename=plain.zip", 'plain.zip'],
+  ['', 'benchmark-results-run.zip'],
+])('handles a package filename header %s', async (header, expected) => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('zip', { headers: { 'Content-Disposition': header } })))
+  const result = await getReviewPackage({ run_id: 'run', run_secret: 'private' })
+  expect(result.filename).toBe(expected)
+})
+
+it('reports an expired package request before treating its error body as a download', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ detail: 'Review not found or expired. Start a new review.' }), { status: 404 })))
+  await expect(getReviewPackage({ run_id: 'expired', run_secret: 'private' })).rejects.toThrow('Review not found or expired')
 })

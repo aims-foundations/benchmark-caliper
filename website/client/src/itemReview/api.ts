@@ -42,7 +42,7 @@ export interface Catalog {
   benchmarks: Array<{ id: string; name: string; table_count: number; source_rows: number; sample_max_items: number }>
 }
 export type ReviewRequest = { deployment: Deployment } & (
-  { mode: 'requirements' } | { mode?: 'item_review'; retrieve_k: number; retrieval_query?: string }
+  { mode: 'requirements'; run_name?: string } | { mode?: 'item_review'; retrieve_k: number; retrieval_query?: string }
 )
 export interface RunAccess { run_id: string; run_secret: string }
 export type LegacyConfidence = 'high' | 'medium' | 'low' | 'insufficient'
@@ -74,10 +74,15 @@ export interface Review {
   sample_complete: boolean; prepared_benchmarks: number; pagination: { page: number; page_size: number; total_pages: number }
   usage: Record<string, number>; ranked_items: ReviewedItem[]; unranked_items?: ReviewedItem[]; failed_items: ReviewedItem[]
 }
+export interface ResultMetadata {
+  export_version: number; run_name: string | null; created_at: string; finished_at: string | null
+  exported_at?: string; result_state: 'partial' | 'stage_complete' | 'frozen'; usage_scope: 'current_run'
+}
 export interface RequirementsReview {
   run_id: string; status: Review['status']; message: string; mode: 'requirements'
   model: string; reasoning_effort: string; deployment: Deployment; requirements: Requirements | null
   extraction: ExtractionPolicy | null; usage: Record<string, number>
+  metadata?: ResultMetadata
 }
 export interface OnetCandidate {
   doc_id: string; kind: string; name: string; text: string; occupation_id: string | null
@@ -232,6 +237,23 @@ export const getReview = (run: RunAccess, page = 1, signal?: AbortSignal) => req
 export const getReviewExport = async (run: RunAccess) => (await fetchResponse(`/runs/${run.run_id}/export`, {
   headers: { 'X-Review-Token': run.run_secret },
 })).blob()
+export const getReviewPackage = async (run: RunAccess): Promise<{ blob: Blob; filename: string }> => {
+  const response = await fetchResponse(`/runs/${run.run_id}/package`, {
+    headers: { 'X-Review-Token': run.run_secret },
+  })
+  const disposition = response.headers.get('Content-Disposition') || ''
+  const encoded = /(?:^|;)\s*filename\*=UTF-8''([^;]+)/i.exec(disposition)
+  const plain = /(?:^|;)\s*filename=(?:"([^"\r\n]+)"|([^;\s]+))/i.exec(disposition)
+  let filename = plain?.[1] || plain?.[2] || ''
+  if (encoded) {
+    try { filename = decodeURIComponent(encoded[1]) } catch { /* use the plain filename or fallback */ }
+  }
+  // A download name must be a filename, even if a proxy changes the header.
+  if (!filename || /[/\\\x00-\x1f\x7f]/.test(filename) || !filename.toLowerCase().endsWith('.zip')) {
+    filename = `benchmark-results-${run.run_id}.zip`
+  }
+  return { blob: await response.blob(), filename }
+}
 export const cancelReview = (run: RunAccess) => request<RunResult>(`/runs/${run.run_id}/cancel`, {
   method: 'POST', headers: { 'X-Review-Token': run.run_secret },
 })

@@ -20,7 +20,7 @@ export function BenchmarkRetrievalForm({ catalog, busy, onRetrieve }: {
         <strong>{benchmark.name}</strong><span>{benchmark.source_rows.toLocaleString()} source rows</span>
       </li>)}</ul>
     </details>
-    <p className="help">The first local index build can take time. The index is cached for later searches. Rows are combined only when every field matches exactly, including identifiers, and all source references are preserved.</p>
+    <p className="help">The first local index build can take time. The index is cached for later searches. Complete candidate rows are fetched from Hugging Face and kept with this run’s results. Rows are combined only when every field matches exactly, including identifiers, and all source references are preserved.</p>
     <p>Retrieval makes no paid model calls and needs no OpenAI key. The result is an ordered set of candidates for later review; it does not assess relevance or select a final benchmark.</p>
     {!catalog.dataset_access_configured && <p className="review-error" role="alert">Dataset access is not configured on this server. Your requirements and O*NET mappings remain available.</p>}
     <button type="submit" disabled={busy || !catalog.dataset_access_configured || catalog.table_count === 0}>{busy ? 'Starting…' : 'Retrieve benchmark items'}</button>

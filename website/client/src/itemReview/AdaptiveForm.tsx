@@ -41,10 +41,12 @@ export function AdaptiveForm({ busy, onAdapt, settings }: {
       {limited && <fieldset className="adaptive-cost-fields" disabled={busy}>
         <legend>Cost settings for this adaptive run</legend>
         <label className="review-field"><span>Additional screening cost ceiling (USD)</span><input type="number" min="0" step="any" required value={ceiling} onChange={event => setCeiling(event.target.value)} /></label>
-        <p className="help">Enter the token prices that apply to your screening model and account. Input and output prices must be positive; the cached input price can be zero and cannot exceed the input price. No prices are assumed.</p>
+        <p className="help">Enter GPT-6 Luna’s base prices for prompts up to 272,000 input tokens, using your account’s processing tier and regional rates. Input and output prices must be positive; the cached input price is for cache reads and can be zero but cannot exceed the input price.</p>
         <label className="review-field"><span>Input price per million tokens (USD)</span><input type="number" min="0" step="any" required value={inputRate} onChange={event => setInputRate(event.target.value)} /></label>
         <label className="review-field"><span>Cached input price per million tokens (USD)</span><input type="number" min="0" step="any" required value={cachedRate} onChange={event => setCachedRate(event.target.value)} /></label>
         <label className="review-field"><span>Output price per million tokens (USD)</span><input type="number" min="0" step="any" required value={outputRate} onChange={event => setOutputRate(event.target.value)} /></label>
+        <p className="help">Cache writes use 1.25× the input price for 30 minutes or 2.5× for 12 hours. These replace the ordinary input charge for written tokens. Reservations include the default 30-minute write rate.</p>
+        <p className="help">Above 272,000 input tokens, all input and cache rates double and the output rate increases by 1.5× for the whole request. Reservations apply this tier when the input estimate exceeds that threshold.</p>
         <p className="help">The ceiling applies only to Step 7 calls, including retries. Earlier calls are excluded. Reservations estimate the next call’s cost; they do not guarantee your final provider invoice.</p>
       </fieldset>}
     </>}

@@ -3,12 +3,13 @@
 from copy import deepcopy
 from itertools import product
 import math
+import json
 
 import pytest
 from pydantic import ValidationError
 
 from bayesian_auditing.screening_budget import (
-    AdaptiveSettings, can_afford, cost_summary, request_reservation, usage_cost,
+    COST_POLICY, AdaptiveSettings, can_afford, cost_summary, request_reservation, usage_cost,
 )
 
 
@@ -24,6 +25,13 @@ def usage(incoming=1000, outgoing=250, cached=400):
 
 def attempt(*, tokens=None, cost=None, reserved=0.02, status="complete"):
     return {"usage": tokens, "cost_usd": cost, "reserved_usd": reserved, "status": status}
+
+
+def written_usage(*, incoming=12000, cached=4000, short=3000, long=4000, outgoing=250):
+    return {"input_tokens": incoming, "output_tokens": outgoing, "input_tokens_details": {
+        "cached_tokens": cached, "cache_write_tokens": short + long,
+        "cache_write_tokens_details": {"ttl_30m_tokens": short, "ttl_12h_tokens": long},
+    }}
 
 
 def test_default_settings_allow_unpriced_runs_and_retain_explicit_scope():
@@ -104,11 +112,89 @@ def test_cached_input_is_charged_once_at_its_own_rate():
     assert usage_cost({"input_tokens": 1000, "output_tokens": 250}, config) == pytest.approx(0.004)
 
 
+def test_mixed_lifetime_cache_writes_are_charged_once_at_total_write_rates():
+    # Official documentation's example: 1k ordinary, 4k reads, 3k 30m writes,
+    # and 4k 12h writes. Writes replace ordinary input, rather than adding fees.
+    tokens = written_usage()
+    original = deepcopy(tokens)
+    assert usage_cost(tokens, settings()) == pytest.approx(
+        (1000 * 2 + 4000 * .5 + 3000 * 2.5 + 4000 * 5 + 250 * 8) / 1_000_000)
+    assert tokens == original
+
+
+@pytest.mark.parametrize("short,long,expected", [(1000, 0, .0025), (0, 1000, .005)])
+def test_entire_input_can_be_written_without_ordinary_input(short, long, expected):
+    tokens = written_usage(incoming=1000, cached=0, short=short, long=long, outgoing=0)
+    assert usage_cost(tokens, settings()) == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("incoming,input_multiplier,output_multiplier", [(272000, 1, 1), (272001, 2, 1.5)])
+def test_long_context_tier_counts_all_input_and_multiplies_entire_request(incoming, input_multiplier, output_multiplier):
+    tokens = written_usage(incoming=incoming)
+    # The total includes reads and both write types, not only ordinary input.
+    base_input_cost = (incoming - 11000) * 2 + 4000 * .5 + 3000 * 2.5 + 4000 * 5
+    expected = (base_input_cost * input_multiplier + 250 * 8 * output_multiplier) / 1_000_000
+    assert usage_cost(tokens, settings()) == pytest.approx(expected)
+
+
+def test_large_output_does_not_trigger_long_context_input_pricing():
+    tokens = written_usage(incoming=12000, outgoing=300000)
+    assert usage_cost(tokens, settings()) == pytest.approx(
+        (1000 * 2 + 4000 * .5 + 3000 * 2.5 + 4000 * 5 + 300000 * 8) / 1_000_000)
+
+
+def test_zero_write_fields_and_legacy_usage_have_identical_cost():
+    tokens = written_usage(incoming=1000, cached=400, short=0, long=0)
+    assert usage_cost(tokens, settings()) == usage_cost(usage(), settings())
+    tokens["input_tokens_details"].pop("cache_write_tokens_details")
+    assert usage_cost(tokens, settings()) == usage_cost(usage(), settings())
+    tokens["input_tokens_details"].update(cache_write_tokens=None, cache_write_tokens_details=None)
+    assert usage_cost(tokens, settings()) == usage_cost(usage(), settings())
+
+
+@pytest.mark.parametrize("change", [
+    "no_breakdown", "null_breakdown", "no_short", "no_long", "no_total", "sum_mismatch",
+    "overlap", "negative_total", "boolean_total", "string_total", "negative_short",
+    "boolean_long", "fractional_short", "list_breakdown", "unknown_breakdown",
+])
+def test_invalid_cache_write_usage_retains_reservation(change):
+    tokens = written_usage()
+    details = tokens["input_tokens_details"]
+    breakdown = details["cache_write_tokens_details"]
+    if change == "no_breakdown":
+        details.pop("cache_write_tokens_details")
+    elif change == "null_breakdown":
+        details["cache_write_tokens_details"] = None
+    elif change in {"no_short", "no_long"}:
+        breakdown.pop("ttl_30m_tokens" if change == "no_short" else "ttl_12h_tokens")
+    elif change == "no_total":
+        details.pop("cache_write_tokens")
+    elif change == "sum_mismatch":
+        details["cache_write_tokens"] += 1
+    elif change == "overlap":
+        tokens["input_tokens"] = 10000
+    elif change in {"negative_total", "boolean_total", "string_total"}:
+        details["cache_write_tokens"] = {"negative_total": -1, "boolean_total": True, "string_total": "7000"}[change]
+    elif change == "negative_short":
+        breakdown["ttl_30m_tokens"] = -1
+    elif change == "boolean_long":
+        breakdown["ttl_12h_tokens"] = False
+    elif change == "fractional_short":
+        breakdown["ttl_30m_tokens"] = 3000.0
+    else:
+        details["cache_write_tokens_details"] = [] if change == "list_breakdown" else "unknown"
+    assert usage_cost(tokens, settings()) is None
+    summary = cost_summary([attempt(tokens=tokens, reserved=.03)], settings())
+    assert summary["unknown_attempts"] == 1
+    assert summary["spent_usd"] == 0 and summary["reserved_usd"] == .03
+
+
 @pytest.mark.parametrize("tokens", [
     None, {}, "unknown", {"input_tokens": 1}, {"output_tokens": 1},
     usage(incoming=-1), usage(outgoing=-1), usage(cached=-1), usage(cached=1001),
     usage(incoming=1.5), usage(outgoing="250"), usage(cached=True),
     usage(incoming=True), usage(outgoing=False),
+    usage(incoming=10**400), usage(outgoing=10**400),
     {"input_tokens": 1000, "output_tokens": 250, "input_tokens_details": "unknown"},
     {"input_tokens": 1000, "output_tokens": 250, "input_tokens_details": [1]},
 ])
@@ -118,25 +204,66 @@ def test_missing_or_invalid_usage_keeps_cost_unknown(tokens):
 
 def test_request_reservation_counts_unicode_bytes_and_maximum_output_without_cache_discount():
     config = settings()
-    request = {"input": "a", "max_output_tokens": 250}
+    request = {"model": "gpt-6-luna", "input": "a", "max_output_tokens": 250}
     original = deepcopy(request)
     base = request_reservation(request, config)
-    assert base > 1024 * 2 / 1_000_000 + 250 * 8 / 1_000_000
+    input_estimate = len(json.dumps(request, ensure_ascii=False).encode("utf-8")) + 1024
+    assert base == pytest.approx((input_estimate * 2 * 1.25 + 250 * 8) / 1_000_000)
     assert request == original
     # UTF-8 é occupies two bytes, while a occupies one.
     unicode_request = {**request, "input": "é"}
-    assert request_reservation(unicode_request, config) - base == pytest.approx(2 / 1_000_000)
+    assert request_reservation(unicode_request, config) - base == pytest.approx(2.5 / 1_000_000)
     more_output = {**request, "max_output_tokens": 251}
     assert request_reservation(more_output, config) - base == pytest.approx(8 / 1_000_000)
     config["cached_input_price_per_million"] = 0
     assert request_reservation(request, config) == base
 
 
+@pytest.mark.parametrize("overrides", [
+    {"model": "other-model"}, {"model": None},
+    {"prompt_cache_options": {"ttl": "12h"}}, {"prompt_cache_retention": "24h"},
+])
+def test_reservation_rejects_requests_outside_documented_model_and_cache_policy(overrides):
+    request = {"model": "gpt-6-luna", "input": "Question", "max_output_tokens": 250, **overrides}
+    with pytest.raises(ValueError, match="policy"):
+        request_reservation(request, settings())
+
+
+def test_cache_write_premium_can_stop_a_call_that_ordinary_input_would_allow():
+    request = {"model": "gpt-6-luna", "input": "Question", "max_output_tokens": 250}
+    incoming = len(json.dumps(request).encode("utf-8")) + 1024
+    ordinary_estimate = (incoming * 2 + 250 * 8) / 1_000_000
+    config = settings(max_cost_usd=ordinary_estimate)
+    assert not can_afford(request_reservation(request, config), [], config)
+
+
+@pytest.mark.parametrize("incoming,input_multiplier,output_multiplier", [(272000, 1, 1), (272001, 2, 1.5)])
+def test_reservation_uses_conservative_input_estimate_for_context_tier(incoming, input_multiplier, output_multiplier):
+    request = {"model": "gpt-6-luna", "input": "", "max_output_tokens": 250}
+    overhead = len(json.dumps(request, ensure_ascii=False).encode("utf-8")) + 1024
+    request["input"] = "a" * (incoming - overhead)
+    assert len(json.dumps(request, ensure_ascii=False).encode("utf-8")) + 1024 == incoming
+    expected = (incoming * 2 * 1.25 * input_multiplier + 250 * 8 * output_multiplier) / 1_000_000
+    assert request_reservation(request, settings()) == pytest.approx(expected)
+    if incoming > 272000:
+        short_context_estimate = (incoming * 2 * 1.25 + 250 * 8) / 1_000_000
+        config = settings(max_cost_usd=short_context_estimate)
+        assert not can_afford(request_reservation(request, config), [], config)
+
+
+def test_exported_cost_policy_records_multipliers_without_aliasing_constants():
+    summary = cost_summary([], settings())
+    assert summary["policy"] == COST_POLICY
+    assert summary["policy"]["model"] == "gpt-6-luna"
+    summary["policy"]["version"] = -1
+    assert cost_summary([], settings())["policy"]["version"] == 2
+
+
 def test_unrepresentable_request_reservation_is_rejected():
     config = settings()
     config["input_price_per_million"] = 1e308
     with pytest.raises(ValueError, match="too large"):
-        request_reservation({"input": "Question", "max_output_tokens": 250}, config)
+        request_reservation({"model": "gpt-6-luna", "input": "Question", "max_output_tokens": 250}, config)
 
 
 def test_known_usage_replaces_reservation_and_unknown_attempts_keep_it_on_resume():
@@ -165,6 +292,7 @@ def test_failed_requests_with_returned_usage_still_cost_money():
 
 
 @pytest.mark.parametrize("tokens", [None, {}, {"input_tokens": 1000}, usage(cached=1001),
+                                   usage(incoming=10**400),
                                    {"input_tokens": 1000, "output_tokens": "unknown"}])
 def test_unknown_attempt_count_tracks_unusable_usage_even_if_object_is_nonempty(tokens):
     config = settings()

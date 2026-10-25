@@ -233,3 +233,27 @@ def test_pinned_table_counts_must_match_actual_parquet_rows(bank, expected):
     with pytest.raises(ValueError, match="row count"):
         list(iter_benchmark_items(inventory, token="fixture-token"))
     assert opened[-1].closed
+
+
+def test_resume_reader_skips_completed_tables_and_keeps_original_row_numbers(bank):
+    inventory, add, opened, _ = bank
+    add('first', [{'item_id': str(i), 'content': 'first'} for i in range(5)])
+    add('second', [{'item_id': str(i), 'content': 'second'} for i in range(8)])
+    expected = list(iter_benchmark_items(inventory, token='fixture-token'))
+    opened.clear()
+    actual = list(iter_benchmark_items(inventory, token='fixture-token', skip_rows=9))
+    assert actual == expected[9:]
+    assert [row['source']['row'] for row in actual] == [5, 6, 7, 8]
+    assert len(opened) == 1 and opened[0].closed
+    opened.clear()
+    assert list(iter_benchmark_items(inventory, token='fixture-token', skip_rows=13)) == []
+    assert not opened
+    with pytest.raises(ValueError, match='exceeds'):
+        list(iter_benchmark_items(inventory, token='fixture-token', skip_rows=14))
+
+
+@pytest.mark.parametrize('offset', [-1, True, 1.5])
+def test_resume_reader_rejects_invalid_offset(bank, offset):
+    inventory, _, _, _ = bank
+    with pytest.raises(ValueError, match='nonnegative integer'):
+        list(iter_benchmark_items(inventory, token='fixture-token', skip_rows=offset))

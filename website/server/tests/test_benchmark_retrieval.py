@@ -12,7 +12,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
 
-from bayesian_auditing import benchmark_data, data as legacy_data
+from bayesian_auditing import benchmark_data, benchmark_rows, data as legacy_data
 from bayesian_auditing.benchmark_index import prepare_benchmark_index as real_prepare
 from bayesian_auditing.benchmark_data import row_fingerprint, row_search_text
 from website.server import item_review
@@ -71,13 +71,14 @@ def full_bank(client, monkeypatch, tmp_path):
                      for name, branch, commit in [("matharena", "main", "fixed-a"),
                                                   ("coding", "main", "fixed-a"),
                                                   ("customer_support", "main", "fixed-a")]]}
-    calls, builds = [], []
+    calls, builds, fetches = [], [], []
 
-    def iter_items(selected, *, token, streaming):
+    def iter_items(selected, *, token, streaming, skip_rows=0):
         assert token == HF_KEY and streaming is True
         calls.append(deepcopy(selected))
         names = {table["benchmark"] for table in selected["tables"]}
-        return (deepcopy(row) for row in rows if row["source"]["benchmark"] in names)
+        selected_rows = [row for row in rows if row["source"]["benchmark"] in names]
+        return (deepcopy(row) for row in selected_rows[skip_rows:])
 
     class Encoder:
         dimensions = 2
@@ -86,22 +87,33 @@ def full_bank(client, monkeypatch, tmp_path):
         def encode(self, texts):
             return np.asarray([[1., 0.] for _ in texts], dtype=np.float32)
 
-    def prepare(items, cache_dir=None, inventory=None, encoder=None, cancelled=None, progress=None):
+    def prepare(items, cache_dir=None, inventory=None, encoder=None, cancelled=None, progress=None, *,
+                resume=False, minimum_free_bytes=0, row_loader=None):
         builds.append(deepcopy(inventory))
-        return real_prepare(items, tmp_path / "index", inventory, Encoder(), cancelled, progress)
+        assert resume is True
+        assert minimum_free_bytes == item_review.DEFAULT_MINIMUM_FREE_BYTES
+        return real_prepare(items, tmp_path / "index", inventory, Encoder(), cancelled, progress,
+                            resume=resume, minimum_free_bytes=minimum_free_bytes, row_loader=row_loader)
+
+    def fetch_rows(selected, requests, *, token, cancelled=None):
+        assert token == HF_KEY
+        fetches.append(deepcopy(requests))
+        originals = {row["evidence_hash"]: row["evidence"]["item"] for row in rows}
+        return {request["item_id"]: deepcopy(originals[request["item_id"]]) for request in requests}
 
     def forbidden(*args, **kwargs):
         pytest.fail("Benchmark retrieval must not call a model or seeded sample preparation")
 
     monkeypatch.setattr(item_review, "inventory", lambda: deepcopy(inventory))
     monkeypatch.setattr(item_review, "iter_benchmark_items", iter_items)
+    monkeypatch.setattr(item_review, "fetch_benchmark_rows", fetch_rows)
     monkeypatch.setattr(item_review, "prepare_benchmark_index", prepare)
     for name in ("AsyncOpenAI", "AsyncJudge", "AsyncRequirementExtractor", "AsyncOnetMapper",
                  "prepare_samples", "iter_sample_items", "review_items"):
         monkeypatch.setattr(item_review, name, forbidden)
     monkeypatch.setattr(legacy_data, "iter_items", forbidden)
     monkeypatch.setattr(legacy_data, "_context", forbidden)
-    return {"calls": calls, "builds": builds, "prepare": prepare, "rows": rows}
+    return {"calls": calls, "builds": builds, "fetches": fetches, "prepare": prepare, "rows": rows}
 
 
 def test_continuation_searches_every_collection_and_preserves_full_rows(client, full_bank):
@@ -129,6 +141,9 @@ def test_continuation_searches_every_collection_and_preserves_full_rows(client, 
     assert all("item_ids" not in queue and "item_count" in queue for queue in retrieval["queues"])
     assert "ranked_items" not in result and "scoring_policy" not in result
     exported = export(client, access).json()["retrieval"]
+    assert len(full_bank["fetches"]) == 2
+    for requests, ranking in zip(full_bank["fetches"], exported["rankings"]):
+        assert [request["item_id"] for request in requests] == [row["item_id"] for row in ranking["candidates"]]
     assert exported["inventory"] == full_bank["builds"][0]
     assert {table["benchmark"] for table in exported["inventory"]["tables"]} == expected_sources
     assert sum(table["row_count"] for table in exported["inventory"]["tables"]) == len(expected_rows)
@@ -179,11 +194,14 @@ def test_http_pipeline_reads_real_parquet_rows_without_projection_or_release_fil
 
     monkeypatch.setattr(item_review, "inventory", lambda: deepcopy(inventory))
     monkeypatch.setattr(item_review, "iter_benchmark_items", benchmark_data.iter_benchmark_items)
+    monkeypatch.setattr(item_review, "fetch_benchmark_rows", benchmark_rows.fetch_benchmark_rows)
     monkeypatch.setattr(benchmark_data, "open_item_table", open_items)
+    monkeypatch.setattr(benchmark_rows, "open_item_table", open_items)
     access = start_retrieval(client, seed_grounding())
     result = finished(client, access).json()
     assert result["status"] == "completed"
-    assert len(opened) == 3
+    assert opened[:3] == [table["items_path"] for table in inventory["tables"]]
+    assert opened[3:] and len(opened[3:]) == len(set(opened[3:]))
     assert result["retrieval"]["stats"]["source_rows"] == 6
     assert result["retrieval"]["stats"]["indexed_items"] == 4
     assert result["retrieval"]["scope"]["release_filter"] is None
@@ -202,6 +220,32 @@ def test_http_pipeline_reads_real_parquet_rows_without_projection_or_release_fil
                       params={"queue_id": queue["queue_id"]},
                       headers={"X-Review-Token": access["run_secret"]}).json()
     assert page["items"] == exported["rankings"][0]["candidates"]
+
+
+def test_cached_index_fetches_candidate_rows_without_reloading_the_bank(client, full_bank):
+    source = seed_grounding()
+    first = finished(client, start_retrieval(client, source)).json()
+    assert first["status"] == "completed" and not first["retrieval"]["stats"]["cache_hit"]
+    assert len(full_bank["calls"]) == len(full_bank["fetches"]) == 1
+    second = finished(client, start_retrieval(client, source)).json()
+    assert second["status"] == "completed" and second["retrieval"]["stats"]["cache_hit"]
+    assert len(full_bank["calls"]) == 1
+    assert len(full_bank["fetches"]) == 2
+
+
+@pytest.mark.parametrize("failure", ["network", "changed_row"])
+def test_candidate_fetch_failure_never_publishes_an_unverified_ranking(client, full_bank, monkeypatch, failure):
+    def broken(inventory, requests, **kwargs):
+        if failure == "network":
+            raise RuntimeError(f"Private source request failed: {HF_KEY}")
+        return {request["item_id"]: {"content": "A different source row"} for request in requests}
+
+    monkeypatch.setattr(item_review, "fetch_benchmark_rows", broken)
+    access = start_retrieval(client, seed_grounding())
+    response = finished(client, access)
+    assert response.json()["status"] == "failed"
+    assert HF_KEY not in response.text
+    assert export(client, access).json()["retrieval"]["rankings"] == []
 
 
 def test_export_keeps_one_retrieval_snapshot_and_releases_interrupted_download(client, full_bank):
