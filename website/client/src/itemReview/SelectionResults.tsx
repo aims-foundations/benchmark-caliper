@@ -1,13 +1,15 @@
 import { useState } from 'react'
-import { getReviewExport, type RunAccess, type SelectionReview } from './api'
+import { getReviewExport, type RunAccess, type SelectionReview, type AdaptiveRequest } from './api'
 import { RequirementsContent } from './RequirementsResults'
 import { ScreeningForm } from './ScreeningForm'
 import { ScreeningItem } from './ScreeningResults'
 import { SelectionForm } from './SelectionForm'
+import { AdaptiveForm } from './AdaptiveForm'
 
-export function SelectionResults({ review, run, busy, onCancel, onRestart, onSelect, onScreen }: {
+export function SelectionResults({ review, run, busy, onCancel, onRestart, onSelect, onScreen, onAdapt }: {
   review: SelectionReview; run: RunAccess; busy: boolean; onCancel: () => void; onRestart: () => void
   onSelect: () => Promise<boolean>; onScreen: (apiKey: string) => Promise<boolean>
+  onAdapt: (apiKey: string, body: AdaptiveRequest) => Promise<boolean>
 }) {
   const [downloading, setDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState('')
@@ -15,12 +17,7 @@ export function SelectionResults({ review, run, busy, onCancel, onRestart, onSel
   const selection = review.selection
   const input = review.selection_input
   const previous = !!selection && (review.status !== 'completed' || (review.selection_run_id != null && review.selection_run_id !== review.run_id))
-  const screenedItems = new Map(review.screening?.items.map(item => [item.item_id, item]))
   const remaining = input.errors + input.pending
-  const taskName = (id: string) => {
-    const index = review.requirements?.task_facets.findIndex(facet => facet.facet_id === id) ?? -1
-    return index >= 0 ? `Task ${index + 1}` : id
-  }
 
   async function download() {
     setDownloading(true)
@@ -72,6 +69,25 @@ export function SelectionResults({ review, run, busy, onCancel, onRestart, onSel
       {downloadError && <p className="review-error" role="alert">{downloadError}</p>}
     </section>
 
+    <SelectedCollection review={review} previous={previous} />
+    {!active && remaining > 0 && <ScreeningForm busy={busy} onScreen={onScreen} remaining={remaining} retained={input.screened} />}
+    {!active && <SelectionForm busy={busy} onSelect={onSelect} input={input} />}
+    {!active && review.status === 'completed' && selection && !previous && remaining === 0 && <AdaptiveForm busy={busy} onAdapt={onAdapt} />}
+    <RequirementsContent requirements={review.requirements} deployment={review.deployment} />
+  </div>
+}
+
+
+export function SelectedCollection({ review, previous = false }: {
+  review: Pick<SelectionReview, 'run_id' | 'requirements' | 'screening' | 'selection' | 'selection_run_id'>; previous?: boolean
+}) {
+  const selection = review.selection
+  const screenedItems = new Map(review.screening?.items.map(item => [item.item_id, item]))
+  const taskName = (id: string) => {
+    const index = review.requirements?.task_facets.findIndex(facet => facet.facet_id === id) ?? -1
+    return index >= 0 ? `Task ${index + 1}` : id
+  }
+  return <>
     {selection && <>
       <section className="review-panel" aria-labelledby="selection-task-coverage-title">
         <h2 id="selection-task-coverage-title">Task coverage</h2>
@@ -109,8 +125,5 @@ export function SelectionResults({ review, run, busy, onCancel, onRestart, onSel
         </details>
       </section>
     </>}
-    {!active && remaining > 0 && <ScreeningForm busy={busy} onScreen={onScreen} remaining={remaining} retained={input.screened} />}
-    {!active && <SelectionForm busy={busy} onSelect={onSelect} input={input} />}
-    <RequirementsContent requirements={review.requirements} deployment={review.deployment} />
-  </div>
+  </>
 }

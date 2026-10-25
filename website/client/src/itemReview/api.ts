@@ -160,7 +160,35 @@ export interface SelectionReview extends Omit<ScreeningReview, 'mode'> {
     excluded_counts: Record<string, number>; solver: Record<string, unknown>
   } | null
 }
-export type RunResult = Review | RequirementsReview | GroundingReview | BenchmarkRetrievalReview | ScreeningReview | SelectionReview
+export interface AdaptiveRequest {
+  seed?: number; max_cost_usd?: number | null; input_price_per_million?: number | null
+  cached_input_price_per_million?: number | null; output_price_per_million?: number | null
+}
+export interface AdaptiveSettings extends Required<AdaptiveRequest> {
+  candidate_limit: number; batch_size: number; exploration_rate: number
+}
+export interface QueueStatistics {
+  queue_id: string; facet_id: string; source: string | null; successes: number; failures: number
+  alpha: number; beta: number; estimated_yield: number; coverage_weight?: number; priority?: number; remaining?: number
+}
+export interface AdaptiveBatch {
+  number: number; kind: 'initial' | 'adaptive'; status: 'committed' | 'pending'
+  queue_id: string | null; facet_id: string | null; source: string | null; exploration: boolean | null
+  item_ids: string[]; outcomes: Array<{ item_id: string; facet_id: string; source_names: string[]; retained: boolean }>
+  selected_item_ids: string[]; unresolved_item_ids?: string[]; priorities?: QueueStatistics[]
+}
+export interface AdaptiveReview extends Omit<SelectionReview, 'mode'> {
+  mode: 'adaptive'
+  adaptive: {
+    version: number; policy: Record<string, unknown>; settings: AdaptiveSettings; batches: AdaptiveBatch[]
+    queue_statistics: QueueStatistics[]
+    attempts: Array<{ item_id: string; status: string; usage: Record<string, number> | null; cost_usd: number | null; reserved_usd: number | null }>
+    cost: { spent_usd: number | null; reserved_usd: number | null; unknown_attempts: number; scope: 'adaptive_screening' }
+    frozen: boolean; stop_reason: 'candidate_limit' | 'queues_exhausted' | 'cost_limit' | null
+    screened_count: number; acquired_count: number
+  } | null
+}
+export type RunResult = Review | RequirementsReview | GroundingReview | BenchmarkRetrievalReview | ScreeningReview | SelectionReview | AdaptiveReview
 
 async function fetchResponse(path: string, options: RequestInit = {}): Promise<Response> {
   const response = await fetch(appPath(`/api/item-review${path}`), { cache: 'no-store', ...options })
@@ -190,6 +218,9 @@ export const startScreening = (run: RunAccess, apiKey: string) => request<RunAcc
 })
 export const startSelection = (run: RunAccess) => request<RunAccess>(`/runs/${run.run_id}/select`, {
   method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Review-Token': run.run_secret }, body: JSON.stringify({}),
+})
+export const startAdaptive = (run: RunAccess, apiKey: string, body: AdaptiveRequest) => request<RunAccess>(`/runs/${run.run_id}/adapt`, {
+  method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Review-Token': run.run_secret, 'X-OpenAI-Key': apiKey }, body: JSON.stringify(body),
 })
 export const getCandidates = (run: RunAccess, queueId: string, page = 1, signal?: AbortSignal) => request<CandidatePage>(
   `/runs/${run.run_id}/candidates?${new URLSearchParams({ queue_id: queueId, page: String(page) })}`,

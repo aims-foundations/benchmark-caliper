@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { startReview, startGrounding, startBenchmarkRetrieval, startScreening, startSelection, getCandidates, getReview } from './api'
+import { startReview, startGrounding, startBenchmarkRetrieval, startScreening, startSelection, startAdaptive, getCandidates, getReview } from './api'
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -79,4 +79,26 @@ it('starts collection selection with only the source token and an empty JSON bod
   expect(fetchMock.mock.calls[0]).toEqual(['/api/item-review/runs/screen/select', {
     cache: 'no-store', method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Review-Token': 'screen-access' }, body: '{}',
   }])
+})
+
+
+it('starts adaptive screening with an explicit budget and private credentials only in headers', async () => {
+  const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ run_id: 'adapt', run_secret: 'adapt-access' })))
+  vi.stubGlobal('fetch', fetchMock)
+  const body = { seed: 2, max_cost_usd: 5, input_price_per_million: 1, cached_input_price_per_million: 0, output_price_per_million: 3 }
+  await startAdaptive({ run_id: 'select', run_secret: 'select-access' }, 'sk-private', body)
+  expect(fetchMock.mock.calls[0]).toEqual(['/api/item-review/runs/select/adapt', {
+    cache: 'no-store', method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Review-Token': 'select-access', 'X-OpenAI-Key': 'sk-private' }, body: JSON.stringify(body),
+  }])
+})
+
+it('resumes adaptive screening with an empty body to preserve its original settings', async () => {
+  const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ run_id: 'adapt-resume', run_secret: 'resume-access' })))
+  vi.stubGlobal('fetch', fetchMock)
+  await startAdaptive({ run_id: 'adapt', run_secret: 'adapt-access' }, 'sk-fresh', {})
+  const [url, options] = fetchMock.mock.calls[0]
+  expect(url).toBe('/api/item-review/runs/adapt/adapt')
+  expect(options.body).toBe('{}')
+  expect(options.headers['X-OpenAI-Key']).toBe('sk-fresh')
+  expect(options.headers['X-Review-Token']).toBe('adapt-access')
 })

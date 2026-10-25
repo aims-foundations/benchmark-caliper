@@ -233,6 +233,11 @@
 .selection-notice p:last-child, .selection-notice ul:last-child { margin-bottom: 0; }
 .selection-quality { color: #3d562a; font-variant-numeric: tabular-nums; }
 .selection-coverage { padding-block: .75rem; border-top: 1px solid var(--review-border); }
+.adaptive-toggle { display: flex; align-items: baseline; gap: .6rem; margin: 1rem 0; }
+.adaptive-toggle input { width: auto; }
+.adaptive-cost-fields { margin: 1rem 0; padding: 1rem; border: 1px solid var(--review-border); border-radius: 5px; min-width: 0; }
+.adaptive-batch { padding-block: .75rem; overflow-wrap: anywhere; }
+.adaptive-results .screening-allocation { min-width: 650px; }
 .review-detail-confidence p { color: var(--review-muted); margin: .4rem 0 0; }
 .review-dimension-detail h5 { font-size: .9rem; font-weight: 600; margin: 1rem 0 .4rem; }
 .review-dimension-detail ul { padding-left: 1.2rem; margin: .4rem 0; }

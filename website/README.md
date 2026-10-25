@@ -330,8 +330,8 @@ required finding leaves the gate unresolved. Output content and output form
 are reported separately, and coverage does not change the gate. Invalid model
 responses are errors, distinct from valid fail or unresolved assessments. This
 step adds no confidence aggregate, final benchmark selection, or adaptive
-allocation. Collection selection is a separate Step 6 action; Step 7 is not
-implemented.
+allocation. Collection selection is a separate Step 6 action, followed by the
+optional Step 7 adaptive loop described below.
 
 `POST /api/item-review/runs/{run_id}/screen` accepts `{}` or an omitted body and
 requires the source run's `X-Review-Token` and a fresh `X-OpenAI-Key`. Budget and
@@ -404,7 +404,58 @@ screening prompt/settings. Select again afterward to include the additional
 results. Step 6 itself makes no model calls and does not start adaptive batches,
 freeze a final benchmark, or validate clinical correctness. See the
 [`Step 6 implementation notes`](../bayesian_auditing/README.md#step-6-select-a-collection-under-coverage-constraints)
-for the optimization and fallback policy. Step 7 remains unimplemented.
+for the optimization and fallback policy.
+
+After the complete initial allocation has valid screening results and Step 6
+has accepted a collection, **Start adaptive screening** continues Step 7 from
+the saved retrieval queues. It screens up to eight unseen candidates per batch
+and stops at **160 distinct candidates total**, including the initial 50, queue
+exhaustion, or a configured cost ceiling. It never retrieves additional items or
+screens an identical original row twice merely because it appears in several
+queues. Each completed batch reruns the existing local selector over all valid
+results, keeping the collection at **up to 30 items total** and preserving
+previously achieved coverage while allowing better items to replace earlier
+ones. Covering every task does not itself stop screening.
+
+The queue controller uses `Beta(1, 1)` counters updated from immediate
+post-batch retention, including the initial Step 6 selection as batch zero. Its
+estimated yield is `(1 + successes) / (2 + successes + failures)`. A coverage
+bonus raises the priority of queues associated with unmet task minima or
+conditional quotas. With probability 0.8 it chooses the highest priority; with
+probability 0.2 it chooses uniformly from available queues. The seed, queue
+priorities, decisions, and batch outcomes are saved for inspection. Historical
+outcomes remain fixed if a later batch replaces an earlier selected item.
+
+`POST /api/item-review/runs/{run_id}/adapt` requires `X-Review-Token` and a fresh
+`X-OpenAI-Key`. A new run accepts a seed (default 0) and an optional dollar cap
+with input, cached-input, and output prices per million tokens. All three prices
+must accompany a cap; they are supplied explicitly rather than inferred from
+the model name. The fixed 160-candidate and eight-per-batch limits cannot be
+overridden. The cost scope is **new Step 7 calls only**, excluding sunk costs
+from earlier stages. Conservative request reservations are settled against
+returned token usage, with cached input accounted separately. Unknown charges
+remain visible and reserved; without configured prices, dollar amounts remain
+unknown. This admission estimate is not a guaranteed provider bill.
+
+Cancellation, provider errors, invalid screening responses, and incomplete
+selection keep the last accepted collection and pending batch. **Continue
+adaptive screening** retries only unfinished or invalid assessments with the
+original settings and seed; it commits queue outcomes only after that
+batch's selection succeeds. SDK retries are disabled, and every explicit
+attempt remains in the cost ledger. Continuation creates a new private run and
+leaves the source unchanged. `/screen` and `/select` reject adaptive sources;
+use `/adapt` to preserve the complete history. If the budget cannot fund a pending
+batch's retries, a final selection can use its valid assessments before freezing;
+unresolved item IDs are reported and receive no retention outcome. A frozen
+collection cannot resume.
+
+The preview and JSON export show the collection, remaining gaps, queue
+statistics, batch history, attempts, cost scope, and stopping reason alongside
+all earlier artifacts. Freezing means adaptive construction has stopped; it
+does not validate the model's judgments or evaluate a deployed AI system. Runs
+retain the existing temporary expiry and do not survive server restarts. See
+the [Step 7 implementation notes](../bayesian_auditing/README.md#step-7-adapt-screening-and-freeze-the-collection)
+for the priority formula and conditional-quota extension.
 
 The existing **Review catalog** assessment option collects six deployment answers, retrieves relevant questions
 locally, and uses the visitor's OpenAI key to assess only the selected shortlist.

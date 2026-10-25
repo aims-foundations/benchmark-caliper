@@ -6,7 +6,7 @@ import * as api from './api'
 
 vi.mock('./api', async importOriginal => ({
   ...await importOriginal<typeof import('./api')>(),
-  getCatalog: vi.fn(), startReview: vi.fn(), startGrounding: vi.fn(), startBenchmarkRetrieval: vi.fn(), startScreening: vi.fn(), startSelection: vi.fn(), getCandidates: vi.fn(), getReview: vi.fn(), cancelReview: vi.fn(), getReviewExport: vi.fn(),
+  getCatalog: vi.fn(), startReview: vi.fn(), startGrounding: vi.fn(), startBenchmarkRetrieval: vi.fn(), startScreening: vi.fn(), startSelection: vi.fn(), startAdaptive: vi.fn(), getCandidates: vi.fn(), getReview: vi.fn(), cancelReview: vi.fn(), getReviewExport: vi.fn(),
 }))
 
 const catalog: api.Catalog = { model: 'gpt-6-luna', reasoning_effort: 'high', max_output_tokens: 25000,
@@ -123,6 +123,29 @@ const selected: api.SelectionReview = {
   },
 }
 
+const readyToAdapt: api.SelectionReview = {
+  ...selected, selection_input: { allocated: 3, screened: 3, errors: 0, pending: 0 },
+  screening: { ...screened.screening!, items: screened.screening!.items.slice(0, 3) },
+}
+const adapted: api.AdaptiveReview = {
+  ...readyToAdapt, mode: 'adaptive', run_id: 'adapt-run', source_run_id: 'select-run', status: 'completed',
+  message: 'Adaptive screening reached the candidate limit; remaining coverage gaps are reported.', selection_run_id: 'adapt-run',
+  selection_input: { allocated: 160, screened: 160, errors: 0, pending: 0 },
+  adaptive: {
+    version: 1, policy: { method: 'epsilon_greedy_beta_yield' },
+    settings: { seed: 0, max_cost_usd: null, input_price_per_million: null, cached_input_price_per_million: null, output_price_per_million: null, candidate_limit: 160, batch_size: 8, exploration_rate: 0.2 },
+    batches: [
+      { number: 0, kind: 'initial', status: 'committed', queue_id: null, facet_id: null, source: null, exploration: null,
+        item_ids: ['item-1', 'item-2', 'item-3'], outcomes: [{ item_id: 'item-1', facet_id: 'management', source_names: ['matharena', 'coding'], retained: true }], selected_item_ids: ['item-1'] },
+      { number: 1, kind: 'adaptive', status: 'committed', queue_id: 'opaque/source', facet_id: 'management', source: 'matharena', exploration: true,
+        item_ids: ['item-5', 'item-6'], outcomes: [{ item_id: 'item-5', facet_id: 'management', source_names: ['matharena'], retained: false }, { item_id: 'item-6', facet_id: 'management', source_names: ['matharena'], retained: false }], selected_item_ids: ['item-1'] },
+    ],
+    queue_statistics: [{ queue_id: 'opaque/source', facet_id: 'management', source: 'matharena', successes: 2, failures: 6, alpha: 3, beta: 7, estimated_yield: 0.3, coverage_weight: 1.67, priority: 0.501, remaining: 200 }],
+    attempts: [], cost: { spent_usd: null, reserved_usd: null, unknown_attempts: 0, scope: 'adaptive_screening' },
+    frozen: true, stop_reason: 'candidate_limit', screened_count: 160, acquired_count: 160,
+  },
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   sessionStorage.clear()
@@ -133,6 +156,7 @@ beforeEach(() => {
   vi.mocked(api.startBenchmarkRetrieval).mockResolvedValue({ run_id: 'retrieve-run', run_secret: 'retrieve-access' })
   vi.mocked(api.startScreening).mockResolvedValue({ run_id: 'screen-run', run_secret: 'screen-access' })
   vi.mocked(api.startSelection).mockResolvedValue({ run_id: 'select-run', run_secret: 'select-access' })
+  vi.mocked(api.startAdaptive).mockResolvedValue({ run_id: 'adapt-run', run_secret: 'adapt-access' })
   vi.mocked(api.getCandidates).mockResolvedValue(candidates)
   vi.mocked(api.getReview).mockResolvedValue(completed)
 })
@@ -967,4 +991,197 @@ it('renders an initial selection without a result and keeps selection unavailabl
   await screen.findByRole('heading', { name: 'Selecting the benchmark collection' })
   expect(screen.getByRole('progressbar', { name: 'Collection selection in progress' })).toBeVisible()
   expect(screen.queryByRole('article', { name: 'Selected item 1' })).not.toBeInTheDocument()
+})
+
+
+it('starts adaptive screening from a complete selection with a fresh key and no assumed prices', async () => {
+  const source = { run_id: 'select-run', run_secret: 'select-access' }
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify(source))
+  vi.mocked(api.getReview).mockResolvedValueOnce(readyToAdapt).mockResolvedValue(adapted)
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  const key = await screen.findByLabelText('OpenAI API key for adaptive screening')
+  expect(screen.getByRole('button', { name: 'Start adaptive screening' })).toBeDisabled()
+  expect(screen.getByText(/Screen up to 160 distinct candidates in total/)).toHaveTextContent('including the initial screening')
+  expect(screen.getByText(/Each batch takes up to eight unseen items/)).toHaveTextContent('30 items total')
+  await user.type(key, 'sk-adaptive-private')
+  expect(api.startAdaptive).not.toHaveBeenCalled()
+  await user.click(screen.getByRole('button', { name: 'Start adaptive screening' }))
+  await screen.findByRole('heading', { name: 'Benchmark collection frozen' })
+  expect(api.startAdaptive).toHaveBeenCalledWith(source, 'sk-adaptive-private', {
+    seed: 0, max_cost_usd: null, input_price_per_million: null, cached_input_price_per_million: null, output_price_per_million: null,
+  })
+  expect(api.startScreening).not.toHaveBeenCalled()
+  expect(api.startBenchmarkRetrieval).not.toHaveBeenCalled()
+  expect(sessionStorage.getItem('item_review_run_v1')).toBe(JSON.stringify({ run_id: 'adapt-run', run_secret: 'adapt-access' }))
+  expect(JSON.stringify(sessionStorage)).not.toContain('sk-adaptive-private')
+  expect(localStorage.length).toBe(0)
+})
+
+it.each([
+  { status: 'completed' as const, input: { allocated: 4, screened: 3, errors: 1, pending: 0 } },
+  { status: 'completed' as const, input: { allocated: 4, screened: 3, errors: 0, pending: 1 } },
+  { status: 'cancelled' as const, input: { allocated: 3, screened: 3, errors: 0, pending: 0 } },
+  { status: 'failed' as const, input: { allocated: 3, screened: 3, errors: 0, pending: 0 } },
+])('does not offer adaptation from unfinished selection or screening ($status, $input)', async ({ status, input }) => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'select-run', run_secret: 'select-access' }))
+  vi.mocked(api.getReview).mockResolvedValue({ ...readyToAdapt, status, selection_input: input })
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Task coverage' })
+  expect(screen.queryByRole('button', { name: 'Start adaptive screening' })).not.toBeInTheDocument()
+})
+
+it('validates user-supplied ceiling, prices, and seed before authorizing adaptive calls', async () => {
+  const source = { run_id: 'select-run', run_secret: 'select-access' }
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify(source))
+  vi.mocked(api.getReview).mockResolvedValueOnce(readyToAdapt).mockResolvedValue(adapted)
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await user.type(await screen.findByLabelText('OpenAI API key for adaptive screening'), 'sk-priced')
+  await user.click(screen.getByRole('checkbox', { name: 'Set an additional screening cost ceiling' }))
+  const button = screen.getByRole('button', { name: 'Start adaptive screening' })
+  expect(button).toBeDisabled()
+  await user.type(screen.getByLabelText('Additional screening cost ceiling (USD)'), '1.25')
+  await user.type(screen.getByLabelText('Input price per million tokens (USD)'), '2')
+  await user.type(screen.getByLabelText('Output price per million tokens (USD)'), '8')
+  expect(button).toBeDisabled()
+  await user.type(screen.getByLabelText('Cached input price per million tokens (USD)'), '3')
+  expect(button).toBeDisabled()
+  await user.clear(screen.getByLabelText('Cached input price per million tokens (USD)'))
+  await user.type(screen.getByLabelText('Cached input price per million tokens (USD)'), '0')
+  await user.clear(screen.getByLabelText('Random seed'))
+  await user.type(screen.getByLabelText('Random seed'), '4294967296')
+  expect(button).toBeDisabled()
+  await user.clear(screen.getByLabelText('Random seed'))
+  await user.type(screen.getByLabelText('Random seed'), '42')
+  expect(button).toBeEnabled()
+  expect(screen.getByText(/The ceiling applies only to Step 7 calls/)).toHaveTextContent('do not guarantee your final provider invoice')
+  await user.click(button)
+  expect(api.startAdaptive).toHaveBeenCalledWith(source, 'sk-priced', { seed: 42, max_cost_usd: 1.25, input_price_per_million: 2, cached_input_price_per_million: 0, output_price_per_million: 8 })
+})
+
+it('retains collection and pending batch when cancelled, then resumes with immutable settings', async () => {
+  const source = { run_id: 'adapt-run', run_secret: 'adapt-access' }
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify(source))
+  const running: api.AdaptiveReview = { ...adapted, status: 'running', message: 'Screening adaptive batch 2.', selection_run_id: 'select-run',
+    selection_input: { allocated: 58, screened: 53, errors: 1, pending: 4 },
+    adaptive: { ...adapted.adaptive!, frozen: false, stop_reason: null, screened_count: 53, acquired_count: 58,
+      batches: [...adapted.adaptive!.batches, { number: 2, kind: 'adaptive', status: 'pending', queue_id: 'opaque/all', facet_id: 'management', source: null, exploration: false, item_ids: ['item-7', 'item-8'], outcomes: [], selected_item_ids: [] }],
+    },
+  }
+  vi.mocked(api.getReview).mockResolvedValueOnce(running).mockResolvedValue(adapted)
+  vi.mocked(api.cancelReview).mockResolvedValue({ ...running, status: 'cancelled', message: 'Adaptive screening stopped.' })
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Improving the benchmark collection' })
+  expect(screen.getByRole('progressbar')).toHaveAttribute('value', '53')
+  expect(screen.getByText(/Last accepted collection/).parentElement).toHaveTextContent('not frozen')
+  expect(screen.queryByRole('button', { name: 'Resume adaptive screening' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Continue screening' })).not.toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Stop adaptive screening' }))
+  await screen.findByRole('heading', { name: 'Adaptive screening stopped' })
+  expect(api.cancelReview).toHaveBeenCalledWith(source)
+  await user.click(screen.getByText('Batch 2 · 2 candidates · Pending'))
+  expect(screen.getByText('This batch is incomplete. Its outcomes have not updated queue statistics.')).toBeVisible()
+  expect(screen.queryByLabelText('Random seed')).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Select up to 30 items' })).not.toBeInTheDocument()
+  expect(screen.queryByLabelText('OpenAI API key for initial screening')).not.toBeInTheDocument()
+  await user.type(screen.getByLabelText('OpenAI API key for adaptive screening'), 'sk-resume')
+  await user.click(screen.getByRole('button', { name: 'Resume adaptive screening' }))
+  expect(api.startAdaptive).toHaveBeenCalledWith(source, 'sk-resume', {})
+  expect(api.startScreening).not.toHaveBeenCalled()
+})
+
+it.each([
+  ['candidate_limit', 'The total candidate limit was reached.'],
+  ['queues_exhausted', 'No unseen candidates remain in the saved retrieval queues.'],
+  ['cost_limit', 'The additional screening cost ceiling was reached, or cannot cover the next reserved call.'],
+] as const)('shows frozen results and remaining gaps when stopping at %s', async (stop_reason, message) => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'adapt-run', run_secret: 'adapt-access' }))
+  vi.mocked(api.getReview).mockResolvedValue({ ...adapted, adaptive: { ...adapted.adaptive!, stop_reason } })
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Benchmark collection frozen' })
+  expect(screen.getByText('Stopping reason:').parentElement).toHaveTextContent(message)
+  expect(screen.getByText('Coverage remains incomplete.')).toBeVisible()
+  expect(screen.getByText('Stopping does not lower the original requirements.')).toBeVisible()
+  expect(screen.getByRole('article', { name: 'Selected item 1' })).toBeVisible()
+  expect(screen.getByText('Selected items').parentElement).toHaveTextContent('1 / 30')
+  expect(screen.queryByRole('button', { name: 'Resume adaptive screening' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Continue screening' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Select up to 30 items' })).not.toBeInTheDocument()
+})
+
+it('makes queue estimates, batch choices, usage uncertainty, and adaptive export inspectable', async () => {
+  const source = { run_id: 'adapt-run', run_secret: 'adapt-access' }
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify(source))
+  vi.mocked(api.getReview).mockResolvedValue({ ...adapted, adaptive: { ...adapted.adaptive!,
+    settings: { ...adapted.adaptive!.settings, max_cost_usd: 1, input_price_per_million: 2, cached_input_price_per_million: 1, output_price_per_million: 8 },
+    cost: { spent_usd: 0.25, reserved_usd: 0.4, unknown_attempts: 1, scope: 'adaptive_screening' as const },
+  } })
+  vi.mocked(api.getReviewExport).mockResolvedValue(new Blob([JSON.stringify(adapted)], { type: 'application/json' }))
+  vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:adaptive')
+  const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Benchmark collection frozen' })
+  expect(screen.getByRole('cell', { name: 'Beta(3, 7)' })).toBeVisible()
+  expect(screen.getByRole('cell', { name: '0.300' })).toBeVisible()
+  expect(screen.getByRole('cell', { name: '1.670' })).toBeVisible()
+  expect(screen.getByRole('cell', { name: '0.501' })).toBeVisible()
+  expect(screen.getByText(/Estimated spent:/)).toHaveTextContent('Estimated spent: $0.2500 · Reserved: $0.4000 · Ceiling: $1.0000')
+  expect(screen.getByText(/Usage is unknown for 1 attempts/)).toBeVisible()
+  await user.click(screen.getByText('Batch 1 · 2 candidates · Committed'))
+  expect(screen.getByText(/Task 1 · matharena · Random exploration/)).toBeVisible()
+  expect(screen.getByText(/0 newly screened items retained after this batch/)).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Download adaptive JSON' }))
+  expect(api.getReviewExport).toHaveBeenCalledWith(source)
+  expect(click.mock.instances[0]).toHaveAttribute('download', 'adaptive-benchmark-adapt-run.json')
+})
+
+it('keeps a completed selection and key available when adaptive screening cannot start', async () => {
+  const source = { run_id: 'select-run', run_secret: 'select-access' }
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify(source))
+  vi.mocked(api.getReview).mockResolvedValue(readyToAdapt)
+  vi.mocked(api.startAdaptive).mockRejectedValueOnce(new Error('The adaptive worker is busy.'))
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await user.type(await screen.findByLabelText('OpenAI API key for adaptive screening'), 'sk-retry')
+  await user.click(screen.getByRole('button', { name: 'Start adaptive screening' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('The adaptive worker is busy.')
+  expect(screen.getByRole('article', { name: 'Selected item 1' })).toBeVisible()
+  expect(screen.getByLabelText('OpenAI API key for adaptive screening')).toHaveValue('sk-retry')
+  expect(screen.getByRole('button', { name: 'Start adaptive screening' })).toBeEnabled()
+  expect(sessionStorage.getItem('item_review_run_v1')).toBe(JSON.stringify(source))
+})
+
+it('explains a partially committed final batch without counting missing assessments as failures', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'adapt-run', run_secret: 'adapt-access' }))
+  vi.mocked(api.getReview).mockResolvedValue({ ...adapted,
+    selection_input: { allocated: 58, screened: 56, errors: 1, pending: 1 },
+    adaptive: { ...adapted.adaptive!, stop_reason: 'cost_limit' as const, acquired_count: 58, screened_count: 56,
+      batches: [...adapted.adaptive!.batches.slice(0, 1), { ...adapted.adaptive!.batches[1],
+        item_ids: ['item-5', 'item-6', 'item-7', 'item-8'], unresolved_item_ids: ['item-7', 'item-8'] }],
+    },
+  })
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Benchmark collection frozen' })
+  expect(screen.getByText(/The last batch included 2 acquired candidates/)).toHaveTextContent('valid assessments were incorporated into selection')
+  expect(screen.getByText(/The last batch included 2 acquired candidates/)).toHaveTextContent('do not count as selection failures')
+  await user.click(screen.getByText('Batch 1 · 4 candidates · Committed'))
+  expect(screen.getByText(/Only this batch’s 2 valid assessments/)).toHaveTextContent('2 unresolved candidates are not counted as selection failures')
+  expect(screen.queryByRole('button', { name: 'Resume adaptive screening' })).not.toBeInTheDocument()
+})
+
+it('reports supplied token prices and estimated spending when no cost ceiling was set', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'adapt-run', run_secret: 'adapt-access' }))
+  vi.mocked(api.getReview).mockResolvedValue({ ...adapted, adaptive: { ...adapted.adaptive!,
+    settings: { ...adapted.adaptive!.settings, input_price_per_million: 2, cached_input_price_per_million: 1, output_price_per_million: 8 },
+    cost: { ...adapted.adaptive!.cost, spent_usd: 0.5, reserved_usd: 0 },
+  } })
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Benchmark collection frozen' })
+  expect(screen.getByText(/Estimated spent:/)).toHaveTextContent('Estimated spent: $0.5000 · Reserved: $0.0000 · Ceiling: Not set')
+  expect(screen.getByText(/Prices per million tokens:/)).toHaveTextContent('input $2, cached input $1, output $8')
+  expect(screen.queryByText(/without an assumed dollar price/)).not.toBeInTheDocument()
 })

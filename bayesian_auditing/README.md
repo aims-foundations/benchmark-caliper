@@ -364,14 +364,105 @@ Its export retains the original answers, requirements,
 grounding, retrieval, and screening. **Continue screening** from a selection
 can finish pending or errored items from the original 50-item allocation;
 reselect afterward to incorporate the new results. It does not add adaptive
-batches. The Python `select_collection` function supports reuse by a future
-Step 7 implementation; there is no new CLI command.
+batches. Step 7 reuses the same Python `select_collection` function after each
+adaptive batch; there is no new CLI command.
 
 Tests compare small random problems with an independent exhaustive enumeration
 of every possible collection, alongside overlapping task/quota cases, exact-ID
 ties, partial results, preserved coverage, cancellation, and solver limits.
 These checks establish implementation behavior, not the validity of model
 ratings or performance across the complete item bank.
+
+## Step 7: adapt screening and freeze the collection
+
+After all candidates in the initial allocation have valid screening results and
+Step 6 has accepted a collection, **Start adaptive screening** continues through
+the saved Step 4 task/source queues. It does not retrieve more candidates, alter
+their ranks, or repeat the initial 50 screening calls. The total candidate limit
+is **160 distinct items, including the initial allocation**; each subsequent
+batch contains at most eight unseen items. The selected collection still holds
+at most 30 items in total.
+
+[`adaptive_screening.py`](adaptive_screening.py) maintains queue counters and
+makes the next queue decision locally. Each queue starts with `Beta(1, 1)`. A
+candidate is a success if it belongs to the accepted collection immediately
+after its batch; every other validly screened candidate is a failure for this
+selection signal. This is a retention signal, not the probability of passing
+the gate or answering the question correctly. The initial Step 6 collection
+supplies batch zero's outcomes. Each outcome is recorded once, including when a
+later collection replaces an item that was previously successful.
+
+For a queue with `s` successes and `f` failures, its estimated yield is
+`(1 + s) / (2 + s + f)`. Two retained candidates out of a first batch of eight
+therefore produce `Beta(3, 7)` and yield `0.3`. Credit applies to the acquisition
+task's all-source queue and each source queue containing that exact original
+row, once per queue. Overlapping retrieval under a different task does not
+receive an outcome from that acquisition.
+
+Queue priority is estimated yield multiplied by a coverage weight. The default
+task minimum gives weight 2 to an uncovered task and 1 to a covered task. For
+explicit numerical requirements, the controller uses the largest applicable
+fractional shortfall, `(minimum - selected_count) / minimum`, capped below at
+zero, and adds 1. Conditional requirements count only selected items whose
+screening finding satisfies that condition. Requirements with no numerical
+minimum remain unresolved and do not acquire an invented target. Extending the
+paper's task shortfall to conditional quotas this way is an implementation
+choice; Step 6 remains responsible for actual collection coverage constraints.
+
+At each decision, exhausted queues are excluded. With probability 0.8, the
+controller picks the highest-priority available queue, breaking ties by queue
+ID. With probability 0.2, it picks uniformly among all available queues. A saved
+seed and decision index reproduce each choice. The chosen queue supplies
+the next highest-ranked unseen items; full-row duplicates already acquired
+anywhere are skipped. Queue choices, priority components, acquisition IDs, and
+exploration decisions are retained in batch history.
+
+Screening reuses Step 5's saved model, prompt, schema, and six-dimensional
+assessment, then Step 6 reconsiders all eligible results accumulated so far.
+Previously achieved task coverage and quota counts up to their targets are
+preserved, while individual items can be replaced. Only a fully screened batch
+and a successfully completed selection commit new outcomes and queue counters.
+A provider error, invalid response, cancellation, or solver interruption keeps
+the last accepted collection and the pending batch. Continuation retries only
+unfinished or invalid assessments from that batch before choosing another
+queue. It never treats an operational failure as a selection failure.
+
+If the cost budget cannot fund retries of a pending batch, the controller may
+instead select from that batch's valid assessments and freeze the collection.
+It records outcomes only for those valid assessments and lists the remaining
+item IDs as unresolved. This final partial batch cannot be resumed; errors and
+unanswered requests never become negative retention outcomes.
+
+The loop freezes the last accepted collection at the candidate limit, queue
+exhaustion, or configured cost limit. Filling all task minima does not stop it:
+later items may still improve quality. A frozen result cannot continue adaptive
+screening; its gaps remain visible for expert review. Freezing does not establish
+model performance or validate the screening judgments.
+
+An optional dollar ceiling is set before starting, together with explicit input,
+cached-input, and output prices per million tokens. Prices are supplied by the
+caller, never inferred from a model name. The ceiling covers **new Step 7
+screening calls only**, excluding the earlier extraction, grounding, and initial
+screening costs. Request admission reserves a conservative estimate from the
+serialized request size and maximum output tokens; provider-reported usage then
+settles that reservation, counting cached input separately and output reasoning
+tokens within output tokens. This is an admission estimate, not a guaranteed
+provider bill. Unknown usage remains explicitly recorded with its reservation;
+it is never silently assigned zero cost. SDK retries are disabled so retries are
+explicit attempts in this ledger. Without configured prices, dollar amounts
+remain unknown while token usage is still reported.
+
+The website's `POST /api/item-review/runs/{run_id}/adapt` action requires the
+source run token and a fresh OpenAI key. It starts from a completed selection or
+resumes an interrupted adaptive run with unchanged settings. Each continuation
+creates a separate run and copies the earlier artifacts, batch history, request
+attempts with their usage, and accepted collection. The source stays unchanged.
+Export includes settings,
+queue statistics, batch outcomes and collection changes, attempt-level usage,
+cost scope, remaining gaps, and the stopping reason. Ordinary `/screen` and
+`/select` continuations reject adaptive runs so they cannot discard this history.
+Hosted runs retain the existing temporary expiry and do not survive a server
+restart.
 
 ## Existing Qwen retrieval and six-dimension assessment
 
