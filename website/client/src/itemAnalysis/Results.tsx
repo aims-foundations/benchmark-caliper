@@ -24,25 +24,29 @@ function contentText(value: unknown): string {
 
 function ItemCard({ item, classifiers, demo, classifierNames }: { item: Item; classifiers: Classifier[]; demo: boolean; classifierNames?: Record<string, string> }) {
   const completed = item.status === 'complete'
+  const hasJudgments = !!Object.keys(item.labels || {}).length
   const content = contentText(item.content)
   return <details className="ia-item">
     <summary><span><small>{item.item_id}</small><strong>{content || 'No item text available'}</strong></span>
-      <span className={`ia-tag ${completed ? '' : 'ia-tag-muted'}`}>{completed ? demo ? 'Example judgment shown' : 'Classified' : item.status === 'error' ? 'Failed' : 'Pending'}</span>
+      <span className={`ia-tag ${completed ? '' : 'ia-tag-muted'}`}>{completed ? demo ? 'Example judgment shown' : 'Classified' : item.status === 'error' ? 'Needs retry' : hasJudgments ? 'Partly classified' : 'Pending'}</span>
     </summary>
     <div className="ia-item-body"><p className="ia-item-text">{content}</p>
       <p className="ia-reference"><strong>Reference answer</strong> {text(item.reference_answer)}</p>
       {item.error && <p className="ia-error">{item.error}</p>}
-      {completed && classifiers.map(classifier => {
+      {(completed || hasJudgments || item.status === 'error') && classifiers.map(classifier => {
         const judgment = item.labels?.[classifier.id]
+        const failure = item.classifier_errors?.[classifier.id]
         return <section key={classifier.id} className="ia-judgment"><div className="ia-judgment-heading">
-          <h4>{classifierName(classifier.id, classifierNames)}</h4><span>{!classifier.applicable ? 'Not applicable' : judgment ? labelName(classifier, judgment.label) : 'Unknown'}</span></div>
+          <h4>{classifierName(classifier.id, classifierNames)}</h4><span>{!classifier.applicable ? 'Not applicable' : judgment ? labelName(classifier, judgment.label) : failure ? 'Needs retry' : 'Pending'}</span></div>
+          {failure && !judgment && <p className="ia-error">{failure}</p>}
           {judgment && classifier.applicable && <><p>{judgment.justification}</p>
             {judgment.matched_category_ids && <p className="ia-small">Matched categories: {judgment.matched_category_ids.join(', ') || 'None'}</p>}
             {!!judgment.scope_exclusion_source_ids?.length && <p className="ia-small">Scope exclusion sources: {judgment.scope_exclusion_source_ids.join(', ')}</p>}
             {!!judgment.evidence?.length && <ul className="ia-evidence">{judgment.evidence.map((evidence, i) => <li key={i}>{evidence}</li>)}</ul>}</>}
         </section>
       })}
-      {!completed && !item.error && <p className="ia-small">{demo ? 'This example will be included after the pilot review.' : 'This item has not been classified yet.'}</p>}
+      {!completed && hasJudgments && <p className="ia-small">Completed classifier judgments are saved. Continuing reuses them and assesses only the remaining dimensions.</p>}
+      {!completed && !hasJudgments && !item.error && <p className="ia-small">{demo ? 'This example will be included after the pilot review.' : 'This item has not been classified yet.'}</p>}
     </div>
   </details>
 }
@@ -67,8 +71,8 @@ export function Results({ run, page, setPage, onDownload, downloading, pageLoadi
         <span>{summary.complete_snapshot ? demo ? 'Full demo sample' : 'Full snapshot' : demo ? 'Demo pilot results' : 'Partial results'}</span></div>
       <div className="ia-stats"><div><strong>{run.complete.toLocaleString()}</strong><span>{demo ? 'Demo judgments shown' : 'Items classified'}</span></div>
         <div><strong>{run.total.toLocaleString()}</strong><span>{demo ? 'Items in demo sample' : 'Items in snapshot'}</span></div>
-        <div><strong>{run.errors.toLocaleString()}</strong><span>Failed assessments</span></div></div>
-      <p className="ia-small">{demo ? 'Percentages describe all valid authored walkthrough judgments, including insufficient evidence, in this bundled sample only. They are not model outputs or estimates for the full MathDial benchmark. Operational failures and pending examples are excluded.' : generic ? 'Percentages include all valid judgments, including insufficient evidence. Invalid responses, operational failures, and pending items are excluded. No issue identified is a bounded finding, not proof of benchmark validity. Human review is needed to check accuracy.' : 'Percentages describe model judgments among known labels. Unknowns, failures, and pending items are excluded. Human review is needed to check accuracy.'}</p>
+        <div><strong>{run.errors.toLocaleString()}</strong><span>Items needing retry</span></div></div>
+      <p className="ia-small">{demo ? 'Percentages describe all valid authored walkthrough judgments, including insufficient evidence, in this bundled sample only. They are not model outputs or estimates for the full MathDial benchmark. Operational failures and pending examples are excluded.' : generic ? 'Percentages include all valid judgments, including insufficient evidence and saved judgments on partially classified items. Invalid responses, failed dimensions, and pending dimensions are excluded. No issue identified is a bounded finding, not proof of benchmark validity. Human review is needed to check accuracy.' : 'Percentages describe model judgments among known labels. Unknowns, failures, and pending items are excluded. Human review is needed to check accuracy.'}</p>
       <p className="ia-small">{summary.experiment?.completed_item_classifier_judgments ?? summary.classifiers.reduce((total, classifier) => total + (classifier.valid_judgments ?? ((classifier.known || 0) + (classifier.unknown || 0))), 0)} completed item-classifier judgments across {run.spec?.classifiers.length || 0} classifiers.</p>
       <div className="ia-distributions">{summary.classifiers.filter(c => c.applicable).map(classifier => <article key={classifier.id} className="ia-distribution">
         <h3>{classifierName(classifier.id, classifierNames)}</h3>

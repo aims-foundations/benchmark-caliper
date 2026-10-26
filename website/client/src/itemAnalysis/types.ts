@@ -195,6 +195,7 @@ export interface Item {
   reference_answer: unknown
   status: string
   error?: string
+  classifier_errors?: Record<string, string>
   labels?: Record<string, { label: string | number | null; evidence: string[]; justification: string; matched_category_ids?: string[]; scope_exclusion_source_ids?: string[] }>
 }
 
@@ -210,6 +211,8 @@ export interface AnalysisRun {
   total: number
   complete: number
   errors: number
+  completed_judgments?: number
+  remaining_judgments?: Record<RunScope, number>
   items: Item[]
   pagination: { page: number; total_pages: number }
   usage: { input_tokens: number; output_tokens: number }

@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { ItemAnalysis } from './ItemAnalysis'
 import * as api from './api'
 import type { AnalysisRun, Catalog } from './types'
+import { DEMO_ITEM_ANALYSIS_SPEC } from '../demo/itemAnalysisFixture'
 
 vi.mock('./api', async original => ({ ...await original<typeof import('./api')>(),
   getCatalog: vi.fn(), createRun: vi.fn(), getRun: vi.fn(), classify: vi.fn(), cancelRun: vi.fn(), download: vi.fn(),
@@ -212,6 +213,9 @@ it('uses GPT-6 Luna for both steps without persisting the OpenAI key', async () 
 it('restores a checkpoint, requires key reentry, and continues through all remaining items', async () => {
   sessionStorage.setItem('item_analysis_run_v1', JSON.stringify(access))
   const checkpoint: AnalysisRun = { ...ready, status: 'checkpoint', processed: 100, complete: 100, total: 14015, can_continue: true, scope: 'pilot',
+    spec: DEMO_ITEM_ANALYSIS_SPEC,
+    summary: { ...ready.summary!, experiment: { classifier_count: 4, selected_items: 100,
+      completed_item_classifier_judgments: 400, expected_item_classifier_judgments: 400 } },
     example: { ...example, item_count: 14015, source_label: 'measurement-db MMLU snapshot' } }
   vi.mocked(api.getRun).mockResolvedValue(checkpoint)
   vi.mocked(api.classify).mockResolvedValue({ ...checkpoint, status: 'running', scope: 'all', can_continue: false })
@@ -224,11 +228,33 @@ it('restores a checkpoint, requires key reentry, and continues through all remai
   expect(screen.getByText('measurement-db MMLU snapshot')).toBeVisible()
   expect(screen.getByLabelText('OpenAI API key')).toHaveValue('')
   expect(screen.getByRole('button', { name: 'Continue through all items' })).toBeDisabled()
-  expect(screen.getByText(/13,915 paid GPT-6 Luna item requests/)).toBeVisible()
+  expect(screen.getByText(/55,660 primary GPT-6 Luna classifier requests remain/)).toBeVisible()
   await user.type(screen.getByLabelText('OpenAI API key'), 'sk-returned')
   await user.click(screen.getByRole('button', { name: 'Continue through all items' }))
   expect(api.classify).toHaveBeenCalledWith(access, 'all', 'sk-returned')
   expect(api.createRun).not.toHaveBeenCalled()
+})
+
+it('uses the saved per-classifier progress to estimate retry calls', async () => {
+  sessionStorage.setItem('item_analysis_run_v1', JSON.stringify(access))
+  vi.mocked(api.getRun).mockResolvedValue({ ...ready, status: 'failed', spec: DEMO_ITEM_ANALYSIS_SPEC,
+    processed: 10, complete: 9, errors: 1, completed_judgments: 39,
+    remaining_judgments: { pilot: 1, all: 1 } })
+  render(<ItemAnalysis />)
+  expect(await screen.findByText(/1 primary GPT-6 Luna classifier requests remain/)).toBeVisible()
+  expect(screen.getByText(/Each item uses 4 separate requests; saved judgments are reused/)).toBeVisible()
+  expect(screen.getByRole('button', { name: 'Resume classification' })).toBeDisabled()
+})
+
+it('measures progress by saved judgments while the last item is still being classified', async () => {
+  sessionStorage.setItem('item_analysis_run_v1', JSON.stringify(access))
+  vi.mocked(api.getRun).mockResolvedValue({ ...ready, status: 'running', spec: DEMO_ITEM_ANALYSIS_SPEC,
+    scope: 'pilot', processed: 10, complete: 9, completed_judgments: 39 })
+  render(<ItemAnalysis />)
+  const progress = await screen.findByRole('progressbar', { name: 'Classification progress' })
+  expect(progress).toHaveAttribute('max', '40')
+  expect(progress).toHaveAttribute('value', '39')
+  expect(screen.getByText(/39 classifier judgments saved/)).toBeVisible()
 })
 
 it('stops an active run and offers a resumable checkpoint', async () => {

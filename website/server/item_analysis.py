@@ -93,6 +93,7 @@ class AnalysisJob:
     provider_error: dict | None = None
     failure: dict | None = None
     data_ready: bool = False
+    pilot_item_ids: set[str] = field(default_factory=set, repr=False)
     stopped: Event = field(default_factory=Event, repr=False)
     owner_hash: str | None = field(default=None, repr=False)
     checkpoint_seen: bool = False
@@ -206,6 +207,12 @@ def reserve_worker(api_key: str | None, current: AnalysisJob | None = None) -> s
 def public_job(job: AnalysisJob, page: int = 1) -> dict:
     complete = sum(record["status"] == "complete" for record in job.results.values())
     errors = sum(record["status"] == "error" for record in job.results.values())
+    classifier_ids = {classifier["id"] for classifier in (job.spec or {}).get("classifiers", [])
+                      if classifier["applicable"]}
+    completed_judgments = sum(len(classifier_ids.intersection(record.get("labels", {})))
+                              for record in job.results.values())
+    pilot_judgments = sum(len(classifier_ids.intersection(record.get("labels", {})))
+                          for item_id, record in job.results.items() if item_id in job.pilot_item_ids)
     pages = max(1, math.ceil(job.total / PAGE_SIZE))
     page = min(page, pages)
     rows = []
@@ -218,13 +225,19 @@ def public_job(job: AnalysisJob, page: int = 1) -> dict:
                     "item_id": item["item_id"], "content": item.get("content"),
                     "reference_answer": item.get("reference_answer"),
                     "status": result.get("status", "pending"), "labels": result.get("labels"),
-                    "error": "No valid classification was saved. Retry this phase to reassess the item." if result.get("status") == "error" else None,
+                    "classifier_errors": result.get("classifier_errors", {}),
+                    "error": "Some classifiers need a retry. Saved judgments are retained." if result.get("status") == "error" else None,
                 })
     return {
         "run_id": job.run_id, "status": job.status, "message": job.message,
         "example": job.example, "spec": job.spec, "summary": job.summary,
         "assessment": item_analysis_assessment.public_assessment(job.assessment) if job.assessment else None,
         "processed": len(job.results), "total": job.total, "complete": complete, "errors": errors,
+        "completed_judgments": completed_judgments,
+        "remaining_judgments": {
+            "pilot": max(0, min(CHECKPOINT_SIZE, job.total) * len(classifier_ids) - pilot_judgments),
+            "all": max(0, job.total * len(classifier_ids) - completed_judgments),
+        },
         "items": rows, "pagination": {"page": page, "page_size": PAGE_SIZE, "total_pages": pages},
         "usage": dict(job.usage), "model": dict(job.model), "scope": job.scope,
         "can_continue": job.checkpoint_seen and job.status in {"checkpoint", "cancelled", "failed"},
@@ -293,7 +306,7 @@ def model_bridge(job: AnalysisJob, api_key: str):
     """Adapt the shared synchronous model callback to a request-scoped async client.
 
     The worker blocks on the event loop's request. Cancellation cancels that
-    request and signals the shared classifier to stop before another item.
+    request and signals the shared classifier to stop before another classifier call.
     Only this closure holds the credential. The client maps provider failures to
     safe diagnostic messages; unrecognized exception details are discarded.
     """
@@ -401,6 +414,8 @@ async def initialize(job: AnalysisJob, mode: str, api_key: str | None, upload: d
             supplied = await drained_thread(prepare_job, job, job.example["id"])
         upload = None
         job.total = read_json(job.directory / "dataset.json")["item_count"]
+        with (job.directory / "items.jsonl").open(encoding="utf-8") as stream:
+            job.pilot_item_ids = {json.loads(line)["item_id"] for line in islice(stream, CHECKPOINT_SIZE)}
         job.data_ready = True
         if job.stopped.is_set():
             return
@@ -461,7 +476,11 @@ async def classify_job(job: AnalysisJob, api_key: str) -> None:
 
     def save_result(record):
         # Keep raw model attempts private; the website only needs validated labels.
-        visible = {key: record[key] for key in ("item_id", "status", "labels") if key in record}
+        visible = deepcopy({key: record[key] for key in ("item_id", "status", "labels") if key in record})
+        visible["classifier_errors"] = {
+            classifier_id: "No valid judgment was saved. Retry this phase."
+            for classifier_id in record.get("classifier_errors", {})
+        }
         loop.call_soon_threadsafe(job.results.__setitem__, record["item_id"], visible)
 
     try:
@@ -478,7 +497,7 @@ async def classify_job(job: AnalysisJob, api_key: str) -> None:
                            "The model request failed. Retry to resume saved progress; if it persists, contact the website maintainer.")
         elif execution["full_dataset_complete"]:
             job.status, job.message = "complete", "Every item in this snapshot has a saved classification. Review the labels and export the results."
-        elif job.scope == "pilot" and not execution["pending"]:
+        elif job.scope == "pilot" and execution["complete"] == execution["target_items"]:
             job.checkpoint_seen = True
             job.status = "checkpoint"
             job.message = "The first items are ready for review. Inspect their labels and evidence before continuing across the snapshot."

@@ -9,7 +9,7 @@ are converted into the rubric's 1–5 scores or used to overwrite an assessment.
 Deployment/elicitation evidence + benchmark/domain documentation + dataset profile
   → model prepares sourced context for the code-owned classifier catalog
   → code validates references and joins context to the catalog
-  → one model request per item judges all four classifiers
+  → four independent model requests per item, one for each classifier
   → deterministic reporting and independent human review
 ```
 
@@ -131,17 +131,34 @@ python -m anthropic_api_package_release.item_analysis classify \
   --run-dir results/item_analysis/mmlu --limit 100
 ```
 
-Each primary request covers all configured classifiers for one item. Responses
-must contain fixed judgment labels, nonempty item evidence, explanations, and
-consistent ontology category/source IDs. Invalid responses receive one repair
-attempt, then become operational errors. API exceptions stop further calls;
-successful results are flushed immediately, with raw attempts and token usage.
+Each item uses four independent primary requests, one per classifier. Each
+request contains that classifier's fixed rules, its sourced context, the item,
+and the supporting source contents. Only Input Ontology receives the required
+category inventory. No request sees another classifier's judgment. Context
+generation remains a separate request that prepares all four context blocks.
+
+The four classification prompts are:
+
+- [Input Ontology](prompts/classify_input_ontology.md)
+- [Input Content](prompts/classify_input_content.md)
+- [Output Ontology](prompts/classify_output_ontology.md)
+- [Output Content](prompts/classify_output_content.md)
+
+Each classification response contains one classifier's entry in `labels`, with
+a fixed judgment label, nonempty item evidence, an explanation, and consistent
+ontology category/source IDs when applicable. An invalid response receives one
+repair attempt for that classifier, then becomes an operational error. Other
+classifiers can still succeed. API exceptions stop further calls. Every
+classifier attempt and successful judgment is saved immediately with token usage.
+An item is complete only when all four judgments are valid; partial successes
+are retained when another dimension fails or the run stops.
 
 Repeat for each benchmark in a separate run directory. Workload totals are
 computed from actual selected IDs, configured classifiers, and valid completed
-results. Benchmark–classifier combinations are not request counts; repairs and
-retries add requests. Reports retain selected-item counts separately from the
-full prepared dataset.
+results. A fresh 100-item experiment produces 400 primary classification
+requests and, when successful, 400 item–classifier judgments. Repairs and
+retries add calls; context generation is counted separately. Reports retain
+selected-item counts separately from the full prepared dataset.
 
 Continuation is optional and requires unchanged inputs:
 
@@ -151,12 +168,15 @@ python -m anthropic_api_package_release.item_analysis classify \
 ```
 
 A larger limit or `--all --resume` expands the experiment without repeating saved
-completions. A changed catalog, context, prompt, source data, or execution
-configuration requires a new run directory. Results cannot be resumed across
+classifier judgments, including successes on partially classified items. Only
+failed or pending dimensions are called again. A changed catalog, context,
+prompt, source data, or execution configuration requires a new run directory.
+Results cannot be resumed across
 incompatible versions. Use one writer per directory; run locks reject concurrent
 writers. An interrupted final append can be recovered; other corruption fails.
 An interruption between receiving an API response and saving it can repeat that
-call on resume.
+call on resume. Historical combined-request runs remain readable, but require a
+new run directory for classification with the independent-request policy.
 
 ## Reporting and human review
 
@@ -174,6 +194,10 @@ judgments; any determinate-only percentage states its denominator. Category
 counts allow overlapping matches. A required category not observed in selected
 items is not established absent from the benchmark, and an incomplete inventory
 cannot establish complete deployment coverage.
+
+Valid judgments on partially classified items contribute to their classifier's
+statistics. A failed or pending dimension does not erase another dimension's
+saved evidence. Whole-item completion counts still require all four judgments.
 
 The new generic `review.csv` is a blind worksheet for the actual selected items.
 It excludes model predictions and is created once after an actual experiment
@@ -221,8 +245,8 @@ item coverage nor high agreement alone establishes benchmark validity.
 | `evidence.json` | Original assessment, deployment, and source registry |
 | `generation_request.json`, `generation_attempts.json` | Exact context request and model/repair outputs |
 | `classifier_spec.original.json`, `classifier_spec.json`, `specification.json` | Original context, joined catalog/context, frozen hashes and validation notes |
-| `preview_requests.jsonl` | Exact classification requests without judgments |
-| `run.json`, `results.jsonl`, `execution.json` | Frozen configuration, append-only versioned results, actual selection/progress |
+| `preview_requests.jsonl` | Exact per-classifier requests without judgments |
+| `run.json`, `results.jsonl`, `execution.json` | Frozen configuration, append-only per-classifier progress with cumulative item results, actual selection/progress |
 | `usage_ledger.json`, `usage.json` | Actual calls and token totals |
 | `report.html`, `summary.json`, `items.csv` | Versioned analysis and item evidence |
 | `review.csv`, `review_selection.json`, `review_comparison.json` | Independent judgments, fixed review selection, agreement |
@@ -230,7 +254,8 @@ item coverage nor high agreement alone establishes benchmark validity.
 `catalog.py`/`catalog.json` own immutable generic rules. `schema.py` validates
 context and current contracts; `legacy_schema.py` retains historical readers.
 `prepare.py` and `data.py` snapshot source evidence and datasets. `generate.py`
-prepares context; `classify.py` sends the combined rules/context to the judge.
+prepares context; `classify.py` sends each classifier's rules and context in a
+separate request and saves its judgment before proceeding to the next dimension.
 `report.py` aggregates results and compares human review. `storage.py` provides
 hashes, atomic JSON writes, and locks. `__main__.py` exposes the CLI.
 

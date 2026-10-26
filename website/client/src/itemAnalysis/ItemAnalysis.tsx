@@ -267,6 +267,8 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
   const canClassify = !!run?.spec && !active && !pollError && ['ready', 'checkpoint', 'cancelled', 'failed'].includes(run.status)
   const scope: RunScope = run?.can_continue ? 'all' : 'pilot'
   const remaining = run ? Math.max(0, (scope === 'all' ? run.total : pilotSize) - run.complete) : pilotSize
+  const classifierCount = run?.spec?.classifiers.filter(classifier => classifier.applicable).length || 4
+  const remainingRequests = run?.remaining_judgments?.[scope] ?? remaining * classifierCount
   const incompleteResults = !!assessment && run?.status === 'complete' && (run.complete < run.total || run.errors > 0)
   const runMessage = run?.status === 'failed' ? run.failure?.message || run.error || run.message : run?.message
 
@@ -347,8 +349,9 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
           <p className={run.status === 'failed' ? 'ia-error' : 'ia-muted'} role="status">{runMessage}</p>
           {run.status === 'failed' && run.failure && <p className="ia-small">Error reference: <code>{run.failure.stage}/{run.failure.code}</code></p>}
           {run.status === 'checkpoint' && <p className="ia-small">Inspect the labels and evidence below, then continue through all remaining items to complete the {direct ? 'item analysis' : 'assessment'}. To change the sourced context, start a new item analysis so all items use the same frozen rules and evidence.</p>}
-          {run.status === 'running' && <><progress max={run.scope === 'pilot' ? pilotSize : run.total} value={run.processed} aria-label="Classification progress" />
-            <p className="ia-small">{run.processed.toLocaleString()} processed · {run.complete.toLocaleString()} classified · {run.errors.toLocaleString()} failed · {run.total.toLocaleString()} in snapshot</p></>}
+          {run.status === 'running' && <><progress max={(run.scope === 'pilot' ? pilotSize : run.total) * classifierCount} value={run.completed_judgments ?? run.complete * classifierCount} aria-label="Classification progress" />
+            <p className="ia-small">{run.processed.toLocaleString()} items started · {run.complete.toLocaleString()} fully classified · {run.errors.toLocaleString()} need retry · {run.total.toLocaleString()} in snapshot</p>
+            {run.completed_judgments !== undefined && <p className="ia-small">{run.completed_judgments.toLocaleString()} classifier judgments saved. Each item is complete after all {classifierCount} classifiers finish.</p>}</>}
           {run.status !== 'failed' && run.error && run.error !== runMessage && <p className="ia-error">{run.error}</p>}
           <div className="ia-run-meta">{run.example.assessment_title && <span>Assessment context: {run.example.assessment_title}</span>}<span>{run.example.source_label}</span><span>{run.total.toLocaleString()} items</span></div>
           <div className="ia-actions">{active ? <button className="ia-secondary" onClick={() => void stop()} disabled={busy}>Stop analysis</button> :
@@ -369,7 +372,7 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
         {canClassify && <form className="ia-classify-panel" onSubmit={event => { event.preventDefault(); void classify(scope) }}>
           <div><p className="ia-eyebrow">{scope === 'all' ? 'Optional: continue beyond the pilot' : 'Try the criteria'}</p>
             <h2>{scope === 'all' ? 'Classify the remaining items' : `Classify ${pilotSize < run.total ? `the first ${pilotSize}` : `all ${pilotSize}`} items`}</h2>
-            <p className="ia-small">{scope === 'all' ? 'Continue only if you want results for the full snapshot. Completed judgments are preserved.' : pilotSize < run.total ? 'The run pauses after this pilot for review and export.' : 'This small example fits in a single run.'} Up to {remaining.toLocaleString()} paid GPT-6 Luna item requests; malformed responses may be retried.</p></div>
+            <p className="ia-small">{scope === 'all' ? 'Continue only if you want results for the full snapshot. Completed judgments are preserved.' : pilotSize < run.total ? 'The run pauses after this pilot for review and export.' : 'This small example fits in a single run.'} {remainingRequests.toLocaleString()} primary GPT-6 Luna classifier requests remain. Each item uses {classifierCount} separate requests; saved judgments are reused. Repairs and retries can add paid calls.</p></div>
           <div>{direct && scope === 'all' && <label className="ia-pilot-review"><input type="checkbox" checked={pilotReviewed} onChange={event => setPilotReviewed(event.target.checked)} /><span>I have reviewed the pilot labels, evidence, and criteria</span></label>}
             <KeyInput value={apiKey} onChange={setApiKey} /><button type="submit" className="ia-primary" disabled={busy || !apiKey.trim() || (direct && scope === 'all' && !pilotReviewed)}>
             {busy ? 'Starting…' : scope === 'all' ? 'Continue through all items' : ['cancelled', 'failed'].includes(run.status) ? 'Resume classification' : `Classify ${pilotSize} items with GPT-6 Luna`}</button></div>

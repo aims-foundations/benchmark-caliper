@@ -178,17 +178,19 @@ def test_direct_evidence_rejects_a_benchmark_score_even_when_manifest_hash_is_up
 
 
 def test_direct_pilot_and_full_classification_export_item_only_provenance_without_scores(direct):
-    canonical = generate_spec(direct, call=lambda **request: json.dumps(_spec(direct)))
+    generate_spec(direct, call=lambda **request: json.dumps(_spec(direct)))
     calls = []
 
     def judge(**request):
         payload = json.loads(request["user"])
         calls.append(payload)
-        labels = {classifier["id"]: {
+        cid = payload["classifier"]["id"]
+        labels = {cid: {
             "label": "insufficient_evidence", "evidence": [payload["item"]["content"]],
             "justification": "Offline fixture: the supplied standard is insufficient.",
-        } for classifier in canonical["classifiers"]}
-        labels["input_ontology"].update(matched_category_ids=[], scope_exclusion_source_ids=[])
+        }}
+        if cid == "input_ontology":
+            labels[cid].update(matched_category_ids=[], scope_exclusion_source_ids=[])
         return json.dumps({"labels": labels})
 
     pilot = run(direct, limit=1, call=judge)
@@ -196,7 +198,7 @@ def test_direct_pilot_and_full_classification_export_item_only_provenance_withou
     assert generate_report(direct)["pending_items"] == 1
     full = run(direct, resume=True, limit=None, call=judge)
     assert full["full_dataset_complete"]
-    assert len(calls) == 2
+    assert len(calls) == 8
     assert all(payload["assessment_status"] == "not_run" for payload in calls)
     assert all("scoring" not in payload for payload in calls)
     summary = generate_report(direct)

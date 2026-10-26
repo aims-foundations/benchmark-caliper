@@ -252,7 +252,7 @@ def test_json_mode_adds_input_instruction_for_both_pipeline_stages(
         }, profile={}, source_registry=registry, source_roles=roles)
         request = classify.classification_request(
             {"item_id": "test", "content": "What is one plus one?", "reference_answer": "2"},
-            spec, "Exam preparation", classify.PROMPT_PATH.read_text())
+            spec, "Exam preparation", "input_ontology")
     assert "JSON" in request["system"]
 
     def require_json_in_input(http_request):

@@ -93,10 +93,13 @@ not authorize automatic paid calls: each model phase requires a user action.
    decision rules, labels, and applicability before classification.
 3. Classify the first 100 items with GPT-6 Luna (all items for smaller datasets),
    inspect the evidence, then explicitly continue through the full snapshot.
-   Completed items are reused on continuation or retry.
+   Each item uses four separate requests, one per classifier. Completed
+   classifier judgments are reused on continuation or retry, including successes
+   on an item whose other dimensions failed.
 
-The results show counts, percentages among known labels, unknowns, failures, and
-pending items. Expand individual items to inspect justifications and evidence.
+The results show counts, percentages among all valid judgments (including
+insufficient evidence), failures, and pending dimensions. Expand individual
+items to inspect justifications and evidence.
 Download the specification, item CSV, summary JSON, HTML report, or blind human
 review worksheet. The original six-dimensional assessment remains visible;
 the demo does not turn item prevalence into new 1–5 scores. Criteria changes
@@ -107,7 +110,11 @@ An OpenAI key is required for generation and classification. Both steps use
 `gpt-6-luna` with low reasoning effort; each run records this model configuration.
 Opening the report and dataset setup makes no model calls. Preparing classifier context,
 classifying the pilot, and continuing through the remaining items are separate
-paid actions. The key stays in memory; the item run's ID and separate access
+paid actions. Context generation prepares all four context blocks in one primary
+request; a fresh 100-item pilot uses 400 primary classification requests, with
+additional calls possible for repairs and retries. Each classification request
+contains one classifier's rules and context, and never another classifier's
+judgment. The key stays in memory; the item run's ID and separate access
 secret are kept in browser session storage, scoped to the source assessment.
 Initialization failures identify dataset/evidence preparation, criteria
 validation, provider access, or report preparation separately. The displayed
@@ -118,6 +125,9 @@ Refresh restores the active run, but a later phase may require entering the key
 again. Runs expire one hour after the last phase ends and do not survive a server
 restart. Download outputs before they expire. Stop cancels the current awaited
 request and prevents new calls; a request already submitted may still be billed.
+Saved classifier judgments survive cancellation and retries within the run's
+lifetime. An item is complete only after all four classifiers succeed. Partial
+judgments remain inspectable, and failed dimensions are identified separately.
 
 ### Assessment-continuation API
 
@@ -846,9 +856,11 @@ website/
 TBD.
 
 
-Item-analysis catalog and result contracts now use `caliper_generic_items_v1`
-and `caliper_item_spec_v2`. The judge receives the catalog's actual fixed rules,
-sourced context, category inventory, and source registry on every item request.
+Item-analysis catalog, specification, and result contracts use
+`caliper_generic_items_v1`, `caliper_item_spec_v2`, and `caliper_item_result_v3`.
+Each independent judge receives one classifier's actual fixed rules, sourced
+context, and supporting source contents. Input Ontology additionally receives
+the required category inventory.
 Input Ontology records a judgment plus multiple matched required-category IDs;
 Input Content, Output Ontology, and Output Content use `issue_identified`,
 `no_issue_identified`, and `insufficient_evidence`. Multiple-choice items retain
@@ -858,8 +870,11 @@ The website displays source contents, prior hypotheses, inventory completeness,
 and evidence gaps for review. Prepared context is semantically unreviewed even
 when structure and source references pass validation. Distribution percentages
 include all valid judgments, including insufficient evidence; operational errors
-and pending items remain separate. Counts come from selected items and saved
-judgments, with one primary request per item covering every classifier.
+and pending dimensions remain separate. Counts come from selected items and
+saved judgments, with four primary requests per item. Valid partial judgments
+contribute to their classifier's statistics; whole-item completion requires
+all four judgments. The website shows remaining primary request counts after
+accounting for saved judgments, with repairs and retries billed separately.
 
 Historical induced specifications retain explicit legacy schema/catalog markers
 and their original label meanings. The old MMLU supplied specification is retained

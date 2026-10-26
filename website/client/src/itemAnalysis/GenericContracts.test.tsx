@@ -36,3 +36,35 @@ it('does not offer a review worksheet before a run selects items', () => {
   render(<Results run={run} page={1} setPage={vi.fn()} onDownload={vi.fn()} downloading={null} pageLoading={false} />)
   expect(screen.getByRole('button', { name: /Human review CSV/ })).toBeDisabled()
 })
+
+it('shows saved dimensions on a partially failed item and identifies the dimension to retry', () => {
+  const run = buildDemoItemAnalysisRun('sample')
+  run.status = 'failed'
+  run.complete = 9
+  run.errors = 1
+  const partial = { ...run.items[0], status: 'error', labels: { ...run.items[0].labels },
+    classifier_errors: { input_content: 'No valid judgment was saved. Retry this phase.' },
+    error: 'Some classifiers need a retry. Saved judgments are retained.' }
+  delete partial.labels.input_content
+  run.items = [partial]
+  render(<Results run={run} page={1} setPage={vi.fn()} onDownload={vi.fn()} downloading={null} pageLoading={false} />)
+  const content = screen.getByRole('heading', { name: 'Input Content', level: 4 }).closest('section')!
+  expect(within(content).getByText('Needs retry')).toBeInTheDocument()
+  expect(within(content).getByText('No valid judgment was saved. Retry this phase.')).toBeInTheDocument()
+  const ontology = screen.getByRole('heading', { name: 'Input Ontology', level: 4 }).closest('section')!
+  expect(within(ontology).getByText('match')).toBeInTheDocument()
+  expect(within(ontology).getByText('Matched categories: required_001')).toBeInTheDocument()
+  expect(screen.getByText(/Completed classifier judgments are saved/)).toBeInTheDocument()
+})
+
+it('keeps unattempted dimensions pending after a partial item is stopped', () => {
+  const run = buildDemoItemAnalysisRun('sample')
+  run.status = 'cancelled'
+  run.items = [{ ...run.items[0], status: 'partial', labels: {
+    input_ontology: run.items[0].labels!.input_ontology,
+  } }]
+  render(<Results run={run} page={1} setPage={vi.fn()} onDownload={vi.fn()} downloading={null} pageLoading={false} />)
+  expect(screen.getByText('Partly classified')).toBeInTheDocument()
+  expect(screen.getAllByText('Pending')).toHaveLength(3)
+  expect(screen.queryByText('Needs retry')).not.toBeInTheDocument()
+})

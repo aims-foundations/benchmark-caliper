@@ -524,3 +524,153 @@ def test_explicitly_versioned_legacy_review_keeps_numeric_and_unknown_semantics(
     assert flag["confusion"] == [{"human": "0", "model": "unknown", "count": 1},
                                   {"human": "1", "model": "1", "count": 1}]
     assert spec_path.read_bytes() == original
+
+
+def _split_result(item_id, *, saved, errors=None, **overrides):
+    result = _generic_complete(item_id, **overrides)
+    result["schema_version"] = "caliper_item_result_v3"
+    result["labels"] = {key: value for key, value in result["labels"].items() if key in saved}
+    result["classifier_errors"] = errors or {}
+    result["status"] = "complete" if len(saved) == 4 else "error" if errors else "partial"
+    result["attempts"] = [{"classifier_id": key} for key in [*saved, *(errors or {})]]
+    return result
+
+
+def _split_progress(run):
+    records = [
+        _split_result("item-0", saved=["input_ontology", "input_content"],
+                      errors={"output_ontology": "Transport failed"}),
+        _split_result("item-1", saved=["input_ontology"], label="insufficient_evidence", categories=[]),
+        _split_result("item-2", saved=["input_ontology", "input_content", "output_ontology", "output_content"]),
+    ]
+    _write_jsonl(run / "results.jsonl", records)
+    (run / "execution.json").write_text(json.dumps({
+        "selected_item_ids": [f"item-{index}" for index in range(4)], "request_mode": "per_classifier",
+    }))
+    return records
+
+
+def test_split_report_preserves_saved_labels_and_distinguishes_sibling_error_and_pending(generic_run):
+    _split_progress(generic_run)
+    summary = generate_report(generic_run)
+    assert (summary["completed_items"], summary["error_items"], summary["partial_items"], summary["pending_items"]) == (1, 1, 1, 1)
+    experiment = summary["experiment"]
+    assert (experiment["selected_completed_items"], experiment["selected_error_items"],
+            experiment["selected_partial_items"], experiment["selected_pending_items"]) == (1, 1, 1, 1)
+    assert experiment["expected_item_classifier_judgments"] == 16
+    assert experiment["completed_item_classifier_judgments"] == 7
+    assert experiment["error_item_classifier_judgments"] == 1
+    assert experiment["pending_item_classifier_judgments"] == 8
+    assert experiment["invalid_item_classifier_judgments"] == 0
+    assert not summary["complete_snapshot"]
+    ontology = _by_id(summary, "input_ontology")
+    assert ontology["counts"] == {"match": 2, "no_match": 0, "insufficient_evidence": 1}
+    assert (ontology["errors"], ontology["pending"], ontology["invalid"]) == (0, 1, 0)
+    assert _by_id(summary, "output_ontology")["errors"] == 1
+    assert _by_id(summary, "output_content")["errors"] == 0
+    assert _by_id(summary, "output_content")["pending"] == 3
+    with (generic_run / "items.csv").open(newline="") as file:
+        rows = list(csv.DictReader(file))
+    assert rows[0]["input_ontology.label"] == "match"
+    assert rows[0]["input_ontology.status"] == "complete"
+    assert rows[0]["output_ontology.status"] == "error"
+    assert rows[0]["output_ontology.error"] == "Transport failed"
+    assert rows[0]["output_content.status"] == "pending"
+    assert rows[0]["output_content.error"] == ""
+    assert rows[1]["input_ontology.label"] == "insufficient_evidence"
+    html = (generic_run / "report.html").read_text()
+    assert "match · item-0" in html
+    assert "1 partially completed" in html
+    assert "One primary request per item-classifier pair" in html
+
+
+def test_split_cumulative_snapshots_count_latest_judgments_and_actual_calls_once(generic_run):
+    first = _split_result("item-0", saved=["input_ontology"])
+    failed = _split_result("item-0", saved=["input_ontology"], errors={"input_content": "Malformed response"})
+    complete = _split_result("item-0", saved=["input_ontology", "input_content", "output_ontology", "output_content"])
+    complete["attempts"] = failed["attempts"] + complete["attempts"][1:]
+    # Legacy rows store attempt deltas, whereas v3 snapshots retain their full history.
+    legacy_error = {"item_id": "item-1", "status": "error", "error": "Failure", "attempts": [{"error": "Failure"}]}
+    legacy_complete = _generic_complete("item-1")
+    legacy_complete["attempts"] = [{"response": "Saved"}]
+    _write_jsonl(generic_run / "results.jsonl", [first, failed, complete, legacy_error, legacy_complete])
+    summary = generate_report(generic_run)
+    assert summary["experiment"]["completed_item_classifier_judgments"] == 8
+    assert summary["experiment"]["recorded_api_calls"] == 7
+    assert summary["completed_items"] == 2
+    assert summary["error_items"] == summary["partial_items"] == 0
+
+
+def test_split_review_compares_saved_dimensions_without_requiring_complete_item(generic_run):
+    records = _split_progress(generic_run)
+    generate_report(generic_run)
+    rows = _read_review(generic_run)
+    for row in rows:
+        labels = _generic_complete(row["item_id"])["labels"]
+        if row["item_id"] == "item-1":
+            labels["input_ontology"] = records[1]["labels"]["input_ontology"]
+        for classifier_id, judgment in labels.items():
+            row[classifier_id] = judgment["label"]
+            row[f"{classifier_id}.evidence"] = "Human observation of the item"
+            row[f"{classifier_id}.justification"] = "Independent comparison with the standard"
+        row["input_ontology.matched_category_ids"] = json.dumps(labels["input_ontology"]["matched_category_ids"])
+        row["input_ontology.scope_exclusion_source_ids"] = "[]"
+    _save_review(generic_run, rows)
+    comparison = compare_review(generic_run, generic_run / "review.csv")
+    overall = comparison["overall"]
+    assert overall["compared"] == overall["matches"] == 7
+    assert overall["model_errors"] == 1
+    assert overall["model_pending"] == 8
+    assert overall["fully_compared_items"] == overall["fully_matching_items"] == 1
+    ontology = comparison["classifiers"]["input_ontology"]
+    assert ontology["compared"] == 3
+    assert ontology["model_insufficient_evidence"] == 1
+    assert ontology["model_errors"] == 0
+    assert comparison["classifiers"]["output_ontology"]["model_errors"] == 1
+    assert comparison["classifiers"]["output_content"]["model_errors"] == 0
+
+
+def test_split_invalid_saved_judgment_is_separate_from_errors_and_pending(generic_run):
+    result = _split_result("item-0", saved=["input_ontology", "input_content"],
+                           errors={"output_ontology": "Failure"})
+    result["labels"]["input_content"]["evidence"] = []
+    _write_jsonl(generic_run / "results.jsonl", [result])
+    summary = generate_report(generic_run)
+    experiment = summary["experiment"]
+    assert experiment["completed_item_classifier_judgments"] == 1
+    assert experiment["invalid_item_classifier_judgments"] == 1
+    assert experiment["error_item_classifier_judgments"] == 1
+    assert experiment["pending_item_classifier_judgments"] == 1
+
+
+def test_split_request_policy_is_visible_before_first_result(generic_run):
+    (generic_run / "run.json").write_text(json.dumps({
+        "schema_version": "caliper_item_result_v3", "request_mode": "per_classifier",
+        "request_schema_version": "caliper_item_classifier_request_v1", "prompt_sha256": {"input_content": "hash"},
+    }))
+    summary = generate_report(generic_run)
+    assert "item-classifier pair" in summary["experiment"]["request_policy"]
+    assert summary["classification"]["request_mode"] == "per_classifier"
+    assert summary["classification"]["prompt_sha256"] == {"input_content": "hash"}
+
+
+@pytest.mark.parametrize("mutation", ["saved_label", "attempts", "version", "after_complete"])
+def test_split_report_rejects_regressing_checkpoint_history(generic_run, mutation):
+    first = _split_result("item-0", saved=["input_ontology"])
+    later = _split_result("item-0", saved=["input_ontology", "input_content"])
+    expected = "cannot change or disappear"
+    if mutation == "saved_label":
+        del later["labels"]["input_ontology"]
+    elif mutation == "attempts":
+        later["attempts"] = later["attempts"][1:]
+    elif mutation == "version":
+        later = _generic_complete("item-0")
+        expected = "versions cannot change"
+    else:
+        first = _split_result("item-0", saved=["input_ontology", "input_content", "output_ontology", "output_content"])
+        later = first
+        expected = "Duplicate completed result"
+    _write_jsonl(generic_run / "results.jsonl", [first, later])
+    with pytest.raises(ValueError, match=expected):
+        generate_report(generic_run)
+    assert not (generic_run / "summary.json").exists()

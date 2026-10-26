@@ -175,8 +175,32 @@ def validate_labels(payload: dict, spec: dict) -> dict:
     if not is_generic_spec(spec):
         return legacy_schema.validate_labels(payload, spec)
     _validate_json(payload, labels_schema(spec), "item labels")
-    value = payload["labels"]["input_ontology"]
-    errors = _references(value["scope_exclusion_source_ids"], spec["source_registry"], spec["source_roles"], "scope exclusion", permitted={"deployment_requirement"})
-    if errors:
-        raise ValueError("\n".join(errors))
+    _validate_scope_exclusion(payload["labels"], spec)
+    return deepcopy(payload["labels"])
+
+
+def classifier_labels_schema(spec: dict, classifier_id: str) -> dict:
+    """Use the same judgment contract, requiring exactly one classifier."""
+    if not is_generic_spec(spec) or classifier_id not in ROSTER:
+        raise ValueError("A single-classifier request requires a current generic classifier ID")
+    schema = labels_schema(spec)
+    labels = schema["properties"]["labels"]
+    labels["properties"] = {classifier_id: labels["properties"][classifier_id]}
+    labels["required"] = [classifier_id]
+    return schema
+
+
+def _validate_scope_exclusion(labels: dict, spec: dict) -> None:
+    if "input_ontology" in labels:
+        errors = _references(labels["input_ontology"]["scope_exclusion_source_ids"],
+                             spec["source_registry"], spec["source_roles"], "scope exclusion",
+                             permitted={"deployment_requirement"})
+        if errors:
+            raise ValueError("\n".join(errors))
+
+
+def validate_classifier_labels(payload: dict, spec: dict, classifier_id: str) -> dict:
+    """Validate one response without requiring or accepting sibling judgments."""
+    _validate_json(payload, classifier_labels_schema(spec, classifier_id), "classifier label")
+    _validate_scope_exclusion(payload["labels"], spec)
     return deepcopy(payload["labels"])

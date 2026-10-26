@@ -19,10 +19,12 @@ from typing import Any
 from . import storage
 from .data import file_sha256
 from .catalog import CATALOG_VERSION, SPEC_SCHEMA_VERSION, LEGACY_SCHEMA_VERSION, LEGACY_CATALOG_VERSION, is_generic_spec
+from .classify import check_result_progress
 from .schema import allowed_labels, validate_spec
 
 
 GENERIC_IDS = {"input_ontology", "input_content", "output_ontology", "output_content"}
+SPLIT_RESULT_SCHEMA = "caliper_item_result_v3"
 
 
 def _generic(classifier: dict) -> bool:
@@ -123,14 +125,21 @@ def _load_run(run_dir: Path) -> tuple[dict, _ItemPopulation, dict[str, dict]]:
             storage.check_prepared(run_dir)
     items = _ItemPopulation(run_dir / "items.jsonl")
     results: dict[str, dict] = {}
-    for result in _read_jsonl(run_dir / "results.jsonl"):
+    for result in _iter_jsonl(run_dir / "results.jsonl"):
         item_id = result.get("item_id")
         if item_id not in items.item_ids:
             raise ValueError(f"Result contains an item outside the prepared dataset: {item_id!r}")
-        if result.get("status") not in {"complete", "error"}:
+        statuses = {"complete", "error", "partial"} if result.get("schema_version") == SPLIT_RESULT_SCHEMA else {"complete", "error"}
+        if result.get("status") not in statuses:
             raise ValueError(f"Unrecognized result status for {item_id}")
+        previous = results.get(item_id)
+        if result.get("schema_version") == SPLIT_RESULT_SCHEMA:
+            check_result_progress(result, previous)
+        elif previous and previous.get("schema_version") == SPLIT_RESULT_SCHEMA:
+            raise ValueError("Result versions cannot change within an item")
         # Retries do not duplicate observations. A later failed retry never erases
-        # an already completed classification.
+        # an already completed historical classification. Split snapshots must
+        # preserve their cumulative labels and attempts, checked above.
         if results.get(item_id, {}).get("status") != "complete":
             results[item_id] = result
     return spec, items, results
@@ -140,16 +149,39 @@ def _valid_model_label(label: Any, classifier: dict) -> bool:
     return any(type(label) is type(option) and label == option for option in allowed_labels(classifier))
 
 
+def _classifier_state(result: dict, classifier: dict) -> str:
+    """Describe this classifier's progress independently of sibling requests."""
+    if _generic(classifier) and result.get("schema_version") == SPLIT_RESULT_SCHEMA:
+        labels = result.get("labels", {})
+        if isinstance(labels, dict) and classifier["id"] in labels:
+            return "complete"
+        errors = result.get("classifier_errors", {})
+        if isinstance(errors, dict) and classifier["id"] in errors:
+            return "error"
+        # A claimed complete record with a missing label is invalid, not pending.
+        return "complete" if result.get("status") == "complete" else "pending"
+    return result.get("status", "pending")
+
+
+def _classifier_error(result: dict, classifier: dict) -> str:
+    if result.get("schema_version") == SPLIT_RESULT_SCHEMA:
+        return result.get("classifier_errors", {}).get(classifier["id"], "")
+    return result.get("error", "") if result.get("status") == "error" else ""
+
+
 def _judgment(result: dict, classifier: dict) -> tuple[Any, dict, bool]:
     if _generic(classifier) and (
-        result.get("schema_version") != "caliper_item_result_v2"
+        result.get("schema_version") not in {"caliper_item_result_v2", SPLIT_RESULT_SCHEMA}
         or result.get("fixed_catalog_version") != CATALOG_VERSION
     ):
         return None, {}, True
     labels = result.get("labels")
     if not isinstance(labels, dict):
         return None, {}, True
-    if _generic(classifier) and set(labels) != GENERIC_IDS:
+    if _generic(classifier) and (
+        set(labels) - GENERIC_IDS
+        or (result.get("schema_version") == "caliper_item_result_v2" and set(labels) != GENERIC_IDS)
+    ):
         return None, {}, True
     judgment = labels.get(classifier["id"])
     if not isinstance(judgment, dict) or "label" not in judgment:
@@ -228,7 +260,7 @@ def _write_items_csv(run_dir: Path, items: Iterable[dict], results: dict, classi
     provenance = provenance or {}
     columns = ["item_id", "status", "content", "reference_answer", "grading_criterion", "error"]
     for classifier in classifiers:
-        suffixes = ["label", "evidence", "justification"]
+        suffixes = ["status", "error", "label", "evidence", "justification"]
         if classifier["id"] == "input_ontology":
             suffixes += ["matched_category_ids", "scope_exclusion_source_ids"]
         columns.extend(f"{classifier['id']}.{suffix}" for suffix in suffixes)
@@ -245,8 +277,15 @@ def _write_items_csv(run_dir: Path, items: Iterable[dict], results: dict, classi
                 prefix = classifier["id"]
                 if not classifier["applicable"]:
                     row[f"{prefix}.label"] = "N/A"
-                elif result.get("status") == "complete":
+                    row[f"{prefix}.status"] = "not_applicable"
+                    continue
+                state = _classifier_state(result, classifier)
+                row[f"{prefix}.status"] = state
+                row[f"{prefix}.error"] = _classifier_error(result, classifier)
+                if state == "complete":
                     label, judgment, invalid = _judgment(result, classifier)
+                    if invalid:
+                        row[f"{prefix}.status"] = "invalid"
                     row[f"{prefix}.label"] = "invalid" if invalid else "unknown" if label is None else label
                     row[f"{prefix}.evidence"] = judgment.get("evidence", [])
                     row[f"{prefix}.justification"] = judgment.get("justification", "")
@@ -339,8 +378,11 @@ def _summarize_classifier(classifier: dict, results: dict, total: int) -> dict:
     counts = {str(option): 0 for option in allowed_labels(classifier)}
     unknown = invalid = completed = errors = 0
     for result in results.values():
-        if result["status"] == "error":
+        state = _classifier_state(result, classifier)
+        if state == "error":
             errors += 1
+            continue
+        if state != "complete":
             continue
         completed += 1
         label, _, is_invalid = _judgment(result, classifier)
@@ -385,8 +427,11 @@ def _summarize_generic(classifier: dict, results: dict, total: int) -> dict:
     inventory = classifier.get("input_category_inventory", {})
     category_counts = {category["id"]: 0 for category in inventory.get("categories", [])}
     for result in results.values():
-        if result["status"] == "error":
+        state = _classifier_state(result, classifier)
+        if state == "error":
             errors += 1
+            continue
+        if state != "complete":
             continue
         completed += 1
         label, judgment, bad = _judgment(result, classifier)
@@ -437,6 +482,7 @@ def generate_report(run_dir: Path) -> dict:
     original_dimensions = original.get("dimensions", original) if isinstance(original, dict) else {}
     completed = sum(result["status"] == "complete" for result in results.values())
     errors = sum(result["status"] == "error" for result in results.values())
+    partial = sum(result["status"] == "partial" for result in results.values())
     generic = is_generic_spec(spec)
     execution = _read_json(run_dir / "execution.json", {})
     if generic and "selected_item_ids" in execution:
@@ -472,6 +518,16 @@ def generate_report(run_dir: Path) -> dict:
                                 for result in results.values() for classifier in definitions))
     )
     run_config = _read_json(run_dir / "run.json", {})
+    split_requests = (
+        run_config.get("request_mode") == "per_classifier"
+        or execution.get("request_mode") == "per_classifier"
+        or any(result.get("schema_version") == SPLIT_RESULT_SCHEMA for result in results.values())
+    )
+    request_policy = (
+        "one primary request per item-classifier pair; repairs and retries add calls"
+        if split_requests else
+        "one primary request per item covers every configured classifier; repairs and retries add calls"
+    )
     summary = {
         **_versions(spec),
         "report_schema_version": "caliper_item_report_v2" if generic else "legacy_item_report_v1",
@@ -487,7 +543,8 @@ def generate_report(run_dir: Path) -> dict:
         "total_items": len(items),
         "completed_items": completed,
         "error_items": errors,
-        "pending_items": len(items) - completed - errors,
+        "partial_items": partial,
+        "pending_items": len(items) - completed - errors - partial,
         "complete_snapshot": complete_snapshot,
         "scope": "all items in the prepared snapshot" if complete_snapshot else "incomplete run over the prepared snapshot",
         "interpretation": (
@@ -498,6 +555,12 @@ def generate_report(run_dir: Path) -> dict:
         "original_assessment": None if direct else {dimension: original_dimensions.get(dimension) for dimension in DIMENSIONS},
         "classifiers": classifiers,
     }
+    if split_requests and summary["classification"] is not None:
+        summary["classification"].update(
+            request_mode="per_classifier",
+            request_schema_version=run_config.get("request_schema_version"),
+            prompt_sha256=run_config.get("prompt_sha256"),
+        )
     active_count = sum(classifier["applicable"] for classifier in definitions)
     selected_completed = sum(result["status"] == "complete" for result in selected_results.values())
     summary["experiment"] = {
@@ -506,14 +569,22 @@ def generate_report(run_dir: Path) -> dict:
         "selected_items": len(selected_items),
         "selected_completed_items": selected_completed,
         "selected_error_items": sum(result["status"] == "error" for result in selected_results.values()),
+        "selected_partial_items": sum(result["status"] == "partial" for result in selected_results.values()),
         "selected_pending_items": len(selected_items) - len(selected_results),
         "expected_item_classifier_judgments": len(selected_items) * active_count,
         "completed_item_classifier_judgments": sum(classifier.get("valid_judgments", classifier.get("known", 0) + classifier.get("unknown", 0)) for classifier in classifiers),
         "error_item_classifier_judgments": sum(classifier.get("errors", 0) for classifier in classifiers),
         "invalid_item_classifier_judgments": sum(classifier.get("invalid", 0) for classifier in classifiers),
         "pending_item_classifier_judgments": sum(classifier.get("pending", 0) for classifier in classifiers),
-        "request_policy": "one primary request per item covers every configured classifier; repairs and retries add calls",
-        "recorded_api_calls": sum(len(record.get("attempts", [])) for record in _read_jsonl(run_dir / "results.jsonl")),
+        "request_policy": request_policy,
+        # Split-request snapshots retain cumulative attempts. Historical records
+        # contain only the attempts made for that append.
+        "recorded_api_calls": (
+            sum(len(record.get("attempts", [])) for record in results.values()
+                if record.get("schema_version") == SPLIT_RESULT_SCHEMA)
+            + sum(len(record.get("attempts", [])) for record in _iter_jsonl(run_dir / "results.jsonl")
+                  if record.get("schema_version") != SPLIT_RESULT_SCHEMA)
+        ),
     }
     if generic:
         summary["interpretation"] = (
@@ -592,7 +663,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}small{color:#465368
         f"<p>{experiment['selected_items']} selected items × {experiment['classifier_count']} classifiers = "
         f"{experiment['expected_item_classifier_judgments']} expected judgments; "
         f"{experiment['completed_item_classifier_judgments']} valid judgments saved. "
-        "One primary request per item covers all configured classifiers; repair and retry requests are additional.</p>"
+        f"{_escape(experiment['request_policy'].capitalize())}.</p>"
     )
     metadata = summary["specification"]
     if summary.get("classification"):
@@ -615,7 +686,8 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}small{color:#465368
         parts.append("</section>")
     parts.append(
         f"<p>{summary['completed_items']} completed / {summary['total_items']} prepared items; "
-        f"{summary['error_items']} failed; {summary['pending_items']} pending.</p>"
+        f"{summary['error_items']} with errors; {summary['partial_items']} partially completed; "
+        f"{summary['pending_items']} pending.</p>"
     )
     parts.append(
         f"<p class='notice'>{_escape(summary['interpretation'])} "
@@ -654,7 +726,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}small{color:#465368
             continue
         seen = set()
         for item_id, result in results.items():
-            if result["status"] != "complete":
+            if _classifier_state(result, classifier) != "complete":
                 continue
             label, _, invalid = _judgment(result, classifier)
             key = "invalid" if invalid else label
@@ -694,7 +766,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}small{color:#465368
         parts.append("<h3>Examples</h3><p><small>First example of each observed label, including unknown. Inspect the CSV for all items.</small></p>")
         seen: set[str] = set()
         for item_id, result in results.items():
-            if result["status"] != "complete":
+            if _classifier_state(result, classifier) != "complete":
                 continue
             label, judgment, invalid = _judgment(result, classifier)
             key = "invalid" if invalid else "unknown" if label is None else str(label)
@@ -791,7 +863,7 @@ def _render_generic_classifier(classifier: dict, item_by_id: dict, results: dict
     parts.append("<h3>Examples</h3><p><small>First item for each observed judgment; inspect the CSV for all items.</small></p>")
     seen = set()
     for item_id, result in results.items():
-        if result["status"] != "complete":
+        if _classifier_state(result, classifier) != "complete":
             continue
         label, judgment, invalid = _judgment(result, classifier)
         key = "invalid" if invalid else label
@@ -860,7 +932,7 @@ def compare_review(run_dir: Path, review_path: Path) -> dict:
                 continue
             human = _parse_human_label(raw, classifier)
             result = results.get(row["item_id"], {})
-            if result.get("status") != "complete":
+            if _classifier_state(result, classifier) != "complete":
                 unavailable += 1
                 continue
             predicted, _, is_invalid = _judgment(result, classifier)
@@ -955,9 +1027,10 @@ def _compare_generic_review(spec: dict, rows: list[dict], results: dict) -> dict
                         raise ValueError(f"Review {row['item_id']}: partial/unknown inventory no_match needs scope exclusion source IDs")
             counts["human_insufficient_evidence"] += human == "insufficient_evidence"
             result = results.get(row["item_id"], {})
-            if result.get("status") != "complete":
+            state = _classifier_state(result, classifier)
+            if state != "complete":
                 counts["model_unavailable"] += 1
-                counts["model_errors" if result.get("status") == "error" else "model_pending"] += 1
+                counts["model_errors" if state == "error" else "model_pending"] += 1
                 continue
             model, judgment, invalid = _judgment(result, classifier)
             if invalid:

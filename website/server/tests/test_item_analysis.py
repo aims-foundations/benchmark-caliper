@@ -80,8 +80,10 @@ def model(monkeypatch):
                              "evidence": ["The supplied question and answer choices."],
                              "justification": "Deterministic test response, not a genuine assessment."}
                       for slot, definition in slots.items()}
-            labels['input_ontology'].update(matched_category_ids=[payload['input_category_inventory']['categories'][0]['id']], scope_exclusion_source_ids=[])
-            if payload["item"]["item_id"].endswith("01"):
+            assert len(slots) == 1
+            if 'input_ontology' in labels:
+                labels['input_ontology'].update(matched_category_ids=[payload['input_category_inventory']['categories'][0]['id']], scope_exclusion_source_ids=[])
+            if 'input_content' in labels and payload["item"]["item_id"].endswith("01"):
                 labels["input_content"]["label"] = 'insufficient_evidence'
             text = json.dumps({"labels": labels})
         return model_client.CallResult(text, arguments["model"], 100, 30, 1,
@@ -292,7 +294,7 @@ def test_selected_context_drives_generation_classification_and_exports(
     assert result["status"] == "complete", result
     assert result["complete"] == result["processed"] == result["total"] == 3
     classification = [payload for _, payload in model if "item" in payload]
-    assert len(classification) == 3
+    assert len(classification) == 12
     assert {payload["item"]["item_id"]: payload["item"] for payload in classification} == expected_items
     assert all(payload["deployment_description"] == evidence["deployment"]
                for payload in classification)
@@ -380,6 +382,8 @@ def test_bundled_example_always_available_and_no_predictions(client, model):
     job = settled(client, access)
     assert job["status"] == "ready" and job["total"] == 10
     assert job["processed"] == 0 and all(item["status"] == "pending" for item in job["items"])
+    assert job["completed_judgments"] == 0
+    assert job["remaining_judgments"] == {"pilot": 40, "all": 40}
     assert "Illustrative" in job["example"]["source_label"]
     assert job["summary"]["original_assessment"]["input_form"]["score"] is None
     assert job["summary"]["specification"]["source"]["kind"] == "provided"
@@ -403,9 +407,11 @@ def test_real_pipeline_generates_or_imports_then_classifies_and_exports(client, 
     assert result["status"] == "complete"
     assert result["complete"] == result["processed"] == result["total"] == 10
     assert result["errors"] == 0 and result["summary"]["complete_snapshot"]
+    assert result["completed_judgments"] == 40
+    assert result["remaining_judgments"] == {"pilot": 0, "all": 0}
     regional = next(c for c in result["summary"]["classifiers"] if c["id"] == "input_content")
     assert regional["insufficient_evidence"] == 1 and regional["determinate_judgments"] == 9
-    call_count = 11 if mode == "generate" else 10
+    call_count = 41 if mode == "generate" else 40
     assert result["usage"] == {"input_tokens": 100 * call_count, "output_tokens": 30 * call_count,
                                "cached_input_tokens": 20 * call_count, "reasoning_tokens": 7 * call_count}
     assert sum("item" not in payload for _, payload in model) == (mode == "generate")
@@ -435,11 +441,16 @@ def test_first_100_checkpoint_full_continuation_and_no_duplicate_calls(client, m
     pilot = classify(client, access)
     assert pilot["status"] == "checkpoint" and pilot["can_continue"]
     assert (pilot["processed"], pilot["total"]) == (100, 105)
+    assert pilot["completed_judgments"] == 400
+    assert pilot["remaining_judgments"] == {"pilot": 0, "all": 20}
     first_ids = [payload["item"]["item_id"] for _, payload in model if "item" in payload]
-    assert len(first_ids) == len(set(first_ids)) == 100
+    assert len(first_ids) == 400 and len(set(first_ids)) == 100
+    first_pairs = [(payload["item"]["item_id"], payload["classifier"]["id"])
+                   for _, payload in model if "item" in payload]
+    assert len(first_pairs) == len(set(first_pairs)) == 400
     complete = classify(client, access, scope="all")
     assert complete["status"] == "complete" and complete["complete"] == 105
-    assert sum("item" in payload for _, payload in model) == 105
+    assert sum("item" in payload for _, payload in model) == 420
     page = client.get(url(access) + "?page=6", headers=headers(access)).json()
     assert page["pagination"] == {"page": 6, "page_size": 20, "total_pages": 6}
     assert len(page["items"]) == 5
@@ -490,6 +501,64 @@ def test_provider_failure_is_sanitized_and_can_resume(client, monkeypatch, model
     assert finished["status"] == "complete" and finished["errors"] == 0
     assert finished["provider_error"] is None
     assert analysis.jobs[access["run_id"]].provider_error is None
+
+
+def test_provider_failure_preserves_saved_dimensions_and_resume_calls_only_missing_ones(client, monkeypatch, model):
+    access = start(client)
+    ready = settled(client, access)
+    first_id = ready["items"][0]["item_id"]
+    original = model_client.call_text_async
+
+    async def fail_second_classifier(**arguments):
+        payload = request_payload(arguments["user"])
+        if payload["classifier"]["id"] == "input_content":
+            raise ValueError(f"Private failure {KEY}")
+        return await original(**arguments)
+
+    monkeypatch.setattr(model_client, "call_text_async", fail_second_classifier)
+    failed = classify(client, access)
+    assert failed["status"] == "failed" and failed["errors"] == 1 and failed["complete"] == 0
+    assert failed["completed_judgments"] == 1
+    assert failed["remaining_judgments"] == {"pilot": 39, "all": 39}
+    first = next(item for item in failed["items"] if item["item_id"] == first_id)
+    assert set(first["labels"]) == {"input_ontology"}
+    assert first["classifier_errors"] == {"input_content": "No valid judgment was saved. Retry this phase."}
+    assert "Private failure" not in json.dumps(failed) and KEY not in json.dumps(failed)
+    monkeypatch.setattr(model_client, "call_text_async", original)
+    complete = classify(client, access)
+    assert complete["status"] == "complete" and complete["completed_judgments"] == 40
+    pairs = [(payload["item"]["item_id"], payload["classifier"]["id"]) for _, payload in model]
+    assert len(pairs) == len(set(pairs)) == 40
+
+
+def test_invalid_classifier_does_not_discard_other_dimensions_or_unlock_full_continuation(client, monkeypatch, model):
+    access = start(client)
+    first_id = settled(client, access)["items"][0]["item_id"]
+    original = model_client.call_text_async
+    invalid_calls = []
+
+    async def invalid_dimension(**arguments):
+        payload = request_payload(arguments["user"])
+        if payload["item"]["item_id"] == first_id and payload["classifier"]["id"] == "output_ontology":
+            invalid_calls.append(arguments)
+            return model_client.CallResult('{"labels": {}}', arguments["model"], 100, 30, 1)
+        return await original(**arguments)
+
+    monkeypatch.setattr(model_client, "call_text_async", invalid_dimension)
+    failed = classify(client, access)
+    assert len(invalid_calls) == 2
+    assert failed["status"] == "failed" and not failed["can_continue"]
+    assert failed["complete"] == 9 and failed["errors"] == 1 and failed["completed_judgments"] == 39
+    assert failed["remaining_judgments"] == {"pilot": 1, "all": 1}
+    first = next(item for item in failed["items"] if item["item_id"] == first_id)
+    assert set(first["labels"]) == {"input_ontology", "input_content", "output_content"}
+    assert set(first["classifier_errors"]) == {"output_ontology"}
+    assert client.post(url(access) + "/classify", json={"scope": "all"}, headers=headers(access, key=True)).status_code == 409
+    monkeypatch.setattr(model_client, "call_text_async", original)
+    complete = classify(client, access)
+    assert complete["status"] == "complete" and complete["completed_judgments"] == 40
+    pairs = [(payload["item"]["item_id"], payload["classifier"]["id"]) for _, payload in model]
+    assert len(pairs) == len(set(pairs)) == 40
 
 
 @pytest.mark.parametrize("mode", ["generate", "provided"])
@@ -583,6 +652,8 @@ def test_cancel_stops_current_request_drains_thread_and_resumes(client, monkeypa
 
     async def blocked(**arguments):
         calls.append(arguments["model"])
+        if len(calls) == 1:
+            return await original(**arguments)
         started.set()
         try:
             await asyncio.Event().wait()
@@ -598,10 +669,14 @@ def test_cancel_stops_current_request_drains_thread_and_resumes(client, monkeypa
     assert duplicate.status_code == 429
     stopped = client.post(url(access) + "/cancel", headers=headers(access)).json()
     assert stopped["status"] == "cancelled" and cancelled.is_set()
+    assert stopped["completed_judgments"] == 1
+    assert stopped["remaining_judgments"] == {"pilot": 39, "all": 39}
     assert analysis.jobs[access["run_id"]].task.done()
-    assert calls == [model_client.MODEL_ID]
+    assert calls == [model_client.MODEL_ID, model_client.MODEL_ID]
     monkeypatch.setattr(model_client, "call_text_async", original)
     assert classify(client, access)["status"] == "complete"
+    pairs = [(payload["item"]["item_id"], payload["classifier"]["id"]) for _, payload in model]
+    assert len(pairs) == len(set(pairs)) == 40
 
 
 def test_generation_can_be_cancelled_and_sweep_never_removes_live_worker(client, monkeypatch):
@@ -1279,11 +1354,17 @@ def test_generic_catalog_reaches_each_judge_and_counts_actual_judgments(client, 
     assert client.get(url(access) + '/download/review', headers=headers(access)).status_code == 404
     result = classify(client, access)
     item_calls = [payload for _, payload in model if 'item' in payload]
-    assert len(item_calls) == result['complete']
+    assert len(item_calls) == result['complete'] * len(get_catalog())
+    catalog = {classifier['id']: classifier for classifier in get_catalog()}
     for payload in item_calls:
-        assert payload['classifiers'] == get_catalog()
-        assert payload['source_registry'] == ready['spec']['source_registry']
-        assert payload['context_by_classifier'] == ready['spec']['context_by_classifier']
+        classifier_id = payload['classifier']['id']
+        assert payload['classifier'] == catalog[classifier_id]
+        assert payload['context'] == ready['spec']['context_by_classifier'][classifier_id]
+        assert set(payload['output_schema']['properties']['labels']['properties']) == {classifier_id}
+        assert 'classifiers' not in payload and 'context_by_classifier' not in payload
+        assert ('input_category_inventory' in payload) == (classifier_id == 'input_ontology')
+        assert all(content == ready['spec']['source_registry'][source_id]
+                   for source_id, content in payload['source_registry'].items())
     experiment = result['summary']['experiment']
     assert experiment['completed_item_classifier_judgments'] == result['complete'] * len(get_catalog())
     assert experiment['selected_items'] == result['total']
