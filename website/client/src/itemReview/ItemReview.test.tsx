@@ -3,6 +3,7 @@ import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ItemReview } from './ItemReview'
 import * as api from './api'
+import { PIPELINE_RUN_STORAGE } from './accessStorage'
 
 vi.mock('./api', async importOriginal => ({
   ...await importOriginal<typeof import('./api')>(),
@@ -146,6 +147,26 @@ const adapted: api.AdaptiveReview = {
   },
 }
 
+const stepTitles = [
+  'Step 1: Deployment goal',
+  'Step 2: Extract requirements',
+  'Step 3: O*NET grounding',
+  'Step 4: Retrieve benchmark items',
+  'Step 5: Initial screening',
+  'Step 6: Initial collection selection',
+  'Step 7: Adaptive screening',
+]
+
+function step(number: number) {
+  return screen.getByRole('region', { name: stepTitles[number - 1] })
+}
+
+function expectNoStageStarted() {
+  for (const start of [api.startReview, api.startGrounding, api.startBenchmarkRetrieval, api.startScreening, api.startSelection, api.startAdaptive]) {
+    expect(start).not.toHaveBeenCalled()
+  }
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   sessionStorage.clear()
@@ -183,6 +204,7 @@ it('submits an optional run name separately from the six deployment answers', as
   expect(screen.queryByLabelText('Run name (optional)')).not.toBeInTheDocument()
   expect(sessionStorage.getItem('item_review_run_v1')).not.toContain('sk-test-private')
   expect(sessionStorage.getItem('item_review_run_v1')).not.toContain('Medical goal')
+  expect(JSON.parse(localStorage.getItem(PIPELINE_RUN_STORAGE)!)).toEqual({ run_id: 'test-run', run_secret: 'temporary-access' })
 })
 
 it.each([extracted, grounded, retrieved, screened, selected, adapted])('offers one package download for the $mode stage alongside its JSON export', async review => {
@@ -193,7 +215,8 @@ it.each([extracted, grounded, retrieved, screened, selected, adapted])('offers o
   expect(screen.getAllByRole('button', { name: 'Download results package' })).toHaveLength(1)
   expect(screen.getByRole('button', { name: /Download .* JSON/ })).toBeEnabled()
   expect(within(packagePanel).getByText(/HTML report/)).toHaveTextContent('CSV of the selected items, and the complete JSON record')
-  expect(within(packagePanel).getByText(/Download before results expire/)).toHaveTextContent('one hour after this run ends')
+  expect(within(packagePanel).getByText(/Completed progress is saved/)).toHaveTextContent('without a time limit')
+  expect(within(packagePanel).getByText(/Completed progress is saved/)).toHaveTextContent('paid calls do not restart automatically')
   expect(within(packagePanel).getByText(review.mode === 'adaptive' ? 'Frozen collection' : 'Stage complete')).toBeVisible()
 })
 
@@ -262,6 +285,35 @@ it('does not offer pipeline packages for the separate sample item review', async
   render(<ItemReview />)
   await screen.findByRole('heading', { name: 'Your item review is ready' })
   expect(screen.queryByRole('button', { name: 'Download results package' })).not.toBeInTheDocument()
+  expect(localStorage.getItem(PIPELINE_RUN_STORAGE)).toBeNull()
+})
+
+it('reopens completed grounding after the tab was closed without repeating paid stages', async () => {
+  const access = { run_id: 'ground-run', run_secret: 'ground-access' }
+  localStorage.setItem(PIPELINE_RUN_STORAGE, JSON.stringify(access))
+  vi.mocked(api.getReview).mockResolvedValue(grounded)
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Your O*NET grounding is ready' })
+  expect(api.getReview).toHaveBeenCalledWith(access, 1, expect.any(AbortSignal))
+  expect(JSON.parse(sessionStorage.getItem('item_review_run_v1')!)).toEqual(access)
+  expect(screen.getByRole('article', { name: 'Mapping for task 1' })).toBeVisible()
+  expect(screen.getByRole('button', { name: 'Retrieve benchmark items' })).toBeEnabled()
+  expect(screen.getByLabelText('OpenAI API key for O*NET mapping')).toHaveValue('')
+  expect(api.startReview).not.toHaveBeenCalled()
+  expect(api.startGrounding).not.toHaveBeenCalled()
+})
+
+it('migrates existing pipeline access only after a successful server response', async () => {
+  const access = { run_id: 'ground-run', run_secret: 'ground-access' }
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify(access))
+  let resolveReview!: (value: api.RunResult) => void
+  vi.mocked(api.getReview).mockReturnValue(new Promise(resolve => { resolveReview = resolve }))
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Connecting to your run' })
+  expect(localStorage.getItem(PIPELINE_RUN_STORAGE)).toBeNull()
+  await act(async () => { resolveReview(grounded) })
+  await screen.findByRole('heading', { name: 'Your O*NET grounding is ready' })
+  expect(JSON.parse(localStorage.getItem(PIPELINE_RUN_STORAGE)!)).toEqual(access)
 })
 
 it('explains the sample and paid shortlist, and starts only on submission', async () => {
@@ -371,7 +423,7 @@ it('extracts from the six answers without dataset access and displays evidence a
   expect(screen.getByText('Unknown — not specified in the answers.')).toBeVisible()
   const task = screen.getByRole('article', { name: 'Task 1' })
   expect(within(task).getByText('Essential')).toBeVisible()
-  const sourceLink = within(task).getByRole('link', { name: 'Answer 5 · What counts as a successful response?' })
+  const sourceLink = within(task).getByRole('link', { name: 'Answer 5: What counts as a successful response?' })
   expect(sourceLink).toHaveAttribute('href', '#original-answer-success')
   expect(within(task).getByText('Choose initial management.')).toBeVisible()
   const coverage = screen.getByRole('region', { name: 'Explicit coverage requirements' })
@@ -383,9 +435,10 @@ it('extracts from the six answers without dataset access and displays evidence a
   expect(screen.queryAllByRole('textbox')).toHaveLength(0)
   expect(sessionStorage.length).toBe(1)
   expect(sessionStorage.getItem('item_review_run_v1')).toBe(JSON.stringify({ run_id: 'test-run', run_secret: 'temporary-access' }))
-  expect(localStorage.length).toBe(0)
+  expect(JSON.parse(localStorage.getItem(PIPELINE_RUN_STORAGE)!)).toEqual({ run_id: 'test-run', run_secret: 'temporary-access' })
   await user.click(screen.getByRole('button', { name: 'Start another run' }))
   expect(await screen.findByLabelText('OpenAI API key')).toHaveValue('')
+  expect(localStorage.getItem(PIPELINE_RUN_STORAGE)).toBeNull()
 })
 
 it('uses native required-field validation before starting extraction and keeps answers without length limits', async () => {
@@ -473,7 +526,7 @@ it('grounds retained requirements without dataset access and hands off only a fr
   expect(api.startReview).not.toHaveBeenCalled()
   expect(api.getReview).toHaveBeenLastCalledWith({ run_id: 'ground-run', run_secret: 'ground-access' }, 1, expect.any(AbortSignal))
   expect(sessionStorage.getItem('item_review_run_v1')).toBe(JSON.stringify({ run_id: 'ground-run', run_secret: 'ground-access' }))
-  expect(localStorage.length).toBe(0)
+  expect(JSON.parse(localStorage.getItem(PIPELINE_RUN_STORAGE)!)).toEqual({ run_id: 'ground-run', run_secret: 'ground-access' })
   expect(screen.getByLabelText('OpenAI API key for O*NET mapping')).toHaveValue('')
   const mapping = screen.getByRole('article', { name: 'Mapping for task 1' })
   expect(within(mapping).getByRole('heading', { name: 'Evaluate treatment options' })).toBeVisible()
@@ -618,13 +671,13 @@ it('retrieves the whole main-branch bank after grounding without scope controls 
   expect(api.startReview).not.toHaveBeenCalled()
   expect(screen.queryByLabelText('OpenAI API key for O*NET mapping')).not.toBeInTheDocument()
   expect(sessionStorage.getItem('item_review_run_v1')).toBe(JSON.stringify({ run_id: 'retrieve-run', run_secret: 'retrieve-access' }))
-  expect(localStorage.length).toBe(0)
+  expect(JSON.parse(localStorage.getItem(PIPELINE_RUN_STORAGE)!)).toEqual({ run_id: 'retrieve-run', run_secret: 'retrieve-access' })
   expect(screen.getByText(/1,160 searchable items/)).toHaveTextContent('0 items without searchable row data')
   expect(screen.getByText(/whole main-branch bank/)).toHaveTextContent('3 benchmark collections · 1,200 source rows')
   expect(screen.getByText(/These are retrieval ranks/)).toBeVisible()
-  await user.click(screen.getByText('Task 1 · 750 candidates'))
+  await user.click(screen.getByText('Task 1: 750 candidates'))
   expect(screen.getByText('Choose initial management. treatment options')).toBeVisible()
-  expect(screen.getByText('treatment options', { exact: true })).toBeVisible()
+  expect(within(step(4)).getByText('treatment options', { exact: true })).toBeVisible()
   expect(screen.getByText(/O\*NET records: dwa:treatment/)).toBeVisible()
 })
 
@@ -743,7 +796,7 @@ it('shows planned queries while the first index is preparing and statistics are 
   expect(screen.getByText(/0 source rows read/)).toBeVisible()
   expect(screen.getByText('0 of 1 task queries completed.')).toBeVisible()
   expect(screen.getByRole('progressbar', { name: 'Task queries completed' })).toHaveAttribute('value', '0')
-  await user.click(screen.getByText('Task 1 · Awaiting retrieval'))
+  await user.click(screen.getByText('Task 1: Awaiting retrieval'))
   expect(screen.getByText('Choose initial management. treatment options')).toBeVisible()
   expect(api.getCandidates).not.toHaveBeenCalled()
   expect(screen.queryByText('No searchable candidates were found in the bank.')).not.toBeInTheDocument()
@@ -786,7 +839,7 @@ it('starts initial screening only after a fresh-key submission and preserves pri
   expect(api.startReview).not.toHaveBeenCalled()
   expect(screen.getByLabelText('OpenAI API key for initial screening')).toHaveValue('')
   expect(sessionStorage.getItem('item_review_run_v1')).toBe(JSON.stringify({ run_id: 'screen-run', run_secret: 'screen-access' }))
-  expect(localStorage.length).toBe(0)
+  expect(JSON.parse(localStorage.getItem(PIPELINE_RUN_STORAGE)!)).toEqual({ run_id: 'screen-run', run_secret: 'screen-access' })
   expect(api.getReview).toHaveBeenLastCalledWith({ run_id: 'screen-run', run_secret: 'screen-access' }, 1, expect.any(AbortSignal))
 })
 
@@ -808,11 +861,11 @@ it('shows actual task matching, six ratings, four-dimension gates, coverage, and
   expect(within(passed).getAllByText('Gate dimension')).toHaveLength(4)
   expect(within(passed).getByText('Choose the indicated first treatment.')).toBeVisible()
   await user.click(within(passed).getByText('Inspect task interpretation and six validity ratings'))
-  expect(within(passed).getByRole('heading', { name: 'Input ontology · 4 / 5' })).toBeVisible()
-  expect(within(passed).getByRole('heading', { name: 'Output form · Unknown' })).toBeVisible()
+  expect(within(passed).getByRole('heading', { name: 'Input ontology: 4 / 5' })).toBeVisible()
+  expect(within(passed).getByRole('heading', { name: 'Output form: Unknown' })).toBeVisible()
   expect(within(passed).getByText('The response format is not established.')).toBeVisible()
   await user.click(within(passed).getByText('Inspect coverage requirements (1)'))
-  expect(within(passed).getByRole('heading', { name: 'Coverage requirement 1 · Satisfied' })).toBeVisible()
+  expect(within(passed).getByRole('heading', { name: 'Coverage requirement 1: Satisfied' })).toBeVisible()
   const failed = screen.getByRole('article', { name: 'Screened item 2' })
   expect(within(failed).getByText(/Acquired from:/).parentElement).toHaveTextContent('Task 1 queue')
   expect(within(failed).getByText(/Task match:/).parentElement).toHaveTextContent('No deployment task matched')
@@ -956,7 +1009,7 @@ it('selects at most 30 items across the whole collection without a key or anothe
   expect(screen.getByText('Eligible items').parentElement).toHaveTextContent('1')
   expect(screen.getByText('Total quality Q').parentElement).toHaveTextContent('4.00')
   expect(sessionStorage.getItem('item_review_run_v1')).toBe(JSON.stringify({ run_id: 'select-run', run_secret: 'select-access' }))
-  expect(localStorage.length).toBe(0)
+  expect(JSON.parse(localStorage.getItem(PIPELINE_RUN_STORAGE)!)).toEqual({ run_id: 'select-run', run_secret: 'select-access' })
 })
 
 it('shows task and quota shortfalls, unresolved quota minima, and the selected item rating evidence', async () => {
@@ -1057,7 +1110,7 @@ it('exports selection evidence and preserves a previous collection after a solve
   const user = userEvent.setup()
   render(<ItemReview />)
   await screen.findByRole('heading', { name: 'Selection interrupted' })
-  expect(screen.getByRole('alert')).toHaveTextContent('Selection could not complete.')
+  expect(within(step(6)).getByRole('alert')).toHaveTextContent('Selection could not complete.')
   expect(screen.getByRole('heading', { name: 'Previously selected collection' })).toBeVisible()
   await user.click(screen.getByText('Inspect selection policy, exclusions, and solver result'))
   expect(screen.getByText(/"selection_run_id": "select-run"/)).toBeVisible()
@@ -1117,7 +1170,7 @@ it('starts adaptive screening from a complete selection with a fresh key and no 
   expect(api.startBenchmarkRetrieval).not.toHaveBeenCalled()
   expect(sessionStorage.getItem('item_review_run_v1')).toBe(JSON.stringify({ run_id: 'adapt-run', run_secret: 'adapt-access' }))
   expect(JSON.stringify(sessionStorage)).not.toContain('sk-adaptive-private')
-  expect(localStorage.length).toBe(0)
+  expect(JSON.parse(localStorage.getItem(PIPELINE_RUN_STORAGE)!)).toEqual({ run_id: 'adapt-run', run_secret: 'adapt-access' })
 })
 
 it.each([
@@ -1185,7 +1238,7 @@ it('retains collection and pending batch when cancelled, then resumes with immut
   await user.click(screen.getByRole('button', { name: 'Stop adaptive screening' }))
   await screen.findByRole('heading', { name: 'Adaptive screening stopped' })
   expect(api.cancelReview).toHaveBeenCalledWith(source)
-  await user.click(screen.getByText('Batch 2 · 2 candidates · Pending'))
+  await user.click(screen.getByText('Batch 2: 2 candidates; Pending'))
   expect(screen.getByText('This batch is incomplete. Its outcomes have not updated queue statistics.')).toBeVisible()
   expect(screen.queryByLabelText('Random seed')).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'Select up to 30 items' })).not.toBeInTheDocument()
@@ -1234,7 +1287,7 @@ it('makes queue estimates, batch choices, usage uncertainty, and adaptive export
   expect(screen.getByRole('cell', { name: '0.501' })).toBeVisible()
   expect(screen.getByText(/Estimated spent:/)).toHaveTextContent('Estimated spent: $0.2500 · Reserved: $0.4000 · Ceiling: $1.0000')
   expect(screen.getByText(/Usage is unknown for 1 attempts/)).toBeVisible()
-  await user.click(screen.getByText('Batch 1 · 2 candidates · Committed'))
+  await user.click(screen.getByText('Batch 1: 2 candidates; Committed'))
   expect(screen.getByText(/Task 1 · matharena · Random exploration/)).toBeVisible()
   expect(screen.getByText(/0 newly screened items retained after this batch/)).toBeVisible()
   await user.click(screen.getByRole('button', { name: 'Download adaptive JSON' }))
@@ -1272,7 +1325,7 @@ it('explains a partially committed final batch without counting missing assessme
   await screen.findByRole('heading', { name: 'Benchmark collection frozen' })
   expect(screen.getByText(/The last batch included 2 acquired candidates/)).toHaveTextContent('valid assessments were incorporated into selection')
   expect(screen.getByText(/The last batch included 2 acquired candidates/)).toHaveTextContent('do not count as selection failures')
-  await user.click(screen.getByText('Batch 1 · 4 candidates · Committed'))
+  await user.click(screen.getByText('Batch 1: 4 candidates; Committed'))
   expect(screen.getByText(/Only this batch’s 2 valid assessments/)).toHaveTextContent('2 unresolved candidates are not counted as selection failures')
   expect(screen.queryByRole('button', { name: 'Resume adaptive screening' })).not.toBeInTheDocument()
 })
@@ -1290,4 +1343,130 @@ it('reports supplied token prices and estimated spending when no cost ceiling wa
   expect(screen.getByText(/Cached input means cache reads/)).toHaveTextContent('2.5× for 12 hours, replacing the ordinary input charge')
   expect(screen.getByText(/Requests above 272,000 input tokens/)).toHaveTextContent('1.5× the output rate for the whole request')
   expect(screen.queryByText(/without an assumed dollar price/)).not.toBeInTheDocument()
+})
+
+it.each([extracted, grounded, retrieved, screened, selected, adapted])('groups the $mode stage and its saved results once in reverse framework order', async review => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: review.run_id, run_secret: 'private-access' }))
+  vi.mocked(api.getReview).mockResolvedValue(review)
+  const { container } = render(<ItemReview />)
+  const currentStep = [extracted, grounded, retrieved, screened, selected, adapted].indexOf(review) + 2
+  await screen.findByRole('heading', { name: stepTitles[currentStep - 1], level: 2 })
+  const headings = screen.getAllByRole('heading', { level: 2 }).filter(heading => heading.id.startsWith('pipeline-step-'))
+  expect(headings.map(heading => heading.textContent)).toEqual(stepTitles.slice(0, currentStep).reverse())
+  for (let number = 1; number <= currentStep; number++) {
+    expect(within(step(number)).getByRole('button', { name: `Collapse Step ${number}` })).toHaveAttribute('aria-expanded', 'true')
+    expect(step(number)).toHaveAttribute('id', `pipeline-step-${number}`)
+    expect(headings[number - 1].textContent).not.toContain('·')
+  }
+  expect(screen.getAllByRole('heading', { name: 'Original deployment answers' })).toHaveLength(1)
+  expect(screen.getAllByRole('heading', { name: 'Task facets' })).toHaveLength(1)
+  const ids = Array.from(container.querySelectorAll('[id]'), element => element.id)
+  expect(new Set(ids).size).toBe(ids.length)
+  expect(screen.getAllByRole('button', { name: 'Start another run' })).toHaveLength(1)
+  expect(screen.getAllByRole('button', { name: /Download .* JSON/ })).toHaveLength(1)
+  expectNoStageStarted()
+})
+
+it('collapses saved results without hiding their step heading and follows evidence links into collapsed steps', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: grounded.run_id, run_secret: 'private-access' }))
+  vi.mocked(api.getReview).mockResolvedValue(grounded)
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: stepTitles[2] })
+  await user.click(within(step(1)).getByRole('button', { name: 'Collapse Step 1' }))
+  expect(within(step(1)).getByRole('heading', { name: stepTitles[0] })).toBeVisible()
+  expect(within(step(1)).getByText('Your original six answers describe the deployment this benchmark should support.')).toBeVisible()
+  expect(within(step(1)).getByRole('button', { name: 'Expand Step 1' })).toHaveAttribute('aria-expanded', 'false')
+  expect(document.getElementById('original-answer-success')).not.toBeVisible()
+  const task = within(step(2)).getByRole('article', { name: 'Task 1' })
+  await user.click(within(task).getByRole('link', { name: /Answer 5/ }))
+  await waitFor(() => expect(document.getElementById('original-answer-success')).toBeVisible())
+  expect(within(step(1)).getByRole('button', { name: 'Collapse Step 1' })).toHaveAttribute('aria-expanded', 'true')
+
+  await user.click(within(step(2)).getByRole('button', { name: 'Collapse Step 2' }))
+  expect(within(step(2)).getByRole('heading', { name: stepTitles[1] })).toBeVisible()
+  await user.click(within(step(2)).getByRole('button', { name: 'Expand Step 2' }))
+  expect(within(step(2)).getByRole('article', { name: 'Task 1' })).toBeVisible()
+  expectNoStageStarted()
+})
+
+it('keeps historical O*NET evidence and candidate pages inspectable using the latest run token without offering old stage actions', async () => {
+  const access = { run_id: selected.run_id, run_secret: 'selection-private-access' }
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify(access))
+  vi.mocked(api.getReview).mockResolvedValue(selected)
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: stepTitles[5] })
+  const mapping = within(step(3)).getByRole('article', { name: 'Mapping for task 1' })
+  expect(within(mapping).getByText('risks and benefits of therapies')).toBeVisible()
+  expect(within(mapping).getByText('Useful treatment vocabulary within an educational task.')).toBeVisible()
+  expect(within(step(3)).queryByRole('button', { name: 'Ground with O*NET' })).not.toBeInTheDocument()
+  expect(within(step(3)).queryByRole('button', { name: 'Retrieve benchmark items' })).not.toBeInTheDocument()
+  expect(within(step(4)).queryByRole('button', { name: 'Screen initial candidates' })).not.toBeInTheDocument()
+  expect(within(step(5)).queryByRole('button', { name: 'Select up to 30 items' })).not.toBeInTheDocument()
+  expect(within(step(5)).queryByRole('button', { name: 'Continue screening' })).not.toBeInTheDocument()
+
+  const candidate = await within(step(4)).findByRole('article', { name: 'Candidate 1' })
+  await user.click(within(candidate).getByText('Inspect full item evidence and sources'))
+  expect(within(candidate).getByText(candidates.items[0].search_text)).toBeVisible()
+  expect(api.getCandidates).toHaveBeenCalledWith(access, 'opaque/all', 1, expect.any(AbortSignal))
+  await user.selectOptions(within(step(4)).getByLabelText('Candidate queue'), 'opaque/source')
+  await waitFor(() => expect(api.getCandidates).toHaveBeenLastCalledWith(access, 'opaque/source', 1, expect.any(AbortSignal)))
+  await user.click(within(step(4)).getByRole('button', { name: 'Collapse Step 4' }))
+  await user.click(within(step(4)).getByRole('button', { name: 'Expand Step 4' }))
+  expectNoStageStarted()
+})
+
+it('separates the initial allocation and original selection from the collection updated by adaptive screening', async () => {
+  const adaptiveItems = [5, 6, 7].map(number => ({
+    ...screeningItem, item_id: `item-${number}`, question_text: `Adaptive treatment scenario ${number}?`,
+    screened_run_id: 'adapt-run', assessment: { ...assessment, ratings: Object.fromEntries(Object.keys(assessment.ratings).map(key => [key, rating(5)])) as api.ScreeningAssessment['ratings'] },
+  }))
+  const review: api.AdaptiveReview = {
+    ...adapted,
+    screening: { ...screened.screening!,
+      allocation: { ...screened.screening!.allocation, allocated: 3, shortfall: 45, items: screened.screening!.allocation.items.slice(0, 3) },
+      items: [...screened.screening!.items.slice(0, 3), ...adaptiveItems],
+    },
+    selection: { ...selected.selection!, selected_count: 3, eligible_count: 4, selected_item_ids: adaptiveItems.map(item => item.item_id),
+      items: adaptiveItems.map(item => ({ ...selected.selection!.items[0], item_id: item.item_id, quality_score: 5, rating_sum: 20 })),
+      total_quality: 15, fully_satisfied: true, constraints_feasible: true, gaps: [],
+      task_coverage: [{ facet_id: 'management', minimum: 1, eligible_count: 4, selected_count: 3, shortfall: 0 }],
+      quota_coverage: [{ requirement_index: 0, minimum_items: 3, eligible_count: 4, selected_count: 3, shortfall: 0 }],
+    },
+    adaptive: { ...adapted.adaptive!, initial_selection: selected.selection, initial_selection_run_id: selected.run_id },
+  }
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: review.run_id, run_secret: 'private-access' }))
+  vi.mocked(api.getReview).mockResolvedValue(review)
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: stepTitles[6] })
+  expect(within(step(5)).getAllByRole('article', { name: /^Screened item/ })).toHaveLength(3)
+  expect(within(step(5)).queryByText('Adaptive treatment scenario 5?')).not.toBeInTheDocument()
+  expect(within(step(6)).getByText('What is the indicated first treatment?', { selector: 'p' })).toBeVisible()
+  expect(within(step(6)).getByText('Quality Q: 4.00 / 5')).toBeVisible()
+  expect(within(step(6)).queryByText('Adaptive treatment scenario 5?')).not.toBeInTheDocument()
+  const initialCoverage = within(step(6)).getByRole('region', { name: 'Coverage requirements in this collection' })
+  expect(within(initialCoverage).getByRole('heading', { name: 'Coverage requirement 1' }).parentElement).toHaveTextContent('Selected: 1 · Shortfall: 2')
+  for (const item of adaptiveItems) expect(within(step(7)).getByText(item.question_text)).toBeVisible()
+  const updatedCoverage = within(step(7)).getByRole('region', { name: 'Coverage requirements in this collection' })
+  expect(within(updatedCoverage).getByRole('heading', { name: 'Coverage requirement 1' }).parentElement).toHaveTextContent('Selected: 3 · Shortfall: 0')
+  expectNoStageStarted()
+})
+
+it('shows only original collection membership for older adaptive runs without a saved initial selection report', async () => {
+  const adaptiveItem = { ...screeningItem, item_id: 'item-5', question_text: 'A treatment question acquired during adaptation.' }
+  vi.mocked(api.getReview).mockResolvedValue({ ...adapted,
+    screening: { ...adapted.screening!, items: [...adapted.screening!.items, adaptiveItem] },
+    selection: { ...adapted.selection!, selected_item_ids: ['item-5'], items: [{ ...adapted.selection!.items[0], item_id: 'item-5' }] },
+  })
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: adapted.run_id, run_secret: 'private-access' }))
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: stepTitles[6] })
+  expect(within(step(6)).getByText('What is the indicated first treatment?', { selector: 'p' })).toBeVisible()
+  expect(within(step(6)).getByText(/not a separate initial coverage report/)).toBeVisible()
+  expect(within(step(6)).queryByText(adaptiveItem.question_text)).not.toBeInTheDocument()
+  expect(within(step(6)).queryByRole('region', { name: 'Task coverage' })).not.toBeInTheDocument()
+  expect(within(step(6)).queryByRole('region', { name: 'Coverage requirements in this collection' })).not.toBeInTheDocument()
+  expect(within(step(7)).getByText(adaptiveItem.question_text)).toBeVisible()
+  expect(within(step(7)).getByRole('region', { name: 'Task coverage' })).toBeVisible()
 })

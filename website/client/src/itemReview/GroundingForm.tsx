@@ -10,7 +10,7 @@ export function GroundingForm({ busy, onGround }: { busy: boolean; onGround: (ap
   }
 
   return <form className="review-panel" onSubmit={event => void submit(event)} aria-labelledby="grounding-start-title">
-    <p className="eyebrow">Step 3 · O*NET grounding</p>
+    <p className="eyebrow">Step 3: O*NET grounding</p>
     <h2 id="grounding-start-title">Find supporting task vocabulary</h2>
     <p>Search the local healthcare O*NET catalog for descriptions related to each extracted task. GPT-6 Luna checks which passages apply and suggests supported vocabulary for a later benchmark search.</p>
     <p>Your original answers and extracted requirements carry forward unchanged. Tasks outside this catalog’s healthcare scope may have no suitable match.</p>

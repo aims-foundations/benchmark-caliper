@@ -186,6 +186,7 @@ export interface AdaptiveReview extends Omit<SelectionReview, 'mode'> {
   mode: 'adaptive'
   adaptive: {
     version: number; policy: Record<string, unknown>; settings: AdaptiveSettings; batches: AdaptiveBatch[]
+    initial_selection?: SelectionReview['selection']; initial_selection_run_id?: string | null
     queue_statistics: QueueStatistics[]
     attempts: Array<{ item_id: string; status: string; usage: Record<string, number> | null; cost_usd: number | null; reserved_usd: number | null }>
     cost: { spent_usd: number | null; reserved_usd: number | null; unknown_attempts: number; scope: 'adaptive_screening' }

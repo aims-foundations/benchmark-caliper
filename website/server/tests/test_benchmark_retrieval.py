@@ -389,7 +389,7 @@ def test_candidate_paging_and_full_export_require_run_token(client, full_bank):
     for secret in (KEY, HF_KEY, source["run_secret"], access["run_secret"]):
         assert secret not in exported.text
     item_review.jobs[access["run_id"]].finished_at = time.monotonic() - item_review.RETENTION_SECONDS - 1
-    assert client.get(url, params=params, headers=headers).status_code == 404
+    assert client.get(url, params=params, headers=headers).status_code == 200
 
 
 def test_worker_failure_is_sanitized_and_failed_retrieval_can_be_retried(client, full_bank, monkeypatch):

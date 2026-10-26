@@ -10,7 +10,7 @@ export function SelectionForm({ input, busy, onSelect }: {
   }
 
   return <form className="review-panel" onSubmit={submit} aria-labelledby="selection-start-title">
-    <p className="eyebrow">Step 6 · Select a collection</p>
+    <p className="eyebrow">Step 6: Select a collection</p>
     <h2 id="selection-start-title">Choose up to 30 items in total</h2>
     <p>The collection has one shared limit of 30 items across all tasks. Selection uses items that pass the screening gate, covers every task with at least one item, and checks your explicit coverage requirements.</p>
     <p>Each item’s quality Q is the mean of its input ontology, input content, input form, and output ontology scores. The selector maximizes total Q while respecting the collection limit and available coverage.</p>

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { getReviewExport, type AdaptiveRequest, type AdaptiveReview, type RunAccess } from './api'
 import { AdaptiveForm } from './AdaptiveForm'
-import { RequirementsContent } from './RequirementsResults'
 import { SelectedCollection } from './SelectionResults'
 
 const STOP_REASONS = {
@@ -43,7 +42,6 @@ export function AdaptiveResults({ review, run, busy, onCancel, onRestart, onAdap
 
   return <div className="selection-results screening-results adaptive-results">
     <section className="review-panel review-progress" aria-live="polite">
-      <p className="eyebrow">Step 7 · Adaptive screening</p>
       <h2>{active ? 'Improving the benchmark collection' : frozen ? 'Benchmark collection frozen' : review.status === 'cancelled' ? 'Adaptive screening stopped' : 'Adaptive screening interrupted'}</h2>
       <p className="review-intro" role={review.status === 'failed' ? 'alert' : undefined}>{review.message}</p>
       <p>The collection has a shared limit of 30 items across all tasks. Screening uses up to 160 distinct candidates in total, including the initial screening.</p>
@@ -71,7 +69,7 @@ export function AdaptiveResults({ review, run, busy, onCancel, onRestart, onAdap
         <button type="button" className="secondary" disabled={downloading} onClick={() => void download()}>{downloading ? 'Downloading…' : 'Download adaptive JSON'}</button>
       </div>
       {active && <p className="help">Stopping preserves completed assessments and the last accepted collection. Requests already sent may still incur charges.</p>}
-      <p className="help">Results expire one hour after this run ends. The export includes selected items, screening evidence, coverage gaps, queue decisions, and batch history.</p>
+      <p className="help">Progress is saved so you can return later. The export includes selected items, screening evidence, coverage gaps, queue decisions, and batch history.</p>
       {downloadError && <p className="review-error" role="alert">{downloadError}</p>}
     </section>
 
@@ -91,7 +89,7 @@ export function AdaptiveResults({ review, run, busy, onCancel, onRestart, onAdap
       <section className="review-panel"><h2>Batch history</h2>
         <p>Each new batch takes up to eight unseen candidates in saved retrieval order. Queue updates are recorded only after screening and selection finish.</p>
         {adaptive.batches.map(batch => <details key={batch.number} className="adaptive-batch">
-          <summary>{batch.kind === 'initial' ? 'Initial screening' : `Batch ${batch.number}`} · {batch.item_ids.length} candidates · {batch.status === 'committed' ? 'Committed' : 'Pending'}</summary>
+          <summary>{batch.kind === 'initial' ? 'Initial screening' : `Batch ${batch.number}`}: {batch.item_ids.length} candidates; {batch.status === 'committed' ? 'Committed' : 'Pending'}</summary>
           {batch.kind === 'adaptive' && <p>{taskName(batch.facet_id)} · {batch.source ?? 'All sources'} · {batch.exploration ? 'Random exploration' : 'Highest priority'}</p>}
           {batch.status === 'committed' ? <p>{batch.outcomes.filter(outcome => outcome.retained).length} newly screened items retained after this batch; {batch.selected_item_ids.length} items in the resulting collection.</p>
             : <p>This batch is incomplete. Its outcomes have not updated queue statistics.</p>}
@@ -113,6 +111,5 @@ export function AdaptiveResults({ review, run, busy, onCancel, onRestart, onAdap
     </>}
     <SelectedCollection review={review} />
     {!active && !frozen && adaptive && <AdaptiveForm busy={busy} onAdapt={onAdapt} settings={adaptive.settings} />}
-    <RequirementsContent requirements={review.requirements} deployment={review.deployment} />
   </div>
 }

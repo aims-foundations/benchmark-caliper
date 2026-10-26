@@ -143,7 +143,9 @@ def test_selection_requires_finished_private_source_and_rejects_limit_override(c
     assert client.post(url, headers=headers).status_code == 409
     job.request = job.request.model_copy(update={"mode": "screening"})
     job.finished_at -= item_review.RETENTION_SECONDS + 1
-    assert client.post(url, headers=headers).status_code == 404
+    continued = client.post(url, headers=headers)
+    assert continued.status_code == 202
+    assert finished(client, continued.json()).json()["status"] == "completed"
     assert client.post("/api/item-review/runs", json={**BODY, "mode": "selection"},
                        headers={"X-OpenAI-Key": KEY}).status_code == 400
 

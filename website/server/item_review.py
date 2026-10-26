@@ -1,7 +1,7 @@
-"""Goal-conditioned pipeline and seeded sample reviews with temporary results.
+"""Goal-conditioned pipeline with private durable checkpoints.
 
-Keys and deployment answers remain in memory. A run secret protects polling,
-downloads, and cancellation. No worker queue or durable resume is required.
+API keys remain in memory. Run secrets protect polling, downloads, and
+continuation. The separate legacy sample-review mode still uses temporary data.
 """
 
 from __future__ import annotations
@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 import hashlib
 import json
+import logging
 import os
 from pathlib import Path
 import secrets
@@ -54,13 +55,17 @@ from . import adaptive_review
 from .item_review_store import ReviewStore
 from .result_package import build_results_package, package_filename
 from .remote_retrieval import RemoteRetrieval, RemoteRetrievalError
+from .review_checkpoints import AccessDenied, CheckpointError, Checkpoints
 from . import db
 
 router = APIRouter(prefix="/api/item-review", tags=["Item review"])
 INVENTORY_PATH = Path(__file__).with_name("item_review_inventory.json")
 MAX_ACTIVE = 3
 MAX_RETAINED = 30
+MAX_CACHED_PIPELINE = 1
 RETENTION_SECONDS = 3600
+PIPELINE_MODES = {"requirements", "grounding", "retrieval", "screening", "selection", "adaptive"}
+logger = logging.getLogger(__name__)
 RESULTS_PAGE_SIZE = 20
 DEFAULT_RETRIEVE_K = 20
 MAX_RETRIEVE_K = 100
@@ -147,7 +152,7 @@ class ReviewJob:
     sample_complete: bool = False
     prepared_benchmarks: int = 0
     downloads: int = 0
-    results: ReviewStore = field(default_factory=ReviewStore, repr=False)
+    results: ReviewStore | None = field(default=None, repr=False)
     usage: Counter = field(default_factory=Counter)
     requirements: dict | None = field(default=None, repr=False)
     extraction: dict | None = field(default=None, repr=False)
@@ -158,6 +163,13 @@ class ReviewJob:
     selection: dict | None = field(default=None, repr=False)
     selection_run_id: str | None = None
     adaptive: dict | None = field(default=None, repr=False)
+    _checkpoint_saved: bool = field(default=False, repr=False)
+    _checkpoint_retrieval: dict | None = field(default=None, repr=False)
+    _checkpoint_retrieval_ref: str | None = field(default=None, repr=False)
+
+    def __post_init__(self):
+        if self.request.mode == "item_review" and self.results is None:
+            self.results = ReviewStore()
 
 
 jobs: dict[str, ReviewJob] = {}
@@ -172,9 +184,117 @@ _cached_onet_index: tuple[Path, OnetIndex] | None = None
 def sweep() -> None:
     now = time.monotonic()
     for run_id, job in list(jobs.items()):
-        if job.finished_at is not None and not job.downloads and now - job.finished_at > RETENTION_SECONDS:
+        if (job.request.mode == "item_review" and job.finished_at is not None
+                and not job.downloads and now - job.finished_at > RETENTION_SECONDS):
             jobs.pop(run_id, None)
             job.results.close()
+    trim_pipeline_cache()
+
+
+# Explicitly exclude API clients/tasks, access tokens, temporary sample results,
+# and process-relative monotonic clocks from the durable record.
+_CHECKPOINT_FIELDS = (
+    "run_id", "owner_hash", "inventory", "created_at_utc", "finished_at_utc",
+    "usage_history", "status", "message", "requirements", "extraction",
+    "source_run_id", "grounding", "screening", "selection", "selection_run_id", "adaptive",
+)
+
+
+def checkpoints() -> Checkpoints:
+    return Checkpoints(db.DEFAULT_DB_PATH.parent / "review-runs")
+
+
+def checkpoint(job: ReviewJob) -> None:
+    if job.request.mode not in PIPELINE_MODES:
+        return
+    state = {name: getattr(job, name) for name in _CHECKPOINT_FIELDS}
+    state.update(request=job.request.model_dump(), usage=dict(job.usage),
+                 finished=job.finished_at is not None)
+    reference = (job._checkpoint_retrieval_ref
+                 if job._checkpoint_retrieval is job.benchmark_retrieval else None)
+    try:
+        reference = checkpoints().save(job.run_id, job.secret, state,
+                                       retrieval=job.benchmark_retrieval, retrieval_ref=reference)
+    except CheckpointError:
+        job._checkpoint_saved = False
+        raise
+    job._checkpoint_retrieval = job.benchmark_retrieval
+    job._checkpoint_retrieval_ref = reference
+    job._checkpoint_saved = True
+
+
+def restore_review(run_id: str, secret: str) -> ReviewJob:
+    state, reference = checkpoints().load(run_id, secret)
+    try:
+        request = ReviewRequest.model_validate(state["request"])
+        if request.mode not in PIPELINE_MODES:
+            raise ValueError("Not a saved pipeline run")
+        job = ReviewJob(secret=secret, request=request,
+                        **{name: state[name] for name in _CHECKPOINT_FIELDS})
+        job.usage = Counter(state["usage"])
+        job.benchmark_retrieval = state["benchmark_retrieval"]
+        job._checkpoint_retrieval = job.benchmark_retrieval
+        job._checkpoint_retrieval_ref = reference
+        job._checkpoint_saved = True
+        job.finished_at = time.monotonic()
+        if not state["finished"]:
+            job.status = "cancelled"
+            job.message = ("This stage was interrupted by a server restart. Saved results are retained. "
+                           "Review them before continuing or retrying unfinished work.")
+            job.finished_at_utc = datetime.now(timezone.utc).isoformat()
+            if job.adaptive:
+                for attempt in job.adaptive["attempts"]:
+                    if attempt["status"] == "pending":
+                        attempt["status"] = "unknown"
+                # Unknown calls retain their reservations and are not replayed.
+                if job.adaptive["frozen"]:
+                    job.status = "completed"
+                    job.message = "The frozen collection was restored from its last saved checkpoint. Review the selected items and remaining coverage gaps."
+            checkpoint(job)
+        return job
+    except (ValueError, TypeError, KeyError) as exc:
+        raise CheckpointError("Could not restore the review checkpoint.") from exc
+
+
+def trim_pipeline_cache(*, keep: str | None = None, limit: int = MAX_CACHED_PIPELINE) -> None:
+    """Large candidate rankings should not accumulate in finished ancestors."""
+    completed = [job for job in jobs.values()
+                 if job.finished_at is not None and not job.downloads and job._checkpoint_saved]
+    excess = len(completed) - limit
+    for job in completed:
+        if excess <= 0:
+            break
+        if job.run_id != keep:
+            jobs.pop(job.run_id, None)
+            excess -= 1
+
+
+def make_cache_room() -> None:
+    """Keep the in-memory cache bounded without deleting saved pipeline runs."""
+    for run_id, job in list(jobs.items()):
+        if len(jobs) < MAX_RETAINED:
+            break
+        if job.finished_at is not None and not job.downloads and job._checkpoint_saved:
+            jobs.pop(run_id)
+
+
+def launch_review(job: ReviewJob, api_key: str, *, source: ReviewJob | None = None) -> dict:
+    """Save before starting work, so storage failures cannot start paid calls."""
+    if (source is not None and job.benchmark_retrieval is not None
+            and source._checkpoint_retrieval is source.benchmark_retrieval):
+        # Continuations copy immutable rankings; share their existing disk blob.
+        job._checkpoint_retrieval = job.benchmark_retrieval
+        job._checkpoint_retrieval_ref = source._checkpoint_retrieval_ref
+    try:
+        checkpoint(job)
+    except CheckpointError:
+        logger.error("Review checkpoint save failed before launch run_id=%r", job.run_id)
+        raise HTTPException(503, "The server could not save this review. No work was started. Please try again or contact the site maintainer.") from None
+    if job.request.mode in PIPELINE_MODES:
+        trim_pipeline_cache(limit=0)
+    jobs[job.run_id] = job
+    job.task = asyncio.create_task(evaluate(job, api_key))
+    return {"run_id": job.run_id, "run_secret": job.secret}
 
 
 async def shutdown() -> None:
@@ -184,7 +304,12 @@ async def shutdown() -> None:
         task.cancel()
     await asyncio.gather(*tasks, return_exceptions=True)
     for job in jobs.values():
-        job.results.close()
+        try:
+            checkpoint(job)
+        except CheckpointError:
+            logger.error("Review checkpoint save failed during shutdown run_id=%r", job.run_id)
+        if job.results is not None:
+            job.results.close()
     jobs.clear()
     _cached_index = None
     _cached_onet_index = None
@@ -321,9 +446,27 @@ def public_job(job: ReviewJob, page: int = 1, *, include_items: bool = True) -> 
 
 def authorize(run_id: str, secret: str | None) -> ReviewJob:
     sweep()
+    failure = "Review unavailable. Return to the browser where you started it, or start a new review."
+    if not secret:
+        logger.warning("Review access denied run_id=%r reason=missing_token", run_id)
+        raise HTTPException(404, failure)
     job = jobs.get(run_id)
-    if job is None or not secret or not secrets.compare_digest(job.secret, secret):
-        raise HTTPException(404, "Review not found or expired. Start a new review.")
+    if job is None:
+        try:
+            job = restore_review(run_id, secret)
+        except AccessDenied as exc:
+            logger.warning("Review access denied run_id=%r reason=%s", run_id, exc.reason)
+            raise HTTPException(404, failure) from None
+        except CheckpointError:
+            logger.error("Review checkpoint restore failed run_id=%r", run_id)
+            raise HTTPException(503, "The server could not open the saved review. Please try again or contact the site maintainer.") from None
+        make_cache_room()
+        if len(jobs) < MAX_RETAINED:
+            jobs[run_id] = job
+            trim_pipeline_cache(keep=run_id)
+    elif not secrets.compare_digest(job.secret, secret):
+        logger.warning("Review access denied run_id=%r reason=invalid_token", run_id)
+        raise HTTPException(404, failure)
     return job
 
 
@@ -345,6 +488,7 @@ def check_owner_capacity(owner: str) -> None:
     active = [job for job in jobs.values() if job.finished_at is None]
     if len(active) >= MAX_ACTIVE or any(job.owner_hash == owner for job in active):
         raise HTTPException(429, "A review is already running for this key, or the demo is busy. Try again shortly.")
+    make_cache_room()
     if len(jobs) >= MAX_RETAINED:
         raise HTTPException(429, "The demo is at capacity. Please try again later.")
 
@@ -362,9 +506,7 @@ async def start_review(body: ReviewRequest, response: Response,
                     inventory=inventory() if body.mode == "item_review" else {})
     if body.mode == "requirements":
         job.message = "Preparing to extract requirements from your six answers."
-    jobs[job.run_id] = job
-    job.task = asyncio.create_task(evaluate(job, key))
-    return {"run_id": job.run_id, "run_secret": job.secret}
+    return launch_review(job, key)
 
 
 @router.post("/runs/{run_id}/ground", status_code=202)
@@ -386,9 +528,7 @@ async def start_grounding(run_id: str, response: Response,
                     requirements=deepcopy(source.requirements), extraction=deepcopy(source.extraction),
                     source_run_id=source.run_id, usage_history=continued_usage(source),
                     message="Preparing O*NET search for your extracted tasks.")
-    jobs[job.run_id] = job
-    job.task = asyncio.create_task(evaluate(job, key))
-    return {"run_id": job.run_id, "run_secret": job.secret}
+    return launch_review(job, key, source=source)
 
 
 @router.post("/runs/{run_id}/retrieve", status_code=202)
@@ -432,9 +572,7 @@ async def start_benchmark_retrieval(run_id: str, body: BenchmarkRetrievalRequest
                       "sample_only": False, "release_filter": None},
         },
     )
-    jobs[job.run_id] = job
-    job.task = asyncio.create_task(evaluate(job, ""))
-    return {"run_id": job.run_id, "run_secret": job.secret}
+    return launch_review(job, "", source=source)
 
 
 def screening_candidates(retrieval: dict, requirements: Requirements) -> dict[tuple[str, str], dict]:
@@ -522,9 +660,7 @@ async def start_screening(run_id: str, response: Response,
         # even if the prompt file has been edited since the first attempt.
         job.screening["model"] = deepcopy(source.screening["model"])
         job.screening["policy"] = deepcopy(source.screening["policy"])
-    jobs[job.run_id] = job
-    job.task = asyncio.create_task(evaluate(job, key))
-    return {"run_id": job.run_id, "run_secret": job.secret}
+    return launch_review(job, key, source=source)
 
 
 def validate_selection_source(source: ReviewJob) -> Requirements:
@@ -584,9 +720,7 @@ async def start_selection(run_id: str, response: Response,
         selection_run_id=source.selection_run_id,
         message="Selecting up to 30 total items using saved ratings and coverage requirements.",
     )
-    jobs[job.run_id] = job
-    job.task = asyncio.create_task(evaluate(job, ""))
-    return {"run_id": job.run_id, "run_secret": job.secret}
+    return launch_review(job, "", source=source)
 
 
 @router.post("/runs/{run_id}/adapt", status_code=202)
@@ -628,9 +762,7 @@ async def start_adaptive_screening(run_id: str, response: Response,
         selection_run_id=source.selection_run_id, adaptive=state,
         message="Preparing adaptive screening from saved queues and the selected collection.",
     )
-    jobs[job.run_id] = job
-    job.task = asyncio.create_task(evaluate(job, key))
-    return {"run_id": job.run_id, "run_secret": job.secret}
+    return launch_review(job, key, source=source)
 
 
 @router.get("/runs/{run_id}/candidates")
@@ -799,6 +931,12 @@ async def cancel_review(run_id: str, response: Response,
         job.message = stopped_message(job)
         job.finished_at = time.monotonic()
         job.finished_at_utc = datetime.now(timezone.utc).isoformat()
+        try:
+            checkpoint(job)
+        except CheckpointError:
+            job.status = "failed"
+            job.message = "The server could not save the stopped review. Download its results now; they may not survive a server restart."
+            logger.error("Review checkpoint save failed during cancellation run_id=%r", job.run_id)
     return public_job(job)
 
 
@@ -1093,6 +1231,7 @@ async def ground_requirements(job: ReviewJob, api_key: str) -> None:
                 }}
             record_usage(job, result.get("usage"))
             job.grounding["facets"].append({**search, "mapping": None, **result})
+            checkpoint(job)
             if result["status"] != "complete":
                 job.status = "failed"
                 job.message = "O*NET mapping failed validation. Completed facet mappings are retained; review the error before retrying."
@@ -1115,6 +1254,7 @@ async def retrieve_benchmarks(job: ReviewJob) -> None:
             state = {**state, "policy": result["policy"], "stats": result["stats"]}
             state = record_benchmark_ranking(state, query, number, result["candidates"])
             job.benchmark_retrieval = state
+            checkpoint(job)
         job.status = "completed"
         job.message = "Benchmark candidates and task/source queues are ready for review. Relevance screening is the next step."
         return
@@ -1158,6 +1298,7 @@ async def retrieve_benchmarks(job: ReviewJob) -> None:
                     raise InterruptedError("Benchmark retrieval cancelled")
                 state = record_benchmark_ranking(state, query, number, candidates)
                 job.benchmark_retrieval = state
+                checkpoint(job)
         finally:
             try:
                 if index is not None:
@@ -1231,6 +1372,7 @@ async def screen_benchmarks(job: ReviewJob, api_key: str) -> None:
                 items = sorted([*job.screening["items"], saved], key=lambda item: order[item["item_id"]])
                 job.screening = {**job.screening, "items": items}
                 job.message = f"Screening initial candidates: {len(items)} of {allocation['allocated']} processed."
+                checkpoint(job)
 
         workers = [asyncio.create_task(worker()) for _ in range(REVIEW_CONCURRENCY)]
         try:
@@ -1267,6 +1409,7 @@ async def select_benchmarks(job: ReviewJob) -> None:
     # A cancelled or incomplete solve cannot replace an accepted collection.
     job.selection = selection
     job.selection_run_id = job.run_id
+    checkpoint(job)
     job.status = "completed"
     count = selection["selected_count"]
     job.message = (
@@ -1329,6 +1472,10 @@ async def evaluate(job: ReviewJob, api_key: str) -> None:
         job.status, job.message = "failed", "The OpenAI request failed. Check model access and try again."
     except RemoteRetrievalError as exc:
         job.status, job.message = "failed", str(exc)
+    except CheckpointError:
+        job.status = "failed"
+        job.message = "The server could not save progress, so this stage stopped. Download the available results and contact the site maintainer before continuing."
+        logger.error("Review checkpoint save failed during work run_id=%r", job.run_id)
     except Exception:
         job.status = "failed"
         if job.request.mode == "grounding":
@@ -1351,3 +1498,10 @@ async def evaluate(job: ReviewJob, api_key: str) -> None:
         api_key = ""
         job.finished_at = time.monotonic()
         job.finished_at_utc = datetime.now(timezone.utc).isoformat()
+        try:
+            checkpoint(job)
+        except CheckpointError:
+            job.status = "failed"
+            job.message = "The server could not save this stage's latest results. Download them now; only earlier saved progress may survive a server restart."
+            logger.error("Review checkpoint save failed at completion run_id=%r", job.run_id)
+        trim_pipeline_cache(keep=job.run_id)

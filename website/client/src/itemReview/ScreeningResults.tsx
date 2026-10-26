@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { DIMENSIONS, getReviewExport, type ScreenedItem, type ScreeningReview, type RunAccess } from './api'
-import { RequirementsContent } from './RequirementsResults'
 import { ScreeningForm } from './ScreeningForm'
 import { SelectionForm } from './SelectionForm'
 
@@ -12,14 +11,14 @@ function EvidenceNotes({ evidence, justification, information_gaps }: { evidence
   </>
 }
 
-export function ScreeningItem({ item, index, review, taskName, label = 'Screened item', qualityScore }: {
+export function ScreeningItem({ item, index, review, taskName, label = 'Screened item', qualityScore, idPrefix = 'screened' }: {
   item: ScreenedItem; index: number; review: Pick<ScreeningReview, 'run_id' | 'requirements' | 'screening'>; taskName: (facetId: string) => string
-  label?: string; qualityScore?: number
+  label?: string; qualityScore?: number; idPrefix?: string
 }) {
   const assessment = item.assessment
   const gateLabel = item.gate?.status === 'pass' ? 'Pass' : item.gate?.status === 'fail' ? 'Fail' : 'Unresolved'
-  return <article className="review-panel screening-item" aria-labelledby={`screened-${item.item_id}`}>
-    <div className="review-result-title"><h3 id={`screened-${item.item_id}`}>{label} {index + 1}</h3>
+  return <article className="review-panel screening-item" aria-labelledby={`${idPrefix}-${item.item_id}`}>
+    <div className="review-result-title"><h3 id={`${idPrefix}-${item.item_id}`}>{label} {index + 1}</h3>
       <span className={`review-confidence screening-${item.status === 'error' ? 'error' : item.gate?.status ?? 'unresolved'}`}>
         {item.status === 'error' ? 'Assessment error' : `Screening gate: ${gateLabel}`}
       </span></div>
@@ -43,14 +42,14 @@ export function ScreeningItem({ item, index, review, taskName, label = 'Screened
         <details><summary>Inspect task interpretation and six validity ratings</summary>
           <section className="screening-explanation"><h4>Task interpretation</h4><EvidenceNotes {...assessment.task} /></section>
           {DIMENSIONS.map(([key, label]) => <section className="screening-explanation" key={key}>
-            <h4>{label} · {assessment.ratings[key].score == null ? 'Unknown' : `${assessment.ratings[key].score} / 5`}</h4>
+            <h4>{label}: {assessment.ratings[key].score == null ? 'Unknown' : `${assessment.ratings[key].score} / 5`}</h4>
             <EvidenceNotes {...assessment.ratings[key]} />
           </section>)}
         </details>
         <details><summary>Inspect coverage requirements ({assessment.coverage.length})</summary>
           {assessment.coverage.length === 0 && <p>No explicit coverage requirements were assessed for this item.</p>}
           {assessment.coverage.map(coverage => <section className="screening-explanation" key={coverage.requirement_index}>
-            <h4>Coverage requirement {coverage.requirement_index + 1} · {coverage.satisfied == null ? 'Unresolved' : coverage.satisfied ? 'Satisfied' : 'Not satisfied'}</h4>
+            <h4>Coverage requirement {coverage.requirement_index + 1}: {coverage.satisfied == null ? 'Unresolved' : coverage.satisfied ? 'Satisfied' : 'Not satisfied'}</h4>
             <p className="review-preserve">{review.requirements?.coverage_requirements[coverage.requirement_index]?.requirement.text}</p>
             <EvidenceNotes {...coverage} />
           </section>)}
@@ -75,16 +74,10 @@ export function ScreeningResults({ review, run, busy, onCancel, onRestart, onScr
   const active = ['preparing', 'running'].includes(review.status)
   const screening = review.screening
   const allocation = screening?.allocation
-  const allocationOrder = new Map(allocation?.items.map((item, index) => [item.item_id, index]))
-  const items = [...(screening?.items ?? [])].sort((left, right) => (allocationOrder.get(left.item_id) ?? Infinity) - (allocationOrder.get(right.item_id) ?? Infinity))
+  const items = initialScreeningItems(screening)
   const complete = items.filter(item => item.status === 'complete').length
   const errors = items.filter(item => item.status === 'error').length
   const remaining = Math.max(0, (allocation?.allocated ?? 0) - complete)
-  const taskName = (id: string) => {
-    const index = review.requirements?.task_facets.findIndex(facet => facet.facet_id === id) ?? -1
-    return index >= 0 ? `Task ${index + 1}` : id
-  }
-
   async function download() {
     setDownloading(true)
     setDownloadError('')
@@ -102,7 +95,6 @@ export function ScreeningResults({ review, run, busy, onCancel, onRestart, onScr
 
   return <div className="screening-results">
     <section className="review-panel review-progress" aria-live="polite">
-      <p className="eyebrow">Step 5 · Initial screening</p>
       <h2>{active ? 'Screening initial candidates' : review.status === 'completed' ? 'Your initial screening is ready' : review.status === 'cancelled' ? 'Screening stopped' : 'Screening interrupted'}</h2>
       <p className="review-intro" role={review.status === 'failed' ? 'alert' : undefined}>{review.message}</p>
       <p>{items.length} of {allocation?.allocated ?? 0} allocated items processed · {complete} valid assessments · {errors} assessment errors</p>
@@ -119,10 +111,35 @@ export function ScreeningResults({ review, run, busy, onCancel, onRestart, onScr
         <button type="button" className="secondary" disabled={downloading} onClick={() => void download()}>{downloading ? 'Downloading…' : 'Download screening JSON'}</button>
       </div>
       {active && <p className="help">Stopping retains completed assessments. A request already sent may still incur charges.</p>}
-      <p className="help">Results expire one hour after the run ends. The export retains original answers, requirements, grounding, retrieval, allocation, assessments, and screening settings.</p>
+      <p className="help">Progress is saved so you can return later. The export retains original answers, requirements, grounding, retrieval, allocation, assessments, and screening settings.</p>
       {downloadError && <p className="review-error" role="alert">{downloadError}</p>}
     </section>
     {!active && screening && <SelectionForm busy={busy} onSelect={onSelect} input={{ allocated: allocation?.allocated ?? 0, screened: complete, errors, pending: Math.max(0, (allocation?.allocated ?? 0) - items.length) }} />}
+    <ScreeningContent review={review} />
+    {!active && remaining > 0 && <ScreeningForm busy={busy} onScreen={onScreen} remaining={remaining} retained={complete} />}
+  </div>
+}
+
+
+export function initialScreeningItems(screening: ScreeningReview['screening']): ScreenedItem[] {
+  const items = new Map(screening?.items.map(item => [item.item_id, item]))
+  return (screening?.allocation.items ?? []).flatMap(({ item_id }) => {
+    const item = items.get(item_id)
+    return item ? [item] : []
+  })
+}
+
+export function ScreeningContent({ review, historical = false }: {
+  review: Pick<ScreeningReview, 'run_id' | 'requirements' | 'screening' | 'usage'>; historical?: boolean
+}) {
+  const screening = review.screening
+  const allocation = screening?.allocation
+  const items = initialScreeningItems(screening)
+  const taskName = (id: string) => {
+    const index = review.requirements?.task_facets.findIndex(facet => facet.facet_id === id) ?? -1
+    return index >= 0 ? `Task ${index + 1}` : id
+  }
+  return <div className="screening-results">
     {allocation && <section className="review-panel" aria-labelledby="screening-allocation-title">
       <h2 id="screening-allocation-title">Initial screening allocation</h2>
       <p>Budget: {allocation.budget} distinct items · Allocated: {allocation.allocated} · Shortfall: {allocation.shortfall}</p>
@@ -137,14 +154,13 @@ export function ScreeningResults({ review, run, busy, onCancel, onRestart, onScr
       <h2 id="screened-items-title">Item screening results</h2><p>Items follow the initial allocation order.</p>
       {items.map((item, index) => <ScreeningItem key={item.item_id} item={item} index={index} review={review} taskName={taskName} />)}
     </section>}
-    {!active && remaining > 0 && <ScreeningForm busy={busy} onScreen={onScreen} remaining={remaining} retained={complete} />}
     {screening && <section className="review-panel"><h2>Screening settings</h2>
       <p>{screening.model.model} · {screening.model.reasoning_effort} reasoning · {screening.model.max_output_tokens.toLocaleString()} maximum output tokens</p>
       <details><summary>Inspect screening prompt and output schema</summary><h3>Prompt instructions</h3><pre>{screening.model.prompt}</pre>
         <h3>Output schema</h3><pre>{JSON.stringify(screening.model.output_schema, null, 2)}</pre></details>
-      <details><summary>Inspect screening policy and current run usage</summary><p>Usage here covers this run's calls. Retained assessments keep their original usage with each item.</p>
-        <pre>{JSON.stringify({ policy: screening.policy, usage: review.usage }, null, 2)}</pre></details>
+      <details><summary>{historical ? 'Inspect screening policy' : 'Inspect screening policy and current run usage'}</summary>
+        <p>{historical ? 'Usage for each assessment is retained with its item.' : 'Usage here covers this run’s calls. Retained assessments keep their original usage with each item.'}</p>
+        <pre>{JSON.stringify({ policy: screening.policy, ...(!historical ? { usage: review.usage } : {}) }, null, 2)}</pre></details>
     </section>}
-    <RequirementsContent requirements={review.requirements} deployment={review.deployment} />
   </div>
 }

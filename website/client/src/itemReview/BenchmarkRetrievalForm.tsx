@@ -10,7 +10,7 @@ export function BenchmarkRetrievalForm({ catalog, busy, onRetrieve }: {
   }
 
   return <form className="review-panel" onSubmit={submit} aria-labelledby="benchmark-retrieval-start-title">
-    <p className="eyebrow">Step 4 · Retrieve benchmark items</p>
+    <p className="eyebrow">Step 4: Retrieve benchmark items</p>
     <h2 id="benchmark-retrieval-start-title">Find candidates for each task</h2>
     <p>Your extracted tasks and supported O*NET vocabulary guide local meaning-based and keyword search across the whole Measurement Data Bank on its main branch. Every field of every item row is included, with all benchmark collections and releases in scope.</p>
     <p><strong>{catalog.benchmarks.length} benchmark collections · {catalog.source_rows.toLocaleString()} source rows · whole bank</strong></p>

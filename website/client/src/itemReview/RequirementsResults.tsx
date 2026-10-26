@@ -15,7 +15,7 @@ export function SupportedValue({ value }: { value: SupportedText }) {
       {value.evidence.map((source, index) => {
         const answerIndex = QUESTIONS.findIndex(question => question.id === source.answer_id)
         return <li key={index}><a href={`#original-answer-${source.answer_id}`}>
-          Answer {answerIndex + 1} · {QUESTIONS[answerIndex].title}
+          Answer {answerIndex + 1}: {QUESTIONS[answerIndex].title}
         </a><blockquote className="review-preserve">{source.quote}</blockquote></li>
       })}
     </ul>}
@@ -48,7 +48,6 @@ export function RequirementsResults({ review, run, busy, onCancel, onRestart, on
 
   return <div className="requirements-results">
     <section className="review-panel review-progress" aria-live="polite">
-      <p className="eyebrow">Step 2 · Requirements extraction</p>
       <h2>{active ? 'Extracting requirements' : review.status === 'completed' ? 'Your extracted requirements are ready' : review.status === 'cancelled' ? 'Extraction stopped' : 'Extraction interrupted'}</h2>
       <p className="review-intro" role={review.status === 'failed' ? 'alert' : undefined}>{review.message}</p>
       {active && <><progress aria-label="Requirements extraction in progress" />
@@ -61,18 +60,18 @@ export function RequirementsResults({ review, run, busy, onCancel, onRestart, on
         <button type="button" className="secondary" disabled={downloading} onClick={() => void download()}>{downloading ? 'Downloading…' : 'Download requirements JSON'}</button>
       </div>
       {active && <p className="help">Stopping cancels the pending extraction. A request already sent may still incur charges.</p>}
-      <p className="help">Results are temporary and expire one hour after the run ends. Download the JSON to keep the original answers and extraction details.</p>
+      <p className="help">Progress is saved so you can return later. Download the JSON for a separate copy of the original answers and extraction details.</p>
       {downloadError && <p className="review-error" role="alert">{downloadError}</p>}
     </section>
 
     {review.status === 'completed' && requirements && (requirements.task_facets.length > 0
       ? <GroundingForm busy={busy} onGround={onGround} />
       : <p className="review-panel">No task facets were extracted to ground with O*NET. Start another run and clarify the tasks in your deployment answers.</p>)}
-    <RequirementsContent requirements={requirements} deployment={review.deployment} />
+    <RequirementsContent requirements={requirements} />
   </div>
 }
 
-export function RequirementsContent({ requirements, deployment }: { requirements: Requirements | null; deployment: Deployment }) {
+export function RequirementsContent({ requirements }: { requirements: Requirements | null }) {
   return <>
     {requirements && <>
       <section className="review-panel requirements-summary" aria-labelledby="requirements-summary-title">
@@ -111,12 +110,15 @@ export function RequirementsContent({ requirements, deployment }: { requirements
           : <p>No unresolved details were reported by the extraction.</p>}
       </section>
     </>}
-    <section className="review-panel requirements-original" aria-labelledby="requirements-original-title">
-      <h2 id="requirements-original-title">Original deployment answers</h2>
-      {QUESTIONS.map((question, index) => <section key={question.id} id={`original-answer-${question.id}`}>
-        <h3>Answer {index + 1} · {question.title}</h3>
-        <p className="review-preserve">{deployment[question.id] || 'No answer supplied.'}</p>
-      </section>)}
-    </section>
   </>
+}
+
+export function DeploymentAnswers({ deployment }: { deployment: Deployment }) {
+  return <section className="review-panel requirements-original" aria-labelledby="requirements-original-title">
+    <h2 id="requirements-original-title">Original deployment answers</h2>
+    {QUESTIONS.map((question, index) => <section key={question.id} id={`original-answer-${question.id}`}>
+      <h3>Answer {index + 1}: {question.title}</h3>
+      <p className="review-preserve">{deployment[question.id] || 'No answer supplied.'}</p>
+    </section>)}
+  </section>
 }

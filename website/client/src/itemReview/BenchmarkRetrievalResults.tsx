@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { getCandidates, getReviewExport, type BenchmarkRetrievalReview, type CandidatePage, type Catalog, type RunAccess } from './api'
 import { BenchmarkRetrievalForm } from './BenchmarkRetrievalForm'
-import { RequirementsContent, SupportedValue } from './RequirementsResults'
+import { SupportedValue } from './RequirementsResults'
 import { ScreeningForm } from './ScreeningForm'
 
-function CandidateBrowser({ review, run, catalog }: { review: BenchmarkRetrievalReview; run: RunAccess; catalog: Catalog | null }) {
+type RetrievalContentReview = Pick<BenchmarkRetrievalReview, 'requirements' | 'retrieval'>
+
+function CandidateBrowser({ review, run, catalog }: { review: RetrievalContentReview; run: RunAccess; catalog: Catalog | null }) {
   const queues = review.retrieval?.queues ?? []
   const [selectedQueue, setSelectedQueue] = useState('')
   const [page, setPage] = useState(1)
@@ -97,7 +99,6 @@ export function BenchmarkRetrievalResults({ review, run, catalog, busy, onCancel
 
   return <div className="retrieval-results">
     <section className="review-panel review-progress" aria-live="polite">
-      <p className="eyebrow">Step 4 · Retrieve benchmark items</p>
       <h2>{active ? 'Retrieving benchmark candidates' : review.status === 'completed' ? 'Your benchmark candidates are ready' : review.status === 'cancelled' ? 'Retrieval stopped' : 'Retrieval interrupted'}</h2>
       <p className="review-intro" role={review.status === 'failed' ? 'alert' : undefined}>{review.message}</p>
       <p>Local meaning-based and keyword search makes no paid model calls. Candidates await relevance screening and benchmark selection in later steps.</p>
@@ -114,15 +115,26 @@ export function BenchmarkRetrievalResults({ review, run, catalog, busy, onCancel
           : <button type="button" className="secondary" disabled={busy} onClick={onRestart}>Start another run</button>}
         <button type="button" className="secondary" disabled={downloading} onClick={() => void download()}>{downloading ? 'Downloading…' : 'Download retrieval JSON'}</button>
       </div>
-      <p className="help">Results expire one hour after the run ends. The JSON export includes all completed candidate rankings and their evidence, original answers, requirements, and O*NET mappings.</p>
+      <p className="help">Progress is saved so you can return later. The JSON export includes all completed candidate rankings and their evidence, original answers, requirements, and O*NET mappings.</p>
       {downloadError && <p className="review-error" role="alert">{downloadError}</p>}
     </section>
     {review.status === 'completed' && retrieval?.queues.some(queue => queue.source == null && queue.item_count > 0) && <ScreeningForm busy={busy} onScreen={onScreen} />}
+    <BenchmarkRetrievalContent review={review} run={run} catalog={catalog} />
+    {!active && canRetry && catalog && <BenchmarkRetrievalForm catalog={catalog} busy={busy} onRetrieve={onRetrieve} />}
+  </div>
+}
+
+export function BenchmarkRetrievalContent({ review, run, catalog }: {
+  review: RetrievalContentReview; run: RunAccess; catalog: Catalog | null
+}) {
+  const retrieval = review.retrieval
+  const facets = review.requirements?.task_facets ?? []
+  return <>
     {retrieval && <section className="review-panel" aria-labelledby="retrieval-queries-title">
       <h2 id="retrieval-queries-title">Task search queries</h2>
       {retrieval.queries.length === 0 && <p>No task query has completed yet.</p>}
       {retrieval.queries.map(query => <details key={query.facet_id}>
-        <summary>Task {facets.findIndex(facet => facet.facet_id === query.facet_id) + 1} · {query.candidate_count == null ? 'Awaiting retrieval' : `${query.candidate_count.toLocaleString()} candidates`}</summary>
+        <summary>Task {facets.findIndex(facet => facet.facet_id === query.facet_id) + 1}: {query.candidate_count == null ? 'Awaiting retrieval' : `${query.candidate_count.toLocaleString()} candidates`}</summary>
         <p className="review-preserve">{query.query}</p>
         <h3>Supported O*NET vocabulary</h3>
         {query.search_terms.length > 0 ? <ul>{query.search_terms.map(term => <li key={term}>{term}</li>)}</ul> : <p>No O*NET vocabulary was added; the query uses the extracted task.</p>}
@@ -132,8 +144,6 @@ export function BenchmarkRetrievalResults({ review, run, catalog, busy, onCancel
       {retrieval.policy && <details><summary>Inspect retrieval settings and scope</summary><pre>{JSON.stringify({ policy: retrieval.policy, scope: retrieval.scope }, null, 2)}</pre></details>}
     </section>}
     <CandidateBrowser review={review} run={run} catalog={catalog} />
-    {review.status === 'completed' && retrieval && retrieval.queues.length === 0 && <p className="review-panel">No searchable candidates were found in the bank.</p>}
-    {!active && canRetry && catalog && <BenchmarkRetrievalForm catalog={catalog} busy={busy} onRetrieve={onRetrieve} />}
-    <RequirementsContent requirements={review.requirements} deployment={review.deployment} />
-  </div>
+    {retrieval && retrieval.queries.length > 0 && retrieval.queries.every(query => typeof query.candidate_count === 'number') && retrieval.queues.length === 0 && <p className="review-panel">No searchable candidates were found in the bank.</p>}
+  </>
 }

@@ -59,7 +59,7 @@ def test_package_preserves_full_selection_evidence_and_private_access(client, mo
     for secret in (KEY, HF_KEY, access["run_secret"]):
         assert secret not in json.dumps(snapshot) + report
     job.finished_at = time.monotonic() - item_review.RETENTION_SECONDS - 1
-    assert download(client, access).status_code == 404
+    assert download(client, access).status_code == 200
 
 
 @pytest.mark.parametrize("status", ["preparing", "running", "failed", "cancelled"])
@@ -176,7 +176,6 @@ def test_cancellation_closes_a_package_still_being_built(monkeypatch):
             assert package.closed and job.downloads == 0
         finally:
             release.set()
-            job.results.close()
 
     asyncio.run(exercise())
 
@@ -199,11 +198,8 @@ def test_disconnect_closes_package_even_before_streaming_starts(monkeypatch, fai
         async def receive():
             return {"type": "http.disconnect"}
 
-        try:
-            with pytest.raises(ClientDisconnect):
-                await response({"type": "http", "asgi": {"spec_version": "2.4"}}, receive, send)
-            assert package.closed and job.downloads == 0
-        finally:
-            job.results.close()
+        with pytest.raises(ClientDisconnect):
+            await response({"type": "http", "asgi": {"spec_version": "2.4"}}, receive, send)
+        assert package.closed and job.downloads == 0
 
     asyncio.run(exercise())

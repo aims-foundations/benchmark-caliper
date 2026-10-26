@@ -239,6 +239,20 @@ review workflow keeps its own sample and catalog.
 
 ## Goal-conditioned item review
 
+Pipeline results are grouped under numbered headings such as **Step 3: O*NET
+grounding**, each with a short purpose and status. The current step appears
+first, followed by saved earlier steps in descending order down to **Step 1:
+Deployment goal**. Groups start expanded and can be collapsed individually;
+evidence links reopen their destination group. The sidebar uses the same
+framework step numbers. Previous results are read-only, including the saved
+O*NET mappings, candidate browser, and initial screening assessments.
+
+During Step 7, the Step 5 section contains only the initial allocation, and
+Step 6 shows the collection selected before adaptation. New adaptive runs save
+that original selection and coverage report as `adaptive.initial_selection`.
+Older runs without this snapshot display the initial membership recorded in
+batch zero and explicitly identify the missing original coverage report.
+
 The six-answer form also offers **Extract requirements**, an independent paid
 GPT-6 Luna request implementing Step 2 of *Goal-Conditioned Adaptive Composite
 Benchmarks*. It shows the extracted deployment summary, task facets, essential
@@ -248,7 +262,7 @@ access and stops at the preview; it does not run retrieval or item assessments.
 
 The action uses `POST /api/item-review/runs` with
 `{"mode": "requirements", "deployment": {"task": "...", "users": "...", "inputs": "...", "outputs": "...", "success": "...", "constraints": ""}}`.
-It shares the existing run-secret polling, cancellation, expiry, and export
+It shares the existing run-secret polling, cancellation, and export
 endpoints. Its export contains the original answers, validated requirements,
 prompt/schema, model/settings, and available usage. Invalid extraction produces a
 failed run without accepted requirements or downstream calls. Source-quotation
@@ -268,7 +282,7 @@ retrieval or assessment.
 `POST /api/item-review/runs/{run_id}/ground` takes `X-Review-Token` for a finished
 requirements or grounding run and a fresh `X-OpenAI-Key`. It creates a separate
 `mode: "grounding"` run without repeating extraction. The key stays in memory
-only. Polling, cancellation, JSON export, and expiry use the existing endpoints;
+only. Polling, cancellation, and JSON export use the existing endpoints;
 completed mappings survive cancellation or later failures. The export includes
 the original extraction, candidates/ranks, mapping evidence, prompts, settings,
 reference-file checksums, and grounding token usage. A failed or stopped mapping
@@ -324,8 +338,8 @@ and requires only the source run's `X-Review-Token`. Scope overrides such as
 Polling returns a compact summary;
 `GET /api/item-review/runs/{run_id}/candidates?queue_id=...&page=1` returns
 20 candidates per display page, and the existing export route returns the full
-retrieval artifact. The existing run-token authorization, cancellation, and
-temporary expiry policy apply.
+retrieval artifact. The existing run-token authorization and cancellation apply;
+pipeline checkpoints persist as described below.
 
 Completed indexes live under `WEBSITE_DATA_DIR/benchmark-retrieval-index/`,
 keyed by the complete pinned main-branch inventory and loader/encoding policy.
@@ -428,7 +442,8 @@ The displayed run usage covers new calls only; retained items preserve their
 individual response usage and originating `screened_run_id`. The JSON export
 contains the full screening result plus the original answers, requirements,
 grounding, and retrieval artifacts. Existing token authorization, cancellation,
-candidate paging, and temporary expiry still apply.
+and candidate paging still apply. Completed assessments are checkpointed for
+continuation after a server restart.
 
 See [`bayesian_auditing/README.md`](../bayesian_auditing/README.md#step-5-screen-the-initial-48-candidates)
 for the prompt, schemas, and Python library entry points. Allocation and provider
@@ -474,7 +489,8 @@ items, construction-fit scores, coverage counts, unmet or unresolved rules,
 exclusions, and solver status alongside the earlier pipeline artifacts.
 `selection_input` reports allocated, screened, errored, and pending counts;
 `selection_run_id` identifies the run that produced the accepted collection.
-Existing authorization, cancellation, and expiry behavior apply.
+Existing authorization and cancellation behavior apply. The selection and its
+source artifacts are saved in the pipeline checkpoint.
 
 **Continue screening** from a selection run can finish pending or errored items
 in its original 48-item allocation, using a fresh OpenAI key and the original
@@ -540,8 +556,8 @@ collection cannot resume.
 The preview and JSON export show the collection, remaining gaps, queue
 statistics, batch history, attempts, cost scope, and stopping reason alongside
 all earlier artifacts. Freezing means adaptive construction has stopped; it
-does not validate the model's judgments or evaluate a deployed AI system. Runs
-retain the existing temporary expiry and do not survive server restarts. See
+does not validate the model's judgments or evaluate a deployed AI system. Saved
+pipeline checkpoints survive server restarts on persistent storage. See
 the [Step 7 implementation notes](../bayesian_auditing/README.md#step-7-adapt-screening-and-freeze-the-collection)
 for the priority formula and conditional-quota extension.
 
@@ -573,9 +589,30 @@ current run, including retries/continuations without recounting retained item
 assessments. The existing top-level `usage` remains current-run usage. Adaptive
 dollar estimates cover Step 7 only; no overall pipeline dollar total is inferred.
 
-Download packages before the one-hour expiry or server restart. Packages are
-portable records, not resumable website sessions: this feature adds no permanent
-run library, upload/reopen action, public share link, or human-validation workflow.
+Pipeline runs from requirements through adaptive construction have no automatic
+expiry. The server saves private checkpoints under
+`WEBSITE_DATA_DIR/review-runs/`; this directory must be on persistent storage to
+survive deployments. Checkpoints include the original answers, completed work,
+usage, and settings. Large retrieval artifacts are compressed and shared across
+stage checkpoints. Only one completed pipeline run is normally cached in memory;
+active work and downloads are protected from eviction. This cache limit does
+not delete saved runs.
+
+The browser retains the latest pipeline's run ID and access token in local
+storage, with session storage preserving each tab's current run. Returning to
+`/items` in the same browser and on the same origin restores access. Clearing
+browser storage loses that access; OpenAI keys are never saved and must be
+entered again for subsequent model calls. A restart stops active work and
+retains its latest checkpoint; it does not automatically repeat paid requests.
+Screening and adaptive continuation reuse completed assessments. Interrupted
+grounding or retrieval can be restarted from the saved source artifacts.
+
+Download packages for a separate, portable copy. Package import, a run-history
+library, public share links, and human validation are not implemented. Choosing
+another review clears the browser pointer, not saved server files. Reviews lost
+before checkpoints were introduced cannot be recovered by this change. The
+legacy **Review catalog** mode retains its one-hour lifetime; the separate
+`/caliper` item-analysis workflow has its own storage implementation.
 
 The existing **Review catalog** assessment option collects six deployment answers, retrieves relevant questions
 locally, and uses the visitor's OpenAI key to assess only the selected shortlist.

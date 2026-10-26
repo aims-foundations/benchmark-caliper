@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { getReviewExport, type Catalog, type GroundingReview, type OnetCandidate, type OnetRecordMapping, type RunAccess } from './api'
 import { GroundingForm } from './GroundingForm'
 import { BenchmarkRetrievalForm } from './BenchmarkRetrievalForm'
-import { RequirementsContent, SupportedValue } from './RequirementsResults'
+import { SupportedValue } from './RequirementsResults'
 
 function RecordMapping({ record, candidates }: { record: OnetRecordMapping; candidates: OnetCandidate[] }) {
   const candidate = candidates.find(item => item.doc_id === record.record_id)
@@ -44,7 +44,6 @@ export function GroundingResults({ review, run, catalog, busy, onCancel, onResta
 
   return <div className="grounding-results">
     <section className="review-panel review-progress" aria-live="polite">
-      <p className="eyebrow">Step 3 · O*NET grounding</p>
       <h2>{active ? 'Finding supporting O*NET passages' : review.status === 'completed' ? 'Your O*NET grounding is ready' : review.status === 'cancelled' ? 'Grounding stopped' : 'Grounding interrupted'}</h2>
       <p className="review-intro" role={review.status === 'failed' ? 'alert' : undefined}>{review.message}</p>
       <p>{complete} of {total} task facets mapped.</p>
@@ -59,11 +58,21 @@ export function GroundingResults({ review, run, catalog, busy, onCancel, onResta
         <button type="button" className="secondary" disabled={downloading} onClick={() => void download()}>{downloading ? 'Downloading…' : 'Download grounding JSON'}</button>
       </div>
       {active && <p className="help">Stopping cancels pending mapping calls. A request already sent may still incur charges.</p>}
-      <p className="help">Results expire one hour after the run ends. Download the JSON to keep the original answers, requirements, retrieval candidates, and mapping details.</p>
+      <p className="help">Progress is saved so you can return later. The JSON includes the original answers, requirements, retrieval candidates, and mapping details.</p>
       {downloadError && <p className="review-error" role="alert">{downloadError}</p>}
     </section>
 
     {review.status === 'completed' && total > 0 && catalog && <BenchmarkRetrievalForm catalog={catalog} busy={busy} onRetrieve={onRetrieve} />}
+    <GroundingContent review={review} />
+    {!active && review.requirements && (review.requirements.task_facets.length > 0
+      ? <GroundingForm busy={busy} onGround={onGround} />
+      : <p className="review-panel">No task facets are available to ground with O*NET. Start another run and clarify the tasks in your deployment answers.</p>)}
+  </div>
+}
+
+export function GroundingContent({ review }: { review: Pick<GroundingReview, 'grounding' | 'requirements'> }) {
+  const facets = review.grounding?.facets ?? []
+  return <>
     {facets.length > 0 && <section aria-labelledby="grounding-facets-title">
       <h2 id="grounding-facets-title">O*NET mappings</h2>
       {facets.map(facet => {
@@ -95,9 +104,5 @@ export function GroundingResults({ review, run, catalog, busy, onCancel, onResta
         </article>
       })}
     </section>}
-    {!active && review.requirements && (review.requirements.task_facets.length > 0
-      ? <GroundingForm busy={busy} onGround={onGround} />
-      : <p className="review-panel">No task facets are available to ground with O*NET. Start another run and clarify the tasks in your deployment answers.</p>)}
-    <RequirementsContent requirements={review.requirements} deployment={review.deployment} />
-  </div>
+  </>
 }

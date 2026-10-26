@@ -40,7 +40,7 @@ export function ResultPackage({ review, run }: { review: PipelineReview; run: Ru
           : 'This stage has finished. The package records progress through this stage; later stages may still remain.'}</p>
     <p>Download a ZIP with an HTML report for reading and sharing, a CSV of the selected items, and the complete JSON record. Before collection selection, the CSV has no selected items.</p>
     <button type="button" disabled={downloading} onClick={() => void download()}>{downloading ? 'Downloading package…' : 'Download results package'}</button>
-    <p className="help">Download before results expire one hour after this run ends. Server restarts also discard results. Keep the package for future review; it cannot be reopened as a website run.</p>
+    <p className="help">Completed progress is saved without a time limit. Return in this browser to continue, even after closing the tab. If a server restart interrupts a stage, its saved results remain available; paid calls do not restart automatically. Keep the package for sharing or a separate copy; it cannot be imported as a website run.</p>
     {error && <p className="review-error" role="alert">{error}</p>}
   </section>
 }

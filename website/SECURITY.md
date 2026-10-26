@@ -56,10 +56,27 @@ item-review workflow has the following implementation:
   The OpenAI client explicitly targets `https://api.openai.com/v1` with `store=False`.
 - Only an independently generated run secret authorizes polling, exports, and cancellation.
   It travels in `X-Review-Token`; the browser keeps it in sessionStorage to allow
-  page refreshes. Job IDs alone cannot retrieve a deployment description/result.
+  page refreshes. For the goal-conditioned pipeline, localStorage also retains
+  the latest run ID and secret so the same browser can return after closing a
+  tab. Neither store receives the OpenAI key or deployment answers. Job IDs
+  alone cannot retrieve a deployment description/result.
+- Goal-conditioned pipeline runs from requirements through adaptive construction
+  have no automatic expiry. Private compressed checkpoints under
+  `WEBSITE_DATA_DIR/review-runs/` contain original answers, artifacts, settings,
+  and usage, with only a hash of the access secret. Large immutable retrieval
+  evidence is shared across stage records. Checkpoint replacement is atomic;
+  files have mode 0600 and the directory has mode 0700. Authorization is checked
+  before loading referenced retrieval evidence. The in-memory cache can evict
+  completed runs without deleting their saved checkpoints. The existing
+  benchmark trace/workspace retention job does not remove this directory.
+  With a persistent data mount, completed work survives deployments and restarts.
+  Interrupted work stops at its latest checkpoint and never automatically
+  replays paid calls. A pending adaptive request with unknown outcome keeps its
+  budget reservation. Choosing another review clears browser access, not saved
+  server files; clearing browser storage loses access to saved runs.
 - Dataset access uses the server's `HF_TOKEN` or saved Hub login. No HF key is
   accepted from visitors. Item tables are read through HTTP ranges and source
-  metadata may be cached. Deployment answers remain in process memory; assessments,
+  metadata may be cached. In legacy **Review catalog** mode, deployment answers remain in process memory; assessments,
   evidence, and provenance are stored in a private temporary SQLite directory.
   Those files expire one hour after a run ends, with a minute-level cleanup timer,
   and are removed on normal shutdown. An abrupt kill can leave orphaned files
@@ -75,7 +92,8 @@ item-review workflow has the following implementation:
   embedding inference sends no question or deployment text to a model API.
   The run records the retrieval query and selected items in its private results.
   Three jobs may run simultaneously, at most one per caller key. At most 30 jobs
-  are retained. User-supplied model IDs, paths, API base
+  are retained in memory. Saved pipeline checkpoints are separate from this
+  limit. User-supplied model IDs, paths, API base
   URLs, and dataset repository IDs are not accepted by the web endpoint.
 - Provider exception bodies are not returned or logged. Model-generated content
   is rendered as React text. Review endpoints use `Cache-Control: no-store`.
@@ -85,6 +103,7 @@ item-review workflow has the following implementation:
   OpenAI may still incur a charge. No email is sent.
 
 Verification: `website/server/tests/test_item_review.py`,
+`website/server/tests/test_review_checkpoints.py`,
 `website/client/src/itemReview/api.test.ts`, and `ItemReview.test.tsx` cover these
 boundaries. Local retrieval tests use an injected encoder and no paid API. Shared
 synchronous/asynchronous judge requests are checked in

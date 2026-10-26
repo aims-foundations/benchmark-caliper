@@ -31,7 +31,7 @@ export function AdaptiveForm({ busy, onAdapt, settings }: {
   }
 
   return <form className="review-panel" onSubmit={event => void submit(event)} aria-labelledby="adaptive-start-title">
-    <p className="eyebrow">Step 7 · Adaptive screening</p>
+    <p className="eyebrow">Step 7: Adaptive screening</p>
     <h2 id="adaptive-start-title">{resuming ? 'Resume adaptive screening' : 'Improve the collection with adaptive screening'}</h2>
     <p>Screen up to 160 distinct candidates in total, including the initial screening. Each batch takes up to eight unseen items from the saved retrieval queues, then selects a collection of up to 30 items total.</p>
     <p>In 80% of decisions, choose the queue with the highest estimated selection yield adjusted for coverage gaps. In 20%, explore an available queue at random. Every completed batch preserves achieved coverage.</p>

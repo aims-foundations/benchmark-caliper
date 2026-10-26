@@ -54,6 +54,24 @@ def forbid_retrieval(monkeypatch):
         monkeypatch.setattr(item_review, name, lambda *args, **kwargs: pytest.fail("Use saved retrieval"))
 
 
+def test_initial_selection_snapshot_is_independent_of_later_collection_changes(client):
+    from bayesian_auditing.screening_budget import AdaptiveSettings
+    from website.server import adaptive_review
+
+    source = seed_selected(per_facet=3)
+    job = item_review.jobs[source["run_id"]]
+    original = deepcopy(job.selection)
+    state = adaptive_review.initialize(job, AdaptiveSettings())
+    assert state["initial_selection"] == original
+    assert state["initial_selection_run_id"] == source["run_id"]
+
+    job.selection["selected_item_ids"].clear()
+    job.selection["task_coverage"][0]["selected_count"] = 0
+    job.selection_run_id = "later-adaptive-run"
+    assert state["initial_selection"] == original
+    assert state["initial_selection_run_id"] == source["run_id"]
+
+
 def test_caps_total_at_160_uses_eight_unseen_per_batch_and_keeps_initial_outcomes(client, monkeypatch):
     source = seed_selected(per_facet=180)
     original = finished(client, source).json()
@@ -63,6 +81,8 @@ def test_caps_total_at_160_uses_eight_unseen_per_batch_and_keeps_initial_outcome
     result = finished(client, access).json()
     assert result["mode"] == "adaptive" and result["status"] == "completed", result["message"]
     adaptive = result["adaptive"]
+    assert adaptive["initial_selection"] == original["selection"]
+    assert adaptive["initial_selection_run_id"] == source["run_id"]
     assert adaptive["frozen"] is True and adaptive["stop_reason"] == "candidate_limit"
     assert adaptive["screened_count"] == adaptive["acquired_count"] == 160
     assert len(calls) == 112
@@ -286,6 +306,8 @@ def test_invalid_response_keeps_pending_batch_and_resume_retries_only_unfinished
     paused = finished(client, first).json()
     assert paused["status"] == "failed", paused["message"]
     adaptive = paused["adaptive"]
+    assert adaptive["initial_selection"] == original_selection
+    assert adaptive["initial_selection_run_id"] == source["run_id"]
     assert adaptive["frozen"] is False and adaptive["stop_reason"] is None
     assert len(adaptive["batches"]) == 2
     assert adaptive["batches"][1]["status"] != "committed"
@@ -307,11 +329,31 @@ def test_invalid_response_keeps_pending_batch_and_resume_retries_only_unfinished
     assert result["adaptive"]["batches"][1]["item_ids"] == adaptive["batches"][1]["item_ids"]
     assert result["adaptive"]["batches"][0] == adaptive["batches"][0]
     assert result["adaptive"]["settings"] == adaptive["settings"]
+    assert result["adaptive"]["initial_selection"] == original_selection
+    assert result["adaptive"]["initial_selection_run_id"] == source["run_id"]
     assert len(calls) == 56 - len(successful)
     assert len(result["adaptive"]["attempts"]) == len(first_calls) + len(calls)
     assert len(result["screening"]["items"]) == 56
     assert all(item["status"] == "complete" for item in result["screening"]["items"])
     assert finished(client, first).json() == paused
+
+
+def test_legacy_history_without_initial_selection_snapshot_can_resume(client, monkeypatch):
+    source = seed_selected(per_facet=49)
+    mock_screener(monkeypatch, lambda value, row: {**value, "coverage": ["invalid"]})
+    first = start_adaptive(client, source)
+    assert finished(client, first).json()["status"] == "failed"
+    state = item_review.jobs[first["run_id"]].adaptive
+    state.pop("initial_selection")
+    state.pop("initial_selection_run_id")
+    original_ids = list(state["batches"][0]["selected_item_ids"])
+
+    mock_screener(monkeypatch)
+    result = finished(client, start_adaptive(client, first)).json()
+    assert result["status"] == "completed", result["message"]
+    assert result["adaptive"]["batches"][0]["selected_item_ids"] == original_ids
+    assert "initial_selection" not in result["adaptive"]
+    assert "initial_selection_run_id" not in result["adaptive"]
 
 
 def test_incomplete_selection_retains_pending_batch_and_resume_uses_saved_assessments(client, monkeypatch):
@@ -445,7 +487,18 @@ def test_cost_limited_resume_freezes_valid_subset_and_keeps_unfinished_ids_expli
     from website.server import adaptive_review
 
     source = seed_selected()
+    initial_selection = deepcopy(item_review.jobs[source["run_id"]].selection)
     requests = []
+    committed_checkpoints = []
+    real_freeze = adaptive_review.freeze
+
+    def freeze_after_checkpoint(job, state, reason):
+        # Capture the narrow restart window after committing a partial batch,
+        # before freeze() has updated the final status and message.
+        committed_checkpoints.append(item_review.checkpoints().run_path(job.run_id).read_bytes())
+        real_freeze(job, state, reason)
+
+    monkeypatch.setattr(adaptive_review, "freeze", freeze_after_checkpoint)
     # Two requests fit initially. One settled charge plus the second unknown
     # reservation leaves too little budget for an explicit retry.
     monkeypatch.setattr(adaptive_review, "request_reservation", lambda *args: .01)
@@ -482,11 +535,21 @@ def test_cost_limited_resume_freezes_valid_subset_and_keeps_unfinished_ids_expli
     assert batch["outcomes"][0]["retained"] is True
     assert batch["unresolved_item_ids"] == batch["item_ids"][1:]
     assert result["selection"]["total_quality"] == 121
+    assert adaptive["initial_selection"] == initial_selection
+    assert adaptive["initial_selection"]["selected_item_ids"] != result["selection"]["selected_item_ids"]
+    assert adaptive["initial_selection_run_id"] == source["run_id"]
     assert result["selection_run_id"] == resumed["run_id"]
     assert adaptive["cost"] == failed["adaptive"]["cost"]
     assert all(stats["successes"] == 31 and stats["failures"] == 18
                for stats in adaptive["queue_statistics"])
     assert finished(client, first).json() == failed
+    assert len(committed_checkpoints) == 1
+    item_review.jobs.clear()
+    item_review.checkpoints().run_path(resumed["run_id"]).write_bytes(committed_checkpoints[0])
+    restored = finished(client, resumed).json()
+    assert restored["status"] == "completed"
+    assert restored["adaptive"] == adaptive
+    adaptive_review.validate_history(item_review.jobs[resumed["run_id"]])
 
 
 @pytest.mark.parametrize("change", ["row", "assessment", "allocation", "duplicate", "selected_id"])
@@ -509,7 +572,9 @@ def test_corrupt_initial_source_is_rejected_before_provider(client, monkeypatch,
     assert response.status_code == 409
 
 
-@pytest.mark.parametrize("change", ["outcome", "statistics", "priority", "remaining", "batch_ids", "cost", "selection"])
+@pytest.mark.parametrize("change", [
+    "outcome", "statistics", "priority", "remaining", "batch_ids", "cost", "selection", "initial_selection",
+])
 def test_corrupt_adaptive_history_is_rejected_before_resume(client, monkeypatch, change):
     source = seed_selected()
     mock_screener(monkeypatch, lambda value, row: {**value, "coverage": ["invalid"]})
@@ -527,6 +592,8 @@ def test_corrupt_adaptive_history_is_rejected_before_resume(client, monkeypatch,
         job.adaptive["batches"][1]["item_ids"].reverse()
     elif change == "cost":
         job.adaptive["cost"]["spent_usd"] = 100
+    elif change == "initial_selection":
+        job.adaptive["initial_selection"]["selected_item_ids"] = []
     else:
         job.selection["selected_item_ids"] = []
     monkeypatch.setattr(item_review, "AsyncOpenAI", lambda **kwargs: pytest.fail("Invalid history"))

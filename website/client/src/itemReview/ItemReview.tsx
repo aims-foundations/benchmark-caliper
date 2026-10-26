@@ -11,9 +11,11 @@ import { ScreeningResults } from './ScreeningResults'
 import { SelectionResults } from './SelectionResults'
 import { AdaptiveResults } from './AdaptiveResults'
 import { ResultPackage } from './ResultPackage'
+import { PipelineResults } from './PipelineResults'
+import { PIPELINE_STEPS, stepNumber } from './StepSection'
 import { QUESTIONS } from './deployment'
+import { forgetReviewAccess, loadReviewAccess, persistRestoredPipelineAccess, saveReviewAccess } from './accessStorage'
 
-const RUN_STORAGE = 'item_review_run_v1'
 const EMPTY: Deployment = { task: '', users: '', inputs: '', outputs: '', success: '', constraints: '' }
 const EXAMPLE: Deployment = {
   task: 'An AI mathematics tutor helping secondary-school students with algebra and geometry.',
@@ -22,13 +24,6 @@ const EXAMPLE: Deployment = {
   outputs: 'Correct answers with clear, age-appropriate explanations and useful follow-up questions.',
   success: 'Both mathematical correctness and a helpful explanation of the reasoning are required.',
   constraints: 'Text only. The tutor does not receive images or audio. Check misleading or incorrect explanations.',
-}
-
-function savedRun(): RunAccess | null {
-  try {
-    const run = JSON.parse(sessionStorage.getItem(RUN_STORAGE) || 'null')
-    return run && typeof run.run_id === 'string' && typeof run.run_secret === 'string' ? run : null
-  } catch { return null }
 }
 
 export function ItemReview() {
@@ -40,7 +35,7 @@ export function ItemReview() {
   const [retrieveK, setRetrieveK] = useState('20')
   const [retrievalQuery, setRetrievalQuery] = useState('')
   const [page, setPage] = useState(1)
-  const [access, setAccess] = useState<RunAccess | null>(savedRun)
+  const [access, setAccess] = useState<RunAccess | null>(loadReviewAccess)
   const [review, setReview] = useState<RunResult | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -75,6 +70,7 @@ export function ItemReview() {
       try {
         const latest = await getReview(access!, page, controller.signal)
         if (controller.signal.aborted) return
+        if (latest.mode && latest.mode !== 'item_review') persistRestoredPipelineAccess(access!)
         setReview(latest)
         setError('')
         if (['preparing', 'running'].includes(latest.status)) timer = setTimeout(() => void poll(), 2000)
@@ -106,7 +102,7 @@ export function ItemReview() {
         : { deployment, retrieve_k: Number(retrieveK), ...(retrievalQuery.trim() ? { retrieval_query: retrievalQuery } : {}) }, apiKey.trim())
       // The OpenAI key stays in React memory only and is cleared once handed off.
       setApiKey('')
-      try { sessionStorage.setItem(RUN_STORAGE, JSON.stringify(run)) } catch { /* current tab still works */ }
+      saveReviewAccess(run, mode === 'requirements')
       setAccess(run)
       setReview(null)
       setPage(1)
@@ -120,7 +116,7 @@ export function ItemReview() {
     setError('')
     try {
       const run = await startGrounding(access, key)
-      try { sessionStorage.setItem(RUN_STORAGE, JSON.stringify(run)) } catch { /* current tab still works */ }
+      saveReviewAccess(run, true)
       setReview(null)
       setAccess(run)
       setPage(1)
@@ -137,7 +133,7 @@ export function ItemReview() {
     setError('')
     try {
       const run = await startBenchmarkRetrieval(access)
-      try { sessionStorage.setItem(RUN_STORAGE, JSON.stringify(run)) } catch { /* current tab still works */ }
+      saveReviewAccess(run, true)
       setReview(null)
       setAccess(run)
       setPage(1)
@@ -154,7 +150,7 @@ export function ItemReview() {
     setError('')
     try {
       const run = await startScreening(access, key)
-      try { sessionStorage.setItem(RUN_STORAGE, JSON.stringify(run)) } catch { /* current tab still works */ }
+      saveReviewAccess(run, true)
       setReview(null)
       setAccess(run)
       setPage(1)
@@ -171,7 +167,7 @@ export function ItemReview() {
     setError('')
     try {
       const run = await startSelection(access)
-      try { sessionStorage.setItem(RUN_STORAGE, JSON.stringify(run)) } catch { /* current tab still works */ }
+      saveReviewAccess(run, true)
       setReview(null)
       setAccess(run)
       setPage(1)
@@ -188,7 +184,7 @@ export function ItemReview() {
     setError('')
     try {
       const run = await startAdaptive(access, key, body)
-      try { sessionStorage.setItem(RUN_STORAGE, JSON.stringify(run)) } catch { /* current tab still works */ }
+      saveReviewAccess(run, true)
       setReview(null)
       setAccess(run)
       setPage(1)
@@ -215,7 +211,7 @@ export function ItemReview() {
   }
 
   function restart() {
-    try { sessionStorage.removeItem(RUN_STORAGE) } catch { /* no persistent storage */ }
+    forgetReviewAccess(access)
     setAccess(null)
     setReview(null)
     setError('')
@@ -224,6 +220,7 @@ export function ItemReview() {
   }
 
   const active = access && (!review || ['preparing', 'running'].includes(review.status))
+  const pipeline = review && 'requirements' in review ? review : null
   const validRetrieveK = !!catalog && Number.isInteger(Number(retrieveK)) && Number(retrieveK) >= 1 && Number(retrieveK) <= catalog.max_retrieve_k
 
   return <div className="rd-root item-review-site">
@@ -238,11 +235,18 @@ export function ItemReview() {
       <div className="review-layout">
         <aside className="review-guide">
           <p className="eyebrow">Your review</p>
-          <ol className="review-steps">
+          {pipeline ? <nav aria-label="Framework steps"><ol className="review-steps review-framework-steps">
+            {PIPELINE_STEPS.map(info => <li key={info.number}
+              aria-current={stepNumber(pipeline.mode) === info.number ? 'step' : undefined}>
+              {info.number <= stepNumber(pipeline.mode)
+                ? <a href={`#pipeline-step-${info.number}`}><span>{info.number}</span>{info.name}</a>
+                : <div className="review-step-future"><span>{info.number}</span>{info.name}</div>}
+            </li>)}
+          </ol></nav> : <ol className="review-steps">
             {['Connect your key', 'Describe deployment', 'Choose an action', 'Inspect results'].map((label, i) => <li key={label}
               aria-current={(access ? 3 : ['access', 'deployment', 'confirm'].indexOf(step)) === i ? 'step' : undefined}>
-              <span>{String(i + 1).padStart(2, '0')}</span>{label}</li>)}
-          </ol>
+              {label}</li>)}
+          </ol>}
           {!access && <div className="review-guide-note"><p className="eyebrow">The framework</p><strong>Start with your deployment.</strong>
             <div className="review-guide-dimensions"><span>Input</span><span>Output</span><p>Ontology · Content · Form</p></div>
             <p>Extract requirements to inspect your goal, or use local retrieval and six-dimension item assessment.</p>
@@ -256,7 +260,7 @@ export function ItemReview() {
           {!catalog && !error && <p role="status">Loading the demo…</p>}
 
           {!access && catalog && step === 'access' && <form onSubmit={moveToDeployment} className="review-panel">
-            <p className="eyebrow">01 · Connect</p><h2>Connect your OpenAI API key</h2>
+            <p className="eyebrow">Connect</p><h2>Connect your OpenAI API key</h2>
             <p className="review-intro">Bring your own key to extract requirements from your deployment answers or assess a shortlist of benchmark items. You’ll choose an action before any paid calls begin.</p>
             {!catalog.dataset_access_configured && <div className="review-error" role="alert">Dataset access is not configured on this server. Requirements extraction is available; item retrieval and assessment are unavailable.</div>}
             <label className="review-field"><span>OpenAI API key</span><input type="password" autoComplete="off" spellCheck={false} maxLength={512}
@@ -267,10 +271,10 @@ export function ItemReview() {
           </form>}
 
           {!access && catalog && step === 'deployment' && <form className="review-panel review-deployment" onSubmit={submitDeployment}>
-            <p className="eyebrow">02 · Your deployment</p><h2>What are you building?</h2>
+            <p className="eyebrow">Step 1: Deployment goal</p><h2>What are you building?</h2>
             <p className="review-intro">Help us understand the real setting. Your answers guide what a relevant test should measure.</p>
             <label className="review-field"><span>Run name (optional)</span>
-              <input value={runName} onChange={e => setRunName(e.target.value)} disabled={busy} aria-describedby="run-name-hint" placeholder="For example, Medical study goal · first run" />
+              <input value={runName} onChange={e => setRunName(e.target.value)} disabled={busy} aria-describedby="run-name-hint" placeholder="For example, Medical study goal, first run" />
             </label>
             <p className="help" id="run-name-hint">Name the benchmark-construction run so its downloaded results are easy to identify. The name carries through requirements extraction and later stages.</p>
             <div className="review-example"><div><strong>Need a starting point?</strong><p>Fill in a mathematics tutor scenario, then make it your own. Filling the form is free.</p></div>
@@ -291,7 +295,7 @@ export function ItemReview() {
           </form>}
 
           {!access && catalog && step === 'confirm' && <section className="review-panel">
-            <p className="eyebrow">03 · Review and run</p><h2>Retrieve candidates, then assess the shortlist</h2>
+            <p className="eyebrow">Review and run</p><h2>Retrieve candidates, then assess the shortlist</h2>
             <p className="review-intro">The demo selects up to {catalog.sampling.items_per_benchmark} distinct items from every benchmark collection. Local retrieval narrows this sample to your chosen shortlist; GPT-6 Luna then assesses each shortlisted item across all six validity dimensions.</p>
             <div className="review-scope"><p className="eyebrow">Available for local retrieval</p><strong>Up to {catalog.sample_max_items.toLocaleString()} <span>items</span></strong>
               <p>{catalog.benchmarks.length} benchmark collections · {catalog.table_count} item tables · {Object.keys(catalog.branches).length} branches</p>
@@ -332,14 +336,16 @@ export function ItemReview() {
           </section>}
 
           {access && review && 'requirements' in review && <ResultPackage key={`package-${access.run_id}`} review={review} run={access} />}
+          {access && pipeline && <PipelineResults key={access.run_id} review={pipeline} run={access} catalog={catalog}>
           {access && review?.mode === 'requirements' && <RequirementsResults review={review} run={access} busy={busy} onCancel={() => void stop()} onRestart={restart} onGround={ground} />}
           {access && review?.mode === 'grounding' && <GroundingResults review={review} run={access} catalog={catalog} busy={busy} onCancel={() => void stop()} onRestart={restart} onGround={ground} onRetrieve={retrieve} />}
           {access && review?.mode === 'retrieval' && <BenchmarkRetrievalResults key={access.run_id} review={review} run={access} catalog={catalog} busy={busy} onCancel={() => void stop()} onRestart={restart} onRetrieve={retrieve} onScreen={screen} />}
           {access && review?.mode === 'screening' && <ScreeningResults key={access.run_id} review={review} run={access} busy={busy} onCancel={() => void stop()} onRestart={restart} onScreen={screen} onSelect={select} />}
           {access && review?.mode === 'selection' && <SelectionResults key={access.run_id} review={review} run={access} busy={busy} onCancel={() => void stop()} onRestart={restart} onScreen={screen} onSelect={select} onAdapt={adapt} />}
           {access && review?.mode === 'adaptive' && <AdaptiveResults key={access.run_id} review={review} run={access} busy={busy} onCancel={() => void stop()} onRestart={restart} onAdapt={adapt} />}
+          </PipelineResults>}
           {access && review?.mode !== 'requirements' && review?.mode !== 'grounding' && review?.mode !== 'retrieval' && review?.mode !== 'screening' && review?.mode !== 'selection' && review?.mode !== 'adaptive' && <>
-            <section className="review-panel review-progress" aria-live="polite"><p className="eyebrow">04 · Results</p>
+            <section className="review-panel review-progress" aria-live="polite"><p className="eyebrow">Results</p>
               <h2>{!review ? 'Connecting to your run' : review.status === 'preparing' ? 'Preparing and retrieving candidate items' : review.status === 'running' ? 'Assessing shortlisted items' : review.status === 'completed' ? 'Your item review is ready' : review.status === 'cancelled' ? 'Review stopped' : 'Review interrupted'}</h2>
               <p className="review-intro">{review?.message || 'Connecting to your review…'}</p>
               {review && review.status === 'preparing' && <><progress max={review.scope.source_rows || 1} value={review.source_rows} aria-label="Source rows considered for sampling" /><p>{review.prepared_benchmarks.toLocaleString()} of {review.scope.benchmarks.length.toLocaleString()} benchmark collections prepared · {review.source_rows.toLocaleString()} source rows considered · no paid model calls yet</p></>}
@@ -355,7 +361,8 @@ export function ItemReview() {
         </div>
       </div>
       <section className="review-privacy"><h2>Data and privacy</h2>
-        <p>Your OpenAI API key is held in memory for the active review and is never saved to our database or browser storage. A separate temporary access token is stored in this tab so you can reload your results. Deployment answers stay in server memory; item results use private temporary server files. These are deleted one hour after the review ends or during a normal server shutdown. Results cannot be resumed after a server restart. Reusable dataset indexes, samples, and source metadata are cached separately, without your deployment answers or API key. OpenAI processes the submitted text under its own API data policies.</p>
+        <p>Your OpenAI API key is held in memory for the active stage and is never saved to our database or browser storage. For the goal-conditioned pipeline, your deployment answers and results are saved privately on the server without automatic expiration. A separate access token stays in this browser so you can return after closing the tab. Clearing browser data or forgetting a review removes this browser’s access, not the saved server results.</p>
+        <p>The separate sampled item review remains temporary: its access token stays in this tab, and its results expire one hour after completion or when the server restarts. Reusable dataset indexes, samples, and source metadata are cached separately, without your deployment answers or API key. OpenAI processes the submitted text under its own API data policies.</p>
       </section>
     </main><SiteFooter />
   </div>

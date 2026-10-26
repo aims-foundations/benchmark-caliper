@@ -2,7 +2,7 @@
 
 The initial allocation stays unchanged. Adaptive acquisitions and request
 attempts have their own history, which survives cancellation and continuation.
-All snapshots have the same temporary lifetime as other item-review results.
+Snapshots are checkpointed with their request reservations before paid work.
 """
 
 import asyncio
@@ -83,6 +83,9 @@ def initialize(job, settings: AdaptiveSettings) -> dict:
     state = {
         "version": ADAPTIVE_VERSION, "policy": deepcopy(ADAPTIVE_POLICY),
         "settings": settings_record(settings),
+        # Keep Step 6 separate from the collection rebuilt during Step 7.
+        "initial_selection": deepcopy(job.selection),
+        "initial_selection_run_id": job.selection_run_id,
         "batches": [{"number": 0, "kind": "initial", "status": "committed",
                      "queue_id": None, "facet_id": None, "source": None, "exploration": None,
                      "item_ids": [entry["item_id"] for entry in allocation], "outcomes": outcomes,
@@ -116,6 +119,9 @@ def validate_history(job) -> None:
     batches = state["batches"]
     if not batches:
         raise ValueError("The initial selection outcomes are missing.")
+    initial_selection = state.get("initial_selection")
+    if initial_selection is not None and initial_selection["selected_item_ids"] != batches[0]["selected_item_ids"]:
+        raise ValueError("The saved initial collection does not match the initial selection outcomes.")
     for number, batch in enumerate(batches):
         if batch["number"] != number or batch["kind"] != ("initial" if number == 0 else "adaptive"):
             raise ValueError("Adaptive batches must retain their original order.")
@@ -180,11 +186,14 @@ def current_priorities(job, state: dict) -> list[dict]:
 
 def publish(job, state: dict) -> None:
     """Replace snapshots so a concurrent export never observes later mutation."""
+    from . import item_review as service
+
     state["cost"] = cost_summary(state["attempts"], state["settings"])
     state["acquired_count"] = sum(len(batch["item_ids"]) for batch in state["batches"])
     state["screened_count"] = sum(item["status"] == "complete" for item in job.screening["items"])
     state["queue_statistics"] = current_priorities(job, state)
     job.adaptive = deepcopy(state)
+    service.checkpoint(job)
 
 
 async def commit_batch(job, state: dict, requirements, *, partial: bool = False) -> None:
@@ -214,6 +223,10 @@ async def commit_batch(job, state: dict, requirements, *, partial: bool = False)
                  selected_item_ids=list(selection["selected_item_ids"]))
     if partial:
         batch["unresolved_item_ids"] = [key for key in batch["item_ids"] if key not in complete]
+        # A partially committed batch is valid only as the final cost-limited
+        # collection. Persist that decision together with the batch, including
+        # if a restart happens before freeze() publishes its final message.
+        state.update(frozen=True, stop_reason="cost_limit")
     job.selection, job.selection_run_id = selection, job.run_id
     publish(job, state)
 

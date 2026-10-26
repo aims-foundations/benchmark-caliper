@@ -181,17 +181,41 @@ O*NET search and a benchmark search through the tunnel, and confirm that all
 website catalog's `retrieval_mode` reports `remote` when configured; this flag
 alone does not verify connectivity. Keep one website instance and one Uvicorn
 worker. Cancellation releases the remote job, and completed remote query/results
-are deleted after transfer or expire automatically. The website's existing
-result-retention rules still apply; download the result package after the run.
+are deleted after transfer or expire automatically. These temporary search jobs
+are separate from the website's saved pipeline checkpoints.
+
+### Pipeline checkpoints
+
+Goal-conditioned runs from requirements through adaptive construction are saved
+under `WEBSITE_DATA_DIR/review-runs/` with no automatic expiry. The existing
+Render `/data` disk and `WEBSITE_DATA_DIR=/data` setting provide persistent
+storage; no additional service or credential is required. Files outside a
+persistent mount will still disappear when a container is replaced.
+
+Checkpoints contain the deployment answers, artifacts, usage, and a hash of the
+run access token; they exclude OpenAI keys. Files are private and committed
+atomically. Large retrieval evidence is compressed and shared across stage
+records. Monitor disk usage as saved runs accumulate; the in-memory cache limit
+does not delete saved runs. Back up the directory as private application data.
+
+The same browser can reopen its latest pipeline using a separately saved access
+token. Completed stages survive deployments. A server interruption stops active
+work at its latest checkpoint without automatically replaying paid requests.
+Screening and adaptive continuation retain completed assessments; a visitor
+must supply an OpenAI key again. Keep one instance and one Uvicorn worker for
+active-job coordination. Runs already lost by the old memory-only version
+cannot be recovered through checkpoints.
 
 ## Item-review configuration
 
 The website's Python requirements include the shared OpenAI judge, dataset
 loader, and local Qwen3 embedding runtime. Keep **one instance and one Uvicorn
 worker** for the item-review jobs.
-Jobs and keys live in memory; results use private temporary SQLite files.
-A restart clears in-flight jobs and their results; users can download JSON
-before restarting the service. The CLI's disk-based resume is separate.
+The legacy **Review catalog** mode keeps jobs and keys in memory and results in
+private temporary SQLite files. A restart clears those jobs and results; users
+can download JSON before restarting the service. The goal-conditioned pipeline
+uses the durable checkpoints described above. The CLI's disk-based resume is
+separate.
 
 Set the server's `HF_TOKEN` secret in Render with read access to the gated
 `aims-foundations/measurement-db` dataset. This is required for hosted item

@@ -163,7 +163,8 @@ def test_grounding_requires_source_access_key_and_finished_facets(client, monkey
     assert client.post("/api/item-review/runs", json={**BODY, "mode": "grounding"},
                        headers={"X-OpenAI-Key": KEY}).status_code == 400
     job.finished_at = time.monotonic() - item_review.RETENTION_SECONDS - 1
-    assert client.post(url, headers=headers).status_code == 404
+    # Pausing no longer removes the run; the invalid empty facets still block grounding.
+    assert client.post(url, headers=headers).status_code == 409
 
 
 def test_no_applicable_records_is_successful_and_keeps_requirements(client, monkeypatch, local_index):

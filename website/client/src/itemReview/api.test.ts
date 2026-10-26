@@ -128,7 +128,7 @@ it.each([
   expect(result.filename).toBe(expected)
 })
 
-it('reports an expired package request before treating its error body as a download', async () => {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ detail: 'Review not found or expired. Start a new review.' }), { status: 404 })))
-  await expect(getReviewPackage({ run_id: 'expired', run_secret: 'private' })).rejects.toThrow('Review not found or expired')
+it('reports unavailable review access before treating its error body as a download', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ detail: 'Review not found or access token is invalid. Reopen the review in the browser where it was started.' }), { status: 404 })))
+  await expect(getReviewPackage({ run_id: 'missing', run_secret: 'private' })).rejects.toThrow('Review not found or access token is invalid')
 })

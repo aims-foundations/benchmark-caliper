@@ -12,7 +12,7 @@ export function ScreeningForm({ busy, onScreen, remaining, retained = 0 }: {
   }
 
   return <form className="review-panel" onSubmit={event => void submit(event)} aria-labelledby="screening-start-title">
-    <p className="eyebrow">Step 5 · Initial screening</p>
+    <p className="eyebrow">Step 5: Initial screening</p>
     <h2 id="screening-start-title">{continuing ? 'Continue the initial screening' : 'Assess the first 48 distinct candidates'}</h2>
     {continuing ? <p>{retained} completed assessments are retained. Continue with up to {remaining} items that are pending or had an assessment error, using the same initial allocation.</p>
       : <p>Up to 48 distinct candidates are distributed as evenly as the available task queues allow. Each item is assessed once, even when it appears in several queues. If fewer than 48 distinct candidates are available, the allocation shows the shortfall.</p>}

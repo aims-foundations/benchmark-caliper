@@ -40,8 +40,8 @@ transport retries. Provider errors are sanitized and cancellation is supported.
 
 The existing run/export mechanism saves the original answers, validated
 requirements, prompt, schema, model/settings, response identifier, and available
-token usage in downloadable JSON. Website runs remain temporary; export before
-they expire. The preview can continue to O*NET grounding below. Tests use
+token usage in downloadable JSON. Website pipeline runs are saved as private
+checkpoints without automatic expiry. The preview can continue to O*NET grounding below. Tests use
 mocked model responses, including a human-authored
 extraction of the paper's worked example; they do not measure live LLM quality.
 
@@ -50,8 +50,8 @@ selected-item CSV, and complete `results.json` in one ZIP. An optional run name
 carries through continuations; exports record UTC dates and partial/stage/frozen
 status. `stage_usage` retains available token counts from preceding runs while
 top-level `usage` continues to cover only the current run. Step 7 dollar estimates
-remain separate from earlier-stage costs. Download before the one-hour expiry;
-the ZIP can be reviewed offline but cannot restore a website session. See the
+remain separate from earlier-stage costs. The ZIP provides a separate offline
+copy; it cannot be imported to restore a website session. See the
 [website export documentation](../website/README.md#saving-and-sharing-construction-results).
 
 ## Step 3: ground task vocabulary with O*NET
@@ -59,8 +59,8 @@ the ZIP can be reviewed offline but cannot restore a website session. See the
 After a successful extraction, choose **Ground with O*NET** in the requirements
 preview. Enter an OpenAI key again because the extraction key has been cleared.
 This creates a separate run using a copy of the accepted requirements and exact
-original answers; it does not repeat extraction. The original run stays available
-until its normal expiry. Grounding uses local reference search followed by one
+original answers; it does not repeat extraction. The original run remains saved.
+Grounding uses local reference search followed by one
 paid GPT-6 Luna mapping request per task facet with candidates, and stops at an
 inspectable mapping preview. It does not retrieve or judge benchmark questions.
 
@@ -124,7 +124,7 @@ The JSON export includes the original answers and extraction snapshot, source ru
 ID, local search queries and shortlisted records/ranks, validated mappings,
 reference-file checksums, retrieval settings, sampled embedding compatibility
 result, mapping prompt/schema, response metadata, and available token usage for
-the grounding run. Results use the existing one-hour temporary retention policy.
+the grounding run. Completed mappings are saved in the pipeline checkpoint.
 Tests cover local search and mocked LLM responses. Real local BGE searches have
 also been checked against the supplied vectors; no live mapping quality is
 claimed by these checks.
@@ -274,8 +274,8 @@ The preview shows task queries, queue membership, complete searchable row text,
 original source fields, source provenance, dense/BM25 ranks, and RRF scores.
 The JSON export preserves the original answers, requirements, grounding, pinned
 inventory, policies, queries, candidates, and queues. Stopping a run preserves
-completed task results. Runs retain the existing
-temporary expiry policy; download the export to keep the result.
+completed task results. Pipeline checkpoints have no automatic expiry; download
+the export for a separate copy.
 
 Tests cover retrieval, complete-row identity and field preservation,
 cache/cancellation behavior, query assembly, queue ordering, and website
@@ -357,7 +357,8 @@ response metadata, and originating `screened_run_id`.
 The export includes the complete screening allocation and results alongside the
 original answers, extraction, grounding, retrieval inventory, candidates, and
 queues. The prompt, schema, model settings, and gate policy are inspectable.
-Temporary run expiry still applies. The allocator and synchronous/asynchronous
+Completed assessments are checkpointed for continuation after a server restart.
+The allocator and synchronous/asynchronous
 screener are also available as Python library functions/classes; there is no
 new Step 5 CLI command.
 
@@ -546,8 +547,10 @@ Export includes settings,
 queue statistics, batch outcomes and collection changes, attempt-level usage,
 cost scope, remaining gaps, and the stopping reason. Ordinary `/screen` and
 `/select` continuations reject adaptive runs so they cannot discard this history.
-Hosted runs retain the existing temporary expiry and do not survive a server
-restart.
+Hosted pipeline checkpoints have no automatic expiry and survive restarts when
+`WEBSITE_DATA_DIR` is on persistent storage. Interrupted work does not restart
+paid calls automatically; resume explicitly using a fresh OpenAI key. See the
+[website storage and access details](../website/README.md#saving-and-sharing-construction-results).
 
 ## Existing Qwen retrieval and six-dimension assessment
 
