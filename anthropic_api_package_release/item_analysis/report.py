@@ -471,7 +471,7 @@ def _summarize_generic(classifier: dict, results: dict, total: int) -> dict:
         summary["determinate_percentage_denominator"] = "issue_identified and no_issue_identified judgments"
     return summary
 
-def generate_report(run_dir: Path) -> dict:
+def generate_report(run_dir: Path, *, run_metadata: dict | None = None) -> dict:
     """Write summary.json, items.csv, blind review.csv, and standalone report.html."""
     run_dir = Path(run_dir)
     spec, items, results = _load_run(run_dir)
@@ -553,8 +553,13 @@ def generate_report(run_dir: Path) -> dict:
             "No item statistics are converted into 1–5 scores."
         ),
         "original_assessment": None if direct else {dimension: original_dimensions.get(dimension) for dimension in DIMENSIONS},
+        "original_report_available": (run_dir / "original_benchmark_report.pdf").is_file(),
         "classifiers": classifiers,
     }
+    if run_metadata:
+        summary["run"] = {key: run_metadata[key] for key in
+                          ("run_id", "status", "scope", "created_at", "updated_at", "exported_at")
+                          if key in run_metadata and run_metadata[key] is not None}
     if split_requests and summary["classification"] is not None:
         summary["classification"].update(
             request_mode="per_classifier",
@@ -639,85 +644,129 @@ def _display_percent(value: float | None) -> str:
     return "—" if value is None else f"{value:.1f}%"
 
 
+def _friendly(value: Any) -> str:
+    names = {
+        "match": "Category match", "no_match": "No category match",
+        "issue_identified": "Issue identified", "no_issue_identified": "No issue identified",
+        "insufficient_evidence": "Insufficient evidence", "invalid": "Invalid response",
+    }
+    return names.get(str(value), str(value).replace("_", " ").capitalize())
+
+
+def _render_fields(value: Any) -> str:
+    """Render nested evidence as readable text with all original values escaped."""
+    if isinstance(value, dict):
+        return "<dl>" + "".join(
+            f"<dt>{_escape(str(key).replace('_', ' ').capitalize())}</dt><dd>{_render_fields(entry)}</dd>"
+            for key, entry in value.items()
+        ) + "</dl>" if value else "<p>Not supplied.</p>"
+    if isinstance(value, list):
+        return "<ul>" + "".join(f"<li>{_render_fields(entry)}</li>" for entry in value) + "</ul>" if value else "<p>None recorded.</p>"
+    return f"<p class='text'>{_escape(value) if value is not None else 'Not supplied'}</p>"
+
+
+def _run_readiness(summary: dict) -> str:
+    state = summary.get("run", {}).get("status")
+    experiment = summary["experiment"]
+    if state in {"cancelled", "failed"}:
+        return "Stopped — saved results retained" if state == "cancelled" else "Run failed — saved results retained"
+    if summary["complete_snapshot"]:
+        return "Prepared snapshot complete"
+    if not experiment["selected_items"]:
+        return "Specification prepared — classification not started"
+    if (experiment["selected_completed_items"] == experiment["selected_items"]
+            and not experiment["invalid_item_classifier_judgments"]):
+        return "Selected sample complete — remaining prepared items not classified"
+    return "Partial results — classification incomplete"
+
+
 def _render_html(summary: dict, items: Iterable[dict], results: dict) -> str:
     parts = ["""<!doctype html><html lang="en"><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
 <title>Caliper item analysis</title><style>
 body{font:16px/1.6 system-ui,sans-serif;max-width:1100px;margin:auto;padding:2rem;color:#17212f;background:#fafbfc}
 h1,h2,h3{line-height:1.25}section{background:white;padding:1.5rem;margin:1.5rem 0;border:1px solid #dce2e8;border-radius:8px}
 table{border-collapse:collapse;width:100%;margin:1rem 0}th,td{text-align:left;padding:.5rem;border-bottom:1px solid #dce2e8;vertical-align:top}
-pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}small{color:#465368}a{color:#175c9e}.notice{background:#edf3fa;padding:1rem}
+.table-scroll{max-width:100%;overflow-x:auto}
+pre,.text{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}small{color:#465368}a{color:#175c9e}.notice{background:#edf3fa;padding:1rem}
+details{margin:.8rem 0}summary{cursor:pointer;font-weight:600}dt{font-weight:600;margin-top:.6rem}dd{margin-left:1rem}dd p,li p{margin:.25rem 0}.metrics{display:flex;flex-wrap:wrap;gap:1.5rem}.metric strong{display:block;font-size:1.8rem}.status{font-weight:600;color:#254b70}code{overflow-wrap:anywhere}nav{display:flex;gap:1rem;flex-wrap:wrap}@media(max-width:650px){body{padding:1rem}section{padding:1rem}table{font-size:.85rem}}@media print{body{max-width:none;background:white}section{break-inside:avoid}nav{display:none}}
 </style><body><h1>Caliper item analysis</h1>"""]
-    parts.append(
-        f"<p><strong>{_escape(summary['benchmark'])}</strong> · {_escape(summary['scope'])}</p>"
-        f"<p><strong>Classifier deployment:</strong> {_escape(summary['deployment'])}</p>"
-        "<details><summary>Original deployment requirements</summary>"
-        f"<pre>{_escape(summary['original_deployment'] or 'Not supplied')}</pre></details>"
-    )
-    parts.append(
-        f"<p><strong>Schema:</strong> {_escape(summary['schema_version'])}; "
-        f"<strong>catalog:</strong> {_escape(summary['fixed_catalog_version'])}.</p>"
-    )
     experiment = summary["experiment"]
     parts.append(
+        f"<p><strong>{_escape(summary['benchmark'])}</strong></p>"
+        f"<p><strong>Classifier deployment:</strong> {_escape(summary['deployment'])}</p>"
+        f"<p class='status'>{_escape(_run_readiness(summary))}</p>"
+        "<nav aria-label='Report sections'><a href='#item-statistics'>Item statistics</a>"
+        "<a href='#original-assessment'>Original assessment</a><a href='#human-review'>Human review</a>"
+        "<a href='#audit'>Methods and provenance</a></nav>"
+        "<section id='item-statistics'><h2>Item statistics</h2>"
+        f"<p>{experiment['classifier_count']} item dimensions summarize the selected sample. These judgments do not revise the original six-dimension benchmark assessment.</p>"
+        "<div class='metrics'>"
+    )
+    for label, key in (("Selected items", "selected_items"), ("Complete", "selected_completed_items"),
+                       ("With errors", "selected_error_items"), ("Partially completed", "selected_partial_items"),
+                       ("Pending", "selected_pending_items")):
+        parts.append(f"<div class='metric'><strong>{experiment[key]}</strong>{label}</div>")
+    parts.append(
+        "</div>"
+        "<p>These item counts are mutually exclusive. A partially completed item has saved judgments and pending dimensions; "
+        "an item with errors may also contain saved judgments. Pending items have no saved item record.</p>"
         f"<p>{experiment['selected_items']} selected items × {experiment['classifier_count']} classifiers = "
         f"{experiment['expected_item_classifier_judgments']} expected judgments; "
         f"{experiment['completed_item_classifier_judgments']} valid judgments saved. "
-        f"{_escape(experiment['request_policy'].capitalize())}.</p>"
+        f"{experiment['error_item_classifier_judgments']} failed, {experiment['invalid_item_classifier_judgments']} invalid, "
+        f"and {experiment['pending_item_classifier_judgments']} pending judgments.</p>"
     )
-    metadata = summary["specification"]
-    if summary.get("classification"):
-        parts.append(
-            "<details><summary>Classification model</summary>"
-            f"<pre>{_escape(summary['classification'])}</pre></details>"
-        )
-    if metadata:
-        parts.append(
-            "<section><h2>Specification provenance</h2>"
-            f"<p>{_escape(metadata.get('note'))}</p>"
-            f"<p><strong>Source:</strong> {_escape(metadata.get('source'))}</p>"
-            f"<p><strong>Evidence references checked:</strong> {_escape(metadata.get('evidence_references_checked'))}</p>"
-        )
-        if metadata.get("adjustments"):
-            parts.append("<h3>Explicit adjustments</h3><ul>")
-            for adjustment in metadata["adjustments"]:
-                parts.append(f"<li><pre>{_escape(json.dumps(adjustment, ensure_ascii=False, indent=2))}</pre></li>")
-            parts.append("</ul>")
-        parts.append("</section>")
+    if any(_generic(c) for c in summary["classifiers"]):
+        parts.append("<table><tr><th>Item dimension</th><th>Category matches / issues</th><th>Valid judgments</th><th>Insufficient evidence</th><th>Failed / pending</th></tr>")
+        for classifier in summary["classifiers"]:
+            key = "match" if classifier["id"] == "input_ontology" else "issue_identified"
+            parts.append(f"<tr><td><a href='#{_escape(classifier['id'])}'>{_escape(classifier['id'].replace('_', ' ').title())}</a></td>"
+                         f"<td>{classifier['counts'][key]} ({_display_percent(classifier['percentages_among_valid'][key])})</td>"
+                         f"<td>{classifier['valid_judgments']}</td><td>{classifier['insufficient_evidence']}</td>"
+                         f"<td>{classifier['errors']} / {classifier['pending']}</td></tr>")
+        parts.append("</table><p><small>Percentages use each dimension's valid judgments, including insufficient evidence. "
+                     "A dash means there is no valid denominator. A category match and an issue are different judgments; compare their definitions below.</small></p>")
     parts.append(
+        f"<details><summary>Prepared snapshot: {summary['total_items']} items</summary>"
         f"<p>{summary['completed_items']} completed / {summary['total_items']} prepared items; "
         f"{summary['error_items']} with errors; {summary['partial_items']} partially completed; "
-        f"{summary['pending_items']} pending.</p>"
+        f"{summary['pending_items']} pending. {summary['total_items'] - experiment['selected_items']} prepared items "
+        "are outside the current selection.</p></details>"
     )
     parts.append(
         f"<p class='notice'>{_escape(summary['interpretation'])} "
-        "A category not observed in a partial run is not demonstrated absent from the benchmark.</p>"
+        "A category not observed in a partial run is not demonstrated absent from the benchmark.</p></section>"
     )
     parts.append(
         "<p><a href='items.csv'>All items and predictions (CSV)</a> · " +
-        ("<a href='review.csv'>Blind review worksheet</a> · " if summary["review_selection"].get("item_ids") else "") +
+        ("<a href='review.csv'>Review worksheet</a> · " if summary["review_selection"].get("item_ids") else "") +
         "<a href='classifier_spec.json'>Classifier specification</a> · "
         "<a href='summary.json'>Summary JSON</a></p>"
+        "<p><small>These links need the companion files beside this report. "
+        "On the website, download and extract the complete results package to open them.</small></p>"
     )
-    parts.append(f"<details><summary>Dataset provenance</summary><pre>{_escape(summary['dataset'])}</pre></details>")
     if summary.get("assessment_status") == "not_run":
         parts.append(
-            "<section><h2>Benchmark assessment not run</h2>"
+            "<section id='original-assessment'><h2>Benchmark assessment not run</h2>"
             "<p>This item-only analysis uses explicit deployment requirements. "
             "There are no benchmark-level validity scores. Input Form and Output Form are not assessed.</p>"
-            f"<h3>Supplied requirements</h3><pre>{_escape(summary.get('requirements'))}</pre></section>"
+            f"<details><summary>Supplied requirements</summary>{_render_fields(summary.get('requirements'))}</details></section>"
         )
     else:
         parts.append(
-            "<section><h2>Original assessment</h2><p>These benchmark-level scores are retained unchanged. "
-            "Input Form and Output Form remain at benchmark level.</p>"
+            "<section id='original-assessment'><h2>Original assessment: six benchmark dimensions</h2><p>These benchmark-level scores are retained unchanged. "
+            "Input Form and Output Form remain at benchmark level. They are separate from the four item classifiers above.</p>"
             "<table><tr><th>Dimension</th><th>Original score</th><th>Original finding</th></tr>"
         )
         for dimension, assessment in summary["original_assessment"].items():
             score = assessment.get("score", "Not supplied") if isinstance(assessment, dict) else "Not supplied"
-            finding = assessment.get("justification", "") if isinstance(assessment, dict) else ""
-            parts.append(f"<tr><td>{_escape(dimension.replace('_', ' ').title())}</td><td>{_escape(score)}</td><td>{_escape(finding)}</td></tr>")
+            parts.append(f"<tr><td>{_escape(dimension.replace('_', ' ').title())}</td><td>{_escape(score)}</td>"
+                         f"<td><details><summary>Original finding</summary>{_render_fields(assessment or 'Not supplied')}</details></td></tr>")
         parts.append("</table></section>")
+    if summary.get("original_report_available"):
+        parts.append("<p><a href='original_benchmark_report.pdf'>Original benchmark report (PDF)</a></p>")
     # The HTML shows one example per observed judgment. Keep only those records,
     # even when exporting a large population or a fully classified run.
     example_ids = set()
@@ -784,7 +833,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}small{color:#465368
         parts.append("</section>")
     selection = summary["review_selection"]
     parts.append(
-        "<section><h2>Human review</h2>"
+        "<section id='human-review'><h2>Human review</h2>"
         f"<p>{_escape(selection.get('purpose', 'Existing review worksheet'))}. "
         f"{_escape(selection.get('instructions', ''))}</p>"
     )
@@ -826,25 +875,39 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}small{color:#465368
                 f"over {ontology['compared']} paired determinate judgments; "
                 f"{ontology['insufficient_evidence_excluded']} pairs with insufficient evidence excluded.</p>"
             )
-        parts.append("<p><a href='review_comparison.json'>Comparison details and confusion counts</a></p>")
+        parts.append("<p><a href='summary.json'>Comparison details and confusion counts in the summary JSON</a></p>")
     else:
         note = summary.get("review_comparison_status", {}).get(
             "note", "No human-label comparison has been supplied yet."
         )
         parts.append(f"<p>{_escape(note)} Full item coverage does not establish classification accuracy.</p>")
-    return "\n".join([*parts, "</section></body></html>"])
+    parts.append("</section><section id='audit'><h2>Methods and provenance</h2>"
+                 f"<p>{_escape(experiment['request_policy'].capitalize())}.</p>"
+                 f"<p><strong>Schema:</strong> <code>{_escape(summary['schema_version'])}</code>; "
+                 f"<strong>catalog:</strong> <code>{_escape(summary['fixed_catalog_version'])}</code>.</p>")
+    for title, data in (("Run and export details", summary.get("run")),
+                        ("Classification model", summary.get("classification")),
+                        ("Specification provenance", summary.get("specification")),
+                        ("Dataset provenance", summary.get("dataset")),
+                        ("Original deployment requirements", summary.get("original_deployment"))):
+        if data:
+            parts.append(f"<details><summary>{title}</summary>{_render_fields(data)}</details>")
+    parts.append("<p>This report works offline. Detailed data are in the accompanying relative-linked JSON and CSV files. "
+                 "In a full results package, README.txt explains the audit files and separate reviewer worksheets.</p>")
+    document = "\n".join([*parts, "</section></body></html>"])
+    return document.replace("<table>", "<div class='table-scroll' role='region' aria-label='Scrollable data table' tabindex='0'><table>").replace("</table>", "</table></div>")
 
 
 
 def _render_generic_classifier(classifier: dict, item_by_id: dict, results: dict) -> str:
-    parts = [f"<section><h2>{_escape(classifier['id'].replace('_', ' ').title())}</h2>",
+    parts = [f"<section id='{_escape(classifier['id'])}'><h2>{_escape(classifier['id'].replace('_', ' ').title())}</h2>",
              f"<p>{_escape(classifier['question'])}</p>",
              f"<p>{classifier['determinate_judgments']} determinate judgments; "
              f"{classifier['insufficient_evidence']} insufficient evidence; {classifier['invalid']} invalid; "
              f"{classifier['errors']} operational errors; {classifier['pending']} pending.</p>",
              "<table><tr><th>Judgment</th><th>Count</th><th>Percent of valid judgments</th></tr>"]
     for label, count in classifier["counts"].items():
-        parts.append(f"<tr><td>{_escape(label)}</td><td>{count}</td>"
+        parts.append(f"<tr><td>{_escape(_friendly(label))} <small>(<code>{_escape(label)}</code>)</small></td><td>{count}</td>"
                      f"<td>{_display_percent(classifier['percentages_among_valid'][label])}</td></tr>")
     parts.append("</table>")
     if classifier["id"] == "input_ontology":
@@ -855,12 +918,13 @@ def _render_generic_classifier(classifier: dict, item_by_id: dict, results: dict
             parts.append(f"<tr><td>{_escape(category['id'])}</td><td>{_escape(category['name'])}</td>"
                          f"<td>{classifier['category_counts'][category['id']]}</td></tr>")
         parts.append("</table>")
-        parts.append(f"<p>Required categories not observed: {_escape(classifier['required_categories_not_observed'])}.</p>")
+        missing = classifier["required_categories_not_observed"]
+        parts.append(f"<p>Required categories not observed: {_escape(', '.join(missing) if missing else 'None')}.</p>")
         parts.append("<details><summary>Required-category definitions, sources, and inventory gaps</summary>"
-                     f"<pre>{_escape(classifier['input_category_inventory'])}</pre></details>")
+                     f"{_render_fields(classifier['input_category_inventory'])}</details>")
     parts.append("<details><summary>Fixed decision rules and sourced context</summary>"
-                 f"<pre>{_escape({'decision_rules': classifier.get('decision_rules'), 'context': classifier.get('context')})}</pre></details>")
-    parts.append("<h3>Examples</h3><p><small>First item for each observed judgment; inspect the CSV for all items.</small></p>")
+                 f"{_render_fields({'decision_rules': classifier.get('decision_rules'), 'context': classifier.get('context')})}</details>")
+    parts.append("<details><summary>Item examples and evidence</summary><p><small>First item for each observed judgment; inspect the CSV for all items.</small></p>")
     seen = set()
     for item_id, result in results.items():
         if _classifier_state(result, classifier) != "complete":
@@ -871,13 +935,13 @@ def _render_generic_classifier(classifier: dict, item_by_id: dict, results: dict
             continue
         seen.add(key)
         item = item_by_id[item_id]
-        parts.append(f"<details><summary>{_escape(key)} · {_escape(item_id)}</summary>"
+        parts.append(f"<details><summary>{_escape(_friendly(key))} <small>{_escape(key)} · {_escape(item_id)}</small></summary>"
                      f"<pre>{_escape(_text(item.get('content'))[:2000])}</pre>"
                      f"<p><strong>Reference:</strong> {_escape(item.get('reference_answer'))}</p>"
-                     f"<p><strong>Matched category IDs:</strong> {_escape(judgment.get('matched_category_ids', []))}</p>"
-                     f"<p><strong>Item evidence:</strong> {_escape(judgment.get('evidence'))}</p>"
+                     f"<p><strong>Matched category IDs:</strong> {_escape(', '.join(judgment.get('matched_category_ids', [])) or 'None')}</p>"
+                     f"<strong>Item evidence:</strong>{_render_fields(judgment.get('evidence'))}"
                      f"<p>{_escape(judgment.get('justification'))}</p></details>")
-    return "\n".join([*parts, "</section>"])
+    return "\n".join([*parts, "</details></section>"])
 
 def _parse_human_label(raw: str, classifier: dict) -> Any:
     if raw == "unknown" and not _generic(classifier):

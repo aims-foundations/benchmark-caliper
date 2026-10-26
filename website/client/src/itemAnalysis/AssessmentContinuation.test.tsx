@@ -36,6 +36,7 @@ const ready: AnalysisRun = {
 beforeEach(() => {
   vi.resetAllMocks()
   sessionStorage.clear()
+  localStorage.clear()
   vi.mocked(api.getAssessment).mockResolvedValue(setup)
   vi.mocked(api.createAssessmentRun).mockResolvedValue({ ...ready, ...access })
   vi.mocked(api.getRun).mockResolvedValue(ready)
@@ -68,8 +69,8 @@ it('continues the displayed assessment without choosing another deployment or st
   expect(api.createAssessmentRun).toHaveBeenCalledWith(assessment, { source_id: sourceId, source_revision: revision, benchmark_confirmed: true }, 'sk-private')
   expect(api.classify).not.toHaveBeenCalled()
   expect(onStatusChange).toHaveBeenLastCalledWith('in_progress')
-  expect(JSON.parse(sessionStorage.getItem(storageKey)!)).toEqual(access)
-  expect(sessionStorage.getItem(storageKey)).not.toContain('sk-private')
+  expect(JSON.parse(localStorage.getItem(storageKey)!)).toEqual(access)
+  expect(localStorage.getItem(storageKey)).not.toContain('sk-private')
 })
 
 it('announces a slow start once, prevents duplicate submissions, and focuses progress only after acknowledgment', async () => {

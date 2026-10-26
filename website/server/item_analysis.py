@@ -1,4 +1,4 @@
-"""Temporary, private website runs of the Caliper item-analysis pipeline.
+"""Durable, private website runs of the Caliper item-analysis pipeline.
 
 The CLI and website share preparation, specification generation, classification,
 and reports. Only this adapter knows about HTTP, BYOK credentials, and job life
@@ -27,21 +27,20 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, File, Form, Header, HTTPException, Query, Response, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, Field
-from starlette.background import BackgroundTask
 
 from anthropic_api_package_release.item_analysis import classify, generate, model_client, prepare, report
 from anthropic_api_package_release.item_analysis.data import file_sha256
 from anthropic_api_package_release.item_analysis.catalog import CATALOG_VERSION
 from anthropic_api_package_release.item_analysis.storage import check_prepared, read_json, write_json
 from . import db, item_analysis_assessment, item_analysis_databank, item_analysis_direct, item_analysis_source
+from . import item_analysis_store as store
 
 router = APIRouter(prefix="/api/item-analysis", tags=["Item analysis"])
 FIXTURE_PATH = Path(__file__).with_name("item_analysis_demo.json")
 CHECKPOINT_SIZE = 100
 PAGE_SIZE = 20
 MAX_ACTIVE = 3
-MAX_RETAINED = 10
-RETENTION_SECONDS = 3600
+MAX_RETAINED = 10  # Idle in-memory cache size; saved runs are not limited to ten.
 ACTIVE_STATUSES = {"preparing", "generating", "running"}
 PREPARED_FILES = ("dataset.json", "profile.json", "evidence.json", "items.jsonl")
 ARTIFACTS = {
@@ -68,7 +67,7 @@ class Classification(BaseModel):
 @dataclass
 class AnalysisJob:
     run_id: str
-    secret: str = field(repr=False)
+    secret_digest: str = field(repr=False)
     example: dict
     directory: Path = field(repr=False)
     status: str = "preparing"
@@ -97,13 +96,95 @@ class AnalysisJob:
     stopped: Event = field(default_factory=Event, repr=False)
     owner_hash: str | None = field(default=None, repr=False)
     checkpoint_seen: bool = False
-    updated_at: float = field(default_factory=time.monotonic)
+    created_at: float = field(default_factory=time.time)
+    updated_at: float = field(default_factory=time.time)
     downloads: int = 0
     assessment: dict | None = field(default=None, repr=False)
     source: dict | None = field(default=None, repr=False)
+    call_sequence: int = 0
 
 
 jobs: dict[str, AnalysisJob] = {}
+
+
+class AnalysisFileResponse(FileResponse):
+    """Release the phase guard even if a download disconnects or is cancelled."""
+
+    def __init__(self, path: Path, *, job: AnalysisJob, **kwargs):
+        super().__init__(path, **kwargs)
+        self.job = job
+
+    async def __call__(self, scope, receive, send):
+        try:
+            await super().__call__(scope, receive, send)
+        finally:
+            self.job.downloads -= 1
+
+
+def storage_root() -> Path:
+    return db.DEFAULT_DB_PATH.parent / "item-analysis"
+
+
+def persist(job: AnalysisJob) -> None:
+    store.save_metadata(job.directory, {
+        "run_id": job.run_id, "secret_digest": job.secret_digest,
+        "example": job.example, "status": job.status, "message": job.message,
+        "total": job.total, "scope": job.scope, "model": job.model,
+        "created_at": job.created_at, "updated_at": job.updated_at,
+        "checkpoint_seen": job.checkpoint_seen, "data_ready": job.data_ready,
+        "call_sequence": job.call_sequence,
+        "failure": job.failure, "provider_error": job.provider_error,
+        "assessment": item_analysis_assessment.public_assessment(job.assessment) if job.assessment else None,
+    })
+
+
+def visible_result(record: dict) -> dict:
+    visible = deepcopy({key: record[key] for key in ("item_id", "status", "labels") if key in record})
+    visible["classifier_errors"] = {
+        classifier_id: "No valid judgment was saved. Retry this phase."
+        for classifier_id in record.get("classifier_errors", {})
+    }
+    return visible
+
+
+def restore_job(directory: Path, metadata: dict) -> AnalysisJob:
+    job = AnalysisJob(metadata["run_id"], metadata["secret_digest"], metadata["example"], directory,
+                      **{key: metadata[key] for key in (
+                          "status", "message", "total", "scope", "model", "created_at", "updated_at",
+                          "checkpoint_seen", "data_ready", "failure", "provider_error", "assessment", "call_sequence") if key in metadata})
+    interrupted = job.status in ACTIVE_STATUSES
+    try:
+        job.usage, saved_sequence = store.load_usage(directory)
+        job.call_sequence = max(job.call_sequence, saved_sequence)
+        if job.data_ready:
+            check_prepared(directory)
+            with (directory / "items.jsonl").open(encoding="utf-8") as stream:
+                job.pilot_item_ids = {json.loads(line)["item_id"] for line in islice(stream, CHECKPOINT_SIZE)}
+        if (directory / "classifier_spec.json").is_file():
+            from anthropic_api_package_release.item_analysis.storage import check_specification
+            check_specification(directory)
+            job.spec = read_json(directory / "classifier_spec.json")
+        if job.spec:
+            job.results = {key: visible_result(value) for key, value in classify.read_results(
+                directory / "results.jsonl", repair_tail=True).items()}
+            if interrupted:
+                job.summary = report.generate_report(directory)
+            elif (directory / "summary.json").is_file():
+                job.summary = read_json(directory / "summary.json")
+        if interrupted:
+            if job.spec:
+                job.status, job.message = "cancelled", "The server stopped during this phase. Saved judgments are retained; resume with your OpenAI key."
+            else:
+                job.status, job.message = "failed", "Context preparation was interrupted. Start a new analysis to prepare the context again."
+                job.failure = {"stage": "specification", "code": "interrupted", "message": job.message}
+            job.provider_error = None
+            persist(job)
+    except (OSError, ValueError, KeyError, TypeError):
+        job.status, job.message = "failed", "Saved analysis files could not be restored. Start a new analysis or contact the maintainer."
+        job.failure = {"stage": "restoration", "code": "saved_files_invalid", "message": job.message}
+        job.data_ready = False
+        job.spec = None
+    return job
 
 
 def prepared_directory() -> Path | None:
@@ -151,20 +232,37 @@ def examples() -> list[dict]:
 
 
 def sweep() -> None:
-    now = time.monotonic()
+    now = time.time()
+    retention = store.retention_seconds()
     for run_id, job in list(jobs.items()):
-        if (not job.task or job.task.done()) and not job.downloads and now - job.updated_at > RETENTION_SECONDS:
+        if retention and (not job.task or job.task.done()) and not job.downloads and now - job.updated_at > retention:
             jobs.pop(run_id, None)
             shutil.rmtree(job.directory, ignore_errors=True)
+    if retention and storage_root().is_dir():
+        for directory in storage_root().iterdir():
+            if directory.name in jobs or store.directory_for(storage_root(), directory.name) is None:
+                continue
+            try:
+                metadata = store.load_metadata(directory)
+                if now - metadata["updated_at"] > retention:
+                    shutil.rmtree(directory, ignore_errors=True)
+            except (OSError, ValueError, KeyError, TypeError):
+                continue
+    # Drop only cached objects. Frozen input/results and access digests remain on disk.
+    idle = sorted((job for job in jobs.values() if (not job.task or job.task.done()) and not job.downloads),
+                  key=lambda job: job.updated_at)
+    for job in idle[:max(0, len(jobs) - MAX_RETAINED)]:
+        jobs.pop(job.run_id, None)
 
 
 async def shutdown() -> None:
-    # Stop requests first, then drain every worker before removing its files.
+    # Stop and drain writers, retaining their frozen inputs and completed judgments.
     for job in list(jobs.values()):
-        stop(job)
+        if job.task and not job.task.done():
+            stop(job)
     await asyncio.gather(*(job.task for job in jobs.values() if job.task), return_exceptions=True)
     for job in jobs.values():
-        shutil.rmtree(job.directory, ignore_errors=True)
+        persist(job)
     jobs.clear()
 
 
@@ -173,18 +271,40 @@ async def delete_for_assessment(run_id: str) -> None:
     linked = [job for job in jobs.values() if job.assessment
               and job.assessment["kind"] == "run" and job.assessment["id"] == run_id]
     for job in linked:
-        jobs.pop(job.run_id, None)
         stop(job)
     await asyncio.gather(*(job.task for job in linked if job.task), return_exceptions=True)
     for job in linked:
+        # Keep active jobs visible until drained: otherwise authorization could
+        # restore the still-existing directory while its writer is stopping.
+        jobs.pop(job.run_id, None)
         shutil.rmtree(job.directory, ignore_errors=True)
+    if storage_root().is_dir():
+        for directory in storage_root().iterdir():
+            if store.directory_for(storage_root(), directory.name) is None:
+                continue
+            try:
+                assessment = store.load_metadata(directory).get("assessment") or {}
+                if assessment.get("kind") == "run" and assessment.get("id") == run_id:
+                    shutil.rmtree(directory, ignore_errors=True)
+            except (OSError, ValueError, TypeError):
+                continue
 
 
 def authorize(run_id: str, secret: str | None) -> AnalysisJob:
     sweep()
     job = jobs.get(run_id)
-    if job is None or not secret or not secrets.compare_digest(job.secret, secret):
-        raise HTTPException(404, "Analysis not found or expired. Start a new analysis.")
+    digest = store.token_digest(secret) if secret and len(secret) <= 512 else ""
+    if job is None and digest:
+        directory = store.directory_for(storage_root(), run_id)
+        try:
+            metadata = store.load_metadata(directory) if directory else {}
+            if secrets.compare_digest(metadata.get("secret_digest", ""), digest):
+                job = restore_job(directory, metadata)
+                jobs[run_id] = job
+        except (OSError, ValueError, TypeError):
+            pass
+    if job is None or not digest or not secrets.compare_digest(job.secret_digest, digest):
+        raise HTTPException(404, "Analysis not found, deleted, or expired under this server's retention policy.")
     return job
 
 
@@ -230,6 +350,10 @@ def public_job(job: AnalysisJob, page: int = 1) -> dict:
                 })
     return {
         "run_id": job.run_id, "status": job.status, "message": job.message,
+        "created_at": store.timestamp(job.created_at), "updated_at": store.timestamp(job.updated_at),
+        "retention": {"automatic_expiry": bool(store.retention_seconds()),
+                      "expires_at": store.timestamp(job.updated_at + store.retention_seconds())
+                      if store.retention_seconds() and job.status not in ACTIVE_STATUSES else None},
         "example": job.example, "spec": job.spec, "summary": job.summary,
         "assessment": item_analysis_assessment.public_assessment(job.assessment) if job.assessment else None,
         "processed": len(job.results), "total": job.total, "complete": complete, "errors": errors,
@@ -252,7 +376,12 @@ def prepare_job(job: AnalysisJob, example_id: str) -> Path:
     if example_id != "illustrative":
         source = prepared_directory()
         if source is None:
-            item_analysis_source.prepare_source(job.directory, stopped=job.stopped.is_set, example_id=example_id)
+            with TemporaryDirectory(prefix="prepared-", dir=job.directory.parent) as temporary:
+                prepared = Path(temporary)
+                item_analysis_source.prepare_source(prepared, stopped=job.stopped.is_set, example_id=example_id)
+                for path in prepared.iterdir():
+                    if path.is_file():
+                        shutil.copyfile(path, job.directory / path.name)
         else:
             try:
                 check_prepared(source)
@@ -280,9 +409,13 @@ def prepare_job(job: AnalysisJob, example_id: str) -> Path:
                 (inputs / filename).write_text(fixture[key], encoding="utf-8")
             items_path = inputs / "items.parquet"
             pq.write_table(pa.Table.from_pylist(fixture["items"]), items_path)
-            prepare.prepare(inputs, items_path, job.directory,
+            prepared = inputs / "prepared"
+            prepare.prepare(inputs, items_path, prepared,
                             source_repo="caliper-authored-illustrative-example",
                             source_revision=file_sha256(FIXTURE_PATH), source_table=FIXTURE_PATH.name)
+            for path in prepared.iterdir():
+                if path.is_file():
+                    shutil.copyfile(path, job.directory / path.name)
         write_json(job.directory / "provided_spec.json", fixture["classifier_spec"])
     # Preserve checksums/revisions without exporting private server filesystem paths.
     dataset = read_json(job.directory / "dataset.json")
@@ -312,10 +445,25 @@ def model_bridge(job: AnalysisJob, api_key: str):
     """
     loop = asyncio.get_running_loop()
 
-    def record_usage(result):
-        # Reasoning and cached tokens are subsets of the billed totals.
-        for key in job.usage:
-            job.usage[key] += getattr(result, key)
+    def record_usage(arguments, sequence, started_at, result=None, *, status="complete", error_code=None):
+        store.record_call(job.directory, {
+            "sequence": sequence, "step": arguments["step"], "provider": "openai",
+            "model": result.model if result else arguments["model"],
+            "reasoning_effort": arguments["reasoning_effort"], "max_tokens": arguments["max_tokens"],
+            "started_at": store.timestamp(started_at), "finished_at": store.timestamp(time.time()),
+            "status": status, "error_code": error_code, "usage_known": result is not None,
+            **({key: getattr(result, key) for key in store.COUNTERS} if result else {}),
+            **({"latency_ms": result.latency_ms} if result else {}),
+        }, job.usage)
+
+    def redacted(value):
+        if isinstance(value, str):
+            return value.replace(api_key, "[redacted]")
+        if isinstance(value, dict):
+            return {key: redacted(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [redacted(item) for item in value]
+        return value
 
     def provider_failure(error):
         # public_message is derived from an allowlisted code, never an SDK body.
@@ -326,7 +474,16 @@ def model_bridge(job: AnalysisJob, api_key: str):
     async def request(arguments):
         task = asyncio.current_task()
         job.provider_tasks.add(task)
+        started_at = time.time()
+        job.call_sequence += 1
+        sequence = job.call_sequence
         try:
+            store.append_jsonl(job.directory / "requests.jsonl", {
+                "sequence": sequence, "started_at": store.timestamp(started_at),
+                **redacted({key: arguments[key] for key in (
+                    "model", "system", "user", "max_tokens", "reasoning_effort", "step")}),
+            })
+            persist(job)
             try:
                 result = await model_client.call_text_async(
                     api_key=api_key, model=arguments["model"], system=arguments["system"],
@@ -334,16 +491,19 @@ def model_bridge(job: AnalysisJob, api_key: str):
                     reasoning_effort=arguments["reasoning_effort"],
                 )
             except asyncio.CancelledError:
+                record_usage(arguments, sequence, started_at, status="cancelled", error_code="interrupted")
                 raise
             except model_client.ModelResponseError as error:
-                record_usage(error.result)
+                record_usage(arguments, sequence, started_at, error.result, status="failed", error_code=error.code)
                 raise provider_failure(error) from None
             except model_client.ModelRequestError as error:
+                record_usage(arguments, sequence, started_at, status="failed", error_code=error.code)
                 raise provider_failure(error) from None
             except Exception:
                 error = model_client.ModelRequestError(code="internal_error")
+                record_usage(arguments, sequence, started_at, status="failed", error_code=error.code)
                 raise provider_failure(error) from None
-            record_usage(result)
+            record_usage(arguments, sequence, started_at, result)
             return result.text.replace(api_key, "[redacted]")
         finally:
             job.provider_tasks.discard(task)
@@ -417,6 +577,20 @@ async def initialize(job: AnalysisJob, mode: str, api_key: str | None, upload: d
         with (job.directory / "items.jsonl").open(encoding="utf-8") as stream:
             job.pilot_item_ids = {json.loads(line)["item_id"] for line in islice(stream, CHECKPOINT_SIZE)}
         job.data_ready = True
+        write_json(job.directory / "website_provenance.json", {
+            "version": 1, "created_at": store.timestamp(job.created_at), "model": job.model,
+            "generation_system": generate.PROMPT_PATH.read_text(encoding="utf-8"),
+            "generation_user_template": generate.USER_PROMPT_PATH.read_text(encoding="utf-8"),
+            "implementation_sha256": {name: file_sha256(Path(module.__file__)) for name, module in (
+                ("classify.py", classify), ("generate.py", generate), ("model_client.py", model_client))},
+        })
+        if job.assessment and job.assessment.get("evidence_directory"):
+            original = Path(job.assessment["evidence_directory"])
+            pdf = original / "pdfs" / "review.pdf"
+            if (pdf.is_file() and not pdf.is_symlink() and pdf.resolve().is_relative_to(original.resolve())
+                    and pdf.stat().st_size <= 32 * 1024 * 1024):
+                shutil.copyfile(pdf, job.directory / "original_benchmark_report.pdf")
+        persist(job)
         if job.stopped.is_set():
             return
         phase = "specification"
@@ -425,6 +599,7 @@ async def initialize(job: AnalysisJob, mode: str, api_key: str | None, upload: d
             job.message = ("GPT-6 Luna is preparing sourced context for the four fixed item classifiers."
                            if job.assessment and job.assessment["kind"] == "direct" else
                            "GPT-6 Luna is preparing sourced context; earlier assessment findings remain hypotheses.")
+        persist(job)
         job.spec = await drained_thread(
             generate.generate_spec, job.directory,
             supplied=supplied if mode == "provided" else None,
@@ -468,7 +643,8 @@ def finish_phase(job: AnalysisJob) -> None:
     if job.stopped.is_set():
         job.status, job.message = "cancelled", "Analysis stopped. Completed results are retained."
     job.owner_hash = None
-    job.updated_at = time.monotonic()
+    job.updated_at = time.time()
+    persist(job)
 
 
 async def classify_job(job: AnalysisJob, api_key: str) -> None:
@@ -476,11 +652,7 @@ async def classify_job(job: AnalysisJob, api_key: str) -> None:
 
     def save_result(record):
         # Keep raw model attempts private; the website only needs validated labels.
-        visible = deepcopy({key: record[key] for key in ("item_id", "status", "labels") if key in record})
-        visible["classifier_errors"] = {
-            classifier_id: "No valid judgment was saved. Retry this phase."
-            for classifier_id in record.get("classifier_errors", {})
-        }
+        visible = visible_result(record)
         loop.call_soon_threadsafe(job.results.__setitem__, record["item_id"], visible)
 
     try:
@@ -636,19 +808,19 @@ async def create_context_job(assessment: dict, source_id: str | None, source_rev
             raise HTTPException(503, source.get("unavailable_reason") or "This dataset is unavailable. Upload the matching items instead.")
         example = {**source, "deployment": assessment["deployment"], "supplied_spec_available": False}
     sweep()
-    if len(jobs) >= MAX_RETAINED:
-        raise HTTPException(429, "The analysis service is at capacity. Try again later.")
     owner = reserve_worker(api_key)
     run_id = secrets.token_hex(16)
-    directory = db.DEFAULT_DB_PATH.parent / "item-analysis" / run_id
+    directory = storage_root() / run_id
     directory.mkdir(mode=0o700, parents=True)
-    job = AnalysisJob(run_id, secrets.token_urlsafe(32), example, directory,
+    secret = secrets.token_urlsafe(32)
+    job = AnalysisJob(run_id, store.token_digest(secret), example, directory,
                       total=example["item_count"], owner_hash=owner, assessment=assessment, source=source)
     if assessment["kind"] == "direct":
         job.message = "Preparing the confirmed item snapshot and your deployment requirements."
     jobs[run_id] = job
+    persist(job)
     job.task = asyncio.create_task(initialize(job, "generate", api_key, upload))
-    return {**public_job(job), "run_secret": job.secret}
+    return {**public_job(job), "run_secret": secret}
 
 
 @router.post("/runs", status_code=202)
@@ -664,17 +836,17 @@ async def create_run(body: NewRun, response: Response,
     if body.specification_mode == "provided" and not example["supplied_spec_available"]:
         raise HTTPException(409, "This example requires generating a specification.")
     sweep()
-    if len(jobs) >= MAX_RETAINED:
-        raise HTTPException(429, "The demo is at capacity. Try again later.")
     owner = reserve_worker(api_key)
     run_id = secrets.token_hex(16)
-    directory = db.DEFAULT_DB_PATH.parent / "item-analysis" / run_id
+    directory = storage_root() / run_id
     directory.mkdir(mode=0o700, parents=True)
-    job = AnalysisJob(run_id, secrets.token_urlsafe(32), example, directory,
+    secret = secrets.token_urlsafe(32)
+    job = AnalysisJob(run_id, store.token_digest(secret), example, directory,
                       total=example["item_count"], owner_hash=owner)
     jobs[run_id] = job
+    persist(job)
     job.task = asyncio.create_task(initialize(job, body.specification_mode, api_key))
-    return {**public_job(job), "run_secret": job.secret}
+    return {**public_job(job), "run_secret": secret}
 
 
 @router.get("/runs/{run_id}")
@@ -710,8 +882,48 @@ async def start_classification(run_id: str, body: Classification, response: Resp
     job.scope = body.scope
     job.status = "running"
     job.message = "Classifying the first items for review." if body.scope == "pilot" else "Continuing across all items using the same classifier rules."
+    persist(job)
     job.task = asyncio.create_task(classify_job(job, api_key))
     return public_job(job)
+
+
+@router.delete("/runs/{run_id}", status_code=204)
+async def delete_analysis(run_id: str, x_review_token: Annotated[str | None, Header()] = None):
+    job = authorize(run_id, x_review_token)
+    if job.downloads:
+        raise HTTPException(409, "Wait for the artifact download to finish before discarding this analysis.")
+    if job.task and not job.task.done():
+        stop(job)
+        await asyncio.shield(job.task)
+    jobs.pop(run_id, None)
+    shutil.rmtree(job.directory)
+    return Response(status_code=204, headers={"Cache-Control": "no-store"})
+
+
+@router.get("/runs/{run_id}/package")
+async def download_package(run_id: str, x_review_token: Annotated[str | None, Header()] = None):
+    from anthropic_api_package_release.item_analysis.package import build_results_package
+
+    job = authorize(run_id, x_review_token)
+    if job.status in ACTIVE_STATUSES or (job.task and not job.task.done()) or job.downloads:
+        raise HTTPException(409, "Wait for the current phase or download to finish before exporting the results package.")
+    if not job.spec:
+        raise HTTPException(409, "Prepare valid criteria before exporting a results package.")
+    job.downloads += 1
+    try:
+        path = await drained_thread(build_results_package, job.directory,
+                                    run_id=job.run_id, status=job.status, scope=job.scope,
+                                    created_at=store.timestamp(job.created_at), updated_at=store.timestamp(job.updated_at),
+                                    usage=job.usage, model=job.model)
+    except asyncio.CancelledError:
+        job.downloads -= 1
+        raise
+    except Exception:
+        job.downloads -= 1
+        raise HTTPException(500, "The results package could not be prepared. Saved results are retained.") from None
+
+    return AnalysisFileResponse(path, job=job, media_type="application/zip", filename=path.name,
+                                headers={"Cache-Control": "no-store"})
 
 
 @router.post("/runs/{run_id}/cancel")
@@ -729,6 +941,8 @@ async def cancel_run(run_id: str, response: Response,
 async def download(run_id: str, artifact: str,
                    x_review_token: Annotated[str | None, Header()] = None):
     job = authorize(run_id, x_review_token)
+    if job.downloads:
+        raise HTTPException(409, "Wait for the current download to finish before downloading another artifact.")
     if artifact not in ARTIFACTS:
         raise HTTPException(404, "Unknown artifact.")
     if job.status in ACTIVE_STATUSES and artifact != "spec":
@@ -739,8 +953,5 @@ async def download(run_id: str, artifact: str,
         raise HTTPException(404, "This artifact is not ready yet.")
     job.downloads += 1
 
-    def finished():
-        job.downloads -= 1
-
-    return FileResponse(path, media_type=media_type, filename=filename,
-                        headers={"Cache-Control": "no-store"}, background=BackgroundTask(finished))
+    return AnalysisFileResponse(path, job=job, media_type=media_type, filename=filename,
+                                headers={"Cache-Control": "no-store"})

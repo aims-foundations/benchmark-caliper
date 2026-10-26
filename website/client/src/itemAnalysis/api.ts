@@ -73,3 +73,19 @@ export const cancelRun = (run: RunAccess) => json<AnalysisRun>(`${runPath(run)}/
 export const download = async (run: RunAccess, artifact: Artifact) => (await response(`${runPath(run)}/download/${artifact}`, {
   headers: accessHeader(run),
 })).blob()
+
+export const discardRun = async (run: RunAccess): Promise<void> => {
+  await response(runPath(run), { method: 'DELETE', headers: accessHeader(run) })
+}
+
+export const downloadPackage = async (run: RunAccess): Promise<{ blob: Blob; filename: string }> => {
+  const result = await response(`${runPath(run)}/package`, { headers: accessHeader(run) })
+  const disposition = result.headers.get('Content-Disposition') || ''
+  const encoded = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1]
+  const quoted = disposition.match(/filename="([^"]+)"/i)?.[1]
+  const unquoted = disposition.match(/filename=([^;]+)/i)?.[1]
+  let filename = quoted || unquoted?.trim() || 'caliper-results.zip'
+  if (encoded) { try { filename = decodeURIComponent(encoded) } catch { /* Use the fallback filename. */ } }
+  filename = filename.split(/[\\/]/).pop()?.replace(/[\u0000-\u001f\u007f]/g, '') || 'caliper-results.zip'
+  return { blob: await result.blob(), filename }
+}

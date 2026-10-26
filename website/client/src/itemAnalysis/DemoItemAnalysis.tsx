@@ -8,6 +8,7 @@ import {
 import { Criteria } from './Criteria'
 import { Results } from './Results'
 import { buildDemoExport } from './demoExports'
+import { viewReport } from './downloads'
 import type { Artifact } from './types'
 import './itemAnalysis.css'
 import './DemoItemAnalysis.css'
@@ -74,6 +75,16 @@ export function DemoItemAnalysis({ onStatusChange }: {
     }
   }
 
+  async function openReport() {
+    setDownloadError('')
+    try {
+      await viewReport(async () => {
+        const result = buildDemoExport('report', run)
+        return new Blob([result.content], { type: result.mimeType })
+      })
+    } catch (problem) { setDownloadError(problem instanceof Error ? problem.message : 'Could not open the demo report.') }
+  }
+
   return <div className="item-analysis-site ia-embedded ia-demo" aria-label="Free MathDial item analysis demo">
     <div className="ia-demo-intro"><div><p className="ia-eyebrow">MathDial walkthrough · item analysis</p>
       <h2>Follow the assessment into the items</h2>
@@ -119,7 +130,7 @@ export function DemoItemAnalysis({ onStatusChange }: {
     {showingResults && <>
       <div className="ia-demo-status" role="status"><h3 ref={resultHeading} tabIndex={-1}>{stage === 'complete' ? 'Demo item analysis complete' : 'Pause for a human review'}</h3>
         <p>{stage === 'complete' ? `All ${run.total} bundled demo items are included below. This completes the walkthrough sample; it does not assess the full MathDial dataset.` : `${DEMO_ITEM_ANALYSIS_PILOT_SIZE} of ${run.total} demo items have example judgments. Open the items below, compare the evidence with the criteria, and review the pilot before continuing.`}</p></div>
-      <Results run={run} page={page} setPage={setPage} onDownload={download} downloading={null} pageLoading={false} demo classifierNames={DEMO_ITEM_ANALYSIS_CLASSIFIER_NAMES} />
+      <Results run={run} page={page} setPage={setPage} onDownload={download} onViewReport={() => void openReport()} downloading={null} pageLoading={false} demo classifierNames={DEMO_ITEM_ANALYSIS_CLASSIFIER_NAMES} />
       {stage === 'pilot' && <section className="ia-demo-checkpoint" aria-label="Human review checkpoint"><h3>Check the pilot before continuing</h3>
         <p>Do the example labels and quoted evidence follow the criteria? For a real analysis, this is the point to catch ambiguous rules or misread items before applying them to the rest of the dataset.</p>
         <label><input type="checkbox" checked={reviewed} onChange={event => setReviewed(event.target.checked)} />

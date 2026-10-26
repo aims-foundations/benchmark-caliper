@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { getDirectSetup } from './api'
-import { assessmentStorageKey } from './accessStorage'
+import { assessmentStorageKey, clearStoredValue, restoreStoredValue, saveStoredValue } from './accessStorage'
 import { ItemAnalysis } from './ItemAnalysis'
 import type { AssessmentReference, AssessmentSetup, DirectContext } from './types'
 import './itemAnalysis.css'
@@ -16,13 +16,15 @@ function normalize(value: DirectContext): DirectContext {
 
 function restore(): AcceptedContext | null {
   try {
-    const saved = JSON.parse(sessionStorage.getItem(DIRECT_CONTEXT_STORAGE_KEY) || 'null')
+    const saved = JSON.parse(restoreStoredValue(DIRECT_CONTEXT_STORAGE_KEY) || 'null')
     if (!saved || saved.version !== 1 || typeof saved.id !== 'string' || !saved.id.startsWith('direct-') || !saved.context) return null
     for (const field of FIELDS) {
       const value = saved.context[field] ?? (field === 'validity_concerns' ? '' : null)
       if (typeof value !== 'string' || value.length > (field === 'benchmark' ? 200 : 12000) || (field !== 'validity_concerns' && !value.trim())) return null
     }
-    return { assessment: { kind: 'direct', id: saved.id }, context: normalize(saved.context) }
+    const context = normalize(saved.context)
+    saveStoredValue(DIRECT_CONTEXT_STORAGE_KEY, JSON.stringify({ version: 1, id: saved.id, context }))
+    return { assessment: { kind: 'direct', id: saved.id }, context }
   } catch { return null }
 }
 
@@ -44,10 +46,8 @@ export function DirectItemStart() {
 
   function editContext() {
     request.current?.abort()
-    try {
-      if (accepted) sessionStorage.removeItem(assessmentStorageKey(accepted.assessment))
-      sessionStorage.removeItem(DIRECT_CONTEXT_STORAGE_KEY)
-    } catch { /* Editing still resets the in-memory workflow. */ }
+    if (accepted) clearStoredValue(assessmentStorageKey(accepted.assessment))
+    clearStoredValue(DIRECT_CONTEXT_STORAGE_KEY)
     setAccepted(null)
     setError('')
     setBusy(false)
@@ -72,8 +72,8 @@ export function DirectItemStart() {
       if (setup.assessment.kind !== 'direct') throw new Error('The item context could not be prepared. Please try again.')
       const confirmedContext = normalize(setup.assessment.direct_context || normalized)
       const assessment: AssessmentReference = { kind: 'direct', id: setup.assessment.id }
-      // The context and access token have separate tab-scoped records; never save a provider key.
-      try { sessionStorage.setItem(DIRECT_CONTEXT_STORAGE_KEY, JSON.stringify({ version: 1, id: assessment.id, context: confirmedContext })) } catch { /* The workflow also works without session storage. */ }
+      // Save only the declared context here; provider keys stay in memory.
+      saveStoredValue(DIRECT_CONTEXT_STORAGE_KEY, JSON.stringify({ version: 1, id: assessment.id, context: confirmedContext }))
       setContext(confirmedContext)
       setAccepted({ context: confirmedContext, assessment, setup })
     } catch (problem) {
@@ -98,7 +98,7 @@ export function DirectItemStart() {
       {error && <p className="ia-error" role="alert">{error}</p>}
       <button type="submit" className="ia-primary" disabled={busy}>{busy ? 'Finding matching items…' : 'Find and confirm benchmark items'}</button>
       <p className="ia-small">This searches dataset metadata and makes no model calls. You will confirm the dataset before entering an OpenAI key and choosing to generate criteria.</p>
-      <p className="ia-small">After you continue, this context is kept in this tab’s session storage so you can return after a refresh. Editing it starts a new item analysis with fresh criteria.</p>
+      <p className="ia-small">After you continue, this context is saved in this browser so you can return later. Editing it starts a new item analysis with fresh criteria.</p>
     </form>
   </section>
 }

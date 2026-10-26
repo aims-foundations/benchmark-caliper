@@ -164,6 +164,28 @@
 .ia-exports { padding: 1.6rem 0 0; border-top: 1px solid var(--ia-rule); margin-top: 2rem; }
 .ia-exports h3 { font-size: 1rem; font-weight: 500; margin: 0 0 1rem; }
 .ia-exports > div { display: flex; flex-wrap: wrap; gap: .7rem; }
+.ia-results { scroll-margin-top: 6rem; }
+.ia-results > .ia-exports:first-of-type { margin: 1.5rem 0 2rem; padding: 1.4rem; border: 1px solid var(--ia-rule); border-radius: 9px; background: #fff; }
+.ia-individual-files { margin-top: 1rem; font-size: .85rem; }
+.ia-individual-files > div { display: flex; flex-wrap: wrap; gap: .6rem 1.2rem; padding-top: .8rem; }
+.ia-result-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ia-result-stats small { color: var(--ia-muted); font-size: .7rem; line-height: 1.5; }
+.ia-results-context { border-top: 1px solid var(--ia-rule); margin-top: 2rem; padding-top: 1.2rem; }
+.ia-results-context > summary { font-weight: 550; }
+.ia-long-text { margin-block: 1rem; }
+.ia-long-text > summary { color: var(--ia-muted); font-size: .85rem; }
+.ia-provenance { display: flex; flex-wrap: wrap; gap: .8rem 1.5rem; font-size: .75rem; }
+.ia-provenance dt { color: var(--ia-muted); }
+.ia-provenance dd { margin: .3rem 0 0; overflow-wrap: anywhere; }
+.ia-source-record { margin-top: .75rem; padding-left: .5rem; }
+.ia-source-record > summary { overflow-wrap: anywhere; }
+.ia-source-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.ia-source-fields { border-left: 2px solid var(--ia-rule); padding-left: .8rem; }
+.ia-source-fields dt { font-weight: 550; margin-top: .75rem; }
+.ia-source-fields dd { margin: .2rem 0 0; }
+.ia-discard { margin: 1rem 0; padding: 1rem; border: 1px solid #c99880; border-radius: 6px; }
+.ia-discard p { margin-top: 0; }
+.ia-discard button + button { margin-left: .7rem; }
 .ia-error { padding: .7rem 1rem; color: #722b22; border-left: 3px solid #963d2e; border-radius: 4px; background: #faece6; font-size: .87rem; margin-bottom: 1rem; overflow-wrap: anywhere; }
 .ia-error p { margin: .4rem 0; }
 .ia-privacy { margin-top: 3rem; padding-top: 1.2rem; border-top: 1px solid var(--ia-rule); font-size: .75rem; color: var(--ia-muted); }
@@ -199,6 +221,9 @@
   .ia-criterion-body, .ia-item-body { padding-inline: 1rem; }
   .ia-criterion .ia-tag { font-size: .57rem; padding: .25rem .4rem; }
   .ia-stats > div { padding: 1rem .65rem; }
+  .ia-result-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ia-result-stats > div:nth-child(3) { border-left: 0; }
+  .ia-result-stats > div:nth-child(n+3) { border-top: 1px solid var(--ia-rule); }
   .ia-stats strong { font-size: 1.65rem; }
   .ia-stats span { font-size: .65rem; }
   .ia-exports > div { gap: .5rem; }

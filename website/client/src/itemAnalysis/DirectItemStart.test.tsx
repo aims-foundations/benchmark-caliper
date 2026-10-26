@@ -63,6 +63,23 @@ function saveContext() {
   sessionStorage.setItem(tokenKey, JSON.stringify(access))
 }
 
+it('returns to the same direct context and saved run after the browser tab storage is cleared', async () => {
+  saveContext()
+  const first = render(<DirectItemStart />)
+  await screen.findByRole('heading', { name: 'Your criteria are ready' })
+  expect(localStorage.getItem(DIRECT_CONTEXT_STORAGE_KEY)).toContain(context.answer_requirements)
+  expect(localStorage.getItem(tokenKey)).toContain(access.run_secret)
+  first.unmount()
+  sessionStorage.clear()
+  vi.mocked(api.getRun).mockClear()
+  render(<DirectItemStart />)
+  await screen.findByRole('heading', { name: 'Your criteria are ready' })
+  expect(api.getRun).toHaveBeenCalledWith(access, 1, expect.any(AbortSignal))
+  expect(api.getDirectSetup).not.toHaveBeenCalled()
+  expect(api.createDirectRun).not.toHaveBeenCalled()
+  expect(screen.getByLabelText('OpenAI API key')).toHaveValue('')
+})
+
 it('requires declared context, dataset confirmation, explicit generation, and pilot review before completing only item analysis', async () => {
   render(<DirectItemStart />)
   expect(api.getDirectSetup).not.toHaveBeenCalled()
@@ -85,9 +102,10 @@ it('requires declared context, dataset confirmation, explicit generation, and pi
   expect(screen.getByText(/Input Form and Output Form are not assessed/)).toBeVisible()
   await user.click(screen.getByText('IF'))
   expect(screen.getByText('Not assessed in this item analysis.')).toBeVisible()
-  expect(sessionStorage.getItem(tokenKey)).toBe(JSON.stringify(access))
-  expect(JSON.stringify(sessionStorage)).not.toContain('sk-private-direct')
-  expect(localStorage.length).toBe(0)
+  expect(localStorage.getItem(tokenKey)).toBe(JSON.stringify(access))
+  expect(localStorage.getItem(tokenKey)).not.toContain('sk-private-direct')
+  expect(localStorage.getItem(DIRECT_CONTEXT_STORAGE_KEY)).not.toContain('sk-private-direct')
+  expect(sessionStorage.length).toBe(0)
 
   const checkpoint: AnalysisRun = { ...ready, status: 'checkpoint', processed: 2, complete: 2, scope: 'pilot', can_continue: true }
   vi.mocked(api.classify).mockImplementationOnce(async () => { vi.mocked(api.getRun).mockResolvedValue(checkpoint); return checkpoint })
@@ -136,7 +154,9 @@ it('restores the exact direct run without a model call and clears its criteria w
   await user.click(screen.getByRole('button', { name: 'Edit context and start again' }))
   expect(screen.getByLabelText('Answer requirements')).toHaveValue(context.answer_requirements)
   expect(sessionStorage.getItem(tokenKey)).toBeNull()
+  expect(localStorage.getItem(tokenKey)).toBeNull()
   expect(sessionStorage.getItem(DIRECT_CONTEXT_STORAGE_KEY)).toBeNull()
+  expect(localStorage.getItem(DIRECT_CONTEXT_STORAGE_KEY)).toBeNull()
   expect(sessionStorage.getItem(galleryKey)).toContain('gallery-token')
   expect(screen.queryByRole('heading', { name: 'Review the criteria' })).not.toBeInTheDocument()
   const changed = { ...context, answer_requirements: 'Give a brief final answer.' }
@@ -146,7 +166,7 @@ it('restores the exact direct run without a model call and clears its criteria w
   expect(await screen.findByRole('button', { name: 'Confirm benchmark' })).toBeEnabled()
   expect(screen.queryByLabelText('OpenAI API key')).not.toBeInTheDocument()
   expect(api.createDirectRun).not.toHaveBeenCalled()
-  expect(JSON.parse(sessionStorage.getItem(DIRECT_CONTEXT_STORAGE_KEY)!).id).toBe('direct-context-b')
+  expect(JSON.parse(localStorage.getItem(DIRECT_CONTEXT_STORAGE_KEY)!).id).toBe('direct-context-b')
 })
 
 it('ignores a stale discovery response after the form requirements change', async () => {
@@ -163,6 +183,7 @@ it('ignores a stale discovery response after the form requirements change', asyn
   expect(screen.getByLabelText('Benchmark')).toHaveValue('GSM8K')
   expect(screen.queryByRole('button', { name: 'Confirm benchmark' })).not.toBeInTheDocument()
   expect(sessionStorage.getItem(DIRECT_CONTEXT_STORAGE_KEY)).toBeNull()
+  expect(localStorage.getItem(DIRECT_CONTEXT_STORAGE_KEY)).toBeNull()
   expect(api.createDirectRun).not.toHaveBeenCalled()
 })
 

@@ -6,7 +6,8 @@ import * as api from './api'
 import { Criteria } from './Criteria'
 import { Results } from './Results'
 import { BenchmarkConfirmation } from './BenchmarkConfirmation'
-import { assessmentStorageKey, restoreAccess } from './accessStorage'
+import { assessmentStorageKey, clearStoredValue, restoreAccess, saveAccess } from './accessStorage'
+import { saveBlob, viewReport } from './downloads'
 import type { AnalysisRun, Artifact, AssessmentReference, AssessmentSetup, Catalog, ConfirmedDataset, DirectContext, Example, RunAccess, RunScope, SpecificationMode } from './types'
 import './itemAnalysis.css'
 
@@ -65,7 +66,8 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
   const [pollError, setPollError] = useState('')
   const [pollVersion, setPollVersion] = useState(0)
   const [catalogVersion, setCatalogVersion] = useState(0)
-  const [downloading, setDownloading] = useState<Artifact | null>(null)
+  const [downloading, setDownloading] = useState<Artifact | 'package' | 'view' | null>(null)
+  const [discardRequested, setDiscardRequested] = useState(false)
   const [privacyOpen, setPrivacyOpen] = useState(false)
   const [pilotReviewed, setPilotReviewed] = useState(false)
   const progressRef = useRef<HTMLElement>(null)
@@ -186,7 +188,7 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
       }
       const nextAccess = { run_id: result.run_id, run_secret: result.run_secret }
       // Persist only the run's access token. API keys never enter browser storage.
-      try { sessionStorage.setItem(storageKey, JSON.stringify(nextAccess)) } catch { /* The current tab can still use the run. */ }
+      saveAccess(storageKey, nextAccess)
       focusStartedRun.current = true
       setRun(result)
       setPage(1)
@@ -230,7 +232,7 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
   }
 
   function reset() {
-    try { sessionStorage.removeItem(storageKey) } catch { /* Storage may be disabled. */ }
+    clearStoredValue(storageKey)
     setAccess(null)
     setRun(null)
     setApiKey('')
@@ -240,7 +242,19 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
     setPollError('')
     setPage(1)
     setPilotReviewed(false)
+    setDiscardRequested(false)
     focusStartedRun.current = false
+  }
+
+  async function discard() {
+    if (!access || busy) return
+    setBusy(true)
+    try {
+      await api.discardRun(access)
+      reset()
+      if (direct) onEditContext?.()
+    } catch (problem) { showRequestError(problem instanceof Error ? problem.message : 'Could not discard this analysis. Your saved results remain available.') }
+    finally { setBusy(false) }
   }
 
   async function download(artifact: Artifact) {
@@ -248,15 +262,26 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
     setDownloading(artifact)
     try {
       const blob = await api.download(access, artifact)
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = FILE_NAMES[artifact]
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      setTimeout(() => URL.revokeObjectURL(url), 1000)
+      saveBlob(blob, FILE_NAMES[artifact])
     } catch (problem) { showRequestError(problem instanceof Error ? problem.message : 'Could not download this file.') }
+    finally { setDownloading(null) }
+  }
+
+  async function openReport() {
+    if (!access || downloading) return
+    setDownloading('view')
+    try { await viewReport(() => api.download(access, 'report')) }
+    catch (problem) { showRequestError(problem instanceof Error ? problem.message : 'Could not open the report.') }
+    finally { setDownloading(null) }
+  }
+
+  async function downloadPackage() {
+    if (!access || downloading) return
+    setDownloading('package')
+    try {
+      const result = await api.downloadPackage(access)
+      saveBlob(result.blob, result.filename)
+    } catch (problem) { showRequestError(problem instanceof Error ? problem.message : 'Could not download the results package.') }
     finally { setDownloading(null) }
   }
 
@@ -356,9 +381,19 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
           <div className="ia-run-meta">{run.example.assessment_title && <span>Assessment context: {run.example.assessment_title}</span>}<span>{run.example.source_label}</span><span>{run.total.toLocaleString()} items</span></div>
           <div className="ia-actions">{active ? <button className="ia-secondary" onClick={() => void stop()} disabled={busy}>Stop analysis</button> :
             <button className="ia-text-button" onClick={reset} disabled={busy}>Start a new analysis</button>}
+            {!active && <button type="button" className="ia-text-button" onClick={() => setDiscardRequested(true)} disabled={busy}>Discard saved analysis</button>}
             {run.spec && <button className="ia-text-button" disabled={downloading !== null} onClick={() => void download('spec')}>Download criteria ↓</button>}</div>
+          {discardRequested && <div className="ia-discard" role="group" aria-label="Confirm discard"><p>Delete this analysis and its saved files from the server? Download a results package first if you want to keep a copy.</p>
+            <button type="button" className="ia-secondary" disabled={busy} onClick={() => void discard()}>Delete analysis permanently</button>
+            <button type="button" className="ia-text-button" disabled={busy} onClick={() => setDiscardRequested(false)}>Keep analysis</button></div>}
+          <p className="ia-small ia-saved-note">{run.retention?.automatic_expiry && run.retention.expires_at
+            ? `Results are saved until ${new Date(run.retention.expires_at).toLocaleString()}. Download a package to keep them beyond this server's retention period.`
+            : 'Results are saved for later. Return in this browser to review or continue; saved judgments are reused. Starting a new analysis removes this browser’s shortcut to the current run, so download its package first.'}</p>
           <details className="ia-source"><summary>Context and usage</summary><p>{run.example.deployment}</p>
             <p>{run.example.description}</p><DatasetSource example={run.example} />
+            <dl className="ia-provenance"><div><dt>Run</dt><dd><code>{run.run_id}</code></dd></div>
+              {run.created_at && <div><dt>Created</dt><dd><time dateTime={run.created_at}>{new Date(run.created_at).toLocaleString()}</time></dd></div>}
+              {run.updated_at && <div><dt>Last saved</dt><dd><time dateTime={run.updated_at}>{new Date(run.updated_at).toLocaleString()}</time></dd></div>}</dl>
             {run.model && <p className="ia-small">Model: <code>{run.model.model_id}</code> · {run.model.provider} · {run.model.reasoning_effort} reasoning effort.</p>}
             <p className="ia-small">Model usage: {(run.usage?.input_tokens || 0).toLocaleString()} input tokens · {(run.usage?.output_tokens || 0).toLocaleString()} output tokens.</p></details>
         </section>
@@ -367,7 +402,8 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
           ? `Your ${pilotSize}-item pilot is complete.`
           : `Your pilot has paused with ${run.complete} items classified and ${run.errors} failed.`} Download the item labels and Human review CSV below, then start another benchmark when ready. You can stop here; continuing through the full snapshot is optional.</p>}
 
-        {run.spec && <Criteria spec={run.spec} metadata={run.summary?.specification} direct={direct} />}
+        {run.spec && run.processed > 0 && <Results run={run} page={page} setPage={setPage} onDownload={artifact => void download(artifact)} onViewReport={() => void openReport()} onDownloadPackage={() => void downloadPackage()} downloading={downloading} pageLoading={pageLoading} />}
+        {run.spec && (run.processed > 0 ? <details className="ia-results-context"><summary>Review criteria and sources</summary><Criteria spec={run.spec} metadata={run.summary?.specification} direct={direct} /></details> : <Criteria spec={run.spec} metadata={run.summary?.specification} direct={direct} />)}
 
         {canClassify && <form className="ia-classify-panel" onSubmit={event => { event.preventDefault(); void classify(scope) }}>
           <div><p className="ia-eyebrow">{scope === 'all' ? 'Optional: continue beyond the pilot' : 'Try the criteria'}</p>
@@ -378,11 +414,11 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
             {busy ? 'Starting…' : scope === 'all' ? 'Continue through all items' : ['cancelled', 'failed'].includes(run.status) ? 'Resume classification' : `Classify ${pilotSize} items with GPT-6 Luna`}</button></div>
         </form>}
 
-        {run.spec && <Results run={run} page={page} setPage={setPage} onDownload={artifact => void download(artifact)} downloading={downloading} pageLoading={pageLoading} />}
+        {run.spec && run.processed === 0 && <Results run={run} page={page} setPage={setPage} onDownload={artifact => void download(artifact)} onViewReport={() => void openReport()} onDownloadPackage={() => void downloadPackage()} downloading={downloading} pageLoading={pageLoading} />}
       </div>}
       <details className="ia-privacy" id="item-analysis-privacy" open={privacyOpen} onToggle={event => setPrivacyOpen(event.currentTarget.open)}><summary>{assessment ? 'About your key and item data' : 'About your key and this demo'}</summary>
-        <p>Your OpenAI key is sent to the server for model calls and held in memory while a phase runs. This page never writes it to browser storage. A run access token is kept in this tab’s session storage so you can refresh and return to the results.</p>
-        <p>Source items, criteria, and model judgments are kept privately for this run and expire one hour after it ends, or when the server restarts. Download the files you need before leaving. Datasets are labelled with their source; illustrative items are for demonstrating the workflow.</p>
+        <p>Your OpenAI key is sent to the server for model calls and held in memory while a phase runs. This page never writes it to browser storage. A private run access token is saved in this browser so you can return later; re-enter your API key only to make further model calls.</p>
+        <p>Source items, criteria, and judgments are saved on the server across restarts. The retention policy for this run appears above. Download the complete package for an independent copy or to share with your team. Discard saved analysis deletes the server copy. Clearing browser storage removes your access shortcut. Datasets are labelled with their source; illustrative items demonstrate the workflow.</p>
       </details>
     </section>
     {!assessment && <SiteFooter onPrivacyClick={() => { setPrivacyOpen(true); document.getElementById('item-analysis-privacy')?.scrollIntoView({ block: 'center', behavior: 'smooth' }) }} />}

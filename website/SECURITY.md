@@ -17,14 +17,15 @@ The `/caliper?start=items` entry can reuse an existing report or accept new
 deployment requirements without creating a benchmark run. `POST
 /api/item-analysis/direct/setup` validates context and searches Data Bank catalog
 metadata without calling a model or persisting a server job. Context is sent in
-the request body, never the URL. The accepted context is kept in this tab's
-session storage; its deterministic identifier is a context fingerprint, not
+the request body, never the URL. The accepted context is kept in this browser's
+local storage; its deterministic identifier is a context fingerprint, not
 an authorization credential.
 
 `POST /api/item-analysis/runs/from-context` requires explicit dataset
 confirmation, a current pinned source revision or a validated upload, and an
 OpenAI key before preparing classifier context. It uses the existing private run token,
-capacity limits, worker lifecycle, credential handling, and one-hour retention.
+capacity limits, worker lifecycle, credential handling, and durable storage
+with no automatic expiry by default.
 Direct full-snapshot continuation requires a pilot-review acknowledgment.
 The frozen evidence records requirements without synthesizing benchmark scores.
 Changing the context creates a distinct run scope; gallery and demo run tokens
@@ -124,9 +125,10 @@ boundaries:
 - The API key travels in `X-OpenAI-Key`, stays in the active phase's memory,
   and is not stored in browser storage, job artifacts, the database, or logs.
   A separate random access secret in `X-Review-Token` authorizes polling,
-  cancellation, and downloads. Only the run ID and access secret are kept in
-  browser session storage, scoped to the original assessment, so refresh can
-  reconnect without persisting a key. The independent item-run secret protects
+  cancellation, deletion, and downloads. The run ID and access secret are kept in
+  browser local storage, scoped to the original assessment, so a returning visitor
+  can reconnect without persisting an API key. Existing session-storage records
+  are migrated. The server persists only a digest of the access secret. The independent item-run secret protects
   results after creation; it does not change the original report's bearer-ID
   access model.
   The client targets `https://api.openai.com/v1` with `store=False`. Both stages
@@ -155,10 +157,14 @@ boundaries:
   allowlisted source registry, supplied criteria, illustrative example, and local
   prepared-directory override for compatibility. These do not replace the
   current assessment or bypass confirmation in the report continuation.
-- Inputs, criteria, raw model outputs, and reports are held in a private run
-  directory. Runs expire one hour after a phase ends, are swept each minute, and
-  are removed on normal shutdown. A server restart loses the in-memory access
-  registry; an abrupt kill can leave files for host cleanup. This flow does not
+- Inputs, criteria, raw model outputs, and reports are saved in a private run
+  directory under `WEBSITE_DATA_DIR/item-analysis/`. No automatic expiry is
+  configured by default; `ITEM_ANALYSIS_RETENTION_SECONDS=0` disables time-based
+  deletion. A positive administrator-configured value enables cleanup of idle
+  runs, while active phases and downloads remain protected. Saved runs are
+  restored after a restart when the data directory is retained. Interrupted
+  phases do not automatically make new model calls. Explicit deletion removes
+  the run's files and invalidates access. This flow does not
   use the original Caliper workflow's opt-in logging or 90-day retention. The
   original benchmark tuple workspace remains under its existing retention and
   deletion rules; its deployment and assessment artifacts support saved-report
@@ -166,11 +172,14 @@ boundaries:
 - Provider exception bodies are replaced with a fixed error before they reach
   saved artifacts or responses. Model responses redact any occurrence of the
   caller key; frontend rendering uses React text. Private responses and downloads
-  use `Cache-Control: no-store`. Download paths are a fixed allowlist.
-  Initialization diagnostics expose only fixed stage/code/message fields;
-  validation feedback and raw model replies stay in the private run directory.
+  use `Cache-Control: no-store`. Individual downloads and complete result
+  packages use fixed artifact allowlists; private runtime metadata and access
+  credentials are excluded. The authenticated package includes available model
+  requests and responses for the owner's audit and offline review.
+  Initialization diagnostics expose only fixed stage/code/message fields.
 - At most three jobs can run concurrently, with one active phase per caller key,
-  and at most ten retained jobs. Classification pauses at 100 items before an
+  and at most ten jobs cached in memory; cache eviction preserves saved runs.
+  Classification pauses at 100 items before an
   explicit full-snapshot continuation. Completed labels are reused on retry.
   Provider clients are closed after each call, including errors and cancellation.
 - Stop signals the shared classifier and cancels the awaited provider request.

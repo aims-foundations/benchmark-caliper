@@ -24,6 +24,12 @@ export function labelName(classifier: Classifier, label: string | number | null)
   return readable(String(label))
 }
 
+function SourceValue({ value }: { value: unknown }) {
+  if (Array.isArray(value)) return <ul>{value.map((entry, index) => <li key={index}><SourceValue value={entry} /></li>)}</ul>
+  if (value && typeof value === 'object') return <dl className="ia-source-fields">{Object.entries(value).map(([key, entry]) => <div key={key}><dt>{readable(key)}</dt><dd><SourceValue value={entry} /></dd></div>)}</dl>
+  return <p className="ia-source-text">{value == null ? 'Not recorded' : String(value)}</p>
+}
+
 export function Criteria({ spec, metadata, classifierNames, direct = false }: { spec: Specification; metadata?: AnalysisSummary['specification']; classifierNames?: Record<string, string>; direct?: boolean }) {
   const generic = spec.fixed_catalog_version === 'caliper_generic_items_v1'
   const inventory = spec.input_category_inventory
@@ -39,7 +45,7 @@ export function Criteria({ spec, metadata, classifierNames, direct = false }: { 
       {metadata?.deployment_text_matches === false && <p className="ia-small">This supplied specification describes the deployment in different words. Compare it with the original deployment in “Context and usage” above.</p>}
       {metadata?.note && <p className="ia-small">{metadata.note}</p>}
       {!!metadata?.adjustments?.length && <><p className="ia-small">Preparation adjustments</p><ul className="ia-small">{metadata.adjustments.map((adjustment, i) => <li key={i}>{adjustment.reason || adjustment.field}</li>)}</ul></>}
-      {spec.source_registry && <details><summary>Registered source contents</summary>{Object.entries(spec.source_registry).map(([id, source]) => <div key={id}><strong>{id}</strong><pre style={{ whiteSpace: 'pre-wrap' }}>{typeof source === 'string' ? source : JSON.stringify(source, null, 2)}</pre></div>)}</details>}
+      {spec.source_registry && <details><summary>Registered source contents</summary>{Object.entries(spec.source_registry).map(([id, source]) => <details className="ia-source-record" key={id}><summary>{id}</summary><SourceValue value={source} /></details>)}</details>}
     </details>
     <div className="ia-criteria-list">{spec.classifiers.map(classifier => {
       const context = spec.context_by_classifier?.[classifier.id]

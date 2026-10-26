@@ -96,6 +96,7 @@ def model(monkeypatch):
 def client(tmp_path, monkeypatch, model):
     monkeypatch.setattr(db, "DEFAULT_DB_PATH", tmp_path / "data/runs.db")
     monkeypatch.setattr(analysis, "jobs", {})
+    monkeypatch.delenv("ITEM_ANALYSIS_RETENTION_SECONDS", raising=False)
     monkeypatch.setenv("ITEM_ANALYSIS_PREPARED_DIR", str(tmp_path / "not-configured"))
     monkeypatch.setattr(analysis.item_analysis_databank, "search_candidates", lambda assessment, query=None: {
         "candidates": [], "status": "ready", "message": "No matching Data Bank snapshot.",
@@ -253,7 +254,8 @@ def test_remote_preparation_uses_actual_frozen_metadata_and_hides_paths(client, 
     assert len(ready["example"]["source_sha256"]) == 64
     assert ready["processed"] == 0 and not model
     directory = analysis.jobs[access["run_id"]].directory
-    assert calls == [(directory, "mmlu")]
+    assert len(calls) == 1 and calls[0][1] == "mmlu"
+    assert calls[0][0].parent == directory.parent and not calls[0][0].exists()
     assert "path" not in read_json(directory / "dataset.json")["source"]
     assert "assessment_dir" not in read_json(directory / "evidence.json")
 
@@ -282,7 +284,8 @@ def test_selected_context_drives_generation_classification_and_exports(
     assert ready["spec"]["deployment"] == evidence["deployment"]
     assert ready["summary"]["specification"]["source"]["kind"] == "generated"
     directory = analysis.jobs[access["run_id"]].directory
-    assert calls == [(directory, example_id)]
+    assert len(calls) == 1 and calls[0][1] == example_id
+    assert calls[0][0].parent == directory.parent and not calls[0][0].exists()
     generation = [payload for _, payload in model if "item" not in payload]
     assert len(generation) == 1
     assert generation[0]["benchmark"] == benchmark
@@ -680,6 +683,7 @@ def test_cancel_stops_current_request_drains_thread_and_resumes(client, monkeypa
 
 
 def test_generation_can_be_cancelled_and_sweep_never_removes_live_worker(client, monkeypatch):
+    monkeypatch.setenv("ITEM_ANALYSIS_RETENTION_SECONDS", "3600")
     started, cancelled = Event(), Event()
 
     async def blocked(**arguments):
@@ -694,21 +698,22 @@ def test_generation_can_be_cancelled_and_sweep_never_removes_live_worker(client,
     access = start(client, mode="generate")
     assert started.wait(2)
     job = analysis.jobs[access["run_id"]]
-    job.updated_at = time.monotonic() - analysis.RETENTION_SECONDS - 1
+    job.updated_at = time.time() - 3601
     analysis.sweep()
     assert job.directory.exists() and job.run_id in analysis.jobs
     response = client.post(url(access) + "/cancel", headers=headers(access)).json()
     assert response["status"] == "cancelled" and cancelled.is_set() and job.task.done()
-    job.updated_at = time.monotonic() - analysis.RETENTION_SECONDS - 1
+    job.updated_at = time.time() - 3601
     analysis.sweep()
     assert not job.directory.exists() and job.run_id not in analysis.jobs
 
 
-def test_expiry_invalidates_secret_and_removes_all_files(client):
+def test_configured_expiry_invalidates_secret_and_removes_all_files(client, monkeypatch):
+    monkeypatch.setenv("ITEM_ANALYSIS_RETENTION_SECONDS", "3600")
     access = start(client)
     settled(client, access)
     job = analysis.jobs[access["run_id"]]
-    job.updated_at = time.monotonic() - analysis.RETENTION_SECONDS - 1
+    job.updated_at = time.time() - 3601
     assert client.get(url(access), headers=headers(access)).status_code == 404
     assert not job.directory.exists()
 

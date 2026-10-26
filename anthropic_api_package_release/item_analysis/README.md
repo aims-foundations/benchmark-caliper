@@ -251,6 +251,18 @@ item coverage nor high agreement alone establishes benchmark validity.
 | `report.html`, `summary.json`, `items.csv` | Versioned analysis and item evidence |
 | `review.csv`, `review_selection.json`, `review_comparison.json` | Independent judgments, fixed review selection, agreement |
 
+The website can combine the available artifacts into a complete results ZIP.
+Its offline HTML report starts with selected-item and judgment counts, then
+separates the original assessment, item findings, and expandable supporting
+evidence. Detailed predictions remain in `items.csv`; keep companion files
+together so the report's links work. The package contains a manifest describing
+the run, selected IDs, model settings, dataset provenance, file checksums, and
+missing artifacts, plus available frozen prompts, requests, responses, and usage
+records. It preserves existing human annotations and provides instructions for
+keeping each reviewer's worksheet and comparison separately. A partial package
+records saved progress and outstanding work; it does not claim a completed
+evaluation or replace missing model outputs.
+
 `catalog.py`/`catalog.json` own immutable generic rules. `schema.py` validates
 context and current contracts; `legacy_schema.py` retains historical readers.
 `prepare.py` and `data.py` snapshot source evidence and datasets. `generate.py`

@@ -65,15 +65,17 @@ export function ConsentGate({ onAccept }: Props) {
 
       <p>
         The item-analysis stage sends assessment context and items to OpenAI.
-        Its criteria and results are temporary: download them before they
-        expire one hour after the run ends or when the server restarts.
+        Its criteria and results are saved privately so you can pause and return
+        later, with no automatic expiry by default. This browser keeps a run
+        access token, but never your OpenAI key, for returning to saved results.
+        You can download the complete results package or delete the saved run.
       </p>
 
       <h3>Your rights</h3>
       <ul>
         <li>
-          Export every record we have about a run with one click in the
-          summary view.
+          Download the benchmark report and scoring JSON, and save the complete
+          item-analysis results package for later review or sharing.
         </li>
       </ul>
 

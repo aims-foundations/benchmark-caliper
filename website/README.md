@@ -98,10 +98,18 @@ not authorize automatic paid calls: each model phase requires a user action.
    on an item whose other dimensions failed.
 
 The results show counts, percentages among all valid judgments (including
-insufficient evidence), failures, and pending dimensions. Expand individual
-items to inspect justifications and evidence.
-Download the specification, item CSV, summary JSON, HTML report, or blind human
-review worksheet. The original six-dimensional assessment remains visible;
+insufficient evidence), failures, and pending dimensions. A summary identifies
+the selected items, saved judgments, and remaining work before the detailed
+results. Expand individual items to inspect justifications and evidence.
+Use **View report** for a readable offline report, **Download complete results
+package** for the full record, or **Download blind review worksheet** for
+independent annotation. Individual CSV/JSON/HTML downloads remain available.
+The ZIP includes the readable report, item labels, summary, classifier context,
+original assessment, review materials, a manifest, and available audit files.
+Its filename identifies the benchmark, deployment, run, and scope. The report
+separates the overview from expandable evidence, rules, and provenance; its
+companion links work when the package is extracted into one folder.
+The original six-dimensional assessment remains visible;
 the demo does not turn item prevalence into new 1–5 scores. Criteria changes
 require a new run. The website does not automatically revise criteria or import
 completed human reviews; the CLI supports comparison with a completed worksheet.
@@ -115,18 +123,28 @@ request; a fresh 100-item pilot uses 400 primary classification requests, with
 additional calls possible for repairs and retries. Each classification request
 contains one classifier's rules and context, and never another classifier's
 judgment. The key stays in memory; the item run's ID and separate access
-secret are kept in browser session storage, scoped to the source assessment.
+secret are kept in browser local storage, scoped to the source assessment,
+so a returning visitor can reopen the run. Existing session-storage access
+records are migrated. Direct-entry requirements are also restored locally;
+OpenAI keys are never persisted.
 Initialization failures identify dataset/evidence preparation, criteria
 validation, provider access, or report preparation separately. The displayed
 error reference contains a stage and fixed code; raw model replies and private
 source text are not included. Validation permits one structural repair and does
 not start item classification when the criteria are invalid.
-Refresh restores the active run, but a later phase may require entering the key
-again. Runs expire one hour after the last phase ends and do not survive a server
-restart. Download outputs before they expire. Stop cancels the current awaited
+Saved runs have **no automatic expiry by default**. They are kept under
+`WEBSITE_DATA_DIR/item-analysis/` and can be reopened after a server restart when
+that storage is retained. Returning to a later phase may require entering the key
+again; reopening results never starts model calls. An interrupted classification
+can resume from saved judgments. Use **Discard saved analysis** to remove its data.
+Administrators may set `ITEM_ANALYSIS_RETENTION_SECONDS` to a positive retention
+period; `0` (the default) disables time-based deletion. Active phases and ongoing
+downloads are protected from cleanup. Keep a downloaded package as an independent
+record, especially before clearing browser storage or changing hosting storage.
+Stop cancels the current awaited
 request and prevents new calls; a request already submitted may still be billed.
-Saved classifier judgments survive cancellation and retries within the run's
-lifetime. An item is complete only after all four classifiers succeed. Partial
+Saved classifier judgments survive cancellation, retries, and normal server
+restarts. An item is complete only after all four classifiers succeed. Partial
 judgments remain inspectable, and failed dimensions are identified separately.
 
 ### Assessment-continuation API
@@ -147,6 +165,12 @@ judgments remain inspectable, and failed dimensions are identified separately.
 - Polling, classification, cancellation, and downloads use the existing item-run
   endpoints with `X-Review-Token`. Classification pauses at the 100-item review
   checkpoint before full-snapshot continuation.
+- `GET /api/item-analysis/runs/{run_id}/package` downloads a complete ZIP after
+  the current phase ends. It also supports saved partial results and prepared
+  context before classification. The package records unavailable audit artifacts
+  explicitly rather than substituting current prompts for historical ones.
+- `DELETE /api/item-analysis/runs/{run_id}` deletes a saved run and invalidates
+  access. Both endpoints require the run's `X-Review-Token`.
 
 The older `/api/item-analysis/catalog` and `POST /api/item-analysis/runs` prepared
 example API remains available for compatibility and tests. It retains generated

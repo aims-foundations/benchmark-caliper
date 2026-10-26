@@ -176,8 +176,9 @@ def test_direct_upload_freezes_requirements_and_completes_without_benchmark_scor
     assert report.status_code == 200 and "not run" in report.text.lower()
     assert all(KEY not in path.read_text() for path in directory.iterdir() if path.is_file())
     assert directory.stat().st_mode & 0o777 == 0o700
-    analysis.jobs[access["run_id"]].updated_at = time.monotonic() - analysis.RETENTION_SECONDS - 1
-    assert client.get(url(access), headers=headers(access)).status_code == 404
+    analysis.jobs[access["run_id"]].updated_at = time.time() - 3601
+    assert client.get(url(access), headers=headers(access)).status_code == 200
+    assert client.delete(url(access), headers=headers(access)).status_code == 204
     assert not directory.exists()
 
 
@@ -216,6 +217,6 @@ def test_direct_start_requires_key_one_source_and_capacity(client, monkeypatch, 
     assert client.post(ENDPOINT, data=fields, headers={"X-OpenAI-Key": KEY}).status_code == 400
     assert client.post(ENDPOINT, data={**fields, "source_id": "source", "source_revision": CATALOG_REVISION}, files=files, headers={"X-OpenAI-Key": KEY}).status_code == 400
     assert client.post(ENDPOINT, data={**fields, "source_revision": CATALOG_REVISION}, files=files, headers={"X-OpenAI-Key": KEY}).status_code == 400
-    monkeypatch.setattr(analysis, "MAX_RETAINED", 0)
+    monkeypatch.setattr(analysis, "MAX_ACTIVE", 0)
     assert client.post(ENDPOINT, data=fields, files=files, headers={"X-OpenAI-Key": KEY}).status_code == 429
     assert not model and not analysis.jobs

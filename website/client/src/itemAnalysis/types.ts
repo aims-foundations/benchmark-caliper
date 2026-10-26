@@ -201,6 +201,9 @@ export interface Item {
 
 export interface AnalysisRun {
   run_id: string
+  created_at?: string
+  updated_at?: string
+  retention?: { automatic_expiry: boolean; expires_at: string | null }
   assessment?: AssessmentContext
   status: 'preparing' | 'generating' | 'ready' | 'running' | 'checkpoint' | 'complete' | 'cancelled' | 'failed'
   message: string

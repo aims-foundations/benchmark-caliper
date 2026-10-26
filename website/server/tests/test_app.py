@@ -161,6 +161,20 @@ def test_security_headers_present(client: TestClient) -> None:
     assert "frame-ancestors 'none'" in r.headers["Content-Security-Policy"]
 
 
+def test_item_analysis_delete_is_available_to_configured_frontend(client: TestClient) -> None:
+    response = client.options(
+        "/api/item-analysis/runs/example",
+        headers={
+            "Origin": app_module.ALLOWED_ORIGINS[0],
+            "Access-Control-Request-Method": "DELETE",
+            "Access-Control-Request-Headers": "X-Review-Token",
+        },
+    )
+    assert response.status_code == 200
+    assert "DELETE" in response.headers["Access-Control-Allow-Methods"]
+    assert "x-review-token" in response.headers["Access-Control-Allow-Headers"].lower()
+
+
 # ---------- request validation ----------
 
 

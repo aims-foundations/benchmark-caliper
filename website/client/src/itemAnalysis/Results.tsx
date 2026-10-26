@@ -2,7 +2,7 @@ import { classifierName, labelName, readable } from './Criteria'
 import type { AnalysisRun, Artifact, Classifier, Item } from './types'
 
 const DIMENSIONS = ['input_ontology', 'input_content', 'input_form', 'output_ontology', 'output_content', 'output_form']
-const ARTIFACTS: [Artifact, string][] = [['items', 'Item labels CSV'], ['summary', 'Summary JSON'], ['report', 'HTML report'], ['review', 'Human review CSV']]
+const ARTIFACTS: [Artifact, string][] = [['spec', 'Criteria JSON'], ['items', 'Item labels CSV'], ['summary', 'Summary JSON'], ['report', 'HTML report'], ['review', 'Human review CSV']]
 
 function text(value: unknown): string {
   return typeof value === 'string' ? value : value == null ? 'Not supplied' : JSON.stringify(value)
@@ -30,7 +30,7 @@ function ItemCard({ item, classifiers, demo, classifierNames }: { item: Item; cl
     <summary><span><small>{item.item_id}</small><strong>{content || 'No item text available'}</strong></span>
       <span className={`ia-tag ${completed ? '' : 'ia-tag-muted'}`}>{completed ? demo ? 'Example judgment shown' : 'Classified' : item.status === 'error' ? 'Needs retry' : hasJudgments ? 'Partly classified' : 'Pending'}</span>
     </summary>
-    <div className="ia-item-body"><p className="ia-item-text">{content}</p>
+    <div className="ia-item-body">{content.length > 800 ? <details className="ia-long-text"><summary>Read full item text</summary><p className="ia-item-text">{content}</p></details> : <p className="ia-item-text">{content}</p>}
       <p className="ia-reference"><strong>Reference answer</strong> {text(item.reference_answer)}</p>
       {item.error && <p className="ia-error">{item.error}</p>}
       {(completed || hasJudgments || item.status === 'error') && classifiers.map(classifier => {
@@ -51,12 +51,14 @@ function ItemCard({ item, classifiers, demo, classifierNames }: { item: Item; cl
   </details>
 }
 
-export function Results({ run, page, setPage, onDownload, downloading, pageLoading, demo = false, classifierNames }: {
+export function Results({ run, page, setPage, onDownload, onViewReport, onDownloadPackage, downloading, pageLoading, demo = false, classifierNames }: {
   run: AnalysisRun
   page: number
   setPage: (page: number) => void
   onDownload: (artifact: Artifact) => void
-  downloading: Artifact | null
+  onViewReport?: () => void
+  onDownloadPackage?: () => void
+  downloading: Artifact | 'package' | 'view' | null
   pageLoading: boolean
   demo?: boolean
   classifierNames?: Record<string, string>
@@ -64,14 +66,33 @@ export function Results({ run, page, setPage, onDownload, downloading, pageLoadi
   const summary = run.summary
   const generic = run.spec?.fixed_catalog_version === 'caliper_generic_items_v1'
   const active = ['preparing', 'generating', 'running'].includes(run.status)
+  const selected = summary?.experiment?.selected_items ?? (run.scope === 'all' ? run.total : run.processed)
+  const classifierCount = run.spec?.classifiers.filter(classifier => classifier.applicable).length || 0
+  const saved = summary?.experiment?.completed_item_classifier_judgments ?? run.completed_judgments ?? summary?.classifiers.reduce((total, classifier) => total + (classifier.valid_judgments ?? ((classifier.known || 0) + (classifier.unknown || 0))), 0) ?? 0
+  const expected = summary?.experiment?.expected_item_classifier_judgments ?? selected * classifierCount
+  const missing = Math.max(0, expected - saved)
+  const failed = summary?.classifiers.reduce((total, classifier) => total + (classifier.errors || 0) + (classifier.invalid || 0), 0) || 0
+  const exportsDisabled = downloading !== null || active
+  const reviewDisabled = exportsDisabled || (generic && !selected)
   return <section className="ia-results" aria-label="Analysis results">
     {active && <p className="ia-small">Summary statistics and exports update when this phase finishes. You can inspect completed item judgments below.</p>}
+    {summary && <section className="ia-exports" aria-label="Save and share results"><h3>Review and keep your results</h3>
+      <div className="ia-primary-exports">
+        {onViewReport && <button type="button" className="ia-primary" onClick={onViewReport} disabled={exportsDisabled}>{downloading === 'view' ? 'Opening report…' : 'View report'}<span aria-hidden="true"> ↗</span></button>}
+        {onDownloadPackage && <button type="button" className="ia-secondary" onClick={onDownloadPackage} disabled={exportsDisabled}>{downloading === 'package' ? 'Downloading…' : 'Download complete results package'}<span aria-hidden="true"> ↓</span></button>}
+        <button type="button" className="ia-secondary" onClick={() => onDownload('review')} disabled={reviewDisabled}>Download blind review worksheet<span aria-hidden="true"> ↓</span></button>
+      </div>
+      <p className="ia-small">{demo ? 'These files contain the bundled sample and authored example judgments. No live experiment package is created.' : 'View the readable report or keep the complete package for later review and team sharing. It includes the current saved results, including partial progress.'} The blind worksheet omits predictions for independent review.</p>
+      <details className="ia-individual-files"><summary>Individual files</summary><div>{ARTIFACTS.map(([artifact, label]) => <button key={artifact} type="button" className="ia-text-button"
+        onClick={() => onDownload(artifact)} disabled={artifact === 'review' ? reviewDisabled : exportsDisabled}>{downloading === artifact ? 'Downloading…' : label}<span aria-hidden="true"> ↓</span></button>)}</div></details>
+    </section>}
     {summary && run.processed > 0 && !active && <>
       <div className="ia-section-heading"><div><p className="ia-eyebrow">From findings to counts</p><h2>What the items show</h2></div>
-        <span>{summary.complete_snapshot ? demo ? 'Full demo sample' : 'Full snapshot' : demo ? 'Demo pilot results' : 'Partial results'}</span></div>
-      <div className="ia-stats"><div><strong>{run.complete.toLocaleString()}</strong><span>{demo ? 'Demo judgments shown' : 'Items classified'}</span></div>
-        <div><strong>{run.total.toLocaleString()}</strong><span>{demo ? 'Items in demo sample' : 'Items in snapshot'}</span></div>
-        <div><strong>{run.errors.toLocaleString()}</strong><span>Items needing retry</span></div></div>
+        <span className="ia-tag">{summary.complete_snapshot ? demo ? 'Full demo sample' : 'Full snapshot' : demo ? 'Demo pilot results' : run.scope === 'pilot' || run.status === 'checkpoint' ? 'Pilot results' : 'Partial results'}</span></div>
+      <div className="ia-stats ia-result-stats"><div><strong>{selected.toLocaleString()}</strong><span>Selected items</span><small>of {run.total.toLocaleString()} in the {demo ? 'demo sample' : 'snapshot'}</small></div>
+        <div><strong>{saved.toLocaleString()}</strong><span>Saved classifier judgments</span><small>of {expected.toLocaleString()} expected</small></div>
+        <div><strong>{run.complete.toLocaleString()}</strong><span>{demo ? 'Demo items complete' : 'Items fully classified'}</span><small>{run.errors.toLocaleString()} {run.errors === 1 ? 'item' : 'items'} needing retry</small></div>
+        <div><strong>{missing.toLocaleString()}</strong><span>Missing classifier judgments</span><small>{failed.toLocaleString()} failed or invalid {failed === 1 ? 'dimension' : 'dimensions'}</small></div></div>
       <p className="ia-small">{demo ? 'Percentages describe all valid authored walkthrough judgments, including insufficient evidence, in this bundled sample only. They are not model outputs or estimates for the full MathDial benchmark. Operational failures and pending examples are excluded.' : generic ? 'Percentages include all valid judgments, including insufficient evidence and saved judgments on partially classified items. Invalid responses, failed dimensions, and pending dimensions are excluded. No issue identified is a bounded finding, not proof of benchmark validity. Human review is needed to check accuracy.' : 'Percentages describe model judgments among known labels. Unknowns, failures, and pending items are excluded. Human review is needed to check accuracy.'}</p>
       <p className="ia-small">{summary.experiment?.completed_item_classifier_judgments ?? summary.classifiers.reduce((total, classifier) => total + (classifier.valid_judgments ?? ((classifier.known || 0) + (classifier.unknown || 0))), 0)} completed item-classifier judgments across {run.spec?.classifiers.length || 0} classifiers.</p>
       <div className="ia-distributions">{summary.classifiers.filter(c => c.applicable).map(classifier => <article key={classifier.id} className="ia-distribution">
@@ -107,8 +128,5 @@ export function Results({ run, page, setPage, onDownload, downloading, pageLoadi
       <span>Page {page} of {run.pagination.total_pages.toLocaleString()}</span>
       <button type="button" className="ia-secondary" disabled={page >= run.pagination.total_pages || pageLoading} onClick={() => setPage(page + 1)}>Next</button>
     </nav>}
-    {summary && <div className="ia-exports"><h3>Take the results with you</h3><div>{ARTIFACTS.map(([artifact, label]) => <button key={artifact} type="button" className="ia-secondary"
-      onClick={() => onDownload(artifact)} disabled={downloading !== null || active || (artifact === 'review' && generic && !(summary.experiment?.selected_items))}>{downloading === artifact ? 'Downloading…' : label}<span aria-hidden="true"> ↓</span></button>)}</div>
-      <p className="ia-small">{demo ? 'Downloads cover this bundled demo sample only and include source and judgment provenance. The human review worksheet omits example judgments for independent review.' : 'The human review worksheet omits model predictions for independent review.'}</p></div>}
   </section>
 }

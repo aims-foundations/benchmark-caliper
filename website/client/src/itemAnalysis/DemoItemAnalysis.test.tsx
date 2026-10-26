@@ -58,8 +58,8 @@ it('requires benchmark confirmation and a human pilot checkpoint before completi
   const results = screen.getByRole('region', { name: 'Analysis results' })
   expect(within(results).getAllByText('Example judgment shown')).toHaveLength(DEMO_ITEM_ANALYSIS_PILOT_SIZE)
   expect(within(results).getAllByText('Pending')).toHaveLength(sampleCount - DEMO_ITEM_ANALYSIS_PILOT_SIZE)
-  expect(screen.getByText('Demo judgments shown').parentElement).toHaveTextContent(String(DEMO_ITEM_ANALYSIS_PILOT_SIZE))
-  expect(screen.getByText('Items in demo sample').parentElement).toHaveTextContent(String(sampleCount))
+  expect(screen.getByText('Demo items complete').parentElement).toHaveTextContent(String(DEMO_ITEM_ANALYSIS_PILOT_SIZE))
+  expect(screen.getByText('Selected items').parentElement).toHaveTextContent(String(sampleCount))
   expect(onStatusChange).toHaveBeenLastCalledWith('in_progress')
   expect(screen.getByRole('button', { name: 'Continue demo through remaining items' })).toBeDisabled()
   await user.click(screen.getByRole('checkbox', { name: 'I have reviewed the pilot examples and criteria' }))
@@ -69,7 +69,7 @@ it('requires benchmark confirmation and a human pilot checkpoint before completi
   expect(within(results).getAllByText('Example judgment shown')).toHaveLength(sampleCount)
   expect(within(results).queryByText('Pending')).not.toBeInTheDocument()
   expect(screen.getByText('Full demo sample')).toBeVisible()
-  expect(screen.getByText('Demo judgments shown').parentElement).toHaveTextContent(String(sampleCount))
+  expect(screen.getByText('Demo items complete').parentElement).toHaveTextContent(String(sampleCount))
   expect(screen.queryByText('Full snapshot')).not.toBeInTheDocument()
   expect(screen.queryByText(/Percentages describe model judgments/)).not.toBeInTheDocument()
   expect(screen.getAllByText(/authored/i).length).toBeGreaterThan(0)
@@ -140,6 +140,7 @@ it('downloads demo artifacts locally with distinct filenames and sample provenan
   render(<DemoItemAnalysis />)
   const user = await finishSample()
   await user.click(screen.getByRole('button', { name: /Download.*criteria/i }))
+  await user.click(screen.getByText('Individual files'))
   for (const name of ['Item labels CSV', 'Summary JSON', 'HTML report', 'Human review CSV']) {
     await user.click(screen.getByRole('button', { name: new RegExp(name) }))
   }

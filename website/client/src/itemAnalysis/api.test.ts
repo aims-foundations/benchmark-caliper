@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { AnalysisApiError, classify, createAssessmentRun, createDirectRun, createRun, download, getAssessment, getDirectSetup, getRun, searchSources } from './api'
+import { AnalysisApiError, classify, createAssessmentRun, createDirectRun, createRun, discardRun, download, downloadPackage, getAssessment, getDirectSetup, getRun, searchSources } from './api'
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -115,4 +115,22 @@ it('downloads artifacts with the run secret in a header, never a URL', async () 
 it('preserves HTTP status so an expired run can stop polling', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ detail: 'This run expired.' }), { status: 404 })))
   await expect(getRun({ run_id: 'expired', run_secret: 'token' }, 1)).rejects.toEqual(new AnalysisApiError('This run expired.', 404))
+})
+
+it('downloads the package with its descriptive server filename and only the private access header', async () => {
+  const fetch = vi.fn().mockResolvedValue(new Response('ZIP fixture', { headers: {
+    'Content-Disposition': "attachment; filename*=UTF-8''MathDial%20pilot%20results.zip",
+  } }))
+  vi.stubGlobal('fetch', fetch)
+  const result = await downloadPackage({ run_id: 'test', run_secret: 'private-secret' })
+  expect(result.filename).toBe('MathDial pilot results.zip')
+  expect(await result.blob.text()).toBe('ZIP fixture')
+  expect(fetch).toHaveBeenCalledExactlyOnceWith('/api/item-analysis/runs/test/package', expect.objectContaining({ headers: { 'X-Review-Token': 'private-secret' } }))
+})
+
+it('discards a saved run using authenticated DELETE and handles an empty response', async () => {
+  const fetch = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
+  vi.stubGlobal('fetch', fetch)
+  await discardRun({ run_id: 'test', run_secret: 'private-secret' })
+  expect(fetch).toHaveBeenCalledExactlyOnceWith('/api/item-analysis/runs/test', expect.objectContaining({ method: 'DELETE', headers: { 'X-Review-Token': 'private-secret' } }))
 })

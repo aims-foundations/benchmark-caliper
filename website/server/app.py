@@ -212,7 +212,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=False,  # we never use cookies for auth
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "DELETE"],
     allow_headers=["Content-Type", "X-Anthropic-Key", "X-OpenAI-Key", "X-Review-Token"],
     expose_headers=["Content-Disposition"],
 )

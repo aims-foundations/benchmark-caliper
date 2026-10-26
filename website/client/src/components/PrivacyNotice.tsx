@@ -58,15 +58,18 @@ export function PrivacyNotice({ onClose }: Props) {
       <p>
         Assessment context or direct deployment requirements, together with dataset items, are sent to OpenAI to generate
         criteria and classify items. Source items, criteria, and results are
-        private to the item-analysis run and expire one hour after it ends or
-        when the server restarts. A run access token is saved in this tab's
-        session storage so you can return to the results. Download the files
-        you need before they expire.
+        saved privately so you can pause to review them and return later.
+        Saved runs have no automatic expiry by default and survive server
+        restarts when the server's data storage is retained. You can delete a
+        saved item-analysis run from its results page. A run access token is
+        kept in this browser's local storage to restore access; your OpenAI key
+        is never stored there. Download a complete results package for an
+        independent copy you can keep or share.
       </p>
       <p>
         If you start directly with a new deployment context, the accepted
-        requirements are also kept in this tab's session storage for restoration
-        after a refresh. Searching for matching datasets makes no model calls.
+        requirements are also kept in this browser's local storage so you can
+        return after closing the tab. Searching for matching datasets makes no model calls.
         Editing the context starts a new item analysis.
       </p>
 
@@ -121,8 +124,9 @@ export function PrivacyNotice({ onClose }: Props) {
       <h3>Your rights</h3>
       <ul>
         <li>
-          <strong>Export:</strong> from any run's summary or scoring view,
-          download every record we have for that run as JSON.
+          <strong>Export:</strong> download the benchmark report and scoring
+          JSON from its results view. The item-analysis results package includes
+          the item judgments, context, review worksheet, and available audit files.
         </li>
         <li>
           <strong>Delete:</strong> from the same view, hard-delete every
@@ -144,7 +148,7 @@ export function PrivacyNotice({ onClose }: Props) {
         <li>
           We do not use your prompts or responses to train any model — they
           go to Anthropic or OpenAI via your keys under their terms. Item-analysis
-          artifacts are retained temporarily as described above; longer-term
+          artifacts are saved for your review as described above; separate
           benchmark debugging records require your per-run opt-in.
         </li>
       </ul>

@@ -18,7 +18,7 @@ the new-context path, entering requirements and searching/confirming a Data Bank
 source or upload must make no model calls. Criterion generation and each
 classification phase require explicit user action and an OpenAI key.
 
-Verify same-tab restoration without key storage, context edits invalidating
+Verify restoration after reopening the browser without key storage, context edits invalidating
 confirmation/criteria, the pilot-review requirement, and downloads carrying
 `analysis_basis=deployment_requirements` and `assessment_status=not_run`.
 Use mocked model responses for automated end-to-end verification; no live paid
@@ -78,9 +78,21 @@ prepared-example API only. It does not bypass Data Bank confirmation in report
 continuations. Local `results/` directories remain excluded from Docker.
 
 Use one instance and one worker. Each item run copies its source inputs and
-the exact original assessment into a private directory. Jobs expire one hour
-after a phase ends and cannot resume
-after a server restart. Preserve the benchmark tuple workspace under the data
+the exact original assessment into a private directory under
+`WEBSITE_DATA_DIR/item-analysis/`. Keep this data directory on persistent storage
+to preserve runs across restarts and deployments. Runs have no automatic expiry
+by default. `ITEM_ANALYSIS_RETENTION_SECONDS=0` disables time-based deletion;
+an administrator can set a positive value to enable a retention period for idle
+runs. Active phases and downloads are not removed by cleanup. Access tokens are
+stored as digests on the server; API keys are never persisted. The browser keeps
+its run access token locally, so clearing browser storage loses that access.
+
+Verify that a completed pilot can reopen after an idle period and server
+restart, an interrupted classification keeps completed judgments, and explicit
+deletion removes a saved run. A new paid phase still requires the visitor's key.
+The complete results package contains available audit files and a readable
+offline report. It is an independent archive, not a website-run import mechanism.
+Preserve the benchmark tuple workspace under the data
 directory: saved report continuation needs its deployment and assessment
 artifacts, including when trace logging was not enabled. The existing benchmark
 workspace retention and deletion rules still apply.

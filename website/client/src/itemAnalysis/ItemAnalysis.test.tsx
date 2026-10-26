@@ -1,4 +1,4 @@
-import { beforeEach, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ItemAnalysis } from './ItemAnalysis'
@@ -7,7 +7,7 @@ import type { AnalysisRun, Catalog } from './types'
 import { DEMO_ITEM_ANALYSIS_SPEC } from '../demo/itemAnalysisFixture'
 
 vi.mock('./api', async original => ({ ...await original<typeof import('./api')>(),
-  getCatalog: vi.fn(), createRun: vi.fn(), getRun: vi.fn(), classify: vi.fn(), cancelRun: vi.fn(), download: vi.fn(),
+  getCatalog: vi.fn(), createRun: vi.fn(), getRun: vi.fn(), classify: vi.fn(), cancelRun: vi.fn(), download: vi.fn(), discardRun: vi.fn(), downloadPackage: vi.fn(),
 }))
 
 const example = { id: 'illustrative', title: 'Exam preparation example', description: 'Authored examples for demonstrating the workflow.', item_count: 10,
@@ -47,6 +47,71 @@ beforeEach(() => {
   vi.mocked(api.getCatalog).mockResolvedValue(catalog)
   vi.mocked(api.createRun).mockResolvedValue({ ...ready, ...access })
   vi.mocked(api.getRun).mockResolvedValue(ready)
+})
+
+afterEach(() => vi.restoreAllMocks())
+
+it('returns to durable results without model calls and exposes readable report, package and blind worksheet actions', async () => {
+  localStorage.setItem('item_analysis_run_v1', JSON.stringify(access))
+  const user = userEvent.setup()
+  render(<ItemAnalysis />)
+  await screen.findByRole('heading', { name: 'Your criteria are ready' })
+  expect(api.getRun).toHaveBeenCalledWith(access, 1, expect.any(AbortSignal))
+  expect(api.createRun).not.toHaveBeenCalled()
+  expect(api.classify).not.toHaveBeenCalled()
+  expect(screen.getByLabelText('OpenAI API key')).toHaveValue('')
+  expect(screen.getByText(/Results are saved for later/)).toBeVisible()
+  expect(screen.getByRole('button', { name: /View report/ })).toBeEnabled()
+  expect(screen.getByRole('button', { name: /Download complete results package/ })).toBeEnabled()
+  expect(screen.getByRole('button', { name: /Download blind review worksheet/ })).toBeEnabled()
+  const files = screen.getByText('Individual files').closest('details')!
+  expect(files.open).toBe(false)
+  await user.click(screen.getByText('Individual files'))
+  expect(files.open).toBe(true)
+})
+
+it('opens the report without an opener or secret URL and preserves the package filename', async () => {
+  localStorage.setItem('item_analysis_run_v1', JSON.stringify(access))
+  const tab = { opener: window, location: { replace: vi.fn() }, close: vi.fn() }
+  vi.spyOn(window, 'open').mockReturnValue(tab as unknown as Window)
+  vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:local-report')
+  vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+  const filenames: string[] = []
+  vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) { filenames.push(this.download) })
+  vi.mocked(api.download).mockResolvedValue(new Blob(['<html>Saved report</html>'], { type: 'text/html' }))
+  vi.mocked(api.downloadPackage).mockResolvedValue({ blob: new Blob(['ZIP fixture']), filename: 'MathDial-pilot-run-123.zip' })
+  const user = userEvent.setup()
+  render(<ItemAnalysis />)
+  await user.click(await screen.findByRole('button', { name: /View report/ }))
+  expect(api.download).toHaveBeenCalledExactlyOnceWith(access, 'report')
+  expect(window.open).toHaveBeenCalledWith('about:blank', '_blank')
+  expect(tab.opener).toBeNull()
+  expect(tab.location.replace).toHaveBeenCalledWith('blob:local-report')
+  await user.click(screen.getByRole('button', { name: /Download complete results package/ }))
+  expect(api.downloadPackage).toHaveBeenCalledExactlyOnceWith(access)
+  expect(filenames).toEqual(['MathDial-pilot-run-123.zip'])
+  await user.click(screen.getByRole('button', { name: /Download blind review worksheet/ }))
+  expect(api.download).toHaveBeenLastCalledWith(access, 'review')
+  expect(filenames).toEqual(['MathDial-pilot-run-123.zip', 'review.csv'])
+  expect(api.classify).not.toHaveBeenCalled()
+})
+
+it('deletes saved results only after the discard action is confirmed and then clears both access stores', async () => {
+  localStorage.setItem('item_analysis_run_v1', JSON.stringify(access))
+  sessionStorage.setItem('item_analysis_run_v1', JSON.stringify(access))
+  vi.mocked(api.discardRun).mockResolvedValue(undefined)
+  const user = userEvent.setup()
+  render(<ItemAnalysis />)
+  await user.click(await screen.findByRole('button', { name: 'Discard saved analysis' }))
+  expect(api.discardRun).not.toHaveBeenCalled()
+  await user.click(screen.getByRole('button', { name: 'Keep analysis' }))
+  expect(localStorage.getItem('item_analysis_run_v1')).not.toBeNull()
+  await user.click(screen.getByRole('button', { name: 'Discard saved analysis' }))
+  await user.click(screen.getByRole('button', { name: 'Delete analysis permanently' }))
+  expect(api.discardRun).toHaveBeenCalledExactlyOnceWith(access)
+  expect(localStorage.getItem('item_analysis_run_v1')).toBeNull()
+  expect(sessionStorage.getItem('item_analysis_run_v1')).toBeNull()
+  expect(await screen.findByRole('combobox', { name: 'Benchmark and assessment context' })).toBeVisible()
 })
 
 it('defaults to real MMLU and exposes the pinned dataset source', async () => {
@@ -203,11 +268,11 @@ it('uses GPT-6 Luna for both steps without persisting the OpenAI key', async () 
   await screen.findByRole('heading', { name: 'Your criteria are ready' })
   expect(api.createRun).toHaveBeenCalledWith('illustrative', 'generate', 'sk-private')
   expect(api.classify).not.toHaveBeenCalled()
-  expect(JSON.parse(sessionStorage.getItem('item_analysis_run_v1')!)).toEqual(access)
-  expect(localStorage.length).toBe(0)
+  expect(JSON.parse(localStorage.getItem('item_analysis_run_v1')!)).toEqual(access)
+  expect(sessionStorage.getItem('item_analysis_run_v1')).toBeNull()
   await user.click(screen.getByRole('button', { name: 'Classify 10 items with GPT-6 Luna' }))
   expect(api.classify).toHaveBeenCalledWith(access, 'pilot', 'sk-private')
-  expect(sessionStorage.getItem('item_analysis_run_v1')).not.toContain('sk-private')
+  expect(localStorage.getItem('item_analysis_run_v1')).not.toContain('sk-private')
 })
 
 it('restores a checkpoint, requires key reentry, and continues through all remaining items', async () => {
@@ -223,7 +288,7 @@ it('restores a checkpoint, requires key reentry, and continues through all remai
   render(<ItemAnalysis />)
   await screen.findByRole('heading', { name: 'Pause here for a human review' })
   expect(screen.getByText(/Your 100-item pilot is complete/)).toHaveTextContent('You can stop here; continuing through the full snapshot is optional.')
-  expect(screen.getByRole('button', { name: /Human review CSV/ })).toBeEnabled()
+  expect(screen.getByRole('button', { name: /Download blind review worksheet/ })).toBeEnabled()
   expect(api.classify).not.toHaveBeenCalled()
   expect(screen.getByText('measurement-db MMLU snapshot')).toBeVisible()
   expect(screen.getByLabelText('OpenAI API key')).toHaveValue('')
