@@ -18,7 +18,7 @@ from website.server.tests.test_item_review import BODY, KEY, HF_KEY, client
 from website.server.tests.test_onet_grounding import response_body
 
 
-def seed_selected(*, facets=1, per_facet=58):
+def seed_selected(*, facets=1, per_facet=56):
     access = seed_screening(facets=facets, per_facet=per_facet)
     job = item_review.jobs[access["run_id"]]
     job.request = job.request.model_copy(update={"mode": "selection"})
@@ -65,14 +65,14 @@ def test_caps_total_at_160_uses_eight_unseen_per_batch_and_keeps_initial_outcome
     adaptive = result["adaptive"]
     assert adaptive["frozen"] is True and adaptive["stop_reason"] == "candidate_limit"
     assert adaptive["screened_count"] == adaptive["acquired_count"] == 160
-    assert len(calls) == 110
+    assert len(calls) == 112
     rows = [json.loads(call["input"])["item"]["id"] for call in calls]
-    assert len(set(rows)) == 110 and all(int(row.split("-")[1]) >= 50 for row in rows)
+    assert len(set(rows)) == 112 and all(int(row.split("-")[1]) >= 48 for row in rows)
     batches = adaptive["batches"]
     assert batches[0]["number"] == 0 and batches[0]["kind"] == "initial"
-    assert len(batches[0]["item_ids"]) == 50
+    assert len(batches[0]["item_ids"]) == 48
     assert batches[0]["selected_item_ids"] == original["selection"]["selected_item_ids"]
-    assert [len(batch["item_ids"]) for batch in batches[1:]] == [8] * 13 + [6]
+    assert [len(batch["item_ids"]) for batch in batches[1:]] == [8] * 14
     assert all(batch["status"] == "committed" for batch in batches)
     assert len({item_id for batch in batches for item_id in batch["item_ids"]}) == 160
     initial_outcomes = batches[0]["outcomes"]
@@ -90,7 +90,7 @@ def test_caps_total_at_160_uses_eight_unseen_per_batch_and_keeps_initial_outcome
     assert result["selection"]["task_coverage"][0]["selected_count"] == 30
     assert len(result["screening"]["items"]) == 160
     assert result["screening"]["allocation"] == original["screening"]["allocation"]
-    assert result["usage"]["input_tokens"] == 11000
+    assert result["usage"]["input_tokens"] == 11200
     assert finished(client, source).json() == original
     exported = export(client, access)
     assert exported.json()["adaptive"] == adaptive
@@ -123,8 +123,8 @@ def test_same_rows_in_all_source_and_source_queue_are_screened_once(client, monk
     assert result["status"] == "completed", result["message"]
     adaptive = result["adaptive"]
     assert adaptive["stop_reason"] == "queues_exhausted"
-    assert [len(batch["item_ids"]) for batch in adaptive["batches"]] == [50, 8, 3]
-    assert len(calls) == 11
+    assert [len(batch["item_ids"]) for batch in adaptive["batches"]] == [48, 8, 5]
+    assert len(calls) == 13
     assert len({item["item_id"] for item in result["screening"]["items"]}) == 61
     assert result["selection"]["selected_count"] == 30
 
@@ -187,7 +187,7 @@ def test_cost_limit_can_freeze_before_any_paid_request(client, monkeypatch):
     assert result["status"] == "completed", result["message"]
     adaptive = result["adaptive"]
     assert adaptive["frozen"] is True and adaptive["stop_reason"] == "cost_limit"
-    assert adaptive["screened_count"] == adaptive["acquired_count"] == 50
+    assert adaptive["screened_count"] == adaptive["acquired_count"] == 48
     assert adaptive["cost"]["spent_usd"] == adaptive["cost"]["reserved_usd"] == 0
     assert adaptive["cost"]["scope"] == "adaptive_screening"
     assert adaptive["attempts"] == []
@@ -211,7 +211,7 @@ def test_cost_uses_cached_tokens_and_only_new_calls(client, monkeypatch):
 
 @pytest.mark.parametrize("complete_breakdown", [True, False])
 def test_cache_write_usage_survives_sdk_and_export_and_settles_only_when_known(client, monkeypatch, complete_breakdown):
-    source = seed_selected(per_facet=51)
+    source = seed_selected(per_facet=49)
 
     def respond(request):
         row = json.loads(json.loads(request.content)["input"])["item"]
@@ -277,7 +277,7 @@ def test_invalid_response_keeps_pending_batch_and_resume_retries_only_unfinished
     original_selection = deepcopy(item_review.jobs[source["run_id"]].selection)
 
     def invalid_one(value, row):
-        if row["id"] == "0-50":
+        if row["id"] == "0-48":
             value["ratings"]["input_content"]["score"] = 6
         return value
 
@@ -291,7 +291,7 @@ def test_invalid_response_keeps_pending_batch_and_resume_retries_only_unfinished
     assert adaptive["batches"][1]["status"] != "committed"
     assert adaptive["batches"][1]["outcomes"] == []
     assert paused["selection"] == original_selection
-    assert all(stats["successes"] == 30 and stats["failures"] == 20
+    assert all(stats["successes"] == 30 and stats["failures"] == 18
                for stats in adaptive["queue_statistics"])
     successful = {item["item_id"] for item in paused["screening"]["items"] if item["status"] == "complete"}
     invalid = [item for item in paused["screening"]["items"] if item["status"] == "error"]
@@ -307,9 +307,9 @@ def test_invalid_response_keeps_pending_batch_and_resume_retries_only_unfinished
     assert result["adaptive"]["batches"][1]["item_ids"] == adaptive["batches"][1]["item_ids"]
     assert result["adaptive"]["batches"][0] == adaptive["batches"][0]
     assert result["adaptive"]["settings"] == adaptive["settings"]
-    assert len(calls) == 58 - len(successful)
+    assert len(calls) == 56 - len(successful)
     assert len(result["adaptive"]["attempts"]) == len(first_calls) + len(calls)
-    assert len(result["screening"]["items"]) == 58
+    assert len(result["screening"]["items"]) == 56
     assert all(item["status"] == "complete" for item in result["screening"]["items"])
     assert finished(client, first).json() == paused
 
@@ -328,7 +328,7 @@ def test_incomplete_selection_retains_pending_batch_and_resume_uses_saved_assess
     assert failed["status"] == "failed" and len(calls) == 8
     assert failed["selection"] == initial and failed["selection_run_id"] == source["run_id"]
     assert failed["adaptive"]["batches"][1]["outcomes"] == []
-    assert all(stats["successes"] + stats["failures"] == 50
+    assert all(stats["successes"] + stats["failures"] == 48
                for stats in failed["adaptive"]["queue_statistics"])
     assert "Private solver details" not in json.dumps(failed)
     monkeypatch.setattr(item_review, "select_collection", select_collection)
@@ -368,7 +368,7 @@ def test_cancel_drains_pending_solver_and_keeps_last_accepted_collection(client,
     assert result["selection"] == original
     assert result["adaptive"]["frozen"] is False
     assert result["adaptive"]["batches"][1]["outcomes"] == []
-    assert result["adaptive"]["screened_count"] == 58
+    assert result["adaptive"]["screened_count"] == 56
 
 
 def test_provider_error_is_one_unknown_attempt_and_not_a_selection_failure(client, monkeypatch):
@@ -396,7 +396,7 @@ def test_provider_error_is_one_unknown_attempt_and_not_a_selection_failure(clien
     assert adaptive["cost"]["unknown_attempts"] == 1
     assert adaptive["cost"]["reserved_usd"] > 0 and adaptive["cost"]["spent_usd"] == 0
     assert len(adaptive["attempts"]) == 1 and adaptive["batches"][1]["outcomes"] == []
-    assert all(stats["successes"] + stats["failures"] == 50 for stats in adaptive["queue_statistics"])
+    assert all(stats["successes"] + stats["failures"] == 48 for stats in adaptive["queue_statistics"])
     assert "Private provider failure" not in json.dumps(failed)
     calls = mock_screener(monkeypatch)
     result = finished(client, start_adaptive(client, first)).json()
@@ -436,7 +436,7 @@ def test_cancel_inflight_request_retains_attempt_without_crediting_incomplete_ba
     assert response.status_code == 200 and result["status"] == "cancelled" and drained.is_set()
     assert result["selection"] == original
     assert result["adaptive"]["batches"][1]["outcomes"] == []
-    assert result["adaptive"]["screened_count"] == 51
+    assert result["adaptive"]["screened_count"] == 49
     assert len(result["adaptive"]["attempts"]) == 2
     assert result["adaptive"]["cost"]["unknown_attempts"] == 1
 
@@ -476,7 +476,7 @@ def test_cost_limited_resume_freezes_valid_subset_and_keeps_unfinished_ids_expli
     assert result["status"] == "completed", result["message"]
     adaptive = result["adaptive"]
     assert adaptive["frozen"] is True and adaptive["stop_reason"] == "cost_limit"
-    assert adaptive["screened_count"] == 51 and adaptive["acquired_count"] == 52
+    assert adaptive["screened_count"] == 49 and adaptive["acquired_count"] == 50
     batch = adaptive["batches"][1]
     assert batch["status"] == "committed" and len(batch["outcomes"]) == 1
     assert batch["outcomes"][0]["retained"] is True
@@ -484,7 +484,7 @@ def test_cost_limited_resume_freezes_valid_subset_and_keeps_unfinished_ids_expli
     assert result["selection"]["total_quality"] == 121
     assert result["selection_run_id"] == resumed["run_id"]
     assert adaptive["cost"] == failed["adaptive"]["cost"]
-    assert all(stats["successes"] == 31 and stats["failures"] == 20
+    assert all(stats["successes"] == 31 and stats["failures"] == 18
                for stats in adaptive["queue_statistics"])
     assert finished(client, first).json() == failed
 

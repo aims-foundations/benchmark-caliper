@@ -64,7 +64,7 @@ def snapshot():
         "retrieval": {"scope": {"commit": "abc123"}, "queries": [{"query": "triage"}], "policy": {"version": 3},
                       "rankings": [{"facet_id": "triage", "candidates": [other, item]}],
                       "queues": [{"item_ids": ["not-selected", "item-b"]}]},
-        "screening": {"allocation": {"budget": 50, "allocated": 2, "items": [{"item_id": "item-b"}]},
+        "screening": {"allocation": {"budget": 48, "allocated": 2, "items": [{"item_id": "item-b"}]},
                       "items": [other, item], "model": {"prompt": "Original screening prompt"}, "policy": {"version": 1}},
         "selection": {"selected_item_ids": ["item-b"], "items": [{"item_id": "item-b", "quality_score": 4.25,
                                                                   "matched_facet_ids": ["triage"]}],

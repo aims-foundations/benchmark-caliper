@@ -35,7 +35,7 @@ def seed_screening(*, facets=3, per_facet=24):
                       "acquisition": {key: entry[key] for key in ("queue_id", "facet_id")},
                       "screened_run_id": job.run_id, "usage": {"input_tokens": 100}})
     job.screening = {
-        "policy": {"version": SCREENING_VERSION, "initial_budget": 50},
+        "policy": {"version": SCREENING_VERSION, "initial_budget": 48},
         "allocation": allocation, "items": items,
         "model": {"version": SCREENING_VERSION, "model": screener.model, "prompt": screener.prompt,
                   "reasoning_effort": screener.reasoning_effort,
@@ -67,13 +67,13 @@ def test_selects_thirty_total_preserves_every_task_and_full_export(client, monke
     assert result["mode"] == "selection" and result["status"] == "completed"
     selection = result["selection"]
     assert selection["limit"] == selection["selected_count"] == 30
-    assert selection["eligible_count"] == 50 and selection["fully_satisfied"] is True
+    assert selection["eligible_count"] == 48 and selection["fully_satisfied"] is True
     assert all(entry["minimum"] == 1 and entry["selected_count"] >= 1 for entry in selection["task_coverage"])
     assert sum(entry["selected_count"] for entry in selection["task_coverage"]) == 30
     assert selection["total_quality"] == 120
     assert all(entry["quality_score"] == 4 for entry in selection["items"])
     assert result["selection_run_id"] == access["run_id"]
-    assert result["selection_input"] == {"allocated": 50, "screened": 50, "errors": 0, "pending": 0}
+    assert result["selection_input"] == {"allocated": 48, "screened": 48, "errors": 0, "pending": 0}
     assert result["usage"] == {} and result["screening"] == original["screening"]
     assert finished(client, source).json() == original
     exported = export(client, access)
@@ -95,7 +95,7 @@ def test_partial_screening_uses_valid_results_and_recomputes_gate(client, monkey
     forbid_external_calls(monkeypatch)
     result = finished(client, start_selection(client, source)).json()
     assert result["status"] == "completed"
-    assert result["selection_input"] == {"allocated": 50, "screened": 5, "errors": 1, "pending": 44}
+    assert result["selection_input"] == {"allocated": 48, "screened": 5, "errors": 1, "pending": 42}
     assert result["selection"]["selected_count"] == 4
     assert result["selection"]["excluded_counts"]["errors"] == 1
     assert result["selection"]["excluded_counts"]["gate_fail"] == 1

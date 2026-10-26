@@ -180,22 +180,37 @@ def _build(connection, items, inventory, encoder, policy, cancelled, progress):
     stats, source_rows = state["stats"], state["source_rows"]
     estimated_rows = sum(table.get("row_count", 0) for table in inventory.get("tables", []))
     _report(progress, "indexing", source_rows, estimated_rows)
-    pending = []
+    parallel_batches = getattr(encoder, "max_parallel_batches", 1)
+    if type(parallel_batches) is not int or parallel_batches < 1:
+        raise ValueError("Encoder parallel batch count must be a positive integer")
+    pending, batches = [], []
 
     def flush():
         _check_cancelled(cancelled)
-        if pending:
-            vectors = _encode(encoder, [text for _, text in pending], state["dimensions"], cancelled)
+        texts = [[text for _, text in batch] for batch in batches]
+        if batches and parallel_batches > 1:
+            encoded = encoder.encode_batches(texts, cancelled=cancelled)
+            if len(encoded) != len(batches):
+                raise ValueError("Encoder must return one result for every input batch")
+        else:
+            encoded = [_encode(encoder, batch, state["dimensions"], cancelled) for batch in texts]
+        for batch, values in zip(batches, encoded):
+            _check_cancelled(cancelled)
+            vectors = (_unit_vectors(values, rows=len(batch), dimensions=state["dimensions"])
+                       if parallel_batches > 1 else values)
             state["dimensions"] = vectors.shape[1]
             connection.executemany(
                 "INSERT INTO vectors(item_id, vector) VALUES (?, ?)",
-                ((row[0], vector.astype("<f4").tobytes()) for row, vector in zip(pending, vectors)),
+                ((row[0], vector.astype("<f4").tobytes()) for row, vector in zip(batch, vectors)),
             )
-            stats["embedded_documents"] += len(pending)
+            stats["embedded_documents"] += len(batch)
         state["source_rows"] = stats["source_rows"] = source_rows
         _check_cancelled(cancelled)
+        # The single writer commits the whole window only after every batch
+        # has vectors. A failed worker rolls back all identities, postings,
+        # provenance and vectors added since the previous checkpoint.
         _checkpoint(connection, state)
-        pending.clear()
+        batches.clear()
         _report(progress, "indexing", source_rows, estimated_rows)
 
     # Factories can skip committed tables/row groups without fetching them.
@@ -211,12 +226,20 @@ def _build(connection, items, inventory, encoder, policy, cancelled, progress):
                 for field in ("total_items", "indexed_items", "unique_documents"):
                     stats[field] += 1
             if len(pending) == ENCODING_BATCH_SIZE or source_rows % 1024 == 0:
-                flush()
+                # Preserve single-GPU encoding boundaries, including partial
+                # batches at source checkpoints. Only scheduling changes.
+                if pending:
+                    batches.append(pending)
+                    pending = []
+                if len(batches) == parallel_batches or source_rows % 1024 == 0:
+                    flush()
         expected_counts = [table.get("row_count") for table in inventory["tables"]]
         if all(type(value) is int and value >= 0 for value in expected_counts):
             if source_rows != sum(expected_counts):
                 raise ValueError("Loaded benchmark row count differs from the pinned inventory")
         estimated_rows = source_rows
+        if pending:
+            batches.append(pending)
         flush()
     finally:
         if callable(items) and hasattr(remaining, "close"):

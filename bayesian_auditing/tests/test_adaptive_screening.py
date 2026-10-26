@@ -149,20 +149,21 @@ def test_batch_is_eight_from_saved_ranking_and_skips_all_globally_seen_items():
     assert (queues, seen) == before
 
 
-def test_total_160_budget_includes_initial_50_and_final_batch_can_be_short():
+@pytest.mark.parametrize("limit, expected_sizes", [(160, [8] * 14), (159, [8] * 13 + [7])])
+def test_total_budget_includes_initial_48_and_final_batch_can_be_short(limit, expected_sizes):
     req = requirements(("diagnosis",))
     queues = [queue("diagnosis", [f"item-{index}" for index in range(200)])]
-    seen = {f"item-{index}" for index in range(50)}
+    seen = {f"item-{index}" for index in range(48)}
     sizes = []
     for decision in range(20):
-        batch = choose(req, queues, seen=seen, decision_index=decision)
+        batch = choose(req, queues, seen=seen, decision_index=decision, limit=limit)
         if batch is None:
             break
         assert not seen.intersection(batch["item_ids"])
         seen.update(batch["item_ids"])
         sizes.append(len(batch["item_ids"]))
-    assert sizes == [8] * 13 + [6]
-    assert len(seen) == 160
+    assert sizes == expected_sizes
+    assert len(seen) == limit
 
 
 def test_exhausted_queues_do_not_receive_exploration_probability():

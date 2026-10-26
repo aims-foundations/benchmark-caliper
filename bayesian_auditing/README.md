@@ -241,6 +241,32 @@ those checks in the same status file. The command's `--help` describes device,
 batch, inventory, and disk-reserve options. These operational settings do not
 change the retrieval policy or the cache identity.
 
+To encode on several available GPUs, use one preparation process with
+`--devices` instead of `--device`:
+
+```bash
+CUDA_VISIBLE_DEVICES=2,4,5 .venv/bin/python -m bayesian_auditing.prepare_benchmark_index \
+  --cache-dir results/local-website/benchmark-retrieval-index \
+  --devices cuda:0 cuda:1 cuda:2 --batch-size 64 --cpu-threads 4
+```
+
+Device indices are relative to `CUDA_VISIBLE_DEVICES`: this example uses
+physical GPUs 2, 4, and 5. Each device gets a separate encoding worker started
+with Python's multiprocessing `spawn` method. `--batch-size` remains the number
+of BGE chunks per worker inference batch, and `--cpu-threads` applies to each
+worker. The main process remains the only SQLite writer and commits completed
+work in source order. Full rows still use the same nonoverlapping chunks and
+normalized mean vectors; using more GPUs does not sample or truncate the bank
+or change the cache identity. The command closes its workers when it completes,
+fails, or is interrupted. Its status file reports the configured devices and
+encoding-worker count (`auto` means the single-device default).
+
+Stop the existing preparation command cleanly before switching device options,
+then point the new command at the same cache directory to resume its committed
+checkpoint. Do not launch multiple CLI builders against the same cache to use
+more GPUs: the filesystem lock serializes builders; `--devices` parallelizes
+encoding within one builder.
+
 Install the existing retrieval dependencies and configure authorized Hugging
 Face dataset access on the server. The pinned BGE model is downloaded once if
 absent from the local Hugging Face cache. The index needs SQLite with FTS5.
@@ -259,22 +285,20 @@ Long-row checks also confirmed that text beyond token 512 affects the embedding.
 These checks do not establish performance or
 retrieval quality across the whole bank, which has not been run end to end.
 
-## Step 5: screen the initial 50 candidates
+## Step 5: screen the initial 48 candidates
 
 After completed retrieval, choose **Screen initial candidates**. This step
-assesses at most **50 distinct items** using GPT-6 Luna. The fixed budget of 50
-is the agreed implementation choice; the paper's worked example uses 48 items
-across three tasks. This stage does not perform adaptive allocation, assemble a
-collection, or implement Step 7. Collection selection follows separately in
-Step 6.
+assesses at most **48 distinct items** using GPT-6 Luna. The 48-item initial
+budget is specified in Step 5 of the paper's framework and Figure 1. Collection
+selection follows separately in Step 6, and adaptive allocation starts in Step 7.
 
 [`screening_queue.py`](screening_queue.py) allocates the budget deterministically
 across the tasks' all-source queues. Each pass takes the next unseen item from
 each task in the existing task order, preserving retrieval rank within each
-queue. Three queues with enough distinct items receive 17, 17, and 16 items.
+queue. Three queues with enough distinct items receive 16 items each.
 An overlapping item counts once globally; the next queue skips it and continues
 to its next unseen candidate. When a queue is exhausted, the remaining queues
-use the available budget. If their combined union has fewer than 50 items, the
+use the available budget. If their combined union has fewer than 48 items, the
 allocation records the shortfall. Per-collection queues do not receive separate
 initial allocations, and the original queues are unchanged.
 
@@ -408,7 +432,7 @@ errored, and pending screening items; `selection_run_id` identifies the run
 that produced the accepted collection, including one retained after a retry.
 Its export retains the original answers, requirements,
 grounding, retrieval, and screening. **Continue screening** from a selection
-can finish pending or errored items from the original 50-item allocation;
+can finish pending or errored items from the original 48-item allocation;
 reselect afterward to incorporate the new results. It does not add adaptive
 batches. Step 7 reuses the same Python `select_collection` function after each
 adaptive batch; there is no new CLI command.
@@ -424,7 +448,7 @@ ratings or performance across the complete item bank.
 After all candidates in the initial allocation have valid screening results and
 Step 6 has accepted a collection, **Start adaptive screening** continues through
 the saved Step 4 task/source queues. It does not retrieve more candidates, alter
-their ranks, or repeat the initial 50 screening calls. The total candidate limit
+their ranks, or repeat the initial screening calls. The total candidate limit
 is **160 distinct items, including the initial allocation**; each subsequent
 batch contains at most eight unseen items. The selected collection still holds
 at most 30 items in total.

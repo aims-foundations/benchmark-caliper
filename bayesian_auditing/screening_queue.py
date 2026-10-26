@@ -3,7 +3,7 @@
 from .benchmark_queries import ScreeningQueues
 
 
-INITIAL_SCREENING_BUDGET = 50
+INITIAL_SCREENING_BUDGET = 48
 
 
 def allocate_initial_screening(queues: list[dict], budget: int = INITIAL_SCREENING_BUDGET) -> dict:

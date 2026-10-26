@@ -804,3 +804,126 @@ def test_default_hydrator_uses_saved_pinned_inventory_only_when_needed(tmp_path,
         assert calls == [(INVENTORY, [{'item_id': record['evidence_hash'], 'sources': [record['source']]}])]
     finally:
         index.close()
+
+
+class ParallelFakeEncoder(FakeEncoder):
+    max_parallel_batches = 3
+
+    def __init__(self, vectors=None):
+        super().__init__(vectors)
+        self.windows = []
+
+    def encode_batches(self, batches, *, cancelled=None):
+        self.windows.append(deepcopy(batches))
+        return [self.encode(batch) for batch in batches]
+
+
+def test_parallel_build_matches_serial_batches_rows_sources_vectors_and_search(tmp_path):
+    rows = [item(f'needle row {i}', row=i + 1) for i in range(1100)]
+    # Repeats cross both batch and transaction boundaries. Every source stays.
+    for position in range(10, 1100, 17):
+        rows.insert(position, item('needle row 0', benchmark='another', row=position + 1))
+    vectors = {row_search_text(row['evidence']['item']): [number + 1, 1]
+               for number, row in enumerate(rows)}
+    original = deepcopy(rows)
+    serial_encoder, parallel_encoder = FakeEncoder(vectors), ParallelFakeEncoder(vectors)
+    serial = prepare(tmp_path / 'serial', rows, serial_encoder, resume=True)
+    parallel = prepare(tmp_path / 'parallel', rows, parallel_encoder, resume=True)
+    try:
+        assert rows == original
+        assert serial.policy == parallel.policy and serial.stats == parallel.stats
+        assert serial.path.name == parallel.path.name
+        assert serial_encoder.calls == parallel_encoder.calls
+        assert max(map(len, parallel_encoder.windows)) == 3
+        for table, order in [('items', 'rowid'), ('vectors', 'item_id'),
+                             ('sources', 'item_id, source_hash'), ('search_fts_docsize', 'id')]:
+            assert serial._connection.execute(f'SELECT * FROM {table} ORDER BY {order}').fetchall() == \
+                parallel._connection.execute(f'SELECT * FROM {table} ORDER BY {order}').fetchall()
+        assert serial.search('needle row 14', dense_k=12, bm25_k=12) == \
+            parallel.search('needle row 14', dense_k=12, bm25_k=12)
+    finally:
+        serial.close()
+        parallel.close()
+
+
+@pytest.mark.parametrize('failure', ['worker', 'invalid_vector', 'missing_batch', 'cancel', 'source'])
+def test_parallel_failure_rolls_back_whole_window_and_resumes(tmp_path, monkeypatch, failure):
+    import json
+
+    monkeypatch.setattr(module, 'ENCODING_BATCH_SIZE', 2)
+    rows = [item(f'row {i}', row=i + 1) for i in range(13)]
+    stopped = False
+
+    class FailingParallel(ParallelFakeEncoder):
+        def encode_batches(self, batches, *, cancelled=None):
+            nonlocal stopped
+            values = super().encode_batches(batches, cancelled=cancelled)
+            if len(self.windows) == 2:
+                if failure == 'worker':
+                    raise RuntimeError('worker failed after another worker finished')
+                if failure == 'invalid_vector':
+                    values[-1][:] = np.nan
+                if failure == 'missing_batch':
+                    values.pop()
+                if failure == 'cancel':
+                    stopped = True
+            return values
+
+    def source(offset):
+        for number, row in enumerate(rows[offset:], offset):
+            if failure == 'source' and number == 9:
+                raise RuntimeError('source failed within a parallel window')
+            yield row
+
+    with pytest.raises((RuntimeError, ValueError, InterruptedError)):
+        prepare(tmp_path, source, FailingParallel(), resume=True, cancelled=lambda: stopped)
+    checkpoint, = tmp_path.glob('*.building.sqlite3')
+    assert list(tmp_path.glob('*.sqlite3')) == [checkpoint]
+    with sqlite3.connect(checkpoint) as connection:
+        for table in ('items', 'vectors', 'sources', 'search_fts'):
+            assert connection.execute(f'SELECT COUNT(*) FROM {table}').fetchone()[0] == 6
+        state = json.loads(connection.execute("SELECT value FROM metadata WHERE key='build_state'").fetchone()[0])
+        assert state['source_rows'] == state['stats']['embedded_documents'] == 6
+        assert not connection.execute("SELECT value FROM metadata WHERE key='complete'").fetchone()
+    offsets = []
+
+    def resume(offset):
+        offsets.append(offset)
+        return iter(rows[offset:])
+
+    encoder = FakeEncoder()
+    index = prepare(tmp_path, resume, encoder, resume=True)
+    try:
+        assert offsets == [6]
+        assert sum(map(len, encoder.calls)) == 7
+        assert index.stats['source_rows'] == index.stats['embedded_documents'] == 13
+        assert {match['item_id'] for match in index.search('row')} == {row['evidence_hash'] for row in rows}
+    finally:
+        index.close()
+
+
+def test_parallel_resume_reuses_single_worker_checkpoint(tmp_path, monkeypatch):
+    monkeypatch.setattr(module, 'ENCODING_BATCH_SIZE', 2)
+    rows = [item(f'row {i}', row=i + 1) for i in range(9)]
+
+    def stop(state):
+        if state['completed'] == 2:
+            raise InterruptedError('switch hardware after checkpoint')
+
+    with pytest.raises(InterruptedError):
+        prepare(tmp_path, rows, FakeEncoder(), resume=True, progress=stop)
+    offsets = []
+
+    def source(offset):
+        offsets.append(offset)
+        return iter(rows[offset:])
+
+    encoder = ParallelFakeEncoder()
+    index = prepare(tmp_path, source, encoder, resume=True)
+    try:
+        assert offsets == [2]
+        assert [text for batch in encoder.calls for text in batch] == [
+            row_search_text(row['evidence']['item']) for row in rows[2:]]
+        assert index.stats['source_rows'] == index.stats['embedded_documents'] == 9
+    finally:
+        index.close()

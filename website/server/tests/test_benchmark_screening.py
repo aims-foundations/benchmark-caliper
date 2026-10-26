@@ -96,7 +96,7 @@ def export(client, access):
                       headers={"X-Review-Token": access["run_secret"]})
 
 
-def test_fifty_items_even_allocation_full_rows_independent_tasks_and_export(client, monkeypatch):
+def test_forty_eight_items_even_allocation_full_rows_independent_tasks_and_export(client, monkeypatch):
     source = seed_retrieval()
     original = finished(client, source).json()
     requests = mock_screener(monkeypatch)
@@ -107,11 +107,11 @@ def test_fifty_items_even_allocation_full_rows_independent_tasks_and_export(clie
     result = finished(client, access).json()
     assert result["mode"] == "screening" and result["status"] == "completed"
     screening = result["screening"]
-    assert screening["policy"]["initial_budget"] == 50
-    assert screening["allocation"]["allocated"] == 50 and screening["allocation"]["shortfall"] == 0
-    assert [allocation["allocated"] for allocation in screening["allocation"]["allocations"]] == [17, 17, 16]
-    assert len(screening["items"]) == len(requests) == 50
-    assert len({item["item_id"] for item in screening["items"]}) == 50
+    assert screening["policy"]["initial_budget"] == 48
+    assert screening["allocation"]["allocated"] == 48 and screening["allocation"]["shortfall"] == 0
+    assert [allocation["allocated"] for allocation in screening["allocation"]["allocations"]] == [16, 16, 16]
+    assert len(screening["items"]) == len(requests) == 48
+    assert len({item["item_id"] for item in screening["items"]}) == 48
     for item, acquisition in zip(screening["items"], screening["allocation"]["items"]):
         assert item["item_id"] == acquisition["item_id"] == row_fingerprint(item["evidence"]["item"])
         assert item["status"] == "complete" and item["gate"]["status"] == "pass"
@@ -128,7 +128,7 @@ def test_fifty_items_even_allocation_full_rows_independent_tasks_and_export(clie
         assert body["store"] is False
         assert body["instructions"] == screening["model"]["prompt"]
         assert body["text"]["format"]["schema"] == screening["model"]["output_schema"]
-    assert result["usage"]["input_tokens"] == 5000
+    assert result["usage"]["input_tokens"] == 4800
     assert finished(client, source).json() == original
     exported = export(client, access)
     assert exported.status_code == 200
@@ -144,7 +144,7 @@ def test_shared_items_count_once_and_shortfall_is_explicit(client, monkeypatch):
     requests = mock_screener(monkeypatch)
     result = finished(client, start_screening(client, source)).json()["screening"]
     assert len(requests) == len(result["items"]) == 7
-    assert result["allocation"]["shortfall"] == 43
+    assert result["allocation"]["shortfall"] == 41
     assert [entry["allocated"] for entry in result["allocation"]["allocations"]] == [3, 2, 2]
 
 
@@ -153,7 +153,7 @@ def test_empty_union_finishes_without_opening_paid_client(client, monkeypatch):
     monkeypatch.setattr(item_review, "AsyncOpenAI", lambda **kwargs: pytest.fail("No candidates to judge"))
     result = finished(client, start_screening(client, source)).json()
     assert result["status"] == "completed" and result["screening"]["items"] == []
-    assert result["screening"]["allocation"]["shortfall"] == 50 and result["usage"] == {}
+    assert result["screening"]["allocation"]["shortfall"] == 48 and result["usage"] == {}
 
 
 def test_gate_failures_unknowns_and_invalid_output_are_distinct(client, monkeypatch):

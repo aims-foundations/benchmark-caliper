@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import signal
 import time
@@ -24,6 +25,7 @@ from .benchmark_data import iter_benchmark_items, row_fingerprint
 from .benchmark_encoding import FullRowBGEEncoder
 from .benchmark_index import DEFAULT_MINIMUM_FREE_BYTES, prepare_benchmark_index
 from .benchmark_rows import fetch_benchmark_rows
+from .parallel_benchmark_encoding import ParallelFullRowBGEEncoder
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -35,15 +37,22 @@ def main(argv=None):
     parser.add_argument("--inventory", type=Path, default=ROOT / "website/server/item_review_inventory.json")
     parser.add_argument("--cache-dir", type=Path, required=True,
                         help="Use WEBSITE_DATA_DIR/benchmark-retrieval-index for the website")
-    parser.add_argument("--device", default=None, help="Torch device; defaults to CUDA when available")
-    parser.add_argument("--batch-size", type=int, default=64, help="BGE chunks per inference batch")
-    parser.add_argument("--cpu-threads", type=int, default=4)
+    devices = parser.add_mutually_exclusive_group()
+    devices.add_argument("--device", default=None, help="Torch device; defaults to CUDA when available")
+    devices.add_argument("--devices", nargs="+", metavar="cuda:N",
+                         help="Distinct visible CUDA devices; one encoding worker per device")
+    parser.add_argument("--batch-size", type=int, default=64, help="BGE chunks per worker inference batch")
+    parser.add_argument("--cpu-threads", type=int, default=4,
+                        help="Torch CPU threads in the main process and each encoding worker")
     parser.add_argument("--minimum-free-gb", type=float, default=DEFAULT_MINIMUM_FREE_BYTES / 1e9,
                         help="Stop safely below this free-disk reserve; committed progress is retained")
     parser.add_argument("--progress-seconds", type=float, default=30)
     args = parser.parse_args(argv)
     if args.batch_size < 1 or args.cpu_threads < 1 or args.minimum_free_gb < 0 or args.progress_seconds <= 0:
         parser.error("Batch/CPU sizes and progress interval must be positive; disk reserve cannot be negative")
+    if args.devices and (len(set(args.devices)) != len(args.devices)
+                         or any(re.fullmatch(r"cuda:(0|[1-9][0-9]*)", device) is None for device in args.devices)):
+        parser.error("--devices requires distinct CUDA indices such as cuda:0 cuda:1")
 
     import torch
 
@@ -52,7 +61,6 @@ def main(argv=None):
     args.cache_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
     inventory = json.loads(args.inventory.read_text())
     token = get_token()
-    encoder = FullRowBGEEncoder(device=args.device, batch_size=args.batch_size)
     started = time.monotonic()
     last_report = 0.0
     stage_started, stage_initial, previous_stage = started, 0, None
@@ -60,7 +68,9 @@ def main(argv=None):
     status = {"status": "starting", "pid": os.getpid(), "inventory": str(args.inventory.resolve()),
               "branches": inventory["branches"], "tables": len(inventory["tables"]),
               "source_rows": sum(table["row_count"] for table in inventory["tables"]),
-              "batch_size": args.batch_size, "minimum_free_gb": args.minimum_free_gb}
+              "batch_size": args.batch_size, "minimum_free_gb": args.minimum_free_gb,
+              "devices": args.devices or [args.device or "auto"],
+              "encoding_workers": len(args.devices) if args.devices else 1}
     status_path = args.cache_dir / "preparation-status.json"
 
     def save_status(**changes):
@@ -99,9 +109,11 @@ def main(argv=None):
     def load_rows(requests, *, cancelled=None):
         return fetch_benchmark_rows(inventory, requests, token=token, cancelled=cancelled)
 
-    index = None
-    save_status()
+    index = encoder = None
     try:
+        save_status()
+        encoder = (ParallelFullRowBGEEncoder(args.devices, batch_size=args.batch_size, cpu_threads=args.cpu_threads)
+                   if args.devices else FullRowBGEEncoder(device=args.device, batch_size=args.batch_size))
         index = prepare_benchmark_index(rows, args.cache_dir, inventory, encoder,
                                         cancelled=lambda: stopped, progress=progress, resume=True,
                                         minimum_free_bytes=int(args.minimum_free_gb * 1e9),
@@ -135,8 +147,12 @@ def main(argv=None):
         print(json.dumps(status), flush=True)
         raise
     finally:
-        if index is not None:
-            index.close()
+        try:
+            if index is not None:
+                index.close()
+        finally:
+            if args.devices and encoder is not None:
+                encoder.close()
 
 
 if __name__ == "__main__":

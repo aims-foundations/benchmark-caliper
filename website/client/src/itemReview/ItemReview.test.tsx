@@ -95,9 +95,9 @@ const screeningItem: api.ScreenedItem = {
 const screened: api.ScreeningReview = {
   ...retrieved, mode: 'screening', run_id: 'screen-run', source_run_id: 'retrieve-run', message: 'Initial screening completed with one assessment error.', usage: { input_tokens: 400, output_tokens: 800 },
   screening: {
-    policy: { version: 1, initial_budget: 50, gated_dimensions: ['input_ontology', 'input_content', 'input_form', 'output_ontology'], minimum_score: 3 },
+    policy: { version: 1, initial_budget: 48, gated_dimensions: ['input_ontology', 'input_content', 'input_form', 'output_ontology'], minimum_score: 3 },
     model: { version: 1, model: 'gpt-6-luna', reasoning_effort: 'high', max_output_tokens: 25000, prompt: 'Identify the tested task and rate all six dimensions.', output_schema: { title: 'ScreeningAssessment' } },
-    allocation: { budget: 50, allocated: 4, shortfall: 46, allocations: [{ queue_id: 'opaque/all', facet_id: 'management', target: 50, allocated: 4 }],
+    allocation: { budget: 48, allocated: 4, shortfall: 44, allocations: [{ queue_id: 'opaque/all', facet_id: 'management', target: 48, allocated: 4 }],
       items: ['item-1', 'item-2', 'item-3', 'item-4'].map(item_id => ({ item_id, queue_id: 'opaque/all', facet_id: 'management' })) },
     items: [screeningItem,
       { ...screeningItem, item_id: 'item-2', assessment: { ...assessment, task: { ...assessment.task, status: 'no_match', decision: 'Recall an unrelated fact.', matched_facet_ids: [], justification: 'The tested task is outside the deployment.' },
@@ -774,10 +774,10 @@ it('starts initial screening only after a fresh-key submission and preserves pri
   expect(key).toHaveValue('')
   expect(key).toHaveAttribute('type', 'password')
   expect(screen.getByRole('button', { name: 'Screen initial candidates' })).toBeDisabled()
-  expect(screen.getByText(/Up to 50 distinct candidates/)).toHaveTextContent('distributed as evenly as the available task queues allow')
+  expect(screen.getByText(/Up to 48 distinct candidates/)).toHaveTextContent('distributed as evenly as the available task queues allow')
   await user.type(key, 'sk-screen-private')
   expect(api.startScreening).not.toHaveBeenCalled()
-  expect(screen.getByText(/Starting authorizes up to 50 paid/)).toBeVisible()
+  expect(screen.getByText(/Starting authorizes up to 48 paid/)).toBeVisible()
   await user.click(screen.getByRole('button', { name: 'Screen initial candidates' }))
   await screen.findByRole('heading', { name: 'Your initial screening is ready' })
   expect(api.startScreening).toHaveBeenCalledWith({ run_id: 'retrieve-run', run_secret: 'retrieve-access' }, 'sk-screen-private')
@@ -796,7 +796,7 @@ it('shows actual task matching, six ratings, four-dimension gates, coverage, and
   const user = userEvent.setup()
   render(<ItemReview />)
   await screen.findByRole('heading', { name: 'Your initial screening is ready' })
-  expect(screen.getByText('Budget: 50 distinct items · Allocated: 4 · Shortfall: 46')).toBeVisible()
+  expect(screen.getByText('Budget: 48 distinct items · Allocated: 4 · Shortfall: 44')).toBeVisible()
   expect(screen.getByText('Passed gate').parentElement).toHaveTextContent('1')
   expect(screen.getByText('Failed gate').parentElement).toHaveTextContent('1')
   expect(screen.getByText('Unresolved gate').parentElement).toHaveTextContent('1')
@@ -850,7 +850,7 @@ it('retains completed screening assessments when stopped and continues only pend
 it('does not offer another paid screening once every allocated item has a valid assessment', async () => {
   sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'screen-run', run_secret: 'screen-access' }))
   vi.mocked(api.getReview).mockResolvedValue({ ...screened, screening: { ...screened.screening!,
-    allocation: { ...screened.screening!.allocation, allocated: 3, shortfall: 47 }, items: screened.screening!.items.slice(0, 3) } })
+    allocation: { ...screened.screening!.allocation, allocated: 3, shortfall: 45 }, items: screened.screening!.items.slice(0, 3) } })
   render(<ItemReview />)
   await screen.findByRole('heading', { name: 'Your initial screening is ready' })
   expect(screen.getByRole('heading', { name: 'Screening gate: Fail' })).toBeVisible()

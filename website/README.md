@@ -328,14 +328,33 @@ inventory and retrieval policy, and makes no paid API calls. Progress is saved
 in `preparation-status.json`; rerun the same command to resume. Completion also
 checks dense/BM25 retrieval, original row hashes, and reuse of the finished cache.
 
+One preparation command can use several GPUs via `--devices` instead of
+`--device`, for example:
+
+```bash
+CUDA_VISIBLE_DEVICES=2,4,5 .venv/bin/python -m bayesian_auditing.prepare_benchmark_index \
+  --cache-dir results/local-website/benchmark-retrieval-index \
+  --devices cuda:0 cuda:1 cuda:2 --batch-size 64 --cpu-threads 4
+```
+
+CUDA indices follow `CUDA_VISIBLE_DEVICES`, so these workers use physical GPUs
+2, 4, and 5. Multiprocessing `spawn` starts one encoder per device, while the
+main process remains the only database writer. Every original row keeps the
+same chunking and normalized-vector calculation. The batch size and CPU-thread
+count apply to each worker. Device choices do not change cache identity: stop
+the current builder cleanly, then resume its committed checkpoint using the
+same cache directory and the new options. Do not run multiple CLI builders for
+the same cache; their lock serializes them. Progress includes `devices` and
+`encoding_workers`, and workers close on completion, interruption, or failure.
+
 A completed retrieval offers **Screen initial candidates** (Step 5). It uses
-GPT-6 Luna to assess at most **50 distinct candidates**. The allocator takes one
+GPT-6 Luna to assess at most **48 distinct candidates**. The allocator takes one
 next unseen item per task's all-source queue on each pass, in existing task
-order. Three sufficiently populated queues receive 17, 17, and 16 items.
+order. Three sufficiently populated queues receive 16 items each.
 Overlapping items count once globally, exhausted queues leave their remaining
-share to other tasks, and a union smaller than 50 produces an explicit shortfall.
-The fixed budget of 50 is the agreed choice, replacing the paper's 48-item
-example. Per-collection queues do not receive extra allocations.
+share to other tasks, and a union smaller than 48 produces an explicit shortfall.
+The 48-item budget is specified in Step 5 of the paper's framework and Figure 1.
+Per-collection queues do not receive extra allocations.
 
 Each model request contains the six original answers, extracted requirements,
 and complete original item row, without the retrieval query, acquisition task,
@@ -367,7 +386,7 @@ retrieval is needed. The model uses high reasoning effort and a 25,000-token
 output ceiling, with the full prompt, schema, settings, and gate policy saved.
 
 Stopping or failing a screening run preserves completed assessments. **Continue
-screening** keeps its original 50-item allocation and prompt/settings snapshot,
+screening** keeps its original 48-item allocation and prompt/settings snapshot,
 retains all valid pass/fail/unresolved results, and retries only pending or
 errored items. A completed run with no items left to retry cannot be continued.
 Incompatible saved schema versions require starting again from retrieval.
@@ -377,7 +396,7 @@ contains the full screening result plus the original answers, requirements,
 grounding, and retrieval artifacts. Existing token authorization, cancellation,
 candidate paging, and temporary expiry still apply.
 
-See [`bayesian_auditing/README.md`](../bayesian_auditing/README.md#step-5-screen-the-initial-50-candidates)
+See [`bayesian_auditing/README.md`](../bayesian_auditing/README.md#step-5-screen-the-initial-48-candidates)
 for the prompt, schemas, and Python library entry points. Allocation and provider
 handling are tested with offline/mocked fixtures. Live provider judgment quality
 has not been validated, and no complete-bank end-to-end run has been performed.
@@ -424,7 +443,7 @@ exclusions, and solver status alongside the earlier pipeline artifacts.
 Existing authorization, cancellation, and expiry behavior apply.
 
 **Continue screening** from a selection run can finish pending or errored items
-in its original 50-item allocation, using a fresh OpenAI key and the original
+in its original 48-item allocation, using a fresh OpenAI key and the original
 screening prompt/settings. Select again afterward to include the additional
 results. Step 6 itself makes no model calls and does not start adaptive batches,
 freeze a final benchmark, or validate clinical correctness. See the
@@ -434,7 +453,7 @@ for the optimization and fallback policy.
 After the complete initial allocation has valid screening results and Step 6
 has accepted a collection, **Start adaptive screening** continues Step 7 from
 the saved retrieval queues. It screens up to eight unseen candidates per batch
-and stops at **160 distinct candidates total**, including the initial 50, queue
+and stops at **160 distinct candidates total**, including the initial 48, queue
 exhaustion, or a configured cost ceiling. It never retrieves additional items or
 screens an identical original row twice merely because it appears in several
 queues. Each completed batch reruns the existing local selector over all valid
