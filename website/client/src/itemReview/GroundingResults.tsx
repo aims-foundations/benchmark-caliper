@@ -1,7 +1,6 @@
 import { useState } from 'react'
-import { getReviewExport, type Catalog, type GroundingReview, type OnetCandidate, type OnetRecordMapping, type RunAccess } from './api'
+import { getReviewExport, type GroundingReview, type OnetCandidate, type OnetRecordMapping, type RunAccess } from './api'
 import { GroundingForm } from './GroundingForm'
-import { BenchmarkRetrievalForm } from './BenchmarkRetrievalForm'
 import { SupportedValue } from './RequirementsResults'
 
 function RecordMapping({ record, candidates }: { record: OnetRecordMapping; candidates: OnetCandidate[] }) {
@@ -16,9 +15,9 @@ function RecordMapping({ record, candidates }: { record: OnetRecordMapping; cand
   </section>
 }
 
-export function GroundingResults({ review, run, catalog, busy, onCancel, onRestart, onGround, onRetrieve }: {
+export function GroundingResults({ review, run, busy, onCancel, onRestart, onGround }: {
   review: GroundingReview; run: RunAccess; busy: boolean; onCancel: () => void; onRestart: () => void
-  catalog: Catalog | null; onGround: (apiKey: string) => Promise<boolean>; onRetrieve: () => Promise<boolean>
+  onGround: (apiKey: string) => Promise<boolean>
 }) {
   const [downloading, setDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState('')
@@ -62,7 +61,6 @@ export function GroundingResults({ review, run, catalog, busy, onCancel, onResta
       {downloadError && <p className="review-error" role="alert">{downloadError}</p>}
     </section>
 
-    {review.status === 'completed' && total > 0 && catalog && <BenchmarkRetrievalForm catalog={catalog} busy={busy} onRetrieve={onRetrieve} />}
     <GroundingContent review={review} />
     {!active && review.requirements && (review.requirements.task_facets.length > 0
       ? <GroundingForm busy={busy} onGround={onGround} />

@@ -1,14 +1,11 @@
 import { useState } from 'react'
-import { getReviewExport, type RunAccess, type SelectionReview, type AdaptiveRequest } from './api'
-import { ScreeningForm } from './ScreeningForm'
+import { getReviewExport, type RunAccess, type SelectionReview } from './api'
 import { ScreeningItem } from './ScreeningResults'
 import { SelectionForm } from './SelectionForm'
-import { AdaptiveForm } from './AdaptiveForm'
 
-export function SelectionResults({ review, run, busy, onCancel, onRestart, onSelect, onScreen, onAdapt }: {
+export function SelectionResults({ review, run, busy, onCancel, onRestart, onSelect }: {
   review: SelectionReview; run: RunAccess; busy: boolean; onCancel: () => void; onRestart: () => void
-  onSelect: () => Promise<boolean>; onScreen: (apiKey: string) => Promise<boolean>
-  onAdapt: (apiKey: string, body: AdaptiveRequest) => Promise<boolean>
+  onSelect: () => Promise<boolean>
 }) {
   const [downloading, setDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState('')
@@ -68,9 +65,7 @@ export function SelectionResults({ review, run, busy, onCancel, onRestart, onSel
     </section>
 
     <SelectedCollection review={review} previous={previous} />
-    {!active && remaining > 0 && <ScreeningForm busy={busy} onScreen={onScreen} remaining={remaining} retained={input.screened} />}
     {!active && <SelectionForm busy={busy} onSelect={onSelect} input={input} />}
-    {!active && review.status === 'completed' && selection && !previous && remaining === 0 && <AdaptiveForm busy={busy} onAdapt={onAdapt} />}
   </div>
 }
 

@@ -161,6 +161,14 @@ function step(number: number) {
   return screen.getByRole('region', { name: stepTitles[number - 1] })
 }
 
+const completedTransitions = [
+  { review: extracted, current: 2, action: 'Ground with O*NET', result: 'Deployment summary' },
+  { review: grounded, current: 3, action: 'Retrieve benchmark items', result: 'O*NET mappings' },
+  { review: retrieved, current: 4, action: 'Screen initial candidates', result: 'Task search queries' },
+  { review: screened, current: 5, action: 'Select up to 30 items', result: 'Initial screening allocation' },
+  { review: readyToAdapt, current: 6, action: 'Start adaptive screening', result: 'Task coverage' },
+]
+
 function expectNoStageStarted() {
   for (const start of [api.startReview, api.startGrounding, api.startBenchmarkRetrieval, api.startScreening, api.startSelection, api.startAdaptive]) {
     expect(start).not.toHaveBeenCalled()
@@ -1184,6 +1192,8 @@ it.each([
   render(<ItemReview />)
   await screen.findByRole('heading', { name: 'Task coverage' })
   expect(screen.queryByRole('button', { name: 'Start adaptive screening' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('region', { name: stepTitles[6] })).not.toBeInTheDocument()
+  expect(screen.queryByText('Ready to start', { exact: true })).not.toBeInTheDocument()
 })
 
 it('validates user-supplied ceiling, prices, and seed before authorizing adaptive calls', async () => {
@@ -1266,6 +1276,7 @@ it.each([
   expect(screen.queryByRole('button', { name: 'Resume adaptive screening' })).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'Continue screening' })).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'Select up to 30 items' })).not.toBeInTheDocument()
+  expect(screen.queryByText('Ready to start', { exact: true })).not.toBeInTheDocument()
 })
 
 it('makes queue estimates, batch choices, usage uncertainty, and adaptive export inspectable', async () => {
@@ -1351,9 +1362,10 @@ it.each([extracted, grounded, retrieved, screened, selected, adapted])('groups t
   const { container } = render(<ItemReview />)
   const currentStep = [extracted, grounded, retrieved, screened, selected, adapted].indexOf(review) + 2
   await screen.findByRole('heading', { name: stepTitles[currentStep - 1], level: 2 })
+  const topStep = currentStep < 6 ? currentStep + 1 : currentStep
   const headings = screen.getAllByRole('heading', { level: 2 }).filter(heading => heading.id.startsWith('pipeline-step-'))
-  expect(headings.map(heading => heading.textContent)).toEqual(stepTitles.slice(0, currentStep).reverse())
-  for (let number = 1; number <= currentStep; number++) {
+  expect(headings.map(heading => heading.textContent)).toEqual(stepTitles.slice(0, topStep).reverse())
+  for (let number = 1; number <= topStep; number++) {
     expect(within(step(number)).getByRole('button', { name: `Collapse Step ${number}` })).toHaveAttribute('aria-expanded', 'true')
     expect(step(number)).toHaveAttribute('id', `pipeline-step-${number}`)
     expect(headings[number - 1].textContent).not.toContain('·')
@@ -1364,6 +1376,78 @@ it.each([extracted, grounded, retrieved, screened, selected, adapted])('groups t
   expect(new Set(ids).size).toBe(ids.length)
   expect(screen.getAllByRole('button', { name: 'Start another run' })).toHaveLength(1)
   expect(screen.getAllByRole('button', { name: /Download .* JSON/ })).toHaveLength(1)
+  expect(within(step(currentStep)).getByRole('region', { name: 'Save and share results' })).toBeVisible()
+  expectNoStageStarted()
+})
+
+it.each(completedTransitions)('puts the next action above completed Step $current, with every result and control in its own step', async ({ review, current, action, result }) => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: review.run_id, run_secret: 'private-access' }))
+  vi.mocked(api.getReview).mockResolvedValue(review)
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: stepTitles[current], level: 2 })
+
+  const next = step(current + 1)
+  const completedStep = step(current)
+  expect(within(next).getByText('Ready to start', { exact: true })).toBeVisible()
+  expect(within(next).getByText('Next step', { exact: true })).toBeVisible()
+  expect(within(next).getByRole('button', { name: action })).toBeVisible()
+  expect(within(completedStep).queryByRole('button', { name: action })).not.toBeInTheDocument()
+  expect(screen.getAllByRole('button', { name: action })).toHaveLength(1)
+  expect(next.compareDocumentPosition(completedStep) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  expect(within(next).queryByRole('region', { name: 'Save and share results' })).not.toBeInTheDocument()
+
+  const completionMessage = within(completedStep).getByText(review.message, { exact: true })
+  const output = within(completedStep).getByRole('heading', { name: result })
+  const packagePanel = within(completedStep).getByRole('region', { name: 'Save and share results' })
+  expect(completionMessage.compareDocumentPosition(output) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  expect(output.compareDocumentPosition(packagePanel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  expect(within(completedStep).getByRole('button', { name: /Download .* JSON/ })).toBeVisible()
+  expect(within(completedStep).getByRole('button', { name: 'Start another run' })).toBeVisible()
+  const headings = screen.getAllByRole('heading', { level: 2 }).filter(heading => heading.id.startsWith('pipeline-step-'))
+  expect(headings.map(heading => heading.textContent)).toEqual(stepTitles.slice(0, current + 1).reverse())
+  expectNoStageStarted()
+})
+
+it('keeps completed grounding immediately beside its mappings, followed by requirements and all six original answers', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: grounded.run_id, run_secret: 'private-access' }))
+  vi.mocked(api.getReview).mockResolvedValue(grounded)
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Your O*NET grounding is ready' })
+
+  const completion = within(step(3)).getByText(grounded.message, { exact: true }).closest('section')
+  const mappings = within(step(3)).getByRole('region', { name: 'O*NET mappings' })
+  expect(completion?.nextElementSibling).toBe(mappings)
+  expect(within(step(3)).getByRole('article', { name: 'Mapping for task 1' })).toBeVisible()
+  for (const heading of ['Deployment summary', 'Task facets', 'Explicit coverage requirements', 'Unresolved details']) {
+    expect(within(step(2)).getByRole('heading', { name: heading })).toBeVisible()
+  }
+  expect(within(step(1)).getAllByRole('heading', { name: /^Answer [1-6]:/ })).toHaveLength(6)
+  expect(within(step(4)).getByRole('button', { name: 'Retrieve benchmark items' })).toBeVisible()
+})
+
+it.each(completedTransitions)('does not advertise the next stage while Step $current is still running', async ({ review, current, action }) => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: review.run_id, run_secret: 'private-access' }))
+  vi.mocked(api.getReview).mockResolvedValue({ ...review, status: 'running' })
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: stepTitles[current - 1], level: 2 })
+  expect(screen.queryByRole('region', { name: stepTitles[current] })).not.toBeInTheDocument()
+  expect(screen.queryByText('Ready to start', { exact: true })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: action })).not.toBeInTheDocument()
+  expect(within(step(current)).getByRole('region', { name: 'Save and share results' })).toBeVisible()
+  expectNoStageStarted()
+})
+
+it('places selection from partial screening in Step 6 while its retry stays beside the Step 5 evidence', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: screened.run_id, run_secret: 'private-access' }))
+  vi.mocked(api.getReview).mockResolvedValue({ ...screened, status: 'cancelled', screening: { ...screened.screening!, items: [screeningItem] } })
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Screening stopped' })
+  expect(within(step(6)).getByText('Ready to start', { exact: true })).toBeVisible()
+  expect(within(step(6)).getByRole('button', { name: 'Select up to 30 items' })).toBeEnabled()
+  expect(within(step(6)).getByText(/Initial screening is incomplete/)).toBeVisible()
+  expect(within(step(5)).getByRole('button', { name: 'Continue screening' })).toBeVisible()
+  expect(within(step(5)).getByRole('article', { name: 'Screened item 1' })).toBeVisible()
+  expect(within(step(6)).queryByRole('button', { name: 'Continue screening' })).not.toBeInTheDocument()
   expectNoStageStarted()
 })
 
@@ -1390,7 +1474,7 @@ it('collapses saved results without hiding their step heading and follows eviden
   expectNoStageStarted()
 })
 
-it('keeps historical O*NET evidence and candidate pages inspectable using the latest run token without offering old stage actions', async () => {
+it('keeps historical evidence inspectable using the latest run token and places unfinished screening controls in Step 5', async () => {
   const access = { run_id: selected.run_id, run_secret: 'selection-private-access' }
   sessionStorage.setItem('item_review_run_v1', JSON.stringify(access))
   vi.mocked(api.getReview).mockResolvedValue(selected)
@@ -1404,7 +1488,9 @@ it('keeps historical O*NET evidence and candidate pages inspectable using the la
   expect(within(step(3)).queryByRole('button', { name: 'Retrieve benchmark items' })).not.toBeInTheDocument()
   expect(within(step(4)).queryByRole('button', { name: 'Screen initial candidates' })).not.toBeInTheDocument()
   expect(within(step(5)).queryByRole('button', { name: 'Select up to 30 items' })).not.toBeInTheDocument()
-  expect(within(step(5)).queryByRole('button', { name: 'Continue screening' })).not.toBeInTheDocument()
+  expect(within(step(5)).getByRole('button', { name: 'Continue screening' })).toBeVisible()
+  expect(within(step(6)).queryByRole('button', { name: 'Continue screening' })).not.toBeInTheDocument()
+  expect(screen.getAllByRole('button', { name: 'Continue screening' })).toHaveLength(1)
 
   const candidate = await within(step(4)).findByRole('article', { name: 'Candidate 1' })
   await user.click(within(candidate).getByText('Inspect full item evidence and sources'))

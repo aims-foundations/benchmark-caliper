@@ -139,6 +139,7 @@
 .pipeline-order-note { color: var(--review-muted); font-size: .85rem; line-height: 1.6; margin: 0 0 1.5rem; }
 .pipeline-step { border: 1px solid var(--review-border); border-radius: 14px; background: #f4f1ec; margin-bottom: 2.5rem; scroll-margin-top: 6rem; overflow-wrap: anywhere; }
 .pipeline-step-current { border-color: #b98e7f; }
+.pipeline-step-ready { border-color: #a8b39e; background: #f1f4ee; }
 .pipeline-step-header { padding: clamp(1.2rem, 2.6vw, 2rem); }
 .pipeline-step-current > .pipeline-step-header { background: #f3e8e1; border-radius: 14px 14px 0 0; }
 .pipeline-step-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }

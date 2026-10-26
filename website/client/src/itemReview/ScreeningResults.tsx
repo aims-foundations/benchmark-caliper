@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { DIMENSIONS, getReviewExport, type ScreenedItem, type ScreeningReview, type RunAccess } from './api'
 import { ScreeningForm } from './ScreeningForm'
-import { SelectionForm } from './SelectionForm'
 
 function EvidenceNotes({ evidence, justification, information_gaps }: { evidence: string[]; justification: string; information_gaps: string[] }) {
   return <>
@@ -65,9 +64,8 @@ export function ScreeningItem({ item, index, review, taskName, label = 'Screened
   </article>
 }
 
-export function ScreeningResults({ review, run, busy, onCancel, onRestart, onScreen, onSelect }: {
+export function ScreeningResults({ review, run, busy, onCancel, onRestart, onScreen }: {
   review: ScreeningReview; run: RunAccess; busy: boolean; onCancel: () => void; onRestart: () => void; onScreen: (apiKey: string) => Promise<boolean>
-  onSelect: () => Promise<boolean>
 }) {
   const [downloading, setDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState('')
@@ -114,7 +112,6 @@ export function ScreeningResults({ review, run, busy, onCancel, onRestart, onScr
       <p className="help">Progress is saved so you can return later. The export retains original answers, requirements, grounding, retrieval, allocation, assessments, and screening settings.</p>
       {downloadError && <p className="review-error" role="alert">{downloadError}</p>}
     </section>
-    {!active && screening && <SelectionForm busy={busy} onSelect={onSelect} input={{ allocated: allocation?.allocated ?? 0, screened: complete, errors, pending: Math.max(0, (allocation?.allocated ?? 0) - items.length) }} />}
     <ScreeningContent review={review} />
     {!active && remaining > 0 && <ScreeningForm busy={busy} onScreen={onScreen} remaining={remaining} retained={complete} />}
   </div>

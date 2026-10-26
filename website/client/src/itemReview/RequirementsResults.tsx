@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { getReviewExport, type Deployment, type Requirements, type RequirementsReview, type RunAccess, type SupportedText } from './api'
 import { QUESTIONS } from './deployment'
-import { GroundingForm } from './GroundingForm'
 
 const SUMMARY_FIELDS = [
   ['workflow', 'Workflow'], ['primary_user', 'Primary user'], ['input_types', 'Input types'],
@@ -22,9 +21,8 @@ export function SupportedValue({ value }: { value: SupportedText }) {
   </div>
 }
 
-export function RequirementsResults({ review, run, busy, onCancel, onRestart, onGround }: {
+export function RequirementsResults({ review, run, busy, onCancel, onRestart }: {
   review: RequirementsReview; run: RunAccess; busy: boolean; onCancel: () => void; onRestart: () => void
-  onGround: (apiKey: string) => Promise<boolean>
 }) {
   const [downloading, setDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState('')
@@ -64,10 +62,8 @@ export function RequirementsResults({ review, run, busy, onCancel, onRestart, on
       {downloadError && <p className="review-error" role="alert">{downloadError}</p>}
     </section>
 
-    {review.status === 'completed' && requirements && (requirements.task_facets.length > 0
-      ? <GroundingForm busy={busy} onGround={onGround} />
-      : <p className="review-panel">No task facets were extracted to ground with O*NET. Start another run and clarify the tasks in your deployment answers.</p>)}
     <RequirementsContent requirements={requirements} />
+    {review.status === 'completed' && requirements?.task_facets.length === 0 && <p className="review-panel">No task facets were extracted to ground with O*NET. Start another run and clarify the tasks in your deployment answers.</p>}
   </div>
 }
 

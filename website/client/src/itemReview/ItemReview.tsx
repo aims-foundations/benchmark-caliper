@@ -4,15 +4,9 @@ import { SiteFooter } from '../components/SiteFooter'
 import { appPath } from '../paths'
 import { cancelReview, getCatalog, getReview, startReview, startGrounding, startBenchmarkRetrieval, startScreening, startSelection, startAdaptive, type AdaptiveRequest, type Catalog, type Deployment, type RunResult, type RunAccess } from './api'
 import { Results } from './Results'
-import { RequirementsResults } from './RequirementsResults'
-import { GroundingResults } from './GroundingResults'
-import { BenchmarkRetrievalResults } from './BenchmarkRetrievalResults'
-import { ScreeningResults } from './ScreeningResults'
-import { SelectionResults } from './SelectionResults'
-import { AdaptiveResults } from './AdaptiveResults'
-import { ResultPackage } from './ResultPackage'
 import { PipelineResults } from './PipelineResults'
 import { PIPELINE_STEPS, stepNumber } from './StepSection'
+import { nextStepNumber } from './pipelineProgress'
 import { QUESTIONS } from './deployment'
 import { forgetReviewAccess, loadReviewAccess, persistRestoredPipelineAccess, saveReviewAccess } from './accessStorage'
 
@@ -221,6 +215,7 @@ export function ItemReview() {
 
   const active = access && (!review || ['preparing', 'running'].includes(review.status))
   const pipeline = review && 'requirements' in review ? review : null
+  const nextPipelineStep = pipeline ? nextStepNumber(pipeline, catalog) : null
   const validRetrieveK = !!catalog && Number.isInteger(Number(retrieveK)) && Number(retrieveK) >= 1 && Number(retrieveK) <= catalog.max_retrieve_k
 
   return <div className="rd-root item-review-site">
@@ -238,7 +233,7 @@ export function ItemReview() {
           {pipeline ? <nav aria-label="Framework steps"><ol className="review-steps review-framework-steps">
             {PIPELINE_STEPS.map(info => <li key={info.number}
               aria-current={stepNumber(pipeline.mode) === info.number ? 'step' : undefined}>
-              {info.number <= stepNumber(pipeline.mode)
+              {info.number <= (nextPipelineStep ?? stepNumber(pipeline.mode))
                 ? <a href={`#pipeline-step-${info.number}`}><span>{info.number}</span>{info.name}</a>
                 : <div className="review-step-future"><span>{info.number}</span>{info.name}</div>}
             </li>)}
@@ -335,15 +330,9 @@ export function ItemReview() {
               <button type="button" onClick={() => void start()} disabled={busy || !catalog.dataset_access_configured || catalog.table_count === 0 || !validRetrieveK}>{busy ? 'Starting…' : 'Retrieve and assess shortlist'}</button></div>
           </section>}
 
-          {access && review && 'requirements' in review && <ResultPackage key={`package-${access.run_id}`} review={review} run={access} />}
-          {access && pipeline && <PipelineResults key={access.run_id} review={pipeline} run={access} catalog={catalog}>
-          {access && review?.mode === 'requirements' && <RequirementsResults review={review} run={access} busy={busy} onCancel={() => void stop()} onRestart={restart} onGround={ground} />}
-          {access && review?.mode === 'grounding' && <GroundingResults review={review} run={access} catalog={catalog} busy={busy} onCancel={() => void stop()} onRestart={restart} onGround={ground} onRetrieve={retrieve} />}
-          {access && review?.mode === 'retrieval' && <BenchmarkRetrievalResults key={access.run_id} review={review} run={access} catalog={catalog} busy={busy} onCancel={() => void stop()} onRestart={restart} onRetrieve={retrieve} onScreen={screen} />}
-          {access && review?.mode === 'screening' && <ScreeningResults key={access.run_id} review={review} run={access} busy={busy} onCancel={() => void stop()} onRestart={restart} onScreen={screen} onSelect={select} />}
-          {access && review?.mode === 'selection' && <SelectionResults key={access.run_id} review={review} run={access} busy={busy} onCancel={() => void stop()} onRestart={restart} onScreen={screen} onSelect={select} onAdapt={adapt} />}
-          {access && review?.mode === 'adaptive' && <AdaptiveResults key={access.run_id} review={review} run={access} busy={busy} onCancel={() => void stop()} onRestart={restart} onAdapt={adapt} />}
-          </PipelineResults>}
+          {access && pipeline && <PipelineResults key={access.run_id} review={pipeline} run={access} catalog={catalog}
+            actions={{ busy, onCancel: () => void stop(), onRestart: restart, onGround: ground,
+              onRetrieve: retrieve, onScreen: screen, onSelect: select, onAdapt: adapt }} />}
           {access && review?.mode !== 'requirements' && review?.mode !== 'grounding' && review?.mode !== 'retrieval' && review?.mode !== 'screening' && review?.mode !== 'selection' && review?.mode !== 'adaptive' && <>
             <section className="review-panel review-progress" aria-live="polite"><p className="eyebrow">Results</p>
               <h2>{!review ? 'Connecting to your run' : review.status === 'preparing' ? 'Preparing and retrieving candidate items' : review.status === 'running' ? 'Assessing shortlisted items' : review.status === 'completed' ? 'Your item review is ready' : review.status === 'cancelled' ? 'Review stopped' : 'Review interrupted'}</h2>

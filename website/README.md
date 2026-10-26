@@ -240,12 +240,14 @@ review workflow keeps its own sample and catalog.
 ## Goal-conditioned item review
 
 Pipeline results are grouped under numbered headings such as **Step 3: O*NET
-grounding**, each with a short purpose and status. The current step appears
-first, followed by saved earlier steps in descending order down to **Step 1:
-Deployment goal**. Groups start expanded and can be collapsed individually;
-evidence links reopen their destination group. The sidebar uses the same
-framework step numbers. Previous results are read-only, including the saved
-O*NET mappings, candidate browser, and initial screening assessments.
+grounding**, each with a short purpose and status. When the next step is
+available, its start panel appears first with **Ready to start**. The current
+step follows with its completion or progress message, results, controls, and
+results-package download together. Saved earlier steps follow in descending
+order down to **Step 1: Deployment goal**. Screening continuation controls stay
+in Step 5, including when reviewing a Step 6 selection. Groups start expanded
+and can be collapsed individually; evidence links reopen their destination
+group. The sidebar uses the same framework step numbers.
 
 During Step 7, the Step 5 section contains only the initial allocation, and
 Step 6 shows the collection selected before adaptation. New adaptive runs save

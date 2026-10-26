@@ -16,8 +16,8 @@ export function stepNumber(mode: string): StepNumber {
   return PIPELINE_STEPS.find(step => step.mode === mode)?.number ?? 1
 }
 
-export function StepSection({ step, current = false, status = 'Saved results', summary, children }: {
-  step: StepNumber; current?: boolean; status?: string; summary?: string; children: ReactNode
+export function StepSection({ step, current = false, ready = false, status = 'Saved results', summary, children }: {
+  step: StepNumber; current?: boolean; ready?: boolean; status?: string; summary?: string; children: ReactNode
 }) {
   const [expanded, setExpanded] = useState(true)
   const section = useRef<HTMLElement>(null)
@@ -51,10 +51,10 @@ export function StepSection({ step, current = false, status = 'Saved results', s
     }
   }, [])
 
-  return <section ref={section} id={id} className={`pipeline-step${current ? ' pipeline-step-current' : ''}`} aria-labelledby={`${id}-title`}>
+  return <section ref={section} id={id} className={`pipeline-step${current ? ' pipeline-step-current' : ''}${ready ? ' pipeline-step-ready' : ''}`} aria-labelledby={`${id}-title`}>
     <header className="pipeline-step-header">
       <div className="pipeline-step-heading">
-        <div><p className="eyebrow">{current ? 'Current step' : 'Previous step'}</p>
+        <div><p className="eyebrow">{ready ? 'Next step' : current ? 'Current step' : 'Previous step'}</p>
           <h2 id={`${id}-title`}>Step {step}: {info.name}</h2></div>
         <span className="pipeline-step-status">{status}</span>
       </div>
