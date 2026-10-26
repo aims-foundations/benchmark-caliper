@@ -10,6 +10,7 @@ datasets>=2.14
 requests>=2.31
 json_repair>=0.30
 openai>=2.48,<4
+httpx>=0.28,<1
 huggingface_hub>=1.2,<2
 pyarrow>=14
 PyYAML>=6

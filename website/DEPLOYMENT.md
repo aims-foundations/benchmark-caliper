@@ -108,6 +108,70 @@ that `/item-analysis` opens the main flow. Loading these pages and the setup end
 classification, cancellation, and continuation require a separate authorized
 live test with a visitor's key; offline tests use mocked model responses.
 
+## Remote retrieval for the goal-conditioned pipeline
+
+The seven-step benchmark-construction pipeline can run its O*NET and full-bank
+searches on a separate machine while Render handles the website, LLM stages,
+selection, and result exports. This mode reuses the completed BGE/BM25 index;
+it does not recalculate bank embeddings or change retrieval rankings. The
+separate service also fetches the complete shortlisted source rows, so Render
+does not load embedding models or decode the source Parquet files for these
+two retrieval stages. Render still needs memory for the returned candidates
+and subsequent stages; verify this with the first example.
+
+The retrieval machine needs the same code revision, Python website requirements,
+the completed benchmark SQLite index, the two supplied O*NET files, and Hugging
+Face access to the pinned source repository. The service opens the benchmark
+index read-only and refuses missing or incompatible indexes. It never starts
+an index build. Requests contain search queries and an inventory fingerprint;
+visitor OpenAI keys remain on the website backend.
+
+For temporary testing on skampere3, install the official
+[cloudflared binary](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/downloads/) and
+run the launcher from the repository root:
+
+```bash
+.venv/bin/python -m bayesian_auditing.serve_retrieval \
+  --index /absolute/path/to/completed-index.sqlite3 \
+  --onet-dir materials \
+  --state-dir results/retrieval-service \
+  --cloudflared /absolute/path/to/cloudflared
+```
+
+The launcher binds the retrieval server to loopback, checks authenticated
+readiness, and starts an HTTPS tunnel. It creates a private shared token and
+reuses it on subsequent starts. Its state directory contains logs, process
+status, and `render.env`, which holds the two Render environment settings:
+
+```text
+ITEM_REVIEW_RETRIEVAL_URL=https://the-current-tunnel.trycloudflare.com
+ITEM_REVIEW_RETRIEVAL_TOKEN=the-private-generated-token
+```
+
+Deploy the website changes and set these two variables in the existing Render
+service's **Environment** page. Keep the token server-side; do not add it to
+frontend variables or Git. `results/` is already ignored. Both settings must
+be present. Configured remote retrieval fails explicitly if unreachable or
+incompatible, without falling back to building an index on Render. Removing
+both settings restores the existing local retrieval mode.
+
+Use a detached process or a persistent terminal session for the launcher so it
+survives disconnecting from the server. Its shutdown stops both child processes.
+Cloudflare Quick Tunnels are a temporary testing facility: the address changes
+when the tunnel is restarted and there is no uptime guarantee. Update the Render
+URL after such a restart. Polling uses short requests, so a long benchmark search
+does not require a single long-lived HTTP request. See
+[Quick Tunnel limitations](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/).
+
+Before starting a paid example, check authenticated service readiness, run an
+O*NET search and a benchmark search through the tunnel, and confirm that all
+8,471,422 indexed rows are available for the current pinned inventory. The
+website catalog's `retrieval_mode` reports `remote` when configured; this flag
+alone does not verify connectivity. Keep one website instance and one Uvicorn
+worker. Cancellation releases the remote job, and completed remote query/results
+are deleted after transfer or expire automatically. The website's existing
+result-retention rules still apply; download the result package after the run.
+
 ## Item-review configuration
 
 The website's Python requirements include the shared OpenAI judge, dataset

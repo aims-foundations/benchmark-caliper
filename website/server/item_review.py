@@ -53,6 +53,7 @@ from bayesian_auditing.screening_budget import AdaptiveSettings
 from . import adaptive_review
 from .item_review_store import ReviewStore
 from .result_package import build_results_package, package_filename
+from .remote_retrieval import RemoteRetrieval, RemoteRetrievalError
 from . import db
 
 router = APIRouter(prefix="/api/item-review", tags=["Item review"])
@@ -201,6 +202,7 @@ async def catalog(response: Response) -> dict:
         "retrieval_policy": RETRIEVAL_POLICY,
         "default_retrieve_k": DEFAULT_RETRIEVE_K, "max_retrieve_k": MAX_RETRIEVE_K,
         "branches": data["branches"], "dataset_access_configured": bool(get_token()),
+        "retrieval_mode": "remote" if os.environ.get("ITEM_REVIEW_RETRIEVAL_URL") or os.environ.get("ITEM_REVIEW_RETRIEVAL_TOKEN") else "local",
         "table_count": len(data["tables"]),
         "source_rows": sum(table["row_count"] for table in data["tables"]),
         "sampling": sampling_policy(), "sample_max_items": sample_upper_bound(data),
@@ -383,7 +385,7 @@ async def start_grounding(run_id: str, response: Response,
     job = ReviewJob(secrets.token_hex(16), secrets.token_urlsafe(32), owner, request, inventory={},
                     requirements=deepcopy(source.requirements), extraction=deepcopy(source.extraction),
                     source_run_id=source.run_id, usage_history=continued_usage(source),
-                    message="Preparing local O*NET search for your extracted tasks.")
+                    message="Preparing O*NET search for your extracted tasks.")
     jobs[job.run_id] = job
     job.task = asyncio.create_task(evaluate(job, key))
     return {"run_id": job.run_id, "run_secret": job.secret}
@@ -419,7 +421,7 @@ async def start_benchmark_retrieval(run_id: str, body: BenchmarkRetrievalRequest
         usage_history=continued_usage(source),
         requirements=deepcopy(source.requirements), extraction=deepcopy(source.extraction),
         grounding=deepcopy(source.grounding), source_run_id=source.run_id,
-        message="Preparing all benchmark collections from the pinned main revision for local retrieval.",
+        message="Preparing to search all benchmark collections from the pinned main revision.",
         benchmark_retrieval={
             "policy": None, "stats": {}, "queries": queries, "queues": [], "rankings": [],
             "inventory": deepcopy(data),
@@ -1003,7 +1005,20 @@ async def extract_requirements(job: ReviewJob, api_key: str) -> None:
 
 
 async def retrieve_onet(job: ReviewJob, requirements: Requirements) -> tuple[list[dict], dict]:
-    """Search each facet locally before making any mapping requests."""
+    """Search each facet before making any mapping requests."""
+    remote = RemoteRetrieval.from_environment()
+    if remote is not None:
+        searches, policy = [], None
+        for number, facet in enumerate(requirements.task_facets, 1):
+            job.message = (f"Searching O*NET descriptions for task {number} of "
+                           f"{len(requirements.task_facets)}. No paid mapping calls yet.")
+            query = build_onet_query(requirements, facet)
+            result = await remote.search("onet", query)
+            if policy is not None and policy != result["policy"]:
+                raise RemoteRetrievalError("The O*NET retrieval policy changed between tasks. Please retry grounding.")
+            policy = result["policy"]
+            searches.append({"facet_id": facet.facet_id, "query": query, "candidates": result["candidates"]})
+        return searches, policy
     cancelled = Event()
     materials = Path(os.environ.get("ITEM_REVIEW_ONET_DIR", str(DEFAULT_MATERIALS_DIR))).resolve()
 
@@ -1087,7 +1102,22 @@ async def ground_requirements(job: ReviewJob, api_key: str) -> None:
 
 
 async def retrieve_benchmarks(job: ReviewJob) -> None:
-    """Build one disk index, then retain bounded rankings for each parent task."""
+    """Search the configured index and retain rankings for each parent task."""
+    remote = RemoteRetrieval.from_environment()
+    if remote is not None:
+        job.status = "running"
+        state = job.benchmark_retrieval
+        for number, query in enumerate(state["queries"], 1):
+            job.message = f"Retrieving benchmark candidates for task {number} of {len(state['queries'])}."
+            result = await remote.search("benchmark", query["query"], inventory=job.inventory)
+            if state["policy"] is not None and (state["policy"] != result["policy"] or state["stats"] != result["stats"]):
+                raise RemoteRetrievalError("The benchmark index changed between tasks. Please retry retrieval.")
+            state = {**state, "policy": result["policy"], "stats": result["stats"]}
+            state = record_benchmark_ranking(state, query, number, result["candidates"])
+            job.benchmark_retrieval = state
+        job.status = "completed"
+        job.message = "Benchmark candidates and task/source queues are ready for review. Relevance screening is the next step."
+        return
     cancelled = Event()
 
     def progress(state):
@@ -1126,10 +1156,7 @@ async def retrieve_benchmarks(job: ReviewJob) -> None:
                 candidates = index.search(query["query"], cancelled=cancelled.is_set)
                 if cancelled.is_set():
                     raise InterruptedError("Benchmark retrieval cancelled")
-                rankings = [*state["rankings"], {**query, "candidates": candidates}]
-                state = {**state, "rankings": rankings, "queues": build_screening_queues(rankings),
-                         "queries": [*state["queries"]]}
-                state["queries"][number - 1] = {**query, "candidate_count": len(candidates)}
+                state = record_benchmark_ranking(state, query, number, candidates)
                 job.benchmark_retrieval = state
         finally:
             try:
@@ -1152,6 +1179,15 @@ async def retrieve_benchmarks(job: ReviewJob) -> None:
         raise
     job.status = "completed"
     job.message = "Benchmark candidates and task/source queues are ready for review. Relevance screening is the next step."
+
+
+def record_benchmark_ranking(state: dict, query: dict, number: int, candidates: list[dict]) -> dict:
+    """Use the same saved evidence and queue construction for either host."""
+    rankings = [*state["rankings"], {**query, "candidates": candidates}]
+    state = {**state, "rankings": rankings, "queues": build_screening_queues(rankings),
+             "queries": [*state["queries"]]}
+    state["queries"][number - 1] = {**query, "candidate_count": len(candidates)}
+    return state
 
 
 async def screen_benchmarks(job: ReviewJob, api_key: str) -> None:
@@ -1291,6 +1327,8 @@ async def evaluate(job: ReviewJob, api_key: str) -> None:
         job.status, job.message = "failed", "OpenAI reported a rate or quota limit. Completed results are retained."
     except OpenAIError:
         job.status, job.message = "failed", "The OpenAI request failed. Check model access and try again."
+    except RemoteRetrievalError as exc:
+        job.status, job.message = "failed", str(exc)
     except Exception:
         job.status = "failed"
         if job.request.mode == "grounding":
