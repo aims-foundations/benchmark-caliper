@@ -11,6 +11,8 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager, closing, suppress
 from dataclasses import dataclass, field
+import gzip
+import io
 import json
 import logging
 import os
@@ -23,6 +25,7 @@ from typing import Literal
 from uuid import uuid4
 
 from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi.responses import Response
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from .benchmark_encoding import FullRowBGEEncoder
@@ -120,7 +123,7 @@ class SearchJob:
     job_id: str = field(default_factory=lambda: uuid4().hex)
     status: str = "queued"
     cancelled: Event = field(default_factory=Event)
-    result: dict | None = None
+    compressed_response: bytes | None = None
     result_bytes: int = 0
     error: str | None = None
 
@@ -128,15 +131,18 @@ class SearchJob:
         response = {"job_id": self.job_id, "status": self.status}
         if self.request.kind == "benchmark":
             response["inventory_hash"] = self.request.inventory_hash
-        if self.result is not None:
-            response["result"] = self.result
         if self.error is not None:
             response["error"] = self.error
         return response
 
 
 class SearchJobs:
-    """Bound pending work and retained results; release them on DELETE or expiry."""
+    """Bound pending work and compressed results; release them on DELETE or expiry.
+
+    Full benchmark rows can exceed the old uncompressed JSON limit. Retain and
+    send losslessly compressed JSON, keeping the same response schema without
+    holding the full result dictionary or another uncompressed JSON copy.
+    """
 
     def __init__(self, resources, executor, *, max_queued=8, max_jobs=32,
                  ttl_seconds=3600, max_result_bytes=64 * 1024**2,
@@ -156,7 +162,7 @@ class SearchJobs:
     def cancel(self, job):
         job.cancelled.set()
         self.retained_bytes -= job.result_bytes
-        job.result, job.result_bytes, job.error = None, 0, None
+        job.compressed_response, job.result_bytes, job.error = None, 0, None
         job.status = "cancelled"
 
     def expire(self):
@@ -190,10 +196,32 @@ class SearchJobs:
         if job.cancelled.is_set():
             raise InterruptedError("Retrieval was cancelled")
         result = self.resources.search(job.request, job.cancelled.is_set)
-        size = len(json.dumps(result, ensure_ascii=False, allow_nan=False).encode("utf-8"))
+        envelope = {**job.response(), "status": "completed", "result": result}
+        encoder = json.JSONEncoder(ensure_ascii=False, allow_nan=False, separators=(",", ":"))
+        raw_bytes = 0
+        with io.BytesIO() as buffer:
+            with gzip.GzipFile(fileobj=buffer, mode="wb", compresslevel=1, mtime=0) as compressed:
+                pending = bytearray()
+                for chunk in encoder.iterencode(envelope):
+                    if job.cancelled.is_set():
+                        raise InterruptedError("Retrieval was cancelled")
+                    pending.extend(chunk.encode("utf-8"))
+                    if len(pending) >= 64 * 1024:
+                        raw_bytes += len(pending)
+                        compressed.write(pending)
+                        pending.clear()
+                        self._check_result_size(buffer.tell())
+                raw_bytes += len(pending)
+                compressed.write(pending)
+            self._check_result_size(buffer.tell())
+            return buffer.getvalue(), raw_bytes
+
+    def _check_result_size(self, size):
         if size > self.max_result_bytes:
-            raise ResultLimitError("Search result exceeds the service's configured retention limit")
-        return result, size
+            raise ResultLimitError(
+                f"Compressed search result exceeds the service's configured retention limit "
+                f"({size} > {self.max_result_bytes} bytes)"
+            )
 
     async def _work(self):
         loop = asyncio.get_running_loop()
@@ -205,14 +233,23 @@ class SearchJobs:
                 if job.cancelled.is_set():
                     continue
                 job.status = "running"
+                started = self.clock()
+                logger.info("Retrieval job %s started kind=%s queued_seconds=%.3f",
+                            job.job_id, job.request.kind, started - job.created)
                 try:
-                    result, size = await loop.run_in_executor(self.executor, self._search, job)
+                    result, raw_bytes = await loop.run_in_executor(self.executor, self._search, job)
+                    size = len(result)
                     if not job.cancelled.is_set():
                         if self.retained_bytes + size > self.max_retained_bytes:
-                            raise ResultLimitError("Retained search results exceed the service's memory limit")
-                        job.result, job.result_bytes = result, size
+                            raise ResultLimitError(
+                                f"Retained search results exceed the service's memory limit "
+                                f"({self.retained_bytes + size} > {self.max_retained_bytes} bytes)"
+                            )
+                        job.compressed_response, job.result_bytes = result, size
                         self.retained_bytes += size
                         job.status = "completed"
+                        logger.info("Retrieval job %s completed seconds=%.3f json_bytes=%d gzip_bytes=%d",
+                                    job.job_id, self.clock() - started, raw_bytes, size)
                 except InterruptedError:
                     self.cancel(job)
                 except Exception as exc:
@@ -220,7 +257,9 @@ class SearchJobs:
                         # Provider errors can embed signed download URLs or
                         # credentials. Do not expose or log their raw messages.
                         category = type(exc).__name__
-                        logger.error("Retrieval job %s failed (%s)", job.job_id, category)
+                        logger.error("Retrieval job %s failed (%s) seconds=%.3f%s", job.job_id,
+                                     category, self.clock() - started,
+                                     f": {exc}" if isinstance(exc, ResultLimitError) else "")
                         job.status = "failed"
                         job.error = (str(exc) if isinstance(exc, ResultLimitError) else
                                      f"Retrieval failed ({category}); service job {job.job_id}")
@@ -297,7 +336,13 @@ def create_app(*, token=None, resource_factory=PreparedResources, **job_options)
 
     @application.get("/v1/searches/{job_id}")
     async def get(job_id: str):
-        return application.state.searches.get(job_id).response()
+        job = application.state.searches.get(job_id)
+        if job.compressed_response is not None:
+            # HTTP clients decode gzip transparently; the website sees the
+            # original complete result and still validates every row and rank.
+            return Response(job.compressed_response, media_type="application/json",
+                            headers={"Content-Encoding": "gzip", "Vary": "Accept-Encoding"})
+        return job.response()
 
     @application.delete("/v1/searches/{job_id}")
     async def cancel(job_id: str):

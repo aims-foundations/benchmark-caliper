@@ -87,6 +87,38 @@ def test_dense_normalization_and_full_union_of_independent_rankings(tmp_path):
         index.close()
 
 
+@pytest.mark.parametrize("fail_fetch", [False, True])
+def test_search_timing_logs_locate_failures_without_private_data(tmp_path, caplog, fail_fetch):
+    secret_query, secret_content = "private-query-123", "private-content-456"
+    secret_source, secret_error = "private-source-789", "https://private.invalid/?token=secret"
+
+    def fetch(requests, *, cancelled=None):
+        if fail_fetch:
+            raise RuntimeError(secret_error)
+        return load_rows(requests, cancelled=cancelled)
+
+    index = prepare(tmp_path, [item(secret_content, benchmark=secret_source)], row_loader=fetch)
+    try:
+        with caplog.at_level("INFO", logger=module.__name__):
+            if fail_fetch:
+                with pytest.raises(RuntimeError):
+                    index.search(secret_query)
+            else:
+                assert len(index.search(secret_query)) == 1
+    finally:
+        index.close()
+
+    assert "Benchmark dense search: seconds=" in caplog.text
+    assert "Benchmark BM25 search: seconds=" in caplog.text
+    assert "Benchmark search finished: seconds=" in caplog.text
+    assert f"final_stage={'row_fetch' if fail_fetch else 'complete'}" in caplog.text
+    if not fail_fetch:
+        assert "Benchmark row fetch: seconds=" in caplog.text
+        assert "requested_rows=1" in caplog.text
+    for private in (secret_query, secret_content, secret_source, secret_error):
+        assert private not in caplog.text
+
+
 def test_entire_original_row_is_embedded_and_keyword_searchable(tmp_path):
     original = item({"question": "visible", "answer": "nestedanswer"}, identifier="uniqueidentifier",
                     answer="gradingsecret", verifier="verifiersecret", reference_answer="referencesecret",

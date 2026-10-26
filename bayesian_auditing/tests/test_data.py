@@ -76,3 +76,55 @@ def test_selected_rows_keep_original_positions_across_row_groups(corpus):
     assert [row["evidence"]["item"]["content"] for row in rows] == ["Question 4", "Question 9"]
     with pytest.raises(ValueError, match="outside the item table"):
         list(iter_items(inventory, selected_rows={(table["branch"], table["items_path"]): [10]}))
+
+
+@pytest.mark.parametrize("selected,start_row,expected,decoded_rows,batch_count", [
+    ([700, 2, 130, 130], 100, [130, 700], 2, 4),
+    ([2, 130], 200, [], 0, 0),
+    ([], 1, [], 0, 0),
+    (None, 700, list(range(700, 1025)), 325, 4),
+])
+def test_row_reader_decodes_only_needed_rows_and_stops_finished_groups(
+        tmp_path, selected, start_row, expected, decoded_rows, batch_count):
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    original = [{"item_id": str(number), "payload": {"text": f" Row {number}\n", "values": [number, None]}}
+                for number in range(1, 1025)]
+    path = tmp_path / "large-groups.parquet"
+    pq.write_table(pa.Table.from_pylist(original), path, row_group_size=512)
+    decoded, consumed, closed = [], [], []
+
+    class RecordedBatch:
+        def __init__(self, batch):
+            self.batch, self.num_rows = batch, batch.num_rows
+
+        def slice(self, offset):
+            return RecordedBatch(self.batch.slice(offset))
+
+        def take(self, indices):
+            return RecordedBatch(self.batch.take(indices))
+
+        def to_pylist(self):
+            decoded.append(self.num_rows)
+            return self.batch.to_pylist()
+
+    with pq.ParquetFile(path) as parquet:
+        class RecordedTable:
+            metadata = parquet.metadata
+
+            def iter_batches(self, **kwargs):
+                try:
+                    for batch in parquet.iter_batches(**kwargs):
+                        consumed.append(kwargs["row_groups"])
+                        yield RecordedBatch(batch)
+                finally:
+                    closed.append(kwargs["row_groups"])
+
+        actual = list(data._table_rows(RecordedTable(), columns=["payload"],
+                                       selected_rows=selected, start_row=start_row))
+
+    assert actual == [(number, {"payload": original[number - 1]["payload"]}) for number in expected]
+    assert sum(decoded) == decoded_rows
+    assert len(consumed) == batch_count
+    assert len(closed) == len({tuple(group) for group in consumed})

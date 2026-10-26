@@ -364,6 +364,34 @@ off the Python heap. Budget for substantial disk and local
 inference time for the complete bank. Full-bank performance and retrieval
 quality have not been measured end to end.
 
+For a hosted website with limited compute, set `ITEM_REVIEW_RETRIEVAL_URL` and
+`ITEM_REVIEW_RETRIEVAL_TOKEN` to use the authenticated retrieval service in
+`bayesian_auditing/retrieval_service.py`. That service opens a completed index
+read-only and performs the same full-bank searches and source-row verification.
+The website keeps the saved pipeline run and receives the complete candidate
+rows; provider API keys never go to the retrieval service.
+
+Completed remote responses are retained and transferred as lossless gzip JSON.
+The 64 MiB per-result and 256 MiB total retention limits count compressed bytes,
+so a complete result larger than 64 MiB before compression is not rejected for
+that reason. No candidate or source field is dropped. HTTP clients decode the
+response before the existing row-hash, ranking, and inventory checks. Temporary
+remote jobs are released after retrieval; their retention is separate from the
+website's durable pipeline checkpoints.
+
+The `bayesian_auditing.serve_retrieval` launcher writes timestamped job IDs,
+queue/search durations, dense/BM25/row-fetch timings, and response byte counts
+to its private `service.log`. It excludes query text, row contents, provider
+credentials, and raw provider exception messages. Broad queries can spend
+minutes in BM25 ranking and source-row fetching even with prepared vectors.
+Inspect those timings before treating a long search as an index-build problem.
+To load updated code, send `SIGHUP` to the `supervisor_pid` recorded in the
+launcher's private `status.json` after active searches finish. This restarts
+only the retrieval worker and keeps the tunnel URL and Render settings intact.
+The launcher's `--reuse-tunnel PID:STARTTIME` option can also adopt a verified
+existing tunnel during a supervisor replacement; it validates the process and
+saved settings and leaves that borrowed tunnel running on shutdown.
+
 Prepare the same complete cache in advance from the repository root:
 
 ```bash

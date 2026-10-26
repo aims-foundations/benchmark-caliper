@@ -2,6 +2,7 @@
 
 import asyncio
 from copy import deepcopy
+import gzip
 import json
 
 import httpx
@@ -74,7 +75,7 @@ def mock_remote(monkeypatch, respond):
     monkeypatch.setattr(remote_retrieval.httpx, "AsyncClient", Client)
 
 
-def successful_service(monkeypatch, result_factory):
+def successful_service(monkeypatch, result_factory, *, compressed=False):
     requests, submitted = [], {}
 
     def respond(request):
@@ -87,7 +88,11 @@ def successful_service(monkeypatch, result_factory):
             return httpx.Response(202, json={"job_id": job_id, "status": "queued"})
         if request.method == "DELETE":
             return httpx.Response(200, json={"status": "cancelled"})
-        return httpx.Response(200, json={"status": "completed", "result": result_factory()})
+        body = {"status": "completed", "result": result_factory()}
+        if compressed:
+            return httpx.Response(200, content=gzip.compress(json.dumps(body, ensure_ascii=False).encode("utf-8")),
+                                  headers={"Content-Encoding": "gzip", "Content-Type": "application/json"})
+        return httpx.Response(200, json=body)
 
     mock_remote(monkeypatch, respond)
     return requests, submitted
@@ -119,11 +124,12 @@ def test_no_configuration_keeps_local_path(monkeypatch):
     assert RemoteRetrieval.from_environment() is None
 
 
-def test_remote_benchmark_preserves_exports_queues_and_full_rows(client, monkeypatch, configured):
+@pytest.mark.parametrize("compressed", [False, True])
+def test_remote_benchmark_preserves_exports_queues_and_full_rows(client, monkeypatch, configured, compressed):
     monkeypatch.setattr(item_review, "inventory", lambda: deepcopy(INVENTORY))
     for name in ("prepare_benchmark_index", "iter_benchmark_items", "fetch_benchmark_rows", "OnetIndex"):
         monkeypatch.setattr(item_review, name, lambda *a, **kw: pytest.fail("Remote mode must not load local retrieval data"))
-    requests, submitted = successful_service(monkeypatch, benchmark_result)
+    requests, submitted = successful_service(monkeypatch, benchmark_result, compressed=compressed)
     source = seed_grounding(facets=2)
     access = start_retrieval(client, source)
     result = finished(client, access).json()

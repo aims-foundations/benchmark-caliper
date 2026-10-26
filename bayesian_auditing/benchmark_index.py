@@ -14,6 +14,7 @@ import hashlib
 import heapq
 from itertools import chain, islice
 import json
+import logging
 import os
 from pathlib import Path
 import re
@@ -37,6 +38,7 @@ ENCODING_BATCH_SIZE = 64
 SCAN_BATCH_SIZE = 2048
 INDEX_VERSION = 3
 DEFAULT_MINIMUM_FREE_BYTES = 15_000_000_000
+logger = logging.getLogger(__name__)
 
 
 def _check_cancelled(cancelled):
@@ -340,9 +342,17 @@ class BenchmarkIndex:
             raise ValueError("At least one benchmark retrieval method must be enabled")
         _check_cancelled(cancelled)
         self._connection.set_progress_handler(lambda: int(bool(cancelled and cancelled())), 1000)
+        started = stage_started = time.monotonic()
+        stage = "dense"
         try:
             dense = self._dense(query, dense_k, cancelled)
+            logger.info("Benchmark dense search: seconds=%.3f matches=%d",
+                        time.monotonic() - stage_started, len(dense))
+            stage, stage_started = "bm25", time.monotonic()
             keyword = self._keyword(query, bm25_k)
+            logger.info("Benchmark BM25 search: seconds=%.3f matches=%d",
+                        time.monotonic() - stage_started, len(keyword))
+            stage = "fusion"
             _check_cancelled(cancelled)
             candidates = {}
             for method, matches in (("dense", dense), ("bm25", keyword)):
@@ -367,8 +377,13 @@ class BenchmarkIndex:
                 )]
                 candidate.update(rank=rank, sources=sources)
                 requests.append({"item_id": key, "sources": deepcopy(sources)})
+            stage, stage_started = "row_fetch", time.monotonic()
             if requests:
                 rows = self._row_loader(requests, cancelled=cancelled)
+            logger.info("Benchmark row fetch: seconds=%.3f requested_rows=%d",
+                        time.monotonic() - stage_started, len(requests))
+            stage = "row_validation"
+            if requests:
                 _check_cancelled(cancelled)
                 if not isinstance(rows, dict) or set(rows) != set(candidates):
                     raise ValueError("Fetched benchmark rows must exactly match the shortlisted item IDs")
@@ -382,12 +397,15 @@ class BenchmarkIndex:
                     candidate.update(evidence=evidence, search_text=row_search_text(row),
                                      question_text=question_text(evidence))
             self._policy["candidate_limits"] = {"dense_k": dense_k, "bm25_k": bm25_k}
+            stage = "complete"
             return ordered
         except sqlite3.OperationalError:
             _check_cancelled(cancelled)
             raise
         finally:
             self._connection.set_progress_handler(None, 0)
+            logger.info("Benchmark search finished: seconds=%.3f final_stage=%s",
+                        time.monotonic() - started, stage)
 
 
 @contextmanager

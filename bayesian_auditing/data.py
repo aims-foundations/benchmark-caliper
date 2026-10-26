@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from bisect import bisect_left
 from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
 
@@ -127,20 +128,39 @@ def open_item_table(inventory: dict, table: dict, *, token=None, streaming=False
 
 
 def _table_rows(parquet, columns, selected_rows=None, *, start_row=1):
-    """Keep original 1-based row numbers, reading only needed row groups."""
-    wanted = None if selected_rows is None else set(selected_rows)
+    """Keep source row numbers while decoding only requested rows into Python."""
+    wanted = None if selected_rows is None else sorted(set(selected_rows))
     if wanted is not None and any(row < 1 or row > parquet.metadata.num_rows for row in wanted):
         raise ValueError("Selected row outside the item table")
     start = 1
     for group in range(parquet.metadata.num_row_groups):
         end = start + parquet.metadata.row_group(group).num_rows
-        if end > start_row and (wanted is None or any(start <= row < end for row in wanted)):
+        selected = (None if wanted is None else
+                    wanted[bisect_left(wanted, max(start, start_row)):bisect_left(wanted, end)])
+        if end > start_row and (selected is None or selected):
             row_number = start
-            for batch in parquet.iter_batches(batch_size=128, columns=columns, row_groups=[group]):
-                for row in batch.to_pylist():
-                    if row_number >= start_row and (wanted is None or row_number in wanted):
-                        yield row_number, row
-                    row_number += 1
+            batches = parquet.iter_batches(batch_size=128, columns=columns, row_groups=[group])
+            try:
+                for batch in batches:
+                    batch_end = row_number + batch.num_rows
+                    if selected is None:
+                        offset = max(0, start_row - row_number)
+                        if offset < batch.num_rows:
+                            for number, row in enumerate(batch.slice(offset).to_pylist(), row_number + offset):
+                                yield number, row
+                    else:
+                        numbers = selected[bisect_left(selected, row_number):bisect_left(selected, batch_end)]
+                        if numbers:
+                            rows = batch.take([number - row_number for number in numbers]).to_pylist()
+                            yield from zip(numbers, rows)
+                        # A Parquet row group may contain millions of rows.
+                        # Stop its batch reader once every requested row is found.
+                        if batch_end > selected[-1]:
+                            break
+                    row_number = batch_end
+            finally:
+                if hasattr(batches, "close"):
+                    batches.close()
         start = end
 
 

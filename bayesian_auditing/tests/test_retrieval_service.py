@@ -1,7 +1,9 @@
 """Offline contract, lifecycle, and prepared-cache checks for remote retrieval."""
 
 from copy import deepcopy
+import gzip
 import json
+import random
 import sqlite3
 import sys
 from threading import Event, get_ident
@@ -234,14 +236,74 @@ def test_oversized_results_fail_without_being_retained():
         assert app.state.searches.retained_bytes == 0
 
 
+def test_uncompressed_result_above_limit_preserves_every_row_over_gzip(caplog):
+    limit = 64 * 1024
+    content = "evidence-must-not-be-logged: clinical résumé\n" * 128
+    expected = {
+        "candidates": [
+            {"rank": number + 1, "original_row": {
+                "item_id": number, "content": content,
+                "nested": {"values": [None, True, 1.25, "\t α\n"]},
+            }}
+            for number in range(600)
+        ],
+        "policy": {"method": "bge_bm25_rrf"},
+        "stats": {"indexed_items": 600},
+        "inventory_hash": INVENTORY_HASH,
+    }
+    assert len(json.dumps(expected, ensure_ascii=False).encode("utf-8")) > limit
+    caplog.set_level("INFO", logger=service.__name__)
+    app, _ = make_app(lambda request, cancelled: expected, max_result_bytes=limit)
+    with TestClient(app) as client:
+        job_id = submit(client, kind="benchmark", query="private-deployment-query").json()["job_id"]
+        job = wait_for(client, job_id)
+        assert job["result"] == expected
+        assert job["inventory_hash"] == INVENTORY_HASH
+        with client.stream("GET", f"/v1/searches/{job_id}", headers=HEADERS) as response:
+            assert response.headers["content-encoding"] == "gzip"
+            assert response.headers["content-type"] == "application/json"
+            assert response.headers["cache-control"] == "no-store"
+            encoded = b"".join(response.iter_raw())
+        assert json.loads(gzip.decompress(encoded)) == job
+        assert 0 < len(encoded) <= limit
+        assert app.state.searches.retained_bytes == len(encoded)
+        client.delete(f"/v1/searches/{job_id}", headers=HEADERS)
+        assert app.state.searches.retained_bytes == 0
+    assert job_id in caplog.text
+    for private in (TOKEN, "private-deployment-query", "evidence-must-not-be-logged"):
+        assert private not in caplog.text
+
+
+def test_incompressible_result_still_obeys_compressed_retention_limit():
+    # Deterministic noise remains larger than the configured limit after gzip.
+    noise = random.Random(37).randbytes(32 * 1024).hex()
+    expected = {"candidates": [{"original_row": {"content": noise}}], "policy": {}}
+    app, _ = make_app(lambda request, cancelled: expected, max_result_bytes=4096)
+    with TestClient(app) as client:
+        job_id = submit(client).json()["job_id"]
+        job = wait_for(client, job_id, "failed")
+        assert "retention limit" in job["error"]
+        assert "result" not in job
+        assert app.state.searches.retained_bytes == 0
+        assert noise not in json.dumps(job)
+
+
 def test_total_retained_result_limit_is_released_after_delete():
-    app, _ = make_app(max_retained_bytes=200)
+    app, _ = make_app()
     with TestClient(app) as client:
         first = submit(client).json()["job_id"]
         wait_for(client, first)
+        retained = app.state.searches.retained_bytes
+        # Job IDs can slightly change the compressed envelope size. Allow that
+        # variation, while keeping the quota below two complete responses.
+        app.state.searches.max_retained_bytes = retained + 64
         second = submit(client).json()["job_id"]
-        assert "memory limit" in wait_for(client, second, "failed")["error"]
+        failed = wait_for(client, second, "failed")
+        assert "memory limit" in failed["error"]
+        assert "result" not in failed
+        assert app.state.searches.retained_bytes == retained
         client.delete(f"/v1/searches/{first}", headers=HEADERS)
+        assert app.state.searches.retained_bytes == 0
         third = submit(client).json()["job_id"]
         wait_for(client, third)
 
