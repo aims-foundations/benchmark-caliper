@@ -31,10 +31,10 @@ export function SixScoreNavigation({ current, onNavigate }: { current: number; o
     </a></li>)}</ol></nav>
 }
 
-export function SixScoreWorkflow({ run, context, canPrepare, onPrepare, busy, starting, startDelayed, apiKey, onKeyChange, pilotSize, canAnalyze, onAnalyze, onStop,
+export function SixScoreWorkflow({ run, context, canPrepare, onPrepare, onRestart, busy, starting, startDelayed, apiKey, onKeyChange, pilotSize, canAnalyze, onAnalyze, onStop,
   page, setPage, pageLoading, filter, onFilterChange, filteredItems, filterLoading, inspectionError, retryInspection,
   onDownload, onViewReport, onDownloadPackage, downloading, management, errors }: {
-  run: AnalysisRun | null; context: ReactNode; canPrepare: boolean; onPrepare: () => void; busy: boolean; starting: boolean; startDelayed?: boolean;
+  run: AnalysisRun | null; context: ReactNode; canPrepare: boolean; onPrepare: () => void; onRestart: () => void; busy: boolean; starting: boolean; startDelayed?: boolean;
   apiKey: string; onKeyChange: (value: string) => void; pilotSize: number; canAnalyze: boolean; onAnalyze: (scope: RunScope) => void; onStop: () => void;
   page: number; setPage: (page: number) => void; pageLoading: boolean; filter: ItemFilter; onFilterChange: (filter: ItemFilter) => void;
   filteredItems?: Item[]; filterLoading: boolean; inspectionError: string; retryInspection: () => void;
@@ -66,6 +66,7 @@ export function SixScoreWorkflow({ run, context, canPrepare, onPrepare, busy, st
       {!run && canPrepare && <form onSubmit={event => { event.preventDefault(); onPrepare() }}><button className="ia-primary" disabled={!canPrepare || busy}>{starting ? 'Preparing context…' : 'Prepare shared context'}</button><p className="ia-small">No API key or model call is needed to prepare context.</p></form>}
       {starting && <p role="status">{startDelayed ? 'Still waiting for the server to confirm this run. We’ll show progress here when it responds.' : 'Starting item analysis. Waiting for the server to confirm your run…'}</p>}
       {run && !run.spec && <p role="status">{run.failure?.message || run.error || run.message}</p>}
+      {run && !run.spec && !active && <div className="ia-actions"><button type="button" className="ia-secondary" onClick={onRestart} disabled={busy}>Start a new analysis</button></div>}
       {run?.spec && <SharedScoringContext spec={run.spec} />}
     </section>
     <section id="ia-score-step-2" className={`ia-stage${current === 2 ? ' ia-stage-current' : ''}`} tabIndex={-1} aria-labelledby="ia-score-analyze-title">

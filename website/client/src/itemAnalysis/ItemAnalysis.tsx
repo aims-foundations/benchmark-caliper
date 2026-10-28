@@ -386,7 +386,7 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
         <p className="ia-small">Starting again replaces this browser’s shortcut without deleting saved server results. If the previous analysis is still running, starting again does not stop it.</p>
         {!pollError && <button type="button" className="ia-secondary" disabled={busy} onClick={reset}>Start a new analysis</button>}
       </> : <SixScoreWorkflow run={run} context={contextContent} canPrepare={dataConfirmed && !access} onPrepare={() => void start({ preventDefault() {} } as FormEvent)}
-        busy={busy} starting={starting} startDelayed={startDelayed} apiKey={apiKey} onKeyChange={setApiKey} pilotSize={pilotSize} canAnalyze={canClassify} onAnalyze={scope => void classify(scope)} onStop={() => void stop()}
+        onRestart={reset} busy={busy} starting={starting} startDelayed={startDelayed} apiKey={apiKey} onKeyChange={setApiKey} pilotSize={pilotSize} canAnalyze={canClassify} onAnalyze={scope => void classify(scope)} onStop={() => void stop()}
         page={page} setPage={setPage} pageLoading={pageLoading} filter={filter} onFilterChange={next => { setFilter(next); setPage(1) }} filteredItems={filter.kind === 'all' ? undefined : inspection.items}
         filterLoading={inspection.loading} inspectionError={inspection.error} retryInspection={inspection.retry} onDownload={artifact => void download(artifact)} onViewReport={() => void openReport()}
         onDownloadPackage={() => void downloadPackage()} downloading={downloading} errors={requestErrors} management={<>

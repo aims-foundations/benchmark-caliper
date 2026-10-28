@@ -436,3 +436,85 @@ it('refreshes and requires new confirmation when the server rejects a stale snap
   expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Prepare shared context' })).toBeEnabled()
 })
+
+it('recovers a failed six-score context preparation from step 1 without deleting runs or reusing confirmation', async () => {
+  const galleryAssessment: AssessmentReference = { kind: 'gallery', id: 'mmlu-report' }
+  const galleryKey = 'item_analysis_run_v1:gallery:mmlu-report'
+  const otherKey = 'item_analysis_run_v1:gallery:gsm8k'
+  const otherAccess = { run_id: 'saved-gsm8k-run', run_secret: 'saved-gsm8k-token' }
+  const gallerySetup: AssessmentSetup = { ...setup, assessment: { ...setup.assessment, ...galleryAssessment } }
+  const failed: AnalysisRun = {
+    ...ready, assessment: gallerySetup.assessment, analysis_type: 'six_scores', status: 'failed', spec: null,
+    message: 'Context preparation was interrupted.',
+    failure: { stage: 'preparing', code: 'interrupted', message: 'Context preparation was interrupted.' },
+  }
+  localStorage.setItem(galleryKey, JSON.stringify(access))
+  localStorage.setItem(otherKey, JSON.stringify(otherAccess))
+  sessionStorage.setItem(otherKey, JSON.stringify(otherAccess))
+  vi.mocked(api.getAssessment).mockResolvedValue(gallerySetup)
+  vi.mocked(api.getRun).mockResolvedValue(failed)
+  const user = userEvent.setup()
+  render(<ItemAnalysis assessment={galleryAssessment} />)
+
+  const context = await screen.findByRole('region', { name: '1. Context & items' })
+  expect(within(context).getByText('Context preparation was interrupted.')).toBeVisible()
+  const restart = within(context).getByRole('button', { name: 'Start a new analysis' })
+  expect(restart).toBeVisible()
+  expect(restart).toBeEnabled()
+  expect(api.getAssessment).not.toHaveBeenCalled()
+  // Also clear a tab-scoped copy that could remain alongside the durable access.
+  sessionStorage.setItem(galleryKey, JSON.stringify(access))
+  await user.click(restart)
+
+  const confirm = await screen.findByRole('button', { name: 'Confirm benchmark' })
+  expect(confirm).toBeEnabled()
+  expect(api.getAssessment).toHaveBeenCalledExactlyOnceWith(galleryAssessment, expect.any(AbortSignal))
+  expect(localStorage.getItem(galleryKey)).toBeNull()
+  expect(sessionStorage.getItem(galleryKey)).toBeNull()
+  expect(JSON.parse(localStorage.getItem(otherKey)!)).toEqual(otherAccess)
+  expect(JSON.parse(sessionStorage.getItem(otherKey)!)).toEqual(otherAccess)
+  expect(screen.queryByRole('button', { name: 'Prepare shared context' })).not.toBeInTheDocument()
+  expect(api.createAssessmentRun).not.toHaveBeenCalled()
+  expect(api.createRun).not.toHaveBeenCalled()
+  expect(api.classify).not.toHaveBeenCalled()
+  expect(api.discardRun).not.toHaveBeenCalled()
+  expect(api.cancelRun).not.toHaveBeenCalled()
+
+  await user.click(confirm)
+  expect(api.createAssessmentRun).not.toHaveBeenCalled()
+  const newAccess = { run_id: 'new-gallery-run', run_secret: 'new-gallery-token' }
+  const prepared: AnalysisRun = {
+    ...ready, run_id: newAccess.run_id, assessment: gallerySetup.assessment, analysis_type: 'six_scores',
+    spec: { ...ready.spec!, analysis_type: 'six_scores' },
+  }
+  vi.mocked(api.createAssessmentRun).mockResolvedValue({ ...prepared, ...newAccess })
+  vi.mocked(api.getRun).mockResolvedValue(prepared)
+  await user.click(screen.getByRole('button', { name: 'Prepare shared context' }))
+
+  expect(await screen.findByRole('button', { name: 'Analyze items' })).toBeDisabled()
+  expect(api.createAssessmentRun).toHaveBeenCalledExactlyOnceWith(galleryAssessment, {
+    source_id: sourceId, source_revision: revision, benchmark_confirmed: true,
+  })
+  expect(JSON.parse(localStorage.getItem(galleryKey)!)).toEqual(newAccess)
+  expect(JSON.parse(localStorage.getItem(otherKey)!)).toEqual(otherAccess)
+  expect(JSON.parse(sessionStorage.getItem(otherKey)!)).toEqual(otherAccess)
+  expect(api.classify).not.toHaveBeenCalled()
+  expect(api.discardRun).not.toHaveBeenCalled()
+  expect(api.cancelRun).not.toHaveBeenCalled()
+})
+
+it.each(['preparing', 'generating'] as const)('does not offer a step-1 restart while six-score context is %s', async status => {
+  localStorage.setItem(storageKey, JSON.stringify(access))
+  vi.mocked(api.getRun).mockResolvedValue({ ...ready, analysis_type: 'six_scores', status, spec: null, message: 'Preparing shared context.' })
+  render(<ItemAnalysis assessment={assessment} />)
+
+  const context = await screen.findByRole('region', { name: '1. Context & items' })
+  expect(within(context).getByText('Preparing shared context.')).toBeVisible()
+  expect(within(context).queryByRole('button', { name: 'Start a new analysis' })).not.toBeInTheDocument()
+  expect(JSON.parse(localStorage.getItem(storageKey)!)).toEqual(access)
+  expect(api.getAssessment).not.toHaveBeenCalled()
+  expect(api.createAssessmentRun).not.toHaveBeenCalled()
+  expect(api.createRun).not.toHaveBeenCalled()
+  expect(api.classify).not.toHaveBeenCalled()
+  expect(api.discardRun).not.toHaveBeenCalled()
+})
