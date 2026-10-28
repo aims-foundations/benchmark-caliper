@@ -9,10 +9,10 @@ This package supports three modes of engagement:
 3. **Run your own assessment**: Evaluate a benchmark of your choice against a custom deployment context
 
 After an assessment, the [item-level analysis module](item_analysis/README.md)
-uses GPT-6 Luna to prepare sourced context for four fixed rubric classifiers and
-apply them to benchmark items, then reports category coverage, supported issues,
-evidence gaps, and human-review agreement. Input Form and Output Form remain in
-the original benchmark-level assessment.
+assembles shared deployment and benchmark evidence without a model call, then
+uses one GPT-6 Luna request per item to assess all six dimensions. Each dimension
+returns a 1–5 score or Unknown, a justification, evidence, and information gaps.
+These item assessments remain separate from the original benchmark-level scores.
 
 ---
 

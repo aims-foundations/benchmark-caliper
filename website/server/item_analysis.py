@@ -28,7 +28,7 @@ from fastapi import APIRouter, File, Form, Header, HTTPException, Query, Respons
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, Field
 
-from anthropic_api_package_release.item_analysis import classify, generate, model_client, prepare, report
+from anthropic_api_package_release.item_analysis import classify, generate, model_client, prepare, report, scoring
 from anthropic_api_package_release.item_analysis.data import file_sha256
 from anthropic_api_package_release.item_analysis.catalog import CATALOG_VERSION
 from anthropic_api_package_release.item_analysis.storage import check_prepared, read_json, write_json
@@ -55,7 +55,8 @@ ARTIFACTS = {
 class NewRun(BaseModel):
     model_config = ConfigDict(extra="forbid")
     example_id: str = Field(pattern=r"^[a-z0-9][a-z0-9_-]{0,159}$")
-    specification_mode: Literal["generate", "provided"]
+    # Retained for older clients; new runs always assemble the fixed scoring context.
+    specification_mode: Literal["generate", "provided"] = "generate"
 
 
 class Classification(BaseModel):
@@ -139,7 +140,8 @@ def persist(job: AnalysisJob) -> None:
 
 
 def visible_result(record: dict) -> dict:
-    visible = deepcopy({key: record[key] for key in ("item_id", "status", "labels") if key in record})
+    visible = deepcopy({key: record[key] for key in (
+        "item_id", "status", "labels", "dimensions", "analysis_type") if key in record})
     visible["classifier_errors"] = {
         classifier_id: "No valid judgment was saved. Retry this phase."
         for classifier_id in record.get("classifier_errors", {})
@@ -325,14 +327,18 @@ def reserve_worker(api_key: str | None, current: AnalysisJob | None = None) -> s
 
 
 def public_job(job: AnalysisJob, page: int = 1) -> dict:
+    six_scores = scoring.is_score_spec(job.spec or {})
     complete = sum(record["status"] == "complete" for record in job.results.values())
     errors = sum(record["status"] == "error" for record in job.results.values())
     classifier_ids = {classifier["id"] for classifier in (job.spec or {}).get("classifiers", [])
                       if classifier["applicable"]}
-    completed_judgments = sum(len(classifier_ids.intersection(record.get("labels", {})))
+    judgment_key = "dimensions" if six_scores else "labels"
+    completed_judgments = sum(len(classifier_ids.intersection(record.get(judgment_key, {})))
                               for record in job.results.values())
-    pilot_judgments = sum(len(classifier_ids.intersection(record.get("labels", {})))
+    pilot_judgments = sum(len(classifier_ids.intersection(record.get(judgment_key, {})))
                           for item_id, record in job.results.items() if item_id in job.pilot_item_ids)
+    pilot_complete = sum(record["status"] == "complete" for item_id, record in job.results.items()
+                         if item_id in job.pilot_item_ids)
     pages = max(1, math.ceil(job.total / PAGE_SIZE))
     page = min(page, pages)
     rows = []
@@ -344,12 +350,16 @@ def public_job(job: AnalysisJob, page: int = 1) -> dict:
                 rows.append({
                     "item_id": item["item_id"], "content": item.get("content"),
                     "reference_answer": item.get("reference_answer"),
+                    **{key: item.get(key) for key in ("grading_criterion", "item_features", "asset_manifest", "verifier")},
                     "status": result.get("status", "pending"), "labels": result.get("labels"),
+                    **({"dimensions": result.get("dimensions")} if six_scores else {}),
                     "classifier_errors": result.get("classifier_errors", {}),
-                    "error": "Some classifiers need a retry. Saved judgments are retained." if result.get("status") == "error" else None,
+                    "error": ("No valid assessment was saved. Retry this item." if six_scores else
+                              "Some classifiers need a retry. Saved judgments are retained.") if result.get("status") == "error" else None,
                 })
     return {
         "run_id": job.run_id, "status": job.status, "message": job.message,
+        **({"analysis_type": "six_scores"} if six_scores or job.spec is None else {}),
         "created_at": store.timestamp(job.created_at), "updated_at": store.timestamp(job.updated_at),
         "retention": {"automatic_expiry": bool(store.retention_seconds()),
                       "expires_at": store.timestamp(job.updated_at + store.retention_seconds())
@@ -362,9 +372,14 @@ def public_job(job: AnalysisJob, page: int = 1) -> dict:
             "pilot": max(0, min(CHECKPOINT_SIZE, job.total) * len(classifier_ids) - pilot_judgments),
             "all": max(0, job.total * len(classifier_ids) - completed_judgments),
         },
+        **({"remaining_requests": {
+            "pilot": max(0, min(CHECKPOINT_SIZE, job.total) - pilot_complete),
+            "all": max(0, job.total - complete),
+        }} if six_scores else {}),
         "items": rows, "pagination": {"page": page, "page_size": PAGE_SIZE, "total_pages": pages},
         "usage": dict(job.usage), "model": dict(job.model), "scope": job.scope,
-        "can_continue": job.checkpoint_seen and job.status in {"checkpoint", "cancelled", "failed"},
+        "can_continue": (six_scores or job.checkpoint_seen) and job.spec is not None
+                        and job.status in {"ready", "checkpoint", "cancelled", "failed"},
         "error": job.message if job.status == "failed" else None,
         "provider_error": dict(job.provider_error) if job.status == "failed" and job.provider_error else None,
         "failure": dict(job.failure) if job.status == "failed" and job.failure else None,
@@ -578,11 +593,11 @@ async def initialize(job: AnalysisJob, mode: str, api_key: str | None, upload: d
             job.pilot_item_ids = {json.loads(line)["item_id"] for line in islice(stream, CHECKPOINT_SIZE)}
         job.data_ready = True
         write_json(job.directory / "website_provenance.json", {
-            "version": 1, "created_at": store.timestamp(job.created_at), "model": job.model,
-            "generation_system": generate.PROMPT_PATH.read_text(encoding="utf-8"),
-            "generation_user_template": generate.USER_PROMPT_PATH.read_text(encoding="utf-8"),
+            "version": 2, "analysis_type": "six_scores",
+            "created_at": store.timestamp(job.created_at), "model": job.model,
+            "context_preparation": "deterministic; no model calls",
             "implementation_sha256": {name: file_sha256(Path(module.__file__)) for name, module in (
-                ("classify.py", classify), ("generate.py", generate), ("model_client.py", model_client))},
+                ("classify.py", classify), ("scoring.py", scoring), ("model_client.py", model_client))},
         })
         if job.assessment and job.assessment.get("evidence_directory"):
             original = Path(job.assessment["evidence_directory"])
@@ -594,24 +609,15 @@ async def initialize(job: AnalysisJob, mode: str, api_key: str | None, upload: d
         if job.stopped.is_set():
             return
         phase = "specification"
-        if mode == "generate":
-            job.status = "generating"
-            job.message = ("GPT-6 Luna is preparing sourced context for the four fixed item classifiers."
-                           if job.assessment and job.assessment["kind"] == "direct" else
-                           "GPT-6 Luna is preparing sourced context; earlier assessment findings remain hypotheses.")
+        job.message = "Preparing shared deployment evidence and the fixed six-dimension rubric."
         persist(job)
-        job.spec = await drained_thread(
-            generate.generate_spec, job.directory,
-            supplied=supplied if mode == "provided" else None,
-            call=model_bridge(job, api_key) if api_key else None,
-            **job.model,
-        )
+        job.spec = await drained_thread(scoring.prepare_context, job.directory)
         phase = "report"
         metadata = read_json(job.directory / "specification.json")
         metadata.get("source", {}).pop("path", None)
         write_json(job.directory / "specification.json", metadata)
         await refresh_report(job)
-        job.status, job.message = "ready", "Review the fixed rules, sourced context, and evidence gaps, then classify the first items."
+        job.status, job.message = "ready", "Context and items are ready. Choose how many items to score on all six dimensions."
     except (item_analysis_source.DatasetAccessError, item_analysis_source.DatasetPreparationError,
             item_analysis_databank.DataBankError) as error:
         job.status, job.message = "failed", str(error)
@@ -629,8 +635,8 @@ async def initialize(job: AnalysisJob, mode: str, api_key: str | None, upload: d
             # exception bodies, model output, source text, or credentials.
             code, job.message = {
                 "preparation": ("preparation_failed", "The website could not prepare the benchmark items or deployment evidence. No model calls were made. Share this error with the maintainer."),
-                "specification": ("specification_failed", "The website could not finish preparing the item criteria. No items have been classified. Share this error with the maintainer; this does not establish a problem with your API key."),
-                "report": ("report_failed", "The item criteria are ready, but the website could not prepare their results view. No items have been classified. Share this error with the maintainer."),
+                "specification": ("specification_failed", "The website could not prepare the shared scoring context. No model calls were made. Share this error with the maintainer."),
+                "report": ("report_failed", "The scoring context is ready, but the website could not prepare its results view. No items have been scored. Share this error with the maintainer."),
             }[phase]
         job.failure = {"stage": phase, "code": code, "message": job.message}
     finally:
@@ -668,13 +674,13 @@ async def classify_job(job: AnalysisJob, api_key: str) -> None:
             job.message = (job.provider_error["message"] if job.provider_error else
                            "The model request failed. Retry to resume saved progress; if it persists, contact the website maintainer.")
         elif execution["full_dataset_complete"]:
-            job.status, job.message = "complete", "Every item in this snapshot has a saved classification. Review the labels and export the results."
+            job.status, job.message = "complete", "Every item in this snapshot has a saved assessment. Inspect the evidence and export the results."
         elif job.scope == "pilot" and execution["complete"] == execution["target_items"]:
             job.checkpoint_seen = True
             job.status = "checkpoint"
-            job.message = "The first items are ready for review. Inspect their labels and evidence before continuing across the snapshot."
+            job.message = "The selected items are ready. Inspect their assessments or continue across the snapshot."
         else:
-            job.status, job.message = "failed", "Some items still need valid classifications. Retry to resume; completed items are retained."
+            job.status, job.message = "failed", "Some items still need valid assessments. Retry to resume; completed items are retained."
     except Exception:
         job.status = "failed"
         job.message = (job.provider_error["message"] if job.provider_error else
@@ -753,9 +759,8 @@ async def create_assessment_run(
         items_file: Annotated[UploadFile | None, File()] = None,
         x_openai_key: Annotated[str | None, Header()] = None) -> dict:
     response.headers["Cache-Control"] = "no-store"
-    api_key = key_required(x_openai_key)
     assessment = item_analysis_assessment.resolve(assessment_kind, assessment_id)
-    return await create_context_job(assessment, source_id, source_revision, benchmark_confirmed, items_file, api_key)
+    return await create_context_job(assessment, source_id, source_revision, benchmark_confirmed, items_file)
 
 
 @router.post("/runs/from-context", status_code=202)
@@ -768,13 +773,12 @@ async def create_direct_run(
         items_file: Annotated[UploadFile | None, File()] = None,
         x_openai_key: Annotated[str | None, Header()] = None) -> dict:
     response.headers["Cache-Control"] = "no-store"
-    api_key = key_required(x_openai_key)
     assessment = item_analysis_direct.resolve(item_analysis_direct.parse_context(context_json))
-    return await create_context_job(assessment, source_id, source_revision, benchmark_confirmed, items_file, api_key)
+    return await create_context_job(assessment, source_id, source_revision, benchmark_confirmed, items_file)
 
 
 async def create_context_job(assessment: dict, source_id: str | None, source_revision: str | None,
-                             benchmark_confirmed: bool, items_file: UploadFile | None, api_key: str) -> dict:
+                             benchmark_confirmed: bool, items_file: UploadFile | None, api_key: str | None = None) -> dict:
     """Both starting points share dataset confirmation, preparation, and privacy."""
     if not benchmark_confirmed:
         raise HTTPException(400, "Confirm the benchmark identity and selected item snapshot before starting item analysis.")
@@ -827,14 +831,12 @@ async def create_context_job(assessment: dict, source_id: str | None, source_rev
 async def create_run(body: NewRun, response: Response,
                      x_openai_key: Annotated[str | None, Header()] = None) -> dict:
     response.headers["Cache-Control"] = "no-store"
-    api_key = key_required(x_openai_key) if body.specification_mode == "generate" else None
+    api_key = None  # Preparing shared evidence never requires or retains a provider key.
     example = next((entry for entry in examples() if entry["id"] == body.example_id), None)
     if example is None:
         raise HTTPException(404, "This example is not configured on the server.")
     if not example["available"]:
         raise HTTPException(503, example.get("unavailable_reason") or "This dataset is currently unavailable. Try again later.")
-    if body.specification_mode == "provided" and not example["supplied_spec_available"]:
-        raise HTTPException(409, "This example requires generating a specification.")
     sweep()
     owner = reserve_worker(api_key)
     run_id = secrets.token_hex(16)
@@ -868,9 +870,10 @@ async def start_classification(run_id: str, body: Classification, response: Resp
         raise HTTPException(409, "Wait for the artifact download to finish before starting another phase.")
     if job.spec is None or (job.task and not job.task.done()) or job.status == "complete":
         raise HTTPException(409, "Wait for a valid specification or the current phase to finish.")
-    if body.scope == "all" and not job.checkpoint_seen:
+    six_scores = scoring.is_score_spec(job.spec)
+    if body.scope == "all" and not job.checkpoint_seen and not six_scores:
         raise HTTPException(409, "Classify and review the first items before continuing across the full snapshot.")
-    if (body.scope == "all" and job.assessment and job.assessment["kind"] == "direct"
+    if (not six_scores and body.scope == "all" and job.assessment and job.assessment["kind"] == "direct"
             and not body.pilot_review_confirmed):
         raise HTTPException(400, "Confirm that you reviewed the pilot judgments and criteria before continuing across the full snapshot.")
     if body.scope == "pilot" and job.scope == "all":
@@ -881,7 +884,10 @@ async def start_classification(run_id: str, body: Classification, response: Resp
     job.failure = None
     job.scope = body.scope
     job.status = "running"
-    job.message = "Classifying the first items for review." if body.scope == "pilot" else "Continuing across all items using the same classifier rules."
+    job.message = ("Scoring the selected items on all six dimensions." if body.scope == "pilot" else
+                   "Scoring all items in this snapshot on all six dimensions.") if six_scores else (
+                       "Classifying the first items for review." if body.scope == "pilot" else
+                       "Continuing across all items using the same classifier rules.")
     persist(job)
     job.task = asyncio.create_task(classify_job(job, api_key))
     return public_job(job)

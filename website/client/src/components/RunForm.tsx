@@ -110,8 +110,9 @@ export function RunForm({ onSubmit, onChangeKey }: Props) {
       <p className="help">
         Upload the benchmark paper as a PDF and describe the deployment context
         where you'd want to use it. First, answer a few questions and assess the
-        benchmark. Then connect its dataset and analyze individual items to
-        complete the validity analysis. The benchmark stage uses your Anthropic
+        benchmark. Then connect its dataset and classify a pilot to inspect and
+        export item-level judgments. Continuing through the full prepared dataset
+        is optional. The benchmark stage uses your Anthropic
         key; item analysis uses an OpenAI key.
       </p>
 
@@ -151,8 +152,8 @@ export function RunForm({ onSubmit, onChangeKey }: Props) {
           the dataset ID, paste it here to include a preliminary data profile in
           the benchmark assessment. You can leave this field blank. In the next
           stage, confirm a matching Measurement Data Bank snapshot or upload
-          the benchmark’s items. Item analysis
-          is required to complete the pipeline.
+          the benchmark’s items. Start with a pilot you can inspect and export;
+          classifying the remaining items is optional.
         </p>
         <label>
           <span className="label-text">HF dataset ID (e.g. org/dataset)</span>

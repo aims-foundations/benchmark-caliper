@@ -18,6 +18,7 @@ from fastapi.testclient import TestClient
 import pytest
 
 from anthropic_api_package_release.item_analysis import model_client, prepare
+from anthropic_api_package_release.item_analysis.scoring import DIMENSIONS, dimension_descriptors
 from anthropic_api_package_release.item_analysis.storage import read_json, write_json
 from website.server import db, item_analysis as analysis, item_analysis_assessment, logging_gate, pipeline_runner
 
@@ -72,7 +73,17 @@ def model(monkeypatch):
         calls.append((arguments["model"], payload))
         assert arguments["model"] == model_client.MODEL_ID
         assert arguments["reasoning_effort"] == model_client.REASONING_EFFORT
-        if "item" not in payload:
+        if "dimensions" in payload.get("output_schema", {}).get("properties", {}):
+            slots = payload["output_schema"]["properties"]["dimensions"]["properties"]
+            assert set(slots) == set(DIMENSIONS)
+            dimensions = {cid: {"score": 4,
+                                "evidence": ["content: The supplied question and answer choices."],
+                                "justification": "Deterministic test response, not a genuine assessment.",
+                                "information_gaps": []} for cid in slots}
+            if payload["item"]["item_id"].endswith("01"):
+                dimensions["input_content"].update(score=None, information_gaps=["No regional comparison evidence was supplied."])
+            text = json.dumps({"dimensions": dimensions})
+        elif "item" not in payload:
             text = json.dumps(context_response(payload))
         else:
             slots = payload["output_schema"]["properties"]["labels"]["properties"]
@@ -261,7 +272,7 @@ def test_remote_preparation_uses_actual_frozen_metadata_and_hides_paths(client, 
 
 
 @pytest.mark.parametrize("example_id,benchmark,assessment_context", REMOTE_CONTEXTS)
-def test_selected_context_drives_generation_classification_and_exports(
+def test_selected_context_drives_preparation_scoring_and_exports(
         client, tmp_path, monkeypatch, model, example_id, benchmark, assessment_context):
     prepared = prepared_snapshot(tmp_path, monkeypatch, count=3, benchmark=benchmark,
                                  assessment_context=assessment_context)
@@ -282,22 +293,19 @@ def test_selected_context_drives_generation_classification_and_exports(
     assert ready["example"]["source_revision"] == "fixture"
     assert ready["spec"]["benchmark"] == benchmark
     assert ready["spec"]["deployment"] == evidence["deployment"]
-    assert ready["summary"]["specification"]["source"]["kind"] == "generated"
+    assert ready["summary"]["specification"]["source"]["kind"] == "deterministic"
     directory = analysis.jobs[access["run_id"]].directory
     assert len(calls) == 1 and calls[0][1] == example_id
     assert calls[0][0].parent == directory.parent and not calls[0][0].exists()
-    generation = [payload for _, payload in model if "item" not in payload]
-    assert len(generation) == 1
-    assert generation[0]["benchmark"] == benchmark
-    assert generation[0]["deployment_description"] == evidence["deployment"]
-    assert generation[0]["source_registry"] == evidence["registry"]
-    assert {item["item_id"]: item for item in generation[0]["example_items"]} == expected_items
+    assert not model
+    assert ready["spec"]["source_registry"]["deployment_description.txt"] == evidence["deployment"]
+    assert not any(key.startswith("scoring.json") for key in ready["spec"]["source_registry"])
 
     result = classify(client, access)
     assert result["status"] == "complete", result
     assert result["complete"] == result["processed"] == result["total"] == 3
     classification = [payload for _, payload in model if "item" in payload]
-    assert len(classification) == 12
+    assert len(classification) == 3
     assert {payload["item"]["item_id"]: payload["item"] for payload in classification} == expected_items
     assert all(payload["deployment_description"] == evidence["deployment"]
                for payload in classification)
@@ -317,15 +325,16 @@ def test_selected_context_drives_generation_classification_and_exports(
 
 
 @pytest.mark.parametrize("example_id", [context[0] for context in REMOTE_CONTEXTS])
-def test_remote_benchmark_without_supplied_criteria_requires_generation(client, monkeypatch, model, example_id):
-    calls = remote_source(monkeypatch)
-    entry = next(entry for entry in client.get("/api/item-analysis/catalog").json()["examples"]
-                 if entry["id"] == example_id)
+def test_remote_benchmark_without_supplied_criteria_uses_fixed_context(client, tmp_path, monkeypatch, model, example_id):
+    source = prepared_snapshot(tmp_path, monkeypatch, count=2)
+    (source / "classifier_spec.original.json").unlink()
+    calls = remote_source(monkeypatch, {example_id: source})
+    entry = next(entry for entry in client.get("/api/item-analysis/catalog").json()["examples"] if entry["id"] == example_id)
     assert entry["available"] and not entry["supplied_spec_available"]
-    response = client.post("/api/item-analysis/runs", json={"example_id": example_id, "specification_mode": "provided"})
-    assert response.status_code == 409
-    assert not analysis.jobs and not calls and not model
-    assert not (db.DEFAULT_DB_PATH.parent / "item-analysis").exists()
+    access = start(client, example=example_id)
+    ready = settled(client, access)
+    assert ready["status"] == "ready" and ready["spec"]["analysis_type"] == "six_scores"
+    assert len(calls) == 1 and not model
 
 
 @pytest.mark.parametrize("mode", ["provided", "generate"])
@@ -386,38 +395,36 @@ def test_bundled_example_always_available_and_no_predictions(client, model):
     assert job["status"] == "ready" and job["total"] == 10
     assert job["processed"] == 0 and all(item["status"] == "pending" for item in job["items"])
     assert job["completed_judgments"] == 0
-    assert job["remaining_judgments"] == {"pilot": 40, "all": 40}
+    assert job["remaining_judgments"] == {"pilot": 60, "all": 60}
     assert "Illustrative" in job["example"]["source_label"]
     assert job["summary"]["original_assessment"]["input_form"]["score"] is None
-    assert job["summary"]["specification"]["source"]["kind"] == "provided"
+    assert job["summary"]["specification"]["source"]["kind"] == "deterministic"
     assert not model
     assert all(c["applicable"] for c in job["spec"]["classifiers"])
-    assert {c["id"] for c in job["spec"]["classifiers"]} == {"input_ontology", "input_content", "output_ontology", "output_content"}
+    assert {c["id"] for c in job["spec"]["classifiers"]} == set(DIMENSIONS)
 
 
 @pytest.mark.parametrize("mode", ["provided", "generate"])
-def test_real_pipeline_generates_or_imports_then_classifies_and_exports(client, model, mode):
+def test_real_pipeline_prepares_context_then_scores_and_exports(client, model, mode):
     access = start(client, mode=mode)
     ready = settled(client, access)
     assert ready["status"] == "ready"
     expected_model = {"provider": "openai", "model_id": "gpt-6-luna", "reasoning_effort": "low"}
     assert ready["model"] == access["model"] == expected_model
-    assert ready["summary"]["specification"]["source"]["kind"] == ("generated" if mode == "generate" else "provided")
-    if mode == "generate":
-        source = ready["summary"]["specification"]["source"]
-        assert {key: source[key] for key in expected_model} == expected_model
+    assert ready["summary"]["specification"]["source"]["kind"] == "deterministic"
+    assert not model
     result = classify(client, access)
     assert result["status"] == "complete"
     assert result["complete"] == result["processed"] == result["total"] == 10
     assert result["errors"] == 0 and result["summary"]["complete_snapshot"]
-    assert result["completed_judgments"] == 40
+    assert result["completed_judgments"] == 60
     assert result["remaining_judgments"] == {"pilot": 0, "all": 0}
     regional = next(c for c in result["summary"]["classifiers"] if c["id"] == "input_content")
-    assert regional["insufficient_evidence"] == 1 and regional["determinate_judgments"] == 9
-    call_count = 41 if mode == "generate" else 40
+    assert regional["unknown"] == 1 and regional["known"] == 9
+    call_count = 10
     assert result["usage"] == {"input_tokens": 100 * call_count, "output_tokens": 30 * call_count,
                                "cached_input_tokens": 20 * call_count, "reasoning_tokens": 7 * call_count}
-    assert sum("item" not in payload for _, payload in model) == (mode == "generate")
+    assert all("item" in payload for _, payload in model)
     for artifact, (filename, _) in analysis.ARTIFACTS.items():
         response = client.get(url(access) + f"/download/{artifact}", headers=headers(access))
         assert response.status_code == 200
@@ -440,20 +447,16 @@ def test_first_100_checkpoint_full_continuation_and_no_duplicate_calls(client, m
         remote_source(monkeypatch, source)
     access = start(client, example="mmlu")
     assert settled(client, access)["status"] == "ready"
-    assert client.post(url(access) + "/classify", json={"scope": "all"}, headers=headers(access, key=True)).status_code == 409
     pilot = classify(client, access)
     assert pilot["status"] == "checkpoint" and pilot["can_continue"]
     assert (pilot["processed"], pilot["total"]) == (100, 105)
-    assert pilot["completed_judgments"] == 400
-    assert pilot["remaining_judgments"] == {"pilot": 0, "all": 20}
+    assert pilot["completed_judgments"] == 600
+    assert pilot["remaining_judgments"] == {"pilot": 0, "all": 30}
     first_ids = [payload["item"]["item_id"] for _, payload in model if "item" in payload]
-    assert len(first_ids) == 400 and len(set(first_ids)) == 100
-    first_pairs = [(payload["item"]["item_id"], payload["classifier"]["id"])
-                   for _, payload in model if "item" in payload]
-    assert len(first_pairs) == len(set(first_pairs)) == 400
+    assert len(first_ids) == len(set(first_ids)) == 100
     complete = classify(client, access, scope="all")
     assert complete["status"] == "complete" and complete["complete"] == 105
-    assert sum("item" in payload for _, payload in model) == 420
+    assert sum("item" in payload for _, payload in model) == 105
     page = client.get(url(access) + "?page=6", headers=headers(access)).json()
     assert page["pagination"] == {"page": 6, "page_size": 20, "total_pages": 6}
     assert len(page["items"]) == 5
@@ -461,12 +464,10 @@ def test_first_100_checkpoint_full_continuation_and_no_duplicate_calls(client, m
 
 
 def test_private_endpoints_and_keys_and_body_validation(client, model):
-    assert client.post("/api/item-analysis/runs", json={**BODY, "specification_mode": "generate"}).status_code == 401
-    wrong_header = client.post("/api/item-analysis/runs", json={**BODY, "specification_mode": "generate"},
-                               headers={"X-Anthropic-Key": KEY})
-    assert wrong_header.status_code == 401
-    assert "OpenAI" in wrong_header.json()["detail"]
-    assert not analysis.jobs and not model
+    response = client.post("/api/item-analysis/runs", json={**BODY, "specification_mode": "generate"})
+    assert response.status_code == 202
+    assert settled(client, response.json())["status"] == "ready"
+    assert not model
     for bad in ({**BODY, "input_path": "/etc/passwd"}, {**BODY, "example_id": "../secret"},
                 {**BODY, "model": "another-model"}):
         assert client.post("/api/item-analysis/runs", json=bad).status_code == 422
@@ -506,62 +507,58 @@ def test_provider_failure_is_sanitized_and_can_resume(client, monkeypatch, model
     assert analysis.jobs[access["run_id"]].provider_error is None
 
 
-def test_provider_failure_preserves_saved_dimensions_and_resume_calls_only_missing_ones(client, monkeypatch, model):
+def test_provider_failure_preserves_completed_items_and_retries_only_missing_ones(client, monkeypatch, model):
     access = start(client)
     ready = settled(client, access)
-    first_id = ready["items"][0]["item_id"]
+    first_id, failed_id = [item["item_id"] for item in ready["items"][:2]]
     original = model_client.call_text_async
 
-    async def fail_second_classifier(**arguments):
-        payload = request_payload(arguments["user"])
-        if payload["classifier"]["id"] == "input_content":
+    async def fail_second_item(**arguments):
+        if request_payload(arguments["user"])["item"]["item_id"] == failed_id:
             raise ValueError(f"Private failure {KEY}")
         return await original(**arguments)
 
-    monkeypatch.setattr(model_client, "call_text_async", fail_second_classifier)
+    monkeypatch.setattr(model_client, "call_text_async", fail_second_item)
     failed = classify(client, access)
-    assert failed["status"] == "failed" and failed["errors"] == 1 and failed["complete"] == 0
-    assert failed["completed_judgments"] == 1
-    assert failed["remaining_judgments"] == {"pilot": 39, "all": 39}
+    assert failed["status"] == "failed" and failed["errors"] == failed["complete"] == 1
+    assert failed["completed_judgments"] == 6
+    assert failed["remaining_judgments"] == {"pilot": 54, "all": 54}
     first = next(item for item in failed["items"] if item["item_id"] == first_id)
-    assert set(first["labels"]) == {"input_ontology"}
-    assert first["classifier_errors"] == {"input_content": "No valid judgment was saved. Retry this phase."}
+    assert set(first["dimensions"]) == set(DIMENSIONS)
+    assert next(item for item in failed["items"] if item["item_id"] == failed_id)["dimensions"] == {}
     assert "Private failure" not in json.dumps(failed) and KEY not in json.dumps(failed)
     monkeypatch.setattr(model_client, "call_text_async", original)
     complete = classify(client, access)
-    assert complete["status"] == "complete" and complete["completed_judgments"] == 40
-    pairs = [(payload["item"]["item_id"], payload["classifier"]["id"]) for _, payload in model]
-    assert len(pairs) == len(set(pairs)) == 40
+    assert complete["status"] == "complete" and complete["completed_judgments"] == 60
+    ids = [payload["item"]["item_id"] for _, payload in model]
+    assert len(ids) == len(set(ids)) == 10
 
 
-def test_invalid_classifier_does_not_discard_other_dimensions_or_unlock_full_continuation(client, monkeypatch, model):
+def test_invalid_item_response_repairs_once_and_preserves_other_completed_items(client, monkeypatch, model):
     access = start(client)
     first_id = settled(client, access)["items"][0]["item_id"]
     original = model_client.call_text_async
     invalid_calls = []
 
-    async def invalid_dimension(**arguments):
-        payload = request_payload(arguments["user"])
-        if payload["item"]["item_id"] == first_id and payload["classifier"]["id"] == "output_ontology":
+    async def invalid_item(**arguments):
+        if request_payload(arguments["user"])["item"]["item_id"] == first_id:
             invalid_calls.append(arguments)
-            return model_client.CallResult('{"labels": {}}', arguments["model"], 100, 30, 1)
+            return model_client.CallResult('{"dimensions": {}}', arguments["model"], 100, 30, 1)
         return await original(**arguments)
 
-    monkeypatch.setattr(model_client, "call_text_async", invalid_dimension)
+    monkeypatch.setattr(model_client, "call_text_async", invalid_item)
     failed = classify(client, access)
     assert len(invalid_calls) == 2
-    assert failed["status"] == "failed" and not failed["can_continue"]
-    assert failed["complete"] == 9 and failed["errors"] == 1 and failed["completed_judgments"] == 39
-    assert failed["remaining_judgments"] == {"pilot": 1, "all": 1}
+    assert failed["status"] == "failed"
+    assert failed["complete"] == 9 and failed["errors"] == 1 and failed["completed_judgments"] == 54
+    assert failed["remaining_judgments"] == {"pilot": 6, "all": 6}
     first = next(item for item in failed["items"] if item["item_id"] == first_id)
-    assert set(first["labels"]) == {"input_ontology", "input_content", "output_content"}
-    assert set(first["classifier_errors"]) == {"output_ontology"}
-    assert client.post(url(access) + "/classify", json={"scope": "all"}, headers=headers(access, key=True)).status_code == 409
+    assert first["dimensions"] == {} and first["status"] == "error"
     monkeypatch.setattr(model_client, "call_text_async", original)
-    complete = classify(client, access)
-    assert complete["status"] == "complete" and complete["completed_judgments"] == 40
-    pairs = [(payload["item"]["item_id"], payload["classifier"]["id"]) for _, payload in model]
-    assert len(pairs) == len(set(pairs)) == 40
+    complete = classify(client, access, scope="all")
+    assert complete["status"] == "complete" and complete["completed_judgments"] == 60
+    ids = [payload["item"]["item_id"] for _, payload in model]
+    assert len(ids) == len(set(ids)) == 10
 
 
 @pytest.mark.parametrize("mode", ["generate", "provided"])
@@ -573,7 +570,7 @@ def test_invalid_classifier_does_not_discard_other_dimensions_or_unlock_full_con
     ("rate_limit", 429, None),
     ("invalid_request", 400, "reasoning.effort"),
 ])
-def test_safe_provider_diagnostics_reach_generation_and_classification(
+def test_safe_provider_diagnostics_reach_scoring_after_free_preparation(
         client, monkeypatch, mode, code, status_code, parameter):
     error = model_client.ModelRequestError(
         f"Raw provider response contains {KEY} and confidential provider text",
@@ -586,14 +583,14 @@ def test_safe_provider_diagnostics_reach_generation_and_classification(
     monkeypatch.setattr(model_client, "call_text_async", rejected)
     access = start(client, mode=mode)
     state = settled(client, access)
-    failed = classify(client, access) if mode == "provided" else state
+    assert state["status"] == "ready"
+    failed = classify(client, access)
     assert failed["status"] == "failed"
     assert failed["message"] == failed["error"] == error.public_message
     assert failed["provider_error"] == {
         "code": code, "status_code": status_code, "message": error.public_message,
     }
-    if mode == "generate":
-        assert failed["failure"] == {"stage": "specification", "code": code, "message": error.public_message}
+    assert failed["failure"] is None
     assert KEY not in json.dumps(failed)
     assert "confidential provider text" not in json.dumps(failed)
     directory = analysis.jobs[access["run_id"]].directory
@@ -633,7 +630,7 @@ def test_model_echo_of_key_is_redacted_before_saving(client, monkeypatch, model)
     async def echo_key(**arguments):
         result = await original(**arguments)
         payload = json.loads(result.text)
-        for label in payload["labels"].values():
+        for label in payload["dimensions"].values():
             label["justification"] = f"The model echoed {KEY} in its explanation."
         return model_client.CallResult(json.dumps(payload), result.model, result.input_tokens,
                                        result.output_tokens, result.latency_ms)
@@ -669,20 +666,23 @@ def test_cancel_stops_current_request_drains_thread_and_resumes(client, monkeypa
     assert response.status_code == 202
     assert started.wait(2)
     duplicate = client.post("/api/item-analysis/runs", json={**BODY, "specification_mode": "generate"}, headers={"X-OpenAI-Key": KEY})
-    assert duplicate.status_code == 429
+    assert duplicate.status_code == 202
+    other = duplicate.json()
+    assert settled(client, other)["status"] == "ready"
+    assert client.post(url(other) + "/classify", json={"scope": "all"}, headers=headers(other, key=True)).status_code == 429
     stopped = client.post(url(access) + "/cancel", headers=headers(access)).json()
     assert stopped["status"] == "cancelled" and cancelled.is_set()
-    assert stopped["completed_judgments"] == 1
-    assert stopped["remaining_judgments"] == {"pilot": 39, "all": 39}
+    assert stopped["completed_judgments"] == 6
+    assert stopped["remaining_judgments"] == {"pilot": 54, "all": 54}
     assert analysis.jobs[access["run_id"]].task.done()
     assert calls == [model_client.MODEL_ID, model_client.MODEL_ID]
     monkeypatch.setattr(model_client, "call_text_async", original)
     assert classify(client, access)["status"] == "complete"
-    pairs = [(payload["item"]["item_id"], payload["classifier"]["id"]) for _, payload in model]
-    assert len(pairs) == len(set(pairs)) == 40
+    ids = [payload["item"]["item_id"] for _, payload in model]
+    assert len(ids) == len(set(ids)) == 10
 
 
-def test_generation_can_be_cancelled_and_sweep_never_removes_live_worker(client, monkeypatch):
+def test_scoring_can_be_cancelled_and_sweep_never_removes_live_worker(client, monkeypatch):
     monkeypatch.setenv("ITEM_ANALYSIS_RETENTION_SECONDS", "3600")
     started, cancelled = Event(), Event()
 
@@ -696,6 +696,8 @@ def test_generation_can_be_cancelled_and_sweep_never_removes_live_worker(client,
 
     monkeypatch.setattr(model_client, "call_text_async", blocked)
     access = start(client, mode="generate")
+    assert settled(client, access)["status"] == "ready"
+    assert client.post(url(access) + "/classify", json={"scope": "all"}, headers=headers(access, key=True)).status_code == 202
     assert started.wait(2)
     job = analysis.jobs[access["run_id"]]
     job.updated_at = time.time() - 3601
@@ -718,13 +720,14 @@ def test_configured_expiry_invalidates_secret_and_removes_all_files(client, monk
     assert not job.directory.exists()
 
 
-def test_configured_missing_original_spec_allows_generation_only(client, tmp_path, monkeypatch):
+def test_configured_missing_original_spec_still_prepares_fixed_context(client, tmp_path, monkeypatch):
     directory = prepared_snapshot(tmp_path, monkeypatch)
     (directory / "classifier_spec.original.json").unlink()
     entry = next(entry for entry in client.get("/api/item-analysis/catalog").json()["examples"] if entry["id"] == "mmlu")
     assert not entry["supplied_spec_available"]
     response = client.post("/api/item-analysis/runs", json={"example_id": "mmlu", "specification_mode": "provided"})
-    assert response.status_code == 409 and not analysis.jobs
+    assert response.status_code == 202
+    assert settled(client, response.json())["status"] == "ready"
     access = start(client, example="mmlu", mode="generate")
     assert settled(client, access)["status"] == "ready"
 
@@ -800,19 +803,21 @@ def test_phase_waits_for_downloads_and_only_immutable_spec_downloads_while_runni
     assert client.post(url(access) + "/cancel", headers=headers(access)).status_code == 200
 
 
-def test_invalid_generated_spec_repairs_once_then_fails_without_classifying(client, monkeypatch):
+def test_context_preparation_does_not_call_provider_even_when_provider_would_fail(client, monkeypatch):
     calls = []
 
     async def invalid(**arguments):
-        calls.append(arguments["model"])
+        calls.append(arguments)
         return model_client.CallResult("{}", "fixture", 1, 1, 1)
 
     monkeypatch.setattr(model_client, "call_text_async", invalid)
     access = start(client, mode="generate")
-    job = settled(client, access)
-    assert job["status"] == "failed" and job["processed"] == 0
-    assert calls == [model_client.MODEL_ID, model_client.MODEL_ID]
-    assert client.post(url(access) + "/classify", json={"scope": "pilot"}, headers=headers(access, key=True)).status_code == 409
+    ready = settled(client, access)
+    assert ready["status"] == "ready" and ready["processed"] == 0 and not calls
+    assert ready["summary"]["specification"]["source"]["kind"] == "deterministic"
+    failed = classify(client, access)
+    assert failed["status"] == "failed" and failed["errors"] == 10
+    assert len(calls) == 20  # One primary request and one structural repair per item.
 
 
 def test_prepared_source_is_never_modified_and_each_run_is_private(client, tmp_path, monkeypatch):
@@ -906,14 +911,15 @@ def test_upload_continues_actual_assessment_without_matching_preset(client, curr
     assert ready["assessment"]["id"] == current_assessment["assessment_id"]
     assert ready["assessment"]["benchmark"] == "my-new-benchmark"
     assert ready["spec"]["deployment"] == "Spanish classrooms in the current user deployment."
-    assert ready["summary"]["specification"]["source"]["kind"] == "generated"
+    assert ready["summary"]["specification"]["source"]["kind"] == "deterministic"
     assert ready["summary"]["original_assessment"]["input_form"]["score"] == 2
     assert {item["item_id"] for item in ready["items"]} == {"uploaded-1", "custom-id"}
     assert next(item for item in ready["items"] if item["item_id"] == "uploaded-1")["content"] == rows[0]["content"]
-    payload = model[0][1]
+    assert not model
+    payload = ready["spec"]
     assert payload["source_registry"]["elicitation_summary.md"] == "Current elicitation requires Spanish explanations."
-    assert payload["source_registry"]["dataset_analysis_report.md"] == "Current dataset review found English-only prompts."
-    assert payload["source_registry"]["scoring.json#/dimensions/input_form/score"] == 2
+    assert "dataset_analysis_report.md" not in payload["source_registry"]
+    assert not any(key.startswith("scoring.json") for key in payload["source_registry"])
     directory = analysis.jobs[access["run_id"]].directory
     dataset = read_json(directory / "dataset.json")
     assert dataset["source"]["repo"] == "user-upload" and "path" not in dataset["source"]
@@ -929,7 +935,7 @@ def test_upload_continues_actual_assessment_without_matching_preset(client, curr
     assert all(KEY not in path.read_text() for path in directory.iterdir() if path.is_file())
 
 
-def test_linked_snapshot_replaces_every_preset_context_and_always_generates(client, current_assessment, tmp_path, monkeypatch, model):
+def test_linked_snapshot_replaces_every_preset_context_without_model_calls(client, current_assessment, tmp_path, monkeypatch, model):
     source = prepared_snapshot(tmp_path, monkeypatch, count=2, benchmark="mmlu", assessment_context="old unrelated use case")
     before = {path.name: path.read_bytes() for path in source.iterdir() if path.is_file()}
     workspace = pipeline_runner._WORKSPACE_ROOT / current_assessment["assessment_id"]
@@ -945,10 +951,10 @@ def test_linked_snapshot_replaces_every_preset_context_and_always_generates(clie
     assert ready["status"] == "ready", ready
     assert ready["summary"]["original_assessment"]["input_form"]["score"] == 2
     assert ready["example"]["deployment"] == ready["spec"]["deployment"] == "Spanish classrooms in the current user deployment."
-    assert ready["summary"]["specification"]["source"]["kind"] == "generated"
-    assert len(model) == 1
-    assert "old unrelated use case" not in json.dumps(model[0][1])
-    assert model[0][1]["source_registry"]["scoring.json#/dimensions/input_form/score"] == 2
+    assert ready["summary"]["specification"]["source"]["kind"] == "deterministic"
+    assert not model
+    assert "old unrelated use case" not in json.dumps(ready["spec"])
+    assert not any(key.startswith("scoring.json") for key in ready["spec"]["source_registry"])
     directory = analysis.jobs[access["run_id"]].directory
     assert not (directory / "provided_spec.json").exists()
     assert read_json(directory / "dataset.json")["source"]["sha256"] == read_json(source / "dataset.json")["source"]["sha256"]
@@ -1032,7 +1038,6 @@ def test_bad_linked_upload_rejected_before_any_model_calls(client, current_asses
 def test_linked_inputs_credentials_and_size_checked_before_work(client, current_assessment, model, monkeypatch):
     endpoint = "/api/item-analysis/runs/from-assessment"
     files = {"items_file": ("items.json", '[{"content": "hello"}]')}
-    assert client.post(endpoint, data=current_assessment, files=files).status_code == 401
     assert client.post(endpoint, data=current_assessment, headers={"X-OpenAI-Key": KEY}).status_code == 400
     assert client.post(endpoint, data={**current_assessment, "source_id": "mmlu"},
                        headers={"X-OpenAI-Key": KEY}).status_code == 409
@@ -1151,7 +1156,7 @@ def test_confirmed_eligible_source_is_not_filtered_by_release_flag(client, curre
     access = start_linked(client, current_assessment, source_id=candidate["id"])
     ready = settled(client, access)
     assert ready["status"] == "ready" and ready["total"] == 2, ready
-    assert ready["example"]["release"] == release and len(model) == 1
+    assert ready["example"]["release"] == release and not model
     assert ready["summary"]["original_assessment"]["input_form"]["score"] == 2
 
 
@@ -1242,53 +1247,21 @@ def test_deleting_benchmark_run_also_deletes_its_linked_item_data(client, curren
 
 
 @pytest.mark.parametrize("code", ["invalid_json", "schema", "evidence", "deployment"])
-def test_specification_validation_diagnostics_are_safe_and_specific(client, monkeypatch, code):
-    calls = []
-    private_marker = "PRIVATE-MODEL-CONTEXT-MUST-NOT-APPEAR-IN-PUBLIC-ERROR"
+def test_context_preparation_failure_is_safe_and_makes_no_model_calls(client, monkeypatch, model, code):
+    private_marker = "PRIVATE-CONTEXT-MUST-NOT-APPEAR"
 
-    async def invalid_specification(**arguments):
-        # Repair feedback follows the first JSON object. Exercise the real
-        # generator and validator, including the one allowed correction.
-        payload = request_payload(arguments["user"])
-        assert "item" not in payload
-        calls.append(payload)
-        spec = context_response(payload)
-        if code == "invalid_json":
-            text = f"Not JSON: {private_marker} {KEY}"
-        else:
-            if code == "schema":
-                spec['invented_rules'] = f"{private_marker} {KEY}"
-            elif code == "evidence":
-                spec['input_category_inventory']['categories'][0]['source_ids'] = [f"unknown-evidence-{private_marker}-{KEY}"]
-            elif code == "deployment":
-                spec["deployment_description"] = f"An invented deployment: {private_marker} {KEY}"
-            text = json.dumps(spec)
-        return model_client.CallResult(text, arguments["model"], 10, 5, 1)
+    def invalid_context(*args, **kwargs):
+        raise ValueError(f"{code}: {private_marker} {KEY}")
 
-    monkeypatch.setattr(model_client, "call_text_async", invalid_specification)
-    if code == "task_grounding":
-        response = client.post("/api/item-analysis/runs/from-context", data={
-            "context_json": json.dumps({"benchmark": "New benchmark", "deployment": "Spanish classroom tutors.",
-                                         "task_requirements": "Arithmetic and reasoning.", "answer_requirements": "Clear correct explanations."}),
-            "benchmark_confirmed": "true",
-        }, files={"items_file": ("items.json", '[{"content":"Explain 2+2.","reference_answer":"4"}]')},
-                               headers={"X-OpenAI-Key": KEY})
-        assert response.status_code == 202, response.text
-        access = response.json()
-    else:
-        access = start(client, mode="generate")
+    monkeypatch.setattr(analysis.scoring, "prepare_context", invalid_context)
+    access = start(client, mode="generate")
     failed = settled(client, access)
-    expected = analysis.generate.SpecificationValidationError(code=code).public_message
     assert failed["status"] == "failed" and failed["provider_error"] is None
-    assert failed["failure"] == {"stage": "specification", "code": code, "message": expected}
-    assert failed["message"] == failed["error"] == expected
-    assert "No items were classified" in expected
-    assert "API key" not in expected and "model access" not in expected
-    assert len(calls) == 2 and failed["processed"] == 0 and failed["spec"] is None
+    assert failed["failure"]["stage"] == "specification"
+    assert failed["failure"]["code"] == "specification_failed"
+    assert failed["processed"] == 0 and failed["spec"] is None and not model
     assert private_marker not in json.dumps(failed) and KEY not in json.dumps(failed)
-    directory = analysis.jobs[access["run_id"]].directory
-    assert not (directory / "results.jsonl").exists()
-    assert all(KEY not in path.read_text() for path in directory.iterdir() if path.is_file())
+    assert not (analysis.jobs[access["run_id"]].directory / "results.jsonl").exists()
 
 
 @pytest.mark.parametrize("phase", ["preparation", "specification", "report"])
@@ -1302,7 +1275,7 @@ def test_unexpected_initialization_failure_identifies_phase_without_exposing_exc
     if phase == "preparation":
         monkeypatch.setattr(analysis, "prepare_assessment_job", fail)
     elif phase == "specification":
-        monkeypatch.setattr(analysis.generate, "generate_spec", fail)
+        monkeypatch.setattr(analysis.scoring, "prepare_context", fail)
     else:
         monkeypatch.setattr(analysis.report, "generate_report", fail)
     access = start_linked(client, current_assessment, rows=[{"content": "Explain 2+2.", "reference_answer": "4"}])
@@ -1315,7 +1288,7 @@ def test_unexpected_initialization_failure_identifies_phase_without_exposing_exc
     assert "Check the example, model access, and API key" not in failed["message"]
     if phase == "report":
         assert failed["spec"] is not None and failed["summary"] is None
-        assert "criteria are ready" in failed["message"] and len(model) == 1
+        assert "scoring context is ready" in failed["message"] and not model
         assert all("item" not in payload for _, payload in model)
     else:
         assert not model and failed["spec"] is None
@@ -1346,35 +1319,27 @@ def test_initialization_failure_is_cleared_before_a_later_classification_failure
     assert "results view" not in failed["message"]
 
 
-def test_generic_catalog_reaches_each_judge_and_counts_actual_judgments(client, model):
-    from anthropic_api_package_release.item_analysis.catalog import get_catalog
-
+def test_fixed_six_dimension_rubric_reaches_each_item_and_counts_judgments(client, model):
     access = start(client)
     ready = settled(client, access)
-    assert ready['spec']['schema_version'] == 'caliper_item_spec_v2'
-    assert ready['spec']['fixed_catalog_version'] == 'caliper_generic_items_v1'
-    assert ready['spec']['classifiers'] == get_catalog()
-    assert ready['spec']['semantic_validation'] == 'unreviewed'
-    assert 'profile.json' in ready['spec']['source_registry']
-    assert client.get(url(access) + '/download/review', headers=headers(access)).status_code == 404
+    assert ready["spec"]["schema_version"] == "caliper_item_context_v1"
+    assert ready["spec"]["rubric_version"] == "caliper_item_rubric_v1"
+    assert ready["spec"]["classifiers"] == dimension_descriptors()
+    assert ready["summary"]["specification"]["semantic_validation"] == "unreviewed"
+    assert isinstance(ready["spec"]["dataset_profile"], dict)
+    assert client.get(url(access) + "/download/review", headers=headers(access)).status_code == 404
     result = classify(client, access)
-    item_calls = [payload for _, payload in model if 'item' in payload]
-    assert len(item_calls) == result['complete'] * len(get_catalog())
-    catalog = {classifier['id']: classifier for classifier in get_catalog()}
-    for payload in item_calls:
-        classifier_id = payload['classifier']['id']
-        assert payload['classifier'] == catalog[classifier_id]
-        assert payload['context'] == ready['spec']['context_by_classifier'][classifier_id]
-        assert set(payload['output_schema']['properties']['labels']['properties']) == {classifier_id}
-        assert 'classifiers' not in payload and 'context_by_classifier' not in payload
-        assert ('input_category_inventory' in payload) == (classifier_id == 'input_ontology')
-        assert all(content == ready['spec']['source_registry'][source_id]
-                   for source_id, content in payload['source_registry'].items())
-    experiment = result['summary']['experiment']
-    assert experiment['completed_item_classifier_judgments'] == result['complete'] * len(get_catalog())
-    assert experiment['selected_items'] == result['total']
-    content = next(c for c in result['summary']['classifiers'] if c['id'] == 'input_content')
-    assert content['percentages_among_valid']['insufficient_evidence'] == 10
+    assert len(model) == result["complete"]
+    for _, payload in model:
+        assert payload["classifiers"] == dimension_descriptors()
+        assert set(payload["output_schema"]["properties"]["dimensions"]["properties"]) == set(DIMENSIONS)
+        assert payload["source_registry"] == ready["spec"]["source_registry"]
+        assert not any(key.startswith("scoring.json") for key in payload["source_registry"])
+    experiment = result["summary"]["experiment"]
+    assert experiment["completed_item_classifier_judgments"] == result["complete"] * 6
+    assert experiment["selected_items"] == result["total"]
+    content = next(c for c in result["summary"]["classifiers"] if c["id"] == "input_content")
+    assert content["unknown"] == 1 and content["known"] == 9
 
 
 def test_browser_demo_catalog_is_identical_to_code_owned_rules():
@@ -1407,7 +1372,10 @@ def test_linked_run_freezes_available_source_contents_and_keeps_secrets_out(clie
     assert sources['region_scaffold.yaml'] == artifacts['scaffold_yaml']
     assert json.loads(sources['elicitation_answers.json']) == artifacts['elicitation_answers']
     assert state['spec']['source_roles']['elicitation_answers.json'] == 'deployment_requirement'
-    assert 'profile.json' in sources and any(key.startswith('items.jsonl#/') for key in sources)
+    assert isinstance(state['spec']['dataset_profile'], dict)
+    assert not any(key.startswith('items.jsonl#/') for key in sources)
+    assert json.loads(sources['elicitation_questions.json']) == artifacts['elicitation_questions']
+    assert state['spec']['source_roles']['elicitation_questions.json'] == 'elicitation_question'
     assert KEY not in json.dumps(state)
 
 
@@ -1421,6 +1389,5 @@ def test_missing_assessment_documents_remain_gaps_not_fabricated_sources(client,
     sources = state['spec']['source_registry']
     assert 'elicitation_summary.md' not in sources
     assert 'dataset_analysis_report.md' not in sources
-    for context in state['spec']['context_by_classifier'].values():
-        assert any('no available elicitation_summary.md contents' in gap for gap in context['evidence_gaps'])
-        assert any('no available dataset_analysis_report.md contents' in gap for gap in context['evidence_gaps'])
+    assert any('no available elicitation_summary.md contents' in gap for gap in state['spec']['evidence_gaps'])
+    assert any('no available dataset_analysis_report.md contents' in gap for gap in state['spec']['evidence_gaps'])

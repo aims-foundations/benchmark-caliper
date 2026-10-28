@@ -641,16 +641,21 @@ describe('App', () => {
     expect(screen.getByText('4 / 5')).toBeInTheDocument()
     expect(screen.getByTestId('item-assessment-reference')).toHaveTextContent('run:run-x')
     expect(window.location.pathname).toBe('/run/run-x')
-    expect(screen.getByText('Benchmark assessment ready · item analysis remains')).toBeInTheDocument()
-    expect(screen.queryByText('Validity analysis complete')).not.toBeInTheDocument()
+    expect(screen.getByText('Benchmark assessment ready · item analysis available')).toBeInTheDocument()
+    expect(screen.queryByText('Full dataset classified')).not.toBeInTheDocument()
 
-    // A successful pilot is still incomplete; only finishing all items
-    // advances the shared workflow's final stage.
+    // A completed pilot remains reviewable and exportable. Full-dataset
+    // coverage has a separate processing status and is optional.
     await user.click(screen.getByRole('button', { name: 'Finish pilot' }))
-    expect(screen.queryByText('Validity analysis complete')).not.toBeInTheDocument()
+    expect(screen.queryByText('Full dataset classified')).not.toBeInTheDocument()
+    expect(screen.getByText('Benchmark assessment ready · item analysis started')).toBeInTheDocument()
+    expect(screen.getByText(/Review and export the pilot when it finishes/)).toHaveTextContent('Continuing through the full prepared dataset is optional.')
+    expect(screen.getByRole('link', { name: 'Return to item analysis ↓' })).toHaveAttribute('href', '#item-analysis-stage')
     await user.click(screen.getByRole('button', { name: 'Finish all items' }))
-    expect(screen.getByText('Validity analysis complete')).toBeInTheDocument()
-    expect(screen.getByText('Complete').closest('li')).toHaveAttribute('aria-current', 'step')
+    expect(screen.getByText('Full dataset classified')).toBeInTheDocument()
+    expect(screen.getByText(/Every item in the prepared dataset has a saved classification/)).toHaveTextContent('Independent human review has not been recorded here.')
+    expect(screen.queryByText('Validity analysis complete')).not.toBeInTheDocument()
+    expect(screen.getByText('Results ready').closest('li')).toHaveAttribute('aria-current', 'step')
 
     // The /score call carried the BYOK key.
     const scoreCall = calls.find((c) => c.url.endsWith('/score'))
@@ -663,7 +668,7 @@ describe('App', () => {
     // legitimately runs long; give it headroom over the 5s default.
   }, 15000)
 
-  it('continues automatic benchmark scoring into the same required item stage', async () => {
+  it('continues automatic benchmark scoring into the matching item stage', async () => {
     const user = userEvent.setup()
     sessionStorage.setItem('anthropic_api_key', 'sk-ant-test')
     globalThis.fetch = vi.fn(async (url: unknown) => {
@@ -684,7 +689,7 @@ describe('App', () => {
     await user.click(await screen.findByRole('button', { name: /start scoring/i }))
     expect(await screen.findByTestId('item-assessment-reference')).toHaveTextContent('run:run-x')
     expect(window.location.pathname).toBe('/run/run-x')
-    expect(screen.getByText('Benchmark assessment ready · item analysis remains')).toBeInTheDocument()
+    expect(screen.getByText('Benchmark assessment ready · item analysis available')).toBeInTheDocument()
   })
 
   it('continues the prerecorded MathDial benchmark into free demo item analysis', async () => {
@@ -705,11 +710,11 @@ describe('App', () => {
     expect(new URLSearchParams(window.location.search).has('assessment')).toBe(false)
     expect(screen.queryByLabelText('OpenAI API key')).not.toBeInTheDocument()
     expect(globalThis.fetch).toHaveBeenCalledTimes(1) // Read-only gallery listing.
-    expect(screen.getByText('Complete').closest('li')).not.toHaveAttribute('aria-current', 'step')
+    expect(screen.getByText('Results ready').closest('li')).not.toHaveAttribute('aria-current', 'step')
     fireEvent.click(screen.getByRole('button', { name: 'Finish demo pilot' }))
-    expect(screen.getByText('Complete').closest('li')).not.toHaveAttribute('aria-current', 'step')
+    expect(screen.getByText('Results ready').closest('li')).not.toHaveAttribute('aria-current', 'step')
     fireEvent.click(screen.getByRole('button', { name: 'Finish demo sample' }))
-    expect(screen.getByText('Complete').closest('li')).toHaveAttribute('aria-current', 'step')
+    expect(screen.getByText('Results ready').closest('li')).toHaveAttribute('aria-current', 'step')
   })
 
   it('restores a free item-demo URL without fetching a live assessment', async () => {
@@ -745,13 +750,13 @@ describe('App', () => {
     window.history.replaceState(null, '', '/caliper?demo=mathdial&stage=items')
     render(<App />)
     await user.click(screen.getByRole('button', { name: 'Finish demo sample' }))
-    expect(screen.getByText('Complete').closest('li')).toHaveAttribute('aria-current', 'step')
+    expect(screen.getByText('Results ready').closest('li')).toHaveAttribute('aria-current', 'step')
     await user.click(await screen.findByRole('button', { name: /Live MMLU A real deployment/ }))
     expect(await screen.findByTestId('item-assessment-reference')).toHaveTextContent('gallery:expert__live-mmlu')
     expect(screen.queryByRole('region', { name: 'Free demo item analysis' })).not.toBeInTheDocument()
     expect(new URLSearchParams(window.location.search).get('assessment')).toBe(entry.id)
     expect(new URLSearchParams(window.location.search).has('demo')).toBe(false)
-    expect(screen.getByText('Complete').closest('li')).not.toHaveAttribute('aria-current', 'step')
+    expect(screen.getByText('Results ready').closest('li')).not.toHaveAttribute('aria-current', 'step')
   })
 
   it('does not return to a stale replay after exiting the demo', async () => {
@@ -782,8 +787,8 @@ describe('App', () => {
     expect(await screen.findByTestId('item-assessment-reference')).toHaveTextContent(`run:${runId}`)
     expect(screen.queryByRole('region', { name: 'Free demo item analysis' })).not.toBeInTheDocument()
     expect(screen.getByText('High priority')).toBeInTheDocument()
-    expect(screen.getByText('Benchmark assessment ready · item analysis remains')).toBeInTheDocument()
-    expect(screen.queryByText('Validity analysis complete')).not.toBeInTheDocument()
+    expect(screen.getByText('Benchmark assessment ready · item analysis available')).toBeInTheDocument()
+    expect(screen.queryByText('Full dataset classified')).not.toBeInTheDocument()
   })
 
   it('restores a missing benchmark report from its authenticated item run without new model calls', async () => {
@@ -851,13 +856,13 @@ describe('App', () => {
     await user.click(await screen.findByRole('button', { name: /first benchmark first deployment/i }))
     expect(await screen.findByTestId('item-assessment-reference')).toHaveTextContent('gallery:expert__first')
     await user.click(screen.getByRole('button', { name: 'Finish all items' }))
-    expect(screen.getByText('Validity analysis complete')).toBeInTheDocument()
+    expect(screen.getByText('Full dataset classified')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /second benchmark second deployment/i }))
     await waitFor(() => expect(screen.getByTestId('item-assessment-reference')).toHaveTextContent('gallery:expert__second'))
     expect(window.location.pathname).toBe('/caliper')
     expect(new URLSearchParams(window.location.search).get('assessment')).toBe('expert__second')
-    expect(screen.queryByText('Validity analysis complete')).not.toBeInTheDocument()
-    expect(screen.getByText('Benchmark assessment ready · item analysis remains')).toBeInTheDocument()
+    expect(screen.queryByText('Full dataset classified')).not.toBeInTheDocument()
+    expect(screen.getByText('Benchmark assessment ready · item analysis available')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /start another benchmark analysis/i }))
     expect(window.location.search).toBe('')
     expect(window.location.pathname).toBe('/caliper')
@@ -873,7 +878,7 @@ describe('App', () => {
     ), { status: 200 })) as unknown as typeof fetch
     render(<App />)
     expect(await screen.findByTestId('item-assessment-reference')).toHaveTextContent('gallery:expert__restored')
-    expect(screen.getByText('Benchmark assessment ready · item analysis remains')).toBeInTheDocument()
+    expect(screen.getByText('Benchmark assessment ready · item analysis available')).toBeInTheDocument()
     expect(globalThis.fetch).toHaveBeenCalledWith('/api/gallery/expert__restored')
     expect(window.location.hash).toBe(anchor)
   })

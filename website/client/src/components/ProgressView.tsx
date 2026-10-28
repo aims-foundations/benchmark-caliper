@@ -1,12 +1,12 @@
 import type { PipelineEvent } from '../api'
 
-/** The shared workflow, including the required item-analysis stage. */
+/** The shared workflow from deployment context to saved model results. */
 export function PipelineProgress({ stage }: { stage: 'context' | 'benchmark' | 'items' | 'complete' }) {
   const stages = [
     { id: 'context', label: 'Deployment context' },
     { id: 'benchmark', label: 'Benchmark assessment' },
     { id: 'items', label: 'Item analysis' },
-    { id: 'complete', label: 'Complete' },
+    { id: 'complete', label: 'Results ready' },
   ]
   const current = stages.findIndex(({ id }) => id === stage)
   return (

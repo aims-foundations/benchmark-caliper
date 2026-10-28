@@ -1,4 +1,4 @@
-"""CLI for the post-stage-7 item classification experiment."""
+"""CLI for six-dimension item assessment and historical classification reports."""
 
 import argparse
 from functools import partial
@@ -12,6 +12,7 @@ from .generate import generate_spec
 from .model_client import MODEL_ID, PROVIDER, REASONING_EFFORT
 from .prepare import prepare
 from .report import compare_review, generate_report
+from .scoring import prepare_context
 from .storage import check_prepared, read_json, run_lock, write_json
 
 
@@ -63,7 +64,7 @@ def _call_and_save(directory: Path, api_key: str, **request):
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="Inspect benchmark items with Caliper's fixed rubric classifiers.")
+    parser = argparse.ArgumentParser(description="Score each benchmark item on Caliper's six validity dimensions.")
     commands = parser.add_subparsers(dest="command", required=True)
     prep = commands.add_parser("prepare", help="Snapshot one dataset and its existing stage-7 assessment")
     prep.add_argument("--assessment-dir", type=Path, required=True)
@@ -74,20 +75,23 @@ def main(argv=None) -> int:
     prep.add_argument("--source-repo", default="aims-foundations/measurement-db")
     prep.add_argument("--source-revision", help="Pinned source revision; inferred from an HF cache path when available")
     prep.add_argument("--source-table", help="Source table path in the dataset repository")
-    generate = commands.add_parser("generate-spec", help="Prepare sourced context with GPT-6 Luna, or import context JSON for the fixed catalog")
+    context = commands.add_parser("prepare-context", help="Assemble shared evidence and the fixed six-dimension rubric without model calls")
+    context.add_argument("--run-dir", type=Path, required=True)
+    context.add_argument("--dry-run", action="store_true", help="Preview the shared scoring context without writing it")
+    generate = commands.add_parser("generate-spec", help="Legacy four-classifier context preparation; new runs use prepare-context")
     generate.add_argument("--run-dir", type=Path, required=True)
     generate_mode = generate.add_mutually_exclusive_group()
     generate_mode.add_argument("--spec", type=Path, help="Import a contextual specification for the current generic catalog")
     generate_mode.add_argument("--dry-run", action="store_true", help="Save the exact generation request only")
     generate.add_argument("--max-output-tokens", type=int, default=12000)
-    classify = commands.add_parser("classify", help="Classify the first 100 random items, or continue to all items")
+    classify = commands.add_parser("classify", help="Score the first 100 items, or choose all items; one primary call per item")
     classify.add_argument("--run-dir", type=Path, required=True)
     scope = classify.add_mutually_exclusive_group()
     scope.add_argument("--limit", type=int, default=100, help="Prefix size of the saved random order; default: 100")
     scope.add_argument("--all", action="store_true", help="Traverse every prepared item")
-    classify.add_argument("--resume", action="store_true", help="Reuse saved classifier judgments; retry failed or pending dimensions")
-    classify.add_argument("--dry-run", action="store_true", help="Save requests without making calls or assigning labels")
-    classify.add_argument("--max-output-tokens", type=int, default=4096, help="Output token limit per classifier request")
+    classify.add_argument("--resume", action="store_true", help="Reuse saved assessments; retry failed or pending items")
+    classify.add_argument("--dry-run", action="store_true", help="Save requests without making model calls")
+    classify.add_argument("--max-output-tokens", type=int, default=4096, help="Output token limit per request")
     report = commands.add_parser("report", help="Build HTML, item CSV, and a blind review worksheet")
     report.add_argument("--run-dir", type=Path, required=True)
     review = commands.add_parser("validate", help="Compare independently entered review labels with model labels")
@@ -100,6 +104,9 @@ def main(argv=None) -> int:
             result = prepare(args.assessment_dir, args.items, args.output_dir, benchmark=args.benchmark,
                              seed=args.seed, source_repo=args.source_repo, source_revision=args.source_revision,
                              source_table=args.source_table)
+            prepare_context(args.output_dir)
+        elif args.command == "prepare-context":
+            result = prepare_context(args.run_dir, dry_run=args.dry_run)
         elif args.command == "generate-spec":
             if not args.spec and not args.dry_run:
                 call = _api(args.run_dir)
@@ -113,6 +120,8 @@ def main(argv=None) -> int:
                 "review_note": read_json(args.run_dir / "specification.json")["note"],
             }
         elif args.command == "classify":
+            if not (args.run_dir / "classifier_spec.json").exists():
+                prepare_context(args.run_dir)
             if not args.dry_run:
                 call = _api(args.run_dir)
             result = run(args.run_dir, limit=None if args.all else args.limit, resume=args.resume,

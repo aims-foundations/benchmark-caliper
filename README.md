@@ -12,9 +12,9 @@ You provide a benchmark paper (PDF) and a description of where and how the bench
 2. Asks a few targeted questions about your deployment context and synthesizes your answers.
 3. Builds a structured profile of the benchmark and the target region.
 4. Scores all 6 validity dimensions and produces a report with per-dimension scores, reasoning, and supporting evidence.
-5. In the website, continues from that report into item analysis: find and confirm its dataset in the Measurement Data Bank (or upload items), prepare sourced context for four fixed rubric classifiers, classify an initial batch, and review item judgments before interpreting aggregates.
+5. In the website, continues from that report into item analysis: confirm its dataset in the Measurement Data Bank (or upload items), reuse shared deployment evidence, and score each item on all six dimensions in one model request.
 
-The benchmark assessment runs on the Anthropic API with cost-routed model selection — lighter models for extraction and synthesis, the strongest model for the scoring step. The website's required item-analysis stage uses a separately supplied OpenAI key for explicit paid criteria-generation and classification actions. Item statistics supplement the benchmark report without changing its original scores.
+The benchmark assessment runs on the Anthropic API with cost-routed model selection — lighter models for extraction and synthesis, the strongest model for the scoring step. Item context preparation makes no model calls. Item scoring uses a separately supplied OpenAI key and returns six 1–5 scores (or Unknown when evidence is insufficient), explanations, evidence, and information gaps per item. Item results supplement the benchmark report without changing its original scores.
 
 ## Components
 
@@ -23,7 +23,7 @@ The benchmark assessment runs on the Anthropic API with cost-routed model select
 | [`anthropic_api_package_release/`](anthropic_api_package_release/) | The validity-analysis pipeline. Run it from the command line to inspect the assessments from the paper, reproduce one, or analyze your own benchmark. See its [README](anthropic_api_package_release/README.md). |
 | [`website/`](website/) | Two tools: benchmark validity analysis, with item analysis as its next required stage, and goal-conditioned item assessment. Existing report links can continue into item analysis. See its [README](website/README.md). |
 | [`bayesian_auditing/`](bayesian_auditing/) | Goal-conditioned item review: retrieve a shortlist with local Qwen3 embeddings, then use GPT-6 Luna to judge those items on six validity dimensions. See its [README](bayesian_auditing/README.md). |
-| [`anthropic_api_package_release/item_analysis/`](anthropic_api_package_release/item_analysis/) | Prepare sourced context for the versioned generic catalog, judge items with GPT-6 Luna, and report category coverage, issues, evidence gaps, and human agreement. See its [README](anthropic_api_package_release/item_analysis/README.md). |
+| [`anthropic_api_package_release/item_analysis/`](anthropic_api_package_release/item_analysis/) | Prepare shared context once, score all six dimensions in one request per item, and export evidence-backed results. Historical categorical reports remain readable. See its [README](anthropic_api_package_release/item_analysis/README.md). |
 
 ## Repository structure
 

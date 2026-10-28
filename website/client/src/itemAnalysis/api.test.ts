@@ -134,3 +134,12 @@ it('discards a saved run using authenticated DELETE and handles an empty respons
   await discardRun({ run_id: 'test', run_secret: 'private-secret' })
   expect(fetch).toHaveBeenCalledExactlyOnceWith('/api/item-analysis/runs/test', expect.objectContaining({ method: 'DELETE', headers: { 'X-Review-Token': 'private-secret' } }))
 })
+
+it('prepares direct and assessment context without sending any provider key', async () => {
+  const fetch = vi.fn().mockImplementation(async () => new Response('{}'))
+  vi.stubGlobal('fetch', fetch)
+  const dataset = { benchmark_confirmed: true as const, source_id: 'source', source_revision: 'revision' }
+  await createDirectRun(directContext, dataset)
+  await createAssessmentRun({ kind: 'run', id: 'assessment' }, dataset)
+  for (const [, request] of fetch.mock.calls) expect(request.headers).not.toHaveProperty('X-OpenAI-Key')
+})

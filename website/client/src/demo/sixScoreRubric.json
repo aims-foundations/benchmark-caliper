@@ -1,0 +1,86 @@
+[
+  {
+    "id": "input_ontology",
+    "component": "Input Ontology",
+    "operation": "ordinal",
+    "applicable": true,
+    "question": "Does this item test a task or capability relevant to the deployment?",
+    "ordinal_anchors": {
+      "1": "Fundamental mismatch with the deployment requirement.",
+      "2": "Substantial mismatch that requires major changes.",
+      "3": "Partial alignment with material limitations.",
+      "4": "Strong alignment with minor limitations.",
+      "5": "Strong alignment supported by explicit evidence."
+    }
+  },
+  {
+    "id": "input_content",
+    "component": "Input Content",
+    "operation": "ordinal",
+    "applicable": true,
+    "question": "Does this item's concrete question or scenario fit the deployment's users, language, and domain?",
+    "ordinal_anchors": {
+      "1": "Fundamental mismatch with the deployment requirement.",
+      "2": "Substantial mismatch that requires major changes.",
+      "3": "Partial alignment with material limitations.",
+      "4": "Strong alignment with minor limitations.",
+      "5": "Strong alignment supported by explicit evidence."
+    }
+  },
+  {
+    "id": "input_form",
+    "component": "Input Form",
+    "operation": "ordinal",
+    "applicable": true,
+    "question": "Does this item's input modality and representation match deployment inputs?",
+    "ordinal_anchors": {
+      "1": "Fundamental mismatch with the deployment requirement.",
+      "2": "Substantial mismatch that requires major changes.",
+      "3": "Partial alignment with material limitations.",
+      "4": "Strong alignment with minor limitations.",
+      "5": "Strong alignment supported by explicit evidence."
+    }
+  },
+  {
+    "id": "output_ontology",
+    "component": "Output Ontology",
+    "operation": "ordinal",
+    "applicable": true,
+    "question": "Do this item's expected decisions and grading criteria capture success in the deployment?",
+    "ordinal_anchors": {
+      "1": "Fundamental mismatch with the deployment requirement.",
+      "2": "Substantial mismatch that requires major changes.",
+      "3": "Partial alignment with material limitations.",
+      "4": "Strong alignment with minor limitations.",
+      "5": "Strong alignment supported by explicit evidence."
+    }
+  },
+  {
+    "id": "output_content",
+    "component": "Output Content",
+    "operation": "ordinal",
+    "applicable": true,
+    "question": "Is this item's reference answer or expected judgment appropriate for the deployment?",
+    "ordinal_anchors": {
+      "1": "Fundamental mismatch with the deployment requirement.",
+      "2": "Substantial mismatch that requires major changes.",
+      "3": "Partial alignment with material limitations.",
+      "4": "Strong alignment with minor limitations.",
+      "5": "Strong alignment supported by explicit evidence."
+    }
+  },
+  {
+    "id": "output_form",
+    "component": "Output Form",
+    "operation": "ordinal",
+    "applicable": true,
+    "question": "Does this item's expected response format or modality match deployment needs?",
+    "ordinal_anchors": {
+      "1": "Fundamental mismatch with the deployment requirement.",
+      "2": "Substantial mismatch that requires major changes.",
+      "3": "Partial alignment with material limitations.",
+      "4": "Strong alignment with minor limitations.",
+      "5": "Strong alignment supported by explicit evidence."
+    }
+  }
+]

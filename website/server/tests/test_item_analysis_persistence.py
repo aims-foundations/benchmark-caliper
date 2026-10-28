@@ -47,25 +47,25 @@ def test_shutdown_preserves_checkpoint_and_resume_reuses_frozen_judgments(client
     access = start(client, mode="generate")
     settled(client, access)
     before = classify(client, access)
-    assert before["status"] == "checkpoint" and before["completed_judgments"] == 8
+    assert before["status"] == "checkpoint" and before["completed_judgments"] == 12
     directory = analysis.jobs[access["run_id"]].directory
     client.portal.call(analysis.shutdown)
     assert not analysis.jobs and directory.exists()
     restored = client.get(url(access), headers=headers(access)).json()
     assert restored["status"] == "checkpoint" and restored["usage"] == before["usage"]
-    assert restored["can_continue"] and restored["completed_judgments"] == 8
+    assert restored["can_continue"] and restored["completed_judgments"] == 12
     complete = classify(client, access, "all")
-    assert complete["status"] == "complete" and len(model) == 41
+    assert complete["status"] == "complete" and len(model) == 10
     ledger = [json.loads(line) for line in (directory / "usage_ledger.jsonl").read_text().splitlines()]
     requests = [json.loads(line) for line in (directory / "requests.jsonl").read_text().splitlines()]
-    assert len(ledger) == len(requests) == 41
-    assert {row["sequence"] for row in ledger} == set(range(1, 42))
+    assert len(ledger) == len(requests) == 10
+    assert {row["sequence"] for row in ledger} == set(range(1, 11))
     assert all(row["usage_known"] and row["status"] == "complete" for row in ledger)
-    assert ledger[0]["step"] == requests[0]["step"] == "item_specification"
+    assert ledger[0]["step"] == requests[0]["step"] == "item_scoring"
     assert all(row["started_at"] and row["finished_at"] for row in ledger)
     assert read_json(directory / "usage.json")["input_tokens"] == complete["usage"]["input_tokens"]
     usage = read_json(directory / "usage.json")
-    assert usage["calls"] == usage["calls_with_usage"] == 41 and usage["calls_without_usage"] == 0
+    assert usage["calls"] == usage["calls_with_usage"] == 10 and usage["calls_without_usage"] == 0
 
 
 def test_interrupted_classification_restores_partial_success_and_unknown_failed_usage(client, model, monkeypatch):
@@ -74,28 +74,28 @@ def test_interrupted_classification_restores_partial_success_and_unknown_failed_
     original = model_client.call_text_async
 
     async def fail_second(**arguments):
-        if request_payload(arguments["user"])["classifier"]["id"] == "input_content":
+        if len(model) == 1:
             raise model_client.ModelRequestError(code="connection")
         return await original(**arguments)
 
     monkeypatch.setattr(model_client, "call_text_async", fail_second)
     failed = classify(client, access)
-    assert failed["completed_judgments"] == 1
+    assert failed["completed_judgments"] == 6
     job = analysis.jobs[access["run_id"]]
     job.status = "running"  # Simulate restart before the final phase metadata write.
     analysis.persist(job)
     analysis.jobs.clear()
     restored = client.get(url(access), headers=headers(access)).json()
-    assert restored["status"] == "cancelled" and restored["completed_judgments"] == 1
-    assert restored["remaining_judgments"]["pilot"] == 39
+    assert restored["status"] == "cancelled" and restored["completed_judgments"] == 6
+    assert restored["remaining_judgments"]["pilot"] == 54
     ledger = [json.loads(line) for line in (job.directory / "usage_ledger.jsonl").read_text().splitlines()]
     assert ledger[-1]["status"] == "failed" and ledger[-1]["usage_known"] is False
     assert "input_tokens" not in ledger[-1]
     assert read_json(job.directory / "usage.json")["calls_without_usage"] == 1
     monkeypatch.setattr(model_client, "call_text_async", original)
     assert classify(client, access)["status"] == "complete"
-    pairs = [(payload["item"]["item_id"], payload["classifier"]["id"]) for _, payload in model]
-    assert len(pairs) == len(set(pairs)) == 40
+    ids = [payload["item"]["item_id"] for _, payload in model]
+    assert len(ids) == len(set(ids)) == 10
 
 
 def test_incomplete_context_is_restored_as_safe_failure(client, model):
@@ -195,7 +195,7 @@ def test_restart_recovers_unknown_usage_and_sequence_before_metadata_commit(clie
     assert len(ledger) == 1 and ledger[0]["status"] == "interrupted" and ledger[0]["finished_at"] is None
     assert classify(client, access)["status"] == "complete"
     requests = [json.loads(line) for line in (job.directory / "requests.jsonl").read_text().splitlines()]
-    assert [entry["sequence"] for entry in requests] == list(range(1, 42))
+    assert [entry["sequence"] for entry in requests] == list(range(1, 12))
 
 
 def test_package_guard_blocks_new_phases_discard_and_cache_eviction(client, monkeypatch):

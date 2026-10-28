@@ -1,282 +1,218 @@
-# Item-level validity analysis
+# Six-score item analysis
 
-This experiment inspects benchmark questions, references, and metadata against
-sourced deployment requirements. It supplements an existing Caliper assessment;
-Input Form and Output Form remain benchmark-level dimensions. No item judgments
-are converted into the rubric's 1–5 scores or used to overwrite an assessment.
+Each benchmark item receives six deployment-specific assessments: Input
+Ontology, Input Content, Input Form, Output Ontology, Output Content, and Output
+Form. Shared deployment and benchmark evidence is assembled once, then one
+primary model request assesses all six dimensions for each item.
 
 ```text
-Deployment/elicitation evidence + benchmark/domain documentation + dataset profile
-  → model prepares sourced context for the code-owned classifier catalog
-  → code validates references and joins context to the catalog
-  → four independent model requests per item, one for each classifier
-  → deterministic reporting and independent human review
+Saved deployment requirements + benchmark documentation + dataset evidence
+  → assemble shared context and the fixed six-dimension item rubric once
+  → one scoring request per item, returning six assessments
+  → validate, save, resume, report, and independently review
 ```
 
-The catalog is `caliper_generic_items_v1`, in `catalog.json`. Its questions,
-decision rules, labels, and response contracts are fixed across benchmarks.
-The context generator cannot change those rules or add classifiers.
+Context assembly requires no model call and does not generate classifiers.
+The six questions and scoring anchors are fixed in `scoring.py` and
+[prompts/assess_item.md](prompts/assess_item.md). The deployment supplies the
+requirements against which they are applied.
 
-| Classifier | Item-level judgment |
+| Dimension | Item-level question |
 | --- | --- |
-| Input Ontology | `match`, `no_match`, `insufficient_evidence`, plus a set of matched required-category IDs |
-| Input Content | `issue_identified`, `no_issue_identified`, `insufficient_evidence` |
-| Output Ontology | `issue_identified`, `no_issue_identified`, `insufficient_evidence` |
-| Output Content | `issue_identified`, `no_issue_identified`, `insufficient_evidence` |
+| Input Ontology | Does this item test a deployment-relevant task or capability? |
+| Input Content | Does this particular question or scenario fit the deployment's users, language, and domain? |
+| Input Form | Do the item's input modality and representation match deployment inputs? |
+| Output Ontology | Do its expected decisions and grading criteria capture deployment success? |
+| Output Content | Is its reference answer or expected judgment appropriate for deployment? |
+| Output Form | Does its expected response format or modality match deployment needs? |
 
-Input Ontology can match several categories. Deployment evidence establishes the
-category inventory; benchmark examples do not establish deployment requirements.
-An inventory is `complete` only with explicit supporting evidence. With a
-`partial` or `unknown` inventory, failure to match a listed category does not
-justify `no_match`; an explicit sourced deployment-scope exclusion is required.
-Every ontology response includes `matched_category_ids` and
-`scope_exclusion_source_ids` (empty arrays when appropriate).
+Each dimension returns `score` (an integer 1–5 or `null`), `justification`,
+`evidence`, and `information_gaps`. Scores mean 1 = fundamental mismatch,
+2 = substantial mismatch, 3 = partial alignment, 4 = strong alignment with minor
+limitations, and 5 = strong alignment supported by evidence. Numerical scores
+require evidence; Unknown (`null`) requires an information gap. All six dimensions
+always appear. Unknown is a valid completed judgment, not a processing error or
+a low score. An item can therefore be complete while some scores are Unknown.
 
-The three issue classifiers require an applicable comparison standard and item
-evidence. `no_issue_identified` is a bounded finding, not proof of validity or
-stakeholder agreement. Missing information remains `insufficient_evidence`.
-Operational errors are separate from all judgments. Output Ontology examines
-semantic categories and scoring rules, including for multiple-choice items.
+Input Ontology assesses the relevance of the individual item, not coverage of
+all deployment tasks. Prior benchmark scores and model-written hypotheses do
+not ground item judgments. The original benchmark assessment remains separate;
+item scores never overwrite it. No combined item rank or benchmark score is
+computed from the six scores.
 
-## Prepare one benchmark
+## Prepare a run
 
-Run commands from the repository root. Install dependencies if necessary:
+Run commands from the repository root:
 
 ```bash
 python -m pip install -r anthropic_api_package_release/requirements.txt
-```
 
-Provide a local dataset and its pinned source revision when available:
-
-```bash
 python -m anthropic_api_package_release.item_analysis prepare \
-  --assessment-dir anthropic_api_package_release/assessments/expert_1a429e941728__mmlu/india_hindi_competitive_exam_prep \
-  --items /path/to/mmlu/items.parquet \
+  --assessment-dir /path/to/existing/assessment \
+  --items /path/to/items.parquet \
   --source-revision SOURCE_COMMIT \
-  --source-table mmlu/items.parquet \
-  --output-dir results/item_analysis/mmlu \
+  --source-table benchmark/items.parquet \
+  --output-dir results/item_analysis/example \
   --seed 42
 ```
 
-Preparation snapshots the assessment artifacts, deployment statement, rubric,
-and deterministic dataset profile. Its source registry retains actual contents
-and exact source IDs, including the deployment statement and profile. Available
-elicitation answers, benchmark taxonomy/scoring documentation, and domain or
-stakeholder evidence are registered with source roles. Earlier assessment
-findings belong in `prior_hypotheses`, not normative requirements. Missing
-sources or comparison standards must remain explicit evidence gaps.
+Preparation freezes the dataset, source evidence, deterministic profile, and
+shared scoring context. Available deployment answers, benchmark instructions,
+label definitions, scoring rules, and regional/domain evidence retain their
+source IDs and roles. Missing evidence stays explicit. The fixed context is
+saved as `classifier_spec.json` for compatibility with existing artifact paths.
+Original elicitation questions remain paired with user answers so references
+such as "both" retain their meaning. Questions have a separate context role;
+their assumptions do not establish deployment requirements.
+The website also supports starting directly from deployment requirements
+without running a benchmark assessment first.
 
-The adapter preserves content, reference answers, grading criteria, item
-features, verifiers, and media references. Verifiers are never executed; an
-asset path is not evidence that its image or audio content was inspected.
-Missing references remain missing. The deterministic profiler records actual
-columns, categorical values/counts, reference availability, and observed
-format/media evidence. It does not infer unavailable data.
-
-The saved item order is a seeded shuffle of the source population. A prefix is
-therefore reproducible. Distinct IDs remain distinct observations even when
-content is identical; duplicate IDs are rejected. Source checksums pin the
-local snapshot, and unknown source revisions remain unknown.
-
-## Prepare and inspect the contextual specification
-
-Preview the complete request without API calls:
+To assemble six-score context for an existing prepared directory that has no
+specification or scoring configuration:
 
 ```bash
-python -m anthropic_api_package_release.item_analysis generate-spec \
-  --run-dir results/item_analysis/mmlu --dry-run
+python -m anthropic_api_package_release.item_analysis prepare-context \
+  --run-dir results/item_analysis/example --dry-run
+
+python -m anthropic_api_package_release.item_analysis prepare-context \
+  --run-dir results/item_analysis/example
 ```
 
-Generate context with the configured model (`OPENAI_API_KEY` is required):
+Inspect the context before interpreting judgments. Source and structural checks
+do not establish semantic correctness. `specification.json` records context
+assembly and retains `semantic_validation: "unreviewed"`.
 
-```bash
-python -m anthropic_api_package_release.item_analysis generate-spec \
-  --run-dir results/item_analysis/mmlu
-```
+The item adapter preserves questions, references, answer choices, grading rules,
+metadata, features, verifiers, and media references when available. Verifiers
+are never executed. A path or URL alone does not mean an image or audio asset
+was inspected. Missing references and unavailable modalities can leave a
+dimension Unknown. Items retain unique IDs and a deterministic shuffled order;
+source checksums identify the prepared snapshot.
 
-The readable system prompt and user-message template are in `prompts/`. The
-request includes the original rubric, source registry, deterministic profile,
-and actual example items. The generated JSON contains the required-category
-inventory and four `context_by_classifier` entries, each separating deployment
-requirements, benchmark evidence, prior hypotheses, and evidence gaps.
+## Score items and resume
 
-Code validates the exact benchmark/deployment text, catalog version, classifier
-IDs, source references and permitted source roles, then joins the unchanged
-catalog to context. The item judge receives the actual fixed rules and source
-contents, not just a catalog version string. Structural/reference validation
-is not semantic validation: inspect the extracted requirements, category
-boundaries, completeness claims, and faithful use of evidence before relying
-on results. Specifications retain `semantic_validation: "unreviewed"`.
-
-A previously prepared generic context/specification can be supplied with
-`generate-spec --spec /path/to/context.json`. Historical induced-classifier
-specifications cannot start new runs; retain their original directories for
-historical reporting. Imported context receives the same structural and source
-checks. A structural failure receives at most one repair call; API failures
-stop the command and preserve attempt details.
-
-## Run the small experiment
-
-Preview the first selected items and their exact classification requests:
+Preview complete requests without making model calls:
 
 ```bash
 python -m anthropic_api_package_release.item_analysis classify \
-  --run-dir results/item_analysis/mmlu --dry-run --limit 100
+  --run-dir results/item_analysis/example --dry-run --limit 100
 ```
 
-Then classify the selected prefix:
+Score a selected prefix with the configured model and API credentials:
 
 ```bash
 python -m anthropic_api_package_release.item_analysis classify \
-  --run-dir results/item_analysis/mmlu --limit 100
+  --run-dir results/item_analysis/example --limit 100
 ```
 
-Each item uses four independent primary requests, one per classifier. Each
-request contains that classifier's fixed rules, its sourced context, the item,
-and the supporting source contents. Only Input Ontology receives the required
-category inventory. No request sees another classifier's judgment. Context
-generation remains a separate request that prepares all four context blocks.
+For 100 items, the normal workload is 100 primary requests producing 600
+dimension assessments. Each request includes the same shared source context,
+the full item evidence, and the fixed rubric. The response is validated as a
+single six-dimension assessment. A structurally invalid response receives at
+most one repair attempt; unrecoverable failures are operational errors without
+fabricated dimension scores. API failures stop further calls and preserve saved
+progress. Repairs and retries add calls.
 
-The four classification prompts are:
-
-- [Input Ontology](prompts/classify_input_ontology.md)
-- [Input Content](prompts/classify_input_content.md)
-- [Output Ontology](prompts/classify_output_ontology.md)
-- [Output Content](prompts/classify_output_content.md)
-
-Each classification response contains one classifier's entry in `labels`, with
-a fixed judgment label, nonempty item evidence, an explanation, and consistent
-ontology category/source IDs when applicable. An invalid response receives one
-repair attempt for that classifier, then becomes an operational error. Other
-classifiers can still succeed. API exceptions stop further calls. Every
-classifier attempt and successful judgment is saved immediately with token usage.
-An item is complete only when all four judgments are valid; partial successes
-are retained when another dimension fails or the run stops.
-
-Repeat for each benchmark in a separate run directory. Workload totals are
-computed from actual selected IDs, configured classifiers, and valid completed
-results. A fresh 100-item experiment produces 400 primary classification
-requests and, when successful, 400 item–classifier judgments. Repairs and
-retries add calls; context generation is counted separately. Reports retain
-selected-item counts separately from the full prepared dataset.
-
-Continuation is optional and requires unchanged inputs:
+Completed items are saved immediately and are skipped on resume. Failed or
+pending items are retried; the selected prefix may grow:
 
 ```bash
 python -m anthropic_api_package_release.item_analysis classify \
-  --run-dir results/item_analysis/mmlu --limit 100 --resume
+  --run-dir results/item_analysis/example --limit 100 --resume
+
+python -m anthropic_api_package_release.item_analysis classify \
+  --run-dir results/item_analysis/example --all --resume
 ```
 
-A larger limit or `--all --resume` expands the experiment without repeating saved
-classifier judgments, including successes on partially classified items. Only
-failed or pending dimensions are called again. A changed catalog, context,
-prompt, source data, or execution configuration requires a new run directory.
-Results cannot be resumed across
-incompatible versions. Use one writer per directory; run locks reject concurrent
-writers. An interrupted final append can be recovered; other corruption fails.
-An interruption between receiving an API response and saving it can repeat that
-call on resume. Historical combined-request runs remain readable, but require a
-new run directory for classification with the independent-request policy.
+The dataset, context, rubric, prompt, and model settings remain frozen. Changed
+inputs require a new run directory. Run locks reject concurrent writers; an
+interrupted final append can be recovered on resume, while other corruption
+fails validation. A call received but not saved before interruption may need
+to be repeated.
 
-## Reporting and human review
+## Results and independent human review
 
-Classification refreshes reports automatically; rebuild them offline with:
+Rebuild reports offline:
 
 ```bash
 python -m anthropic_api_package_release.item_analysis report \
-  --run-dir results/item_analysis/mmlu
+  --run-dir results/item_analysis/example
 ```
 
-Reports and CSVs identify schema/catalog versions. Generic reports count each
-fixed judgment, with `insufficient_evidence`, invalid responses, operational
-errors, and pending items separately visible. Judgment percentages use all valid
-judgments; any determinate-only percentage states its denominator. Category
-counts allow overlapping matches. A required category not observed in selected
-items is not established absent from the benchmark, and an incomplete inventory
-cannot establish complete deployment coverage.
+`report.html` shows one row per prepared item and six score columns. Expand a
+score to inspect its explanation, evidence, and information gaps. `items.csv`
+contains the same assessments, full item evidence, selection flags, and distinct
+Unknown/error/pending states. `summary.json` records six score distributions for
+the selected items, selected progress, and the full prepared-population counts.
+Completed pilots remain distinct from completion of the entire prepared dataset.
+The original benchmark report appears separately when available.
 
-Valid judgments on partially classified items contribute to their classifier's
-statistics. A failed or pending dimension does not erase another dimension's
-saved evidence. Whole-item completion counts still require all four judgments.
+`review.csv` is a blind worksheet for the actual selected items, created once a
+selection exists. It omits model predictions. Existing annotations are preserved
+when reports regenerate; expanding a run does not change an existing worksheet's
+selection. Give each reviewer a separate copy and the fixed rubric/shared
+context before showing predictions.
 
-The new generic `review.csv` is a blind worksheet for the actual selected items.
-It excludes model predictions and is created once after an actual experiment
-selection exists; reports generated before classification defer the worksheet.
-Existing human work is never overwritten. Its selection file records the IDs and purpose. If the experiment
-later expands, the original review sample remains fixed. This worksheet is an
-independent review sample, not an automatic prompt-tuning holdout.
-
-For every reviewed classifier, enter its fixed label, item evidence, and an
-explanation. Blank labels mean unreviewed; use `insufficient_evidence` for an
-actual evidence-gap judgment. For Input Ontology, also enter a JSON array in
-`input_ontology.matched_category_ids` (for example `["required_001"]` or `[]`).
-A `no_match` judgment with a partial/unknown inventory requires deployment-scope
-source IDs in `input_ontology.scope_exclusion_source_ids`. Reviewers should
-consult the catalog and sourced context independently before viewing predictions.
+Enter 1–5 or `unknown` for each reviewed dimension. A blank score means
+unreviewed. Provide a justification and supporting evidence for a numerical
+score; Unknown requires a justification and missing-information explanation in
+`<dimension>.information_gaps`. Additional gaps may accompany numerical scores.
 
 ```bash
 python -m anthropic_api_package_release.item_analysis validate \
-  --run-dir results/item_analysis/mmlu \
-  --review results/item_analysis/mmlu/review.csv
+  --run-dir results/item_analysis/example \
+  --review /path/to/independent-review.csv
 ```
 
-Comparison reports per-classifier judgment agreement, Cohen's kappa where
-defined, confusion counts, pooled overall judgment agreement, pooled agreement
-including Input Ontology category sets, and exact agreement across
-all classifiers for fully reviewed items. `insufficient_evidence` participates
-as an explicit judgment. Input Ontology additionally reports exact category-set
-agreement on paired determinate judgments, excluding pairs where either side
-has insufficient evidence, and joint judgment/category agreement. Category-set
-order does not matter. Model errors, missing results, and invalid judgments are
-excluded from agreement and counted separately. Human evidence/explanations are
-required for entered judgments.
+Comparison reports exact agreement, Cohen's kappa where defined, confusion
+counts, and mean absolute error separately for each dimension. Unknown
+participates in exact agreement; numerical error uses paired numerical scores
+only. Pending and failed model results are excluded and counted separately.
+A saved comparison becomes visibly stale if its results, context, or review
+file changes. Completion and agreement alone do not establish validity.
 
-Historical reports preserve their old numeric labels and legacy unknown/N/A
-semantics under explicit legacy versions. They are not reinterpreted as generic
-judgments. Human-review comparisons become visibly stale when predictions,
-specifications, or review files change. Revalidate to refresh them. Neither full
-item coverage nor high agreement alone establishes benchmark validity.
+The website can export a ZIP containing the offline report, CSVs, shared context,
+raw results, exact saved requests/responses, frozen prompts, available usage,
+and a manifest of file checksums and missing artifacts. Original benchmark
+scores/PDFs remain separate. The package preserves existing annotations and
+also creates `review/blank_review.csv` without predictions or reviewer answers.
+Partial packages clearly retain saved progress and outstanding work.
 
-## Artifacts and maintenance
+## Artifacts and compatibility
 
 | Artifact | Purpose |
 | --- | --- |
-| `dataset.json`, `profile.json`, `items.jsonl` | Dataset provenance, deterministic facts, saved random order |
-| `evidence.json` | Original assessment, deployment, and source registry |
-| `generation_request.json`, `generation_attempts.json` | Exact context request and model/repair outputs |
-| `classifier_spec.original.json`, `classifier_spec.json`, `specification.json` | Original context, joined catalog/context, frozen hashes and validation notes |
-| `preview_requests.jsonl` | Exact per-classifier requests without judgments |
-| `run.json`, `results.jsonl`, `execution.json` | Frozen configuration, append-only per-classifier progress with cumulative item results, actual selection/progress |
-| `usage_ledger.json`, `usage.json` | Actual calls and token totals |
-| `report.html`, `summary.json`, `items.csv` | Versioned analysis and item evidence |
-| `review.csv`, `review_selection.json`, `review_comparison.json` | Independent judgments, fixed review selection, agreement |
+| `dataset.json`, `profile.json`, `items.jsonl` | Dataset provenance, deterministic facts, saved item order |
+| `evidence.json`, optional `direct_context.json` | Original evidence and deployment requirements |
+| `classifier_spec.json`, `specification.json` | Frozen shared source context, six-dimension rubric, hashes and preparation notes |
+| `preview_requests.jsonl` | Exact scoring request previews without model calls |
+| `run.json`, `results.jsonl`, `execution.json` | Frozen settings, append-only cumulative attempt history and assessments, actual selection/progress |
+| `classification_requests.jsonl`, optional `requests.jsonl` | Exact core scoring requests and website request/usage records |
+| `usage_ledger.json`, `usage_ledger.jsonl`, `usage.json` | Available call/usage records and token totals |
+| `report.html`, `summary.json`, `items.csv` | Six-score reports and supporting evidence |
+| `review.csv`, `review_selection.json`, `review_comparison.json` | Independent judgments, preserved selection, agreement |
 
-The website can combine the available artifacts into a complete results ZIP.
-Its offline HTML report starts with selected-item and judgment counts, then
-separates the original assessment, item findings, and expandable supporting
-evidence. Detailed predictions remain in `items.csv`; keep companion files
-together so the report's links work. The package contains a manifest describing
-the run, selected IDs, model settings, dataset provenance, file checksums, and
-missing artifacts, plus available frozen prompts, requests, responses, and usage
-records. It preserves existing human annotations and provides instructions for
-keeping each reviewer's worksheet and comparison separately. A partial package
-records saved progress and outstanding work; it does not claim a completed
-evaluation or replace missing model outputs.
+New context uses `caliper_item_context_v1`; the fixed rubric is
+`caliper_item_rubric_v1`; results use `caliper_item_result_v4`.
+Historical four-classifier and earlier induced-classifier reports keep their
+original labels and semantics. They are not reinterpreted as six scores. The
+legacy `generate-spec` command remains available for existing categorical
+workflows. New six-score runs should use a fresh directory; historical
+specifications are never silently migrated.
 
-`catalog.py`/`catalog.json` own immutable generic rules. `schema.py` validates
-context and current contracts; `legacy_schema.py` retains historical readers.
-`prepare.py` and `data.py` snapshot source evidence and datasets. `generate.py`
-prepares context; `classify.py` sends each classifier's rules and context in a
-separate request and saves its judgment before proceeding to the next dimension.
-`report.py` aggregates results and compares human review. `storage.py` provides
-hashes, atomic JSON writes, and locks. `__main__.py` exposes the CLI.
+`scoring.py` owns context assembly, the fixed six-dimension contract, scoring,
+and continuation. `score_report.py` handles six-score reports and human review;
+`report.py` dispatches by specification version while retaining historical
+readers. `package.py` exports allowlisted artifacts. `prepare.py`, `data.py`,
+and `storage.py` provide dataset/evidence snapshots, hashes, atomic writes,
+and locks. `__main__.py` exposes the CLI.
 
-Run offline tests from the repository root:
+Run offline tests:
 
 ```bash
 python -m pytest anthropic_api_package_release/tests/test_item_analysis_*.py -q
 ```
 
-Tests use local fixtures and injected model responses. They check program
-behavior and compatibility, not semantic faithfulness of generated context or
-the accuracy of live model judgments.
+Tests use local fixtures and injected model responses. They verify contracts,
+state transitions, provenance, and compatibility; they do not establish the
+accuracy of live model judgments.

@@ -474,6 +474,10 @@ def _summarize_generic(classifier: dict, results: dict, total: int) -> dict:
 def generate_report(run_dir: Path, *, run_metadata: dict | None = None) -> dict:
     """Write summary.json, items.csv, blind review.csv, and standalone report.html."""
     run_dir = Path(run_dir)
+    from .scoring import is_score_spec
+    if is_score_spec(_read_json(run_dir / "classifier_spec.json", {})):
+        from .score_report import generate_score_report
+        return generate_score_report(run_dir, run_metadata=run_metadata)
     spec, items, results = _load_run(run_dir)
     dataset = _read_json(run_dir / "dataset.json", {})
     evidence = _read_json(run_dir / "evidence.json", {})
@@ -956,6 +960,10 @@ def _parse_human_label(raw: str, classifier: dict) -> Any:
 def compare_review(run_dir: Path, review_path: Path) -> dict:
     """Validate a filled blind-review CSV, save agreement, and refresh the report."""
     run_dir, review_path = Path(run_dir), Path(review_path).resolve()
+    from .scoring import is_score_spec
+    if is_score_spec(_read_json(run_dir / "classifier_spec.json", {})):
+        from .score_report import compare_score_review
+        return compare_score_review(run_dir, review_path)
     spec, items, results = _load_run(run_dir)
     classifiers = [classifier for classifier in spec["classifiers"] if classifier["applicable"]]
     item_ids = items.item_ids

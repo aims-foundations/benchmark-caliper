@@ -88,7 +88,7 @@ export function DirectItemStart() {
   return <section className="item-analysis-site ia-direct-start" aria-label="New item analysis context">
     <form className="ia-panel ia-direct-form" onSubmit={event => void continueToItems(event)} aria-busy={busy}>
       <p className="ia-eyebrow">Start with your requirements</p><h2>Describe the context for the items</h2>
-      <p>Specify what the system needs to do and what a suitable answer looks like. These requirements will guide the item criteria.</p>
+      <p>Specify what the system needs to do and what a suitable answer looks like. These requirements provide the shared context for each item’s six scores.</p>
       <p className="ia-assessment-not-run"><strong>Benchmark assessment: Not run.</strong> You can begin item analysis without a paper or benchmark-level scores.</p>
       <label className="ia-field"><span>Benchmark</span><input required maxLength={200} value={context.benchmark} onChange={event => change('benchmark', event.target.value)} placeholder="For example, MathDial" /></label>
       <label className="ia-field"><span>Deployment context</span><textarea required rows={4} maxLength={12000} value={context.deployment} onChange={event => change('deployment', event.target.value)} placeholder="Who will use the system, where, in which languages, and for what purpose?" /></label>
@@ -97,8 +97,8 @@ export function DirectItemStart() {
       <label className="ia-field"><span>Validity concerns (optional)</span><textarea rows={3} maxLength={12000} value={context.validity_concerns} onChange={event => change('validity_concerns', event.target.value)} placeholder="Any suspected gaps, assumptions, or other issues to check in the items." /></label>
       {error && <p className="ia-error" role="alert">{error}</p>}
       <button type="submit" className="ia-primary" disabled={busy}>{busy ? 'Finding matching items…' : 'Find and confirm benchmark items'}</button>
-      <p className="ia-small">This searches dataset metadata and makes no model calls. You will confirm the dataset before entering an OpenAI key and choosing to generate criteria.</p>
-      <p className="ia-small">After you continue, this context is saved in this browser so you can return later. Editing it starts a new item analysis with fresh criteria.</p>
+      <p className="ia-small">This searches dataset metadata and makes no model calls. You will confirm the dataset and prepare shared context before entering an OpenAI key to score items.</p>
+      <p className="ia-small">After you continue, this context is saved in this browser so you can return later. Editing it starts a new item analysis with updated shared context.</p>
     </form>
   </section>
 }

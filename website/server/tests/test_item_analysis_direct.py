@@ -150,9 +150,10 @@ def test_direct_upload_freezes_requirements_and_completes_without_benchmark_scor
     assert ready["spec"]["analysis_basis"] == "deployment_requirements"
     assert ready["summary"]["assessment_status"] == "not_run"
     assert ready["summary"].get("original_assessment") is None
-    assert set(ready["summary"]["unassessed_dimensions"]) == {"input_form", "output_form"}
+    assert {d["id"] for d in ready["summary"]["dimensions"]} == {"input_ontology", "input_content", "input_form", "output_ontology", "output_content", "output_form"}
     assert next(item for item in ready["items"] if item["item_id"] == "q1")["content"] == rows[0]["content"]
-    payload = model[0][1]
+    assert not model
+    payload = ready["spec"]
     assert "direct_context.json#/task_requirements" in payload["source_registry"]
     assert not any(key.startswith("scoring.json") for key in payload["source_registry"])
     assert payload["source_registry"]["direct_context.json#/answer_requirements"] == CONTEXT["answer_requirements"]
@@ -162,10 +163,8 @@ def test_direct_upload_freezes_requirements_and_completes_without_benchmark_scor
     assert check_prepared(directory)["assessment"]["id"] == ready["assessment"]["id"]
     assert not (directory / "scoring.json").exists()
     assert classify(client, access)["status"] == "checkpoint"
-    calls_after_pilot = len(model)
-    assert client.post(url(access) + "/classify", json={"scope": "all"}, headers=headers(access, key=True)).status_code == 400
-    assert len(model) == calls_after_pilot
-    response = client.post(url(access) + "/classify", json={"scope": "all", "pilot_review_confirmed": True}, headers=headers(access, key=True))
+    assert len(model) == 1
+    response = client.post(url(access) + "/classify", json={"scope": "all"}, headers=headers(access, key=True))
     assert response.status_code == 202, response.text
     complete = settled(client, access)
     assert complete["status"] == "complete" and complete["complete"] == 2
@@ -173,7 +172,7 @@ def test_direct_upload_freezes_requirements_and_completes_without_benchmark_scor
     assert client.get(url(access), headers={"X-Review-Token": "wrong-token"}).status_code == 404
     assert client.get(url(access), headers=headers(access)).json()["assessment"] == ready["assessment"]
     report = client.get(url(access) + "/download/report", headers=headers(access))
-    assert report.status_code == 200 and "not run" in report.text.lower()
+    assert report.status_code == 200 and "no benchmark assessment was supplied" in report.text.lower()
     assert all(KEY not in path.read_text() for path in directory.iterdir() if path.is_file())
     assert directory.stat().st_mode & 0o777 == 0o700
     analysis.jobs[access["run_id"]].updated_at = time.time() - 3601
@@ -193,8 +192,8 @@ def test_direct_catalog_alias_preserves_full_source_without_old_assessment(clien
     assert dataset["source_benchmark"] == "mmlu" and dataset["benchmark"] == CONTEXT["benchmark"]
     assert dataset["source"]["sha256"] == read_json(source / "dataset.json")["source"]["sha256"]
     assert "path" not in dataset["source"]
-    assert not any(key.startswith("scoring.json") for key in model[0][1]["source_registry"])
-    assert "Old unrelated deployment" not in json.dumps(model[0][1])
+    assert not any(key.startswith("scoring.json") for key in ready["spec"]["source_registry"])
+    assert "Old unrelated deployment" not in json.dumps(ready["spec"])
     assert ready["summary"].get("original_assessment") is None
 
 
@@ -210,13 +209,19 @@ def test_direct_source_preparation_failure_makes_no_paid_calls(client, monkeypat
     assert not model
 
 
-def test_direct_start_requires_key_one_source_and_capacity(client, monkeypatch, model):
+def test_direct_start_requires_one_source_and_capacity_but_no_provider_key(client, monkeypatch, model):
     fields = {"context_json": json.dumps(CONTEXT), "benchmark_confirmed": "true"}
     files = {"items_file": ("items.json", '[{"content":"Question"}]')}
-    assert client.post(ENDPOINT, data=fields, files=files).status_code == 401
     assert client.post(ENDPOINT, data=fields, headers={"X-OpenAI-Key": KEY}).status_code == 400
     assert client.post(ENDPOINT, data={**fields, "source_id": "source", "source_revision": CATALOG_REVISION}, files=files, headers={"X-OpenAI-Key": KEY}).status_code == 400
     assert client.post(ENDPOINT, data={**fields, "source_revision": CATALOG_REVISION}, files=files, headers={"X-OpenAI-Key": KEY}).status_code == 400
     monkeypatch.setattr(analysis, "MAX_ACTIVE", 0)
     assert client.post(ENDPOINT, data=fields, files=files, headers={"X-OpenAI-Key": KEY}).status_code == 429
     assert not model and not analysis.jobs
+
+
+def test_direct_preparation_succeeds_without_provider_key(client, model):
+    response = client.post(ENDPOINT, data={"context_json": json.dumps(CONTEXT), "benchmark_confirmed": "true"},
+                           files={"items_file": ("items.json", '[{"content":"Question"}]')})
+    assert response.status_code == 202
+    assert settled(client, response.json())["status"] == "ready" and not model

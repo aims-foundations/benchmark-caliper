@@ -141,7 +141,7 @@ export function SummaryView({
         <p className="help">
           {demo
             ? 'This free walkthrough replays the benchmark assessment, then guides you through sample confirmation, item criteria, pilot review, and the final demo-sample summary. No API key or model calls are required.'
-            : 'The benchmark assessment takes about 3–7 minutes on your Anthropic key. Its report appears here, followed by the required item-analysis stage. You will connect the dataset, review the criteria and pilot, and classify the remaining items before the analysis is complete.'}
+            : 'The benchmark assessment takes about 3–7 minutes on your Anthropic key. Its report appears here, followed by item analysis: connect the dataset, prepare classifier context, and classify a pilot to review and export. Continuing through the full prepared dataset is optional. Human review takes place separately.'}
         </p>
 
         {!demo && <label className="step-by-step">

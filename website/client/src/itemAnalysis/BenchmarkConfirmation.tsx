@@ -8,6 +8,7 @@ interface Props {
   confirmed: ConfirmedDataset | null
   onConfirm: (dataset: ConfirmedDataset | null) => void
   directContext?: DirectContext
+  onSelectionChange?: (source: AssessmentSource | null, file: File | null) => void
 }
 
 const MATCH_LABELS = { identifier: 'Identifier match', exact_name: 'Name match', related_name: 'Related name', search: 'Search result' }
@@ -31,7 +32,7 @@ function SourceDetails({ source }: { source: AssessmentSource }) {
 }
 
 /** Read-only discovery and explicit confirmation, before any model request. */
-export function BenchmarkConfirmation({ assessment, setup, confirmed, onConfirm, directContext }: Props) {
+export function BenchmarkConfirmation({ assessment, setup, confirmed, onConfirm, directContext, onSelectionChange }: Props) {
   const initialSource = setup.sources.find(source => source.available && source.source_revision) || setup.sources[0]
   const [datasetMode, setDatasetMode] = useState<'source' | 'upload'>(initialSource ? 'source' : 'upload')
   const [sources, setSources] = useState(setup.sources)
@@ -52,6 +53,9 @@ export function BenchmarkConfirmation({ assessment, setup, confirmed, onConfirm,
     ? `https://huggingface.co/datasets/${catalog.repo}` : null
 
   useEffect(() => () => request.current?.abort(), [])
+  useEffect(() => {
+    onSelectionChange?.(datasetMode === 'source' ? source || null : null, datasetMode === 'upload' ? file : null)
+  }, [datasetMode, source, file, onSelectionChange])
 
   function invalidate() {
     request.current?.abort()

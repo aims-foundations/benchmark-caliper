@@ -104,12 +104,17 @@ def read_results(path: Path, *, repair_tail=False) -> dict:
                 raise ValueError(f"Missing item_id in results record at byte {start}")
             if record.get("status") not in {"complete", "error", "partial"}:
                 raise ValueError(f"Invalid result status at byte {start}")
-            if record["status"] == "complete" and not isinstance(record.get("labels"), dict):
+            from .scoring import RESULT_SCHEMA_VERSION as SCORE_RESULT_VERSION, check_result_progress as check_score_progress
+            if (record["status"] == "complete" and record.get("schema_version") != SCORE_RESULT_VERSION
+                    and not isinstance(record.get("labels"), dict)):
                 raise ValueError(f"Missing labels in completed result at byte {start}")
             previous = latest.get(record["item_id"])
             if previous and previous["status"] == "complete":
                 raise ValueError(f"Duplicate completed result for {record['item_id']}")
-            if (record.get("schema_version") == RESULT_SCHEMA_VERSION
+            if (record.get("schema_version") == SCORE_RESULT_VERSION
+                    or (previous and previous.get("schema_version") == SCORE_RESULT_VERSION)):
+                check_score_progress(record, previous)
+            elif (record.get("schema_version") == RESULT_SCHEMA_VERSION
                     or (previous and previous.get("schema_version") == RESULT_SCHEMA_VERSION)):
                 check_result_progress(record, previous)
             if repair_tail and not line.endswith(b"\n"):
@@ -128,6 +133,11 @@ def run(directory: Path, *, limit=100, resume=False, dry_run=False, max_tokens=4
     Optional website hooks report flushed records and stop before the next call.
     A response already received is saved before stopping, so it can be resumed.
     """
+    from .scoring import is_score_spec, run as score_items
+    if is_score_spec(read_json(Path(directory) / "classifier_spec.json")):
+        return score_items(directory, limit=limit, resume=resume, dry_run=dry_run,
+                           max_tokens=max_tokens, call=call, model_id=model_id, provider=provider,
+                           reasoning_effort=reasoning_effort, on_result=on_result, should_stop=should_stop)
     if (limit is not None and limit <= 0) or max_tokens <= 0:
         raise ValueError("limit and max_tokens must be positive")
     with run_lock(directory):

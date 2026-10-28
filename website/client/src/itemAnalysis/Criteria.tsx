@@ -3,6 +3,8 @@ import type { AnalysisSummary, Classifier, Specification } from './types'
 export const CLASSIFIER_NAMES: Record<string, string> = {
   input_ontology: 'Input Ontology',
   input_content: 'Input Content',
+  input_form: 'Input Form',
+  output_form: 'Output Form',
   output_ontology: 'Output Ontology',
   output_content: 'Output Content',
   // Historical artifacts retain their original meanings.
@@ -24,7 +26,7 @@ export function labelName(classifier: Classifier, label: string | number | null)
   return readable(String(label))
 }
 
-function SourceValue({ value }: { value: unknown }) {
+export function SourceValue({ value }: { value: unknown }) {
   if (Array.isArray(value)) return <ul>{value.map((entry, index) => <li key={index}><SourceValue value={entry} /></li>)}</ul>
   if (value && typeof value === 'object') return <dl className="ia-source-fields">{Object.entries(value).map(([key, entry]) => <div key={key}><dt>{readable(key)}</dt><dd><SourceValue value={entry} /></dd></div>)}</dl>
   return <p className="ia-source-text">{value == null ? 'Not recorded' : String(value)}</p>

@@ -14,6 +14,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 from .catalog import is_generic_spec
 from .report import generate_report
+from .scoring import is_score_spec
 from .storage import run_lock
 
 
@@ -91,7 +92,7 @@ def _selected_ids(directory: Path, summary: dict, spec: dict) -> list[str]:
     if "target_items" in execution:
         from itertools import islice
         return [item["item_id"] for item in islice(items, execution["target_items"])]
-    if not is_generic_spec(spec):
+    if not is_generic_spec(spec) and not is_score_spec(spec):
         return [item["item_id"] for item in items]
     result_ids = {record["item_id"] for record in _records(directory / "results.jsonl")}
     return [item["item_id"] for item in items if item["item_id"] in result_ids]
@@ -99,6 +100,11 @@ def _selected_ids(directory: Path, summary: dict, spec: dict) -> list[str]:
 
 def _blank_review(directory: Path, spec: dict, selected_ids: list[str], stream) -> None:
     """Create a fresh worksheet from inputs, never from existing human responses."""
+    if is_score_spec(spec):
+        from .score_report import write_blank_review
+        selected = set(selected_ids)
+        write_blank_review((item for item in _records(directory / "items.jsonl") if item["item_id"] in selected), stream)
+        return
     columns = ["item_id", "content", "reference_answer", "grading_criterion"]
     classifiers = [c for c in spec["classifiers"] if c.get("applicable", True)]
     for classifier in classifiers:
@@ -192,21 +198,26 @@ def build_results_package(run_dir: Path, *, run_id: str, status: str,
                     "scoring": scoring, "context_artifact": "audit/evidence.json",
                 }))
                 for cid, prompt in config.get("prompts", {}).items():
+                    if is_score_spec(spec) and cid == "assess_item" and isinstance(prompt, str):
+                        virtual("audit/prompts/assess_item.md", prompt.encode("utf-8"), "frozen_prompt")
+                        continue
                     if cid in {c["id"] for c in spec["classifiers"]} and isinstance(prompt, str):
                         virtual(f"audit/prompts/classify_{_slug(cid).replace('-', '_')}.md", prompt.encode("utf-8"), "frozen_prompt")
-                generation = _read(directory, "generation_request.json", {})
-                provenance = _read(directory, "website_provenance.json", {})
-                generation_system = generation.get("system", provenance.get("generation_system"))
-                if isinstance(generation_system, str):
-                    virtual("audit/prompts/generation_system.md", generation_system.encode("utf-8"), "frozen_prompt")
-                else:
-                    missing.append({"path": "audit/prompts/generation_system.md", "reason": "No saved generation request with a system prompt"})
-                if isinstance(provenance.get("generation_user_template"), str):
-                    virtual("audit/prompts/generation_user_template.md", provenance["generation_user_template"].encode("utf-8"), "frozen_prompt")
-                else:
-                    missing.append({"path": "audit/prompts/generation_user_template.md", "reason": "No frozen generation user-template snapshot"})
+                if not is_score_spec(spec):
+                    generation = _read(directory, "generation_request.json", {})
+                    provenance = _read(directory, "website_provenance.json", {})
+                    generation_system = generation.get("system", provenance.get("generation_system"))
+                    if isinstance(generation_system, str):
+                        virtual("audit/prompts/generation_system.md", generation_system.encode("utf-8"), "frozen_prompt")
+                    else:
+                        missing.append({"path": "audit/prompts/generation_system.md", "reason": "No saved generation request with a system prompt"})
+                    if isinstance(provenance.get("generation_user_template"), str):
+                        virtual("audit/prompts/generation_user_template.md", provenance["generation_user_template"].encode("utf-8"), "frozen_prompt")
+                    else:
+                        missing.append({"path": "audit/prompts/generation_user_template.md", "reason": "No frozen generation user-template snapshot"})
                 if not config.get("prompts"):
-                    missing.append({"path": "audit/prompts/classify_*.md", "reason": "No frozen classifier prompt snapshots in run.json"})
+                    missing.append({"path": "audit/prompts/assess_item.md" if is_score_spec(spec) else "audit/prompts/classify_*.md",
+                                    "reason": "No frozen scoring prompt snapshots in run.json"})
                 if selected_ids:
                     with tempfile.TemporaryFile(mode="w+", encoding="utf-8", newline="", dir=export_dir) as worksheet:
                         _blank_review(directory, spec, selected_ids, worksheet)
@@ -219,7 +230,7 @@ def build_results_package(run_dir: Path, *, run_id: str, status: str,
                         write_member("review/blank_review.csv", EncodedReader(), "fresh_blind_worksheet")
                 else:
                     missing.append({"path": "review/blank_review.csv", "reason": "No classification selection has been recorded"})
-                virtual("README.txt", _readme(snapshot_status).encode("utf-8"))
+                virtual("README.txt", _readme(snapshot_status, six_scores=is_score_spec(spec)).encode("utf-8"))
                 public_model = {key: value for key, value in {**config, **(model or {})}.items() if key in MODEL_FIELDS}
                 saved_usage = _read(directory, "usage.json", {})
                 public_usage = {key: value for key, value in {**saved_usage, **(usage or {})}.items() if key in USAGE_FIELDS}
@@ -235,6 +246,8 @@ def build_results_package(run_dir: Path, *, run_id: str, status: str,
                     "artifacts": entries, "missing_artifacts": missing,
                     "checksum_note": "SHA-256 values cover each archived member's exact uncompressed bytes. manifest.json is excluded from its own checksum list.",
                 }
+                if is_score_spec(spec):
+                    manifest.update(analysis_type="six_scores", rubric_version=spec["rubric_version"])
                 archive.writestr("manifest.json", _json(manifest))
             temporary.replace(output)
         finally:
@@ -242,7 +255,59 @@ def build_results_package(run_dir: Path, *, run_id: str, status: str,
         return output
 
 
-def _readme(snapshot_status: str) -> str:
+def _readme(snapshot_status: str, *, six_scores: bool = False) -> str:
+    if six_scores:
+        return f"""CALIPER SIX-SCORE ITEM ANALYSIS — OFFLINE RESULTS PACKAGE
+
+Snapshot: {snapshot_status}
+
+Extract the whole ZIP and open report.html in a browser. It needs no server or
+internet connection. Keep companion file names so relative links still work.
+The report shows one row per item and six 1–5 deployment-alignment scores:
+Input Ontology, Input Content, Input Form, Output Ontology, Output Content,
+and Output Form. Open each score to inspect its explanation, evidence, and gaps.
+Unknown means insufficient evidence. Operational errors and pending items are
+separate states. An item can be complete while some scores remain Unknown.
+
+items.csv contains all prepared items, selection flags, scores, explanations,
+evidence, and information gaps. summary.json records the selected-item score
+distributions, selected progress, and full prepared-population counts. No item
+rank or combined benchmark score is computed. A completed pilot does not imply
+completion of the full prepared snapshot or establish benchmark-wide coverage.
+
+classifier_spec.json contains the fixed six-dimension rubric, shared deployment
+requirements, benchmark documentation, and their source references. Context is
+assembled once from saved evidence; one primary model call returns all six
+judgments for an item. Repairs and retries add calls. Original benchmark scores
+are not used as item-scoring evidence and are never overwritten by item scores.
+audit/evidence.json retains the original evidence; original_assessment.json
+contains benchmark scoring when supplied. original_benchmark_report.pdf is
+included only when a saved original PDF exists. Missing assessments are explicit.
+
+INDEPENDENT HUMAN REVIEW
+Make a separately named copy of review/blank_review.csv for each reviewer.
+Share that blank copy with classifier_spec.json and the relevant evidence,
+without model predictions or other reviewers' annotations. Enter 1–5 or unknown
+for each dimension, a justification, evidence, and information gaps. Unknown
+requires an explanation of the missing information; blank scores mean unreviewed.
+Keep reviewers' files separate. Root review.csv is preserved exactly and may
+already contain human annotations. It is not necessarily a blank template.
+audit/review_comparison.json, when present, records agreement and per-dimension
+numeric error; report.html states whether the comparison matches saved inputs.
+
+AUDIT AND REPRODUCIBILITY
+manifest.json identifies the run, timestamps, scope, status, selected IDs, model,
+available usage, member sizes, SHA-256 checksums, and missing artifacts. The
+audit/ folder contains saved input items, context provenance, frozen scoring
+prompts, exact requests, raw responses, results, configuration, and usage logs.
+Some artifacts appear only after scoring starts. Context assembly does not
+require a context-generation model request. Missing logs mean unavailable,
+not zero calls. Usage totals can omit unknown usage from failed or cancelled
+provider calls and are not guaranteed billing totals. Previews are not execution.
+No historical request is reconstructed as an exact log. Future model calls
+may produce different judgments. Credentials and private website access files
+are outside the artifact allowlist and are not included.
+"""
     return f"""CALIPER ITEM ANALYSIS — OFFLINE RESULTS PACKAGE
 
 Snapshot: {snapshot_status}

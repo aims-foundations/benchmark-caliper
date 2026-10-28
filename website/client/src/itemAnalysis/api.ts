@@ -31,7 +31,7 @@ export const getDirectSetup = (context: DirectContext, query = '', signal?: Abor
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...context, q: query }), signal,
   })
 
-export const createDirectRun = (context: DirectContext, dataset: ConfirmedDataset, apiKey: string) => {
+export const createDirectRun = (context: DirectContext, dataset: ConfirmedDataset, apiKey = '') => {
   const body = new FormData()
   body.set('context_json', JSON.stringify(context))
   body.set('benchmark_confirmed', String(dataset.benchmark_confirmed))
@@ -39,11 +39,11 @@ export const createDirectRun = (context: DirectContext, dataset: ConfirmedDatase
   if (dataset.source_revision) body.set('source_revision', dataset.source_revision)
   if (dataset.items_file) body.set('items_file', dataset.items_file)
   return json<AnalysisRun & RunAccess>('/runs/from-context', {
-    method: 'POST', headers: { 'X-OpenAI-Key': apiKey }, body,
+    method: 'POST', headers: apiKey ? { 'X-OpenAI-Key': apiKey } : {}, body,
   })
 }
 
-export const createAssessmentRun = (assessment: AssessmentReference, dataset: ConfirmedDataset, apiKey: string) => {
+export const createAssessmentRun = (assessment: AssessmentReference, dataset: ConfirmedDataset, apiKey = '') => {
   const body = new FormData()
   body.set('assessment_kind', assessment.kind)
   body.set('assessment_id', assessment.id)
@@ -52,7 +52,7 @@ export const createAssessmentRun = (assessment: AssessmentReference, dataset: Co
   if (dataset.source_revision) body.set('source_revision', dataset.source_revision)
   if (dataset.items_file) body.set('items_file', dataset.items_file)
   return json<AnalysisRun & RunAccess>('/runs/from-assessment', {
-    method: 'POST', headers: { 'X-OpenAI-Key': apiKey }, body,
+    method: 'POST', headers: apiKey ? { 'X-OpenAI-Key': apiKey } : {}, body,
   })
 }
 export const createRun = (exampleId: string, mode: SpecificationMode, apiKey: string) => json<AnalysisRun & RunAccess>('/runs', {

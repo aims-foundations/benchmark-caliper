@@ -1,143 +1,75 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { DEMO_DEPLOYMENT_DESCRIPTION } from '../demo/fixture'
+import { useEffect, useMemo, useState } from 'react'
 import { DEMO_ITEM_STORAGE_KEY, resetDemoItemProgress } from '../demo/session'
-import {
-  buildDemoItemAnalysisRun, DEMO_ITEM_ANALYSIS_PILOT_SIZE, DEMO_ITEM_ANALYSIS_PROVENANCE,
-  DEMO_ITEM_ANALYSIS_SPEC, DEMO_ITEM_ANALYSIS_CLASSIFIER_NAMES,
-} from '../demo/itemAnalysisFixture'
-import { Criteria } from './Criteria'
-import { Results } from './Results'
+import { DEMO_ITEM_ANALYSIS_PILOT_SIZE, DEMO_ITEM_ANALYSIS_PROVENANCE } from '../demo/itemAnalysisFixture'
+import { buildSixScoreDemoRun, DEMO_SIX_SCORE_SPEC } from '../demo/sixScoreItemFixture'
+import { SharedScoringContext, SixScoreNavigation } from './SixScoreWorkflow'
+import { ItemJudgments, ResultExports, SummaryFindings, type ItemFilter } from './Results'
 import { buildDemoExport } from './demoExports'
-import { viewReport } from './downloads'
+import { saveBlob, viewReport } from './downloads'
 import type { Artifact } from './types'
 import './itemAnalysis.css'
 import './DemoItemAnalysis.css'
 
-type Stage = 'identify' | 'confirmed' | 'criteria' | 'pilot' | 'complete'
-const STAGES: Stage[] = ['identify', 'confirmed', 'criteria', 'pilot', 'complete']
-
+type Stage = 'identify' | 'ready' | 'pilot' | 'complete'
 function restoreStage(): Stage {
-  try {
-    const saved: unknown = JSON.parse(sessionStorage.getItem(DEMO_ITEM_STORAGE_KEY) || 'null')
-    if (saved && typeof saved === 'object' && 'version' in saved && saved.version === 1 && 'stage' in saved && STAGES.includes(saved.stage as Stage)) return saved.stage as Stage
-  } catch { /* Invalid or unavailable storage starts a fresh walkthrough. */ }
+  try { const saved = JSON.parse(sessionStorage.getItem(DEMO_ITEM_STORAGE_KEY) || 'null'); if (saved?.version === 2 && ['identify', 'ready', 'pilot', 'complete'].includes(saved.stage)) return saved.stage } catch { /* Start a fresh walkthrough. */ }
   return 'identify'
 }
-
-export function DemoItemAnalysis({ onStatusChange }: {
-  onStatusChange?: (status: 'pending' | 'in_progress' | 'complete') => void
-}) {
+export function DemoItemAnalysis({ onStatusChange }: { onStatusChange?: (status: 'pending' | 'in_progress' | 'complete') => void }) {
   const [stage, setStage] = useState<Stage>(restoreStage)
-  const [reviewed, setReviewed] = useState(false)
+  const [viewed, setViewed] = useState<number | null>(null)
   const [page, setPage] = useState(1)
-  const [downloadError, setDownloadError] = useState('')
-  const resultHeading = useRef<HTMLHeadingElement>(null)
-  const run = useMemo(() => buildDemoItemAnalysisRun(stage === 'complete' ? 'sample' : 'pilot'), [stage])
+  const [filter, setFilter] = useState<ItemFilter>({ kind: 'all' })
+  const [error, setError] = useState('')
+  const run = useMemo(() => buildSixScoreDemoRun(stage === 'complete' ? 'sample' : 'pilot'), [stage])
+  const showing = stage === 'pilot' || stage === 'complete'
   const source = DEMO_ITEM_ANALYSIS_PROVENANCE
-  const showingCriteria = ['criteria', 'pilot', 'complete'].includes(stage)
-  const showingResults = stage === 'pilot' || stage === 'complete'
-  const step = stage === 'identify' ? 0 : stage === 'confirmed' || stage === 'criteria' ? 1 : stage === 'pilot' ? 2 : 3
-
+  const current = viewed ?? (stage === 'identify' ? 1 : stage === 'ready' ? 2 : 3)
   useEffect(() => {
-    try { sessionStorage.setItem(DEMO_ITEM_STORAGE_KEY, JSON.stringify({ version: 1, stage })) } catch { /* Progress still works in memory. */ }
+    try { sessionStorage.setItem(DEMO_ITEM_STORAGE_KEY, JSON.stringify({ version: 2, stage })) } catch { /* Keep progress in memory. */ }
     onStatusChange?.(stage === 'complete' ? 'complete' : stage === 'identify' ? 'pending' : 'in_progress')
   }, [stage, onStatusChange])
-
-  useEffect(() => {
-    if (stage === 'pilot' || stage === 'complete') resultHeading.current?.focus()
-  }, [stage])
-
-  function restart() {
-    resetDemoItemProgress()
-    setStage('identify')
-    setReviewed(false)
-    setPage(1)
-    setDownloadError('')
+  function advance(next: Stage) { setStage(next); setViewed(null); setPage(1); setFilter({ kind: 'all' }) }
+  function navigate(step: number) {
+    setViewed(step)
+    requestAnimationFrame(() => { const section = document.getElementById(`ia-score-step-${step}`); section?.focus({ preventScroll: true }); section?.scrollIntoView?.({ block: 'start' }) })
   }
-
   function download(artifact: Artifact) {
-    setDownloadError('')
-    let url: string | undefined
-    let link: HTMLAnchorElement | undefined
-    try {
-      const result = buildDemoExport(artifact, showingResults ? run : { ...run, status: 'ready', scope: null, complete: 0, processed: 0 })
-      url = URL.createObjectURL(new Blob([result.content], { type: result.mimeType }))
-      link = document.createElement('a')
-      link.href = url
-      link.download = result.filename
-      document.body.appendChild(link)
-      link.click()
-    } catch {
-      setDownloadError('The demo export could not be downloaded. Please try again.')
-    } finally {
-      link?.remove()
-      if (url) { const downloadUrl = url; setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000) }
-    }
+    try { const result = buildDemoExport(artifact, showing ? run : { ...run, status: 'ready', scope: null, complete: 0, processed: 0 }); saveBlob(new Blob([result.content], { type: result.mimeType }), result.filename); setError('') }
+    catch { setError('The demo export could not be downloaded. Please try again.') }
   }
-
-  async function openReport() {
-    setDownloadError('')
-    try {
-      await viewReport(async () => {
-        const result = buildDemoExport('report', run)
-        return new Blob([result.content], { type: result.mimeType })
-      })
-    } catch (problem) { setDownloadError(problem instanceof Error ? problem.message : 'Could not open the demo report.') }
+  async function report() {
+    try { const result = buildDemoExport('report', run); await viewReport(async () => new Blob([result.content], { type: result.mimeType })); setError('') }
+    catch { setError('The demo report could not be opened. Please try again.') }
   }
-
   return <div className="item-analysis-site ia-embedded ia-demo" aria-label="Free MathDial item analysis demo">
-    <div className="ia-demo-intro"><div><p className="ia-eyebrow">MathDial walkthrough · item analysis</p>
-      <h2>Follow the assessment into the items</h2>
-      <p>This free demo uses {run.total} public MathDial examples and authored walkthrough judgments. No API key or model calls are needed.</p></div>
-      <button type="button" className="ia-text-button" onClick={restart}>Restart item demo</button></div>
-
-    <ol className="ia-steps ia-demo-steps" aria-label="Demo item analysis progress">
-      {['Confirm benchmark', 'Review criteria', 'Review pilot', 'Complete demo sample'].map((label, index) => <li key={label}
-        aria-current={index === step ? 'step' : undefined} data-done={index < step || stage === 'complete' ? true : undefined}>
-        <span aria-hidden="true">{index < step || stage === 'complete' ? '✓' : index + 1}</span>{label}</li>)}
-    </ol>
-
-    <section className="ia-panel ia-demo-source" aria-label="Demo benchmark and source">
-      <div className="ia-section-heading"><div><p className="ia-eyebrow">The benchmark in this assessment</p><h2>MathDial</h2></div>
-        {stage !== 'identify' && <span className="ia-tag">Benchmark confirmed</span>}</div>
-      <p>Continue the MathDial assessment for the India urban tutoring deployment with this fixed {run.total}-item demo sample.</p>
-      <dl className="ia-demo-source-facts"><div><dt>Dataset</dt><dd>{source.title}</dd></div>
-        <div><dt>Sample</dt><dd>{source.sample_description}</dd></div>
-        <div><dt>License</dt><dd><a href={source.license_url} target="_blank" rel="noreferrer">{source.license}</a></dd></div>
-        <div><dt>Source revision</dt><dd><code>{source.revision}</code></dd></div></dl>
+    <div className="ia-demo-intro"><div><p className="ia-eyebrow">MathDial walkthrough · item analysis</p><h2>Six scores for every item</h2>
+      <p>This free demo uses {run.total} public MathDial examples and authored illustrative scores. No API key or model calls are needed.</p></div>
+      <button className="ia-text-button" onClick={() => { resetDemoItemProgress(); advance('identify'); setError('') }}>Restart item demo</button></div>
+    <SixScoreNavigation current={current} onNavigate={navigate} />
+    <section id="ia-score-step-1" className="ia-stage" tabIndex={-1} aria-labelledby="demo-context-title"><h2 id="demo-context-title">1. Context &amp; items</h2>
+      <p><strong>MathDial</strong> · {run.total} bundled dialogues from {source.source_split_count} published test dialogues.</p><p>{source.sample_description}</p>
+      <p>Deployment: one-on-one tutoring for English-fluent professional teachers in Indian metropolitan cities.</p>
       <a href={source.source_url} target="_blank" rel="noreferrer">View the pinned MathDial source ↗</a>
-      <p className="ia-small ia-demo-attribution">{source.citation} <a href={source.paper_url} target="_blank" rel="noreferrer">Read the paper ↗</a></p>
-      <p className="ia-small">{source.changes}</p>
-      <p className="ia-small">{source.student_provenance}</p>
-      <p className="ia-small">{source.source_route}</p>
-      <p className="ia-demo-disclosure"><strong>Authored example judgments.</strong> {source.label_provenance} Results describe only this bundled sample, not the full MathDial benchmark.</p>
-      <details className="ia-original"><summary>Deployment from the original assessment</summary><p className="ia-demo-deployment">{DEMO_DEPLOYMENT_DESCRIPTION}</p></details>
-      {stage === 'identify' && <div className="ia-demo-next"><p>Confirm that this MathDial sample is the dataset you want to use for the walkthrough of the assessment above.</p>
-        <button type="button" className="ia-primary" onClick={() => setStage('confirmed')}>Confirm benchmark</button></div>}
+      <p className="ia-demo-disclosure"><strong>Authored illustrative scores.</strong> {source.label_provenance}</p>
+      <details className="ia-original"><summary>Source provenance and attribution</summary><p>{source.citation}</p><p>{source.student_provenance}</p><p>{source.changes}</p><p>Revision: {source.revision}</p><a href={source.license_url}>{source.license}</a></details>
+      {stage === 'identify' ? <button className="ia-primary" onClick={() => advance('ready')}>Confirm benchmark and prepare context</button> : <SharedScoringContext spec={DEMO_SIX_SCORE_SPEC} />}
     </section>
-
-    {stage === 'confirmed' && <section className="ia-demo-next ia-demo-stage" aria-label="Demo criteria preparation"><h3>Benchmark confirmed. Review the item criteria next.</h3>
-      <p>The demo uses the fixed four-classifier catalog with authored, sourced context for the deployment shown above. Open them to see the questions applied to each example.</p>
-      <button type="button" className="ia-primary" onClick={() => setStage('criteria')}>Show demo criteria</button></section>}
-
-    {showingCriteria && <><Criteria spec={DEMO_ITEM_ANALYSIS_SPEC} metadata={run.summary?.specification} classifierNames={DEMO_ITEM_ANALYSIS_CLASSIFIER_NAMES} />
-      <button type="button" className="ia-secondary" onClick={() => download('spec')}>Download demo criteria JSON <span aria-hidden="true">↓</span></button></>}
-
-    {stage === 'criteria' && <section className="ia-demo-next ia-demo-stage" aria-label="Demo pilot preparation"><h3>Start with a small pilot</h3>
-      <p>Inspect the authored judgments for {DEMO_ITEM_ANALYSIS_PILOT_SIZE} of the {run.total} bundled examples before continuing through the sample. Use the pilot to check how the criteria fit the item text.</p>
-      <button type="button" className="ia-primary" onClick={() => setStage('pilot')}>Show pilot results</button></section>}
-
-    {showingResults && <>
-      <div className="ia-demo-status" role="status"><h3 ref={resultHeading} tabIndex={-1}>{stage === 'complete' ? 'Demo item analysis complete' : 'Pause for a human review'}</h3>
-        <p>{stage === 'complete' ? `All ${run.total} bundled demo items are included below. This completes the walkthrough sample; it does not assess the full MathDial dataset.` : `${DEMO_ITEM_ANALYSIS_PILOT_SIZE} of ${run.total} demo items have example judgments. Open the items below, compare the evidence with the criteria, and review the pilot before continuing.`}</p></div>
-      <Results run={run} page={page} setPage={setPage} onDownload={download} onViewReport={() => void openReport()} downloading={null} pageLoading={false} demo classifierNames={DEMO_ITEM_ANALYSIS_CLASSIFIER_NAMES} />
-      {stage === 'pilot' && <section className="ia-demo-checkpoint" aria-label="Human review checkpoint"><h3>Check the pilot before continuing</h3>
-        <p>Do the example labels and quoted evidence follow the criteria? For a real analysis, this is the point to catch ambiguous rules or misread items before applying them to the rest of the dataset.</p>
-        <label><input type="checkbox" checked={reviewed} onChange={event => setReviewed(event.target.checked)} />
-          <span>I have reviewed the pilot examples and criteria</span></label>
-        <button type="button" className="ia-primary" disabled={!reviewed} onClick={() => { if (reviewed) setStage('complete') }}>Continue demo through remaining items</button>
-        <p className="ia-small">This reveals the remaining authored example judgments. No model is run.</p></section>}
-    </>}
-    {downloadError && <p className="ia-error" role="alert">{downloadError}</p>}
+    <section id="ia-score-step-2" className="ia-stage" tabIndex={-1} aria-labelledby="demo-analyze-title"><h2 id="demo-analyze-title">2. Analyze</h2>
+      <p>A live analysis uses one model call per item to return all six assessments together. This walkthrough reveals bundled examples.</p>
+      {stage === 'identify' ? <p>Confirm the context and items first.</p> : <div className="ia-actions">
+        {!showing && <button className="ia-secondary" onClick={() => advance('pilot')}>Show first {DEMO_ITEM_ANALYSIS_PILOT_SIZE} items</button>}
+        {stage !== 'complete' && <button className="ia-primary" onClick={() => advance('complete')}>{stage === 'pilot' ? 'Show remaining examples' : `Show all ${run.total} items`}</button>}
+        {stage === 'complete' && <p>All {run.total} bundled examples are available.</p>}
+      </div>}
+    </section>
+    <section id="ia-score-step-3" className="ia-stage" tabIndex={-1} aria-labelledby="demo-results-title"><h2 id="demo-results-title">3. Results</h2>
+      {showing ? <><p role="status">{run.complete} of {run.total} bundled items shown. These scores illustrate the workflow; they are not model outputs or findings about the full MathDial benchmark.</p>
+        <ItemJudgments run={run} page={page} setPage={setPage} pageLoading={false} demo filter={filter} onFilterChange={value => { setFilter(value); setPage(1) }} />
+        <details className="ia-original"><summary>Illustrative score distributions and original benchmark assessment</summary><SummaryFindings run={run} demo onInspect={value => { setFilter(value); setPage(1); navigate(3) }} /></details>
+        <ResultExports run={run} onDownload={download} onViewReport={() => void report()} downloading={null} demo />
+      </> : <><p>Six scores per item will appear here. Select a score to read the explanation, evidence, and missing information.</p>{stage === 'ready' && <button className="ia-secondary" onClick={() => download('spec')}>Download demo context JSON</button>}</>}
+      {error && <p className="ia-error" role="alert">{error}</p>}
+    </section>
   </div>
 }

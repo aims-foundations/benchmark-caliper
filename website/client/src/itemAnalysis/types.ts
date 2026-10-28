@@ -122,6 +122,8 @@ export interface CategoryInventory {
   evidence_gaps: string[]
 }
 export interface Specification {
+  analysis_type?: 'six_scores'
+  rubric_version?: string
   schema_version?: string
   fixed_catalog_version?: string
   deployment_description?: string
@@ -161,6 +163,9 @@ export interface OriginalAssessment {
 }
 
 export interface AnalysisSummary {
+  analysis_type?: 'six_scores'
+  rubric_version?: string
+  dimensions?: ClassifierSummary[]
   report_schema_version?: string
   schema_version?: string
   fixed_catalog_version?: string
@@ -189,7 +194,19 @@ export interface AnalysisSummary {
   }
 }
 
+export interface DimensionAssessment {
+  score: number | null
+  justification: string
+  evidence: string[]
+  information_gaps: string[]
+}
+
 export interface Item {
+  dimensions?: Record<string, DimensionAssessment>
+  grading_criterion?: unknown
+  item_features?: unknown
+  asset_manifest?: unknown
+  verifier?: unknown
   item_id: string
   content: unknown
   reference_answer: unknown
@@ -200,6 +217,7 @@ export interface Item {
 }
 
 export interface AnalysisRun {
+  analysis_type?: 'six_scores'
   run_id: string
   created_at?: string
   updated_at?: string
@@ -216,8 +234,9 @@ export interface AnalysisRun {
   errors: number
   completed_judgments?: number
   remaining_judgments?: Record<RunScope, number>
+  remaining_requests?: Record<RunScope, number>
   items: Item[]
-  pagination: { page: number; total_pages: number }
+  pagination: { page: number; total_pages: number; page_size?: number }
   usage: { input_tokens: number; output_tokens: number }
   model?: { provider: string; model_id: string; reasoning_effort: string }
   can_continue: boolean

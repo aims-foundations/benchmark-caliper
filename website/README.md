@@ -28,15 +28,16 @@ required tasks/topics, expected answers, and optional validity concerns. The
 website searches the same Measurement Data Bank catalog and requires explicit
 benchmark/snapshot confirmation, or confirmation of an uploaded CSV/JSON file.
 Neither entering context nor searching/confirming requires a key or model call.
-Preparing classifier context and classifying items require explicit actions and an
-OpenAI key. The full-snapshot continuation also requires pilot review.
+Preparing shared scoring context makes no model calls and requires no key.
+Scoring is an explicit paid action requiring an OpenAI key. Users can assess an
+initial batch or the full snapshot, and can continue a saved batch later.
 
-Direct criteria use the frozen user requirements, framework, deterministic
-dataset profile, and actual sample items. No benchmark scores or elicitation
-summary are invented. UI and exported artifacts identify the basis as
-deployment requirements and the benchmark assessment as **Not run**. Input Form
-and Output Form remain unassessed. Completing an item snapshot does not claim
-a completed six-dimension benchmark assessment.
+Direct analysis uses frozen user requirements, a fixed six-dimension item rubric,
+and the supplied item evidence. No benchmark scores or elicitation summary are
+invented. UI and exports identify the basis as deployment requirements and the
+benchmark assessment as **Not run**. All six dimensions, including Input Form and
+Output Form, are assessed per item; unsupported judgments remain Unknown.
+Completing item analysis does not create a benchmark-level assessment.
 
 Direct context and run access are restored in the same browser tab, separately
 from gallery/run-linked analyses and the free demo. Provider keys are never
@@ -48,8 +49,8 @@ first. The normal full pipeline and free walkthrough remain available.
 
 The homepage and Caliper screen offer **Try the free demo**. The MathDial
 walkthrough replays the existing benchmark assessment, then continues through
-mandatory sample confirmation, criterion review, a four-dialogue pilot,
-a human-review checkpoint, and all ten bundled sample dialogues. No Anthropic
+sample confirmation, shared-context review, scoring, and inspection of six
+illustrative scores per dialogue. An initial batch can continue to all ten dialogues. No Anthropic
 or OpenAI key is required, and the walkthrough makes no model calls or creates
 server analysis jobs. The optional gallery listing remains a read-only request.
 The intro also provides **Preview item analysis** for returning visitors.
@@ -57,7 +58,7 @@ The intro also provides **Preview item analysis** for returning visitors.
 The item sample contains the first ten complete dialogues from the public
 `eth-nlped/mathdial` test split, pinned to a repository revision. Original source
 records, source identifiers, attribution, license, and selection scope ship with
-the fixture. Item criteria and judgments are authored walkthrough examples,
+the fixture. Item scores and explanations are authored walkthrough examples,
 clearly distinguished from the prerecorded benchmark scores and source data.
 Counts describe the ten-dialogue convenience sample, not all 599 test dialogues
 or the full MathDial benchmark. Missing local-teacher acceptance evidence stays
@@ -73,10 +74,10 @@ ordinary gallery report or starting a new assessment uses the live pipeline.
 
 The benchmark report embeds the shared
 [`item_analysis` pipeline](../anthropic_api_package_release/item_analysis/README.md)
-as the next required stage, including reports opened from the gallery or a saved
-`/run/{run_id}` link. The report remains marked as awaiting item analysis until
-the full connected item snapshot is classified. This product requirement does
-not authorize automatic paid calls: each model phase requires a user action.
+as the next stage, including reports opened from the gallery or a saved
+`/run/{run_id}` link. A completed pilot can be reviewed and exported; full-snapshot
+classification is optional. Processing completion does not establish scientific
+correctness or record independent human review. Each model phase requires a user action.
 
 1. Find and confirm the benchmark's items. Caliper searches the Measurement Data
    Bank using the paper identity saved with the assessment. Review the matching
@@ -86,96 +87,84 @@ not authorize automatic paid calls: each model phase requires a user action.
    Uploads accept 1–50,000 items and at most 10 MiB. Each item needs nonempty
    `content`; `item_id` is generated from its row number when omitted and must
    be unique when supplied. Include `reference_answer` when available.
-2. Prepare sourced context for the four fixed rubric classifiers with GPT-6 Luna. The server carries
-   forward the exact report's deployment description, scoring, elicitation
-   summary, and available dataset evidence. Selecting a dataset does not select
-   another deployment or reuse that source's supplied criteria. Review the
-   decision rules, labels, and applicability before classification.
-3. Classify the first 100 items with GPT-6 Luna (all items for smaller datasets),
-   inspect the evidence, then explicitly continue through the full snapshot.
-   Each item uses four separate requests, one per classifier. Completed
-   classifier judgments are reused on continuation or retry, including successes
-   on an item whose other dimensions failed.
+2. **Context & items:** assemble the deployment description, available elicitation
+   answers, benchmark instructions, regional evidence, and dataset profile once.
+   Preparation is deterministic and uses no provider key. Prior benchmark scores
+   are preserved in the original report but excluded from the item scorer's evidence.
+3. **Analyze:** choose an initial batch (up to 100 items) or all items, then provide
+   an OpenAI key and explicitly start scoring. Each item uses one primary request
+   returning Input Ontology, Input Content, Input Form, Output Ontology, Output
+   Content, and Output Form. Each dimension contains a 1–5 score or `null`, a
+   justification, supporting evidence, and information gaps. One structural repair
+   may follow an invalid response; provider failures stop the phase.
+4. **Results:** inspect the six-column score table and select a score to read the
+   complete item, reference answer, grading criteria, explanation, evidence, and
+   gaps. Unknown judgments are distinct from pending items and processing failures.
+   Context and results can be revisited without model calls. Saved successful item
+   assessments are reused on continuation or retry.
+5. Export the readable report, item CSV, summary, complete ZIP, or independent
+   review worksheet. The original benchmark assessment remains separate. A sample's
+   scores are not converted into new benchmark-wide coverage scores.
 
-The results show counts, percentages among all valid judgments (including
-insufficient evidence), failures, and pending dimensions. A summary identifies
-the selected items, saved judgments, and remaining work before the detailed
-results. Expand individual items to inspect justifications and evidence.
-Use **View report** for a readable offline report, **Download complete results
-package** for the full record, or **Download blind review worksheet** for
-independent annotation. Individual CSV/JSON/HTML downloads remain available.
-The ZIP includes the readable report, item labels, summary, classifier context,
-original assessment, review materials, a manifest, and available audit files.
-Its filename identifies the benchmark, deployment, run, and scope. The report
-separates the overview from expandable evidence, rules, and provenance; its
-companion links work when the package is extracted into one folder.
-The original six-dimensional assessment remains visible;
-the demo does not turn item prevalence into new 1–5 scores. Criteria changes
-require a new run. The website does not automatically revise criteria or import
-completed human reviews; the CLI supports comparison with a completed worksheet.
+The fixed rubric is adapted to individual items: Input Ontology measures the
+item's relevance to the deployment, not whether one question covers every task.
+Missing references or media remain evidence gaps. The scorer never executes
+item instructions or verifiers, and asset URLs do not imply inspected media.
+The initial implementation scores supplied text and metadata; judgments needing
+unavailable image/audio content must remain Unknown or state the limitation.
 
-An OpenAI key is required for generation and classification. Both steps use
-`gpt-6-luna` with low reasoning effort; each run records this model configuration.
-Opening the report and dataset setup makes no model calls. Preparing classifier context,
-classifying the pilot, and continuing through the remaining items are separate
-paid actions. Context generation prepares all four context blocks in one primary
-request; a fresh 100-item pilot uses 400 primary classification requests, with
-additional calls possible for repairs and retries. Each classification request
-contains one classifier's rules and context, and never another classifier's
-judgment. The key stays in memory; the item run's ID and separate access
-secret are kept in browser local storage, scoped to the source assessment,
-so a returning visitor can reopen the run. Existing session-storage access
-records are migrated. Direct-entry requirements are also restored locally;
-OpenAI keys are never persisted.
-Initialization failures identify dataset/evidence preparation, criteria
-validation, provider access, or report preparation separately. The displayed
-error reference contains a stage and fixed code; raw model replies and private
-source text are not included. Validation permits one structural repair and does
-not start item classification when the criteria are invalid.
-Saved runs have **no automatic expiry by default**. They are kept under
-`WEBSITE_DATA_DIR/item-analysis/` and can be reopened after a server restart when
-that storage is retained. Returning to a later phase may require entering the key
-again; reopening results never starts model calls. An interrupted classification
-can resume from saved judgments. Use **Discard saved analysis** to remove its data.
-Administrators may set `ITEM_ANALYSIS_RETENTION_SECONDS` to a positive retention
-period; `0` (the default) disables time-based deletion. Active phases and ongoing
-downloads are protected from cleanup. Keep a downloaded package as an independent
-record, especially before clearing browser storage or changing hosting storage.
-Stop cancels the current awaited
-request and prevents new calls; a request already submitted may still be billed.
-Saved classifier judgments survive cancellation, retries, and normal server
-restarts. An item is complete only after all four classifiers succeed. Partial
-judgments remain inspectable, and failed dimensions are identified separately.
+An OpenAI key is required only for scoring. The shared client uses `gpt-6-luna`
+with low reasoning effort and records the actual run configuration. A fresh
+100-item batch uses 100 primary requests, with additional repair/retry calls
+possible. There is no generated classifier specification, numerical confidence,
+or combined item-ranking score in this workflow.
+
+The key stays in memory; the item run ID and separate access secret are kept in
+browser local storage, scoped to the assessment. Existing session-storage access
+records are migrated. Direct-entry requirements are restored locally; OpenAI keys
+are never persisted. Initialization errors identify dataset/evidence preparation,
+shared-context preparation, or report preparation without exposing private input.
+
+Saved runs have **no automatic expiry by default** and live under
+`WEBSITE_DATA_DIR/item-analysis/`. Completed item scores, context, and source
+snapshots survive server restarts when that storage is retained. Resume uses the
+same frozen inputs, rubric, prompt, and model configuration. Changing them requires
+a new run. **Discard saved analysis** deletes the saved run. Administrators may
+set `ITEM_ANALYSIS_RETENTION_SECONDS`; zero disables automatic deletion. Active
+phases and downloads are protected from cleanup.
+
+Stop cancels the awaited request and prevents new calls. Already submitted
+requests may still be billed. A response received before cancellation is saved.
+Download a complete results package to retain an independent copy of the run.
+Historical four-classifier results keep their original labels and reports;
+new analyses use the versioned six-score format.
 
 ### Assessment-continuation API
 
 - `GET /api/item-analysis/assessment?kind=run&id={run_id}` (or `kind=gallery`)
-  resolves the existing report, returns its context, extracted benchmark identity,
-  suggested Data Bank sources, catalog status, and upload limits. It makes no
-  model call. A run ID uses the existing report access model; gallery IDs must identify an allowlisted report.
-- `GET /api/item-analysis/sources?kind=run&id={run_id}&q={query}` searches the
-  catalog for another candidate while retaining the original assessment identity.
+  resolves an existing report and returns context, benchmark identity, suggested
+  Data Bank sources, catalog status, and upload limits without model calls.
+- `GET /api/item-analysis/sources?kind=run&id={run_id}&q={query}` searches another
+  candidate while retaining the original assessment identity.
 - `POST /api/item-analysis/runs/from-assessment` accepts multipart fields
-  `assessment_kind` (`run` or `gallery`), `assessment_id`, and exactly one of
-  `source_id` or `items_file`, plus explicit `benchmark_confirmed=true` and
-  `X-OpenAI-Key`. Remote sources also require the displayed `source_revision`.
-  It validates confirmation, the assessment, and source or upload before starting
-  fresh context preparation. Clients cannot submit replacement assessment text
-  or arbitrary source URLs. Stale revisions must be reviewed and confirmed again.
-- Polling, classification, cancellation, and downloads use the existing item-run
-  endpoints with `X-Review-Token`. Classification pauses at the 100-item review
-  checkpoint before full-snapshot continuation.
-- `GET /api/item-analysis/runs/{run_id}/package` downloads a complete ZIP after
-  the current phase ends. It also supports saved partial results and prepared
-  context before classification. The package records unavailable audit artifacts
-  explicitly rather than substituting current prompts for historical ones.
-- `DELETE /api/item-analysis/runs/{run_id}` deletes a saved run and invalidates
-  access. Both endpoints require the run's `X-Review-Token`.
+  `assessment_kind`, `assessment_id`, one of `source_id` or `items_file`, and
+  `benchmark_confirmed=true`. Remote sources require the displayed `source_revision`.
+  Preparation needs no OpenAI key. Stale revisions must be confirmed again.
+- `POST /api/item-analysis/runs/from-context` accepts the same item selection and
+  `context_json` containing explicit deployment requirements, without a key.
+- `POST /api/item-analysis/runs/{run_id}/classify` requires `X-Review-Token` and
+  `X-OpenAI-Key`, with `scope` set to `pilot` or `all`. New six-score runs can choose
+  either initially. Each scope can resume saved work; `all` can grow a pilot.
+- Polling, cancellation, downloads, and deletion require `X-Review-Token`.
+  Run responses expose `analysis_type: "six_scores"`, per-item `dimensions`,
+  `remaining_requests`, and `remaining_judgments` (dimension count).
+- `GET /api/item-analysis/runs/{run_id}/package` downloads an allowlisted ZIP after
+  the current phase ends, including partial results. Missing audit artifacts are
+  recorded explicitly. `DELETE /api/item-analysis/runs/{run_id}` removes the run.
 
-The older `/api/item-analysis/catalog` and `POST /api/item-analysis/runs` prepared
-example API remains available for compatibility and tests. It retains generated
-or supplied criteria modes and the ten-item illustrative example. These presets
-are not a separate homepage tool and do not replace the current report's context.
+The older catalog and prepared-example creation endpoints remain available.
+`specification_mode` is accepted for older clients, but new runs always assemble
+shared context without generating or importing classifier rules.
 
 ### Configure Data Bank access
 
@@ -808,7 +797,7 @@ A user pastes their Anthropic API key, uploads a benchmark paper PDF, and descri
 9. **Region YAML** — Haiku picks templates, Sonnet writes a regional scaffold, Sonnet+web search enriches it
 10. **Validity scoring** — single Opus call across the 6 dimensions
 11. **Benchmark report** — the six-dimension report is displayed with downloads and the required item-analysis stage below it. Saved `/run/{run_id}` reports offer the same continuation. Optional notification endpoints remain available to compatible clients when email delivery is configured.
-12. **Item analysis** — connect matching benchmark items, prepare and review sourced classifier context, classify the first 100 items, inspect the pilot, then continue through the full snapshot. These explicit paid actions use a separately supplied OpenAI key.
+12. **Item analysis** — confirm matching items, prepare shared context without model calls, then score a batch or the full snapshot on six dimensions. Scoring uses a separately supplied OpenAI key; completed items can be inspected, exported, and resumed.
 
 The complete output combines the six-dimension validity report with item-level
 judgments, prevalence summaries, and exportable evidence. Item prevalence does
@@ -871,8 +860,8 @@ Backend tests mock provider calls, including success, failures, cancellation,
 credential handling, retention, and per-run access control. Frontend tests cover
 both routing and the guided item-review flow.
 
-The item-analysis tests exercise generated and supplied criteria, checkpoint
-continuation, cancellation, exports, and authentication without paid model calls:
+The item-analysis tests exercise shared context, six-score responses, historical
+reports, continuation, cancellation, exports, and authentication without paid calls:
 
 ```bash
 python -m pytest website/server/tests/test_item_analysis*.py anthropic_api_package_release/tests/test_item_analysis_*.py
@@ -947,29 +936,13 @@ website/
 TBD.
 
 
-Item-analysis catalog, specification, and result contracts use
-`caliper_generic_items_v1`, `caliper_item_spec_v2`, and `caliper_item_result_v3`.
-Each independent judge receives one classifier's actual fixed rules, sourced
-context, and supporting source contents. Input Ontology additionally receives
-the required category inventory.
-Input Ontology records a judgment plus multiple matched required-category IDs;
-Input Content, Output Ontology, and Output Content use `issue_identified`,
-`no_issue_identified`, and `insufficient_evidence`. Multiple-choice items retain
-Output Ontology. Input Form and Output Form remain benchmark-level dimensions.
+New item analyses use `caliper_item_context_v1`, `caliper_item_rubric_v1`, and
+`caliper_item_result_v4`. A single item request returns six separate assessments;
+each has `score`, `justification`, `evidence`, and `information_gaps`. Numerical
+scores require evidence, and null scores require an explicit gap. Validation is
+structural and does not establish scientific correctness.
 
-The website displays source contents, prior hypotheses, inventory completeness,
-and evidence gaps for review. Prepared context is semantically unreviewed even
-when structure and source references pass validation. Distribution percentages
-include all valid judgments, including insufficient evidence; operational errors
-and pending dimensions remain separate. Counts come from selected items and
-saved judgments, with four primary requests per item. Valid partial judgments
-contribute to their classifier's statistics; whole-item completion requires
-all four judgments. The website shows remaining primary request counts after
-accounting for saved judgments, with repairs and retries billed separately.
-
-Historical induced specifications retain explicit legacy schema/catalog markers
-and their original label meanings. The old MMLU supplied specification is retained
-as a historical artifact, but is unavailable for new runs. The bundled exam demo
-and free MathDial walkthrough use the fixed generic catalog. The walkthrough's
-judgments are authored illustrations with explicit evidence gaps, not a study.
-Its catalog copy is checked against the Python catalog by the server tests.
+Historical `caliper_generic_items_v1` / `caliper_item_spec_v2` /
+`caliper_item_result_v3` runs retain their four categorical judgments and original
+export semantics. Their labels are never silently reinterpreted as 1–5 scores.
+The free walkthrough's scores are authored illustrations, not study findings.

@@ -246,15 +246,17 @@ export function ScoringView({
     <div className="pipeline-stage-status" role="status">
       <strong>{demo
         ? itemStatus === 'complete' ? 'Demo walkthrough complete' : 'Demo benchmark ready · item walkthrough remains'
-        : itemStatus === 'complete' ? 'Validity analysis complete' : 'Benchmark assessment ready · item analysis remains'}</strong>
+        : itemStatus === 'complete' ? 'Full dataset classified' : itemStatus === 'in_progress' ? 'Benchmark assessment ready · item analysis started' : 'Benchmark assessment ready · item analysis available'}</strong>
       <p>{demo
         ? itemStatus === 'complete'
           ? 'The benchmark assessment and all example judgments in the small walkthrough sample are available below. These example counts do not describe the full MathDial benchmark.'
           : 'Continue below to confirm the demo sample, review criteria, inspect the pilot, and reveal the remaining sample judgments. No API key is needed.'
         : itemStatus === 'complete'
-          ? 'Review the benchmark assessment and the item-level evidence together below.'
-          : 'Continue with the matching dataset below. Item analysis is the next required stage: review the criteria, inspect the pilot, and classify the full dataset to complete this analysis.'}</p>
-      {itemStatus !== 'complete' && <a href="#item-analysis-stage">Continue to item analysis ↓</a>}
+          ? 'Every item in the prepared dataset has a saved classification. Review the benchmark assessment and item-level evidence together below. Independent human review has not been recorded here.'
+          : itemStatus === 'in_progress'
+          ? 'Review and export the pilot when it finishes. Continuing through the full prepared dataset is optional. Independent human review takes place separately and is not recorded here.'
+          : 'Continue with the matching dataset below to prepare classifier context and classify a pilot. You can review and export that pilot; continuing through the full prepared dataset is optional.'}</p>
+      {itemStatus !== 'complete' && <a href="#item-analysis-stage">{itemStatus === 'in_progress' ? 'Return to item analysis ↓' : 'Continue to item analysis ↓'}</a>}
     </div>
     {demo && <div className="demo-banner"><p><strong>Free pipeline walkthrough.</strong> The MathDial benchmark scores below are prerecorded. The item stage carries forward this same deployment context and shows authored example judgments on a small sample. No API key or model calls are required.</p></div>}
     <section className="summary">
