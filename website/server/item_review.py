@@ -24,7 +24,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Header, HTTPException, Query, Response
 from fastapi.responses import JSONResponse, StreamingResponse
-from starlette.concurrency import run_in_threadpool
+from starlette.concurrency import iterate_in_threadpool, run_in_threadpool
 from huggingface_hub import get_token
 from openai import AsyncOpenAI, AuthenticationError, RateLimitError, OpenAIError
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -56,6 +56,8 @@ from .item_review_store import ReviewStore
 from .result_package import build_results_package, package_filename
 from .remote_retrieval import RemoteRetrieval, RemoteRetrievalError
 from .review_checkpoints import AccessDenied, CheckpointError, Checkpoints
+from .candidate_store import CandidateStore, CandidateStoreError
+from . import streaming_json
 from . import db
 
 router = APIRouter(prefix="/api/item-review", tags=["Item review"])
@@ -202,6 +204,45 @@ _CHECKPOINT_FIELDS = (
 
 def checkpoints() -> Checkpoints:
     return Checkpoints(db.DEFAULT_DB_PATH.parent / "review-runs")
+
+
+def candidate_store() -> CandidateStore:
+    return CandidateStore(checkpoints().directory / "candidates")
+
+
+def expand_candidate(record: dict) -> dict:
+    return candidate_store().expand(record)
+
+
+def screened_records(job):
+    """Supply the solver one complete assessment and original row at a time."""
+    store = candidate_store()
+    for record in job.screening["items"]:
+        yield store.expand(record)
+
+
+def _expand_output(path, record):
+    # Original rows have arbitrary column names; only pipeline record positions
+    # may contain our private references. Never interpret nested evidence keys.
+    if ((len(path) == 5 and path[:2] == ("retrieval", "rankings")
+         and type(path[2]) is int and path[3] == "candidates" and type(path[4]) is int)
+            or (len(path) == 3 and path[:2] == ("screening", "items") and type(path[2]) is int)
+            or (len(path) == 2 and path[0] == "items" and type(path[1]) is int)):
+        return expand_candidate(record)
+    return record
+
+
+def _json_chunks(snapshot):
+    """Expand private references into bounded chunks of the unchanged API JSON."""
+    pending, length = [], 0
+    for chunk in streaming_json.iterencode(snapshot, expand=_expand_output):
+        pending.append(chunk)
+        length += len(chunk)
+        if length >= 64 * 1024:
+            yield "".join(pending)
+            pending, length = [], 0
+    if pending:
+        yield "".join(pending)
 
 
 def checkpoint(job: ReviewJob) -> None:
@@ -587,7 +628,8 @@ def screening_candidates(retrieval: dict, requirements: Requirements) -> dict[tu
     for ranking in rankings:
         for candidate in ranking["candidates"]:
             item_id = candidate["item_id"]
-            if (item_id != row_fingerprint(candidate["evidence"]["item"])
+            original = expand_candidate(candidate)
+            if (item_id != row_fingerprint(original["evidence"]["item"])
                     or candidate["evidence_hash"] != item_id):
                 raise ValueError("A candidate does not retain its original row identity.")
             candidates[ranking["facet_id"], item_id] = candidate
@@ -610,6 +652,8 @@ async def start_screening(run_id: str, response: Response,
         build_benchmark_queries(source.request.deployment.model_dump(), requirements, source.grounding)
         screening_candidates(source.benchmark_retrieval, requirements)
         allocation = allocate_initial_screening(source.benchmark_retrieval["queues"])
+    except CandidateStoreError:
+        raise HTTPException(503, "Saved candidate evidence could not be read. Contact the site maintainer before continuing.") from None
     except (ValueError, TypeError, KeyError):
         raise HTTPException(409, "Screening requires valid requirements, grounding, and complete candidate queues.") from None
 
@@ -683,7 +727,8 @@ def validate_selection_source(source: ReviewJob) -> Requirements:
         if item_id in seen or item_id not in allocated or item["status"] not in {"complete", "error"}:
             raise ValueError("Screening results do not match the original allocation.")
         seen.add(item_id)
-        original = candidates[allocated[item_id]["facet_id"], item_id]
+        original = expand_candidate(candidates[allocated[item_id]["facet_id"], item_id])
+        item = expand_candidate(item)
         if (item["evidence"] != original["evidence"] or item["evidence_hash"] != item_id
                 or item["sources"] != original["sources"]
                 or item["acquisition"] != {key: allocated[item_id][key] for key in ("queue_id", "facet_id")}):
@@ -706,6 +751,8 @@ async def start_selection(run_id: str, response: Response,
         raise HTTPException(409, "Finish or stop screening before selecting from its saved results.")
     try:
         validate_selection_source(source)
+    except CandidateStoreError:
+        raise HTTPException(503, "Saved candidate evidence could not be read. Contact the site maintainer before continuing.") from None
     except (ValueError, KeyError, TypeError):
         raise HTTPException(409, "Selection requires valid saved screening results and original item evidence.") from None
     check_owner_capacity(source.owner_hash)
@@ -747,6 +794,8 @@ async def start_adaptive_screening(run_id: str, response: Response,
             if source.status != "completed":
                 raise ValueError("Complete initial collection selection first.")
             state = adaptive_review.initialize(source, body)
+    except CandidateStoreError:
+        raise HTTPException(503, "Saved candidate evidence could not be read. Contact the site maintainer before continuing.") from None
     except (ValueError, TypeError, KeyError):
         raise HTTPException(409, "Adaptive screening requires a valid selected collection and complete initial assessments. Resume only unfinished adaptive runs with their original settings.") from None
     key, _ = check_run_capacity(x_openai_key)
@@ -781,9 +830,11 @@ async def benchmark_candidates(run_id: str, queue_id: str, response: Response,
     pages = max(1, (total + RESULTS_PAGE_SIZE - 1) // RESULTS_PAGE_SIZE)
     page = min(page, pages)
     start = (page - 1) * RESULTS_PAGE_SIZE
-    return {"queue_id": queue_id, "facet_id": queue["facet_id"], "page": page,
+    snapshot = {"queue_id": queue_id, "facet_id": queue["facet_id"], "page": page,
             "page_size": RESULTS_PAGE_SIZE, "total_pages": pages, "total_items": total,
             "items": [candidates[key] for key in queue["item_ids"][start:start + RESULTS_PAGE_SIZE]]}
+    return StreamingResponse(_json_chunks(snapshot), media_type="application/json",
+                             headers={"Cache-Control": "no-store"})
 
 
 @router.get("/runs/{run_id}")
@@ -791,7 +842,9 @@ async def get_review(run_id: str, response: Response,
                x_review_token: Annotated[str | None, Header()] = None,
                page: Annotated[int, Query(ge=1)] = 1) -> dict:
     response.headers["Cache-Control"] = "no-store"
-    return public_job(authorize(run_id, x_review_token), page)
+    snapshot = deepcopy(public_job(authorize(run_id, x_review_token), page))
+    return StreamingResponse(_json_chunks(snapshot), media_type="application/json",
+                             headers={"Cache-Control": "no-store"})
 
 
 @router.get("/runs/{run_id}/export")
@@ -801,29 +854,31 @@ async def export_review(run_id: str, x_review_token: Annotated[str | None, Heade
     if job.request.mode in {"retrieval", "screening", "selection", "adaptive"}:
         # The worker replaces its snapshot after each completed facet. Holding
         # this reference keeps a download consistent while retrieval continues.
-        retrieval = job.benchmark_retrieval
-        snapshot.pop("retrieval")
+        snapshot["retrieval"] = job.benchmark_retrieval
         job.downloads += 1
+        closed = False
+
+        def release_download():
+            nonlocal closed
+            if not closed:
+                closed = True
+                job.downloads -= 1
 
         async def retrieval_content():
             try:
-                yield json.dumps(snapshot)[:-1] + ', "retrieval": '
-                if retrieval is None:
-                    yield "null}"
-                    return
-                yield json.dumps({key: value for key, value in retrieval.items() if key != "rankings"})[:-1]
-                yield ', "rankings": ['
-                for number, ranking in enumerate(retrieval["rankings"]):
-                    yield ("," if number else "") + json.dumps({key: value for key, value in ranking.items() if key != "candidates"})[:-1]
-                    yield ', "candidates": ['
-                    for index, candidate in enumerate(ranking["candidates"]):
-                        yield ("," if index else "") + json.dumps(candidate)
-                    yield "]}"
-                yield "]}}"
+                async for chunk in iterate_in_threadpool(_json_chunks(snapshot)):
+                    yield chunk
             finally:
-                job.downloads -= 1
+                release_download()
 
-        return StreamingResponse(retrieval_content(), media_type="application/json", headers={
+        class RetrievalResponse(StreamingResponse):
+            async def __call__(self, scope, receive, send):
+                try:
+                    await super().__call__(scope, receive, send)
+                finally:
+                    release_download()
+
+        return RetrievalResponse(retrieval_content(), media_type="application/json", headers={
             "Cache-Control": "no-store",
             "Content-Disposition": f'attachment; filename="benchmark-{job.request.mode}-{run_id}.json"',
         })
@@ -881,7 +936,7 @@ async def export_package(run_id: str, x_review_token: Annotated[str | None, Head
                 package.close()
             job.downloads -= 1
 
-    worker = asyncio.create_task(asyncio.to_thread(build_results_package, snapshot))
+    worker = asyncio.create_task(asyncio.to_thread(build_results_package, snapshot, expand=expand_candidate))
     try:
         # Compression runs off the event loop. A disconnected client must not
         # leave a thread writing an unowned temporary file.
@@ -937,7 +992,8 @@ async def cancel_review(run_id: str, response: Response,
             job.status = "failed"
             job.message = "The server could not save the stopped review. Download its results now; they may not survive a server restart."
             logger.error("Review checkpoint save failed during cancellation run_id=%r", job.run_id)
-    return public_job(job)
+    return StreamingResponse(_json_chunks(deepcopy(public_job(job))), media_type="application/json",
+                             headers={"Cache-Control": "no-store"})
 
 
 def stopped_message(job: ReviewJob) -> str:
@@ -1248,7 +1304,8 @@ async def retrieve_benchmarks(job: ReviewJob) -> None:
         state = job.benchmark_retrieval
         for number, query in enumerate(state["queries"], 1):
             job.message = f"Retrieving benchmark candidates for task {number} of {len(state['queries'])}."
-            result = await remote.search("benchmark", query["query"], inventory=job.inventory)
+            result = await remote.search("benchmark", query["query"], inventory=job.inventory,
+                                         candidate_store=candidate_store())
             if state["policy"] is not None and (state["policy"] != result["policy"] or state["stats"] != result["stats"]):
                 raise RemoteRetrievalError("The benchmark index changed between tasks. Please retry retrieval.")
             state = {**state, "policy": result["policy"], "stats": result["stats"]}
@@ -1324,6 +1381,8 @@ async def retrieve_benchmarks(job: ReviewJob) -> None:
 
 def record_benchmark_ranking(state: dict, query: dict, number: int, candidates: list[dict]) -> dict:
     """Use the same saved evidence and queue construction for either host."""
+    store = candidate_store()
+    candidates = [store.compact(candidate) for candidate in candidates]
     rankings = [*state["rankings"], {**query, "candidates": candidates}]
     state = {**state, "rankings": rankings, "queues": build_screening_queues(rankings),
              "queries": [*state["queries"]]}
@@ -1357,10 +1416,12 @@ async def screen_benchmarks(job: ReviewJob, api_key: str) -> None:
             # next() and the result update contain no awaits, so workers cannot
             # reserve the same item or overwrite one another's saved results.
             for acquisition in pending:
-                candidate = candidates[acquisition["facet_id"], acquisition["item_id"]]
+                reference = candidates[acquisition["facet_id"], acquisition["item_id"]]
+                candidate = expand_candidate(reference)
                 result = await screener(answers, requirements, candidate["evidence"]["item"])
                 saved = {
-                    **candidate, "acquisition": {key: acquisition[key] for key in ("queue_id", "facet_id")},
+                    **candidate_store().compact(candidate),
+                    "acquisition": {key: acquisition[key] for key in ("queue_id", "facet_id")},
                     "screened_run_id": job.run_id,
                     **{key: result[key] for key in (
                         "status", "assessment", "gate", "response_id", "response_model", "usage",
@@ -1397,7 +1458,7 @@ async def select_benchmarks(job: ReviewJob) -> None:
     cancelled = Event()
     job.status, job.message = "running", "Choosing up to 30 items while enforcing coverage and rating priorities."
     work = asyncio.create_task(asyncio.to_thread(
-        select_collection, requirements, job.screening["items"],
+        select_collection, requirements, screened_records(job),
         previous_selected_ids=previous_ids, cancelled=cancelled.is_set,
     ))
     try:
@@ -1472,6 +1533,10 @@ async def evaluate(job: ReviewJob, api_key: str) -> None:
         job.status, job.message = "failed", "The OpenAI request failed. Check model access and try again."
     except RemoteRetrievalError as exc:
         job.status, job.message = "failed", str(exc)
+    except CandidateStoreError:
+        job.status = "failed"
+        job.message = "The server could not save or read candidate evidence, so this stage stopped. Contact the site maintainer to check storage before continuing."
+        logger.error("Candidate evidence storage failed during work run_id=%r", job.run_id)
     except CheckpointError:
         job.status = "failed"
         job.message = "The server could not save progress, so this stage stopped. Download the available results and contact the site maintainer before continuing."

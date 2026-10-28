@@ -6,6 +6,7 @@ import gzip
 import json
 from threading import Event
 import time
+import tracemalloc
 
 import httpx
 from openai import AsyncOpenAI
@@ -13,6 +14,10 @@ import pytest
 
 from website.server import adaptive_review, item_review
 from website.server.review_checkpoints import AccessDenied, CheckpointError, Checkpoints
+from website.server.candidate_store import CandidateStore, has_ref
+from website.server.review_checkpoints import VERSION, token_hash
+from website.server.tests.test_candidate_store import candidate
+from bayesian_auditing.benchmark_data import row_fingerprint, row_search_text
 from website.server.tests.test_item_review import (
     BODY, KEY, HF_KEY, client, extracted_requirements, finished, mock_extraction_provider, start,
 )
@@ -85,6 +90,102 @@ def test_truncated_checkpoint_is_a_sanitized_storage_error(tmp_path, damage):
     path.write_bytes(path.read_bytes()[:14])
     with pytest.raises(CheckpointError, match="Could not read the review checkpoint"):
         store.load("run", "access")
+
+
+def legacy_checkpoint(store, state, retrieval):
+    reference = store._write(retrieval) if retrieval is not None else None
+    store._write({"version": 1, "token_hash": token_hash("access"), "run": state,
+                  "retrieval_ref": reference}, store.run_path("run"))
+    return reference
+
+
+def test_legacy_full_rows_restore_as_refs_without_changing_any_original_fields(tmp_path):
+    store = Checkpoints(tmp_path / "private")
+    item = candidate()
+    row = item["evidence"]["item"]
+    # These are original column names, not internal references or parser paths.
+    row.update(_candidate_ref="original column", rankings=[{"candidates": [{"value": "keep"}]}],
+               **{"run.screening.items": [{"value": "also keep"}]})
+    identity = row_fingerprint(row)
+    item.update(item_id=identity, evidence_hash=identity, search_text=row_search_text(row))
+    screened = {**item, "assessment": {"unknown_field": ["preserved"]}, "status": "complete"}
+    state = {"run_id": "run", "screening": {"items": [screened]},
+             "unrelated": {"rankings": [{"candidates": [{"_candidate_ref": "literal"}]}]}}
+    retrieval = {"rankings": [{"facet_id": "task-1", "candidates": [item]}]}
+    reference = legacy_checkpoint(store, state, retrieval)
+    restored, restored_reference = store.load("run", "access")
+    assert restored_reference == reference
+    candidates = CandidateStore(store.directory / "candidates")
+    screening_ref = restored["screening"]["items"][0]
+    retrieval_ref = restored["benchmark_retrieval"]["rankings"][0]["candidates"][0]
+    assert has_ref(screening_ref) and has_ref(retrieval_ref)
+    assert candidates.expand(screening_ref) == screened
+    assert candidates.expand(retrieval_ref) == item
+    assert restored["unrelated"] == state["unrelated"]
+    assert len(list(candidates.directory.glob("*.json.gz"))) == 1
+
+    # New checkpoint metadata can keep sharing the immutable old retrieval file.
+    saved_state = {key: value for key, value in restored.items() if key != "benchmark_retrieval"}
+    same = store.save("run", "access", saved_state, retrieval=restored["benchmark_retrieval"],
+                      retrieval_ref=restored_reference)
+    assert same == reference
+    assert json.loads(gzip.decompress(store.run_path("run").read_bytes()))["version"] == VERSION == 2
+    again, again_reference = store.load("run", "access")
+    assert again == restored and again_reference == reference
+
+
+def test_legacy_authentication_never_migrates_or_opens_candidate_evidence_before_access(tmp_path, monkeypatch):
+    store = Checkpoints(tmp_path / "private")
+    state = {"run_id": "run", "screening": {"items": [{**candidate(), "status": "complete"}]}}
+    legacy_checkpoint(store, state, {"rankings": [{"candidates": [candidate()]}]})
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("Unauthenticated requests must not access or migrate candidate blobs")
+
+    monkeypatch.setattr(CandidateStore, "compact", forbidden)
+    monkeypatch.setattr(CandidateStore, "expand", forbidden)
+    with pytest.raises(AccessDenied, match="invalid_token"):
+        store.load("run", "wrong-token")
+    assert not (store.directory / "candidates").exists()
+
+
+@pytest.mark.parametrize("location", ["screening", "retrieval"])
+def test_missing_candidate_blob_is_a_checkpoint_error(tmp_path, location):
+    store = Checkpoints(tmp_path / "private")
+    candidates = CandidateStore(store.directory / "candidates")
+    reference = candidates.compact(candidate())
+    state = {"run_id": "run", "screening": {"items": [reference] if location == "screening" else []}}
+    retrieval = {"rankings": [{"candidates": [reference] if location == "retrieval" else []}]}
+    store.save("run", "access", state, retrieval=retrieval)
+    next(candidates.directory.glob("*.json.gz")).unlink()
+    with pytest.raises(CheckpointError, match="Could not read the review checkpoint"):
+        store.load("run", "access")
+
+
+def test_legacy_restore_retains_only_one_large_row_at_a_time(tmp_path):
+    store = Checkpoints(tmp_path / "private")
+    records = []
+    for number in range(16):
+        item = candidate()
+        row = item["evidence"]["item"]
+        row["content"] = f"Question {number}: " + "x" * (384 * 1024)
+        identity = row_fingerprint(row)
+        item.update(item_id=identity, evidence_hash=identity,
+                    question_text=row["content"], search_text=row_search_text(row))
+        records.append(item)
+    legacy_checkpoint(store, {"run_id": "run", "screening": {"items": records}},
+                      {"rankings": [{"candidates": records}]})
+    del records, item, row
+    tracemalloc.start()
+    try:
+        restored, _ = store.load("run", "access")
+        retained, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    assert retained < 1024 * 1024
+    assert peak < 10 * 1024 * 1024
+    assert len(restored["screening"]["items"]) == 16
+    assert len(restored["benchmark_retrieval"]["rankings"][0]["candidates"]) == 16
 
 
 def test_grounded_review_survives_long_pause_and_restart_then_retrieves(client, monkeypatch, local_index, request):

@@ -15,6 +15,7 @@ from bayesian_auditing.data import fingerprint
 from bayesian_auditing.onet import MODEL_ID, MODEL_REVISION
 from website.server import item_review, remote_retrieval
 from website.server.remote_retrieval import RemoteRetrieval, RemoteRetrievalError
+from website.server.candidate_store import CandidateStore, CandidateStoreError, has_ref
 from website.server.tests.test_item_review import client, finished, KEY, HF_KEY
 from website.server.tests.test_onet_grounding import (
     CANDIDATE, mock_mapper, seed_requirements, start_grounding,
@@ -96,6 +97,154 @@ def successful_service(monkeypatch, result_factory, *, compressed=False):
 
     mock_remote(monkeypatch, respond)
     return requests, submitted
+
+
+class ChunkedBody(httpx.AsyncByteStream):
+    """A real asynchronous HTTP body; httpx must decompress it incrementally."""
+    def __init__(self, body, *, size=29):
+        self.body = body
+        self.size = size
+        self.closed = False
+        self.finished = False
+        self.chunks = 0
+
+    async def __aiter__(self):
+        for offset in range(0, len(self.body), self.size):
+            self.chunks += 1
+            yield self.body[offset:offset + self.size]
+            await asyncio.sleep(0)
+        self.finished = True
+
+    async def aclose(self):
+        self.closed = True
+
+
+def chunked_service(monkeypatch, body):
+    stream, methods = ChunkedBody(body), []
+
+    def respond(request):
+        methods.append(request.method)
+        if request.method == "POST":
+            return httpx.Response(202, json={"job_id": "chunked", "status": "queued"})
+        if request.method == "DELETE":
+            return httpx.Response(200, json={"status": "cancelled"})
+        return httpx.Response(200, stream=stream,
+                              headers={"Content-Encoding": "gzip", "Content-Type": "application/json"})
+
+    mock_remote(monkeypatch, respond)
+    return stream, methods
+
+
+def test_chunked_gzip_persists_each_candidate_before_response_finishes(monkeypatch, configured, tmp_path):
+    expected = benchmark_result()
+    candidate = expected["candidates"][0]
+    row = candidate["evidence"]["item"]
+    row.update(content="  Keep β🧬 and line breaks\n" + "x" * (96 * 1024),
+               huge_integer=2 ** 80, negative_zero=-0.0, floating=1.25,
+               _candidate_ref="original column", result={"candidates": [{"_candidate_ref": "literal"}]})
+    identity = row_fingerprint(row)
+    candidate.update(item_id=identity, evidence_hash=identity,
+                     search_text=row_search_text(row), question_text=row["content"],
+                     unknown_metadata={"retain": [None, False, "  whitespace\n"]})
+    envelope = {"status": "completed", "result": expected,
+                "unused_later_field": "z" * (96 * 1024)}
+    stream, methods = chunked_service(monkeypatch, gzip.compress(json.dumps(envelope, ensure_ascii=False).encode()))
+    compacted_before_finished = []
+
+    class RecordingStore(CandidateStore):
+        def compact(self, record):
+            compacted_before_finished.append(not stream.finished)
+            return super().compact(record)
+
+    original_aread = httpx.Response.aread
+
+    async def disallow_buffered_result(response):
+        assert response.request.method != "GET", "The whole retrieval response must never be buffered"
+        return await original_aread(response)
+
+    monkeypatch.setattr(httpx.Response, "aread", disallow_buffered_result)
+    store = RecordingStore(tmp_path / "candidates")
+    result = asyncio.run(configured.search("benchmark", "private task", inventory=INVENTORY,
+                                           candidate_store=store))
+    assert compacted_before_finished == [True]
+    assert has_ref(result["candidates"][0])
+    assert not {"evidence", "search_text", "question_text"} & result["candidates"][0].keys()
+    assert {**result, "candidates": [store.expand(record) for record in result["candidates"]]} == expected
+    assert stream.closed and stream.finished and stream.chunks > 10
+    assert methods == ["POST", "GET", "DELETE"]
+
+
+@pytest.mark.parametrize("damage", ["truncated_json", "truncated_gzip", "invalid_gzip", "row_identity"])
+def test_broken_chunked_results_close_stream_and_release_remote_job(monkeypatch, configured, tmp_path, damage):
+    result = benchmark_result()
+    if damage == "row_identity":
+        result["candidates"][0]["evidence"]["item"]["content"] = "Changed after the row identity was computed"
+    raw = json.dumps({"status": "completed", "result": result}).encode()
+    if damage == "truncated_json":
+        raw = raw[:-7]
+    compressed = gzip.compress(raw)
+    if damage == "truncated_gzip":
+        compressed = compressed[:len(compressed) // 2]
+    if damage == "invalid_gzip":
+        compressed = b"not a gzip stream: private server details"
+    stream, methods = chunked_service(monkeypatch, compressed)
+    with pytest.raises(RemoteRetrievalError) as failure:
+        asyncio.run(configured.search("benchmark", "private task", inventory=INVENTORY,
+                                       candidate_store=CandidateStore(tmp_path / "candidates")))
+    assert stream.closed
+    assert methods == ["POST", "GET", "DELETE"]
+    assert all(secret not in str(failure.value) for secret in (URL, TOKEN, "private server details", "private task"))
+    assert not list(tmp_path.rglob(".saving-*"))
+
+
+def test_candidate_storage_failure_releases_stream_and_remote_job(monkeypatch, configured, tmp_path):
+    raw = json.dumps({"status": "completed", "result": benchmark_result()}).encode()
+    stream, methods = chunked_service(monkeypatch, gzip.compress(raw))
+
+    class UnavailableStore(CandidateStore):
+        def compact(self, record):
+            raise CandidateStoreError("Could not save candidate evidence.")
+
+    with pytest.raises(CandidateStoreError, match="Could not save candidate evidence"):
+        asyncio.run(configured.search("benchmark", "private task", inventory=INVENTORY,
+                                       candidate_store=UnavailableStore(tmp_path / "candidates")))
+    assert stream.closed
+    assert methods == ["POST", "GET", "DELETE"]
+
+
+def test_cancellation_during_chunked_download_closes_body_and_releases_job(monkeypatch, configured, tmp_path):
+    async def scenario():
+        entered, methods = asyncio.Event(), []
+        body = gzip.compress(json.dumps({"status": "completed", "result": benchmark_result()}).encode())
+
+        class InterruptedBody(ChunkedBody):
+            async def __aiter__(self):
+                yield self.body[:20]
+                entered.set()
+                await asyncio.Event().wait()
+
+        stream = InterruptedBody(body)
+
+        def respond(request):
+            methods.append(request.method)
+            if request.method == "POST":
+                return httpx.Response(202, json={"job_id": "streaming", "status": "queued"})
+            if request.method == "DELETE":
+                return httpx.Response(200, json={"status": "cancelled"})
+            return httpx.Response(200, stream=stream, headers={"Content-Encoding": "gzip"})
+
+        mock_remote(monkeypatch, respond)
+        task = asyncio.create_task(configured.search("benchmark", "private task", inventory=INVENTORY,
+                                                      candidate_store=CandidateStore(tmp_path / "candidates")))
+        await entered.wait()
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        assert stream.closed
+        assert methods == ["POST", "GET", "DELETE"]
+        assert not list(tmp_path.rglob(".saving-*"))
+
+    asyncio.run(scenario())
 
 
 @pytest.mark.parametrize("url", ["https://service.example", "http://127.0.0.1:8001", "http://[::1]:8001", "http://localhost:8001"])

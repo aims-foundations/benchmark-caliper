@@ -74,12 +74,15 @@ def validate_collection(job) -> None:
 
 
 def initialize(job, settings: AdaptiveSettings) -> dict:
+    from . import item_review as service
+
     validate_collection(job)
     allocation = job.screening["allocation"]["items"]
     items = job.screening["items"]
     if len(items) != len(allocation) or any(item["status"] != "complete" for item in items):
         raise ValueError("Finish valid initial screening before adaptive screening.")
-    outcomes = make_outcomes(allocation, items, job.selection["selected_item_ids"])
+    outcomes = make_outcomes(allocation, items, job.selection["selected_item_ids"],
+                             resolve=service.expand_candidate)
     state = {
         "version": ADAPTIVE_VERSION, "policy": deepcopy(ADAPTIVE_POLICY),
         "settings": settings_record(settings),
@@ -100,6 +103,8 @@ def initialize(job, settings: AdaptiveSettings) -> dict:
 
 def validate_history(job) -> None:
     """Validate saved decisions and once-only outcomes without repeating a solve."""
+    from . import item_review as service
+
     state = job.adaptive
     validate_collection(job)
     if state["version"] != ADAPTIVE_VERSION or state["policy"] != ADAPTIVE_POLICY:
@@ -147,7 +152,8 @@ def validate_history(job) -> None:
                 raise ValueError("Only a cost-limited final batch can be committed partially.")
             if not set(batch["selected_item_ids"]).issubset(seen):
                 raise ValueError("A batch selection contains an unseen candidate.")
-            expected = make_outcomes(complete, list(items.values()), batch["selected_item_ids"])
+            expected = make_outcomes(complete, list(items.values()), batch["selected_item_ids"],
+                                     resolve=service.expand_candidate)
             if batch["outcomes"] != expected:
                 raise ValueError("Saved selection outcomes cannot be relabeled.")
             last_selected = batch["selected_item_ids"]
@@ -169,7 +175,7 @@ def validate_history(job) -> None:
                 or attempt["status"] not in {"pending", "unknown", "complete", "error"}):
             raise ValueError("A screening attempt has no valid adaptive acquisition.")
         batch = batches[number]
-        row = candidates[batch["facet_id"], attempt["item_id"]]["evidence"]["item"]
+        row = service.expand_candidate(candidates[batch["facet_id"], attempt["item_id"]])["evidence"]["item"]
         request = screener.request_options(job.request.deployment.model_dump(), Requirements.model_validate(job.requirements), row)
         if (attempt["cost_usd"] != usage_cost(attempt["usage"], state["settings"])
                 or attempt["reserved_usd"] != request_reservation(request, state["settings"])):
@@ -207,7 +213,7 @@ async def commit_batch(job, state: dict, requirements, *, partial: bool = False)
     cancelled = Event()
     job.message = f"Rebuilding the collection after adaptive batch {batch['number']}."
     work = asyncio.create_task(asyncio.to_thread(
-        service.select_collection, requirements, job.screening["items"],
+        service.select_collection, requirements, service.screened_records(job),
         previous_selected_ids=job.selection["selected_item_ids"], cancelled=cancelled.is_set,
     ))
     try:
@@ -217,7 +223,8 @@ async def commit_batch(job, state: dict, requirements, *, partial: bool = False)
         await service.finish_worker(work)
         raise
     acquired = [dict(item_id=key, facet_id=batch["facet_id"]) for key in complete]
-    outcomes = make_outcomes(acquired, job.screening["items"], selection["selected_item_ids"])
+    outcomes = make_outcomes(acquired, job.screening["items"], selection["selected_item_ids"],
+                             resolve=service.expand_candidate)
     # Nothing is published until optimization and all outcome checks succeed.
     batch.update(status="committed", outcomes=outcomes,
                  selected_item_ids=list(selection["selected_item_ids"]))
@@ -275,7 +282,7 @@ async def adapt_benchmarks(job, api_key: str) -> None:
                 # Admit a prefix of the chosen queue that fits the reservation.
                 affordable, reservation = [], 0.0
                 for key in decision["item_ids"]:
-                    row = candidates[decision["facet_id"], key]["evidence"]["item"]
+                    row = service.expand_candidate(candidates[decision["facet_id"], key])["evidence"]["item"]
                     estimate = request_reservation(screener.request_options(answers, requirements, row), settings)
                     reservation += estimate or 0
                     if not can_afford(reservation, state["attempts"], settings):
@@ -294,7 +301,7 @@ async def adapt_benchmarks(job, api_key: str) -> None:
                 existing = next((item for item in job.screening["items"] if item["item_id"] == key), None)
                 if existing and existing["status"] == "complete":
                     continue
-                candidate = candidates[batch["facet_id"], key]
+                candidate = service.expand_candidate(candidates[batch["facet_id"], key])
                 reservation = request_reservation(screener.request_options(answers, requirements, candidate["evidence"]["item"]), settings)
                 if not can_afford(reservation, state["attempts"], settings):
                     await commit_batch(job, state, requirements, partial=True)
@@ -317,7 +324,8 @@ async def adapt_benchmarks(job, api_key: str) -> None:
                 attempt.update(status=result["status"], usage=result.get("usage"),
                                cost_usd=usage_cost(result.get("usage"), settings))
                 service.record_usage(job, result.get("usage"))
-                saved = {**candidate, "acquisition": {"queue_id": batch["queue_id"], "facet_id": batch["facet_id"]},
+                saved = {**service.candidate_store().compact(candidate),
+                         "acquisition": {"queue_id": batch["queue_id"], "facet_id": batch["facet_id"]},
                          "screened_run_id": job.run_id,
                          **{name: result[name] for name in ("status", "assessment", "gate", "response_id", "response_model", "usage", "error") if name in result}}
                 records = {item["item_id"]: item for item in job.screening["items"]}

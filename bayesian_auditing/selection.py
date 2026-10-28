@@ -6,6 +6,7 @@ No model requests are made here.
 """
 
 from copy import deepcopy
+from collections.abc import Iterable, Mapping
 import math
 import time
 
@@ -227,7 +228,7 @@ def _choose(items, task_matrix, quota_matrix, targets, size, task_floors, quota_
     return _lexicographic_selection(solver, count, size, rows, lower, upper, bounds), False
 
 
-def select_collection(requirements: Requirements, screened_items: list[dict], *,
+def select_collection(requirements: Requirements, screened_items: Iterable[dict], *,
                       limit: int = DEFAULT_COLLECTION_LIMIT, previous_selected_ids: list[str] | None = None,
                       cancelled=None, time_limit: float = 30.0) -> dict:
     """Return a proven selection, or raise without publishing an approximation.
@@ -236,8 +237,9 @@ def select_collection(requirements: Requirements, screened_items: list[dict], *,
     preserve earlier achieved coverage, maximize distinct covered tasks, minimize
     numeric quota deficits, then maximize quality. Equal optima use exact ID order.
     """
-    if not isinstance(requirements, Requirements) or not isinstance(screened_items, list):
-        raise ValueError("Selection requires validated requirements and a list of screened items.")
+    if (not isinstance(requirements, Requirements) or not isinstance(screened_items, Iterable)
+            or isinstance(screened_items, (str, bytes, Mapping))):
+        raise ValueError("Selection requires validated requirements and an iterable of screened items.")
     if type(limit) is not int or not 1 <= limit <= DEFAULT_COLLECTION_LIMIT:
         raise ValueError("The collection limit must be a positive integer no greater than 30.")
     if type(time_limit) not in {int, float} or not math.isfinite(time_limit) or time_limit <= 0:

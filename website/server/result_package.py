@@ -14,6 +14,8 @@ from tempfile import SpooledTemporaryFile
 import unicodedata
 from zipfile import ZIP_DEFLATED, ZipFile
 
+from website.server import streaming_json
+
 
 DIMENSIONS = (
     ("input_ontology", "Input ontology"), ("input_content", "Input content"),
@@ -357,7 +359,7 @@ def _history(snapshot) -> str:
     return text + "</section>"
 
 
-def _report(snapshot):
+def _report(snapshot, *, expand=None):
     title = (snapshot.get("metadata") or {}).get("run_name") or "Benchmark construction results"
     yield ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
            '<meta name="viewport" content="width=device-width, initial-scale=1">'
@@ -370,7 +372,9 @@ def _report(snapshot):
     if not selected:
         yield "<p>No selected items are recorded in this snapshot. Review the current stage and coverage findings above.</p>"
     for index, (compact, item) in enumerate(selected):
-        yield _selected_item(compact, item, index, snapshot)
+        # Only this selected record needs its original row for the report.
+        # Rankings and unselected evidence remain compact while it is rendered.
+        yield _selected_item(compact, expand(item) if expand else item, index, snapshot)
     yield "</section>"
     yield _requirements(snapshot)
     yield _history(snapshot)
@@ -390,12 +394,14 @@ def _csv_safe(value) -> str:
     return text
 
 
-def _write_csv(stream, snapshot) -> None:
+def _write_csv(stream, snapshot, *, expand=None) -> None:
     writer = csv.writer(stream)
     writer.writerow(["item_id", "question_preview", "matched_tasks", "sources", "quality_score",
                      "screening_gate", *(key for key, _ in DIMENSIONS), "reviewer_notes"])
     names = _task_names(snapshot)
     for compact, item in _selected(snapshot):
+        if expand is not None:
+            item = expand(item)
         assessment = item.get("assessment") or {}
         facets = compact.get("matched_facet_ids", (assessment.get("task") or {}).get("matched_facet_ids", []))
         ratings = assessment.get("ratings") or {}
@@ -405,22 +411,33 @@ def _write_csv(stream, snapshot) -> None:
         writer.writerow([_csv_safe(value) for value in row])
 
 
-def build_results_package(snapshot: dict):
+def build_results_package(snapshot: dict, *, expand=None):
     """Build a ZIP in bounded-memory temporary storage; caller owns its handle."""
+    def expand_candidate(path, record):
+        # Original source rows may themselves contain a field named
+        # _candidate_ref. Only stored pipeline records are references.
+        ranking = (len(path) == 5 and path[:2] == ("retrieval", "rankings")
+                   and isinstance(path[2], int) and path[3] == "candidates"
+                   and isinstance(path[4], int))
+        screening = (len(path) == 3 and path[:2] == ("screening", "items")
+                     and isinstance(path[2], int))
+        return expand(record) if expand is not None and (ranking or screening) else record
+
     output = SpooledTemporaryFile(max_size=8 * 1024 * 1024, mode="w+b")
     try:
         with ZipFile(output, "w", compression=ZIP_DEFLATED) as archive:
             with archive.open("report.html", "w", force_zip64=True) as stream:
-                for chunk in _report(snapshot):
+                for chunk in _report(snapshot, expand=expand):
                     stream.write(chunk.encode("utf-8"))
             with archive.open("selected_items.csv", "w", force_zip64=True) as raw:
                 with TextIOWrapper(raw, encoding="utf-8-sig", newline="") as stream:
-                    _write_csv(stream, snapshot)
+                    _write_csv(stream, snapshot, expand=expand)
             with archive.open("results.json", "w", force_zip64=True) as raw:
                 with TextIOWrapper(raw, encoding="utf-8") as stream:
-                    # The text wrapper buffers the encoder's small writes. No
-                    # second complete JSON string is held alongside the snapshot.
-                    json.dump(snapshot, stream, ensure_ascii=False, allow_nan=False, indent=2)
+                    # Read each stored candidate as the encoder visits it. The
+                    # complete expanded result never occupies memory at once.
+                    for chunk in streaming_json.iterencode(snapshot, expand=expand_candidate):
+                        stream.write(chunk)
         output.seek(0)
         return output
     except BaseException:

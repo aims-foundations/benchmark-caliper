@@ -62,6 +62,30 @@ def test_package_preserves_full_selection_evidence_and_private_access(client, mo
     assert download(client, access).status_code == 200
 
 
+def test_package_expands_stored_evidence_without_changing_saved_compact_results(client, monkeypatch):
+    access = seed_selected(per_facet=3)
+    job = item_review.jobs[access["run_id"]]
+    retrieval, screening = deepcopy(job.benchmark_retrieval), deepcopy(job.screening)
+    store = item_review.candidate_store()
+    for ranking in job.benchmark_retrieval["rankings"]:
+        ranking["candidates"] = [store.compact(item) for item in ranking["candidates"]]
+    job.screening["items"] = [store.compact(item) for item in job.screening["items"]]
+    compact_retrieval, compact_screening = deepcopy(job.benchmark_retrieval), deepcopy(job.screening)
+    for name in ("AsyncOpenAI", "get_token", "inventory"):
+        monkeypatch.setattr(item_review, name, lambda *a, **kw: pytest.fail("Export is local"))
+
+    snapshot, report = unpack(download(client, access))
+    assert snapshot["retrieval"] == retrieval
+    assert snapshot["screening"] == screening
+    assert snapshot["selection"] == job.selection
+    assert "extra_original_column" in report
+    assert "_candidate_ref" not in json.dumps(snapshot) + report
+    assert str(store.directory) not in json.dumps(snapshot) + report
+    assert job.benchmark_retrieval == compact_retrieval
+    assert job.screening == compact_screening
+    assert job.downloads == 0
+
+
 @pytest.mark.parametrize("status", ["preparing", "running", "failed", "cancelled"])
 def test_unfinished_requirement_packages_are_explicit_partial_snapshots(client, status):
     access = seed_requirements()
@@ -127,11 +151,11 @@ def test_package_snapshot_does_not_change_while_worker_builds(client, monkeypatc
     original = deepcopy(job.screening)
     real_build = item_review.build_results_package
 
-    def build(snapshot):
+    def build(snapshot, *, expand=None):
         # This emulates the pipeline publishing new results after snapshot capture.
         job.screening["items"][0]["evidence"]["item"]["content"] = "Later change"
         job.usage.update(input_tokens=999)
-        return real_build(snapshot)
+        return real_build(snapshot, expand=expand)
 
     monkeypatch.setattr(item_review, "build_results_package", build)
     snapshot, _ = unpack(download(client, access))
@@ -143,7 +167,7 @@ def test_build_failure_releases_download_lease(client, monkeypatch):
     access = seed_requirements()
     job = item_review.jobs[access["run_id"]]
 
-    def broken(_snapshot):
+    def broken(_snapshot, *, expand=None):
         raise RuntimeError("fixture build failure")
 
     monkeypatch.setattr(item_review, "build_results_package", broken)
@@ -160,7 +184,7 @@ def test_cancellation_closes_a_package_still_being_built(monkeypatch):
         entered, release = Event(), Event()
         package = BytesIO(b"fixture")
 
-        def build(_snapshot):
+        def build(_snapshot, *, expand=None):
             entered.set()
             assert release.wait(5)
             return package
@@ -187,7 +211,7 @@ def test_disconnect_closes_package_even_before_streaming_starts(monkeypatch, fai
         access = seed_requirements()
         job = item_review.jobs[access["run_id"]]
         package = BytesIO(b"fixture package bytes")
-        monkeypatch.setattr(item_review, "build_results_package", lambda _: package)
+        monkeypatch.setattr(item_review, "build_results_package", lambda _, *, expand=None: package)
         response = await item_review.export_package(job.run_id, job.secret)
         assert job.downloads == 1
 

@@ -12,8 +12,10 @@ import pytest
 
 from bayesian_auditing.selection import select_collection, SelectionIncomplete
 from website.server import item_review
-from website.server.tests.test_benchmark_screening import assessment, export, mock_screener
-from website.server.tests.test_benchmark_selection import seed_screening
+from website.server.tests.test_benchmark_screening import (
+    assessment, export, mock_screener, seed_retrieval, start_screening,
+)
+from website.server.tests.test_benchmark_selection import seed_screening, start_selection
 from website.server.tests.test_item_review import BODY, KEY, HF_KEY, client
 from website.server.tests.test_onet_grounding import response_body
 
@@ -147,6 +149,74 @@ def test_same_rows_in_all_source_and_source_queue_are_screened_once(client, monk
     assert len(calls) == 13
     assert len({item["item_id"] for item in result["screening"]["items"]}) == 61
     assert result["selection"]["selected_count"] == 30
+
+
+def test_compact_retrieval_flows_through_screening_selection_and_adaptive_with_complete_public_rows(client, monkeypatch):
+    source = seed_retrieval(facets=1, per_facet=61)
+    source_job = item_review.jobs[source["run_id"]]
+    stage_jobs = [source_job]
+    original_retrieval = deepcopy(source_job.benchmark_retrieval)
+    original_candidates = original_retrieval["rankings"][0]["candidates"]
+    original_rows = {item["item_id"]: item["evidence"]["item"] for item in original_candidates}
+    store = item_review.candidate_store()
+    for ranking in source_job.benchmark_retrieval["rankings"]:
+        ranking["candidates"] = [store.compact(item) for item in ranking["candidates"]]
+    compact_retrieval = deepcopy(source_job.benchmark_retrieval)
+    calls = mock_screener(monkeypatch)
+    forbid_retrieval(monkeypatch)
+
+    screening_access = start_screening(client, source)
+    initial = finished(client, screening_access).json()
+    assert initial["status"] == "completed", initial["message"]
+    assert len(calls) == len(initial["screening"]["items"]) == 48
+    stage_jobs.append(item_review.jobs[screening_access["run_id"]])
+    selection_access = start_selection(client, screening_access)
+    selected = finished(client, selection_access).json()
+    assert selected["status"] == "completed", selected["message"]
+    assert selected["selection"]["selected_count"] == 30
+    assert len(calls) == 48
+    stage_jobs.append(item_review.jobs[selection_access["run_id"]])
+
+    access = start_adaptive(client, selection_access)
+    result = finished(client, access).json()
+    stage_jobs.append(item_review.jobs[access["run_id"]])
+    assert result["status"] == "completed", result["message"]
+    assert result["adaptive"]["frozen"] is True
+    assert result["adaptive"]["stop_reason"] == "queues_exhausted"
+    assert [len(batch["item_ids"]) for batch in result["adaptive"]["batches"]] == [48, 8, 5]
+    assert all(batch["status"] == "committed" for batch in result["adaptive"]["batches"])
+    assert result["selection"]["selected_count"] == 30
+    assert result["selection"]["fully_satisfied"] is True
+    assert len(calls) == len(result["screening"]["items"]) == 61
+    sent_rows = [json.loads(call["input"])["item"] for call in calls]
+    assert {row["id"]: row for row in sent_rows} == {row["id"]: row for row in original_rows.values()}
+
+    exported = export(client, access).json()
+    assert exported["retrieval"] == original_retrieval
+    assert exported["screening"] == result["screening"]
+    assert exported["selection"] == result["selection"]
+    for item in exported["screening"]["items"]:
+        assert item["evidence"]["item"] == original_rows[item["item_id"]]
+        assert item["status"] == "complete" and item["gate"]["status"] == "pass"
+    assert "_candidate_ref" not in json.dumps(exported)
+
+    queue = next(queue for queue in original_retrieval["queues"] if queue["source"] is None)
+    browsed = []
+    for page in range(1, (61 + item_review.RESULTS_PAGE_SIZE - 1) // item_review.RESULTS_PAGE_SIZE + 1):
+        response = client.get(f"/api/item-review/runs/{access['run_id']}/candidates",
+                              params={"queue_id": queue["queue_id"], "page": page},
+                              headers={"X-Review-Token": access["run_secret"]})
+        assert response.status_code == 200
+        browsed.extend(response.json()["items"])
+    assert browsed == original_candidates
+
+    for job in stage_jobs:
+        assert job.benchmark_retrieval == compact_retrieval
+        if job.screening is not None:
+            assert all("_candidate_ref" in item and "evidence" not in item for item in job.screening["items"])
+    restored, _ = item_review.checkpoints().load(access["run_id"], access["run_secret"])
+    assert restored["benchmark_retrieval"] == compact_retrieval
+    assert restored["screening"] == item_review.jobs[access["run_id"]].screening
 
 
 def test_requires_private_finished_selection_complete_initial_results_and_fresh_key(client):

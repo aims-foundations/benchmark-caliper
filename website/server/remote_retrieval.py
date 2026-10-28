@@ -22,6 +22,7 @@ from bayesian_auditing.benchmark_data import row_fingerprint, row_search_text
 from bayesian_auditing.benchmark_index import DEFAULT_BM25_K, DEFAULT_DENSE_K, INDEX_VERSION
 from bayesian_auditing.data import fingerprint
 from bayesian_auditing.onet import CSV_FIELDS, DEFAULT_LIMIT, MODEL_ID, MODEL_REVISION
+from . import streaming_json
 
 
 POLL_SECONDS = 2
@@ -69,7 +70,8 @@ class RemoteRetrieval:
             )
         return cls(url.rstrip("/"), token)
 
-    async def search(self, kind: str, query: str, *, inventory: dict | None = None) -> dict:
+    async def search(self, kind: str, query: str, *, inventory: dict | None = None,
+                     candidate_store=None) -> dict:
         if kind not in {"onet", "benchmark"} or (kind == "benchmark" and inventory is None):
             raise ValueError("A benchmark search requires its pinned inventory")
         payload = {"kind": kind, "query": query}
@@ -82,7 +84,7 @@ class RemoteRetrieval:
         ) as client:
             try:
                 return await asyncio.wait_for(
-                    self._search(client, payload, inventory), timeout=SEARCH_TIMEOUT_SECONDS,
+                    self._search(client, payload, inventory, candidate_store), timeout=SEARCH_TIMEOUT_SECONDS,
                 )
             except (TimeoutError, httpx.TimeoutException):
                 raise RemoteRetrievalError(
@@ -93,7 +95,7 @@ class RemoteRetrieval:
                     "Could not reach the retrieval server. Check its connection, then retry."
                 ) from None
 
-    async def _search(self, client, payload, inventory):
+    async def _search(self, client, payload, inventory, candidate_store=None):
         job_id = None
         submission = asyncio.create_task(client.post("v1/searches", json=payload))
         try:
@@ -108,12 +110,42 @@ class RemoteRetrieval:
                 raise
             submitted = self._response(response)
             job_id = self._job_id(submitted)
+
+            def store_candidate(path, record):
+                if (candidate_store is not None and payload["kind"] == "benchmark"
+                        and len(path) == 3 and path[:2] == ("result", "candidates")
+                        and type(path[2]) is int):
+                    try:
+                        row = record["evidence"]["item"]
+                        if (not isinstance(row, dict)
+                                or row_fingerprint(row) != record["item_id"]
+                                or record["evidence_hash"] != record["item_id"]):
+                            raise ValueError("Invalid candidate identity")
+                    except (KeyError, TypeError, ValueError):
+                        raise _invalid_response() from None
+                    return candidate_store.compact(record)
+                return record
+
             while True:
-                state = self._response(await client.get(f"v1/searches/{job_id}"))
+                # httpx.get().json() holds the full decompressed body, decoded
+                # Unicode document, and result tree at once. Parse bounded
+                # chunks and persist each complete candidate before the next.
+                async with client.stream("GET", f"v1/searches/{job_id}") as response:
+                    self._check_status(response)
+                    try:
+                        state = await streaming_json.async_load(
+                            streaming_json.BinaryChunkReader(response.aiter_bytes(chunk_size=64 * 1024)),
+                            transform=store_candidate,
+                        )
+                    except ValueError:
+                        raise _invalid_response() from None
+                if not isinstance(state, dict):
+                    raise _invalid_response()
                 status = state.get("status")
                 if status == "completed":
                     result = state.get("result")
-                    _validate_result(result, payload["kind"], inventory)
+                    _validate_result(result, payload["kind"], inventory,
+                                     expand=candidate_store.expand if candidate_store is not None else None)
                     return result
                 if status in {"failed", "cancelled"}:
                     # The remote error may contain a path, query, or credential.
@@ -139,7 +171,7 @@ class RemoteRetrieval:
         return value
 
     @staticmethod
-    def _response(response):
+    def _check_status(response):
         if response.status_code in {401, 403}:
             raise RemoteRetrievalError(
                 "The retrieval server rejected authentication. "
@@ -156,6 +188,10 @@ class RemoteRetrieval:
             raise RemoteRetrievalError(
                 "The retrieval server is unavailable. Check that its service is running, then retry."
             )
+
+    @staticmethod
+    def _response(response):
+        RemoteRetrieval._check_status(response)
         try:
             value = response.json()
         except ValueError:
@@ -172,7 +208,7 @@ def _invalid_response():
     )
 
 
-def _validate_result(result, kind, inventory):
+def _validate_result(result, kind, inventory, *, expand=None):
     """Reject truncated rows or mismatched provenance instead of weakening queues."""
     try:
         if not isinstance(result, dict) or not isinstance(result["candidates"], list):
@@ -207,6 +243,8 @@ def _validate_result(result, kind, inventory):
                      for table in inventory["tables"]}
         seen, dense_ranks, bm25_ranks = set(), [], []
         for rank, candidate in enumerate(candidates, 1):
+            if expand is not None:
+                candidate = expand(candidate)
             row, item_id = candidate["evidence"]["item"], candidate["item_id"]
             if (item_id in seen or item_id != row_fingerprint(row) or candidate["evidence_hash"] != item_id
                     or candidate["rank"] != rank or candidate["search_text"] != row_search_text(row)

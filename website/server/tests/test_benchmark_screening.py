@@ -50,6 +50,25 @@ def seed_retrieval(*, facets=3, per_facet=24, shared=False):
     return access
 
 
+def test_screening_reports_unavailable_stored_evidence_before_paid_calls(client, monkeypatch):
+    access = seed_retrieval(facets=1, per_facet=1)
+    job = item_review.jobs[access["run_id"]]
+    store = item_review.candidate_store()
+    ranking = job.benchmark_retrieval["rankings"][0]
+    reference = store.compact(ranking["candidates"][0])
+    ranking["candidates"] = [reference]
+    (store.directory / f"{reference['_candidate_ref']}.json.gz").unlink()
+    monkeypatch.setattr(item_review, "AsyncOpenAI", lambda **kwargs: pytest.fail("No paid client may start"))
+    response = client.post(f"/api/item-review/runs/{access['run_id']}/screen", json={}, headers={
+        "X-Review-Token": access["run_secret"], "X-OpenAI-Key": KEY,
+    })
+    assert response.status_code == 503
+    assert "saved candidate evidence" in response.json()["detail"].lower()
+    assert reference["_candidate_ref"] not in response.text
+    assert str(store.directory) not in response.text
+    assert len(item_review.jobs) == 1
+
+
 def rating(item, score=4):
     return {"score": score, "evidence": [item["content"]],
             "justification": "The question asks for a mathematical explanation.",

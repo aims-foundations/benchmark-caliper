@@ -45,6 +45,23 @@ def seed_screening(*, facets=3, per_facet=24):
     return access
 
 
+def test_selection_reports_unavailable_stored_screening_evidence(client, monkeypatch):
+    access = seed_screening(facets=1, per_facet=1)
+    job = item_review.jobs[access["run_id"]]
+    store = item_review.candidate_store()
+    reference = store.compact(job.screening["items"][0])
+    job.screening["items"] = [reference]
+    (store.directory / f"{reference['_candidate_ref']}.json.gz").unlink()
+    monkeypatch.setattr(item_review, "select_collection", lambda *args, **kwargs: pytest.fail("Do not start selection"))
+    response = client.post(f"/api/item-review/runs/{access['run_id']}/select", json={},
+                           headers={"X-Review-Token": access["run_secret"]})
+    assert response.status_code == 503
+    assert "saved candidate evidence" in response.json()["detail"].lower()
+    assert reference["_candidate_ref"] not in response.text
+    assert str(store.directory) not in response.text
+    assert len(item_review.jobs) == 1
+
+
 def start_selection(client, source):
     response = client.post(f"/api/item-review/runs/{source['run_id']}/select", json={},
                            headers={"X-Review-Token": source["run_secret"]})

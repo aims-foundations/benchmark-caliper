@@ -130,6 +130,35 @@ def test_overlap_requires_joint_optimization_not_best_item_per_task():
     assert set(result["selected_item_ids"]) == {items[2]["item_id"], items[3]["item_id"]}
 
 
+def test_one_pass_candidate_generator_preserves_selection_coverage_and_exclusions():
+    req = requirements(3, (1,))
+    items = [candidate("old", (0,), (3, 3, 3, 3), (True,)),
+             candidate("replacement", (0, 1), (4, 4, 4, 4), (True,)),
+             candidate("third-task", (2,), (5, 5, 5, 5), (False,)),
+             candidate("gate-failure", (0,), (2, 2, 2, 2), (False,)),
+             {"item_id": "failed-assessment", "status": "error"}]
+    items.append(deepcopy(items[1]))
+    previous = [items[0]["item_id"]]
+    expected = selection.select_collection(req, items, limit=2, previous_selected_ids=previous)
+    visited = []
+
+    def candidates():
+        for index, item in enumerate(items):
+            visited.append(index)
+            yield deepcopy(item)
+
+    streamed = candidates()
+    actual = selection.select_collection(req, streamed, limit=2, previous_selected_ids=previous)
+    assert visited == list(range(len(items)))
+    assert list(streamed) == []
+    # Wall-clock duration is the only expected difference from a list-backed run.
+    expected["solver"].pop("elapsed_seconds")
+    actual["solver"].pop("elapsed_seconds")
+    assert actual == expected
+    assert set(actual["selected_item_ids"]) == {items[1]["item_id"], items[2]["item_id"]}
+    assert actual["excluded_counts"] == {"errors": 1, "gate_fail": 1, "gate_unresolved": 0, "duplicates": 1}
+
+
 def test_thirty_is_total_capacity_and_quality_beats_equal_task_counts():
     req = requirements()
     items = [candidate(number, (0,), (5, 5, 5, 5)) for number in range(48)]

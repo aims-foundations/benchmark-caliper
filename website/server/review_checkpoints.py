@@ -19,8 +19,11 @@ import secrets
 import tempfile
 import zlib
 
+from .candidate_store import CandidateStore, CandidateStoreError, has_ref
+from .streaming_json import load
 
-VERSION = 1
+
+VERSION = 2
 
 
 class CheckpointError(Exception):
@@ -95,32 +98,79 @@ class Checkpoints:
             self._write({"version": VERSION, "token_hash": token_hash(secret),
                          "run": state, "retrieval_ref": retrieval_ref}, self.run_path(run_id))
             return retrieval_ref
-        except (OSError, ValueError, TypeError) as exc:
+        except (OSError, ValueError, TypeError, CandidateStoreError) as exc:
             raise CheckpointError("Could not save the review checkpoint.") from exc
 
     def load(self, run_id: str, secret: str) -> tuple[dict, str | None]:
-        """Authenticate the small run record before loading private evidence."""
+        """Authenticate first, then restore old or new evidence one row at a time.
+
+        Older run files embed complete screened rows. The first pass discards
+        those rows without writing anything; only an authenticated second pass
+        migrates them to the candidate store. Both passes use the same open file
+        so an atomic checkpoint update cannot change the authenticated snapshot.
+        """
+        candidates = CandidateStore(self.directory / "candidates")
+        validated = set()
+
+        def compact(record):
+            reference = candidates.compact(record)
+            if has_ref(record):
+                identity = (reference["_candidate_ref"], reference.get("item_id"),
+                            reference.get("evidence_hash"))
+                if identity not in validated:
+                    candidates.expand(reference)
+                    validated.add(identity)
+            return reference
+
+        def screening_path(path):
+            return (len(path) == 4 and path[:3] == ("run", "screening", "items")
+                    and type(path[3]) is int)
+
+        def restore_screening(path, record):
+            return compact(record) if screening_path(path) else record
+
+        def restore_retrieval(path, record):
+            if (len(path) == 4 and path[0] == "rankings" and type(path[1]) is int
+                    and path[2] == "candidates" and type(path[3]) is int):
+                return compact(record)
+            return record
+
+        discarded_screening = False
+
+        def authentication_pass(path, record):
+            nonlocal discarded_screening
+            if screening_path(path):
+                discarded_screening = True
+                return {}
+            return record
+
         try:
-            with gzip.open(self.run_path(run_id), "rt", encoding="utf-8") as stream:
-                record = json.load(stream)
+            with self.run_path(run_id).open("rb") as source:
+                with gzip.GzipFile(fileobj=source, mode="rb") as stream:
+                    record = load(stream, transform=authentication_pass)
+                if not secrets.compare_digest(record["token_hash"], token_hash(secret)):
+                    raise AccessDenied("invalid_token")
+                if (type(record["version"]) is not int or record["version"] not in {1, VERSION}
+                        or record["run"]["run_id"] != run_id):
+                    raise ValueError("Unsupported checkpoint")
+                if discarded_screening:
+                    source.seek(0)
+                    with gzip.GzipFile(fileobj=source, mode="rb") as stream:
+                        record = load(stream, transform=restore_screening)
         except FileNotFoundError:
             raise AccessDenied("missing_run") from None
-        except (OSError, ValueError, TypeError, EOFError, zlib.error) as exc:
+        except (OSError, ValueError, TypeError, KeyError, EOFError, zlib.error, CandidateStoreError) as exc:
             raise CheckpointError("Could not read the review checkpoint.") from exc
         try:
-            if not secrets.compare_digest(record["token_hash"], token_hash(secret)):
-                raise AccessDenied("invalid_token")
-            if record["version"] != VERSION or record["run"]["run_id"] != run_id:
-                raise ValueError("Unsupported checkpoint")
             state, reference = record["run"], record["retrieval_ref"]
             retrieval = None
             if reference is not None:
                 if not isinstance(reference, str) or not re.fullmatch(r"[a-f0-9]{64}", reference):
                     raise ValueError("Invalid evidence reference")
-                with gzip.open(self.directory / f"evidence-{reference}.json.gz", "rt", encoding="utf-8") as stream:
-                    retrieval = json.load(stream)
+                with gzip.open(self.directory / f"evidence-{reference}.json.gz", "rb") as stream:
+                    retrieval = load(stream, transform=restore_retrieval)
                 if not isinstance(retrieval, dict):
                     raise ValueError("Invalid retrieval evidence")
             return {**state, "benchmark_retrieval": retrieval}, reference
-        except (OSError, ValueError, TypeError, KeyError, EOFError, zlib.error) as exc:
+        except (OSError, ValueError, TypeError, KeyError, EOFError, zlib.error, CandidateStoreError) as exc:
             raise CheckpointError("Could not read the review checkpoint.") from exc

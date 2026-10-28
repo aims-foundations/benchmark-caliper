@@ -186,13 +186,15 @@ def choose_batch(requirements: Requirements, queues: list[dict], selection: dict
             "exploration": exploration, "item_ids": item_ids, "priorities": priorities}
 
 
-def make_outcomes(acquisitions: list[dict], screened_items: list[dict], selected_ids) -> list[dict]:
+def make_outcomes(acquisitions: list[dict], screened_items: list[dict], selected_ids,
+                  *, resolve=None) -> list[dict]:
     """Freeze this batch's retention signal after all its assessments are valid.
 
     Requirements-specific context validation belongs to the screening/selection
     stages. Here we additionally check row identities, assessment structure, and
     eligibility for retained items. Errors or missing responses are not failures:
     they prevent committing the batch until screening has been completed.
+    An optional resolver loads each acquired record's original row as needed.
     """
     if not isinstance(acquisitions, list) or not isinstance(screened_items, list):
         raise ValueError("Outcome construction requires acquisition and screening lists.")
@@ -219,6 +221,8 @@ def make_outcomes(acquisitions: list[dict], screened_items: list[dict], selected
         record = records.get(key)
         if record is None or record.get("status") != "complete":
             raise ValueError("A batch cannot commit outcomes until every acquired item has a complete assessment.")
+        if resolve is not None:
+            record = resolve(record)
         evidence = record.get("evidence")
         if not isinstance(evidence, dict) or not isinstance(evidence.get("item"), dict):
             raise ValueError("Screening outcomes require complete original item rows.")

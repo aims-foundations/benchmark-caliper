@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 import csv
+from html import unescape
 from html.parser import HTMLParser
 from io import StringIO
 import json
@@ -10,6 +11,8 @@ from zipfile import ZipFile
 
 import pytest
 
+from bayesian_auditing.benchmark_data import row_fingerprint
+from website.server.candidate_store import CandidateStore, has_ref
 from website.server import result_package
 
 
@@ -89,8 +92,8 @@ def snapshot():
     }
 
 
-def read_package(snapshot):
-    with result_package.build_results_package(snapshot) as file:
+def read_package(snapshot, *, expand=None):
+    with result_package.build_results_package(snapshot, expand=expand) as file:
         assert file.tell() == 0
         assert file.seekable()
         with ZipFile(file) as archive:
@@ -147,6 +150,69 @@ def test_unselected_rows_stay_in_json_but_not_selected_report_or_csv(snapshot):
     assert "UNSELECTED SENTINEL" not in html
     assert len(rows) == 1
     assert original["retrieval"]["rankings"][0]["candidates"][0]["question_text"] == "UNSELECTED SENTINEL"
+
+
+def test_stored_candidates_export_complete_original_fields_and_per_occurrence_metadata(snapshot, tmp_path):
+    snapshot["screening"]["items"][1]["evidence"]["item"]["_candidate_ref"] = "original source column"
+    # Assign the real row identities required by the evidence store, including
+    # every selection/queue reference to these fixture candidates.
+    identifiers = {item["item_id"]: row_fingerprint(item["evidence"]["item"])
+                   for item in snapshot["screening"]["items"]}
+
+    def identify(value):
+        if isinstance(value, dict):
+            result = {key: identify(nested) for key, nested in value.items()}
+            if "evidence" in result and "item_id" in result:
+                result["evidence_hash"] = result["item_id"]
+            return result
+        if isinstance(value, list):
+            return [identify(nested) for nested in value]
+        return identifiers.get(value, value) if isinstance(value, str) else value
+
+    original = identify(snapshot)
+    retrieved = original["retrieval"]["rankings"][0]["candidates"][1]
+    retrieved["rank"] = 3
+    second_query = {**deepcopy(retrieved), "rank": 7, "scores": {"dense": 0.8, "keyword": 1.3}}
+    original["retrieval"]["rankings"].append({"facet_id": "followup", "candidates": [second_query]})
+    screened = original["screening"]["items"][1]
+    screened.update(rank=19, screened_run_id="screen-run", acquisition={"queue_id": "triage-all", "facet_id": "triage"})
+    expected_html, expected_csv, _ = read_package(original)
+
+    store = CandidateStore(tmp_path / "private-review-runs" / "candidates")
+    compact = deepcopy(original)
+    for ranking in compact["retrieval"]["rankings"]:
+        ranking["candidates"] = [store.compact(item) for item in ranking["candidates"]]
+    compact["screening"]["items"] = [store.compact(item) for item in compact["screening"]["items"]]
+    before = deepcopy(compact)
+    expanded_ids = []
+
+    def expand(record):
+        if has_ref(record):
+            expanded_ids.append(record["item_id"])
+        return store.expand(record)
+
+    html, rows, exported = read_package(compact, expand=expand)
+    assert exported == original
+    # The store's canonical JSON changes object-key order, which has no effect
+    # on the contents of the original row shown in the report's evidence view.
+    def normalize_json_views(report):
+        return re.sub(r"<pre>(.*?)</pre>", lambda match: json.dumps(json.loads(unescape(match[1])), sort_keys=True),
+                      report, flags=re.S)
+
+    assert normalize_json_views(html) == normalize_json_views(expected_html)
+    assert rows == expected_csv
+    assert compact == before
+    # HTML and CSV read only the selected record. Full JSON subsequently reads
+    # each ranking/screening occurrence, preserving its distinct rank metadata.
+    assert expanded_ids[:2] == [screened["item_id"], screened["item_id"]]
+    assert len(expanded_ids) == 7
+    assert [ranking["candidates"][-1]["rank"] for ranking in exported["retrieval"]["rankings"]] == [3, 7]
+    assert exported["screening"]["items"][1]["rank"] == 19
+    serialized = html + json.dumps(rows) + json.dumps(exported)
+    assert exported["screening"]["items"][1]["evidence"]["item"]["_candidate_ref"] == "original source column"
+    assert compact["screening"]["items"][1]["_candidate_ref"] not in serialized
+    assert "private-review-runs" not in serialized
+    assert "UNSELECTED SENTINEL" not in html
 
 
 @pytest.mark.parametrize("mode", ["requirements", "grounding", "retrieval", "screening", "selection", "adaptive"])

@@ -625,8 +625,18 @@ Pipeline runs from requirements through adaptive construction have no automatic
 expiry. The server saves private checkpoints under
 `WEBSITE_DATA_DIR/review-runs/`; this directory must be on persistent storage to
 survive deployments. Checkpoints include the original answers, completed work,
-usage, and settings. Large retrieval artifacts are compressed and shared across
-stage checkpoints. Only one completed pipeline run is normally cached in memory;
+usage, and settings. Candidate rows and their search/question text are stored as
+private compressed files in `review-runs/candidates/`. Rankings and assessments
+keep small references to that evidence, shared across stage checkpoints. Remote
+search responses and legacy checkpoints are parsed incrementally, so a complete
+retrieval response does not need to fit in RAM. Screening and selection load
+records as needed; API pages, JSON downloads, and result packages expand the
+references back into the full original fields. The retrieval scope and ranking,
+screening, and selection policies are unchanged. This avoids exhausting a 512 MB
+backend simply by decoding and retaining several large result sets; memory still
+depends on individual row size, active work, and other application workloads.
+
+Only one completed pipeline run is normally cached in memory;
 active work and downloads are protected from eviction. This cache limit does
 not delete saved runs.
 

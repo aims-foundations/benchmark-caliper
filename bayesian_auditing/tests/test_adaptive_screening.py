@@ -245,6 +245,28 @@ def test_outcomes_use_retention_instead_of_gate_pass_and_keep_original_history()
     assert all((row["successes"], row["failures"]) == (2, 1) for row in stats)
 
 
+def test_outcomes_resolve_only_acquired_complete_records_once_in_acquisition_order():
+    records = [screened(index, sources=("benchmark-b", "benchmark-a", "benchmark-b")) for index in range(4)]
+    records[3]["status"] = "pending"
+    acquired = [{"item_id": records[index]["item_id"], "facet_id": "diagnosis"} for index in (2, 0)]
+    selected = [records[2]["item_id"]]
+    expected = adaptive.make_outcomes(acquired, records, selected)
+    compact = [{"item_id": record["item_id"], "status": record["status"]} for record in records]
+    originals = {record["item_id"]: record for record in records}
+    before = deepcopy((compact, records))
+    resolved = []
+
+    def resolve(record):
+        resolved.append(record["item_id"])
+        return deepcopy(originals[record["item_id"]])
+
+    assert adaptive.make_outcomes(acquired, compact, selected, resolve=resolve) == expected
+    assert resolved == [row["item_id"] for row in acquired]
+    assert (compact, records) == before
+    assert [row["retained"] for row in expected] == [True, False]
+    assert all(row["source_names"] == ["benchmark-a", "benchmark-b"] for row in expected)
+
+
 def test_physical_source_duplicates_collapse_to_names_and_inputs_remain_unchanged():
     record = screened(sources=("b", "a", "b", "a"))
     acquired = [{"item_id": record["item_id"], "facet_id": "management"}]
@@ -261,7 +283,8 @@ def test_invalid_or_incomplete_responses_are_not_recorded_as_failures(status):
     record = screened()
     record["status"] = status
     with pytest.raises(ValueError, match="complete assessment"):
-        adaptive.make_outcomes([{"item_id": record["item_id"], "facet_id": "diagnosis"}], [record], [])
+        adaptive.make_outcomes([{"item_id": record["item_id"], "facet_id": "diagnosis"}], [record], [],
+                               resolve=lambda _: pytest.fail("Incomplete records must not load stored evidence"))
 
 
 def test_missing_response_prevents_partial_batch_commit():
@@ -271,6 +294,7 @@ def test_missing_response_prevents_partial_batch_commit():
                                 {"item_id": "missing", "facet_id": "diagnosis"}], [record], [])
 
 
+@pytest.mark.parametrize("stored", [False, True])
 @pytest.mark.parametrize("mutation", [
     lambda row: row["evidence"]["item"].update(content="A modified row."),
     lambda row: row.update(evidence_hash="wrong"),
@@ -278,19 +302,26 @@ def test_missing_response_prevents_partial_batch_commit():
     lambda row: row.update(sources=[{"benchmark": ""}]),
     lambda row: row.update(sources="not a list"),
 ])
-def test_corrupt_outcome_inputs_are_rejected(mutation):
+def test_corrupt_outcome_inputs_are_rejected(mutation, stored):
     record = screened()
     mutation(record)
+    compact = {"item_id": record["item_id"], "status": "complete"}
     with pytest.raises(ValueError):
-        adaptive.make_outcomes([{"item_id": record["item_id"], "facet_id": "diagnosis"}], [record], [])
+        adaptive.make_outcomes([{"item_id": record["item_id"], "facet_id": "diagnosis"}],
+                               [compact] if stored else [record], [],
+                               resolve=(lambda _: record) if stored else None)
 
 
-def test_gate_failure_can_be_a_failure_but_never_a_retention_success():
+@pytest.mark.parametrize("stored", [False, True])
+def test_gate_failure_can_be_a_failure_but_never_a_retention_success(stored):
     record = screened(score=2)
     acquired = [{"item_id": record["item_id"], "facet_id": "diagnosis"}]
-    assert adaptive.make_outcomes(acquired, [record], [])[0]["retained"] is False
+    compact = {"item_id": record["item_id"], "status": "complete"}
+    records = [compact] if stored else [record]
+    resolve = (lambda _: record) if stored else None
+    assert adaptive.make_outcomes(acquired, records, [], resolve=resolve)[0]["retained"] is False
     with pytest.raises(ValueError, match="eligibility gate"):
-        adaptive.make_outcomes(acquired, [record], [record["item_id"]])
+        adaptive.make_outcomes(acquired, records, [record["item_id"]], resolve=resolve)
 
 
 @pytest.mark.parametrize("duplicate", ["acquisitions", "records", "selected"])

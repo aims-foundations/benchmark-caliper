@@ -263,7 +263,10 @@ def test_export_keeps_one_retrieval_snapshot_and_releases_interrupted_download(c
         # Workers publish a replacement dictionary, preserving earlier snapshots.
         job.benchmark_retrieval = newer
         text = "".join([chunk async for chunk in response.body_iterator])
-        assert json.loads(text)["retrieval"] == original
+        expanded = deepcopy(original)
+        for ranking in expanded["rankings"]:
+            ranking["candidates"] = [item_review.expand_candidate(item) for item in ranking["candidates"]]
+        assert json.loads(text)["retrieval"] == expanded
         assert job.downloads == 0
         response = await item_review.export_review(job.run_id, job.secret)
         await response.body_iterator.__anext__()
