@@ -196,12 +196,23 @@ export interface AdaptiveReview extends Omit<SelectionReview, 'mode'> {
 }
 export type RunResult = Review | RequirementsReview | GroundingReview | BenchmarkRetrievalReview | ScreeningReview | SelectionReview | AdaptiveReview
 
+export class ReviewRequestError extends Error {
+  constructor(readonly status: number, message: string, readonly hasServerDetail = false) {
+    super(message)
+    this.name = 'ReviewRequestError'
+  }
+}
+
 async function fetchResponse(path: string, options: RequestInit = {}): Promise<Response> {
   const response = await fetch(appPath(`/api/item-review${path}`), { cache: 'no-store', ...options })
   if (!response.ok) {
     const body = await response.json().catch(() => ({}))
-    const message = typeof body.detail === 'string' ? body.detail : `Request failed (${response.status}). Check your entries and try again.`
-    throw new Error(message)
+    const fallback = response.status >= 500
+      ? `The server could not respond (${response.status}). Please try again shortly.`
+      : `Request failed (${response.status}). Check your entries and try again.`
+    const hasServerDetail = typeof body?.detail === 'string'
+    const message = hasServerDetail ? body.detail : fallback
+    throw new ReviewRequestError(response.status, message, hasServerDetail)
   }
   return response
 }

@@ -1,7 +1,30 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { startReview, startGrounding, startBenchmarkRetrieval, startScreening, startSelection, startAdaptive, getCandidates, getReview, getReviewPackage } from './api'
+import { startReview, startGrounding, startBenchmarkRetrieval, startScreening, startSelection, startAdaptive, getCandidates, getReview, getReviewPackage, ReviewRequestError } from './api'
 
 afterEach(() => vi.unstubAllGlobals())
+
+it.each([502, 503, 504])('identifies a proxy %s response without blaming the supplied answers', async status => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('<html>Bad gateway</html>', { status })))
+  const request = getReview({ run_id: 'running', run_secret: 'private' })
+  await expect(request).rejects.toBeInstanceOf(ReviewRequestError)
+  await expect(request).rejects.toMatchObject({ status, message: `The server could not respond (${status}). Please try again shortly.`, hasServerDetail: false })
+})
+
+it('retains a specific server error and does not automatically repeat a paid action', async () => {
+  const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ detail: 'The mapping provider is unavailable.' }), { status: 503 }))
+  vi.stubGlobal('fetch', fetchMock)
+  await expect(startGrounding({ run_id: 'extracted', run_secret: 'private' }, 'sk-secret')).rejects.toMatchObject({
+    status: 503, message: 'The mapping provider is unavailable.', hasServerDetail: true,
+  })
+  expect(fetchMock).toHaveBeenCalledTimes(1)
+})
+
+it('keeps input validation errors distinct from server failures', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 400 })))
+  await expect(getReview({ run_id: 'invalid', run_secret: 'private' })).rejects.toMatchObject({
+    status: 400, message: 'Request failed (400). Check your entries and try again.',
+  })
+})
 
 it('sends only the OpenAI key in headers and polls with a separate run secret', async () => {
   const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ run_id: 'a', run_secret: 'access' })))

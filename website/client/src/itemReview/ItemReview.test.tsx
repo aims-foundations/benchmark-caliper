@@ -689,6 +689,63 @@ it('retrieves the whole main-branch bank after grounding without scope controls 
   expect(screen.getByText(/O\*NET records: dwa:treatment/)).toBeVisible()
 })
 
+it.each([
+  new api.ReviewRequestError(502, 'The server could not respond (502). Please try again shortly.'),
+  new TypeError('Failed to fetch'),
+])('recovers progress polling after $name while retaining the existing run and results', async failure => {
+  vi.useFakeTimers()
+  const access = { run_id: 'retrieve-run', run_secret: 'retrieve-access' }
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify(access))
+  vi.mocked(api.getReview).mockResolvedValueOnce({ ...retrieved, status: 'running', message: 'Searching remaining tasks.' })
+    .mockRejectedValueOnce(failure).mockResolvedValueOnce(retrieved)
+  const { unmount } = render(<ItemReview />)
+  try {
+    await act(async () => {})
+    expect(screen.getByRole('heading', { name: 'Retrieving benchmark candidates' })).toBeVisible()
+    await act(async () => { await vi.advanceTimersByTimeAsync(2000) })
+    expect(screen.getByText(/Progress updates are temporarily unavailable/)).toHaveAttribute('role', 'status')
+    expect(screen.getByText(/Retrying automatically in 5 seconds/)).toHaveTextContent('Your run may still be running')
+    expect(screen.queryByText(/Check your entries/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Forget this review and return to setup' })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Retrieving benchmark candidates' })).toBeVisible()
+    expect(screen.getByRole('article', { name: 'Candidate 1' })).toBeVisible()
+    expect(sessionStorage.getItem('item_review_run_v1')).toBe(JSON.stringify(access))
+    await act(async () => { await vi.advanceTimersByTimeAsync(4999) })
+    expect(api.getReview).toHaveBeenCalledTimes(2)
+    await act(async () => { await vi.advanceTimersByTimeAsync(1) })
+    expect(screen.getByRole('heading', { name: 'Your benchmark candidates are ready' })).toBeVisible()
+    expect(screen.queryByText(/Progress updates are temporarily unavailable/)).not.toBeInTheDocument()
+    expect(api.getReview).toHaveBeenCalledTimes(3)
+    expect(api.startReview).not.toHaveBeenCalled()
+    expect(api.startGrounding).not.toHaveBeenCalled()
+    expect(api.startBenchmarkRetrieval).not.toHaveBeenCalled()
+    expect(api.startScreening).not.toHaveBeenCalled()
+    expect(api.startAdaptive).not.toHaveBeenCalled()
+    expect(api.cancelReview).not.toHaveBeenCalled()
+  } finally {
+    unmount()
+    vi.useRealTimers()
+  }
+})
+
+it('preserves an access error without describing it as a temporary connection problem', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'missing-run', run_secret: 'private' }))
+  vi.mocked(api.getReview).mockRejectedValue(new api.ReviewRequestError(404, 'Review not found or access token is invalid.'))
+  render(<ItemReview />)
+  expect(await screen.findByRole('alert')).toHaveTextContent('Review not found or access token is invalid.')
+  expect(screen.queryByText(/Progress updates are temporarily unavailable/)).not.toBeInTheDocument()
+  expect(api.startReview).not.toHaveBeenCalled()
+})
+
+it('shows a specific backend 503 error instead of hiding it behind a connection notice', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'saved-run', run_secret: 'private' }))
+  vi.mocked(api.getReview).mockRejectedValue(new api.ReviewRequestError(503, 'The saved checkpoint could not be read.', true))
+  render(<ItemReview />)
+  expect(await screen.findByRole('alert')).toHaveTextContent('The saved checkpoint could not be read.')
+  expect(screen.queryByText(/Progress updates are temporarily unavailable/)).not.toBeInTheDocument()
+  expect(api.startReview).not.toHaveBeenCalled()
+})
+
 it('browses private candidate pages and source queues with inspectable evidence and original ranking', async () => {
   const access = { run_id: 'retrieve-run', run_secret: 'retrieve-access' }
   sessionStorage.setItem('item_review_run_v1', JSON.stringify(access))

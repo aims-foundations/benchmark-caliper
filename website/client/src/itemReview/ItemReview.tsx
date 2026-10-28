@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { SiteHeader } from '../components/SiteHeader'
 import { SiteFooter } from '../components/SiteFooter'
 import { appPath } from '../paths'
-import { cancelReview, getCatalog, getReview, startReview, startGrounding, startBenchmarkRetrieval, startScreening, startSelection, startAdaptive, type AdaptiveRequest, type Catalog, type Deployment, type RunResult, type RunAccess } from './api'
+import { cancelReview, getCatalog, getReview, startReview, startGrounding, startBenchmarkRetrieval, startScreening, startSelection, startAdaptive, ReviewRequestError, type AdaptiveRequest, type Catalog, type Deployment, type RunResult, type RunAccess } from './api'
 import { Results } from './Results'
 import { PipelineResults } from './PipelineResults'
 import { PIPELINE_STEPS, stepNumber } from './StepSection'
@@ -32,6 +32,7 @@ export function ItemReview() {
   const [access, setAccess] = useState<RunAccess | null>(loadReviewAccess)
   const [review, setReview] = useState<RunResult | null>(null)
   const [error, setError] = useState('')
+  const [progressNotice, setProgressNotice] = useState('')
   const [busy, setBusy] = useState(false)
   const workspace = useRef<HTMLDivElement>(null)
   const previousStage = useRef('access')
@@ -57,6 +58,7 @@ export function ItemReview() {
   }, [])
 
   useEffect(() => {
+    setProgressNotice('')
     if (!access) return
     const controller = new AbortController()
     let timer: ReturnType<typeof setTimeout>
@@ -67,10 +69,18 @@ export function ItemReview() {
         if (latest.mode && latest.mode !== 'item_review') persistRestoredPipelineAccess(access!)
         setReview(latest)
         setError('')
+        setProgressNotice('')
         if (['preparing', 'running'].includes(latest.status)) timer = setTimeout(() => void poll(), 2000)
       } catch (e) {
         if (!controller.signal.aborted) {
-          setError(e instanceof Error ? e.message : 'Could not load progress. Your review may still be running.')
+          const temporary = e instanceof TypeError || (e instanceof ReviewRequestError && !e.hasServerDetail && (e.status >= 500 || [408, 429].includes(e.status)))
+          if (temporary) {
+            const status = e instanceof ReviewRequestError ? ` (HTTP ${e.status})` : ''
+            setProgressNotice(`Progress updates are temporarily unavailable${status}. Retrying automatically in 5 seconds. Your run may still be running; you do not need to start it again.`)
+          } else {
+            setProgressNotice('')
+            setError(e instanceof Error ? e.message : 'Could not load progress. Your review may still be running.')
+          }
           timer = setTimeout(() => void poll(), 5000)
         }
       }
@@ -252,6 +262,7 @@ export function ItemReview() {
           {error && <div className="review-error" role="alert">{error}
             {!catalog && <p><button className="secondary" onClick={() => window.location.reload()}>Reload page</button></p>}
           </div>}
+          {progressNotice && <p className="help" role="status">{progressNotice}</p>}
           {!catalog && !error && <p role="status">Loading the demo…</p>}
 
           {!access && catalog && step === 'access' && <form onSubmit={moveToDeployment} className="review-panel">
