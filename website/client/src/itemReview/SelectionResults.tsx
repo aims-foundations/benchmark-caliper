@@ -37,7 +37,7 @@ export function SelectionResults({ review, run, busy, onCancel, onRestart, onSel
       <p className="review-intro" role={review.status === 'failed' ? 'alert' : undefined}>{review.message}</p>
       <p>The collection has a shared limit of 30 items across all tasks. Selection runs locally without model calls.</p>
       <p>{input.screened} valid assessments · {input.errors} assessment errors · {input.pending} pending items from {input.allocated} initial allocations</p>
-      {remaining > 0 && <p className="selection-notice">This selection uses the valid assessments available so far. Initial screening still has pending items or assessment errors.</p>}
+      {remaining > 0 && <p className="selection-notice">This selection uses the valid assessments available so far. Initial screening still has pending items or assessment errors.{!active && <> <a href="#initial-screening-continuation">Continue screening in Step 5</a>.</>}</p>}
       {previous && <p className="selection-notice"><strong>Previous selection retained.</strong> This run has not produced a new completed selection. The collection and coverage below belong to the earlier result.</p>}
       {selection && !selection.fully_satisfied && <div className="selection-notice" role="status">
         <strong>Coverage remains incomplete.</strong>

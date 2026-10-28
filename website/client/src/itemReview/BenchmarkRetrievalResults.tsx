@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getCandidates, getReviewExport, type BenchmarkRetrievalReview, type CandidatePage, type Catalog, type RunAccess } from './api'
 import { BenchmarkRetrievalForm } from './BenchmarkRetrievalForm'
 import { SupportedValue } from './RequirementsResults'
+import { ItemDetails } from './ItemDetails'
 
 type RetrievalContentReview = Pick<BenchmarkRetrievalReview, 'requirements' | 'retrieval'>
 
@@ -48,16 +49,17 @@ function CandidateBrowser({ review, run, catalog }: { review: RetrievalContentRe
       {result.items.length === 0 && <p>No candidates are available in this queue.</p>}
       {result.items.map(item => <article key={item.item_id} className="retrieval-candidate" aria-labelledby={`candidate-${item.item_id}`}>
         <h3 id={`candidate-${item.item_id}`}>Candidate {item.rank}</h3>
-        <p className="review-preserve">{item.question_text || 'This item has no separately labeled question. Its full source row is available below.'}</p>
         <p><strong>Sources:</strong> {[...new Set(item.sources.map(source => source.benchmark))].join(', ') || 'No source label supplied'}</p>
         <p className="help">Combined rank: {item.rank} · Meaning search rank: {item.dense_rank ?? 'Not ranked'} · Keyword rank: {item.bm25_rank ?? 'Not ranked'}</p>
-        <details><summary>Inspect full item evidence and sources</summary>
-          <p className="help">Item ID: <code>{item.item_id}</code> · Evidence hash: <code>{item.evidence_hash}</code></p>
-          <p className="help">Combined ranking score: {item.rrf_score.toFixed(6)} · Meaning score: {item.dense_score ?? 'Not ranked'} · Keyword score: {item.bm25_score ?? 'Not ranked'}</p>
-          <h4>Full row text used for search</h4><pre>{item.search_text}</pre>
-          <h4>Original item evidence</h4><pre>{JSON.stringify(item.evidence, null, 2)}</pre>
-          <h4>Source provenance</h4><pre>{JSON.stringify(item.sources, null, 2)}</pre>
-        </details>
+        <ItemDetails question={item.question_text}>
+          <details><summary>Inspect full item evidence and sources</summary>
+            <p className="help">Item ID: <code>{item.item_id}</code> · Evidence hash: <code>{item.evidence_hash}</code></p>
+            <p className="help">Combined ranking score: {item.rrf_score.toFixed(6)} · Meaning score: {item.dense_score ?? 'Not ranked'} · Keyword score: {item.bm25_score ?? 'Not ranked'}</p>
+            <h4>Full row text used for search</h4><pre>{item.search_text}</pre>
+            <h4>Original item evidence</h4><pre>{JSON.stringify(item.evidence, null, 2)}</pre>
+            <h4>Source provenance</h4><pre>{JSON.stringify(item.sources, null, 2)}</pre>
+          </details>
+        </ItemDetails>
       </article>)}
       {result.total_pages > 1 && <nav className="review-actions" aria-label="Candidate pages">
         <button type="button" className="secondary" disabled={result.page <= 1} onClick={() => setPage(result.page - 1)}>Previous candidates</button>

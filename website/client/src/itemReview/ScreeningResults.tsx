@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { DIMENSIONS, getReviewExport, type ScreenedItem, type ScreeningReview, type RunAccess } from './api'
 import { ScreeningForm } from './ScreeningForm'
+import { ItemDetails } from './ItemDetails'
 
 function EvidenceNotes({ evidence, justification, information_gaps }: { evidence: string[]; justification: string; information_gaps: string[] }) {
   return <>
@@ -22,45 +23,46 @@ export function ScreeningItem({ item, index, review, taskName, label = 'Screened
         {item.status === 'error' ? 'Assessment error' : `Screening gate: ${gateLabel}`}
       </span></div>
     {qualityScore != null && <p className="selection-quality"><strong>Quality Q: {qualityScore.toFixed(2)} / 5</strong></p>}
-    <p className="review-preserve">{item.question_text || 'This item has no separately labeled question. Its full source row is available below.'}</p>
     <p className="help"><strong>Acquired from:</strong> {taskName(item.acquisition.facet_id)} queue · <strong>Sources:</strong> {[...new Set(item.sources.map(source => source.benchmark))].join(', ')}</p>
     {item.screened_run_id && item.screened_run_id !== review.run_id && <p className="help">Retained assessment from an earlier screening run.</p>}
-    {item.status === 'error' ? <div className="review-error" role="alert"><p>{item.error || 'No valid assessment was returned for this item.'}</p><p>This is an assessment error; the item has no screening gate decision.</p></div>
-      : assessment && <>
-        <h4>Task actually tested</h4>
-        <p className="review-preserve">{assessment.task.decision ?? 'The tested decision is unresolved.'}</p>
-        <p><strong>Task match:</strong> {assessment.task.status === 'matched' ? 'Matched' : assessment.task.status === 'no_match' ? 'No deployment task matched' : 'Unresolved'}</p>
-        {assessment.task.matched_facet_ids.length > 0 && <p><strong>Matched deployment tasks: </strong>{assessment.task.matched_facet_ids.map((id, taskIndex) => <span key={id}>
-          {taskIndex > 0 && ', '}<a href={`#facet-${id}`}>{taskName(id)}</a>
-        </span>)}</p>}
-        {item.gate && <section><h4>Screening gate: {gateLabel}</h4><ul>{item.gate.reasons.map((reason, reasonIndex) => <li className="review-preserve" key={reasonIndex}>{reason}</li>)}</ul></section>}
-        <dl className="screening-ratings">{DIMENSIONS.map(([key, label]) => <div key={key}>
-          <dt>{label}<small>{review.screening?.policy.gated_dimensions.includes(key) ? 'Gate dimension' : 'Reported dimension'}</small></dt>
-          <dd>{assessment.ratings[key].score == null ? 'Unknown' : `${assessment.ratings[key].score} / 5`}</dd>
-        </div>)}</dl>
-        <details><summary>Inspect task interpretation and six validity ratings</summary>
-          <section className="screening-explanation"><h4>Task interpretation</h4><EvidenceNotes {...assessment.task} /></section>
-          {DIMENSIONS.map(([key, label]) => <section className="screening-explanation" key={key}>
-            <h4>{label}: {assessment.ratings[key].score == null ? 'Unknown' : `${assessment.ratings[key].score} / 5`}</h4>
-            <EvidenceNotes {...assessment.ratings[key]} />
-          </section>)}
-        </details>
-        <details><summary>Inspect coverage requirements ({assessment.coverage.length})</summary>
-          {assessment.coverage.length === 0 && <p>No explicit coverage requirements were assessed for this item.</p>}
-          {assessment.coverage.map(coverage => <section className="screening-explanation" key={coverage.requirement_index}>
-            <h4>Coverage requirement {coverage.requirement_index + 1}: {coverage.satisfied == null ? 'Unresolved' : coverage.satisfied ? 'Satisfied' : 'Not satisfied'}</h4>
-            <p className="review-preserve">{review.requirements?.coverage_requirements[coverage.requirement_index]?.requirement.text}</p>
-            <EvidenceNotes {...coverage} />
-          </section>)}
-        </details>
-      </>}
-    <details><summary>Inspect original row and sources</summary>
-      <p className="help">Item ID: <code>{item.item_id}</code> · Evidence hash: <code>{item.evidence_hash}</code></p>
-      <h4>Original item evidence</h4><pre>{JSON.stringify(item.evidence, null, 2)}</pre>
-      <h4>Full row text used for retrieval</h4><pre>{item.search_text}</pre>
-      <h4>Source provenance</h4><pre>{JSON.stringify(item.sources, null, 2)}</pre>
-      <h4>Acquisition details</h4><pre>{JSON.stringify({ ...item.acquisition, retrieval_rank: item.rank, screened_run_id: item.screened_run_id, usage: item.usage }, null, 2)}</pre>
-    </details>
+    <ItemDetails question={item.question_text}>
+      {item.status === 'error' ? <div className="review-error" role="alert"><p>{item.error || 'No valid assessment was returned for this item.'}</p><p>This is an assessment error; the item has no screening gate decision.</p></div>
+        : assessment && <>
+          <h4>Task actually tested</h4>
+          <p className="review-preserve">{assessment.task.decision ?? 'The tested decision is unresolved.'}</p>
+          <p><strong>Task match:</strong> {assessment.task.status === 'matched' ? 'Matched' : assessment.task.status === 'no_match' ? 'No deployment task matched' : 'Unresolved'}</p>
+          {assessment.task.matched_facet_ids.length > 0 && <p><strong>Matched deployment tasks: </strong>{assessment.task.matched_facet_ids.map((id, taskIndex) => <span key={id}>
+            {taskIndex > 0 && ', '}<a href={`#facet-${id}`}>{taskName(id)}</a>
+          </span>)}</p>}
+          {item.gate && <section><h4>Screening gate: {gateLabel}</h4><ul>{item.gate.reasons.map((reason, reasonIndex) => <li className="review-preserve" key={reasonIndex}>{reason}</li>)}</ul></section>}
+          <dl className="screening-ratings">{DIMENSIONS.map(([key, label]) => <div key={key}>
+            <dt>{label}<small>{review.screening?.policy.gated_dimensions.includes(key) ? 'Gate dimension' : 'Reported dimension'}</small></dt>
+            <dd>{assessment.ratings[key].score == null ? 'Unknown' : `${assessment.ratings[key].score} / 5`}</dd>
+          </div>)}</dl>
+          <details><summary>Inspect task interpretation and six validity ratings</summary>
+            <section className="screening-explanation"><h4>Task interpretation</h4><EvidenceNotes {...assessment.task} /></section>
+            {DIMENSIONS.map(([key, label]) => <section className="screening-explanation" key={key}>
+              <h4>{label}: {assessment.ratings[key].score == null ? 'Unknown' : `${assessment.ratings[key].score} / 5`}</h4>
+              <EvidenceNotes {...assessment.ratings[key]} />
+            </section>)}
+          </details>
+          <details><summary>Inspect coverage requirements ({assessment.coverage.length})</summary>
+            {assessment.coverage.length === 0 && <p>No explicit coverage requirements were assessed for this item.</p>}
+            {assessment.coverage.map(coverage => <section className="screening-explanation" key={coverage.requirement_index}>
+              <h4>Coverage requirement {coverage.requirement_index + 1}: {coverage.satisfied == null ? 'Unresolved' : coverage.satisfied ? 'Satisfied' : 'Not satisfied'}</h4>
+              <p className="review-preserve">{review.requirements?.coverage_requirements[coverage.requirement_index]?.requirement.text}</p>
+              <EvidenceNotes {...coverage} />
+            </section>)}
+          </details>
+        </>}
+      <details><summary>Inspect original row and sources</summary>
+        <p className="help">Item ID: <code>{item.item_id}</code> · Evidence hash: <code>{item.evidence_hash}</code></p>
+        <h4>Original item evidence</h4><pre>{JSON.stringify(item.evidence, null, 2)}</pre>
+        <h4>Full row text used for retrieval</h4><pre>{item.search_text}</pre>
+        <h4>Source provenance</h4><pre>{JSON.stringify(item.sources, null, 2)}</pre>
+        <h4>Acquisition details</h4><pre>{JSON.stringify({ ...item.acquisition, retrieval_rank: item.rank, screened_run_id: item.screened_run_id, usage: item.usage }, null, 2)}</pre>
+      </details>
+    </ItemDetails>
   </article>
 }
 
@@ -112,8 +114,8 @@ export function ScreeningResults({ review, run, busy, onCancel, onRestart, onScr
       <p className="help">Progress is saved so you can return later. The export retains original answers, requirements, grounding, retrieval, allocation, assessments, and screening settings.</p>
       {downloadError && <p className="review-error" role="alert">{downloadError}</p>}
     </section>
-    <ScreeningContent review={review} />
     {!active && remaining > 0 && <ScreeningForm busy={busy} onScreen={onScreen} remaining={remaining} retained={complete} />}
+    <ScreeningContent review={review} />
   </div>
 }
 

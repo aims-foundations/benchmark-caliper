@@ -11,7 +11,8 @@ export function ScreeningForm({ busy, onScreen, remaining, retained = 0 }: {
     if (!busy && apiKey.trim() && await onScreen(apiKey.trim())) setApiKey('')
   }
 
-  return <form className="review-panel" onSubmit={event => void submit(event)} aria-labelledby="screening-start-title">
+  return <form id={continuing ? 'initial-screening-continuation' : undefined} tabIndex={continuing ? -1 : undefined}
+    className="review-panel" onSubmit={event => void submit(event)} aria-labelledby="screening-start-title">
     <p className="eyebrow">Step 5: Initial screening</p>
     <h2 id="screening-start-title">{continuing ? 'Continue the initial screening' : 'Assess the first 48 distinct candidates'}</h2>
     {continuing ? <p>{retained} completed assessments are retained. Continue with up to {remaining} items that are pending or had an assessment error, using the same initial allocation.</p>

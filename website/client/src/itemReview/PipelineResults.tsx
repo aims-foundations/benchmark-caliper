@@ -122,9 +122,9 @@ export function PipelineResults({ review, run, catalog, actions }: PipelineProps
 
     {current > 5 && 'screening' in review && review.screening && <StepSection step={5}
       summary={`${count(initialScreeningItems(review.screening).filter(item => item.status === 'complete').length, 'valid assessment')} from ${count(review.screening.allocation.allocated, 'initially allocated candidate')}`}>
-      <ScreeningContent review={review} historical />
       {screeningRemaining > 0 && review.mode === 'selection' && <ScreeningForm busy={actions.busy} onScreen={actions.onScreen}
         remaining={screeningRemaining} retained={review.selection_input.screened} />}
+      <ScreeningContent review={review} historical />
     </StepSection>}
 
     {current > 4 && 'retrieval' in review && review.retrieval && <StepSection step={4}

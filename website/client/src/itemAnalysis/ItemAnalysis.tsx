@@ -269,6 +269,7 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
 
   async function download(artifact: Artifact) {
     if (!access || downloading) return
+    setError('')
     setDownloading(artifact)
     try {
       const blob = await api.download(access, artifact)
@@ -279,6 +280,7 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
 
   async function openReport() {
     if (!access || downloading) return
+    setError('')
     setDownloading('view')
     try { await viewReport(() => api.download(access, 'report')) }
     catch (problem) { showRequestError(problem instanceof Error ? problem.message : 'Could not open the report.') }
@@ -287,6 +289,7 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
 
   async function downloadPackage() {
     if (!access || downloading) return
+    setError('')
     setDownloading('package')
     try {
       const result = await api.downloadPackage(access)

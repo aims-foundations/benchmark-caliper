@@ -245,6 +245,10 @@
 .retrieval-results select { width: 100%; min-width: 0; max-width: 100%; padding: .7rem; border: 1px solid var(--review-border); border-radius: 5px; background: white; font: inherit; }
 .screening-results pre { max-height: 24rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .8rem; }
 .screening-item { overflow-wrap: anywhere; }
+.review-workspace .review-item-details > summary { font-size: .95rem; }
+.review-item-preview { display: block; margin-top: .4rem; font-weight: 400; color: var(--review-muted); overflow-wrap: anywhere; }
+.review-item-body { border-top: 1px solid var(--review-border); padding-top: .75rem; }
+#initial-screening-continuation { scroll-margin-top: 6rem; }
 .screening-item blockquote { margin: .75rem 0; padding-left: 1rem; border-left: 3px solid var(--review-border); }
 .screening-pass { background: #e7edde; color: #3d562a; }
 .screening-fail { background: #f4e3e0; color: #7d3029; }
