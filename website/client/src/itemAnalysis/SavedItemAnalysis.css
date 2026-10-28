@@ -1,0 +1,21 @@
+.saved-item-analysis { border-top: 1px solid var(--ia-rule); margin-top: 2rem; padding-top: 2.2rem; background: transparent; min-width: 0; scroll-margin-top: calc(var(--site-header-h, 5rem) + 1rem); }
+.saved-item-analysis .saved-ia-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.saved-item-analysis h2 { font-size: clamp(1.6rem, 2.3vw, 2rem); font-weight: 500; letter-spacing: -.035em; line-height: 1.25; margin: .5rem 0 .8rem; }
+.saved-item-analysis .saved-ia-context { margin: 1.2rem 0; padding: .85rem 1rem; border: 1px solid #e0d8ce; border-radius: 6px; background: #f8f5ef; font-size: .85rem; }
+.saved-item-analysis .saved-ia-context > summary { color: #635040; }
+.saved-item-analysis .saved-ia-metadata { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; padding: 1rem 0; }
+.saved-item-analysis .saved-ia-metadata dt { color: #7f6d5c; font-size: .72rem; }
+.saved-item-analysis .saved-ia-metadata dd { margin: .25rem 0 0; overflow-wrap: anywhere; font-size: .8rem; }
+.saved-item-analysis .ia-item-heading { margin-top: 0; }
+.saved-item-analysis .ia-item-heading h3 { margin: 0; }
+.saved-item-analysis .ia-item-filters > button:last-child { display: none; }
+.saved-item-analysis .saved-ia-items { scroll-margin-top: calc(var(--site-header-h, 5rem) + 1.5rem); }
+.saved-item-analysis .saved-ia-items:focus-visible { outline: 2px solid var(--cardinal); outline-offset: 4px; }
+.saved-item-analysis .saved-ia-exports :is(a.ia-primary, a.ia-secondary) { text-decoration: none; display: inline-flex; align-items: center; gap: .4rem; }
+.saved-item-analysis .ia-individual-files a { color: #79432c; font-size: .8rem; text-underline-offset: .25em; padding: .6rem 0; }
+.saved-item-analysis .saved-ia-own-analysis { border-top: 1px solid var(--ia-rule); padding-top: 1.4rem; margin-top: 2rem; display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 1rem; align-items: center; }
+.saved-item-analysis .saved-ia-own-analysis h3 { font-size: .95rem; font-weight: 500; margin: 0; }
+@media (max-width: 760px) {
+  .saved-item-analysis .saved-ia-heading { align-items: flex-start; flex-direction: column; gap: .2rem; }
+  .saved-item-analysis .saved-ia-metadata { grid-template-columns: minmax(0, 1fr); }
+}

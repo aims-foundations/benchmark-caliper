@@ -3,10 +3,12 @@ import {
   submitFeedback,
   ApiError,
   type FeedbackCategory,
+  type GalleryItemAnalysis,
 } from '../api'
 import { appPath } from '../paths'
 import { ItemAnalysis } from '../itemAnalysis/ItemAnalysis'
 import { DemoItemAnalysis } from '../itemAnalysis/DemoItemAnalysis'
+import { SavedItemAnalysis } from '../itemAnalysis/SavedItemAnalysis'
 import { PipelineProgress } from './ProgressView'
 import {
   calibrateConfidence,
@@ -75,6 +77,7 @@ interface Props {
    */
   elicitationSummary?: string
   deploymentContext?: string
+  savedItemAnalysis?: GalleryItemAnalysis
   /** Report-email outcome from the run. Absent for the read-only gallery. */
   emailStatus?: {
     requested: boolean
@@ -159,8 +162,15 @@ export function ScoringView({
   emailStatus,
   elicitationSummary,
   deploymentContext,
+  savedItemAnalysis,
 }: Props) {
   const [tab, setTab] = useState<Tab>('table')
+  const [showPersonalAnalysis, setShowPersonalAnalysis] = useState(false)
+  const hasSavedItemAnalysis = assessment.kind === 'gallery' && !!savedItemAnalysis && !demo
+  function openPersonalAnalysis() {
+    setShowPersonalAnalysis(true)
+    window.requestAnimationFrame(() => document.getElementById('personal-item-analysis')?.scrollIntoView({ block: 'start' }))
+  }
   const assessmentKey = `${assessment.kind}:${assessment.id}`
   useEffect(() => {
     if (window.location.hash !== '#item-analysis-stage') return
@@ -173,7 +183,6 @@ export function ScoringView({
     setItemState((previous) => previous.key === assessmentKey && previous.status === status ? previous : { key: assessmentKey, status })
   }, [assessmentKey])
   const priorities = parsePriorityWeights(elicitationSummary)
-  const hasPriorities = Object.keys(priorities).length > 0
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [feedbackCategory, setFeedbackCategory] =
     useState<FeedbackCategory>('incorrect_score')
@@ -242,7 +251,7 @@ export function ScoringView({
 
   return (
     <>
-    <PipelineProgress stage={itemStatus === 'complete' ? 'complete' : 'items'} />
+    {!hasSavedItemAnalysis && <><PipelineProgress stage={itemStatus === 'complete' ? 'complete' : 'items'} />
     <div className="pipeline-stage-status" role="status">
       <strong>{demo
         ? itemStatus === 'complete' ? 'Demo walkthrough complete' : 'Demo benchmark ready · item walkthrough remains'
@@ -257,10 +266,10 @@ export function ScoringView({
           ? 'Review and export the pilot when it finishes. Continuing through the full prepared dataset is optional. Independent human review takes place separately and is not recorded here.'
           : 'Continue with the matching dataset below to prepare classifier context and classify a pilot. You can review and export that pilot; continuing through the full prepared dataset is optional.'}</p>
       {itemStatus !== 'complete' && <a href="#item-analysis-stage">{itemStatus === 'in_progress' ? 'Return to item analysis ↓' : 'Continue to item analysis ↓'}</a>}
-    </div>
+    </div></>}
     {demo && <div className="demo-banner"><p><strong>Free pipeline walkthrough.</strong> The MathDial benchmark scores below are prerecorded. The item stage carries forward this same deployment context and shows authored example judgments on a small sample. No API key or model calls are required.</p></div>}
     <section className="summary">
-      <p className="eyebrow">Stage 2 · Benchmark assessment</p>
+      <p className="eyebrow">{hasSavedItemAnalysis ? 'Benchmark-level analysis' : 'Stage 2 · Benchmark assessment'}</p>
       <h2>Benchmark validity assessment</h2>
       <p className="help">
         The benchmark-level assessment across six dimensions, conditioned on your
@@ -314,17 +323,10 @@ export function ScoringView({
       {tab === 'table' && (
         <div className="score-table" role="tabpanel">
           <p className="score-table-caveat">
-            A structured opinion from Claude Opus, not a verdict — these
-            scores can miss context. Read the reasoning, not just the number.
+            These scores reflect Claude Opus’s assessment of the available
+            evidence. The model may miss important context, so consider the
+            reasoning alongside each score.
           </p>
-          {!empty && hasPriorities && (
-            <p className="priority-legend">
-              The badge on each dimension is the priority you assigned during
-              elicitation. A 5/5 on a <strong>Lower</strong>-priority
-              dimension matters less than a low score on a{' '}
-              <strong>High</strong>-priority one.
-            </p>
-          )}
           {empty ? (
             <p className="inline-error">
               Opus output couldn't be parsed as a scoring object. Switch to
@@ -451,7 +453,7 @@ export function ScoringView({
         </div>
       )}
 
-      <dl className="run-meta">
+      {!hasSavedItemAnalysis && <dl className="run-meta">
         {slug && <>
         <dt>Slug</dt>
         <dd>
@@ -462,7 +464,7 @@ export function ScoringView({
         <dd>
           <code>{runId}</code>
         </dd>
-      </dl>
+      </dl>}
 
       <div className="actions">
         {!readOnly && (
@@ -470,21 +472,21 @@ export function ScoringView({
             Change key
           </button>
         )}
-        <button type="button" className="link" onClick={handleDownload}>
+        {!hasSavedItemAnalysis && <button type="button" className="link" onClick={handleDownload}>
           Download {tab === 'table' ? '.json' : '.txt'}
-        </button>
+        </button>}
         {pdfAvailable && <a
           className="link"
           href={pdfUrl ?? appPath(`/api/runs/${runId}/review.pdf`)}
-          download={`validity_report_${slug || runId}.pdf`}
+          download={hasSavedItemAnalysis ? undefined : `validity_report_${slug || runId}.pdf`}
           target="_blank"
           rel="noreferrer"
         >
-          Download benchmark report PDF
+          {hasSavedItemAnalysis ? 'Open original benchmark report' : 'Download benchmark report PDF'}
         </a>}
       </div>
 
-      <aside className="score-disclaimer">
+      {!hasSavedItemAnalysis && <aside className="score-disclaimer">
         <strong>A note on these scores.</strong> This pipeline is still a
         work in progress, and we're improving it as we learn. Each score
         reflects Claude Opus's reading of the documents shared. It's
@@ -494,7 +496,7 @@ export function ScoringView({
         the benchmark's fit.
         {!readOnly &&
           " If something looks off, we'd love to hear about it through the form below - that's how we make the next version better."}
-      </aside>
+      </aside>}
 
       {!readOnly && (
       <details
@@ -577,11 +579,19 @@ export function ScoringView({
       </details>
       )}
     </section>
-    <div id="item-analysis-stage" className="pipeline-item-stage">
+    {hasSavedItemAnalysis ? <>
+      <SavedItemAnalysis assessmentId={assessment.id} onRunOwnAnalysis={openPersonalAnalysis} />
+      {showPersonalAnalysis && <section id="personal-item-analysis" className="pipeline-item-stage" aria-label="Your item analysis">
+        <h2>Your item analysis</h2>
+        <p className="help">This is your own run using the same benchmark assessment and deployment context. Your saved progress in this browser can be continued here.</p>
+        <a href="#item-analysis-stage">Back to saved item analysis</a>
+        <ItemAnalysis key={assessmentKey} assessment={assessment} onStatusChange={handleItemStatus} />
+      </section>}
+    </> : <div id="item-analysis-stage" className="pipeline-item-stage">
       {demo
         ? <DemoItemAnalysis onStatusChange={handleItemStatus} />
         : <ItemAnalysis key={assessmentKey} assessment={assessment} onStatusChange={handleItemStatus} />}
-    </div>
+    </div>}
     <div className="actions">
       <button type="button" className={itemStatus === 'complete' ? undefined : 'link'} onClick={onStartOver}>
         {demo ? 'Start your own analysis' : 'Start another benchmark analysis'}

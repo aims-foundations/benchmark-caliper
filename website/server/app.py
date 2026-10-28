@@ -51,6 +51,7 @@ from . import (
     db,
     email_notify,
     gallery,
+    gallery_item_analysis,
     item_analysis,
     item_review,
     logging_gate,
@@ -134,7 +135,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
         response = await call_next(request)
         for name, value in SECURITY_HEADERS.items():
-            response.headers[name] = value
+            response.headers.setdefault(name, value)
         return response
 
 
@@ -2162,6 +2163,31 @@ def get_gallery_review_pdf(entry_id: str) -> Response:
             "Content-Disposition": f'inline; filename="review-{entry_id}.pdf"',
         },
     )
+
+
+@app.get("/api/gallery/{entry_id}/item-analysis")
+def get_gallery_item_analysis(entry_id: str) -> dict:
+    """Published item results, available without credentials or a live run."""
+    snapshot = gallery_item_analysis.get_snapshot(entry_id)
+    if snapshot is None:
+        raise HTTPException(404, "saved item analysis not found")
+    return snapshot
+
+
+@app.get("/api/gallery/{entry_id}/item-analysis/artifacts/{artifact}")
+def get_gallery_item_analysis_artifact(entry_id: str, artifact: str) -> Response:
+    result = gallery_item_analysis.get_artifact(entry_id, artifact)
+    if result is None:
+        raise HTTPException(404, "saved item analysis artifact not found")
+    content, media_type, filename = result
+    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+    if artifact == "report":
+        headers["Content-Disposition"] = f'inline; filename="{filename}"'
+        headers["Content-Security-Policy"] = (
+            "sandbox; default-src 'none'; style-src 'unsafe-inline'; "
+            "img-src data:; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+        )
+    return Response(content=content, media_type=media_type, headers=headers)
 
 
 # ---------- rerun endpoints (mirror --rerun-scoring / --rerun-all) ----------

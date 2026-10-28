@@ -72,6 +72,46 @@ ordinary gallery report or starting a new assessment uses the live pipeline.
 
 ## Item-level validity analysis
 
+### Saved item analyses in the gallery
+
+Curated gallery assessments can include an author-published item analysis.
+The GSM8K statistics-assistant assessment includes the completed 100-item sample
+from its 1,319-item prepared snapshot. Open
+`/caliper?assessment=gsm8k#item-analysis-stage` to browse it without an API key.
+The existing site header, gallery sidebar, and benchmark score table are reused.
+The item table, score explanations, distributions, six dimension averages, and
+downloads use the published results. Averages always describe all evaluated
+items, regardless of the current page or filter.
+
+**Run your own analysis** opens the existing interactive workflow separately.
+It may resume the visitor's browser-owned progress, but cannot change the
+published snapshot. Viewing published results does not restore a private run
+or make model calls. Assessments without a published snapshot continue to show
+the normal item-analysis workflow.
+
+Authors publish a completed export from a local directory or its original ZIP:
+
+```bash
+.venv/bin/python -m website.scripts.import_gallery_item_analysis /path/to/export --assessment gsm8k
+```
+
+The importer verifies artifact checksums, the exact gallery assessment and
+deployment, item identities, six-score results, and aggregate counts and means.
+It writes the validated snapshot, metadata, evaluated-item CSV, and complete
+export archive under `website/gallery_item_analyses/<assessment-id>/`. Include
+that directory with the code changes when committing and deploying. Publishing
+another completed export for the same assessment requires `--overwrite`.
+No website admin credentials or model calls are needed for this local import.
+
+The public endpoints are `/api/gallery/<id>/item-analysis` and
+`/api/gallery/<id>/item-analysis/artifacts/<spec|items|summary|report|package>`.
+The CSV contains evaluated items only; the original HTML report and full archive
+preserve the complete export, including unselected prepared rows. A saved
+snapshot is hidden if its linked benchmark assessment or deployment changes,
+until the author imports a matching export.
+
+### Running an item analysis
+
 The benchmark report embeds the shared
 [`item_analysis` pipeline](../anthropic_api_package_release/item_analysis/README.md)
 as the next stage, including reports opened from the gallery or a saved

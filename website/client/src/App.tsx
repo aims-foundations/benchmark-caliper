@@ -1464,6 +1464,8 @@ export function App({ legacyItemAnalysis = false }: { legacyItemAnalysis?: boole
           onStartOver={handleStartOver}
           onChangeKey={handleChangeKey}
           elicitationSummary={phase.state.report.elicitation_summary}
+          deploymentContext={phase.state.report.deploymentDescription}
+          savedItemAnalysis={phase.state.report.item_analysis ?? undefined}
         />
       )}
 

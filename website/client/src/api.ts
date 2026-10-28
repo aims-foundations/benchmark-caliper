@@ -623,6 +623,16 @@ export interface GalleryReport extends GalleryEntry {
   raw: string
   /** Elicitation summary markdown; source of the priority-weights table. */
   elicitation_summary?: string
+  /** Author-published item results; independent of browser-owned live runs. */
+  item_analysis?: GalleryItemAnalysis | null
+}
+
+export interface GalleryItemAnalysis {
+  run_id: string
+  item_count: number
+  total_items: number
+  completed_at: string
+  model: string
 }
 
 /**
@@ -666,6 +676,9 @@ export async function fetchGalleryReport(id: string): Promise<GalleryReport> {
         : {},
     raw: typeof data.raw === 'string' ? data.raw : '',
     elicitation_summary: typeof data.elicitation_summary === 'string' ? data.elicitation_summary : undefined,
+    item_analysis: data.item_analysis && typeof data.item_analysis === 'object'
+      ? data.item_analysis as GalleryItemAnalysis
+      : undefined,
   }
 }
 

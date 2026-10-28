@@ -379,7 +379,10 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
         {onEditContext && <button className="ia-text-button" disabled={busy || active} onClick={onEditContext}>Edit context and start again</button>}
       </div>
       {run && <div ref={progressRef} tabIndex={-1} role="region" aria-label="Run progress"><p className="ia-small">{run.message}</p></div>}
-      {access && !run ? <>{requestErrors}<p role="status">Restoring your saved analysis…</p></> : <SixScoreWorkflow run={run} context={contextContent} canPrepare={dataConfirmed && !access} onPrepare={() => void start({ preventDefault() {} } as FormEvent)}
+      {access && !run ? <>{requestErrors}<p role="status">Restoring your saved analysis…</p>
+        <p className="ia-small">Starting again replaces this browser’s shortcut without deleting saved server results. If the previous analysis is still running, starting again does not stop it.</p>
+        {!pollError && <button type="button" className="ia-secondary" disabled={busy} onClick={reset}>Start a new analysis</button>}
+      </> : <SixScoreWorkflow run={run} context={contextContent} canPrepare={dataConfirmed && !access} onPrepare={() => void start({ preventDefault() {} } as FormEvent)}
         busy={busy} starting={starting} startDelayed={startDelayed} apiKey={apiKey} onKeyChange={setApiKey} pilotSize={pilotSize} canAnalyze={canClassify} onAnalyze={scope => void classify(scope)} onStop={() => void stop()}
         page={page} setPage={setPage} pageLoading={pageLoading} filter={filter} onFilterChange={next => { setFilter(next); setPage(1) }} filteredItems={filter.kind === 'all' ? undefined : inspection.items}
         filterLoading={inspection.loading} inspectionError={inspection.error} retryInspection={inspection.retry} onDownload={artifact => void download(artifact)} onViewReport={() => void openReport()}
@@ -411,7 +414,11 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
         <h3 id="ia-historical-title">You reopened an earlier item analysis</h3>
         <p>This saved run keeps its original pipeline and results format. New analyses use six scores per item and three steps: Context &amp; items, Analyze, and Results.</p>
         <p className="ia-small">Download the results package in step 6 before starting again to keep a copy. Starting again replaces this browser’s shortcut without deleting the saved analysis from the server.</p>
-        <button type="button" className="ia-primary" disabled={busy || active} onClick={reset}>Start a new six-score analysis</button>
+        {active && <p>Stop this analysis before starting a new one. Completed results stay saved.</p>}
+        <div className="ia-actions">
+          {active && <button type="button" className="ia-secondary" disabled={busy} onClick={() => void stop()}>Stop this analysis</button>}
+          <button type="button" className="ia-primary" disabled={busy || active} onClick={reset}>Start a new six-score analysis</button>
+        </div>
       </aside>
       <PipelineNavigation current={currentStep} statuses={statuses} onNavigate={navigate} />
       {(error || pollError) && <div className="ia-error ia-request-error" role="alert" ref={errorRef} tabIndex={-1}><p>{error || pollError}</p>

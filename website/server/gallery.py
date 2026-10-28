@@ -154,7 +154,7 @@ def get_report(entry_id: str) -> dict | None:
     )
 
     entry = next(e for e in list_entries() if e["id"] == entry_id)
-    return {
+    report = {
         "id": entry_id,
         "benchmark_name": entry["benchmark_name"],
         "slug": entry["slug"],
@@ -163,6 +163,12 @@ def get_report(entry_id: str) -> dict | None:
         "raw": raw,
         "elicitation_summary": elicitation_summary,
     }
+    from .gallery_item_analysis import published_metadata
+
+    metadata = published_metadata(entry_id, report)
+    if metadata is not None:
+        report["item_analysis"] = metadata
+    return report
 
 
 def review_pdf_path(entry_id: str) -> Path | None:

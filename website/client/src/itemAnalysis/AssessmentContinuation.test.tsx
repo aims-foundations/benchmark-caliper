@@ -206,13 +206,70 @@ it('explains restored historical runs and opens the new workflow without deletin
   expect(api.classify).not.toHaveBeenCalled()
 })
 
-it('keeps the historical-analysis restart action disabled while the run is active', async () => {
+it('can leave a stalled restoration and ignores its late response without deleting saved results', async () => {
   localStorage.setItem(storageKey, JSON.stringify(access))
-  vi.mocked(api.getRun).mockResolvedValue({ ...ready, status: 'running', scope: 'pilot' })
+  sessionStorage.setItem(storageKey, JSON.stringify(access))
+  let resolveRun!: (value: AnalysisRun) => void
+  let restoreSignal: AbortSignal | undefined
+  vi.mocked(api.getRun).mockImplementationOnce((_access, _page, signal) => {
+    restoreSignal = signal
+    return new Promise(resolve => { resolveRun = resolve })
+  })
+  const user = userEvent.setup()
   render(<ItemAnalysis assessment={assessment} />)
-  expect(await screen.findByRole('button', { name: 'Start a new six-score analysis' })).toBeDisabled()
+  expect(await screen.findByText('Restoring your saved analysis…')).toBeVisible()
+  expect(screen.getByText(/Starting again replaces this browser’s shortcut/)).toHaveTextContent('starting again does not stop it')
+
+  await user.click(screen.getByRole('button', { name: 'Start a new analysis' }))
+
+  expect(await screen.findByRole('button', { name: 'Confirm benchmark' })).toBeEnabled()
+  expect(restoreSignal?.aborted).toBe(true)
+  expect(localStorage.getItem(storageKey)).toBeNull()
+  expect(sessionStorage.getItem(storageKey)).toBeNull()
+  await act(async () => { resolveRun(ready) })
+  expect(screen.getByRole('heading', { name: 'Six scores for every item' })).toBeVisible()
+  expect(within(screen.getByRole('navigation', { name: 'Item analysis steps' })).getAllByRole('link')).toHaveLength(3)
+  expect(screen.queryByRole('complementary', { name: 'You reopened an earlier item analysis' })).not.toBeInTheDocument()
+  expect(api.getRun).toHaveBeenCalledTimes(1)
+  expect(api.cancelRun).not.toHaveBeenCalled()
   expect(api.discardRun).not.toHaveBeenCalled()
   expect(api.createAssessmentRun).not.toHaveBeenCalled()
+  expect(api.createRun).not.toHaveBeenCalled()
+  expect(api.classify).not.toHaveBeenCalled()
+})
+
+it.each(['preparing', 'generating', 'running'] as const)('can stop an earlier %s analysis from its notice before starting again', async status => {
+  localStorage.setItem(storageKey, JSON.stringify(access))
+  vi.mocked(api.getRun).mockResolvedValue({ ...ready, status, scope: 'pilot' })
+  let resolveStop!: (value: AnalysisRun) => void
+  vi.mocked(api.cancelRun).mockImplementationOnce(() => new Promise(resolve => { resolveStop = resolve }))
+  const user = userEvent.setup()
+  render(<ItemAnalysis assessment={assessment} />)
+  const notice = await screen.findByRole('complementary', { name: 'You reopened an earlier item analysis' })
+  expect(notice).toHaveTextContent('Stop this analysis before starting a new one. Completed results stay saved.')
+  expect(within(notice).getByRole('button', { name: 'Start a new six-score analysis' })).toBeDisabled()
+
+  await user.click(within(notice).getByRole('button', { name: 'Stop this analysis' }))
+
+  expect(api.cancelRun).toHaveBeenCalledWith(access)
+  expect(within(notice).getByRole('button', { name: 'Stop this analysis' })).toBeDisabled()
+  expect(within(notice).getByRole('button', { name: 'Start a new six-score analysis' })).toBeDisabled()
+  expect(JSON.parse(localStorage.getItem(storageKey)!)).toEqual(access)
+  const stopped: AnalysisRun = { ...ready, status: 'cancelled', message: 'Stopped; completed results retained.' }
+  vi.mocked(api.getRun).mockResolvedValue(stopped)
+  await act(async () => { resolveStop(stopped) })
+
+  expect(within(notice).getByRole('button', { name: 'Start a new six-score analysis' })).toBeEnabled()
+  expect(JSON.parse(localStorage.getItem(storageKey)!)).toEqual(access)
+  await user.click(within(notice).getByRole('button', { name: 'Start a new six-score analysis' }))
+
+  expect(await screen.findByRole('button', { name: 'Confirm benchmark' })).toBeEnabled()
+  expect(screen.getByRole('heading', { name: 'Six scores for every item' })).toBeVisible()
+  expect(localStorage.getItem(storageKey)).toBeNull()
+  expect(api.discardRun).not.toHaveBeenCalled()
+  expect(api.createAssessmentRun).not.toHaveBeenCalled()
+  expect(api.createRun).not.toHaveBeenCalled()
+  expect(api.classify).not.toHaveBeenCalled()
 })
 
 it('keeps failed items incomplete even if the provider reports a completed run', async () => {

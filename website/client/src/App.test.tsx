@@ -28,6 +28,14 @@ vi.mock('./itemAnalysis/DemoItemAnalysis', () => ({
     </section>,
 }))
 
+vi.mock('./itemAnalysis/SavedItemAnalysis', () => ({
+  SavedItemAnalysis: ({ assessmentId, onRunOwnAnalysis }: { assessmentId: string; onRunOwnAnalysis: () => void }) =>
+    <section id="item-analysis-stage" aria-label="Saved item analysis">
+      <p data-testid="saved-item-assessment-reference">{assessmentId}</p>
+      <button onClick={onRunOwnAnalysis}>Run your own analysis</button>
+    </section>,
+}))
+
 function makeStream(body: string): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder()
   return new ReadableStream<Uint8Array>({
@@ -757,6 +765,52 @@ describe('App', () => {
     expect(new URLSearchParams(window.location.search).get('assessment')).toBe(entry.id)
     expect(new URLSearchParams(window.location.search).has('demo')).toBe(false)
     expect(screen.getByText('Results ready').closest('li')).not.toHaveAttribute('aria-current', 'step')
+  })
+
+  it('opens published gallery results without mounting the private workflow and preserves the existing site layout', async () => {
+    const user = userEvent.setup()
+    const published = { id: 'gsm8k', benchmark_name: 'GSM8K', slug: 'us_statistics', deployment_description: 'A statistical analysis assistant' }
+    const ordinary = { id: 'expert__glue', benchmark_name: 'GLUE', slug: 'english', deployment_description: 'An English assistant' }
+    const storageKey = 'item_analysis_run_v1:gallery:gsm8k'
+    const access = JSON.stringify({ run_id: 'my-private-run', run_secret: 'private-token' })
+    localStorage.setItem(storageKey, access)
+    const dimensions = Object.fromEntries(['input_ontology', 'input_content', 'input_form', 'output_ontology', 'output_content', 'output_form'].map(id => [id, { score: 2, justification: 'Saved benchmark reasoning.' }]))
+    const fetchSpy = vi.fn(async (url: unknown) => {
+      const path = String(url)
+      if (path === '/api/gallery') return new Response(JSON.stringify({ benchmarks: [published, ordinary] }))
+      const entry = path.endsWith('/gsm8k') ? published : ordinary
+      return new Response(JSON.stringify({ ...entry, scoring: { dimensions }, raw: '{}',
+        elicitation_summary: '| IO | HIGH | Needed |',
+        ...(entry === published ? { item_analysis: { run_id: 'published-run', item_count: 100, total_items: 1319, completed_at: '2026-10-28T19:58:19Z', model: 'saved-model' } } : {}),
+      }))
+    })
+    globalThis.fetch = fetchSpy as typeof fetch
+    window.history.replaceState(null, '', '/caliper?assessment=gsm8k#item-analysis-stage')
+
+    render(<App />)
+    expect(await screen.findByTestId('saved-item-assessment-reference')).toHaveTextContent('gsm8k')
+    expect(screen.queryByRole('region', { name: 'Embedded item analysis' })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Benchmark Caliper.' })).toBeVisible()
+    expect(screen.getByRole('complementary', { name: 'Benchmark gallery' })).toBeVisible()
+    expect(document.querySelectorAll('.score-row')).toHaveLength(6)
+    expect(screen.getByText('High priority')).toBeVisible()
+    expect(screen.getByRole('link', { name: 'Open original benchmark report' })).toHaveAttribute('href', '/api/gallery/gsm8k/review.pdf')
+    expect(screen.queryByText('Full dataset classified')).not.toBeInTheDocument()
+    expect(document.querySelector('.priority-legend')).not.toBeInTheDocument()
+    expect(localStorage.getItem(storageKey)).toBe(access)
+    expect(fetchSpy.mock.calls.every(([url]) => String(url).startsWith('/api/gallery'))).toBe(true)
+
+    await user.click(screen.getByRole('button', { name: 'Run your own analysis' }))
+    expect(await screen.findByTestId('item-assessment-reference')).toHaveTextContent('gallery:gsm8k')
+    expect(screen.getByRole('region', { name: 'Saved item analysis' })).toBeVisible()
+    expect(screen.getByRole('link', { name: 'Back to saved item analysis' })).toHaveAttribute('href', '#item-analysis-stage')
+    expect(localStorage.getItem(storageKey)).toBe(access)
+
+    await user.click(screen.getByRole('button', { name: /GLUE An English assistant/ }))
+    await waitFor(() => expect(screen.getByTestId('item-assessment-reference')).toHaveTextContent('gallery:expert__glue'))
+    expect(screen.queryByRole('region', { name: 'Saved item analysis' })).not.toBeInTheDocument()
+    expect(screen.getByText('Benchmark assessment ready · item analysis available')).toBeInTheDocument()
+    expect(localStorage.getItem(storageKey)).toBe(access)
   })
 
   it('does not return to a stale replay after exiting the demo', async () => {
