@@ -299,7 +299,9 @@ def prepare_data(items_path: Path, output_dir: Path, *, benchmark: str, seed: in
 
             def normalized_items():
                 row_number = 0
-                for batch in parquet.iter_batches(batch_size=PREPARATION_BATCH_ROWS):
+                # Decode one batch at a time without parallel column buffers;
+                # large multilingual tables must fit the website's memory budget.
+                for batch in parquet.iter_batches(batch_size=PREPARATION_BATCH_ROWS, use_threads=False):
                     for row in batch.to_pylist():
                         row_number += 1
                         if _present(row.get("benchmark_id")):

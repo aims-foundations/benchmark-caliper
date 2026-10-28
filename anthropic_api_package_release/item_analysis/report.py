@@ -471,13 +471,15 @@ def _summarize_generic(classifier: dict, results: dict, total: int) -> dict:
         summary["determinate_percentage_denominator"] = "issue_identified and no_issue_identified judgments"
     return summary
 
-def generate_report(run_dir: Path, *, run_metadata: dict | None = None) -> dict:
-    """Write summary.json, items.csv, blind review.csv, and standalone report.html."""
+def generate_report(run_dir: Path, *, run_metadata: dict | None = None,
+                    export_artifacts: bool = True) -> dict:
+    """Summarize saved results, optionally deferring six-score export files."""
     run_dir = Path(run_dir)
     from .scoring import is_score_spec
     if is_score_spec(_read_json(run_dir / "classifier_spec.json", {})):
         from .score_report import generate_score_report
-        return generate_score_report(run_dir, run_metadata=run_metadata)
+        return generate_score_report(run_dir, run_metadata=run_metadata,
+                                     export_artifacts=export_artifacts)
     spec, items, results = _load_run(run_dir)
     dataset = _read_json(run_dir / "dataset.json", {})
     evidence = _read_json(run_dir / "evidence.json", {})

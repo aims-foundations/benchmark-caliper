@@ -233,7 +233,8 @@ def restore_job(directory: Path, metadata: dict) -> AnalysisJob:
                 # Existing six-score runs gain derived averages without changing
                 # their frozen scoring inputs or making additional model calls.
                 job.summary = report.generate_report(
-                    directory, run_metadata=job.summary.get("run") if job.summary else None)
+                    directory, run_metadata=job.summary.get("run") if job.summary else None,
+                    **({"export_artifacts": False} if scoring.is_score_spec(job.spec) else {}))
         if interrupted and (job.failure or {}).get("code") != "storage_full":
             if job.spec:
                 job.status, job.message = "cancelled", "The server stopped during this phase. Saved judgments are retained; resume with your OpenAI key."
@@ -664,7 +665,11 @@ async def drain_provider(job: AnalysisJob) -> None:
 
 
 async def refresh_report(job: AnalysisJob) -> None:
-    job.summary = await drained_thread(report.generate_report, job.directory)
+    # The website reads paginated items and this summary. Portable exports can
+    # be much larger than the dataset, so build them only on download.
+    job.summary = await drained_thread(
+        report.generate_report, job.directory,
+        **({"export_artifacts": False} if scoring.is_score_spec(job.spec) else {}))
 
 
 def prepare_assessment_job(job: AnalysisJob, upload: dict | None) -> Path:
@@ -1070,13 +1075,31 @@ async def download(run_id: str, artifact: str,
         raise HTTPException(409, "Wait for the current download to finish before downloading another artifact.")
     if artifact not in ARTIFACTS:
         raise HTTPException(404, "Unknown artifact.")
-    if job.status in ACTIVE_STATUSES and artifact != "spec":
+    if (job.status in ACTIVE_STATUSES or (job.task and not job.task.done())) and artifact != "spec":
         raise HTTPException(409, "Download results after the current phase finishes.")
     filename, media_type = ARTIFACTS[artifact]
     path = job.directory / filename
-    if not path.is_file():
-        raise HTTPException(404, "This artifact is not ready yet.")
     job.downloads += 1
+    try:
+        if scoring.is_score_spec(job.spec) and artifact in {"items", "report", "review"}:
+            # Rebuild from saved judgments even if an older export exists, so a
+            # resumed run cannot download stale scores. Hold the guard while
+            # preparing and sending the artifact.
+            job.summary = await drained_thread(
+                report.generate_report, job.directory,
+                run_metadata=job.summary.get("run") if job.summary else None)
+        if not path.is_file():
+            raise HTTPException(404, "This artifact is not ready yet.")
+    except asyncio.CancelledError:
+        job.downloads -= 1
+        raise
+    except Exception as error:
+        job.downloads -= 1
+        if isinstance(error, HTTPException):
+            raise
+        if store.is_storage_full(error):
+            raise HTTPException(507, STORAGE_FULL_MESSAGE) from None
+        raise HTTPException(500, "The artifact could not be prepared. Saved results are retained.") from None
 
     return AnalysisFileResponse(path, job=job, media_type=media_type, filename=filename,
                                 headers={"Cache-Control": "no-store"})

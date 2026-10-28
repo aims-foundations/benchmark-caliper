@@ -9,14 +9,16 @@ from __future__ import annotations
 
 import csv
 from collections import Counter
+from contextlib import contextmanager
 from itertools import islice
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 from . import storage
 from .classify import read_results
 from .report import (
     _ItemPopulation, _agreement, _comparison_inputs, _csv_text, _escape,
-    _items_with_ids, _read_json, _render_fields, _text, _write_json,
+    _read_json, _render_fields, _text, _write_json,
 )
 from .scoring import DIMENSIONS, validate_score_spec
 
@@ -38,20 +40,48 @@ def _load(directory: Path):
     return spec, dataset, items, results
 
 
-def _selection(directory: Path, items, results: dict) -> list[dict]:
+def _selected_items(items, selected_ids: set[str]):
+    """Yield selected evidence in saved order without retaining its contents."""
+    remaining = set(selected_ids)
+    if not remaining:
+        return
+    for item in items:
+        if item["item_id"] in remaining:
+            yield item
+            remaining.remove(item["item_id"])
+            if not remaining:
+                break
+
+
+def _selection_ids(directory: Path, items, results: dict) -> list[str]:
     execution = _read_json(directory / "execution.json", {})
     if "selected_item_ids" in execution:
         selected = execution["selected_item_ids"]
         if (not isinstance(selected, list) or any(not isinstance(value, str) for value in selected)
                 or len(selected) != len(set(selected)) or set(selected) - items.item_ids):
             raise ValueError("Execution selection must contain unique prepared item IDs")
-        return _items_with_ids(items, set(selected))
+        return [item["item_id"] for item in _selected_items(items, set(selected))]
     if "target_items" in execution:
         target = execution["target_items"]
         if type(target) is not int or target < 0:
             raise ValueError("Execution target_items must be a nonnegative integer")
-        return list(islice(items, target))
-    return _items_with_ids(items, set(results))
+        return [item["item_id"] for item in islice(items, target)]
+    return [item["item_id"] for item in _selected_items(items, set(results))]
+
+
+@contextmanager
+def _atomic_text(path: Path):
+    """Publish a finished artifact while retaining its previous copy on failure."""
+    temporary = None
+    try:
+        with NamedTemporaryFile(mode="w", encoding="utf-8", newline="", dir=path.parent,
+                                prefix=f".{path.name}-", suffix=".tmp", delete=False) as stream:
+            temporary = Path(stream.name)
+            yield stream
+        temporary.replace(path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
 
 
 def _dimension_summary(definition: dict, results: dict, total: int) -> dict:
@@ -82,7 +112,7 @@ def _write_csv(directory: Path, items, results: dict, selected_ids: set[str]) ->
         columns.extend(f"{dimension}.{field}" for field in
                        ("score", "status", "justification", "evidence", "information_gaps"))
     columns += ["analysis_type", "rubric_version"]
-    with (directory / "items.csv").open("w", encoding="utf-8", newline="") as stream:
+    with _atomic_text(directory / "items.csv") as stream:
         writer = csv.DictWriter(stream, fieldnames=columns)
         writer.writeheader()
         for item in items:
@@ -121,12 +151,12 @@ def write_blank_review(items, stream) -> None:
         writer.writerow({key: _csv_text(value) for key, value in row.items()})
 
 
-def _review(directory: Path, selected: list[dict]) -> dict:
+def _review(directory: Path, items, selected: list[str], *, export_artifacts: bool) -> dict:
     if (directory / "review.csv").exists():
         return _read_json(directory / "review_selection.json", {"method": "existing worksheet preserved"})
     selection = {
         "schema_version": "caliper_item_review_v3", "analysis_type": "six_scores",
-        "item_ids": [item["item_id"] for item in selected],
+        "item_ids": selected,
         "method": "all selected items in saved dataset order" if selected else "awaiting experiment selection",
         "purpose": "independent human review; model scores are omitted",
         "instructions": (
@@ -137,17 +167,20 @@ def _review(directory: Path, selected: list[dict]) -> dict:
         ),
     }
     if selected:
-        with (directory / "review.csv").open("w", encoding="utf-8", newline="") as stream:
-            write_blank_review(selected, stream)
-        _write_json(directory / "review_selection.json", selection)
+        if export_artifacts:
+            with _atomic_text(directory / "review.csv") as stream:
+                write_blank_review(_selected_items(items, set(selected)), stream)
+        storage.write_json(directory / "review_selection.json", selection)
     return selection
 
 
-def generate_score_report(directory: Path, *, run_metadata: dict | None = None) -> dict:
+def generate_score_report(directory: Path, *, run_metadata: dict | None = None,
+                          export_artifacts: bool = True) -> dict:
+    """Save the summary; materialize portable reports only when requested."""
     spec, dataset, items, results = _load(directory)
     evidence = _read_json(directory / "evidence.json", {})
-    selected = _selection(directory, items, results)
-    selected_ids = {item["item_id"] for item in selected}
+    selected = _selection_ids(directory, items, results)
+    selected_ids = set(selected)
     selected_results = {key: value for key, value in results.items() if key in selected_ids}
     dimensions = summarize_dimensions(spec["classifiers"], selected_results, len(selected))
     completed = sum(value["status"] == "complete" for value in results.values())
@@ -205,8 +238,9 @@ def generate_score_report(directory: Path, *, run_metadata: dict | None = None) 
         summary["run"] = {key: run_metadata[key] for key in
                           ("run_id", "status", "scope", "created_at", "updated_at", "exported_at")
                           if run_metadata.get(key) is not None}
-    _write_csv(directory, items, results, selected_ids)
-    summary["review_selection"] = _review(directory, selected)
+    if export_artifacts:
+        _write_csv(directory, items, results, selected_ids)
+    summary["review_selection"] = _review(directory, items, selected, export_artifacts=export_artifacts)
     comparison = _read_json(directory / "review_comparison.json")
     if comparison:
         current_inputs = _comparison_inputs(directory, Path(comparison.get("review_path", "")))
@@ -218,12 +252,13 @@ def generate_score_report(directory: Path, *, run_metadata: dict | None = None) 
         }
         if current:
             summary["review_comparison"] = comparison
-    _write_json(directory / "summary.json", summary)
-    (directory / "report.html").write_text(_html(summary, items, results, selected_ids), encoding="utf-8")
+    storage.write_json(directory / "summary.json", summary)
+    if export_artifacts:
+        _write_html(directory / "report.html", summary, items, results, selected_ids)
     return summary
 
 
-def _html(summary: dict, items, results: dict, selected_ids: set[str]) -> str:
+def _html_parts(summary: dict, items, results: dict, selected_ids: set[str]):
     experiment = summary["experiment"]
     if summary.get("run", {}).get("status") in {"cancelled", "failed"}:
         readiness = "Stopped — saved results retained"
@@ -235,7 +270,7 @@ def _html(summary: dict, items, results: dict, selected_ids: set[str]) -> str:
         readiness = "Selected sample complete"
     else:
         readiness = "Scoring in progress — partial results"
-    parts = ["<!doctype html><html lang='en'><head><meta charset='utf-8'>",
+    yield from ("<!doctype html><html lang='en'><head><meta charset='utf-8'>",
              "<meta name='viewport' content='width=device-width, initial-scale=1'>",
              "<meta http-equiv='Content-Security-Policy' content=\"default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'\">",
              "<title>Caliper — six scores per item</title><style>",
@@ -262,7 +297,7 @@ def _html(summary: dict, items, results: dict, selected_ids: set[str]) -> str:
              "Unknown counts are shown separately. Averages are descriptive item summaries and do not establish "
              "benchmark-wide coverage.</p>",
              "<table><tr><th>Dimension</th><th>Item average</th><th>Numeric items</th><th>Unknown</th>"
-             "<th>Original benchmark score</th></tr>"]
+             "<th>Original benchmark score</th></tr>")
     original = summary.get("original_assessment") or {}
     for dimension in summary["dimensions"]:
         mean = dimension["mean_score"]
@@ -277,65 +312,77 @@ def _html(summary: dict, items, results: dict, selected_ids: set[str]) -> str:
             original_label = "Unknown"
         else:
             original_label = "Not supplied"
-        parts.append(f"<tr><th>{_escape(dimension['name'])}</th><td class='score'>{mean_label}</td>"
+        yield (f"<tr><th>{_escape(dimension['name'])}</th><td class='score'>{mean_label}</td>"
                      f"<td>{dimension['known']}</td><td>{dimension['unknown']}</td><td>{original_label}</td></tr>")
-    parts.append("</table></section><section id='dimension-distributions'><h2>Score distributions</h2>"
+    yield ("</table></section><section id='dimension-distributions'><h2>Score distributions</h2>"
                  "<table><tr><th>Dimension</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>"
                  "<th>Unknown</th><th>Error</th><th>Pending</th></tr>")
     for dimension in summary["dimensions"]:
-        parts.append(f"<tr><th>{_escape(dimension['name'])}</th>" +
+        yield (f"<tr><th>{_escape(dimension['name'])}</th>" +
                      "".join(f"<td>{dimension['counts'][str(score)]}</td>" for score in range(1, 6)) +
                      f"<td>{dimension['unknown']}</td><td>{dimension['errors']}</td><td>{dimension['pending']}</td></tr>")
-    parts.append("</table></section><section id='items'><h2>Items and supporting evidence</h2>"
+    yield ("</table></section><section id='items'><h2>Items and supporting evidence</h2>"
                  "<p>Open a score to see its explanation, evidence, and information gaps. "
                  "Unselected prepared items remain visible as pending.</p><table><tr><th>Item</th><th>Status</th>" +
                  "".join(f"<th>{_escape(value.replace('_', ' ').title())}</th>" for value in DIMENSIONS) + "</tr>")
     for item in items:
         result = results.get(item["item_id"], {})
         state = result.get("status", "pending")
-        parts.append(f"<tr><td><strong>{_escape(item['item_id'])}</strong><br>"
+        yield (f"<tr><td><strong>{_escape(item['item_id'])}</strong><br>"
                      f"{_escape(_text(item.get('content'))[:160])}"
                      f"<details><summary>Complete item evidence</summary>{_render_fields(item)}</details></td>"
                      f"<td>{_escape(state.title())}{'' if item['item_id'] in selected_ids else ' (not selected)'}"
                      f"{('<p>' + _escape(result.get('error', '')) + '</p>') if state == 'error' else ''}</td>")
         for dimension in DIMENSIONS:
             if state != "complete":
-                parts.append(f"<td>{_escape(state.title())}</td>")
+                yield (f"<td>{_escape(state.title())}</td>")
                 continue
             judgment = result["dimensions"][dimension]
             score = judgment["score"]
             label = "Unknown" if score is None else f"{score}/5"
-            parts.append(f"<td><details><summary class='score{' unknown' if score is None else ''}'>{label}</summary>"
+            yield (f"<td><details><summary class='score{' unknown' if score is None else ''}'>{label}</summary>"
                          f"<p>{_escape(judgment['justification'])}</p><strong>Evidence</strong>"
                          f"{_render_fields(judgment['evidence'])}<strong>Information gaps</strong>"
                          f"{_render_fields(judgment['information_gaps'])}</details></td>")
-        parts.append("</tr>")
-    parts.append("</table></section><section id='original-assessment'><h2>Original benchmark assessment</h2>"
+        yield ("</tr>")
+    yield ("</table></section><section id='original-assessment'><h2>Original benchmark assessment</h2>"
                  "<p>The benchmark assessment remains separate. Item scores do not overwrite it.</p>")
     if summary["original_assessment"]:
-        parts.append(_render_fields(summary["original_assessment"]))
+        yield (_render_fields(summary["original_assessment"]))
     else:
-        parts.append("<p>No benchmark assessment was supplied for this item analysis.</p>")
+        yield ("<p>No benchmark assessment was supplied for this item analysis.</p>")
     if summary["original_report_available"]:
-        parts.append("<p><a href='original_benchmark_report.pdf'>Original benchmark report (PDF)</a></p>")
-    parts.append("</section><section id='human-review'><h2>Independent human review</h2>" +
+        yield ("<p><a href='original_benchmark_report.pdf'>Original benchmark report (PDF)</a></p>")
+    yield ("</section><section id='human-review'><h2>Independent human review</h2>" +
                  f"<p>{_escape(summary['review_selection'].get('instructions', 'Existing worksheet preserved.'))}</p>")
     if summary["review_selection"].get("item_ids"):
-        parts.append("<p><a href='review.csv'>Review worksheet</a> (may contain existing human annotations). "
+        yield ("<p><a href='review.csv'>Review worksheet</a> (may contain existing human annotations). "
                      "A full results package includes a separate fresh blank worksheet.</p>")
     if summary.get("review_comparison_status"):
-        parts.append(f"<p>{_escape(summary['review_comparison_status']['note'])}</p>")
+        yield (f"<p>{_escape(summary['review_comparison_status']['note'])}</p>")
     if summary.get("review_comparison"):
-        parts.append(_render_fields(summary["review_comparison"]["classifiers"]))
-    parts.append("</section><section id='audit'><h2>Methods and provenance</h2>" +
+        yield (_render_fields(summary["review_comparison"]["classifiers"]))
+    yield ("</section><section id='audit'><h2>Methods and provenance</h2>" +
                  f"<p>{_escape(experiment['request_policy'])}. "
                  f"Rubric: {_escape(summary['rubric_version'])}.</p>")
     for title, value in (("Run", summary.get("run")), ("Model", summary["classification"]),
                          ("Context preparation", summary["specification"]), ("Dataset", summary["dataset"])):
         if value:
-            parts.append(f"<details><summary>{title}</summary>{_render_fields(value)}</details>")
-    parts.append("<p>This report works offline. Keep companion JSON and CSV files together.</p></section></body></html>")
-    return "\n".join(parts).replace("<table>", "<div class='table-scroll' role='region' aria-label='Scrollable data table' tabindex='0'><table>").replace("</table>", "</table></div>")
+            yield (f"<details><summary>{title}</summary>{_render_fields(value)}</details>")
+    yield ("<p>This report works offline. Keep companion JSON and CSV files together.</p></section></body></html>")
+
+
+def _write_html(path: Path, summary: dict, items, results: dict, selected_ids: set[str]) -> None:
+    with _atomic_text(path) as stream:
+        separator = ""
+        for part in _html_parts(summary, items, results, selected_ids):
+            # Wrap each complete table tag as it arrives, without copying the
+            # full document. User-provided evidence is already escaped.
+            part = part.replace("<table>", "<div class='table-scroll' role='region' aria-label='Scrollable data table' tabindex='0'><table>")
+            part = part.replace("</table>", "</table></div>")
+            stream.write(separator)
+            stream.write(part)
+            separator = "\n"
 
 
 def compare_score_review(directory: Path, review_path: Path) -> dict:

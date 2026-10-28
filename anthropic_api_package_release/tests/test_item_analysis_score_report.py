@@ -3,6 +3,7 @@
 import csv
 import io
 import json
+import tracemalloc
 from zipfile import ZipFile
 
 import pytest
@@ -243,3 +244,91 @@ def test_unknown_human_judgment_requires_gap(score_run):
         writer.writerows(rows)
     with pytest.raises(ValueError, match="information_gaps"):
         compare_review(score_run, score_run / "review.csv")
+
+
+@pytest.mark.parametrize("execution", [
+    {"selected_item_ids": ["item-2", "item-0", "item-1"]},
+    {"target_items": 3},
+    None,
+])
+def test_summary_only_defers_exports_without_changing_scores_or_review_selection(score_run, execution):
+    if execution is not None:
+        _json(score_run / "execution.json", execution)
+    _records(score_run / "results.jsonl", [_complete("item-0"), _error("item-1")])
+    metadata = {"run_id": "saved-run", "status": "failed", "scope": "pilot"}
+    summary = generate_report(score_run, run_metadata=metadata, export_artifacts=False)
+    assert summary == json.loads((score_run / "summary.json").read_text())
+    assert summary["dimensions"][0]["mean_score"] == 4
+    assert summary["review_selection"]["item_ids"] == (
+        ["item-0", "item-1", "item-2"] if execution is not None else ["item-0", "item-1"])
+    assert json.loads((score_run / "review_selection.json").read_text()) == summary["review_selection"]
+    assert not any((score_run / name).exists() for name in ("items.csv", "report.html", "review.csv"))
+
+    exported = generate_report(score_run, run_metadata=metadata)
+    assert exported == summary
+    assert all((score_run / name).is_file() for name in ("items.csv", "report.html", "review.csv"))
+    with (score_run / "review.csv").open() as stream:
+        assert [row["item_id"] for row in csv.DictReader(stream)] == summary["review_selection"]["item_ids"]
+
+
+def test_summary_refresh_preserves_existing_exports_and_human_annotations(score_run):
+    _records(score_run / "results.jsonl", [_complete("item-0")])
+    generate_report(score_run)
+    with (score_run / "review.csv").open("a") as stream:
+        stream.write("\nHuman annotation retained\n")
+    saved = {name: (score_run / name).read_bytes()
+             for name in ("report.html", "items.csv", "review.csv", "review_selection.json")}
+    _records(score_run / "results.jsonl", [_complete("item-0"), _complete("item-1", unknown=None)])
+
+    summary = generate_report(score_run, export_artifacts=False)
+    assert summary["completed_items"] == 2
+    assert summary["review_selection"]["item_ids"] == ["item-0"]
+    assert all((score_run / name).read_bytes() == content for name, content in saved.items())
+
+
+def test_full_export_memory_does_not_grow_with_selected_item_contents(score_run):
+    # A multilingual population previously accumulated every selected item and
+    # several complete copies of the HTML document in memory. This smaller
+    # population exercises the same failure without exhausting the test runner.
+    count = 600
+    content = "<b>&𐐀" + "a" * 8192
+    with (score_run / "items.jsonl").open("w") as stream:
+        for index in range(count):
+            stream.write(json.dumps({"item_id": f"item-{index}", "content": content}) + "\n")
+    _json(score_run / "dataset.json", {"benchmark": "test", "item_count": count})
+    _json(score_run / "execution.json", {"selected_item_ids": [f"item-{index}" for index in range(count)]})
+    tracemalloc.start()
+    try:
+        summary = generate_report(score_run)
+        _, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    assert peak < 12 * 1024 * 1024, f"Report generation retained {peak / 1024**2:.1f} MiB"
+    assert summary["experiment"]["selected_items"] == count
+    with (score_run / "items.csv").open() as stream:
+        assert sum(1 for _ in csv.DictReader(stream)) == count
+    with (score_run / "review.csv").open() as stream:
+        assert sum(1 for _ in csv.DictReader(stream)) == count
+    report = (score_run / "report.html").read_text()
+    assert report.count("Complete item evidence") == count
+    assert "item-599" in report and "&lt;b&gt;&amp;𐐀" in report
+    assert report.count("<table>") == report.count("</table></div>") == 3
+    assert report.endswith("</body></html>")
+
+
+def test_interrupted_streamed_export_keeps_previous_report(score_run, monkeypatch):
+    from item_analysis import score_report
+
+    _records(score_run / "results.jsonl", [_complete("item-0")])
+    generate_report(score_run)
+    saved = (score_run / "report.html").read_bytes()
+
+    def interrupted(*args):
+        yield "New report started"
+        raise OSError("Simulated interrupted write")
+
+    monkeypatch.setattr(score_report, "_html_parts", interrupted)
+    with pytest.raises(OSError, match="interrupted write"):
+        generate_report(score_run)
+    assert (score_run / "report.html").read_bytes() == saved
+    assert not list(score_run.glob(".report.html-*.tmp"))
