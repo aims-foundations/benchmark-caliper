@@ -1,5 +1,5 @@
 import { beforeEach, expect, it, vi } from 'vitest'
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ItemAnalysis } from './ItemAnalysis'
 import * as api from './api'
@@ -7,7 +7,7 @@ import type { AnalysisRun, AssessmentReference, AssessmentSetup, SourceDiscovery
 
 vi.mock('./api', async original => ({ ...await original<typeof import('./api')>(),
   getAssessment: vi.fn(), createAssessmentRun: vi.fn(), getRun: vi.fn(), classify: vi.fn(), cancelRun: vi.fn(),
-  getCatalog: vi.fn(), createRun: vi.fn(), searchSources: vi.fn(),
+  getCatalog: vi.fn(), createRun: vi.fn(), searchSources: vi.fn(), discardRun: vi.fn(),
 }))
 
 const assessment: AssessmentReference = { kind: 'run', id: 'my-assessment' }
@@ -181,6 +181,38 @@ it('restores the same assessment’s checkpoint and completes only after the ful
   await user.click(screen.getByRole('button', { name: 'Continue through all items' }))
   await waitFor(() => expect(onStatusChange).toHaveBeenLastCalledWith('complete'))
   expect(api.classify).toHaveBeenCalledWith(access, 'all', 'sk-returned')
+})
+
+it('explains restored historical runs and opens the new workflow without deleting results or starting calls', async () => {
+  localStorage.setItem(storageKey, JSON.stringify(access))
+  const user = userEvent.setup()
+  render(<ItemAnalysis assessment={assessment} />)
+  const notice = await screen.findByRole('complementary', { name: 'You reopened an earlier item analysis' })
+  expect(notice).toHaveTextContent('This saved run keeps its original pipeline and results format.')
+  expect(notice).toHaveTextContent('Download the results package in step 6 before starting again')
+  expect(within(screen.getByRole('navigation', { name: 'Item analysis steps' })).getAllByRole('link')).toHaveLength(6)
+
+  await user.click(within(notice).getByRole('button', { name: 'Start a new six-score analysis' }))
+
+  expect(await screen.findByRole('heading', { name: 'Six scores for every item' })).toBeVisible()
+  expect(await screen.findByRole('button', { name: 'Confirm benchmark' })).toBeEnabled()
+  expect(within(screen.getByRole('navigation', { name: 'Item analysis steps' })).getAllByRole('link')).toHaveLength(3)
+  expect(screen.queryByRole('complementary', { name: 'You reopened an earlier item analysis' })).not.toBeInTheDocument()
+  expect(localStorage.getItem(storageKey)).toBeNull()
+  expect(sessionStorage.getItem(storageKey)).toBeNull()
+  expect(api.discardRun).not.toHaveBeenCalled()
+  expect(api.createAssessmentRun).not.toHaveBeenCalled()
+  expect(api.createRun).not.toHaveBeenCalled()
+  expect(api.classify).not.toHaveBeenCalled()
+})
+
+it('keeps the historical-analysis restart action disabled while the run is active', async () => {
+  localStorage.setItem(storageKey, JSON.stringify(access))
+  vi.mocked(api.getRun).mockResolvedValue({ ...ready, status: 'running', scope: 'pilot' })
+  render(<ItemAnalysis assessment={assessment} />)
+  expect(await screen.findByRole('button', { name: 'Start a new six-score analysis' })).toBeDisabled()
+  expect(api.discardRun).not.toHaveBeenCalled()
+  expect(api.createAssessmentRun).not.toHaveBeenCalled()
 })
 
 it('keeps failed items incomplete even if the provider reports a completed run', async () => {

@@ -99,3 +99,16 @@ it('can choose a pilot and continue through all items without a review acknowled
   expect(screen.getByText(/6 primary scoring calls remaining/)).toBeVisible()
   expect(screen.getByRole('button', { name: 'Continue analysis' })).toBeEnabled()
 })
+
+it('shows the run-wide mean comparison below the item table and directly above exports without opening a disclosure', async () => {
+  localStorage.setItem('item_analysis_run_v1', JSON.stringify(access))
+  vi.mocked(api.getRun).mockResolvedValue({ ...buildSixScoreDemoRun('sample'), run_id: access.run_id })
+  render(<ItemAnalysis />)
+  const averages = await screen.findByRole('table', { name: 'Dimension averages and benchmark scores' })
+  expect(averages).toBeVisible()
+  expect(averages.closest('details')).toBeNull()
+  expect(within(averages).getAllByRole('rowheader')).toHaveLength(6)
+  const items = screen.getByRole('table', { name: /Item scores/ })
+  expect(items.compareDocumentPosition(averages) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  expect(screen.getByRole('region', { name: 'Average item scores' }).nextElementSibling).toContainElement(screen.getByRole('region', { name: 'Save and share results' }))
+})

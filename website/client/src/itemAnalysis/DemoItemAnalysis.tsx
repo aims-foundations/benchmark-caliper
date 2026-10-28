@@ -3,7 +3,7 @@ import { DEMO_ITEM_STORAGE_KEY, resetDemoItemProgress } from '../demo/session'
 import { DEMO_ITEM_ANALYSIS_PILOT_SIZE, DEMO_ITEM_ANALYSIS_PROVENANCE } from '../demo/itemAnalysisFixture'
 import { buildSixScoreDemoRun, DEMO_SIX_SCORE_SPEC } from '../demo/sixScoreItemFixture'
 import { SharedScoringContext, SixScoreNavigation } from './SixScoreWorkflow'
-import { ItemJudgments, ResultExports, SummaryFindings, type ItemFilter } from './Results'
+import { DimensionAverages, ItemJudgments, ResultExports, SummaryFindings, type ItemFilter } from './Results'
 import { buildDemoExport } from './demoExports'
 import { saveBlob, viewReport } from './downloads'
 import type { Artifact } from './types'
@@ -67,6 +67,7 @@ export function DemoItemAnalysis({ onStatusChange }: { onStatusChange?: (status:
       {showing ? <><p role="status">{run.complete} of {run.total} bundled items shown. These scores illustrate the workflow; they are not model outputs or findings about the full MathDial benchmark.</p>
         <ItemJudgments run={run} page={page} setPage={setPage} pageLoading={false} demo filter={filter} onFilterChange={value => { setFilter(value); setPage(1) }} />
         <details className="ia-original"><summary>Illustrative score distributions and original benchmark assessment</summary><SummaryFindings run={run} demo onInspect={value => { setFilter(value); setPage(1); navigate(3) }} /></details>
+        <DimensionAverages run={run} demo />
         <ResultExports run={run} onDownload={download} onViewReport={() => void report()} downloading={null} demo />
       </> : <><p>Six scores per item will appear here. Select a score to read the explanation, evidence, and missing information.</p>{stage === 'ready' && <button className="ia-secondary" onClick={() => download('spec')}>Download demo context JSON</button>}</>}
       {error && <p className="ia-error" role="alert">{error}</p>}

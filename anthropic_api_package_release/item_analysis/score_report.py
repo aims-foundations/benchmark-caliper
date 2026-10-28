@@ -58,15 +58,22 @@ def _dimension_summary(definition: dict, results: dict, total: int) -> dict:
     scores = Counter(result["dimensions"][definition["id"]]["score"]
                      for result in results.values() if result["status"] == "complete")
     completed = sum(scores.values())
+    known = completed - scores[None]
     errors = sum(result["status"] == "error" for result in results.values())
     return {
         **definition, "name": definition["id"].replace("_", " ").title(),
         "counts": {str(score): scores[score] for score in range(1, 6)},
-        "known": completed - scores[None], "unknown": scores[None],
+        "known": known, "unknown": scores[None],
+        "mean_score": sum(score * scores[score] for score in range(1, 6)) / known if known else None,
         "valid_judgments": completed, "errors": errors,
         "pending": total - completed - errors, "invalid": 0,
-        "denominator": "selected items; Unknown, operational errors, and pending items are separate",
+        "denominator": "counts describe selected items; mean_score uses only numeric scores from completed selected items; Unknown, operational errors, and pending items are excluded from the mean",
     }
+
+
+def summarize_dimensions(definitions: list[dict], results: dict, total: int) -> list[dict]:
+    """Summarize validated results for the selected population without writing files."""
+    return [_dimension_summary(definition, results, total) for definition in definitions]
 
 
 def _write_csv(directory: Path, items, results: dict, selected_ids: set[str]) -> None:
@@ -142,7 +149,7 @@ def generate_score_report(directory: Path, *, run_metadata: dict | None = None) 
     selected = _selection(directory, items, results)
     selected_ids = {item["item_id"] for item in selected}
     selected_results = {key: value for key, value in results.items() if key in selected_ids}
-    dimensions = [_dimension_summary(definition, selected_results, len(selected)) for definition in spec["classifiers"]]
+    dimensions = summarize_dimensions(spec["classifiers"], selected_results, len(selected))
     completed = sum(value["status"] == "complete" for value in results.values())
     errors = sum(value["status"] == "error" for value in results.values())
     selected_completed = sum(value["status"] == "complete" for value in selected_results.values())
@@ -166,6 +173,9 @@ def generate_score_report(directory: Path, *, run_metadata: dict | None = None) 
         "interpretation": (
             "Each item receives six independent 1–5 alignment judgments against the shared deployment requirements. "
             "Unknown means insufficient evidence, not a low score or a processing failure. Counts describe selected items. "
+            "Each dimension's average is the arithmetic mean of its numeric scores from completed selected items; "
+            "Unknown, operational errors, and pending items are excluded. These six averages can be compared "
+            "with the original benchmark dimensions, whose scores remain unchanged. "
             "Scores are not combined into an item rank or an overall benchmark score. "
             "An item's task relevance does not establish benchmark-wide coverage."
         ),
@@ -245,8 +255,33 @@ def _html(summary: dict, items, results: dict, selected_ids: set[str]) -> str:
              "<a href='classifier_spec.json'>Shared context and fixed rubric</a></p>",
              "<p>1 = fundamental mismatch; 2 = substantial mismatch; 3 = partial alignment; "
              "4 = strong alignment with minor limitations; 5 = strong alignment supported by evidence.</p>",
-             "<table><tr><th>Dimension</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>"
-             "<th>Unknown</th><th>Error</th><th>Pending</th></tr>"]
+             "</section><section id='dimension-averages'><h2>Average scores across evaluated items</h2>",
+             f"<p>Based on {experiment['selected_completed_items']} completed items out of "
+             f"{experiment['selected_items']} selected items in the prepared dataset. Each dimension uses its own "
+             "numeric item count. Unknown scores, errors, and pending items are excluded from averages; "
+             "Unknown counts are shown separately. Averages are descriptive item summaries and do not establish "
+             "benchmark-wide coverage.</p>",
+             "<table><tr><th>Dimension</th><th>Item average</th><th>Numeric items</th><th>Unknown</th>"
+             "<th>Original benchmark score</th></tr>"]
+    original = summary.get("original_assessment") or {}
+    for dimension in summary["dimensions"]:
+        mean = dimension["mean_score"]
+        mean_label = f"{mean:.2f} / 5" if mean is not None else "No numeric scores"
+        assessment = original.get(dimension["id"])
+        original_score = assessment.get("score") if isinstance(assessment, dict) else assessment
+        if type(original_score) in (int, float):
+            original_label = f"{original_score:.2f} / 5"
+        elif original_score is not None:
+            original_label = _escape(original_score)
+        elif isinstance(assessment, dict) and "score" in assessment:
+            original_label = "Unknown"
+        else:
+            original_label = "Not supplied"
+        parts.append(f"<tr><th>{_escape(dimension['name'])}</th><td class='score'>{mean_label}</td>"
+                     f"<td>{dimension['known']}</td><td>{dimension['unknown']}</td><td>{original_label}</td></tr>")
+    parts.append("</table></section><section id='dimension-distributions'><h2>Score distributions</h2>"
+                 "<table><tr><th>Dimension</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>"
+                 "<th>Unknown</th><th>Error</th><th>Pending</th></tr>")
     for dimension in summary["dimensions"]:
         parts.append(f"<tr><th>{_escape(dimension['name'])}</th>" +
                      "".join(f"<td>{dimension['counts'][str(score)]}</td>" for score in range(1, 6)) +

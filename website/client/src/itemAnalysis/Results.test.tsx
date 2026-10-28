@@ -106,23 +106,27 @@ it('keeps saved judgments inspectable while another dimension needs retry', () =
   expect(screen.getAllByText('Pending')).toHaveLength(2)
 })
 
-it('groups downloads and explains external human review without claiming completion', async () => {
+it('groups report, package and individual downloads without human review controls', async () => {
   const user = userEvent.setup()
   const run = buildDemoItemAnalysisRun('sample')
   const onDownload = vi.fn()
   const onViewReport = vi.fn()
   const onDownloadPackage = vi.fn()
   render(<ResultExports run={run} onDownload={onDownload} onViewReport={onViewReport} onDownloadPackage={onDownloadPackage} downloading={null} />)
-  expect(screen.getByText('Human review has not been recorded here.')).toBeInTheDocument()
-  expect(screen.getByText(/website does not import completed worksheets/)).toBeInTheDocument()
-  expect(within(screen.getByRole('region', { name: 'External human review' })).getAllByRole('listitem')).toHaveLength(4)
+  expect(screen.queryByText('Independent human review')).not.toBeInTheDocument()
+  expect(screen.queryByRole('region', { name: 'External human review' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /Download blind review worksheet/ })).not.toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: /View report/ }))
   expect(onViewReport).toHaveBeenCalledOnce()
   await user.click(screen.getByRole('button', { name: /Download complete results package/ }))
   expect(onDownloadPackage).toHaveBeenCalledOnce()
-  await user.click(screen.getByRole('button', { name: /Download blind review worksheet/ }))
-  expect(onDownload).toHaveBeenCalledWith('review')
   expect((screen.getByText('Individual files').closest('details') as HTMLDetailsElement).open).toBe(false)
+  await user.click(screen.getByText('Individual files'))
+  expect(screen.queryByRole('button', { name: /Human review CSV/ })).not.toBeInTheDocument()
+  for (const [label, artifact] of [['Criteria JSON', 'spec'], ['Item labels CSV', 'items'], ['Summary JSON', 'summary'], ['HTML report', 'report']]) {
+    await user.click(screen.getByRole('button', { name: new RegExp(label) }))
+    expect(onDownload).toHaveBeenLastCalledWith(artifact)
+  }
 })
 
 it('keeps the immutable specification downloadable while result exports await a running phase', async () => {

@@ -1,9 +1,10 @@
 import { SixScoreTable } from './SixScoreTable'
 import { classifierName, labelName, readable } from './Criteria'
+import { dimensionAverages } from './sixScoreSummary'
 import type { AnalysisRun, Artifact, Classifier, Item } from './types'
 
 const DIMENSIONS = ['input_ontology', 'input_content', 'input_form', 'output_ontology', 'output_content', 'output_form']
-const ARTIFACTS: [Artifact, string][] = [['spec', 'Criteria JSON'], ['items', 'Item labels CSV'], ['summary', 'Summary JSON'], ['report', 'HTML report'], ['review', 'Human review CSV']]
+const ARTIFACTS: [Artifact, string][] = [['spec', 'Criteria JSON'], ['items', 'Item labels CSV'], ['summary', 'Summary JSON'], ['report', 'HTML report']]
 const DESCRIPTIONS: Record<string, string> = {
   input_ontology: 'Which tasks, skills, or situations required by the deployment does each input represent?',
   input_content: 'Do the input’s details or assumptions introduce a supported conflict with the intended task or deployment?',
@@ -173,8 +174,30 @@ function OriginalAssessment({ run }: { run: AnalysisRun }) {
   </details>
 }
 
+export function DimensionAverages({ run, demo = false }: { run: AnalysisRun; demo?: boolean }) {
+  if (!(run.analysis_type === 'six_scores' || run.spec?.schema_version === 'caliper_item_context_v1') || !run.summary) return null
+  const summary = run.summary
+  const selected = summary.experiment?.selected_items ?? summary.total_items
+  const evaluated = typeof summary.experiment?.selected_completed_items === 'number' ? summary.experiment.selected_completed_items : summary.completed_items
+  const scope = summary.complete_snapshot ? demo ? 'Full demo sample' : 'Full snapshot' : selected < summary.total_items ? 'Selected items' : 'Partial results'
+  return <section className="ia-dimension-averages" aria-labelledby="ia-dimension-averages-title">
+    <div className="ia-section-heading"><h3 id="ia-dimension-averages-title">Average item scores</h3><span className="ia-tag">{scope}</span></div>
+    <p className="ia-small">{evaluated.toLocaleString()} of {selected.toLocaleString()} selected items evaluated, from {summary.total_items.toLocaleString()} items in the {demo ? 'demo sample' : 'prepared snapshot'}. Averages use all evaluated items in this run, regardless of the item table’s page or filter.</p>
+    <div className="ia-average-table-scroll"><table className="ia-average-table" aria-label="Dimension averages and benchmark scores">
+      <thead><tr><th scope="col">Dimension</th><th scope="col">Item average</th><th scope="col">Items included</th><th scope="col">Benchmark score</th></tr></thead>
+      <tbody>{dimensionAverages(run).map(dimension => <tr key={dimension.id}>
+        <th scope="row">{classifierName(dimension.id)}</th>
+        <td><strong>{dimension.mean === null ? 'Unknown' : `${dimension.mean.toFixed(2)} / 5`}</strong>{dimension.mean === null && <small>No numeric scores</small>}</td>
+        <td>{dimension.known.toLocaleString()} numeric<small>{dimension.unknown.toLocaleString()} Unknown</small></td>
+        <td>{dimension.benchmark}</td>
+      </tr>)}</tbody>
+    </table></div>
+    <p className="ia-small">Each average is the sum of numeric scores divided by their count for that dimension. Unknown, failed, and pending items are excluded. Item averages describe the evaluated items; the original benchmark scores assess the benchmark as a whole.</p>
+    {demo && <p className="ia-small">These averages describe authored illustrative scores, not model outputs or estimates for the full benchmark.</p>}
+  </section>
+}
+
 export function SummaryFindings({ run, demo = false, classifierNames, onInspect }: { run: AnalysisRun; demo?: boolean; classifierNames?: Record<string, string>; onInspect?: (filter: ItemFilter) => void }) {
-  if ((run.analysis_type === 'six_scores' || run.spec?.schema_version === 'caliper_item_context_v1') && ['preparing', 'generating', 'running'].includes(run.status)) return <p className="ia-small">Score distributions update when the current phase pauses or finishes. Saved item assessments remain available in the table.</p>
   if (run.analysis_type === 'six_scores' || run.spec?.schema_version === 'caliper_item_context_v1') return <div className="ia-summary-findings">
     <p className="ia-small">Distributions describe saved numeric scores for each dimension. Unknown, failed, and pending assessments are counted separately. These are not benchmark-level scores.</p>
     <div className="ia-distributions">{run.summary?.classifiers.map(dimension => {
@@ -230,29 +253,18 @@ export function SummaryFindings({ run, demo = false, classifierNames, onInspect 
 export function ResultExports({ run, onDownload, onViewReport, onDownloadPackage, downloading, demo = false }: Pick<ResultsProps, 'run' | 'onDownload' | 'onViewReport' | 'onDownloadPackage' | 'downloading' | 'demo'>) {
   const sixScores = run.analysis_type === 'six_scores' || run.spec?.schema_version === 'caliper_item_context_v1'
   const active = ['preparing', 'generating', 'running'].includes(run.status)
-  const { selected } = resultCounts(run)
   const exportsDisabled = downloading !== null || active || !run.summary
-  const reviewDisabled = exportsDisabled || ((sixScores || run.spec?.fixed_catalog_version === 'caliper_generic_items_v1') && !selected)
   return <div className="ia-export-results">
     <section className="ia-exports" aria-label="Save and share results"><h3>Save and share results</h3>
       <div className="ia-primary-exports">
         {onViewReport && <button type="button" className="ia-primary" onClick={onViewReport} disabled={exportsDisabled}>{downloading === 'view' ? 'Opening report…' : 'View report'}<span aria-hidden="true"> ↗</span></button>}
         {onDownloadPackage && <button type="button" className="ia-secondary" onClick={onDownloadPackage} disabled={exportsDisabled}>{downloading === 'package' ? 'Downloading…' : 'Download complete results package'}<span aria-hidden="true"> ↓</span></button>}
-        <button type="button" className="ia-secondary" onClick={() => onDownload('review')} disabled={reviewDisabled}>Download blind review worksheet<span aria-hidden="true"> ↓</span></button>
       </div>
-      <p className="ia-small">{demo ? 'These files contain the bundled sample and authored example judgments. No live experiment package is created.' : 'View the readable report or keep the complete package for later review and team sharing. It includes the current saved results, including partial progress.'} The blind worksheet omits predictions for independent review.</p>
+      <p className="ia-small">{demo ? 'These files contain the bundled sample and authored example judgments. No live experiment package is created.' : 'View the readable report or keep the complete package for later review and team sharing. It includes the current saved results, including partial progress.'}</p>
       {active && <p className="ia-small">Downloads become available when the current processing phase stops or finishes.</p>}
       <details className="ia-individual-files"><summary>Individual files</summary><div>{ARTIFACTS.map(([artifact, label]) => <button key={artifact} type="button" className="ia-text-button"
-        onClick={() => onDownload(artifact)} disabled={artifact === 'spec' ? downloading !== null || !run.spec : artifact === 'review' ? reviewDisabled : exportsDisabled}>{downloading === artifact ? 'Downloading…' : sixScores && artifact === 'items' ? 'Item scores CSV' : sixScores && artifact === 'spec' ? 'Shared context JSON' : label}<span aria-hidden="true"> ↓</span></button>)}</div></details>
+        onClick={() => onDownload(artifact)} disabled={artifact === 'spec' ? downloading !== null || !run.spec : exportsDisabled}>{downloading === artifact ? 'Downloading…' : sixScores && artifact === 'items' ? 'Item scores CSV' : sixScores && artifact === 'spec' ? 'Shared context JSON' : label}<span aria-hidden="true"> ↓</span></button>)}</div></details>
     </section>
-    <details className="ia-human-review" open={!sixScores}><summary>Independent human review</summary><section aria-label="External human review"><h3>Arrange an independent human review</h3>
-      <p><strong>Human review has not been recorded here.</strong> Model classification and downloading a worksheet do not complete human review.</p>
-      <ol><li><strong>Prepare reviewer copies.</strong> Download the blind worksheet and classifier specification. Give each reviewer a separate worksheet and the same criteria and source context.</li>
-        <li><strong>Record independent judgments.</strong> Reviewers inspect the selected items, enter their labels and supporting notes, and preserve item identifiers. Ask them to finish before consulting model predictions.</li>
-        <li><strong>Compare and resolve disagreements.</strong> Keep each reviewer’s original file, compare their judgments with one another and with the item labels, and document any agreed changes separately.</li>
-        <li><strong>Keep the review record with the results.</strong> Store the completed worksheets and review notes beside the exported package so your team can revisit the decisions.</li></ol>
-      <p className="ia-small">Review happens outside this page. The website does not import completed worksheets or calculate reviewer agreement; the project’s command-line review tools support separate comparison.</p>
-    </section></details>
   </div>
 }
 
@@ -262,6 +274,7 @@ export function Results(props: ResultsProps) {
     {props.run.summary && props.run.processed > 0 && <ProcessingCounts run={props.run} demo={props.demo} />}
     <ItemJudgments {...props} />
     <SummaryFindings run={props.run} demo={props.demo} classifierNames={props.classifierNames} />
+    <DimensionAverages run={props.run} demo={props.demo} />
     <ResultExports {...props} />
   </section>
 }

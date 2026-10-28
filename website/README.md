@@ -97,14 +97,27 @@ correctness or record independent human review. Each model phase requires a user
    Content, and Output Form. Each dimension contains a 1–5 score or `null`, a
    justification, supporting evidence, and information gaps. One structural repair
    may follow an invalid response; provider failures stop the phase.
-4. **Results:** inspect the six-column score table and select a score to read the
+4. **Results:** inspect the six-column item table and select a score to read the
    complete item, reference answer, grading criteria, explanation, evidence, and
    gaps. Unknown judgments are distinct from pending items and processing failures.
    Context and results can be revisited without model calls. Saved successful item
    assessments are reused on continuation or retry.
-5. Export the readable report, item CSV, summary, complete ZIP, or independent
-   review worksheet. The original benchmark assessment remains separate. A sample's
+   Below the item results, the six dimension averages appear alongside the original
+   benchmark scores, directly above **Save and share results**.
+5. Export the readable report, item CSV, summary, or complete ZIP.
+   The original benchmark assessment remains separate. A sample's
    scores are not converted into new benchmark-wide coverage scores.
+
+Each dimension average uses numeric scores from all completed items in the run,
+independent of the visible page or item filter. Unknown scores, operational errors,
+and pending items are excluded; each dimension shows its numeric item count and
+Unknown count. No numeric scores produces `null` in the summary and an Unknown
+average in the website. Averages update as results are saved, retain full precision
+in Summary JSON (`dimensions[].mean_score`, with `known` as the denominator), and
+display two decimal places. HTML and ZIP exports include the same comparison.
+Reopening a saved six-score run adds averages without model calls. The comparison
+keeps the original benchmark scores intact; item averages describe the evaluated
+sample, while benchmark judgments may also consider properties such as coverage.
 
 The fixed rubric is adapted to individual items: Input Ontology measures the
 item's relevance to the deployment, not whether one question covers every task.
@@ -804,8 +817,8 @@ judgments, prevalence summaries, and exportable evidence. Item prevalence does
 not change the original benchmark scores.
 
 Benchmark-stage cost depends on paper length, model usage, and web search.
-Item context preparation and classification incur separate OpenAI charges;
-classification volume depends on the connected dataset's size.
+Item scoring incurs separate OpenAI charges; request volume depends on the
+connected dataset's size. Context preparation and averaging make no model calls.
 
 ---
 

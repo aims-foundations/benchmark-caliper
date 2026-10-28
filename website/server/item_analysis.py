@@ -28,7 +28,7 @@ from fastapi import APIRouter, File, Form, Header, HTTPException, Query, Respons
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, Field
 
-from anthropic_api_package_release.item_analysis import classify, generate, model_client, prepare, report, scoring
+from anthropic_api_package_release.item_analysis import classify, generate, model_client, prepare, report, score_report, scoring
 from anthropic_api_package_release.item_analysis.data import file_sha256
 from anthropic_api_package_release.item_analysis.catalog import CATALOG_VERSION
 from anthropic_api_package_release.item_analysis.storage import check_prepared, read_json, write_json
@@ -173,6 +173,14 @@ def restore_job(directory: Path, metadata: dict) -> AnalysisJob:
                 job.summary = report.generate_report(directory)
             elif (directory / "summary.json").is_file():
                 job.summary = read_json(directory / "summary.json")
+            if scoring.is_score_spec(job.spec) and (
+                not job.summary or len(job.summary.get("dimensions", [])) != len(scoring.DIMENSIONS)
+                or any("mean_score" not in dimension for dimension in job.summary["dimensions"])
+            ):
+                # Existing six-score runs gain derived averages without changing
+                # their frozen scoring inputs or making additional model calls.
+                job.summary = report.generate_report(
+                    directory, run_metadata=job.summary.get("run") if job.summary else None)
         if interrupted:
             if job.spec:
                 job.status, job.message = "cancelled", "The server stopped during this phase. Saved judgments are retained; resume with your OpenAI key."
@@ -326,6 +334,41 @@ def reserve_worker(api_key: str | None, current: AnalysisJob | None = None) -> s
     return owner
 
 
+def current_score_summary(job: AnalysisJob, complete: int, errors: int) -> dict | None:
+    """Expose all saved item scores while a phase is still running.
+
+    The persisted report is rebuilt at phase boundaries. Its in-memory summary
+    can otherwise lag behind saved results, including when expanding a pilot.
+    """
+    if not job.summary or not scoring.is_score_spec(job.spec):
+        return job.summary
+    selected = (job.total if job.scope == "all" else min(CHECKPOINT_SIZE, job.total)
+                if job.scope == "pilot" else len(job.results))
+    if (job.summary.get("completed_items") == complete and job.summary.get("error_items") == errors
+            and job.summary.get("experiment", {}).get("selected_items") == selected):
+        return job.summary
+    dimensions = score_report.summarize_dimensions(job.spec["classifiers"], job.results, selected)
+    return {
+        **job.summary, "dimensions": dimensions, "classifiers": dimensions,
+        "completed_items": complete, "error_items": errors,
+        "pending_items": job.total - complete - errors,
+        "complete_snapshot": job.total > 0 and complete == job.total,
+        "scope": "all items in the prepared snapshot" if job.total > 0 and complete == job.total
+                 else "incomplete run over the prepared snapshot",
+        "experiment": {
+            **job.summary.get("experiment", {}),
+            "selected_items": selected, "selected_completed_items": complete,
+            "selected_error_items": errors, "selected_pending_items": selected - complete - errors,
+            "expected_item_classifier_judgments": selected * len(scoring.DIMENSIONS),
+            "completed_item_classifier_judgments": complete * len(scoring.DIMENSIONS),
+            "error_item_classifier_judgments": errors * len(scoring.DIMENSIONS),
+            "pending_item_classifier_judgments": (selected - complete - errors) * len(scoring.DIMENSIONS),
+            "expected_primary_requests": selected,
+            "recorded_api_calls": job.call_sequence,
+        },
+    }
+
+
 def public_job(job: AnalysisJob, page: int = 1) -> dict:
     six_scores = scoring.is_score_spec(job.spec or {})
     complete = sum(record["status"] == "complete" for record in job.results.values())
@@ -364,7 +407,7 @@ def public_job(job: AnalysisJob, page: int = 1) -> dict:
         "retention": {"automatic_expiry": bool(store.retention_seconds()),
                       "expires_at": store.timestamp(job.updated_at + store.retention_seconds())
                       if store.retention_seconds() and job.status not in ACTIVE_STATUSES else None},
-        "example": job.example, "spec": job.spec, "summary": job.summary,
+        "example": job.example, "spec": job.spec, "summary": current_score_summary(job, complete, errors),
         "assessment": item_analysis_assessment.public_assessment(job.assessment) if job.assessment else None,
         "processed": len(job.results), "total": job.total, "complete": complete, "errors": errors,
         "completed_judgments": completed_judgments,

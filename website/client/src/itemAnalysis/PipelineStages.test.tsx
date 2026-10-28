@@ -106,7 +106,7 @@ it('presents all six steps with contracts and keeps accepted context accessible 
   expect(api.classify).not.toHaveBeenCalled()
 })
 
-it('separates a completed 100-item pilot from optional dataset coverage and external human review', async () => {
+it('separates a completed 100-item pilot from optional dataset coverage and exports', async () => {
   vi.mocked(api.getRun).mockResolvedValue(checkpoint())
   const user = userEvent.setup()
   render(<ItemAnalysis />)
@@ -117,8 +117,9 @@ it('separates a completed 100-item pilot from optional dataset coverage and exte
   expect(stage(1)).toHaveTextContent('14,015')
   expect(within(stage(4)).getByRole('button', { name: 'Continue through all items' })).toBeDisabled()
   await visit(6, user)
-  expect(within(stage(6)).getByText('Human review has not been recorded here.')).toBeVisible()
-  for (const label of [/View report/, /Download complete results package/, /Download blind review worksheet/]) {
+  expect(within(stage(6)).queryByText('Independent human review')).not.toBeInTheDocument()
+  expect(within(stage(6)).queryByRole('button', { name: /Download blind review worksheet/ })).not.toBeInTheDocument()
+  for (const label of [/View report/, /Download complete results package/]) {
     expect(within(stage(6)).getByRole('button', { name: label })).toBeEnabled()
   }
   expect(within(stage(4)).queryByRole('button', { name: /Download/ })).not.toBeInTheDocument()

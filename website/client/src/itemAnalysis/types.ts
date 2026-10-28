@@ -143,6 +143,7 @@ export interface Specification {
 export interface ClassifierSummary extends Classifier {
   counts?: Record<string, number>
   known?: number
+  mean_score?: number | null
   unknown?: number
   invalid?: number
   errors?: number

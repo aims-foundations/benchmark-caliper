@@ -63,7 +63,7 @@ async function openExports(user: ReturnType<typeof userEvent.setup>) {
 }
 
 
-it('returns to durable results without model calls and exposes readable report, package and blind worksheet actions', async () => {
+it('returns to durable results without model calls and exposes report, package and individual file actions', async () => {
   localStorage.setItem('item_analysis_run_v1', JSON.stringify(access))
   const user = userEvent.setup()
   render(<ItemAnalysis />)
@@ -76,11 +76,13 @@ it('returns to durable results without model calls and exposes readable report, 
   expect(screen.getByText(/No automatic expiry is configured for this run/)).toBeVisible()
   expect(screen.getByRole('button', { name: /View report/ })).toBeEnabled()
   expect(screen.getByRole('button', { name: /Download complete results package/ })).toBeEnabled()
-  expect(screen.getByRole('button', { name: /Download blind review worksheet/ })).toBeEnabled()
+  expect(screen.queryByRole('button', { name: /Download blind review worksheet/ })).not.toBeInTheDocument()
   const files = screen.getByText('Individual files').closest('details')!
   expect(files.open).toBe(false)
   await user.click(screen.getByText('Individual files'))
   expect(files.open).toBe(true)
+  expect(screen.getByRole('button', { name: /Item labels CSV/ })).toBeEnabled()
+  expect(screen.queryByRole('button', { name: /Human review CSV/ })).not.toBeInTheDocument()
 })
 
 it('opens the report without an opener or secret URL and preserves the package filename', async () => {
@@ -104,9 +106,10 @@ it('opens the report without an opener or secret URL and preserves the package f
   await user.click(screen.getByRole('button', { name: /Download complete results package/ }))
   expect(api.downloadPackage).toHaveBeenCalledExactlyOnceWith(access)
   expect(filenames).toEqual(['MathDial-pilot-run-123.zip'])
-  await user.click(screen.getByRole('button', { name: /Download blind review worksheet/ }))
-  expect(api.download).toHaveBeenLastCalledWith(access, 'review')
-  expect(filenames).toEqual(['MathDial-pilot-run-123.zip', 'review.csv'])
+  await user.click(screen.getByText('Individual files'))
+  await user.click(screen.getByRole('button', { name: /Item labels CSV/ }))
+  expect(api.download).toHaveBeenLastCalledWith(access, 'items')
+  expect(filenames).toEqual(['MathDial-pilot-run-123.zip', 'items.csv'])
   expect(api.classify).not.toHaveBeenCalled()
 })
 
@@ -305,7 +308,7 @@ it('restores a checkpoint, requires key reentry, and continues through all remai
   await screen.findByText('Pilot complete: 100/100 selected items classified.')
   await openStep(user, 4)
   expect(screen.getByText(/The remaining 13,915 items are outside this pilot/)).toHaveTextContent('Classifying them is optional.')
-  expect(screen.getByRole('button', { name: /Download blind review worksheet/ })).toBeEnabled()
+  expect(screen.getByRole('button', { name: /Download complete results package/ })).toBeEnabled()
   expect(api.classify).not.toHaveBeenCalled()
   await openStep(user, 1)
   expect(screen.getByText('measurement-db MMLU snapshot')).toBeVisible()

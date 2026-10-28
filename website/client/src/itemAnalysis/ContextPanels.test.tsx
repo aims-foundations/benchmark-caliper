@@ -47,7 +47,7 @@ it('distinguishes structural checks from scientific and human review, with fixed
   render(<ContextValidation run={run} />)
   expect(screen.getByRole('heading', { name: 'Python checks passed for the saved specification' })).toBeInTheDocument()
   expect(screen.getByText(/Passing these checks does not establish scientific correctness/)).toBeInTheDocument()
-  expect(screen.getByText(/External human review in step 6 is a separate activity/)).toBeInTheDocument()
+  expect(screen.getByText(/External human review is a separate activity/)).toBeInTheDocument()
   expect(screen.getByText('Preserve deterministic source availability gap')).toBeInTheDocument()
   expect(screen.queryByText(DEMO_ITEM_ANALYSIS_SPEC.deployment_description!)).not.toBeInTheDocument()
   const specification = screen.getByRole('region', { name: 'Resulting classifier specification' })

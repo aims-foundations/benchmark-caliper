@@ -43,7 +43,7 @@ export function buildSixScoreDemoRun(scope: 'pilot' | 'sample'): AnalysisRun {
       else counts[String(score)] += 1
     }
     const known = completed.length - unknown
-    return { ...dimension, counts, known, unknown, valid_judgments: completed.length, errors: 0, pending: 0,
+    return { ...dimension, counts, known, unknown, mean_score: known ? Object.entries(counts).reduce((total, [score, count]) => total + Number(score) * count, 0) / known : null, valid_judgments: completed.length, errors: 0, pending: 0,
       percentages_among_known: Object.fromEntries(Object.entries(counts).map(([score, count]) => [score, known ? count / known * 100 : null])) }
   })
   const summary = { ...original.summary! }

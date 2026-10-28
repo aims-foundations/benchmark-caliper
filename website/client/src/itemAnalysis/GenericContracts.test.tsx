@@ -29,13 +29,19 @@ it('renders actual generic summary fields and includes insufficient evidence in 
   expect(screen.getAllByText('Matched categories: required_001')).toHaveLength(10)
 })
 
-it('does not offer a review worksheet before a run selects items', () => {
+it('keeps criteria downloadable before a run selects items without human review controls', async () => {
   const run = buildDemoItemAnalysisRun('sample')
   run.status = 'ready'
   run.processed = 0
   run.summary!.experiment!.selected_items = 0
-  render(<Results run={run} page={1} setPage={vi.fn()} onDownload={vi.fn()} downloading={null} pageLoading={false} />)
-  expect(screen.getByRole('button', { name: /Download blind review worksheet/ })).toBeDisabled()
+  const user = userEvent.setup()
+  const onDownload = vi.fn()
+  render(<Results run={run} page={1} setPage={vi.fn()} onDownload={onDownload} downloading={null} pageLoading={false} />)
+  expect(screen.queryByRole('button', { name: /Download blind review worksheet/ })).not.toBeInTheDocument()
+  await user.click(screen.getByText('Individual files'))
+  await user.click(screen.getByRole('button', { name: /Criteria JSON/ }))
+  expect(onDownload).toHaveBeenCalledWith('spec')
+  expect(screen.queryByRole('button', { name: /Human review CSV/ })).not.toBeInTheDocument()
 })
 
 it('shows saved dimensions on a partially failed item and identifies the dimension to retry', () => {

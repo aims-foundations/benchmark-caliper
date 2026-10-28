@@ -47,7 +47,7 @@ export function ContextValidation({ run, onDownload, demo = false }: { run: Anal
     <div className="ia-validation-boundary">
       <h3>Scientific correctness remains unreviewed</h3>
       <p>Passing these checks does not establish scientific correctness. Python checks structure and source references; it does not determine whether a source supports a generated interpretation, whether stakeholders agree, or whether the benchmark is valid for your deployment.</p>
-      <p className="ia-small">Review the source-grounded interpretation in step 2. External human review in step 6 is a separate activity; this page does not record it as completed.</p>
+      <p className="ia-small">Review the source-grounded interpretation in step 2. External human review is a separate activity; this page does not record it as completed.</p>
     </div>
 
     {spec && <section className="ia-context-section" aria-label="Resulting classifier specification">

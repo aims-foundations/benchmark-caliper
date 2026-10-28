@@ -142,10 +142,19 @@ python -m anthropic_api_package_release.item_analysis report \
 `report.html` shows one row per prepared item and six score columns. Expand a
 score to inspect its explanation, evidence, and information gaps. `items.csv`
 contains the same assessments, full item evidence, selection flags, and distinct
-Unknown/error/pending states. `summary.json` records six score distributions for
-the selected items, selected progress, and the full prepared-population counts.
+Unknown/error/pending states. `summary.json` records six score distributions and
+six dimension averages for the selected items, selected progress, and the full
+prepared-population counts. Each dimension's `mean_score` is the arithmetic mean
+of numeric scores from completed items; `known` is its contributing item count.
+Unknown, failed, and pending assessments are excluded. If a dimension has no
+numeric scores, its average is `null`. JSON preserves the calculated precision;
+the report shows two decimal places.
 Completed pilots remain distinct from completion of the entire prepared dataset.
-The original benchmark report appears separately when available.
+The report compares the six item averages with the original benchmark scores
+when available. These averages describe evaluated items; benchmark judgments can
+also assess properties such as category coverage. The original benchmark scores
+remain unchanged. Existing six-score reports can gain averages by running the
+offline `report` command above, without rescoring items.
 
 `review.csv` is a blind worksheet for the actual selected items, created once a
 selection exists. It omits model predictions. Existing annotations are preserved

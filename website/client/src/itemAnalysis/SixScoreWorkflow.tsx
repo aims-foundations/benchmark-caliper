@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { classifierName, SourceValue } from './Criteria'
-import { ItemJudgments, ResultExports, SummaryFindings, type ItemFilter } from './Results'
+import { DimensionAverages, ItemJudgments, ResultExports, SummaryFindings, type ItemFilter } from './Results'
 import type { AnalysisRun, Artifact, Item, RunScope, Specification } from './types'
 
 export const SIX_SCORE_STEPS = ['Context & items', 'Analyze', 'Results'] as const
@@ -92,6 +92,7 @@ export function SixScoreWorkflow({ run, context, canPrepare, onPrepare, busy, st
         <p>Six scores per item. Select a score to inspect its explanation, evidence, and missing information.</p>
         {inspectionError ? <div role="alert"><p>{inspectionError}</p><button className="ia-secondary" onClick={retryInspection}>Retry item inspection</button></div> : <ItemJudgments run={run} page={page} setPage={setPage} pageLoading={pageLoading} filter={filter} onFilterChange={inspect} filteredItems={filteredItems} filterLoading={filterLoading} />}
         {run.processed > 0 && <details className="ia-original"><summary>Score distributions and original benchmark assessment</summary><SummaryFindings run={run} onInspect={inspect} /></details>}
+        <DimensionAverages run={run} />
         <ResultExports run={run} onDownload={onDownload} onViewReport={onViewReport} onDownloadPackage={onDownloadPackage} downloading={downloading} />
         {management}
       </> : <p>Item scores will appear here as they are saved.</p>}

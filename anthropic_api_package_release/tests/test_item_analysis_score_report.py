@@ -20,14 +20,16 @@ def _records(path, records):
     path.write_text("".join(json.dumps(record) + "\n" for record in records), encoding="utf-8")
 
 
-def _complete(item_id, *, unknown="output_content", attempts=None):
-    dimensions = {
-        dimension: {"score": None if dimension == unknown else 4,
-                    "justification": "Insufficient answer evidence" if dimension == unknown else "Fits the supplied deployment.",
-                    "evidence": [] if dimension == unknown else ["item.content and deployment.md"],
-                    "information_gaps": ["Reference answer unavailable"] if dimension == unknown else []}
-        for dimension in DIMENSIONS
-    }
+def _complete(item_id, *, unknown="output_content", attempts=None, scores=None):
+    dimensions = {}
+    for dimension in DIMENSIONS:
+        score = (scores or {}).get(dimension, None if dimension == unknown else 4)
+        dimensions[dimension] = {
+            "score": score,
+            "justification": "Insufficient answer evidence" if score is None else "Fits the supplied deployment.",
+            "evidence": [] if score is None else ["item.content and deployment.md"],
+            "information_gaps": ["Reference answer unavailable"] if score is None else [],
+        }
     return {"schema_version": "caliper_item_result_v4", "analysis_type": "six_scores",
             "item_id": item_id, "status": "complete", "dimensions": dimensions,
             "attempts": attempts or [{"attempt": 1, "response": json.dumps({"dimensions": dimensions})}]}
@@ -73,7 +75,10 @@ def test_scores_unknown_errors_and_pending_are_distinct_and_selection_is_explici
     assert summary["dimensions"] == summary["classifiers"]
     by_id = {dimension["id"]: dimension for dimension in summary["dimensions"]}
     assert by_id["input_form"]["counts"] == {"1": 0, "2": 0, "3": 0, "4": 1, "5": 0}
+    assert by_id["input_form"]["mean_score"] == 4
+    assert by_id["input_form"]["known"] == 1
     assert by_id["output_content"]["unknown"] == 1
+    assert by_id["output_content"]["mean_score"] is None
     assert by_id["output_content"]["errors"] == by_id["output_content"]["pending"] == 1
     assert summary["original_assessment"]["input_form"]["score"] == 2
     assert not summary["complete_snapshot"]
@@ -92,7 +97,49 @@ def test_scores_unknown_errors_and_pending_are_distinct_and_selection_is_explici
     assert "Unknown" in report and "Information gaps" in report
     assert "<img src=x" not in report and "&lt;img src=x" in report
     assert "Content-Security-Policy" in report and "<script" not in report
+    assert "Based on 1 completed items out of 3 selected items" in report
+    assert "<th>Input Form</th><td class='score'>4.00 / 5</td><td>1</td><td>0</td><td>2.00 / 5</td>" in report
+    assert "<th>Output Content</th><td class='score'>No numeric scores</td><td>0</td><td>1</td><td>Not supplied</td>" in report
+    assert report.index("id='dimension-averages'") < report.index("id='items'")
     assert report.index("id='items'") < report.index("id='original-assessment'")
+
+
+def test_means_use_each_dimensions_numeric_selected_scores_and_keep_exact_precision(score_run):
+    _json(score_run / "execution.json", {"selected_item_ids": ["item-0", "item-1", "item-2"]})
+    _records(score_run / "results.jsonl", [
+        _complete("item-0", scores={"input_form": 1, "input_ontology": 1, "output_content": 1}),
+        _complete("item-1", scores={"input_form": 2, "input_ontology": None, "output_content": 5}),
+        _complete("item-2", scores={"input_form": 2, "input_ontology": 5}),
+        _complete("item-3", unknown=None, scores={dimension: 5 for dimension in DIMENSIONS}),
+    ])
+    summary = generate_report(score_run)
+    by_id = {dimension["id"]: dimension for dimension in summary["dimensions"]}
+    assert len(by_id) == 6
+    assert by_id["input_form"]["mean_score"] == 5 / 3
+    assert by_id["input_form"]["known"] == 3
+    assert by_id["input_ontology"]["mean_score"] == 3
+    assert by_id["input_ontology"]["known"] == 2
+    assert by_id["input_ontology"]["unknown"] == 1
+    assert by_id["output_content"]["mean_score"] == 3
+    assert by_id["output_content"]["known"] == 2
+    assert by_id["output_content"]["unknown"] == 1
+    assert by_id["output_form"]["mean_score"] == 4
+    assert summary["experiment"]["selected_completed_items"] == 3
+    assert summary["completed_items"] == 4
+    assert summary["original_assessment"]["input_form"]["score"] == 2
+    persisted = json.loads((score_run / "summary.json").read_text())
+    assert persisted["dimensions"] == summary["dimensions"] == persisted["classifiers"]
+    assert "1.67 / 5" in (score_run / "report.html").read_text()
+
+
+def test_all_unknown_scores_have_no_numeric_average(score_run):
+    _records(score_run / "results.jsonl", [
+        _complete("item-0", scores={dimension: None for dimension in DIMENSIONS}),
+    ])
+    summary = generate_report(score_run)
+    assert all(dimension["mean_score"] is None for dimension in summary["dimensions"])
+    assert all(dimension["known"] == 0 and dimension["unknown"] == 1 for dimension in summary["dimensions"])
+    assert (score_run / "report.html").read_text().count("No numeric scores") == 6
 
 
 def test_retry_calls_are_counted_once_from_cumulative_attempts(score_run):
@@ -162,6 +209,8 @@ def test_six_score_package_contains_actual_prompts_raw_results_and_separate_revi
 
 def test_context_only_report_defers_selection_and_worksheet(score_run):
     summary = generate_report(score_run)
+    assert all(dimension["mean_score"] is None for dimension in summary["dimensions"])
+    assert all(dimension["known"] == 0 for dimension in summary["dimensions"])
     assert summary["experiment"]["selected_items"] == 0
     assert summary["experiment"]["expected_primary_requests"] == 0
     assert not (score_run / "review.csv").exists()

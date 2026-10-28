@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 export const ITEM_STEPS = [
   'Confirm data and deployment', 'Prepare classifier context', 'Validate context',
-  'Classify items', 'Review summary findings', 'Export and human review',
+  'Classify items', 'Review summary findings', 'Export results',
 ] as const
 
 export function PipelineNavigation({ current, statuses, onNavigate }: {

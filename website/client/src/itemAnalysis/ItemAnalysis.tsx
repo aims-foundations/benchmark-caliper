@@ -324,7 +324,7 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
     run?.spec ? 'Checks passed · interpretation unreviewed' : validationFailure ? 'Needs attention' : 'Waiting for context',
     pilotComplete ? 'Pilot complete' : fullComplete ? 'Full dataset classified' : run?.status === 'running' ? 'Classifying' : run?.processed ? 'Partial results saved' : run?.spec ? 'Ready to start' : 'Waiting for specification',
     findingsReady ? 'Findings available' : active && run?.processed ? 'Updates when classification pauses' : 'Waiting for judgments',
-    run?.spec ? active ? 'Exports after phase ends · review external' : 'Export available · human review external' : 'Human review not recorded',
+    run?.spec ? active ? 'Exports after phase ends' : 'Export available' : 'Waiting for results',
   ]
   const inspection = useItemInspection(access, run, filter, pilotSize)
   function navigate(step: number) {
@@ -407,6 +407,12 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
         {direct && <p className="ia-assessment-not-run"><strong>Benchmark assessment: Not run.</strong> This path uses your requirements and does not produce benchmark-level validity scores.</p>}
         {onEditContext && <button type="button" className="ia-text-button" disabled={busy || active} onClick={onEditContext}>Edit context and start again</button>}
       </div>}
+      <aside className="ia-historical-analysis" aria-labelledby="ia-historical-title">
+        <h3 id="ia-historical-title">You reopened an earlier item analysis</h3>
+        <p>This saved run keeps its original pipeline and results format. New analyses use six scores per item and three steps: Context &amp; items, Analyze, and Results.</p>
+        <p className="ia-small">Download the results package in step 6 before starting again to keep a copy. Starting again replaces this browser’s shortcut without deleting the saved analysis from the server.</p>
+        <button type="button" className="ia-primary" disabled={busy || active} onClick={reset}>Start a new six-score analysis</button>
+      </aside>
       <PipelineNavigation current={currentStep} statuses={statuses} onNavigate={navigate} />
       {(error || pollError) && <div className="ia-error ia-request-error" role="alert" ref={errorRef} tabIndex={-1}><p>{error || pollError}</p>
         {!(assessment ? setup || access : catalog) && <button className="ia-secondary" onClick={() => { setError(''); setCatalogVersion(value => value + 1) }}>{assessment ? 'Retry loading assessment' : 'Retry loading benchmarks'}</button>}
@@ -461,7 +467,7 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
         output={run?.processed ? 'Saved item judgments, explanations, evidence, and separate records of failed or pending dimensions.' : 'Four judgments per item, with explanations and evidence; no judgments are available yet.'}
         next={findingsReady ? nextLink(5, 'Review summary findings for this selection') : run?.status === 'running' ? 'Wait for this phase to finish, or stop it to review the saved partial results.' : run?.spec ? 'Start or resume classification below when you are ready.' : nextLink(3, 'Review the specification first')}>
         {run?.spec ? <><h3 aria-live="polite">{classificationMessage}</h3>
-          {selectedComplete && <p className="ia-small">{pilotComplete && run.total > pilotSize ? `The remaining ${(run.total - pilotSize).toLocaleString()} items are outside this pilot. Classifying them is optional.` : 'This completes item processing for the selected dataset.'} Independent human review is a separate activity in step 6.</p>}
+          {selectedComplete && <p className="ia-small">{pilotComplete && run.total > pilotSize ? `The remaining ${(run.total - pilotSize).toLocaleString()} items are outside this pilot. Classifying them is optional.` : 'This completes item processing for the selected dataset.'}</p>}
           {run.status === 'running' && <progress max={target * classifierCount} value={run.completed_judgments ?? run.complete * classifierCount} aria-label="Classification progress" />}
           {run.status === 'running' && <button type="button" className="ia-secondary" onClick={() => void stop()} disabled={busy}>Stop analysis</button>}
           {['failed', 'cancelled'].includes(run.status) && <p className={run.status === 'failed' ? 'ia-error' : 'ia-small'}>{runMessage}</p>}
@@ -484,17 +490,17 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
         purpose="Understand what each dimension found in the selected items and inspect findings that need attention."
         input="Valid saved item judgments from the completed or paused classification phase."
         output={findingsReady ? 'Four label distributions for the selection, with links to flagged and uncertain items.' : 'Label distributions will be available after classification pauses or finishes.'}
-        next={findingsReady ? nextLink(6, 'Keep the results and plan independent human review') : nextLink(4, 'Continue to item classification')}>
+        next={findingsReady ? nextLink(6, 'Keep and share results') : nextLink(4, 'Continue to item classification')}>
         {run && findingsReady ? <SummaryFindings run={run} onInspect={inspect} /> : <p>{active ? 'Summary findings update when the current phase pauses or finishes. Step 4 shows live processing counts and saved item judgments.' : 'No summary findings are available yet. Processing counts belong to step 4; they do not establish scientific validity.'}</p>}
       </StageSection>
 
       <StageSection step={6} current={currentStep} status={statuses[5]} initiallyOpen={findingsReady}
-        purpose="Keep a portable record and arrange independent human review outside this page."
-        input="Saved context, item judgments, summary findings, and a blank review worksheet."
-        output="Downloadable records and a plan for external annotation. Human review is not recorded as completed here."
-        next={run?.spec ? 'Download the package, give each reviewer a separate blank worksheet, and compare their annotations using the existing CLI workflow.' : 'Prepare context and classify a selection before arranging independent item review.'}>
+        purpose="Keep a portable record of the analysis and share its findings."
+        input="Saved context, item judgments, and summary findings."
+        output="A readable report, complete results package, and individual data files."
+        next={run?.spec ? 'View the report or download the results for later use and sharing.' : 'Prepare context and classify a selection to produce results.'}>
         {run?.spec ? <ResultExports run={run} onDownload={artifact => void download(artifact)} onViewReport={() => void openReport()} onDownloadPackage={() => void downloadPackage()} downloading={downloading} />
-          : <p>The report, complete results package, item files, classifier specification, and blind review worksheet will be grouped here when available. No human annotations have been supplied through this page.</p>}
+          : <p>The report, complete results package, item files, and classifier specification will be grouped here when available.</p>}
         {run && <><p className="ia-small ia-saved-note">{run.retention?.automatic_expiry && run.retention.expires_at
           ? `Results are saved until ${new Date(run.retention.expires_at).toLocaleString()}. Download a package to keep a separate copy.`
           : 'No automatic expiry is configured for this run. Return in this browser to review or continue; saved judgments are reused.'}</p>
