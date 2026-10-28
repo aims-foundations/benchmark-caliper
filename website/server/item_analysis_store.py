@@ -1,6 +1,7 @@
 """Private durable metadata and credential-free usage for website item analyses."""
 
 from datetime import datetime, timezone
+import errno
 import hashlib
 import json
 import os
@@ -12,6 +13,17 @@ from anthropic_api_package_release.item_analysis.storage import read_json, write
 
 METADATA = "_website_run.json"
 COUNTERS = ("input_tokens", "output_tokens", "cached_input_tokens", "reasoning_tokens")
+
+
+def is_storage_full(error: BaseException) -> bool:
+    """Recognize exhausted disks/quotas even through sanitized preparation errors."""
+    seen = set()
+    while error is not None and id(error) not in seen:
+        seen.add(id(error))
+        if isinstance(error, OSError) and error.errno in {errno.ENOSPC, errno.EDQUOT}:
+            return True
+        error = error.__cause__ or error.__context__
+    return False
 
 
 def timestamp(value: float) -> str:

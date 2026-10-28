@@ -120,6 +120,44 @@ that `/item-analysis` opens the main flow. Loading these pages and the setup end
 classification, cancellation, and continuation require a separate authorized
 live test with a visitor's key; offline tests use mocked model responses.
 
+### Full item-analysis storage
+
+`OSError: [Errno 28] No space left on device` under `/data/item-analysis/`
+means the persistent filesystem cannot accept another write. It can prevent
+new runs from starting or interrupt the saving of item scores. A successful
+`/healthz` response does not verify that this disk has writable space.
+
+Inspect capacity, inode availability, and the largest data directories from
+the service's shell before choosing a remedy:
+
+```bash
+df -h /data
+df -i /data
+du -h --max-depth=2 /data | sort -h | tail -n 20
+```
+
+The Blueprint allocates 10 GB, which still needs monitoring as analyses
+accumulate. Each run stores a full prepared item snapshot plus
+request audits, scores, and derived reports; selecting 100 items does not limit
+the prepared snapshot to 100. Multiple saved runs accumulate because expiry is
+disabled by default. Size the disk for measured usage and future runs, including
+temporary space needed while generating reports and downloads.
+
+In Render, inspect the existing service's **Disk** page and increase its
+persistent disk size if more capacity is needed. Keep the `/data` mount and
+existing disk: deleting or replacing it would discard saved runs. Render
+supports increasing a disk without downtime, but does not support shrinking
+it. See [Render's persistent disk documentation](https://render.com/docs/disks).
+Any change to hosted capacity is a separate administrator action; deploying
+application error handling does not free space or enlarge the disk.
+
+Once writable capacity is restored, reopen the original run in the same
+browser and resume it with an OpenAI key. Completed judgments already saved
+to that run are reused. A response that could not be saved may need to be
+requested again. Do not clear browser storage or choose **Start again** to
+recover an existing run. Back up saved runs before any deliberate cleanup;
+the public gallery snapshot is separate from the private continuation state.
+
 ## Remote retrieval for the goal-conditioned pipeline
 
 The seven-step benchmark-construction pipeline can run its O*NET and full-bank

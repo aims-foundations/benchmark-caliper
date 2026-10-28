@@ -42,6 +42,8 @@ PAGE_SIZE = 20
 MAX_ACTIVE = 3
 MAX_RETAINED = 10  # Idle in-memory cache size; saved runs are not limited to ten.
 ACTIVE_STATUSES = {"preparing", "generating", "running"}
+STORAGE_FULL_MESSAGE = ("The website server storage is full. The maintainer must increase available disk space "
+                        "before analysis can continue. Previously saved item results are retained.")
 PREPARED_FILES = ("dataset.json", "profile.json", "evidence.json", "items.jsonl")
 ARTIFACTS = {
     "spec": ("classifier_spec.json", "application/json"),
@@ -139,6 +141,47 @@ def persist(job: AnalysisJob) -> None:
     })
 
 
+def storage_failure(job: AnalysisJob) -> None:
+    # This must work even when no further metadata can be written to disk.
+    job.status, job.message = "failed", STORAGE_FULL_MESSAGE
+    job.failure = {"stage": "storage", "code": "storage_full", "message": job.message}
+    job.provider_error = None
+    job.owner_hash = None
+
+
+def persist_finished_job(job: AnalysisJob) -> None:
+    try:
+        persist(job)
+    except OSError as error:
+        if not store.is_storage_full(error):
+            raise
+        storage_failure(job)
+
+
+def new_job(example: dict, *, owner=None, assessment=None, source=None) -> tuple[AnalysisJob, str]:
+    """Expose a job only once its private access metadata is durably saved."""
+    run_id, secret = secrets.token_hex(16), secrets.token_urlsafe(32)
+    directory = storage_root() / run_id
+    created = False
+    try:
+        directory.mkdir(mode=0o700, parents=True)
+        created = True
+        job = AnalysisJob(run_id, store.token_digest(secret), example, directory,
+                          total=example["item_count"], owner_hash=owner, assessment=assessment, source=source)
+        if assessment and assessment["kind"] == "direct":
+            job.message = "Preparing the confirmed item snapshot and your deployment requirements."
+        persist(job)
+    except OSError as error:
+        if created:
+            # Only this fresh, never-exposed directory; never remove an existing run.
+            shutil.rmtree(directory, ignore_errors=True)
+        if store.is_storage_full(error):
+            raise HTTPException(507, STORAGE_FULL_MESSAGE) from None
+        raise
+    jobs[run_id] = job
+    return job, secret
+
+
 def visible_result(record: dict) -> dict:
     visible = deepcopy({key: record[key] for key in (
         "item_id", "status", "labels", "dimensions", "analysis_type") if key in record})
@@ -156,8 +199,6 @@ def restore_job(directory: Path, metadata: dict) -> AnalysisJob:
                           "checkpoint_seen", "data_ready", "failure", "provider_error", "assessment", "call_sequence") if key in metadata})
     interrupted = job.status in ACTIVE_STATUSES
     try:
-        job.usage, saved_sequence = store.load_usage(directory)
-        job.call_sequence = max(job.call_sequence, saved_sequence)
         if job.data_ready:
             check_prepared(directory)
             with (directory / "items.jsonl").open(encoding="utf-8") as stream:
@@ -169,19 +210,31 @@ def restore_job(directory: Path, metadata: dict) -> AnalysisJob:
         if job.spec:
             job.results = {key: visible_result(value) for key, value in classify.read_results(
                 directory / "results.jsonl", repair_tail=True).items()}
-            if interrupted:
-                job.summary = report.generate_report(directory)
-            elif (directory / "summary.json").is_file():
-                job.summary = read_json(directory / "summary.json")
-            if scoring.is_score_spec(job.spec) and (
+        try:
+            job.usage, saved_sequence = store.load_usage(directory)
+            job.call_sequence = max(job.call_sequence, saved_sequence)
+        except OSError as error:
+            if not store.is_storage_full(error):
+                raise
+            storage_failure(job)
+        if job.spec:
+            if (directory / "summary.json").is_file():
+                try:
+                    job.summary = read_json(directory / "summary.json")
+                except ValueError:
+                    # A full disk can interrupt a derived report. Frozen inputs
+                    # and completed results remain the source for rebuilding it.
+                    job.summary = None
+            needs_summary = scoring.is_score_spec(job.spec) and (
                 not job.summary or len(job.summary.get("dimensions", [])) != len(scoring.DIMENSIONS)
                 or any("mean_score" not in dimension for dimension in job.summary["dimensions"])
-            ):
+            )
+            if (interrupted or needs_summary) and (job.failure or {}).get("code") != "storage_full":
                 # Existing six-score runs gain derived averages without changing
                 # their frozen scoring inputs or making additional model calls.
                 job.summary = report.generate_report(
                     directory, run_metadata=job.summary.get("run") if job.summary else None)
-        if interrupted:
+        if interrupted and (job.failure or {}).get("code") != "storage_full":
             if job.spec:
                 job.status, job.message = "cancelled", "The server stopped during this phase. Saved judgments are retained; resume with your OpenAI key."
             else:
@@ -189,11 +242,14 @@ def restore_job(directory: Path, metadata: dict) -> AnalysisJob:
                 job.failure = {"stage": "specification", "code": "interrupted", "message": job.message}
             job.provider_error = None
             persist(job)
-    except (OSError, ValueError, KeyError, TypeError):
-        job.status, job.message = "failed", "Saved analysis files could not be restored. Start a new analysis or contact the maintainer."
-        job.failure = {"stage": "restoration", "code": "saved_files_invalid", "message": job.message}
-        job.data_ready = False
-        job.spec = None
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        if store.is_storage_full(error):
+            storage_failure(job)
+        else:
+            job.status, job.message = "failed", "Saved analysis files could not be restored. Start a new analysis or contact the maintainer."
+            job.failure = {"stage": "restoration", "code": "saved_files_invalid", "message": job.message}
+            job.data_ready = False
+            job.spec = None
     return job
 
 
@@ -272,7 +328,7 @@ async def shutdown() -> None:
             stop(job)
     await asyncio.gather(*(job.task for job in jobs.values() if job.task), return_exceptions=True)
     for job in jobs.values():
-        persist(job)
+        persist_finished_job(job)
     jobs.clear()
 
 
@@ -563,6 +619,11 @@ def model_bridge(job: AnalysisJob, api_key: str):
                 raise provider_failure(error) from None
             record_usage(arguments, sequence, started_at, result)
             return result.text.replace(api_key, "[redacted]")
+        except OSError as error:
+            if store.is_storage_full(error):
+                storage_failure(job)
+                raise RuntimeError(STORAGE_FULL_MESSAGE) from None
+            raise
         finally:
             job.provider_tasks.discard(task)
 
@@ -663,13 +724,19 @@ async def initialize(job: AnalysisJob, mode: str, api_key: str | None, upload: d
         job.status, job.message = "ready", "Context and items are ready. Choose how many items to score on all six dimensions."
     except (item_analysis_source.DatasetAccessError, item_analysis_source.DatasetPreparationError,
             item_analysis_databank.DataBankError) as error:
-        job.status, job.message = "failed", str(error)
-        job.failure = {"stage": phase, "code": "dataset_unavailable", "message": job.message}
+        if store.is_storage_full(error):
+            storage_failure(job)
+        else:
+            job.status, job.message = "failed", str(error)
+            job.failure = {"stage": phase, "code": "dataset_unavailable", "message": job.message}
     except generate.SpecificationValidationError as error:
         job.status, job.message = "failed", error.public_message
         job.failure = {"stage": phase, "code": error.code, "message": job.message}
-    except Exception:
+    except Exception as error:
         job.status = "failed"
+        if store.is_storage_full(error):
+            storage_failure(job)
+            return
         if job.provider_error:
             job.message = job.provider_error["message"]
             code = job.provider_error["code"]
@@ -689,11 +756,11 @@ async def initialize(job: AnalysisJob, mode: str, api_key: str | None, upload: d
 
 
 def finish_phase(job: AnalysisJob) -> None:
-    if job.stopped.is_set():
+    if job.stopped.is_set() and (job.failure or {}).get("code") != "storage_full":
         job.status, job.message = "cancelled", "Analysis stopped. Completed results are retained."
     job.owner_hash = None
     job.updated_at = time.time()
-    persist(job)
+    persist_finished_job(job)
 
 
 async def classify_job(job: AnalysisJob, api_key: str) -> None:
@@ -711,6 +778,8 @@ async def classify_job(job: AnalysisJob, api_key: str) -> None:
             **job.model, on_result=save_result,
             should_stop=job.stopped.is_set,
         )
+        if (job.failure or {}).get("code") == "storage_full":
+            return  # Do not overwrite derived reports while storage is unavailable.
         await refresh_report(job)
         if execution["fatal_error"]:
             job.status = "failed"
@@ -724,10 +793,13 @@ async def classify_job(job: AnalysisJob, api_key: str) -> None:
             job.message = "The selected items are ready. Inspect their assessments or continue across the snapshot."
         else:
             job.status, job.message = "failed", "Some items still need valid assessments. Retry to resume; completed items are retained."
-    except Exception:
-        job.status = "failed"
-        job.message = (job.provider_error["message"] if job.provider_error else
-                       "The analysis could not finish. Completed results are retained; retry with the same frozen specification.")
+    except Exception as error:
+        if store.is_storage_full(error) or (job.failure or {}).get("code") == "storage_full":
+            storage_failure(job)
+        else:
+            job.status = "failed"
+            job.message = (job.provider_error["message"] if job.provider_error else
+                           "The analysis could not finish. Completed results are retained; retry with the same frozen specification.")
     finally:
         await drain_provider(job)
         api_key = ""
@@ -856,16 +928,7 @@ async def create_context_job(assessment: dict, source_id: str | None, source_rev
         example = {**source, "deployment": assessment["deployment"], "supplied_spec_available": False}
     sweep()
     owner = reserve_worker(api_key)
-    run_id = secrets.token_hex(16)
-    directory = storage_root() / run_id
-    directory.mkdir(mode=0o700, parents=True)
-    secret = secrets.token_urlsafe(32)
-    job = AnalysisJob(run_id, store.token_digest(secret), example, directory,
-                      total=example["item_count"], owner_hash=owner, assessment=assessment, source=source)
-    if assessment["kind"] == "direct":
-        job.message = "Preparing the confirmed item snapshot and your deployment requirements."
-    jobs[run_id] = job
-    persist(job)
+    job, secret = new_job(example, owner=owner, assessment=assessment, source=source)
     job.task = asyncio.create_task(initialize(job, "generate", api_key, upload))
     return {**public_job(job), "run_secret": secret}
 
@@ -882,14 +945,7 @@ async def create_run(body: NewRun, response: Response,
         raise HTTPException(503, example.get("unavailable_reason") or "This dataset is currently unavailable. Try again later.")
     sweep()
     owner = reserve_worker(api_key)
-    run_id = secrets.token_hex(16)
-    directory = storage_root() / run_id
-    directory.mkdir(mode=0o700, parents=True)
-    secret = secrets.token_urlsafe(32)
-    job = AnalysisJob(run_id, store.token_digest(secret), example, directory,
-                      total=example["item_count"], owner_hash=owner)
-    jobs[run_id] = job
-    persist(job)
+    job, secret = new_job(example, owner=owner)
     job.task = asyncio.create_task(initialize(job, body.specification_mode, api_key))
     return {**public_job(job), "run_secret": secret}
 
@@ -921,7 +977,18 @@ async def start_classification(run_id: str, body: Classification, response: Resp
         raise HTTPException(400, "Confirm that you reviewed the pilot judgments and criteria before continuing across the full snapshot.")
     if body.scope == "pilot" and job.scope == "all":
         raise HTTPException(409, "Resume the full-snapshot phase to keep this run's scope consistent.")
+    if (job.failure or {}).get("code") == "storage_full":
+        # A request journal may have reached disk before its sequence/usage
+        # metadata did. Recover it before assigning another request number.
+        try:
+            job.usage, saved_sequence = store.load_usage(job.directory)
+            job.call_sequence = max(job.call_sequence, saved_sequence)
+        except OSError as error:
+            if store.is_storage_full(error):
+                raise HTTPException(507, STORAGE_FULL_MESSAGE) from None
+            raise
     job.owner_hash = reserve_worker(api_key, job)
+    previous_scope = job.scope
     job.stopped.clear()
     job.provider_error = None
     job.failure = None
@@ -931,7 +998,16 @@ async def start_classification(run_id: str, body: Classification, response: Resp
                    "Scoring all items in this snapshot on all six dimensions.") if six_scores else (
                        "Classifying the first items for review." if body.scope == "pilot" else
                        "Continuing across all items using the same classifier rules.")
-    persist(job)
+    try:
+        persist(job)
+    except OSError as error:
+        job.scope = previous_scope
+        job.owner_hash = None
+        if store.is_storage_full(error):
+            storage_failure(job)
+            raise HTTPException(507, STORAGE_FULL_MESSAGE) from None
+        job.status, job.message = "failed", "The website could not save the analysis state. No scoring was started."
+        raise
     job.task = asyncio.create_task(classify_job(job, api_key))
     return public_job(job)
 
