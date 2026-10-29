@@ -140,6 +140,7 @@ export interface ScreenedItem extends BenchmarkCandidate {
   acquisition: { queue_id: string; facet_id: string }; status: 'complete' | 'error'
   assessment?: ScreeningAssessment; gate?: { status: 'pass' | 'fail' | 'unresolved'; reasons: string[] }
   error?: string; usage?: Record<string, number>; screened_run_id?: string
+  evidence_adjustments?: Array<{ field: string; returned_quote: string; source_quote: string }>
 }
 export interface ScreeningReview extends Omit<BenchmarkRetrievalReview, 'mode'> {
   mode: 'screening'

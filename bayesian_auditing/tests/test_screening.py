@@ -115,7 +115,7 @@ def response_body(assessment, mode="complete"):
 
 @pytest.mark.parametrize("async_mode", [False, True])
 @pytest.mark.parametrize("mode", ["complete", "fabricated_quote", "unknown_facet", "missing_coverage",
-                                 "malformed", "incomplete", "refusal", "mixed_refusal"])
+                                 "malformed", "incomplete", "refusal", "mixed_refusal", "outer_padding"])
 def test_real_sdk_contract_preserves_input_and_sanitizes_errors(answers, requirements, item_row, assessment, async_mode, mode):
     if mode == "fabricated_quote":
         assessment["ratings"]["input_form"]["evidence"] = ["private-provider-diagnostic"]
@@ -123,6 +123,9 @@ def test_real_sdk_contract_preserves_input_and_sanitizes_errors(answers, require
         assessment["task"]["matched_facet_ids"] = ["private-provider-diagnostic"]
     elif mode == "missing_coverage":
         assessment["coverage"].pop()
+    elif mode == "outer_padding":
+        assessment["ratings"]["input_form"]["evidence"] = [f"\t  {QUESTION}\n  "]
+        assessment["ratings"]["input_form"]["score"] = 2
     captured = []
     original = deepcopy((answers, requirements.model_dump(), item_row))
 
@@ -157,6 +160,17 @@ def test_real_sdk_contract_preserves_input_and_sanitizes_errors(answers, require
     if mode == "complete":
         assert result["status"] == "complete" and result["assessment"] == assessment
         assert result["gate"]["status"] == "pass"
+        assert "evidence_adjustments" not in result
+    elif mode == "outer_padding":
+        assert result["status"] == "complete"
+        assert result["gate"]["status"] == "fail"
+        assert result["assessment"]["ratings"]["input_form"]["evidence"] == [QUESTION]
+        assert result["assessment"]["ratings"]["input_form"]["score"] == 2
+        assert result["evidence_adjustments"] == [{
+            "field": "ratings.input_form.evidence[0]",
+            "returned_quote": f"\t  {QUESTION}\n  ",
+            "source_quote": QUESTION,
+        }]
     else:
         assert result["status"] == "error" and "assessment" not in result and "gate" not in result
         if mode == "fabricated_quote":
@@ -291,6 +305,64 @@ def test_quote_errors_identify_every_rejected_excerpt_without_changing_it(requir
     assert message.count("Returned quotation:") == 3
     assert "Assessment field: task.evidence[0]" not in message
     assert (assessment, item_row) == original
+
+
+def test_reported_indented_quotes_are_corrected_to_verbatim_source(requirements, item_row, assessment):
+    quotes = [
+        "     - Immediately initialize the simulated patient using scenario_id = 2.",
+        "     - You may assume that the environment will provide sensible, consistent\n     answers.",
+        "     - Use whatever initialization or patient-loading mechanism is available in\n"
+        "     this environment (e.g., `initialize_patient` or equivalent) with\n"
+        "     scenario_id 2 before doing anything else.",
+    ]
+    item_row["formatted_prompt"] = "\n\n".join(quote[2:] for quote in quotes)
+    assessment["ratings"]["input_content"]["evidence"] = quotes[:2]
+    assessment["ratings"]["input_form"]["evidence"] = quotes[2:]
+    original = deepcopy((assessment, item_row))
+    value = ScreeningAssessment.model_validate(assessment)
+    with pytest.raises(ValueError, match="quotation"):
+        value.validate_context(requirements, item_row)
+    adjustments = value.trim_evidence_padding(item_row)
+    assert adjustments == [
+        {"field": field, "returned_quote": quote, "source_quote": quote.strip()}
+        for field, quote in zip(("ratings.input_content.evidence[0]", "ratings.input_content.evidence[1]",
+                                 "ratings.input_form.evidence[0]"), quotes)
+    ]
+    value.validate_context(requirements, item_row)
+    assert value.ratings.input_content.evidence == [quote.strip() for quote in quotes[:2]]
+    assert value.ratings.input_form.evidence == [quotes[2].strip()]
+    assert (assessment, item_row) == original
+    # Already accepted excerpts never acquire another adjustment on validation.
+    assert value.trim_evidence_padding(item_row) == []
+
+
+@pytest.mark.parametrize("quote", [
+    "  Which  initial management is indicated?  ",
+    "  Which initial management is indicated!  ",
+    "  which initial management is indicated?  ",
+    "  Which initial treatment is indicated?  ",
+    f"  {QUESTION} {CONSTRAINT}  ",
+])
+def test_trimming_does_not_accept_changed_text_or_join_separate_fields(requirements, item_row, assessment, quote):
+    assessment["task"]["evidence"] = [quote]
+    value = ScreeningAssessment.model_validate(assessment)
+    assert value.trim_evidence_padding(item_row) == []
+    assert value.task.evidence == [quote]
+    with pytest.raises(ValueError, match="quotation"):
+        value.validate_context(requirements, item_row)
+
+
+def test_literal_padding_and_raw_json_cells_are_preserved(requirements, item_row, assessment):
+    literal = f"   {QUESTION}\n\t"
+    item_row["literal_padding"] = literal
+    item_row["json_cell"] = json.dumps({"rule": "Original\nscoring text."})
+    assessment["task"]["evidence"] = [literal]
+    assessment["ratings"]["output_ontology"]["evidence"] = ["  Original\nscoring text.  "]
+    value = ScreeningAssessment.model_validate(assessment)
+    assert value.trim_evidence_padding(item_row) == []
+    assert value.task.evidence == [literal]
+    with pytest.raises(ValueError, match="quotation"):
+        value.validate_context(requirements, item_row)
 
 
 def test_nested_and_raw_json_cell_excerpts_preserve_original_values(requirements, item_row, assessment):

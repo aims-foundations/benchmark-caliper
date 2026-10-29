@@ -336,6 +336,14 @@ remain errors without an accepted assessment or an automatic model repair.
 Reference answers are evidence to inspect, not proof of correctness, and the
 output-content rating is not expert validation of clinical answers.
 
+Before validation, the screener can remove leading or trailing whitespace from
+an otherwise unmatched quotation, but only when the remaining text occurs
+verbatim in one original item value. Already exact quotations stay unchanged.
+The item record's `evidence_adjustments` retain the assessment field, returned
+quotation, and verified source quotation. Internal whitespace, wording, case,
+punctuation, and JSON-string escaping are not normalized. This correction uses
+no additional model call and does not change ratings or gate thresholds.
+
 The construction gate is computed by Python. It passes only with a matched task
 and ratings of at least 3 for **input ontology, input content, input form, and
 output ontology**. A clear task mismatch or any known score below 3 in these

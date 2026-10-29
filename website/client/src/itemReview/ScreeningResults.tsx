@@ -58,6 +58,15 @@ export function ScreeningItem({ item, index, review, taskName, label = 'Screened
       <details><summary>Inspect original row and sources</summary>
         <p className="help">Item ID: <code>{item.item_id}</code> · Evidence hash: <code>{item.evidence_hash}</code></p>
         <h4>Original item evidence</h4><pre>{JSON.stringify(item.evidence, null, 2)}</pre>
+        {item.evidence_adjustments && item.evidence_adjustments.length > 0 && <>
+          <h4>Evidence quotation formatting</h4>
+          <p>Only leading or trailing whitespace was removed from these returned quotations. Each resulting quotation matches the original item exactly. Internal spacing, punctuation, and wording were preserved.</p>
+          {item.evidence_adjustments.map((adjustment, adjustmentIndex) => <div key={adjustmentIndex}>
+            <p><strong>Assessment field:</strong> <code>{adjustment.field}</code></p>
+            <p>Returned quotation</p><pre>{JSON.stringify(adjustment.returned_quote)}</pre>
+            <p>Verified source quotation</p><pre>{JSON.stringify(adjustment.source_quote)}</pre>
+          </div>)}
+        </>}
         <h4>Full row text used for retrieval</h4><pre>{item.search_text}</pre>
         <h4>Source provenance</h4><pre>{JSON.stringify(item.sources, null, 2)}</pre>
         <h4>Acquisition details</h4><pre>{JSON.stringify({ ...item.acquisition, retrieval_rank: item.rank, screened_run_id: item.screened_run_id, usage: item.usage }, null, 2)}</pre>

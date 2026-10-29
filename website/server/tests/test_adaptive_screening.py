@@ -123,6 +123,36 @@ def test_caps_total_at_160_uses_eight_unseen_per_batch_and_keeps_initial_outcome
         assert secret not in exported.text
 
 
+def test_adaptive_quotation_adjustments_survive_export_and_restart(client, monkeypatch):
+    source = seed_selected(per_facet=49)
+
+    def padded_failure(value, row):
+        value["ratings"]["input_form"].update(score=2, evidence=[f"\n{row['content']}\n"])
+        return value
+
+    calls = mock_screener(monkeypatch, padded_failure)
+    access = start_adaptive(client, source)
+    result = finished(client, access).json()
+    assert result["status"] == "completed", result["message"]
+    assert len(calls) == 1
+    original_row = json.loads(calls[0]["input"])["item"]
+    record = next(item for item in result["screening"]["items"]
+                  if item["screened_run_id"] == access["run_id"])
+    assert record["status"] == "complete" and record["gate"]["status"] == "fail"
+    assert record["evidence"]["item"] == original_row
+    assert record["assessment"]["ratings"]["input_form"]["evidence"] == [original_row["content"]]
+    assert record["evidence_adjustments"] == [{
+        "field": "ratings.input_form.evidence[0]",
+        "returned_quote": f"\n{original_row['content']}\n",
+        "source_quote": original_row["content"],
+    }]
+    assert export(client, access).json()["screening"] == result["screening"]
+    item_review.jobs.clear()
+    assert finished(client, access).json() == result
+    assert export(client, access).json()["screening"] == result["screening"]
+    assert len(calls) == 1
+
+
 def test_small_exhausted_pool_freezes_without_opening_model_client(client, monkeypatch):
     source = seed_selected(per_facet=3)
     original = finished(client, source).json()

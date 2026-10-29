@@ -985,6 +985,48 @@ it('preserves exact quotation diagnostics as plain text alongside the full origi
   expect(originalEvidence).toBeVisible()
 })
 
+it.each(['complete', 'error'] as const)('shows quotation whitespace adjustments for a %s item without changing its result or original evidence', async status => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'screen-run', run_secret: 'screen-access' }))
+  const sourceQuote = '<img src=x onerror=alert(1)>\nPreserve two  spaces and "quoted" words.'
+  const returnedQuote = `  ${sourceQuote}\n `
+  const evidence = { item: { ...candidates.items[0].evidence.item as Record<string, unknown>, annotation: sourceQuote } }
+  const originalEvidence = JSON.stringify(evidence, null, 2)
+  const screenedItem: api.ScreenedItem = {
+    ...screeningItem, evidence, search_text: JSON.stringify(evidence.item), status,
+    evidence_adjustments: [{ field: 'ratings.input_form.evidence[0]', returned_quote: returnedQuote, source_quote: sourceQuote }],
+    ...(status === 'complete' ? {
+      assessment: { ...assessment, ratings: { ...assessment.ratings, input_form: { ...assessment.ratings.input_form, evidence: [sourceQuote] } } },
+    } : { assessment: undefined, gate: undefined, error: 'Another evidence quotation does not occur exactly in the original item.' }),
+  }
+  vi.mocked(api.getReview).mockResolvedValue({ ...screened, screening: { ...screened.screening!,
+    allocation: { ...screened.screening!.allocation, allocated: 1, shortfall: 47, items: screened.screening!.allocation.items.slice(0, 1) },
+    items: [screenedItem],
+  } })
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  const item = await screen.findByRole('article', { name: 'Screened item 1' })
+  await user.click(within(item).getByText('Item details', { exact: true }))
+  if (status === 'complete') {
+    expect(within(item).getByRole('heading', { name: 'Screening gate: Pass' })).toBeVisible()
+    expect(within(item).getByText('Input form').parentElement).toHaveTextContent('Gate dimension4 / 5')
+    expect(within(item).queryByRole('alert')).not.toBeInTheDocument()
+  } else {
+    expect(within(item).getByRole('alert')).toHaveTextContent('Another evidence quotation does not occur exactly in the original item.')
+    expect(within(item).queryByRole('heading', { name: /Screening gate:/ })).not.toBeInTheDocument()
+  }
+  expect(within(item).getByRole('heading', { name: 'Evidence quotation formatting' })).not.toBeVisible()
+  await user.click(within(item).getByText('Inspect original row and sources'))
+  expect(within(item).getByRole('heading', { name: 'Evidence quotation formatting' })).toBeVisible()
+  expect(within(item).getByText(/Only leading or trailing whitespace was removed/)).toHaveTextContent('Internal spacing, punctuation, and wording were preserved.')
+  expect(within(item).getByText('ratings.input_form.evidence[0]')).toBeVisible()
+  const blocks = Array.from(item.querySelectorAll('pre'))
+  expect(blocks.find(element => element.textContent === JSON.stringify(returnedQuote))).toBeVisible()
+  expect(blocks.find(element => element.textContent === JSON.stringify(sourceQuote))).toBeVisible()
+  expect(blocks.find(element => element.textContent === originalEvidence)).toBeVisible()
+  expect(item.querySelector('img')).toBeNull()
+  expect(JSON.stringify(screenedItem.evidence, null, 2)).toBe(originalEvidence)
+})
+
 it('retains completed screening assessments when stopped and continues only pending or errored items', async () => {
   const access = { run_id: 'screen-run', run_secret: 'screen-access' }
   sessionStorage.setItem('item_review_run_v1', JSON.stringify(access))

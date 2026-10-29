@@ -1424,7 +1424,7 @@ async def screen_benchmarks(job: ReviewJob, api_key: str) -> None:
                     "acquisition": {key: acquisition[key] for key in ("queue_id", "facet_id")},
                     "screened_run_id": job.run_id,
                     **{key: result[key] for key in (
-                        "status", "assessment", "gate", "response_id", "response_model", "usage",
+                        "status", "assessment", "gate", "response_id", "response_model", "usage", "evidence_adjustments",
                     ) if key in result},
                 }
                 if result["status"] == "error":

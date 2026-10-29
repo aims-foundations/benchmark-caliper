@@ -282,6 +282,55 @@ def test_quotation_diagnostics_survive_export_restart_and_retry(client, monkeypa
     assert finished(client, first).json() == original
 
 
+def test_outer_whitespace_adjustments_are_saved_without_changing_gate_or_source(client, monkeypatch):
+    source = seed_retrieval(facets=1, per_facet=3)
+    source_rows = [deepcopy(candidate["evidence"]["item"]) for candidate in
+                   item_review.jobs[source["run_id"]].benchmark_retrieval["rankings"][0]["candidates"]]
+
+    def padded_evidence(value, row):
+        if row["id"] == "0-0":
+            value["task"]["evidence"] = [f"\n{row['content']}\n"]
+        elif row["id"] == "0-1":
+            value["ratings"]["input_content"].update(
+                score=2, evidence=[f"\t {row['content']} \n"])
+        else:
+            # A changed space inside the quotation remains unsupported evidence.
+            value["ratings"]["input_form"]["evidence"] = [
+                f"\n{row['content'].replace('adding two', 'adding  two')}\n"]
+        return value
+
+    calls = mock_screener(monkeypatch, padded_evidence)
+    access = start_screening(client, source)
+    original = finished(client, access).json()
+    accepted, failed_gate, invalid = original["screening"]["items"]
+    assert len(calls) == 3
+    assert accepted["status"] == "complete" and accepted["gate"]["status"] == "pass"
+    assert accepted["assessment"]["task"]["evidence"] == [source_rows[0]["content"]]
+    assert accepted["evidence_adjustments"] == [{
+        "field": "task.evidence[0]",
+        "returned_quote": f"\n{source_rows[0]['content']}\n",
+        "source_quote": source_rows[0]["content"],
+    }]
+    assert failed_gate["status"] == "complete" and failed_gate["gate"]["status"] == "fail"
+    assert failed_gate["assessment"]["ratings"]["input_content"]["score"] == 2
+    assert failed_gate["assessment"]["ratings"]["input_content"]["evidence"] == [source_rows[1]["content"]]
+    assert failed_gate["evidence_adjustments"] == [{
+        "field": "ratings.input_content.evidence[0]",
+        "returned_quote": f"\t {source_rows[1]['content']} \n",
+        "source_quote": source_rows[1]["content"],
+    }]
+    assert invalid["status"] == "error" and "gate" not in invalid
+    assert "ratings.input_form.evidence[0]" in invalid["error"]
+    assert "adding  two" in invalid["error"]
+    assert [record["evidence"]["item"] for record in original["screening"]["items"]] == source_rows
+    assert export(client, access).json()["screening"] == original["screening"]
+
+    item_review.jobs.clear()
+    assert finished(client, access).json() == original
+    assert export(client, access).json()["screening"] == original["screening"]
+    assert len(calls) == 3
+
+
 def test_continuation_reuses_original_prompt_settings_after_file_edit(client, monkeypatch, tmp_path):
     from bayesian_auditing import screening
 

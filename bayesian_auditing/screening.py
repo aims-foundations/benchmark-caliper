@@ -117,6 +117,37 @@ class ScreeningAssessment(StrictModel):
     ratings: ScreeningRatings
     coverage: list[CoverageFinding]
 
+    def _evidence_findings(self):
+        yield "task", self.task
+        for name in DIMENSIONS:
+            yield f"ratings.{name}", getattr(self.ratings, name)
+        for index, finding in enumerate(self.coverage):
+            yield f"coverage[{index}]", finding
+
+    def trim_evidence_padding(self, item_row: dict) -> list[dict]:
+        """Remove outer padding only when the remaining excerpt is verbatim.
+
+        Already literal excerpts are preserved. This does not alter spacing
+        inside a quotation, decode JSON cells, or accept paraphrased evidence.
+        Keep the returned quotation alongside each correction for inspection.
+        """
+        originals = list(_item_strings(item_row))
+        adjustments = []
+        for path, finding in self._evidence_findings():
+            for index, quote in enumerate(finding.evidence):
+                if any(quote in original for original in originals):
+                    continue
+                source_quote = quote.strip()
+                if (source_quote and source_quote != quote
+                        and any(source_quote in original for original in originals)):
+                    finding.evidence[index] = source_quote
+                    adjustments.append({
+                        "field": f"{path}.evidence[{index}]",
+                        "returned_quote": quote,
+                        "source_quote": source_quote,
+                    })
+        return adjustments
+
     def validate_context(self, requirements: Requirements, item_row: dict) -> None:
         """Check facet/coverage references and literal excerpts of item values.
 
@@ -141,13 +172,8 @@ class ScreeningAssessment(StrictModel):
                 if requirement.facet_ids and not set(requirement.facet_ids).intersection(self.task.matched_facet_ids):
                     raise ValueError("Positive coverage must apply to a matched task facet.")
         strings = list(_item_strings(item_row))
-        findings = [
-            ("task", self.task),
-            *((f"ratings.{name}", getattr(self.ratings, name)) for name in DIMENSIONS),
-            *((f"coverage[{index}]", finding) for index, finding in enumerate(self.coverage)),
-        ]
         mismatches = []
-        for path, finding in findings:
+        for path, finding in self._evidence_findings():
             for index, quote in enumerate(finding.evidence):
                 if not any(quote in original for original in strings):
                     # Preserve only the rejected evidence from the parsed assessment,
@@ -232,6 +258,9 @@ class ItemScreener:
             assessment = ScreeningAssessment.model_validate_json(response.output_text)
         except ValidationError:
             return {**result, "status": "error", "error": "The screening failed schema validation. Check task findings, ratings, and coverage evidence."}
+        adjustments = assessment.trim_evidence_padding(item_row)
+        if adjustments:
+            result["evidence_adjustments"] = adjustments
         try:
             assessment.validate_context(requirements, item_row)
         except ValueError as exc:

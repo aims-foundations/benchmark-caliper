@@ -487,6 +487,14 @@ in original item string values; semantic support still needs human review.
 Null ratings and the prompt's score anchors are explicit implementation choices.
 Clinical answer correctness is not established by an LLM screening judgment.
 
+An unmatched quotation with extra leading or trailing whitespace is corrected
+only if trimming those edges produces an exact excerpt of an original item
+value. The original row stays unchanged, and `evidence_adjustments` records both
+quotation versions and their assessment field. These records appear under
+**Inspect original row and sources** and in the export. Internal text changes
+still fail validation. This also applies to continued and adaptive screening,
+without changing the saved prompt or making extra model requests.
+
 Python computes the gate: a matched task and scores of at least 3 on input
 ontology, input content, input form, and output ontology are required to pass.
 A known low gated score or clear task mismatch fails; otherwise an unknown
