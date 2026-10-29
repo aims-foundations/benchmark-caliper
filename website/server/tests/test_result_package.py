@@ -130,6 +130,25 @@ def test_frozen_collection_has_descriptive_gaps_evidence_and_history(snapshot):
     assert original == snapshot
 
 
+def test_composition_precedes_selected_items_and_links_overlapping_rows(snapshot):
+    first, second = snapshot["screening"]["items"]
+    first["question_text"] = second["question_text"].replace(" ", "\n  ")
+    snapshot["selection"]["selected_item_ids"] = [second["item_id"], first["item_id"]]
+    annotations = {"version": 1, "formats": [{"label": "Text question", "item_ids": [first["item_id"]]}],
+                   "basis": "Description based on inspection of the saved question text."}
+    before = deepcopy(snapshot)
+
+    html = "".join(result_package._report(snapshot, composition_annotations=annotations))
+
+    assert html.index("Composition of the selected items") < html.index("Selected benchmark items")
+    assert "After whitespace normalization, 1 distinct text remains." in html
+    assert "Text question" in html and annotations["basis"] in html
+    for item_id in snapshot["selection"]["selected_item_ids"]:
+        assert f'href="#selected-item-{item_id}"' in html
+        assert f'id="selected-item-{item_id}"' in html
+    assert snapshot == before
+
+
 def test_join_selected_ids_preserves_order_and_all_raw_json_without_mutation(snapshot):
     snapshot["selection"]["selected_item_ids"] = ["item-b", "not-selected"]
     snapshot["selection"]["items"].insert(0, {"item_id": "not-selected", "quality_score": 3})
@@ -222,10 +241,10 @@ def test_stored_candidates_export_complete_original_fields_and_per_occurrence_me
     assert normalize_json_views(html) == normalize_json_views(expected_html)
     assert rows == expected_csv
     assert compact == before
-    # HTML and CSV read only the selected record. Full JSON subsequently reads
-    # each ranking/screening occurrence, preserving its distinct rank metadata.
-    assert expanded_ids[:2] == [screened["item_id"], screened["item_id"]]
-    assert len(expanded_ids) == 7
+    # Composition, selected item HTML, and CSV read only the selected record.
+    # Full JSON then reads every occurrence with its distinct rank metadata.
+    assert expanded_ids[:3] == [screened["item_id"]] * 3
+    assert len(expanded_ids) == 8
     assert [ranking["candidates"][-1]["rank"] for ranking in exported["retrieval"]["rankings"]] == [3, 7]
     assert exported["screening"]["items"][1]["rank"] == 19
     serialized = html + json.dumps(rows) + json.dumps(exported)
@@ -241,7 +260,7 @@ def test_early_or_interrupted_stage_exports_are_explicitly_partial(snapshot, mod
     minimal.update(mode=mode, status="running", requirements=None, selection=None)
     minimal["metadata"]["result_state"] = "partial"
     html, rows, original = read_package(minimal)
-    assert "Partial result — the current stage is unfinished." in html
+    assert "Partial result. The current stage is unfinished." in html
     assert "No benchmark collection has been selected" in html
     assert "No validated requirements are available" in html
     assert len(rows) == 0

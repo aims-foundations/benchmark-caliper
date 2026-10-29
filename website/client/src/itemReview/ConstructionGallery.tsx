@@ -12,16 +12,66 @@ type Artifact = { filename: string; bytes: number; sha256?: string }
 export interface ConstructionExample {
   id: string; title: string; description: string; run_id: string; result_state: string
   assessed_count: number; selected_count: number; coverage_complete: boolean
-  artifacts: { report: Artifact; items: Artifact; results: Artifact; package: Artifact & PreparedPackage }
+  artifacts: { report: Artifact; summary_report?: Artifact; items: Artifact; results: Artifact; package: Artifact & PreparedPackage }
 }
 export interface ConstructionItemSummary {
   item_id: string; index: number; question_preview: string; status: 'complete' | 'error'
   gate: 'pass' | 'fail' | 'unresolved' | null; matched_facet_ids: string[]; sources: string[]
   selected: boolean; initial: boolean; quality_score: number | null
 }
-export interface ConstructionSnapshot { entry: ConstructionExample; review: AdaptiveReview; items: ConstructionItemSummary[] }
+export interface ConstructionComposition {
+  selected_count: number
+  sources: { name: string; count: number; percentage: number }[]
+  unknown_source_count: number
+  tasks: { facet_id: string; label: string; count: number }[]
+  coverage: { requirement_index: number; label: string; minimum_items: number | null; selected_count: number; shortfall: number | null }[]
+  question_text: { available_count: number; distinct_count: number; missing_count: number; overlaps: { item_ids: string[] }[] }
+  formats: { counts: { label: string; count: number }[]; unknown_count: number; basis: string | null }
+}
+export interface ConstructionSnapshot { entry: ConstructionExample; review: AdaptiveReview; items: ConstructionItemSummary[]; composition?: ConstructionComposition }
 const examplePath = (id: string) => `/api/item-review/examples/${encodeURIComponent(id)}`
 export const constructionExampleLink = (id: string) => appPath(`/items?example=${encodeURIComponent(id)}`)
+const selectedItemAnchor = (itemId: string) => `selected-item-${itemId}`
+
+function CompositionSummary({ composition, selected }: { composition: ConstructionComposition; selected: ConstructionItemSummary[] }) {
+  const { selected_count: count, sources, tasks, formats, coverage, question_text: questions } = composition
+  const representedTasks = tasks.filter(task => task.count > 0)
+  const sourceAssignments = sources.reduce((sum, source) => sum + source.count, 0)
+  const taskAssignments = tasks.reduce((sum, task) => sum + task.count, 0)
+  return <section className="review-panel construction-composition" aria-labelledby="construction-composition">
+    <h2 id="construction-composition">Composition of the selected items</h2>
+    {count === 0 ? <p>No items were selected, so there is no selected collection to summarize.</p> : <>
+      <p>The selected collection draws on {sources.length} recorded source {sources.length === 1 ? 'benchmark' : 'benchmarks'} and represents {representedTasks.length} deployment {representedTasks.length === 1 ? 'task' : 'tasks'}. Question format is a separate property; a composite collection can contain multiple choice questions.</p>
+      <div className="construction-composition-tables">
+        <div className="construction-table"><table><caption>Source benchmarks</caption><thead><tr><th scope="col">Source</th><th scope="col">Selected items</th><th scope="col">Share</th></tr></thead><tbody>
+          {sources.map(source => <tr key={source.name}><th scope="row">{source.name}</th><td>{source.count}</td><td>{source.percentage.toLocaleString(undefined, { maximumFractionDigits: 1 })}%</td></tr>)}
+          {composition.unknown_source_count > 0 && <tr><th scope="row">Source not recorded</th><td>{composition.unknown_source_count}</td><td>{(composition.unknown_source_count / count * 100).toLocaleString(undefined, { maximumFractionDigits: 1 })}%</td></tr>}
+        </tbody></table></div>
+        <div className="construction-table"><table><caption>Deployment tasks</caption><thead><tr><th scope="col">Task</th><th scope="col">Selected items</th></tr></thead><tbody>
+          {tasks.map(task => <tr key={task.facet_id}><th scope="row"><a href={`#facet-${task.facet_id}`}>{task.label}</a></th><td>{task.count}</td></tr>)}
+        </tbody></table></div>
+      </div>
+      {(sourceAssignments + composition.unknown_source_count > count || taskAssignments > count) && <p>An item can belong to more than one source benchmark or deployment task, so these counts can exceed the number of selected items. Source shares use all {count} selected items as the denominator.</p>}
+      <h3>Question formats</h3>
+      {formats.counts.length > 0 && <ul>{formats.counts.map(format => <li key={format.label}>{format.label}: {format.count} {format.count === 1 ? 'item' : 'items'}.</li>)}</ul>}
+      {formats.unknown_count > 0 && <p>{formats.unknown_count} selected {formats.unknown_count === 1 ? 'item has' : 'items have'} no reviewed format annotation.</p>}
+      {formats.basis && <p>Format review: {formats.basis}</p>}
+      <h3>Additional coverage requirements</h3>
+      {coverage.length === 0 ? <p>No additional coverage requirements were recorded.</p> : <ul>{coverage.map(requirement => <li key={requirement.requirement_index}><span className="review-preserve">{requirement.label}</span>{' '}
+        {requirement.minimum_items == null ? `${requirement.selected_count} qualifying ${requirement.selected_count === 1 ? 'item' : 'items'}. No numeric minimum was specified.` : `${requirement.selected_count} qualifying ${requirement.selected_count === 1 ? 'item' : 'items'} against a minimum of ${requirement.minimum_items}.`}{' '}
+        {requirement.shortfall == null ? 'The coverage finding remains unresolved.' : requirement.shortfall > 0 ? `${requirement.shortfall} more ${requirement.shortfall === 1 ? 'item is' : 'items are'} needed.` : 'This requirement is met.'}
+      </li>)}</ul>}
+      <h3>Question text overlap</h3>
+      <p>{questions.missing_count === 0 ? `${count} selected ${count === 1 ? 'row contains' : 'rows contain'} ${questions.distinct_count} distinct question ${questions.distinct_count === 1 ? 'text' : 'texts'} after normalizing whitespace.` : `${questions.available_count} of ${count} selected rows have question text available, with ${questions.distinct_count} distinct question ${questions.distinct_count === 1 ? 'text' : 'texts'} after normalizing whitespace. ${questions.missing_count} ${questions.missing_count === 1 ? 'row could' : 'rows could'} not be compared.`}</p>
+      {questions.overlaps.length > 0 && <ul>{questions.overlaps.map((overlap, index) => <li key={index}>Same question text: {overlap.item_ids.map((id, itemIndex) => {
+        const selectedIndex = selected.findIndex(item => item.item_id === id)
+        return <span key={id}>{itemIndex > 0 && ', '}{selectedIndex >= 0 ? <a href={`#${encodeURIComponent(selectedItemAnchor(id))}`}>Selected item {selectedIndex + 1}</a> : 'Item unavailable'}</span>
+      })}.</li>)}</ul>}
+      <p>The comparison keeps wording, punctuation, and letter case. It does not measure whether differently worded questions test the same content.</p>
+      <p>This text comparison does not change the whole row identity rule used during selection.</p>
+    </>}
+  </section>
+}
 
 async function publicJson<T>(path: string, signal: AbortSignal): Promise<T> {
   const response = await fetch(appPath(path), { cache: 'no-store', signal })
@@ -117,7 +167,7 @@ function FullAssessment({ item, review }: { item: ScreenedItem; review: Adaptive
   </div>
 }
 
-function GalleryItem({ summary, item, review, exampleId, onLoad, label = 'Screened item' }: { summary: ConstructionItemSummary; item?: ScreenedItem; review: AdaptiveReview; exampleId: string; onLoad: (item: ScreenedItem) => void; label?: string }) {
+function GalleryItem({ summary, item, review, exampleId, onLoad, label = 'Screened item', anchorId }: { summary: ConstructionItemSummary; item?: ScreenedItem; review: AdaptiveReview; exampleId: string; onLoad: (item: ScreenedItem) => void; label?: string; anchorId?: string }) {
   const [open, setOpen] = useState(false)
   const [error, setError] = useState('')
   const [attempt, setAttempt] = useState(0)
@@ -131,7 +181,7 @@ function GalleryItem({ summary, item, review, exampleId, onLoad, label = 'Screen
     return () => controller.abort()
   }, [open, item, summary.item_id, exampleId, onLoad, attempt])
   const decision = summary.status === 'error' ? 'Assessment error' : summary.gate === 'pass' ? 'Passed screening' : summary.gate === 'fail' ? 'Failed screening' : 'Unresolved screening'
-  return <details className="construction-item" onToggle={event => setOpen(event.currentTarget.open)}>
+  return <details className="construction-item" id={anchorId} onToggle={event => setOpen(event.currentTarget.open)}>
     <summary><span className="construction-item-label">{label} {summary.index + 1}{summary.selected && <span className="construction-selected">Selected</span>}</span><strong>{summary.question_preview || 'Item with no separately labeled question'}</strong><span className="construction-item-meta">{decision}. Sources: {summary.sources.join(', ')}.{summary.quality_score != null && ` Quality: ${summary.quality_score.toFixed(2)} / 5.`}</span></summary>
     {open && (item ? <FullAssessment item={item} review={review} /> : error ? <div className="construction-assessment-body"><p role="alert">{error}</p><button type="button" onClick={() => setAttempt(value => value + 1)}>Try loading this item again</button></div> : <p role="status">Loading the full item and assessment…</p>)}
   </details>
@@ -155,18 +205,22 @@ function PublishedConstruction({ snapshot }: { snapshot: ConstructionSnapshot })
   const downloadController = useRef<AbortController | null>(null)
   useEffect(() => () => downloadController.current?.abort(), [])
   useEffect(() => {
-    function reveal() {
+    function revealTarget(hash: string) {
       let id: string
-      try { id = decodeURIComponent(window.location.hash.slice(1)) } catch { return }
+      try { id = decodeURIComponent(hash.slice(1)) } catch { return }
       const target = document.getElementById(id)
+      if (target instanceof HTMLDetailsElement) target.open = true
       for (let parent = target?.parentElement; parent; parent = parent.parentElement) if (parent instanceof HTMLDetailsElement) parent.open = true
+      return target
+    }
+    function reveal() {
+      const target = revealTarget(window.location.hash)
       target?.scrollIntoView?.({ block: 'start' })
     }
     function click(event: MouseEvent) {
       const anchor = event.target instanceof Element ? event.target.closest('a[href^="#"]') : null
       if (anchor && event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
-        const target = document.getElementById(anchor.getAttribute('href')!.slice(1))
-        for (let parent = target?.parentElement; parent; parent = parent.parentElement) if (parent instanceof HTMLDetailsElement) parent.open = true
+        revealTarget(anchor.getAttribute('href')!)
       }
     }
     window.addEventListener('hashchange', reveal); document.addEventListener('click', click); reveal()
@@ -205,11 +259,13 @@ function PublishedConstruction({ snapshot }: { snapshot: ConstructionSnapshot })
       <p>Human validation is not included in this saved record.</p>
       <p>{entry.coverage_complete ? 'The selected collection meets all recorded coverage requirements.' : 'The collection covers the tasks shown below, with remaining coverage gaps recorded explicitly.'}</p>
       <Coverage review={review} selection={review.selection} />
-      <div className="construction-actions"><a href={artifactUrl('report')} target="_blank" rel="noopener noreferrer">Read the HTML report</a><a href={artifactUrl('items')} download={entry.artifacts.items.filename}>Download selected items CSV</a><a href={artifactUrl('results')} download={entry.artifacts.results.filename}>Download complete JSON</a><button type="button" disabled={progress !== null} onClick={() => void download()}>{progress?.phase === 'downloading' ? `Downloading package… ${Math.floor(progress.receivedBytes / progress.totalBytes * 100)}%` : 'Download complete package'}</button><button type="button" className="secondary" onClick={() => void copyLink()}>Copy example link</button></div>
+      <div className="construction-actions">{entry.artifacts.summary_report && <a href={artifactUrl('summary_report')} target="_blank" rel="noopener noreferrer">Read the report with composition summary</a>}<a href={artifactUrl('report')} target="_blank" rel="noopener noreferrer">Read the original HTML report</a><a href={artifactUrl('items')} download={entry.artifacts.items.filename}>Download selected items CSV</a><a href={artifactUrl('results')} download={entry.artifacts.results.filename}>Download complete JSON</a><button type="button" disabled={progress !== null} onClick={() => void download()}>{progress?.phase === 'downloading' ? `Downloading original package… ${Math.floor(progress.receivedBytes / progress.totalBytes * 100)}%` : 'Download original results package'}</button><button type="button" className="secondary" onClick={() => void copyLink()}>Copy example link</button></div>
+      {entry.artifacts.summary_report && <p>The composition summary is available in the gallery and the report with composition summary. The original results package retains the files saved when this run finished.</p>}
       {downloadError && <p className="review-error" role="alert">{downloadError}</p>}{copyMessage && <p role="status">{copyMessage}</p>}
     </section>
+    {snapshot.composition && <CompositionSummary composition={snapshot.composition} selected={selected} />}
     <section aria-labelledby="construction-selected"><h2 id="construction-selected">Selected items ({selected.length})</h2><p>Open an item to read the original question, its ratings, supporting evidence, and source record.</p>
-      {selected.map((item, index) => <GalleryItem key={item.item_id} summary={{ ...item, index }} item={loadedItems.get(item.item_id)} review={review} exampleId={entry.id} onLoad={onLoad} label="Selected item" />)}
+      {selected.map((item, index) => <GalleryItem key={item.item_id} summary={{ ...item, index }} item={loadedItems.get(item.item_id)} review={review} exampleId={entry.id} onLoad={onLoad} label="Selected item" anchorId={selectedItemAnchor(item.item_id)} />)}
     </section>
     <section className="review-panel" id="all-assessments" aria-labelledby="construction-assessments"><h2 id="construction-assessments">All screened items ({items.length})</h2><p>Inspect accepted and rejected candidates, including the initial screening batch and later adaptive batches.</p>
       <div className="construction-filters"><label>Screening result<select value={filter} onChange={event => { setFilter(event.target.value); setPage(1) }}><option value="all">All results</option><option value="selected">Selected items</option><option value="pass">Passed screening</option><option value="fail">Failed screening</option><option value="unresolved">Unresolved screening</option><option value="error">Assessment errors</option></select></label><label>Screening stage<select value={phase} onChange={event => { setPhase(event.target.value); setPage(1) }}><option value="all">All stages</option><option value="initial">Initial screening</option><option value="adaptive">Adaptive screening</option></select></label></div>

@@ -27,7 +27,7 @@ from bayesian_auditing.requirements import Requirements
 from bayesian_auditing.screening import GATED_DIMENSIONS, ScreeningAssessment, gate_for
 from website.server import construction_gallery as gallery
 from website.server.adaptive_review import validate_collection
-from website.server import streaming_json
+from website.server import construction_composition, result_package, streaming_json
 
 
 FILES = ("report.html", "selected_items.csv", "results.json")
@@ -192,10 +192,36 @@ def validate_csv(stream, snapshot):
             require(row.get(name) == ("" if finding["score"] is None else str(finding["score"])), "A CSV rating differs from the saved assessment")
 
 
+def add_composition(directory, snapshot, *, title, annotations=None):
+    """Add a derived summary and report while retaining the original exports."""
+    snapshot["composition"] = construction_composition.summarize(snapshot["review"], annotations)
+    if annotations is not None:
+        write_json(directory / "composition_annotations.json", annotations)
+    selected = {item["item_id"]: item for item in snapshot["review"]["screening"]["items"]}
+    # Report history counts every saved assessment. Only selected rows need full
+    # evidence; summaries retain the status of every other screened candidate.
+    report_items = [selected.get(item["item_id"], {"item_id": item["item_id"], "status": item["status"]})
+                    for item in snapshot["items"]]
+    review = {**snapshot["review"], "screening": {
+        **snapshot["review"]["screening"], "items": report_items,
+    }, "metadata": {
+        **(snapshot["review"].get("metadata") or {}), "run_name": title,
+    }}
+    path = directory / "report-with-composition.html"
+    with path.open("w", encoding="utf-8") as output:
+        for part in result_package._report(review, composition_annotations=annotations):
+            output.write(part)
+    with path.open("rb") as stream:
+        return {"filename": path.name, **checksum(stream)}
+
+
 def import_example(source: Path, entry_id: str, *, title: str, description: str,
-                   output_dir: Path | None = None, overwrite=False):
+                   output_dir: Path | None = None, overwrite=False,
+                   composition_annotations: Path | None = None):
     require(isinstance(entry_id, str) and gallery.ENTRY_ID.fullmatch(entry_id), "Use a lowercase example ID with words separated by hyphens")
     require(title.strip() and description.strip(), "A title and description are required")
+    annotations = (json.loads(Path(composition_annotations).read_text(encoding="utf-8"))
+                   if composition_annotations is not None else None)
     root = Path(output_dir) if output_dir is not None else gallery.ROOT
     require(not root.is_symlink(), "The publication root cannot be a symlink")
     destination = root / entry_id
@@ -223,6 +249,7 @@ def import_example(source: Path, entry_id: str, *, title: str, description: str,
                 snapshot = derive_snapshot(stream, stage)
             with export.open("selected_items.csv") as stream:
                 validate_csv(stream, snapshot)
+            artifacts["summary_report"] = add_composition(stage, snapshot, title=title.strip(), annotations=annotations)
             archive_path = stage / "complete-results.zip"
             if export.archive is not None:
                 shutil.copyfile(source, archive_path)
@@ -273,6 +300,8 @@ def main():
     parser.add_argument("--description", required=True)
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument("--composition-annotations", type=Path,
+                        help="Optional reviewed format descriptions tied to selected item IDs")
     args = parser.parse_args()
     try:
         entry = import_example(**vars(args))

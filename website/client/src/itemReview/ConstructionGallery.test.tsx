@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { EvaluationSite } from '../EvaluationSite'
 import { PIPELINE_RUN_STORAGE } from './accessStorage'
 import { type AdaptiveReview, type ScreenedItem } from './api'
-import { type ConstructionExample, type ConstructionSnapshot } from './ConstructionGallery'
+import { type ConstructionComposition, type ConstructionExample, type ConstructionSnapshot } from './ConstructionGallery'
 
 vi.mock('../App', () => ({ App: () => null }))
 vi.mock('../ItemAnalysisEntry', () => ({ ItemAnalysisEntry: () => null }))
@@ -52,14 +52,25 @@ const snapshot: ConstructionSnapshot = {
   } satisfies AdaptiveReview,
   items: Array.from({ length: 160 }, (_, index) => ({ item_id: `item-${index}`, index, question_preview: `Question preview ${index}`, status: 'complete', gate: index >= 48 && index < 58 ? 'pass' : 'fail', matched_facet_ids: ['management'], sources: ['clinical_questions'], selected: index >= 48 && index < 58, initial: index < 48, quality_score: 4 })),
 }
+const composition: ConstructionComposition = {
+  selected_count: 10,
+  sources: [{ name: 'AfriMedQA', count: 7, percentage: 70 }, { name: 'chatgpt_drift', count: 2, percentage: 20 }, { name: 'MMLU', count: 1, percentage: 10 }],
+  unknown_source_count: 0,
+  tasks: [{ facet_id: 'diagnosis', label: 'Choose a diagnosis', count: 5 }, { facet_id: 'investigation', label: 'Choose an investigation', count: 1 }, { facet_id: 'management', label: 'Choose initial management', count: 4 }],
+  coverage: [{ requirement_index: 0, label: 'Include allergy cases.', minimum_items: 3, selected_count: 0, shortfall: 3 }],
+  question_text: { available_count: 10, distinct_count: 9, missing_count: 0, overlaps: [{ item_ids: ['item-48', 'item-49'] }] },
+  formats: { counts: [{ label: 'Text multiple choice questions', count: 10 }], unknown_count: 0, basis: 'Reviewed the original questions and answer choices in all selected rows.' },
+}
+let currentSnapshot: ConstructionSnapshot
 let fetchMock: ReturnType<typeof vi.fn>
 beforeEach(() => {
+  currentSnapshot = structuredClone(snapshot)
   localStorage.clear(); sessionStorage.clear()
   fetchMock = vi.fn(async (input: string) => {
     const path = new URL(input, window.location.origin).pathname
     if (path === '/nav.json') return new Response('{}')
     if (path === '/api/item-review/examples') return new Response(JSON.stringify({ examples: [entry] }))
-    if (path === `/api/item-review/examples/${exampleId}`) return new Response(JSON.stringify(snapshot))
+    if (path === `/api/item-review/examples/${exampleId}`) return new Response(JSON.stringify(currentSnapshot))
     const match = path.match(/\/items\/item-(\d+)$/)
     if (match) return new Response(JSON.stringify(fullItem(Number(match[1]))))
     if (path.endsWith('/package/chunk')) return new Response('zip', { headers: { 'X-Package-Id': 'fixed-zip', 'X-Package-Offset': '0', 'Content-Length': '3' } })
@@ -155,8 +166,8 @@ it('publishes stable links and downloads the public package without private auth
   const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
   render(<EvaluationSite />)
   await screen.findByRole('heading', { name: entry.title })
-  expect(screen.getByRole('link', { name: 'Read the HTML report' })).toHaveAttribute('href', `/api/item-review/examples/${exampleId}/artifacts/report`)
-  await user.click(screen.getByRole('button', { name: 'Download complete package' }))
+  expect(screen.getByRole('link', { name: 'Read the original HTML report' })).toHaveAttribute('href', `/api/item-review/examples/${exampleId}/artifacts/report`)
+  await user.click(screen.getByRole('button', { name: 'Download original results package' }))
   expect(create).toHaveBeenCalled()
   expect(click.mock.instances[0]).toHaveAttribute('download', 'complete-results.zip')
   const chunk = fetchMock.mock.calls.find(([url]) => String(url).includes('/package/chunk'))!
@@ -188,4 +199,116 @@ it('copies the stable example address without private access or a date', async (
   await user.click(screen.getByRole('button', { name: 'Copy example link' }))
   expect(write).toHaveBeenCalledWith(`${window.location.origin}/items?example=clinical-exam-study`)
   expect(screen.getByText('Link copied.')).toBeVisible()
+})
+
+it('summarizes supplied source counts, task counts, formats, and coverage before the selected items', async () => {
+  currentSnapshot.composition = structuredClone(composition)
+  render(<EvaluationSite />)
+  const summary = await screen.findByRole('region', { name: 'Composition of the selected items' })
+  const sources = within(summary).getByRole('table', { name: 'Source benchmarks' })
+  expect(within(sources).getByRole('row', { name: 'AfriMedQA 7 70%' })).toBeVisible()
+  expect(within(sources).getByRole('row', { name: 'chatgpt_drift 2 20%' })).toBeVisible()
+  expect(within(sources).getByRole('row', { name: 'MMLU 1 10%' })).toBeVisible()
+  const tasks = within(summary).getByRole('table', { name: 'Deployment tasks' })
+  expect(within(tasks).getByRole('row', { name: 'Choose a diagnosis 5' })).toBeVisible()
+  expect(within(tasks).getByRole('row', { name: 'Choose an investigation 1' })).toBeVisible()
+  expect(within(tasks).getByRole('row', { name: 'Choose initial management 4' })).toBeVisible()
+  expect(within(summary).getByText('Text multiple choice questions: 10 items.')).toBeVisible()
+  expect(within(summary).getByText(/Format review: Reviewed the original questions/)).toBeVisible()
+  expect(within(summary).getByText(/0 qualifying items against a minimum of 3\. 3 more items are needed/)).toBeVisible()
+  expect(within(summary).getByText(/a composite collection can contain multiple choice questions/)).toBeVisible()
+  expect(summary.compareDocumentPosition(screen.getByRole('region', { name: 'Selected items (10)' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+})
+
+it('links question text overlaps to the corresponding selected cards and opens them', async () => {
+  currentSnapshot.composition = structuredClone(composition)
+  const user = userEvent.setup()
+  render(<EvaluationSite />)
+  const summary = await screen.findByRole('region', { name: 'Composition of the selected items' })
+  expect(within(summary).getByText('10 selected rows contain 9 distinct question texts after normalizing whitespace.')).toBeVisible()
+  const first = within(summary).getByRole('link', { name: 'Selected item 1' })
+  const second = within(summary).getByRole('link', { name: 'Selected item 2' })
+  expect(first).toHaveAttribute('href', '#selected-item-item-48')
+  expect(second).toHaveAttribute('href', '#selected-item-item-49')
+  const firstCard = document.getElementById('selected-item-item-48')!
+  expect(firstCard).not.toHaveAttribute('open')
+  await user.click(first)
+  expect(firstCard).toHaveAttribute('open')
+  expect(await within(firstCard).findByText(/Full original question 48\./, { selector: 'p' })).toBeVisible()
+  await user.click(second)
+  expect(document.getElementById('selected-item-item-49')).toHaveAttribute('open')
+  expect(within(summary).getByText('This text comparison does not change the whole row identity rule used during selection.')).toBeVisible()
+})
+
+it('reports missing annotations and question text without inferring a format', async () => {
+  currentSnapshot.composition = {
+    ...structuredClone(composition),
+    sources: [{ name: 'AfriMedQA', count: 7, percentage: 70 }], unknown_source_count: 3,
+    formats: { counts: [], unknown_count: 10, basis: null },
+    question_text: { available_count: 8, distinct_count: 8, missing_count: 2, overlaps: [] },
+    coverage: [{ requirement_index: 0, label: 'Include allergy cases.', minimum_items: null, selected_count: 0, shortfall: null }],
+  }
+  render(<EvaluationSite />)
+  const summary = await screen.findByRole('region', { name: 'Composition of the selected items' })
+  expect(within(summary).getByRole('row', { name: 'Source not recorded 3 30%' })).toBeVisible()
+  expect(within(summary).getByText('10 selected items have no reviewed format annotation.')).toBeVisible()
+  expect(within(summary).queryByText(/^Text multiple choice questions:/)).not.toBeInTheDocument()
+  expect(within(summary).queryByText(/^Format review:/)).not.toBeInTheDocument()
+  expect(within(summary).getByText(/8 of 10 selected rows have question text available/)).toHaveTextContent('2 rows could not be compared.')
+  expect(within(summary).getByText(/No numeric minimum was specified/)).toHaveTextContent('The coverage finding remains unresolved.')
+})
+
+it('explains counts when selected rows have multiple source or task assignments', async () => {
+  currentSnapshot.composition = {
+    ...structuredClone(composition),
+    sources: [...composition.sources, { name: 'Additional source', count: 1, percentage: 10 }],
+  }
+  render(<EvaluationSite />)
+  const summary = await screen.findByRole('region', { name: 'Composition of the selected items' })
+  expect(within(summary).getByText(/An item can belong to more than one source benchmark or deployment task/)).toHaveTextContent('Source shares use all 10 selected items as the denominator.')
+})
+
+it('handles a single selected item and an empty selected collection', async () => {
+  currentSnapshot.composition = {
+    selected_count: 1, sources: [{ name: 'One source', count: 1, percentage: 100 }], unknown_source_count: 0,
+    tasks: [{ facet_id: 'management', label: 'Choose initial management', count: 1 }], coverage: [],
+    question_text: { available_count: 1, distinct_count: 1, missing_count: 0, overlaps: [] },
+    formats: { counts: [], unknown_count: 1, basis: null },
+  }
+  currentSnapshot.review.selection = { ...selection, selected_count: 1, selected_item_ids: ['item-48'] }
+  const view = render(<EvaluationSite />)
+  let summary = await screen.findByRole('region', { name: 'Composition of the selected items' })
+  expect(within(summary).getByText(/1 recorded source benchmark and represents 1 deployment task/)).toBeVisible()
+  expect(within(summary).getByText('1 selected row contains 1 distinct question text after normalizing whitespace.')).toBeVisible()
+  expect(within(summary).getByText('1 selected item has no reviewed format annotation.')).toBeVisible()
+  expect(within(summary).getByText('No additional coverage requirements were recorded.')).toBeVisible()
+  view.unmount()
+  currentSnapshot.composition = {
+    selected_count: 0, sources: [], unknown_source_count: 0, tasks: [], coverage: [],
+    question_text: { available_count: 0, distinct_count: 0, missing_count: 0, overlaps: [] },
+    formats: { counts: [], unknown_count: 0, basis: null },
+  }
+  currentSnapshot.review.selection = { ...selection, selected_count: 0, selected_item_ids: [] }
+  render(<EvaluationSite />)
+  summary = await screen.findByRole('region', { name: 'Composition of the selected items' })
+  expect(within(summary).getByText('No items were selected, so there is no selected collection to summarize.')).toBeVisible()
+  expect(within(summary).queryByRole('table')).not.toBeInTheDocument()
+})
+
+it('offers a separate report with the summary while retaining the original package and report', async () => {
+  currentSnapshot.composition = structuredClone(composition)
+  currentSnapshot.entry.artifacts.summary_report = { filename: 'report-with-composition.html', bytes: 40 }
+  render(<EvaluationSite />)
+  expect(await screen.findByRole('link', { name: 'Read the report with composition summary' })).toHaveAttribute('href', `/api/item-review/examples/${exampleId}/artifacts/summary_report`)
+  expect(screen.getByRole('link', { name: 'Read the original HTML report' })).toHaveAttribute('href', `/api/item-review/examples/${exampleId}/artifacts/report`)
+  expect(screen.getByRole('button', { name: 'Download original results package' })).toBeVisible()
+  expect(screen.getByText(/The original results package retains the files saved when this run finished/)).toBeVisible()
+})
+
+it('continues to show older examples without composition data or an added report', async () => {
+  render(<EvaluationSite />)
+  await screen.findByRole('heading', { name: entry.title })
+  expect(screen.queryByRole('region', { name: 'Composition of the selected items' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: 'Read the report with composition summary' })).not.toBeInTheDocument()
+  expect(screen.getByRole('region', { name: 'Selected items (10)' })).toBeVisible()
 })

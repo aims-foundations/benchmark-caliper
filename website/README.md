@@ -663,13 +663,32 @@ The page identifies the 10 selected items and explains that the automated run
 stopped at the candidate limit with a shortfall of three management cases.
 Human validation is not included in this saved record.
 
+Above the selected items, a composition summary shows the source counts and
+shares, task counts, coverage findings, question formats where described, and
+repeated question text. Counts use selected rows only. Each row counts once per
+distinct source and matched task, so totals can overlap when a row has multiple
+sources or tasks. Question text is compared after collapsing whitespace only;
+this description does not change the full-row identity rule used by selection.
+Missing text is reported separately and is never treated as a shared question.
+
+For the clinical example, the ten selected rows come from AfriMedQA (7),
+chatgpt_drift (2), and MMLU (1), and cover diagnosis (5), investigation (1), and
+initial management (4). Inspection of the saved questions identifies all ten as
+text multiple choice. The two chatgpt_drift rows repeat the same question with
+different spacing, leaving nine distinct question texts under this comparison.
+The three-item management constraint requirement remains unmet. Format inspection
+describes the inputs and does not establish clinical correctness or expert validation.
+
 Published examples use separate curated files under
 `website/construction_examples/`. Opening a gallery page does not restore a
 private run, read its access token, or make a model call. The initial page uses
 a compact snapshot. Complete item records load when requested, and the original
 HTML report, selected item CSV, JSON record, and results package remain available
-as downloads. The complete ZIP uses the same bounded download approach as private
-results packages, with automatic retries of interrupted pieces.
+as downloads. A separate **report with composition summary** includes the new
+summary and the selected item evidence. The original report and original ZIP keep
+their existing contents and checksums. The complete ZIP uses the same bounded
+download approach as private results packages, with automatic retries of
+interrupted pieces.
 
 Authors import an exported directory or ZIP locally with
 `website.scripts.import_construction_example`. The importer checks the saved
@@ -677,6 +696,16 @@ selection against its screening records, preserves the original artifact bytes,
 and creates the gallery snapshot and item files. The curated entry and its index
 are deployed with the application. Publishing a later run is a separate import;
 viewing the gallery cannot change the published result.
+
+The importer calculates the composition summary from the saved selection and
+creates `report-with-composition.html`. Optional `--composition-annotations`
+accepts a JSON file with `version: 1`, a nonempty `basis` describing how formats
+were inspected, and `formats` groups containing `label` and `item_ids` fields.
+Each item ID must belong to the selected collection and occur in at most one
+format group. Items without a format description are reported as unknown. This
+small annotation is saved as `composition_annotations.json`; no model calls or
+automatic format guesses are made. The clinical example's annotation can be
+reused when reimporting the same saved selection.
 
 ```bash
 .venv/bin/python -m website.scripts.import_construction_example /path/to/export \
@@ -700,7 +729,9 @@ dataset calls:
 
 - `report.html` opens offline and supports browser printing to PDF. It shows the
   goal, status, selected items with six ratings and supporting evidence, task and
-  quota coverage, gaps, construction history, and usage/cost scope.
+  quota coverage, a selected collection composition summary, gaps, construction
+  history, and usage/cost scope. New exports calculate composition from the saved
+  selection; question formats remain unknown unless descriptions are supplied.
 - `selected_items.csv` provides spreadsheet columns for selected IDs, question
   previews, matched tasks, sources, ratings, quality, and reviewer notes. Previews
   are limited to 1,000 characters; complete original rows remain in the JSON.

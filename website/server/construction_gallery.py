@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[1] / "construction_examples"
 ENTRY_ID = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 ARTIFACTS = {
     "report": ("report.html", "text/html"),
+    "summary_report": ("report-with-composition.html", "text/html"),
     "items": ("selected_items.csv", "text/csv"),
     "results": ("results.json", "application/json"),
     "package": ("complete-results.zip", "application/zip"),
@@ -102,7 +103,7 @@ def get_artifact(entry_id: str, artifact: str):
     entry, directory = published(entry_id)
     filename, media_type = ARTIFACTS[artifact]
     headers = {"Cache-Control": "no-cache, no-transform"}
-    if artifact == "report":
+    if artifact in {"report", "summary_report"}:
         headers["Content-Security-Policy"] = (
             "sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data:; "
             "frame-ancestors 'none'; base-uri 'none'; form-action 'none'"

@@ -69,6 +69,9 @@ def test_import_preserves_artifacts_and_public_page_loads_only_selected_items(tm
     assert client.get(base).json() == {"examples": [entry]}
     data = client.get(base + "/" + entry["id"]).json()
     assert data["entry"] == entry and len(data["items"]) == 40
+    assert data["composition"]["selected_count"] == 30
+    assert data["composition"]["sources"] == [{"name": "fixture", "count": 30, "percentage": 100.0}]
+    assert data["composition"]["formats"]["unknown_count"] == 30
     selected = set(source_snapshot["selection"]["selected_item_ids"])
     assert {item["item_id"] for item in data["review"]["screening"]["items"]} == selected
     assert data["review"]["selection"] == source_snapshot["selection"]
@@ -92,6 +95,39 @@ def test_import_preserves_artifacts_and_public_page_loads_only_selected_items(tm
         if key == "report":
             assert "sandbox" in response.headers["content-security-policy"]
             assert "inline" in response.headers["content-disposition"]
+    summary_report = client.get(base + f"/{entry['id']}/artifacts/summary_report")
+    assert summary_report.status_code == 200
+    assert "Composition of the selected items" in summary_report.text
+    assert "All saved screening assessments:</strong> 40 valid, 0 errors." in summary_report.text
+    assert "Clinical exam study with management constraints" in summary_report.text
+    assert "sandbox" in summary_report.headers["content-security-policy"]
+    assert hashlib.sha256(summary_report.content).hexdigest() == entry["artifacts"]["summary_report"]["sha256"]
+
+
+def test_reviewed_format_descriptions_are_scoped_to_selected_items(tmp_path, monkeypatch, source_snapshot):
+    source = write_export(tmp_path / "source", source_snapshot)
+    root = tmp_path / "published"
+    annotations = {
+        "version": 1,
+        "basis": "Description based on inspection of the saved question text.",
+        "formats": [{"label": "Text multiple choice", "item_ids": source_snapshot["selection"]["selected_item_ids"]}],
+    }
+    path = tmp_path / "annotations.json"
+    path.write_text(json.dumps(annotations))
+    publish(source, root, composition_annotations=path)
+    client = public_client(monkeypatch, root)
+    base = "/api/item-review/examples/clinical-exam-study"
+    formats = client.get(base).json()["composition"]["formats"]
+    assert formats == {"counts": [{"label": "Text multiple choice", "count": 30}],
+                       "unknown_count": 0, "basis": annotations["basis"]}
+    assert "Text multiple choice" in client.get(base + "/artifacts/summary_report").text
+    assert json.loads((root / "clinical-exam-study/composition_annotations.json").read_text()) == annotations
+    saved = (root / "index.json").read_bytes()
+    annotations["formats"][0]["item_ids"].append("another-run-item")
+    path.write_text(json.dumps(annotations))
+    with pytest.raises(ValueError):
+        publish(source, root, overwrite=True, composition_annotations=path)
+    assert (root / "index.json").read_bytes() == saved
 
 
 def test_original_zip_is_copied_byte_for_byte_and_chunk_reads_are_bounded(tmp_path, monkeypatch, source_snapshot):

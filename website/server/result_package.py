@@ -14,7 +14,7 @@ from tempfile import SpooledTemporaryFile
 import unicodedata
 from zipfile import ZIP_DEFLATED, ZipFile
 
-from website.server import streaming_json
+from website.server import construction_composition, streaming_json
 
 
 DIMENSIONS = (
@@ -34,9 +34,9 @@ STOP_REASONS = {
     "cost_limit": "The additional screening cost ceiling was reached, or cannot cover the next reserved call.",
 }
 STAGES = {
-    "requirements": "Step 2 · Requirements extraction", "grounding": "Step 3 · O*NET grounding",
-    "retrieval": "Step 4 · Benchmark retrieval", "screening": "Step 5 · Initial screening",
-    "selection": "Step 6 · Collection selection", "adaptive": "Step 7 · Adaptive screening",
+    "requirements": "Step 2: Requirements extraction", "grounding": "Step 3: O*NET grounding",
+    "retrieval": "Step 4: Benchmark retrieval", "screening": "Step 5: Initial screening",
+    "selection": "Step 6: Collection selection", "adaptive": "Step 7: Adaptive screening",
 }
 STYLE = """
 :root { color-scheme: light; font: 16px/1.6 system-ui, sans-serif; color: #243346; background: #eef2f5; }
@@ -140,7 +140,7 @@ def _sources(item) -> str:
     values = []
     for source in item.get("sources", []):
         # Include every provenance field, including full pinned commit and row.
-        values.append(" · ".join(f"{key}: {_text(value)}" for key, value in source.items()))
+        values.append("; ".join(f"{key}: {_text(value)}" for key, value in source.items()))
     return "\n".join(values)
 
 
@@ -168,11 +168,11 @@ def _summary(snapshot) -> str:
     labels = {"partial": "Partial result", "stage_complete": "Stage complete", "frozen": "Collection frozen"}
     title = metadata.get("run_name") or "Benchmark construction results"
     text = (f'<header><p class="eyebrow">Benchmark construction record</p><h1>{_html(title)}</h1>'
-            f'<p>{_html(STAGES.get(snapshot.get("mode"), snapshot.get("mode")))} · {_html(labels.get(state, state))}</p>'
+            f'<p>{_html(STAGES.get(snapshot.get("mode"), snapshot.get("mode")))}. {_html(labels.get(state, state))}</p>'
             f'<p class="muted">Run <code>{_html(snapshot.get("run_id"))}</code><br>'
-            f'Created {_html(metadata.get("created_at"))} · Exported {_html(metadata.get("exported_at"))}</p></header>')
+            f'Created {_html(metadata.get("created_at"))}. Exported {_html(metadata.get("exported_at"))}</p></header>')
     if state == "partial":
-        text += ('<div class="notice"><strong>Partial result — the current stage is unfinished.</strong>'
+        text += ('<div class="notice"><strong>Partial result. The current stage is unfinished.</strong>'
                  '<p>Completed evidence and any last accepted collection are included. '
                  'Pending work has not produced a frozen collection.</p></div>')
     elif state == "stage_complete":
@@ -188,8 +188,8 @@ def _summary(snapshot) -> str:
         text += f'<p class="preserve">{_html(snapshot["message"])}</p>'
     if selection:
         text += (f'<p><strong>Selected items:</strong> {_html(selection.get("selected_count", len(_selected(snapshot))))}'
-                 f' / {_html(selection.get("limit", 30))} total · <strong>Eligible items:</strong> {_html(selection.get("eligible_count"))}'
-                 f' · <strong>Total quality Q:</strong> {_html(selection.get("total_quality"))}</p>'
+                 f' / {_html(selection.get("limit", 30))} total. <strong>Eligible items:</strong> {_html(selection.get("eligible_count"))}'
+                 f'. <strong>Total quality Q:</strong> {_html(selection.get("total_quality"))}</p>'
                  '<p class="muted">Q is the mean of the four gated ratings for each item; total Q sums these item scores.</p>')
     else:
         text += '<p><strong>No benchmark collection has been selected at this stage.</strong></p>'
@@ -227,14 +227,14 @@ def _coverage(snapshot) -> str:
 def _selected_item(compact, item, index, snapshot) -> str:
     names = _task_names(snapshot)
     key = compact["item_id"]
-    text = f'<article class="card"><h3>Selected item {index + 1}</h3><p class="muted">Item ID: <code>{_html(key)}</code></p>'
+    text = f'<article class="card" id="selected-item-{_html(key)}"><h3>Selected item {index + 1}</h3><p class="muted">Item ID: <code>{_html(key)}</code></p>'
     if not item:
         return text + '<p class="notice">The saved screening evidence for this item is unavailable. Consult results.json for the recorded selection.</p></article>'
     assessment = item.get("assessment") or {}
     task = assessment.get("task") or {}
     matched = compact.get("matched_facet_ids", task.get("matched_facet_ids", []))
     text += (f'<p class="preserve">{_html(_preview(item))}</p>'
-             f'<p><strong>Quality Q:</strong> {_html(compact.get("quality_score"))} / 5 · '
+             f'<p><strong>Quality Q:</strong> {_html(compact.get("quality_score"))} / 5. '
              f'<strong>Screening gate:</strong> {_html((item.get("gate") or {}).get("status"))}</p>'
              f'<p><strong>Matched tasks:</strong> {_html("; ".join(names.get(facet, facet) for facet in matched), "None")}</p>'
              f'<p class="preserve"><strong>Sources:</strong> {_html(_sources(item), "None recorded")}</p>'
@@ -256,7 +256,7 @@ def _selected_item(compact, item, index, snapshot) -> str:
             description = quotas[index]["requirement"]["text"] if 0 <= index < len(quotas) else f"Requirement {index + 1}"
             satisfied = finding.get("satisfied")
             label = "Unresolved" if satisfied is None else "Satisfied" if satisfied else "Not satisfied"
-            text += f"<h4>{_html(description)} · {label}</h4>" + _finding(finding)
+            text += f"<h4>{_html(description)}. {label}</h4>" + _finding(finding)
         text += "</details>"
     text += _details("Complete original item row", (item.get("evidence") or {}).get("item", item.get("evidence")))
     text += _details("Source provenance and acquisition", {key: item.get(key) for key in (
@@ -272,7 +272,7 @@ def _requirements(snapshot) -> str:
                            ("input_types", "Input types"), ("output_types", "Output types"), ("authority", "Authority")):
             text += f"<h3>{label}</h3>" + _supported(requirements.get(key))
         for index, facet in enumerate(requirements.get("task_facets", [])):
-            text += f'<article class="card"><h3>Task {index + 1} · {_html(facet["facet_id"])}</h3>'
+            text += f'<article class="card"><h3>Task {index + 1}. {_html(facet["facet_id"])}</h3>'
             text += _supported(facet.get("task"))
             text += "<h4>Required input evidence</h4>" + _supported(facet.get("required_input_evidence"))
             text += "<h4>Required output behavior</h4>" + _supported(facet.get("required_output_behavior"))
@@ -289,7 +289,7 @@ def _requirements(snapshot) -> str:
         text += "<p>No validated requirements are available in this snapshot.</p>"
     text += "<h3>Original deployment answers</h3>"
     for index, (key, label) in enumerate(ANSWERS):
-        text += f'<h4>Answer {index + 1} · {label}</h4><p class="preserve">{_html((snapshot.get("deployment") or {}).get(key) or "No answer supplied.")}</p>'
+        text += f'<h4>Answer {index + 1}. {label}</h4><p class="preserve">{_html((snapshot.get("deployment") or {}).get(key) or "No answer supplied.")}</p>'
     return text + "</section>"
 
 
@@ -308,7 +308,7 @@ def _history(snapshot) -> str:
     names = _task_names(snapshot)
     for batch in adaptive.get("batches", []):
         title = "Initial screening" if batch.get("kind") == "initial" else f'Adaptive batch {batch.get("number")}'
-        text += (f'<details><summary>{_html(title)} · {len(batch.get("item_ids", []))} candidates · '
+        text += (f'<details><summary>{_html(title)}. {len(batch.get("item_ids", []))} candidates. '
                  f'{_html(batch.get("status"))}</summary>')
         if batch.get("facet_id"):
             text += f'<p>Task: {_html(names.get(batch["facet_id"], batch["facet_id"]))}</p>'
@@ -336,7 +336,7 @@ def _history(snapshot) -> str:
         cost = adaptive.get("cost") or {}
         text += ("<p>Adaptive cost estimates cover Step 7 calls and retries only. Earlier stages are excluded. "
                  "Estimates and reservations are not a final provider invoice.</p>"
-                 f'<p>Estimated spent (USD): {_html(cost.get("spent_usd"), "Not priced")} · '
+                 f'<p>Estimated spent (USD): {_html(cost.get("spent_usd"), "Not priced")}. '
                  f'Reserved (USD): {_html(cost.get("reserved_usd"), "Not priced")}</p>')
         if cost.get("unknown_attempts"):
             text += f'<p class="notice">Usage is unknown for {_html(cost["unknown_attempts"])} attempts; those attempts may still incur charges.</p>'
@@ -360,16 +360,23 @@ def _history(snapshot) -> str:
     return text + "</section>"
 
 
-def _report(snapshot, *, expand=None):
+def _report(snapshot, *, expand=None, composition_annotations=None):
     title = (snapshot.get("metadata") or {}).get("run_name") or "Benchmark construction results"
     yield ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
            '<meta name="viewport" content="width=device-width, initial-scale=1">'
            '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'; base-uri \'none\'; form-action \'none\'">'
            f'<title>{_html(title)}</title><style>{STYLE}</style></head><body><main>')
     yield _summary(snapshot)
+    selected = _selected(snapshot)
+    # Expand only selected records, one at a time. The summary retains question
+    # text and small metadata rather than whole source rows or retrieval data.
+    composition_snapshot = {**snapshot, "screening": {"items": (
+        expand(item) if expand and item else item for _, item in selected if item
+    )}}
+    yield construction_composition.render_html(construction_composition.summarize(
+        composition_snapshot, composition_annotations))
     yield _coverage(snapshot)
     yield "<section><h2>Selected benchmark items</h2>"
-    selected = _selected(snapshot)
     if not selected:
         yield "<p>No selected items are recorded in this snapshot. Review the current stage and coverage findings above.</p>"
     for index, (compact, item) in enumerate(selected):
