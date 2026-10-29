@@ -171,8 +171,10 @@ def test_build_failure_releases_download_lease(client, monkeypatch):
         raise RuntimeError("fixture build failure")
 
     monkeypatch.setattr(item_review, "build_results_package", broken)
-    with pytest.raises(RuntimeError, match="fixture build failure"):
-        download(client, access)
+    response = download(client, access)
+    assert response.status_code == 500
+    assert "saved results are retained" in response.json()["detail"]
+    assert "fixture build failure" not in response.text
     assert job.downloads == 0
 
 

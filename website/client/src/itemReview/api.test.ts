@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest'
 import { startReview, startGrounding, startBenchmarkRetrieval, startScreening, startSelection, startAdaptive, getCandidates, getReview, getReviewPackage, ReviewRequestError } from './api'
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers() })
 
 it.each([502, 503, 504])('identifies a proxy %s response without blaming the supplied answers', async status => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('<html>Bad gateway</html>', { status })))
@@ -126,14 +126,17 @@ it('resumes adaptive screening with an empty body to preserve its original setti
   expect(options.headers['X-Review-Token']).toBe('adapt-access')
 })
 
-it('downloads a package with the private run token and the server filename', async () => {
-  const fetchMock = vi.fn().mockResolvedValue(new Response('zip-content', {
+it('prepares and downloads a package with the private run token and the server filename', async () => {
+  const fetchMock = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({ status: 'ready' }))).mockResolvedValueOnce(new Response('zip-content', {
     headers: { 'Content-Type': 'application/zip', 'Content-Disposition': 'attachment; filename="medical-goal-adaptive-20261025.zip"' },
   }))
   vi.stubGlobal('fetch', fetchMock)
   const result = await getReviewPackage({ run_id: 'adapt', run_secret: 'private-access' })
   expect(fetchMock.mock.calls[0]).toEqual(['/api/item-review/runs/adapt/package', {
-    cache: 'no-store', headers: { 'X-Review-Token': 'private-access' },
+    cache: 'no-store', method: 'POST', headers: { 'X-Review-Token': 'private-access' }, signal: expect.any(AbortSignal),
+  }])
+  expect(fetchMock.mock.calls[1]).toEqual(['/api/item-review/runs/adapt/package?prepared=true', {
+    cache: 'no-store', headers: { 'X-Review-Token': 'private-access' }, signal: expect.any(AbortSignal),
   }])
   expect(result.filename).toBe('medical-goal-adaptive-20261025.zip')
   expect(await result.blob.text()).toBe('zip-content')
@@ -146,7 +149,8 @@ it.each([
   ["attachment; filename*=UTF-8''%broken; filename=plain.zip", 'plain.zip'],
   ['', 'benchmark-results-run.zip'],
 ])('handles a package filename header %s', async (header, expected) => {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('zip', { headers: { 'Content-Disposition': header } })))
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({ status: 'ready' })))
+    .mockResolvedValueOnce(new Response('zip', { headers: { 'Content-Disposition': header } })))
   const result = await getReviewPackage({ run_id: 'run', run_secret: 'private' })
   expect(result.filename).toBe(expected)
 })
@@ -154,4 +158,80 @@ it.each([
 it('reports unavailable review access before treating its error body as a download', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ detail: 'Review not found or access token is invalid. Reopen the review in the browser where it was started.' }), { status: 404 })))
   await expect(getReviewPackage({ run_id: 'missing', run_secret: 'private' })).rejects.toThrow('Review not found or access token is invalid')
+})
+
+it('polls preparation before transfer and sends credentials only in headers', async () => {
+  vi.useFakeTimers()
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce(new Response(JSON.stringify({ status: 'preparing' }), { status: 202 }))
+    .mockResolvedValueOnce(new Response(JSON.stringify({ status: 'preparing' })))
+    .mockResolvedValueOnce(new Response(JSON.stringify({ status: 'ready' })))
+    .mockResolvedValueOnce(new Response('prepared zip'))
+  vi.stubGlobal('fetch', fetchMock)
+  const controller = new AbortController()
+  const progress = vi.fn()
+  const result = getReviewPackage({ run_id: 'run/id', run_secret: 'private-access' }, progress, controller.signal)
+  await vi.advanceTimersByTimeAsync(1000)
+  expect(fetchMock).toHaveBeenCalledTimes(2)
+  expect(progress.mock.calls).toEqual([['preparing']])
+  await vi.advanceTimersByTimeAsync(1000)
+  expect(await (await result).blob.text()).toBe('prepared zip')
+  expect(progress.mock.calls).toEqual([['preparing'], ['downloading']])
+  expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+    '/api/item-review/runs/run%2Fid/package', '/api/item-review/runs/run%2Fid/package/status',
+    '/api/item-review/runs/run%2Fid/package/status', '/api/item-review/runs/run%2Fid/package?prepared=true',
+  ])
+  for (const [, options] of fetchMock.mock.calls) {
+    expect(options.headers).toEqual({ 'X-Review-Token': 'private-access' })
+    expect(options.signal).toBe(controller.signal)
+  }
+})
+
+it('stops waiting and polling when its browser request is aborted', async () => {
+  vi.useFakeTimers()
+  const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ status: 'preparing' }), { status: 202 }))
+  vi.stubGlobal('fetch', fetchMock)
+  const controller = new AbortController()
+  const result = getReviewPackage({ run_id: 'run', run_secret: 'private' }, undefined, controller.signal)
+  const rejection = expect(result).rejects.toMatchObject({ name: 'AbortError' })
+  await vi.advanceTimersByTimeAsync(0)
+  controller.abort()
+  await rejection
+  await vi.advanceTimersByTimeAsync(10000)
+  expect(fetchMock).toHaveBeenCalledTimes(1)
+  expect(vi.getTimerCount()).toBe(0)
+})
+
+it('does not start preparation for an already aborted request', async () => {
+  const fetchMock = vi.fn()
+  vi.stubGlobal('fetch', fetchMock)
+  const controller = new AbortController()
+  controller.abort()
+  await expect(getReviewPackage({ run_id: 'run', run_secret: 'private' }, undefined, controller.signal)).rejects.toMatchObject({ name: 'AbortError' })
+  expect(fetchMock).not.toHaveBeenCalled()
+})
+
+it.each(['failed', 'not_started'])('reports %s preparation without transferring or repeating the request', async status => {
+  const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ status, message: 'Package preparation was interrupted. Your saved results are unchanged.', error_status: 503 })))
+  vi.stubGlobal('fetch', fetchMock)
+  await expect(getReviewPackage({ run_id: 'run', run_secret: 'private' })).rejects.toMatchObject({ status: 503, message: 'Package preparation was interrupted. Your saved results are unchanged.' })
+  expect(fetchMock).toHaveBeenCalledTimes(1)
+})
+
+it.each(['preparing', 'downloading'] as const)('explains a connection failure while %s without retrying requests', async phase => {
+  const fetchMock = vi.fn()
+  if (phase === 'downloading') fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ status: 'ready' })))
+  fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+  vi.stubGlobal('fetch', fetchMock)
+  await expect(getReviewPackage({ run_id: 'run', run_secret: 'private' })).rejects.toThrow(`The connection was interrupted while ${phase} the results package. Your saved results are unchanged. Please try downloading again.`)
+  expect(fetchMock).toHaveBeenCalledTimes(phase === 'preparing' ? 1 : 2)
+})
+
+it('reports an interrupted ZIP response body as a download failure', async () => {
+  const response = new Response('zip')
+  vi.spyOn(response, 'blob').mockRejectedValueOnce(new TypeError('NetworkError'))
+  const fetchMock = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({ status: 'ready' }))).mockResolvedValueOnce(response)
+  vi.stubGlobal('fetch', fetchMock)
+  await expect(getReviewPackage({ run_id: 'run', run_secret: 'private' })).rejects.toThrow('connection was interrupted while downloading')
+  expect(fetchMock).toHaveBeenCalledTimes(2)
 })

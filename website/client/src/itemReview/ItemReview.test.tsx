@@ -2,6 +2,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ItemReview } from './ItemReview'
+import { ResultPackage } from './ResultPackage'
 import * as api from './api'
 import { PIPELINE_RUN_STORAGE } from './accessStorage'
 
@@ -265,7 +266,7 @@ it('uses the package response filename and releases its browser download URL', a
   const user = userEvent.setup()
   render(<ItemReview />)
   await user.click(await screen.findByRole('button', { name: 'Download results package' }))
-  expect(api.getReviewPackage).toHaveBeenCalledWith(access)
+  expect(api.getReviewPackage).toHaveBeenCalledWith(access, expect.any(Function), expect.any(AbortSignal))
   expect(create).toHaveBeenCalledWith(blob)
   expect(click.mock.instances[0]).toHaveAttribute('download', 'medical-goal-requirements.zip')
   expect(revoke).not.toHaveBeenCalledWith('blob:package')
@@ -286,6 +287,64 @@ it('keeps results and JSON export available when the package download fails', as
   expect(screen.getByRole('button', { name: 'Download results package' })).toBeEnabled()
   expect(screen.getByRole('button', { name: 'Download requirements JSON' })).toBeEnabled()
   expect(create).not.toHaveBeenCalled()
+})
+
+it('uses the same package button for preparation and transfer and prevents duplicate downloads', async () => {
+  let resolvePackage!: (result: { blob: Blob; filename: string }) => void
+  let progress!: (progress: api.PackageDownloadProgress) => void
+  vi.mocked(api.getReviewPackage).mockImplementationOnce((_run, update) => {
+    progress = update!
+    return new Promise(resolve => { resolvePackage = resolve })
+  })
+  vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:prepared')
+  vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+  const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+  const user = userEvent.setup()
+  render(<ResultPackage review={extracted} run={{ run_id: extracted.run_id, run_secret: 'private-access' }} />)
+  await user.click(screen.getByRole('button', { name: 'Download results package' }))
+  const button = screen.getByRole('button', { name: 'Preparing package…' })
+  expect(button).toBeDisabled()
+  await user.click(button)
+  expect(api.getReviewPackage).toHaveBeenCalledTimes(1)
+  act(() => { progress('downloading') })
+  expect(screen.getByRole('button', { name: 'Downloading package…' })).toBe(button)
+  expect(button).toBeDisabled()
+  await act(async () => { resolvePackage({ blob: new Blob(['zip']), filename: 'prepared.zip' }) })
+  expect(button).toHaveTextContent('Download results package')
+  expect(button).toBeEnabled()
+  expect(click.mock.instances[0]).toHaveAttribute('download', 'prepared.zip')
+  expect(api.startReview).not.toHaveBeenCalled()
+  expect(api.startScreening).not.toHaveBeenCalled()
+})
+
+it('aborts package polling on run changes or unmount without saving stale downloads', async () => {
+  const signals: AbortSignal[] = []
+  let resolveFirst!: (result: { blob: Blob; filename: string }) => void
+  let firstProgress!: (progress: api.PackageDownloadProgress) => void
+  vi.mocked(api.getReviewPackage).mockImplementation((_run, progress, signal) => {
+    signals.push(signal!)
+    return new Promise(resolve => {
+      if (signals.length === 1) { resolveFirst = resolve; firstProgress = progress! }
+    })
+  })
+  const create = vi.spyOn(URL, 'createObjectURL')
+  const user = userEvent.setup()
+  const { rerender, unmount } = render(<ResultPackage review={extracted} run={{ run_id: extracted.run_id, run_secret: 'first-access' }} />)
+  await user.click(screen.getByRole('button', { name: 'Download results package' }))
+  expect(signals[0].aborted).toBe(false)
+  rerender(<ResultPackage review={grounded} run={{ run_id: grounded.run_id, run_secret: 'next-access' }} />)
+  expect(signals[0].aborted).toBe(true)
+  expect(screen.getByRole('button', { name: 'Download results package' })).toBeEnabled()
+  await user.click(screen.getByRole('button', { name: 'Download results package' }))
+  await act(async () => {
+    firstProgress('downloading')
+    resolveFirst({ blob: new Blob(['old zip']), filename: 'old.zip' })
+  })
+  expect(screen.getByRole('button', { name: 'Preparing package…' })).toBeDisabled()
+  expect(create).not.toHaveBeenCalled()
+  unmount()
+  expect(signals[1].aborted).toBe(true)
+  expect(api.getReviewPackage).toHaveBeenCalledTimes(2)
 })
 
 it('does not offer pipeline packages for the separate sample item review', async () => {

@@ -12,6 +12,7 @@ from contextlib import closing
 from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+import errno
 import hashlib
 import json
 import logging
@@ -52,6 +53,7 @@ from bayesian_auditing.screening_queue import allocate_initial_screening, INITIA
 from bayesian_auditing.selection import select_collection, SelectionIncomplete
 from bayesian_auditing.screening_budget import AdaptiveSettings
 from . import adaptive_review
+from . import review_exports
 from .item_review_store import ReviewStore
 from .result_package import build_results_package, package_filename
 from .remote_retrieval import RemoteRetrieval, RemoteRetrievalError
@@ -168,6 +170,7 @@ class ReviewJob:
     _checkpoint_saved: bool = field(default=False, repr=False)
     _checkpoint_retrieval: dict | None = field(default=None, repr=False)
     _checkpoint_retrieval_ref: str | None = field(default=None, repr=False)
+    package: review_exports.PreparedPackage = field(default_factory=review_exports.PreparedPackage, repr=False)
 
     def __post_init__(self):
         if self.request.mode == "item_review" and self.results is None:
@@ -306,6 +309,7 @@ def trim_pipeline_cache(*, keep: str | None = None, limit: int = MAX_CACHED_PIPE
         if excess <= 0:
             break
         if job.run_id != keep:
+            job.package.close()
             jobs.pop(job.run_id, None)
             excess -= 1
 
@@ -316,6 +320,7 @@ def make_cache_room() -> None:
         if len(jobs) < MAX_RETAINED:
             break
         if job.finished_at is not None and not job.downloads and job._checkpoint_saved:
+            job.package.close()
             jobs.pop(run_id)
 
 
@@ -340,11 +345,13 @@ def launch_review(job: ReviewJob, api_key: str, *, source: ReviewJob | None = No
 
 async def shutdown() -> None:
     global _cached_index, _cached_onet_index
-    tasks = [job.task for job in jobs.values() if job.task and not job.task.done()]
+    tasks = [task for job in jobs.values() for task in (job.task, job.package.task)
+             if task is not None and not task.done()]
     for task in tasks:
         task.cancel()
     await asyncio.gather(*tasks, return_exceptions=True)
     for job in jobs.values():
+        job.package.close()
         try:
             checkpoint(job)
         except CheckpointError:
@@ -912,9 +919,7 @@ async def export_review(run_id: str, x_review_token: Annotated[str | None, Heade
     })
 
 
-@router.get("/runs/{run_id}/package")
-async def export_package(run_id: str, x_review_token: Annotated[str | None, Header()] = None):
-    job = authorize(run_id, x_review_token)
+def package_snapshot(job: ReviewJob) -> dict:
     if job.request.mode == "item_review":
         raise HTTPException(409, "Results packages are available for the goal-conditioned construction pipeline.")
     # Capture all fields together before yielding to a running pipeline worker.
@@ -922,8 +927,137 @@ async def export_package(run_id: str, x_review_token: Annotated[str | None, Head
     snapshot = public_job(job, include_items=False)
     if "retrieval" in snapshot:
         snapshot["retrieval"] = job.benchmark_retrieval
+    return deepcopy(snapshot)
+
+
+def package_error(error: Exception) -> dict:
+    if isinstance(error, CandidateStoreError):
+        return {"error_status": 503, "message": "Saved candidate evidence could not be read. Your saved results are retained; retry the download or contact the site maintainer."}
+    if isinstance(error, OSError) and error.errno in {errno.ENOSPC, errno.EDQUOT}:
+        return {"error_status": 507, "message": "The server has insufficient temporary space to prepare the package. Your saved results are retained; contact the site maintainer."}
+    return {"error_status": 500, "message": "The results package could not be prepared. Retry the download; your saved results are retained."}
+
+
+async def prepare_package(job: ReviewJob, snapshot: dict) -> None:
+    state = job.package
+    started = time.monotonic()
+    package = None
+    worker = asyncio.create_task(asyncio.to_thread(
+        review_exports.build, snapshot, builder=build_results_package, expand=expand_candidate))
+    try:
+        package = await asyncio.shield(worker)
+        size = package.seek(0, 2)
+        package.seek(0)
+        state.file, state.size = package, size
+        logger.info("Review results package ready run_id=%r bytes=%d seconds=%.1f",
+                    job.run_id, size, time.monotonic() - started)
+    except asyncio.CancelledError:
+        await finish_worker(worker)
+        if not worker.cancelled() and worker.exception() is None:
+            worker.result().close()
+        state.error = {"error_status": 503, "message": "Package preparation was interrupted. Retry the download; your saved results are retained."}
+        raise
+    except Exception as error:
+        if package is not None:
+            package.close()
+        state.error = package_error(error)
+        logger.warning("Review results package failed run_id=%r error=%s seconds=%.1f",
+                       job.run_id, type(error).__name__, time.monotonic() - started)
+
+
+def package_preparation_finished(job: ReviewJob, state, task) -> None:
+    # A task cancelled before its first turn cannot run a coroutine's finally.
+    job.downloads -= 1
+    if task.cancelled() and state.error is None:
+        state.error = {"error_status": 503, "message": "Package preparation was interrupted. Retry the download; your saved results are retained."}
+
+
+@router.post("/runs/{run_id}/package")
+async def start_package(run_id: str, x_review_token: Annotated[str | None, Header()] = None):
+    job = authorize(run_id, x_review_token)
+    if jobs.get(job.run_id) is not job:
+        # Synchronous reads can use an uncached restored run, but a background
+        # preparation must stay registered for polling and shutdown cleanup.
+        raise HTTPException(429, "The server is busy preparing other reviews or downloads. Retry shortly; your saved results are retained.")
+    state = job.package
+    if state.task is not None and not state.task.done():
+        return JSONResponse(state.public(), status_code=202, headers={"Cache-Control": "no-store"})
+    if state.transferring:
+        raise HTTPException(409, "A package download is already in progress. Wait for it to finish before downloading again.")
+    snapshot = package_snapshot(job)
+    key = review_exports.snapshot_key(snapshot)
+    if state.file is not None and state.key == key:
+        return JSONResponse(state.public(), headers={"Cache-Control": "no-store"})
+    state.close()
     snapshot["metadata"]["exported_at"] = datetime.now(timezone.utc).isoformat()
-    snapshot = deepcopy(snapshot)
+    job.package = review_exports.PreparedPackage(key=key, filename=package_filename(snapshot))
+    job.downloads += 1
+    job.package.task = asyncio.create_task(prepare_package(job, snapshot))
+    job.package.task.add_done_callback(lambda task, state=job.package: package_preparation_finished(job, state, task))
+    return JSONResponse(job.package.public(), status_code=202, headers={"Cache-Control": "no-store"})
+
+
+@router.get("/runs/{run_id}/package/status")
+async def get_package_status(run_id: str, response: Response,
+                             x_review_token: Annotated[str | None, Header()] = None):
+    response.headers["Cache-Control"] = "no-store"
+    job = authorize(run_id, x_review_token)
+    if job.request.mode == "item_review":
+        raise HTTPException(409, "Results packages are available for the goal-conditioned construction pipeline.")
+    return job.package.public()
+
+
+def prepared_package_response(job: ReviewJob):
+    state = job.package
+    if state.transferring:
+        raise HTTPException(409, "A package download is already in progress. Wait for it to finish before downloading again.")
+    if state.file is None:
+        if state.error:
+            raise HTTPException(state.error["error_status"], state.error["message"])
+        raise HTTPException(409, "The package is not ready. Retry the download to prepare it from saved results.")
+    state.file.seek(0)
+    state.transferring = True
+    job.downloads += 1
+    released = False
+
+    def release():
+        nonlocal released
+        if not released:
+            released = True
+            state.transferring = False
+            job.downloads -= 1
+
+    async def contents():
+        try:
+            while chunk := await run_in_threadpool(state.file.read, 64 * 1024):
+                yield chunk
+        finally:
+            release()
+
+    class PreparedResponse(StreamingResponse):
+        async def __call__(self, scope, receive, send):
+            try:
+                await super().__call__(scope, receive, send)
+            finally:
+                release()
+
+    return PreparedResponse(contents(), media_type="application/zip", headers={
+        "Cache-Control": "no-store", "Content-Length": str(state.size),
+        "X-Accel-Buffering": "no",
+        "Content-Disposition": f'attachment; filename="{state.filename}"',
+    })
+
+
+@router.get("/runs/{run_id}/package")
+async def export_package(run_id: str, x_review_token: Annotated[str | None, Header()] = None,
+                         prepared: bool = False):
+    job = authorize(run_id, x_review_token)
+    if prepared:
+        return prepared_package_response(job)
+    # Older clients still receive a direct export. Current clients prepare and
+    # poll first, so the file request itself never waits for compression.
+    snapshot = package_snapshot(job)
+    snapshot["metadata"]["exported_at"] = datetime.now(timezone.utc).isoformat()
     job.downloads += 1
     package = None
     closed = False
@@ -936,7 +1070,8 @@ async def export_package(run_id: str, x_review_token: Annotated[str | None, Head
                 package.close()
             job.downloads -= 1
 
-    worker = asyncio.create_task(asyncio.to_thread(build_results_package, snapshot, expand=expand_candidate))
+    worker = asyncio.create_task(asyncio.to_thread(
+        review_exports.build, snapshot, builder=build_results_package, expand=expand_candidate))
     try:
         # Compression runs off the event loop. A disconnected client must not
         # leave a thread writing an unowned temporary file.
@@ -964,10 +1099,18 @@ async def export_package(run_id: str, x_review_token: Annotated[str | None, Head
                 finally:
                     close_package()
 
+        size = package.seek(0, 2)
+        package.seek(0)
         return PackageResponse(contents(), media_type="application/zip", headers={
             "Cache-Control": "no-store",
+            "Content-Length": str(size), "X-Accel-Buffering": "no",
             "Content-Disposition": f'attachment; filename="{package_filename(snapshot)}"',
         })
+    except Exception as error:
+        close_package()
+        failure = package_error(error)
+        logger.warning("Review results package failed run_id=%r error=%s", job.run_id, type(error).__name__)
+        raise HTTPException(failure["error_status"], failure["message"]) from None
     except BaseException:
         close_package()
         raise

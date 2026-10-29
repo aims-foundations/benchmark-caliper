@@ -170,6 +170,23 @@ requested again. Do not clear browser storage or choose **Start again** to
 recover an existing run. Back up saved runs before any deliberate cleanup;
 the public gallery snapshot is separate from the private continuation state.
 
+## Construction result downloads
+
+The `/items` results-package button prepares its ZIP through authenticated
+`POST /api/item-review/runs/{run_id}/package`, polls the `/package/status` endpoint,
+and transfers it through `GET /package?prepared=true`. This keeps compression
+outside a long waiting download request. The full record includes unscreened
+retrieval candidates, so a package can be much larger than its selected collection.
+No model calls or retrieval reruns are involved.
+
+After deployment, reopen an existing saved construction run and download its
+package. Confirm that the button changes from preparing to downloading, that
+the ZIP opens, and that it contains `report.html`, `selected_items.csv`, and
+`results.json`. Check the server's package-ready log for archive bytes and build
+duration if a transfer still fails. Preparation failures log the run ID and error
+type without source excerpts or credentials. Temporary prepared ZIPs can be rebuilt
+after a restart; persistent review checkpoints remain the source of saved results.
+
 ## Remote retrieval for the goal-conditioned pipeline
 
 The seven-step benchmark-construction pipeline can run its O*NET and full-bank

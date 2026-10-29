@@ -250,10 +250,54 @@ export const getReview = (run: RunAccess, page = 1, signal?: AbortSignal) => req
 export const getReviewExport = async (run: RunAccess) => (await fetchResponse(`/runs/${run.run_id}/export`, {
   headers: { 'X-Review-Token': run.run_secret },
 })).blob()
-export const getReviewPackage = async (run: RunAccess): Promise<{ blob: Blob; filename: string }> => {
-  const response = await fetchResponse(`/runs/${run.run_id}/package`, {
-    headers: { 'X-Review-Token': run.run_secret },
+export type PackageDownloadProgress = 'preparing' | 'downloading'
+type PackageStatus = {
+  status: 'not_started' | 'preparing' | 'ready' | 'failed'
+  message: string
+  error_status?: number
+}
+
+function waitForPackagePoll(signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    signal.throwIfAborted()
+    const timer = setTimeout(() => { signal.removeEventListener('abort', abort); resolve() }, 1000)
+    function abort() { clearTimeout(timer); reject(signal.reason) }
+    signal.addEventListener('abort', abort, { once: true })
   })
+}
+
+export const getReviewPackage = async (run: RunAccess, onProgress?: (progress: PackageDownloadProgress) => void, signal?: AbortSignal): Promise<{ blob: Blob; filename: string }> => {
+  const activeSignal = signal ?? new AbortController().signal
+  const path = `/runs/${encodeURIComponent(run.run_id)}/package`
+  const options = { headers: { 'X-Review-Token': run.run_secret }, signal: activeSignal }
+  let phase: PackageDownloadProgress = 'preparing'
+  try {
+    activeSignal.throwIfAborted()
+    onProgress?.(phase)
+    let status = await request<PackageStatus>(path, { ...options, method: 'POST' })
+    while (status.status === 'preparing') {
+      await waitForPackagePoll(activeSignal)
+      status = await request<PackageStatus>(`${path}/status`, options)
+    }
+    if (status.status !== 'ready') {
+      throw new ReviewRequestError(status.error_status || 409, status.message || 'Package preparation was interrupted. Please try downloading again; your saved results are unchanged.', true)
+    }
+    activeSignal.throwIfAborted()
+    phase = 'downloading'
+    onProgress?.(phase)
+    const response = await fetchResponse(`${path}?prepared=true`, options)
+    return { blob: await response.blob(), filename: packageFilename(response, run) }
+  } catch (error) {
+    if (activeSignal.aborted) throw activeSignal.reason
+    if (error instanceof ReviewRequestError && error.hasServerDetail) throw error
+    const message = error instanceof ReviewRequestError ? error.message
+      : error instanceof TypeError ? `The connection was interrupted while ${phase} the results package.`
+        : `The results package could not finish ${phase}.`
+    throw new Error(`${message} Your saved results are unchanged. Please try downloading again.`)
+  }
+}
+
+function packageFilename(response: Response, run: RunAccess): string {
   const disposition = response.headers.get('Content-Disposition') || ''
   const encoded = /(?:^|;)\s*filename\*=UTF-8''([^;]+)/i.exec(disposition)
   const plain = /(?:^|;)\s*filename=(?:"([^"\r\n]+)"|([^;\s]+))/i.exec(disposition)
@@ -265,7 +309,7 @@ export const getReviewPackage = async (run: RunAccess): Promise<{ blob: Blob; fi
   if (!filename || /[/\\\x00-\x1f\x7f]/.test(filename) || !filename.toLowerCase().endsWith('.zip')) {
     filename = `benchmark-results-${run.run_id}.zip`
   }
-  return { blob: await response.blob(), filename }
+  return filename
 }
 export const cancelReview = (run: RunAccess) => request<RunResult>(`/runs/${run.run_id}/cancel`, {
   method: 'POST', headers: { 'X-Review-Token': run.run_secret },

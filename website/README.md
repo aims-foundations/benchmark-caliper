@@ -652,8 +652,9 @@ for the priority formula and conditional-quota extension.
 
 An optional **Run name** entered with the deployment carries through Steps 2–7.
 Every stage offers **Download results package**, alongside its existing JSON
-download. The authenticated `GET /api/item-review/runs/{run_id}/package` endpoint
-creates one ZIP from a consistent snapshot, without model or dataset calls:
+download. The button first shows **Preparing package…**, then **Downloading
+package…**. It creates one ZIP from a consistent snapshot, without model or
+dataset calls:
 
 - `report.html` opens offline and supports browser printing to PDF. It shows the
   goal, status, selected items with six ratings and supporting evidence, task and
@@ -664,6 +665,26 @@ creates one ZIP from a consistent snapshot, without model or dataset calls:
   Before selection, this CSV contains only its headers.
 - `results.json` preserves the complete pipeline export, including full retrieved
   and screened rows, source revisions, prompts, policies, and adaptive history.
+
+The ZIP can be large because it contains the full retrieval rankings, including
+candidates that were never screened. Preparation runs in the background so one
+HTTP request does not wait for all evidence to be read and compressed. The browser
+sends authenticated `POST /api/item-review/runs/{run_id}/package`, polls
+`GET /api/item-review/runs/{run_id}/package/status`, and downloads the ready ZIP
+with `GET /api/item-review/runs/{run_id}/package?prepared=true`. Every request uses
+the same private run token. The legacy package GET remains available for older
+clients.
+
+Compression is serialized to limit resource use, and temporary ZIP storage spills
+to disk after 8 MiB. Retrying the button can reuse preparation already in progress
+or a ready package for the same snapshot. Leaving the page stops browser polling;
+server preparation can finish independently. Prepared ZIPs are temporary and may
+be rebuilt after a restart or cache eviction; saved pipeline results do not expire.
+Preparation and transfer protect the run from cache eviction. A partial-stage
+package retains the snapshot captured when preparation began, even if the stage
+continues. A later button click prepares a fresh snapshot if the run changed.
+Build failures return a readable status and are logged with the run ID and error
+type; they do not restart screening or change saved assessments.
 
 Metadata records the run name, run creation/finish times in UTC, and whether the
 snapshot is partial, a completed stage, or a frozen collection. Packages also
