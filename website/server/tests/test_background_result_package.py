@@ -123,6 +123,7 @@ def test_eviction_closes_ready_file_and_restoration_can_rebuild(client):
     assert client.post(endpoint(access), headers=headers(access)).status_code == 202
     assert wait_for_package(client, access)["status"] == "ready"
     artifact = job.package.file
+    job.package.lease_until = 0
     item_review.trim_pipeline_cache(limit=0)
     assert artifact.closed and job.run_id not in item_review.jobs
     state = client.get(endpoint(access) + "/status", headers=headers(access)).json()

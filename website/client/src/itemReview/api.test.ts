@@ -126,38 +126,55 @@ it('resumes adaptive screening with an empty body to preserve its original setti
   expect(options.headers['X-Review-Token']).toBe('adapt-access')
 })
 
-it('prepares and downloads a package with the private run token and the server filename', async () => {
-  const fetchMock = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({ status: 'ready' }))).mockResolvedValueOnce(new Response('zip-content', {
-    headers: { 'Content-Type': 'application/zip', 'Content-Disposition': 'attachment; filename="medical-goal-adaptive-20261025.zip"' },
-  }))
+const packageMetadata = { status: 'ready', package_id: 'zip-version-1', bytes: 11, filename: 'medical-goal.zip', chunk_bytes: 1048576 }
+const readyPackage = (overrides: Record<string, unknown> = {}) => new Response(JSON.stringify({ ...packageMetadata, ...overrides }))
+const packagePiece = (body: string, offset = 0, headers: Record<string, string> = {}) => new Response(body, {
+  headers: { 'Content-Type': 'application/octet-stream', 'Content-Length': String(new Blob([body]).size),
+    'X-Package-Id': packageMetadata.package_id, 'X-Package-Offset': String(offset), ...headers },
+})
+const packageAccess = { run_id: 'run', run_secret: 'private-access' }
+
+it('prepares and downloads a package with the private run token and the ready filename', async () => {
+  const fetchMock = vi.fn().mockResolvedValueOnce(readyPackage()).mockResolvedValueOnce(packagePiece('zip-content'))
   vi.stubGlobal('fetch', fetchMock)
-  const result = await getReviewPackage({ run_id: 'adapt', run_secret: 'private-access' })
-  expect(fetchMock.mock.calls[0]).toEqual(['/api/item-review/runs/adapt/package', {
+  const result = await getReviewPackage(packageAccess)
+  expect(fetchMock.mock.calls[0]).toEqual(['/api/item-review/runs/run/package', {
     cache: 'no-store', method: 'POST', headers: { 'X-Review-Token': 'private-access' }, signal: expect.any(AbortSignal),
   }])
-  expect(fetchMock.mock.calls[1]).toEqual(['/api/item-review/runs/adapt/package?prepared=true', {
+  expect(fetchMock.mock.calls[1]).toEqual(['/api/item-review/runs/run/package/chunk?package_id=zip-version-1&offset=0', {
     cache: 'no-store', headers: { 'X-Review-Token': 'private-access' }, signal: expect.any(AbortSignal),
   }])
-  expect(result.filename).toBe('medical-goal-adaptive-20261025.zip')
+  expect(result.filename).toBe('medical-goal.zip')
+  expect(result.blob.type).toBe('application/zip')
   expect(await result.blob.text()).toBe('zip-content')
 })
 
+it('preserves a valid Unicode ZIP filename supplied by the server', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(readyPackage({ filename: 'étude.zip' })).mockResolvedValueOnce(packagePiece('zip-content')))
+  expect((await getReviewPackage(packageAccess)).filename).toBe('étude.zip')
+})
+
 it.each([
-  ["attachment; filename*=UTF-8''%C3%A9tude.zip", 'étude.zip'],
-  ['attachment; filename="../report.zip"', 'benchmark-results-run.zip'],
-  ['attachment; filename="report.html"', 'benchmark-results-run.zip'],
-  ["attachment; filename*=UTF-8''%broken; filename=plain.zip", 'plain.zip'],
-  ['', 'benchmark-results-run.zip'],
-])('handles a package filename header %s', async (header, expected) => {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({ status: 'ready' })))
-    .mockResolvedValueOnce(new Response('zip', { headers: { 'Content-Disposition': header } })))
-  const result = await getReviewPackage({ run_id: 'run', run_secret: 'private' })
-  expect(result.filename).toBe(expected)
+  { package_id: undefined }, { package_id: '' }, { bytes: undefined }, { bytes: 0 }, { bytes: -1 }, { bytes: 1.5 },
+  { bytes: Number.MAX_SAFE_INTEGER + 1 }, { chunk_bytes: undefined }, { chunk_bytes: 0 }, { chunk_bytes: 2.5 }, { chunk_bytes: 1048577 },
+  { filename: undefined }, { filename: '../report.zip' }, { filename: 'report.html' }, { filename: 'bad\n.zip' },
+])('rejects incomplete or unsafe prepared package metadata %j without transferring', async overrides => {
+  const fetchMock = vi.fn().mockResolvedValueOnce(readyPackage(overrides))
+  vi.stubGlobal('fetch', fetchMock)
+  await expect(getReviewPackage(packageAccess)).rejects.toThrow('incomplete package information')
+  expect(fetchMock).toHaveBeenCalledTimes(1)
+})
+
+it('accepts exact bytes when a proxy omits Content-Length', async () => {
+  const response = packagePiece('zip-content')
+  response.headers.delete('Content-Length')
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(readyPackage()).mockResolvedValueOnce(response))
+  expect(await (await getReviewPackage(packageAccess)).blob.text()).toBe('zip-content')
 })
 
 it('reports unavailable review access before treating its error body as a download', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ detail: 'Review not found or access token is invalid. Reopen the review in the browser where it was started.' }), { status: 404 })))
-  await expect(getReviewPackage({ run_id: 'missing', run_secret: 'private' })).rejects.toThrow('Review not found or access token is invalid')
+  await expect(getReviewPackage(packageAccess)).rejects.toThrow('Review not found or access token is invalid')
 })
 
 it('polls preparation before transfer and sends credentials only in headers', async () => {
@@ -165,26 +182,24 @@ it('polls preparation before transfer and sends credentials only in headers', as
   const fetchMock = vi.fn()
     .mockResolvedValueOnce(new Response(JSON.stringify({ status: 'preparing' }), { status: 202 }))
     .mockResolvedValueOnce(new Response(JSON.stringify({ status: 'preparing' })))
-    .mockResolvedValueOnce(new Response(JSON.stringify({ status: 'ready' })))
-    .mockResolvedValueOnce(new Response('prepared zip'))
+    .mockResolvedValueOnce(readyPackage())
+    .mockResolvedValueOnce(packagePiece('zip-content'))
   vi.stubGlobal('fetch', fetchMock)
   const controller = new AbortController()
   const progress = vi.fn()
-  const result = getReviewPackage({ run_id: 'run/id', run_secret: 'private-access' }, progress, controller.signal)
+  const result = getReviewPackage({ ...packageAccess, run_id: 'run/id' }, progress, controller.signal)
   await vi.advanceTimersByTimeAsync(1000)
   expect(fetchMock).toHaveBeenCalledTimes(2)
-  expect(progress.mock.calls).toEqual([['preparing']])
+  expect(progress.mock.calls).toEqual([[{ phase: 'preparing' }]])
   await vi.advanceTimersByTimeAsync(1000)
-  expect(await (await result).blob.text()).toBe('prepared zip')
-  expect(progress.mock.calls).toEqual([['preparing'], ['downloading']])
+  expect(await (await result).blob.text()).toBe('zip-content')
+  expect(progress.mock.calls).toEqual([[{ phase: 'preparing' }],
+    [{ phase: 'downloading', receivedBytes: 0, totalBytes: 11 }], [{ phase: 'downloading', receivedBytes: 11, totalBytes: 11 }]])
   expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
     '/api/item-review/runs/run%2Fid/package', '/api/item-review/runs/run%2Fid/package/status',
-    '/api/item-review/runs/run%2Fid/package/status', '/api/item-review/runs/run%2Fid/package?prepared=true',
+    '/api/item-review/runs/run%2Fid/package/status', '/api/item-review/runs/run%2Fid/package/chunk?package_id=zip-version-1&offset=0',
   ])
-  for (const [, options] of fetchMock.mock.calls) {
-    expect(options.headers).toEqual({ 'X-Review-Token': 'private-access' })
-    expect(options.signal).toBe(controller.signal)
-  }
+  for (const [, options] of fetchMock.mock.calls) expect(options.headers).toEqual({ 'X-Review-Token': 'private-access' })
 })
 
 it('stops waiting and polling when its browser request is aborted', async () => {
@@ -192,7 +207,7 @@ it('stops waiting and polling when its browser request is aborted', async () => 
   const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ status: 'preparing' }), { status: 202 }))
   vi.stubGlobal('fetch', fetchMock)
   const controller = new AbortController()
-  const result = getReviewPackage({ run_id: 'run', run_secret: 'private' }, undefined, controller.signal)
+  const result = getReviewPackage(packageAccess, undefined, controller.signal)
   const rejection = expect(result).rejects.toMatchObject({ name: 'AbortError' })
   await vi.advanceTimersByTimeAsync(0)
   controller.abort()
@@ -207,31 +222,149 @@ it('does not start preparation for an already aborted request', async () => {
   vi.stubGlobal('fetch', fetchMock)
   const controller = new AbortController()
   controller.abort()
-  await expect(getReviewPackage({ run_id: 'run', run_secret: 'private' }, undefined, controller.signal)).rejects.toMatchObject({ name: 'AbortError' })
+  await expect(getReviewPackage(packageAccess, undefined, controller.signal)).rejects.toMatchObject({ name: 'AbortError' })
   expect(fetchMock).not.toHaveBeenCalled()
 })
 
 it.each(['failed', 'not_started'])('reports %s preparation without transferring or repeating the request', async status => {
   const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ status, message: 'Package preparation was interrupted. Your saved results are unchanged.', error_status: 503 })))
   vi.stubGlobal('fetch', fetchMock)
-  await expect(getReviewPackage({ run_id: 'run', run_secret: 'private' })).rejects.toMatchObject({ status: 503, message: 'Package preparation was interrupted. Your saved results are unchanged.' })
+  await expect(getReviewPackage(packageAccess)).rejects.toMatchObject({ status: 503, message: 'Package preparation was interrupted. Your saved results are unchanged.' })
   expect(fetchMock).toHaveBeenCalledTimes(1)
 })
 
-it.each(['preparing', 'downloading'] as const)('explains a connection failure while %s without retrying requests', async phase => {
-  const fetchMock = vi.fn()
-  if (phase === 'downloading') fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ status: 'ready' })))
-  fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+it('explains a preparation connection failure without restarting preparation', async () => {
+  const fetchMock = vi.fn().mockRejectedValueOnce(new TypeError('Failed to fetch'))
   vi.stubGlobal('fetch', fetchMock)
-  await expect(getReviewPackage({ run_id: 'run', run_secret: 'private' })).rejects.toThrow(`The connection was interrupted while ${phase} the results package. Your saved results are unchanged. Please try downloading again.`)
-  expect(fetchMock).toHaveBeenCalledTimes(phase === 'preparing' ? 1 : 2)
+  await expect(getReviewPackage(packageAccess)).rejects.toThrow('The connection was interrupted while preparing the results package. Your saved results are unchanged. Please try downloading again.')
+  expect(fetchMock).toHaveBeenCalledTimes(1)
 })
 
-it('reports an interrupted ZIP response body as a download failure', async () => {
-  const response = new Response('zip')
-  vi.spyOn(response, 'blob').mockRejectedValueOnce(new TypeError('NetworkError'))
-  const fetchMock = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({ status: 'ready' }))).mockResolvedValueOnce(response)
+it('retries only a truncated middle piece and assembles exact bytes with monotonic progress', async () => {
+  vi.useFakeTimers()
+  const fetchMock = vi.fn().mockResolvedValueOnce(readyPackage({ bytes: 10, chunk_bytes: 4 }))
+    .mockResolvedValueOnce(packagePiece('abcd'))
+    .mockResolvedValueOnce(packagePiece('ef', 4, { 'Content-Length': '4' }))
+    .mockResolvedValueOnce(packagePiece('efgh', 4))
+    .mockResolvedValueOnce(packagePiece('ij', 8))
   vi.stubGlobal('fetch', fetchMock)
-  await expect(getReviewPackage({ run_id: 'run', run_secret: 'private' })).rejects.toThrow('connection was interrupted while downloading')
+  const progress = vi.fn()
+  const result = getReviewPackage(packageAccess, progress)
+  await vi.runAllTimersAsync()
+  expect(await (await result).blob.text()).toBe('abcdefghij')
+  expect(fetchMock.mock.calls.slice(1).map(([url]) => new URL(url, 'https://test').searchParams.get('offset'))).toEqual(['0', '4', '4', '8'])
+  expect(progress.mock.calls.slice(1).map(([value]) => value.receivedBytes)).toEqual([0, 4, 8, 10])
+  expect(vi.getTimerCount()).toBe(0)
+})
+
+it('retries a response-body network failure before assembling the package', async () => {
+  vi.useFakeTimers()
+  const response = packagePiece('zip-content')
+  vi.spyOn(response, 'blob').mockRejectedValueOnce(new TypeError('NetworkError'))
+  const fetchMock = vi.fn().mockResolvedValueOnce(readyPackage()).mockResolvedValueOnce(response).mockResolvedValueOnce(packagePiece('zip-content'))
+  vi.stubGlobal('fetch', fetchMock)
+  const result = getReviewPackage(packageAccess)
+  await vi.runAllTimersAsync()
+  expect(await (await result).blob.text()).toBe('zip-content')
+  expect(fetchMock.mock.calls[1][0]).toBe(fetchMock.mock.calls[2][0])
+})
+
+it.each([429, 502, 503, 504])('retries transient HTTP %s pieces without redoing preparation', async status => {
+  vi.useFakeTimers()
+  const fetchMock = vi.fn().mockResolvedValueOnce(readyPackage())
+    .mockResolvedValueOnce(new Response('', { status })).mockResolvedValueOnce(packagePiece('zip-content'))
+  vi.stubGlobal('fetch', fetchMock)
+  const result = getReviewPackage(packageAccess)
+  await vi.runAllTimersAsync()
+  expect(await (await result).blob.text()).toBe('zip-content')
+  expect(fetchMock).toHaveBeenCalledTimes(3)
+  expect(fetchMock.mock.calls[1][0]).toBe(fetchMock.mock.calls[2][0])
+})
+
+it.each([
+  { 'X-Package-Id': 'different-version' }, { 'X-Package-Offset': '1' }, { 'X-Package-Id': '' },
+] as Record<string, string>[])('rejects a changed or missing piece identity %j without retrying or mixing versions', async headers => {
+  const fetchMock = vi.fn().mockResolvedValueOnce(readyPackage()).mockResolvedValueOnce(packagePiece('zip-content', 0, headers))
+  vi.stubGlobal('fetch', fetchMock)
+  await expect(getReviewPackage(packageAccess)).rejects.toThrow('did not match the requested package')
   expect(fetchMock).toHaveBeenCalledTimes(2)
+})
+
+it('stops on package replacement or cache loss and asks for a fresh download', async () => {
+  const fetchMock = vi.fn().mockResolvedValueOnce(readyPackage({ bytes: 8, chunk_bytes: 4 }))
+    .mockResolvedValueOnce(packagePiece('abcd')).mockResolvedValueOnce(new Response('', { status: 412 }))
+  vi.stubGlobal('fetch', fetchMock)
+  await expect(getReviewPackage(packageAccess)).rejects.toThrow('prepared package changed or is no longer available. Your saved results are unchanged')
+  expect(fetchMock).toHaveBeenCalledTimes(3)
+})
+
+it.each([206, 403, 404])('does not retry an unexpected HTTP %s response or accept its body', async status => {
+  const fetchMock = vi.fn().mockResolvedValueOnce(readyPackage())
+    .mockResolvedValueOnce(new Response('zip-content', { status, headers: {
+      'X-Package-Id': packageMetadata.package_id, 'X-Package-Offset': '0', 'Content-Length': '11',
+    } }))
+  vi.stubGlobal('fetch', fetchMock)
+  await expect(getReviewPackage(packageAccess)).rejects.toThrow('Your saved results are unchanged')
+  expect(fetchMock).toHaveBeenCalledTimes(2)
+})
+
+it.each(['network', 'length', 'header'] as const)('stops after three attempts for a persistent %s failure without returning partial bytes', async kind => {
+  vi.useFakeTimers()
+  const fetchMock = vi.fn().mockResolvedValueOnce(readyPackage({ bytes: 8, chunk_bytes: 4 })).mockResolvedValueOnce(packagePiece('abcd'))
+  fetchMock.mockImplementation(() => kind === 'network' ? Promise.reject(new TypeError('Failed to fetch'))
+    : Promise.resolve(kind === 'length' ? packagePiece('e', 4, { 'Content-Length': '4' }) : packagePiece('efgh', 4, { 'Content-Length': '3' })))
+  vi.stubGlobal('fetch', fetchMock)
+  const result = getReviewPackage(packageAccess)
+  const rejection = expect(result).rejects.toThrow('Your saved results are unchanged')
+  await vi.runAllTimersAsync()
+  await rejection
+  expect(fetchMock.mock.calls.slice(1).map(([url]) => new URL(url, 'https://test').searchParams.get('offset'))).toEqual(['0', '4', '4', '4'])
+  expect(vi.getTimerCount()).toBe(0)
+})
+
+it('times out each stalled body read and stops after three bounded attempts', async () => {
+  vi.useFakeTimers()
+  const signals: AbortSignal[] = []
+  const fetchMock = vi.fn().mockResolvedValueOnce(readyPackage()).mockImplementation((_url, options) => {
+    signals.push(options.signal)
+    const response = packagePiece('zip-content')
+    vi.spyOn(response, 'blob').mockImplementation(() => new Promise((_resolve, reject) => {
+      options.signal.addEventListener('abort', () => reject(options.signal.reason), { once: true })
+    }))
+    return Promise.resolve(response)
+  })
+  vi.stubGlobal('fetch', fetchMock)
+  const result = getReviewPackage(packageAccess)
+  const rejection = expect(result).rejects.toThrow('download timed out after three attempts')
+  await vi.advanceTimersByTimeAsync(45000)
+  expect(signals).toHaveLength(1)
+  expect(signals[0].aborted).toBe(true)
+  await vi.advanceTimersByTimeAsync(500 + 45000 + 1000 + 45000)
+  await rejection
+  expect(signals).toHaveLength(3)
+  expect(signals.every(signal => signal.aborted)).toBe(true)
+  expect(fetchMock).toHaveBeenCalledTimes(4)
+  expect(vi.getTimerCount()).toBe(0)
+})
+
+it.each(['body', 'backoff'] as const)('aborts an active %s without retrying or creating a partial download', async phase => {
+  vi.useFakeTimers()
+  const fetchMock = vi.fn().mockResolvedValueOnce(readyPackage()).mockImplementation((_url, options) => {
+    if (phase === 'backoff') return Promise.reject(new TypeError('Failed to fetch'))
+    const response = packagePiece('zip-content')
+    vi.spyOn(response, 'blob').mockImplementation(() => new Promise((_resolve, reject) => {
+      options.signal.addEventListener('abort', () => reject(options.signal.reason), { once: true })
+    }))
+    return Promise.resolve(response)
+  })
+  vi.stubGlobal('fetch', fetchMock)
+  const controller = new AbortController()
+  const result = getReviewPackage(packageAccess, undefined, controller.signal)
+  const rejection = expect(result).rejects.toMatchObject({ name: 'AbortError' })
+  await vi.advanceTimersByTimeAsync(0)
+  controller.abort()
+  await rejection
+  await vi.advanceTimersByTimeAsync(45000)
+  expect(fetchMock).toHaveBeenCalledTimes(2)
+  expect(vi.getTimerCount()).toBe(0)
 })

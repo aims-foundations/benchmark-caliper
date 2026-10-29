@@ -250,30 +250,86 @@ export const getReview = (run: RunAccess, page = 1, signal?: AbortSignal) => req
 export const getReviewExport = async (run: RunAccess) => (await fetchResponse(`/runs/${run.run_id}/export`, {
   headers: { 'X-Review-Token': run.run_secret },
 })).blob()
-export type PackageDownloadProgress = 'preparing' | 'downloading'
-type PackageStatus = {
+export type PackageDownloadProgress = { phase: 'preparing' } | { phase: 'downloading'; receivedBytes: number; totalBytes: number }
+type PreparedPackage = { package_id: string; bytes: number; filename: string; chunk_bytes: number }
+type PackageStatus = Partial<PreparedPackage> & {
   status: 'not_started' | 'preparing' | 'ready' | 'failed'
   message: string
   error_status?: number
 }
 
-function waitForPackagePoll(signal: AbortSignal): Promise<void> {
+function waitForPackagePoll(signal: AbortSignal, milliseconds = 1000): Promise<void> {
   return new Promise((resolve, reject) => {
     signal.throwIfAborted()
-    const timer = setTimeout(() => { signal.removeEventListener('abort', abort); resolve() }, 1000)
+    const timer = setTimeout(() => { signal.removeEventListener('abort', abort); resolve() }, milliseconds)
     function abort() { clearTimeout(timer); reject(signal.reason) }
     signal.addEventListener('abort', abort, { once: true })
   })
+}
+
+function preparedPackage(status: PackageStatus): PreparedPackage {
+  if (typeof status.package_id !== 'string' || !status.package_id
+      || !Number.isSafeInteger(status.bytes) || status.bytes! <= 0
+      || !Number.isSafeInteger(status.chunk_bytes) || status.chunk_bytes! <= 0 || status.chunk_bytes! > 1048576
+      || typeof status.filename !== 'string' || !status.filename
+      || /[/\\\x00-\x1f\x7f]/.test(status.filename) || !status.filename.toLowerCase().endsWith('.zip')) {
+    throw new ReviewRequestError(502, 'The server returned incomplete package information. Your saved results are unchanged. Please try downloading again.', true)
+  }
+  return status as PreparedPackage
+}
+
+class PackagePieceError extends Error {
+  constructor(message: string, readonly retryable: boolean) { super(message) }
+}
+
+async function packagePiece(path: string, prepared: PreparedPackage, offset: number, headers: Record<string, string>, signal: AbortSignal): Promise<Blob> {
+  const expectedBytes = Math.min(prepared.chunk_bytes, prepared.bytes - offset)
+  const query = new URLSearchParams({ package_id: prepared.package_id, offset: String(offset) })
+  for (let attempt = 0; ; attempt++) {
+    signal.throwIfAborted()
+    const controller = new AbortController()
+    const abort = () => controller.abort(signal.reason)
+    signal.addEventListener('abort', abort, { once: true })
+    const timeout = setTimeout(() => controller.abort(new DOMException('Package transfer timed out.', 'TimeoutError')), 45000)
+    let failure: unknown
+    try {
+      const response = await fetchResponse(`${path}/chunk?${query}`, { headers, signal: controller.signal })
+      if (response.status !== 200 || response.headers.get('X-Package-Id') !== prepared.package_id
+          || response.headers.get('X-Package-Offset') !== String(offset)) {
+        throw new PackagePieceError('The downloaded package piece did not match the requested package.', false)
+      }
+      const blob = await response.blob()
+      const contentLength = response.headers.get('Content-Length')
+      if ((contentLength !== null && contentLength !== String(expectedBytes)) || blob.size !== expectedBytes) {
+        throw new PackagePieceError('The connection returned an incomplete package piece.', true)
+      }
+      return blob
+    } catch (error) {
+      if (signal.aborted) throw signal.reason
+      failure = controller.signal.aborted ? controller.signal.reason : error
+    } finally {
+      clearTimeout(timeout)
+      signal.removeEventListener('abort', abort)
+    }
+    if (failure instanceof ReviewRequestError && failure.status === 412) {
+      throw new ReviewRequestError(412, 'The prepared package changed or is no longer available. Your saved results are unchanged. Please try downloading again.', true)
+    }
+    const retryable = failure instanceof PackagePieceError ? failure.retryable
+      : failure instanceof ReviewRequestError ? [429, 502, 503, 504].includes(failure.status)
+        : failure instanceof TypeError || (failure instanceof DOMException && ['NetworkError', 'TimeoutError'].includes(failure.name))
+    if (!retryable || attempt === 2) throw failure
+    await waitForPackagePoll(signal, 500 * (attempt + 1))
+  }
 }
 
 export const getReviewPackage = async (run: RunAccess, onProgress?: (progress: PackageDownloadProgress) => void, signal?: AbortSignal): Promise<{ blob: Blob; filename: string }> => {
   const activeSignal = signal ?? new AbortController().signal
   const path = `/runs/${encodeURIComponent(run.run_id)}/package`
   const options = { headers: { 'X-Review-Token': run.run_secret }, signal: activeSignal }
-  let phase: PackageDownloadProgress = 'preparing'
+  let phase = 'preparing'
   try {
     activeSignal.throwIfAborted()
-    onProgress?.(phase)
+    onProgress?.({ phase: 'preparing' })
     let status = await request<PackageStatus>(path, { ...options, method: 'POST' })
     while (status.status === 'preparing') {
       await waitForPackagePoll(activeSignal)
@@ -282,34 +338,28 @@ export const getReviewPackage = async (run: RunAccess, onProgress?: (progress: P
     if (status.status !== 'ready') {
       throw new ReviewRequestError(status.error_status || 409, status.message || 'Package preparation was interrupted. Please try downloading again; your saved results are unchanged.', true)
     }
-    activeSignal.throwIfAborted()
+    const prepared = preparedPackage(status)
     phase = 'downloading'
-    onProgress?.(phase)
-    const response = await fetchResponse(`${path}?prepared=true`, options)
-    return { blob: await response.blob(), filename: packageFilename(response, run) }
+    const pieces: Blob[] = []
+    let receivedBytes = 0
+    onProgress?.({ phase: 'downloading', receivedBytes, totalBytes: prepared.bytes })
+    while (receivedBytes < prepared.bytes) {
+      const piece = await packagePiece(path, prepared, receivedBytes, options.headers, activeSignal)
+      activeSignal.throwIfAborted()
+      pieces.push(piece)
+      receivedBytes += piece.size
+      onProgress?.({ phase: 'downloading', receivedBytes, totalBytes: prepared.bytes })
+    }
+    return { blob: new Blob(pieces, { type: 'application/zip' }), filename: prepared.filename }
   } catch (error) {
     if (activeSignal.aborted) throw activeSignal.reason
     if (error instanceof ReviewRequestError && error.hasServerDetail) throw error
-    const message = error instanceof ReviewRequestError ? error.message
+    const message = error instanceof ReviewRequestError || error instanceof PackagePieceError ? error.message
       : error instanceof TypeError ? `The connection was interrupted while ${phase} the results package.`
-        : `The results package could not finish ${phase}.`
+        : error instanceof DOMException && error.name === 'TimeoutError' ? 'The package download timed out after three attempts.'
+          : `The results package could not finish ${phase}.`
     throw new Error(`${message} Your saved results are unchanged. Please try downloading again.`)
   }
-}
-
-function packageFilename(response: Response, run: RunAccess): string {
-  const disposition = response.headers.get('Content-Disposition') || ''
-  const encoded = /(?:^|;)\s*filename\*=UTF-8''([^;]+)/i.exec(disposition)
-  const plain = /(?:^|;)\s*filename=(?:"([^"\r\n]+)"|([^;\s]+))/i.exec(disposition)
-  let filename = plain?.[1] || plain?.[2] || ''
-  if (encoded) {
-    try { filename = decodeURIComponent(encoded[1]) } catch { /* use the plain filename or fallback */ }
-  }
-  // A download name must be a filename, even if a proxy changes the header.
-  if (!filename || /[/\\\x00-\x1f\x7f]/.test(filename) || !filename.toLowerCase().endsWith('.zip')) {
-    filename = `benchmark-results-${run.run_id}.zip`
-  }
-  return filename
 }
 export const cancelReview = (run: RunAccess) => request<RunResult>(`/runs/${run.run_id}/cancel`, {
   method: 'POST', headers: { 'X-Review-Token': run.run_secret },

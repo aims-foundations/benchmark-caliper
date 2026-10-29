@@ -303,7 +303,8 @@ def restore_review(run_id: str, secret: str) -> ReviewJob:
 def trim_pipeline_cache(*, keep: str | None = None, limit: int = MAX_CACHED_PIPELINE) -> None:
     """Large candidate rankings should not accumulate in finished ancestors."""
     completed = [job for job in jobs.values()
-                 if job.finished_at is not None and not job.downloads and job._checkpoint_saved]
+                 if job.finished_at is not None and not job.downloads
+                 and not job.package.pinned() and job._checkpoint_saved]
     excess = len(completed) - limit
     for job in completed:
         if excess <= 0:
@@ -319,7 +320,8 @@ def make_cache_room() -> None:
     for run_id, job in list(jobs.items()):
         if len(jobs) < MAX_RETAINED:
             break
-        if job.finished_at is not None and not job.downloads and job._checkpoint_saved:
+        if (job.finished_at is not None and not job.downloads
+                and not job.package.pinned() and job._checkpoint_saved):
             job.package.close()
             jobs.pop(run_id)
 
@@ -350,6 +352,10 @@ async def shutdown() -> None:
     for task in tasks:
         task.cancel()
     await asyncio.gather(*tasks, return_exceptions=True)
+    # A bounded archive read may still be executing after its request was
+    # cancelled. Finish it before closing a shared temporary handle.
+    await asyncio.gather(*(finish_worker(job.package.read_task) for job in jobs.values()
+                           if job.package.read_task is not None))
     for job in jobs.values():
         job.package.close()
         try:
@@ -949,6 +955,7 @@ async def prepare_package(job: ReviewJob, snapshot: dict) -> None:
         size = package.seek(0, 2)
         package.seek(0)
         state.file, state.size = package, size
+        state.refresh_lease()
         logger.info("Review results package ready run_id=%r bytes=%d seconds=%.1f",
                     job.run_id, size, time.monotonic() - started)
     except asyncio.CancelledError:
@@ -987,6 +994,7 @@ async def start_package(run_id: str, x_review_token: Annotated[str | None, Heade
     snapshot = package_snapshot(job)
     key = review_exports.snapshot_key(snapshot)
     if state.file is not None and state.key == key:
+        state.refresh_lease()
         return JSONResponse(state.public(), headers={"Cache-Control": "no-store"})
     state.close()
     snapshot["metadata"]["exported_at"] = datetime.now(timezone.utc).isoformat()
@@ -1005,6 +1013,60 @@ async def get_package_status(run_id: str, response: Response,
     if job.request.mode == "item_review":
         raise HTTPException(409, "Results packages are available for the goal-conditioned construction pipeline.")
     return job.package.public()
+
+
+@router.get("/runs/{run_id}/package/chunk")
+async def get_package_chunk(run_id: str, package_id: str, offset: str,
+                            x_review_token: Annotated[str | None, Header()] = None):
+    job = authorize(run_id, x_review_token)
+    state = job.package
+    if state.file is None or state.package_id != package_id:
+        raise HTTPException(412, "The prepared package is no longer available. Retry the download to prepare it again from your saved results.")
+    try:
+        position = int(offset)
+    except ValueError:
+        raise HTTPException(416, "The requested package offset is invalid.") from None
+    if not 0 <= position < state.size:
+        raise HTTPException(416, "The requested package offset is outside the archive.")
+    if state.transferring:
+        raise HTTPException(429, "Another package read is in progress. Retry this part shortly.")
+    state.transferring = True
+    state.refresh_lease()
+    job.downloads += 1
+    expected = min(review_exports.CHUNK_BYTES, state.size - position)
+
+    def read():
+        state.file.seek(position)
+        data = state.file.read(expected)
+        if len(data) != expected:
+            raise OSError("Incomplete prepared archive")
+        return data
+
+    worker = asyncio.create_task(asyncio.to_thread(read))
+    state.read_task = worker
+    try:
+        data = await asyncio.shield(worker)
+        # Keep the finite grace period even for the final piece: its response
+        # can still be interrupted, in which case the client retries this offset.
+        return Response(data, media_type="application/zip", headers={
+            "Cache-Control": "no-store, no-transform", "Content-Length": str(len(data)),
+            "X-Package-Id": state.package_id, "X-Package-Offset": str(position),
+            "X-Accel-Buffering": "no",
+        })
+    except asyncio.CancelledError:
+        # A cancelled HTTP request must not release the shared cursor while its
+        # thread is still reading; retries then cannot corrupt each other's data.
+        await finish_worker(worker)
+        raise
+    except Exception as error:
+        state.close()
+        state.error = {"error_status": 503, "message": "The prepared package could not be read. Retry the download; your saved results are retained."}
+        logger.warning("Review package read failed run_id=%r error=%s", job.run_id, type(error).__name__)
+        raise HTTPException(503, state.error["message"]) from None
+    finally:
+        state.read_task = None
+        state.transferring = False
+        job.downloads -= 1
 
 
 def prepared_package_response(job: ReviewJob):
