@@ -327,22 +327,25 @@ are implementation choices that make the paper's ratings operational. The
 default model settings are `gpt-6-luna`, high reasoning effort, and a 25,000-token
 output ceiling. Calls use the Responses API with `store=False` and no tools.
 
-Python validates task references, coverage indices and scope, and literal
-evidence excerpts against original string values in the item, including nested
-values. It does not verify whether an excerpt semantically supports a judgment.
-A resolved task, numerical rating, or true/false coverage finding needs an item
-excerpt; an unknown finding needs a stated information gap. Invalid responses
-remain errors without an accepted assessment or an automatic model repair.
+Python validates response structure, score ranges, task references, and coverage
+indices and scope. A resolved task, numerical rating, or true/false coverage
+finding needs supporting item evidence and a justification; an unknown finding
+needs a stated information gap. The prompt asks for faithful excerpts with enough
+context to explain each judgment, but screening does not reject an assessment
+because its evidence fails an exact-text match. Evidence is preserved as returned
+by the model, without whitespace corrections, and displayed alongside the original
+item for human review. Neither literal accuracy nor semantic support is verified
+by these checks. Other invalid responses remain errors without an accepted
+assessment or an automatic model repair.
 Reference answers are evidence to inspect, not proof of correctness, and the
 output-content rating is not expert validation of clinical answers.
 
-Before validation, the screener can remove leading or trailing whitespace from
-an otherwise unmatched quotation, but only when the remaining text occurs
-verbatim in one original item value. Already exact quotations stay unchanged.
-The item record's `evidence_adjustments` retain the assessment field, returned
-quotation, and verified source quotation. Internal whitespace, wording, case,
-punctuation, and JSON-string escaping are not normalized. This correction uses
-no additional model call and does not change ratings or gate thresholds.
+This policy applies to initial and adaptive screening and to selection of saved
+assessments. It does not change the literal source checks in Steps 2 and 3.
+Older saved records may include `evidence_adjustments` from the previous whitespace
+correction; those historical records remain inspectable. Previously rejected
+assessments have no saved scores to recover and can be retried with **Continue
+screening**, preserving completed assessments and the saved prompt/settings.
 
 The construction gate is computed by Python. It passes only with a matched task
 and ratings of at least 3 for **input ontology, input content, input form, and
@@ -370,8 +373,9 @@ The allocator and synchronous/asynchronous
 screener are also available as Python library functions/classes; there is no
 new Step 5 CLI command.
 
-Tests exercise allocation, strict response/evidence validation, gate behavior,
-mocked provider requests, and website continuation, cancellation, and export.
+Tests exercise allocation, response and reference validation, evidence preservation,
+gate behavior, mocked provider requests, and website continuation, cancellation,
+and export.
 Live provider judgment quality has not been validated, and these tests do not
 constitute an end-to-end run over the complete bank.
 

@@ -72,7 +72,7 @@ def _eligible_items(requirements, screened_items, cancelled):
         if record.get("item_id") != key or ("evidence_hash" in record and record["evidence_hash"] != key):
             raise ValueError("Screened item identifiers must match their complete original rows.")
         assessment = ScreeningAssessment.model_validate(record.get("assessment"))
-        assessment.validate_context(requirements, evidence["item"])
+        assessment.validate_context(requirements)
         snapshot = assessment.model_dump()
         if key in seen:
             if seen[key] != snapshot:

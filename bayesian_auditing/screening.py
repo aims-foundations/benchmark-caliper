@@ -1,8 +1,8 @@
 """Rate a candidate against the deployment and apply the four-dimension gate.
 
-Literal evidence checks establish traceability to the original item, not whether
-an interpretation is correct. Collection selection and adaptive allocation are
-separate stages; this module does not calculate an aggregate ranking score.
+Model-provided evidence and explanations are retained for human review.
+Collection selection and adaptive allocation are separate stages; this module
+does not calculate an aggregate ranking score.
 """
 
 import json
@@ -13,7 +13,6 @@ from pydantic import Field, ValidationError, model_validator
 
 from .judge import DEFAULT_MAX_OUTPUT_TOKENS, DEFAULT_MODEL, DEFAULT_REASONING_EFFORT
 from .requirements import Requirements, StrictModel
-from .scoring import DIMENSIONS
 
 
 SCREENING_VERSION = 1
@@ -100,63 +99,13 @@ class CoverageFinding(StrictModel):
         return self
 
 
-def _item_strings(value):
-    """Yield original string values, preserving raw JSON cells and whitespace."""
-    if isinstance(value, str):
-        yield value
-    elif isinstance(value, dict):
-        for nested in value.values():
-            yield from _item_strings(nested)
-    elif isinstance(value, list):
-        for nested in value:
-            yield from _item_strings(nested)
-
-
 class ScreeningAssessment(StrictModel):
     task: TaskFinding
     ratings: ScreeningRatings
     coverage: list[CoverageFinding]
 
-    def _evidence_findings(self):
-        yield "task", self.task
-        for name in DIMENSIONS:
-            yield f"ratings.{name}", getattr(self.ratings, name)
-        for index, finding in enumerate(self.coverage):
-            yield f"coverage[{index}]", finding
-
-    def trim_evidence_padding(self, item_row: dict) -> list[dict]:
-        """Remove outer padding only when the remaining excerpt is verbatim.
-
-        Already literal excerpts are preserved. This does not alter spacing
-        inside a quotation, decode JSON cells, or accept paraphrased evidence.
-        Keep the returned quotation alongside each correction for inspection.
-        """
-        originals = list(_item_strings(item_row))
-        adjustments = []
-        for path, finding in self._evidence_findings():
-            for index, quote in enumerate(finding.evidence):
-                if any(quote in original for original in originals):
-                    continue
-                source_quote = quote.strip()
-                if (source_quote and source_quote != quote
-                        and any(source_quote in original for original in originals)):
-                    finding.evidence[index] = source_quote
-                    adjustments.append({
-                        "field": f"{path}.evidence[{index}]",
-                        "returned_quote": quote,
-                        "source_quote": source_quote,
-                    })
-        return adjustments
-
-    def validate_context(self, requirements: Requirements, item_row: dict) -> None:
-        """Check facet/coverage references and literal excerpts of item values.
-
-        Every evidence string must occur within one original string value in the
-        row, including nested objects/lists. Field names, joined values, generated
-        summaries, and deployment-only quotations are not item evidence. JSON
-        stored inside a string cell is kept literal. Missing facts belong in
-        information_gaps. These checks cannot establish semantic support.
-        """
+    def validate_context(self, requirements: Requirements) -> None:
+        """Check task and coverage references against the extracted requirements."""
         facet_ids = {facet.facet_id for facet in requirements.task_facets}
         if not set(self.task.matched_facet_ids).issubset(facet_ids):
             raise ValueError("Screening references a task outside the extracted requirements.")
@@ -171,23 +120,6 @@ class ScreeningAssessment(StrictModel):
                     raise ValueError("Positive coverage requires a matched task.")
                 if requirement.facet_ids and not set(requirement.facet_ids).intersection(self.task.matched_facet_ids):
                     raise ValueError("Positive coverage must apply to a matched task facet.")
-        strings = list(_item_strings(item_row))
-        mismatches = []
-        for path, finding in self._evidence_findings():
-            for index, quote in enumerate(finding.evidence):
-                if not any(quote in original for original in strings):
-                    # Preserve only the rejected evidence from the parsed assessment,
-                    # not the raw provider response. JSON notation makes differences
-                    # such as a newline versus a literal backslash-n inspectable.
-                    mismatches.append(
-                        f"Assessment field: {path}.evidence[{index}]\n"
-                        f"Returned quotation: {json.dumps(quote, ensure_ascii=False)}"
-                    )
-        if mismatches:
-            raise ValueError(
-                "A screening evidence quotation does not occur exactly in the original item.\n\n"
-                + "\n\n".join(mismatches)
-            )
 
 
 def gate_for(assessment: ScreeningAssessment) -> dict:
@@ -258,11 +190,8 @@ class ItemScreener:
             assessment = ScreeningAssessment.model_validate_json(response.output_text)
         except ValidationError:
             return {**result, "status": "error", "error": "The screening failed schema validation. Check task findings, ratings, and coverage evidence."}
-        adjustments = assessment.trim_evidence_padding(item_row)
-        if adjustments:
-            result["evidence_adjustments"] = adjustments
         try:
-            assessment.validate_context(requirements, item_row)
+            assessment.validate_context(requirements)
         except ValueError as exc:
             return {**result, "status": "error", "error": str(exc)}
         return {**result, "status": "complete", "assessment": assessment.model_dump(),

@@ -123,14 +123,16 @@ def test_caps_total_at_160_uses_eight_unseen_per_batch_and_keeps_initial_outcome
         assert secret not in exported.text
 
 
-def test_adaptive_quotation_adjustments_survive_export_and_restart(client, monkeypatch):
+def test_adaptive_nonliteral_evidence_is_preserved_through_export_and_restart(client, monkeypatch):
     source = seed_selected(per_facet=49)
 
-    def padded_failure(value, row):
-        value["ratings"]["input_form"].update(score=2, evidence=[f"\n{row['content']}\n"])
+    returned_evidence = "\nExplain why the sum of two even numbers must also be even.\n"
+
+    def nonliteral_failure(value, row):
+        value["ratings"]["input_form"].update(score=2, evidence=[returned_evidence])
         return value
 
-    calls = mock_screener(monkeypatch, padded_failure)
+    calls = mock_screener(monkeypatch, nonliteral_failure)
     access = start_adaptive(client, source)
     result = finished(client, access).json()
     assert result["status"] == "completed", result["message"]
@@ -140,12 +142,9 @@ def test_adaptive_quotation_adjustments_survive_export_and_restart(client, monke
                   if item["screened_run_id"] == access["run_id"])
     assert record["status"] == "complete" and record["gate"]["status"] == "fail"
     assert record["evidence"]["item"] == original_row
-    assert record["assessment"]["ratings"]["input_form"]["evidence"] == [original_row["content"]]
-    assert record["evidence_adjustments"] == [{
-        "field": "ratings.input_form.evidence[0]",
-        "returned_quote": f"\n{original_row['content']}\n",
-        "source_quote": original_row["content"],
-    }]
+    assert record["assessment"]["ratings"]["input_form"]["evidence"] == [returned_evidence]
+    assert "evidence_adjustments" not in record
+    assert record["item_id"] not in result["selection"]["selected_item_ids"]
     assert export(client, access).json()["screening"] == result["screening"]
     item_review.jobs.clear()
     assert finished(client, access).json() == result

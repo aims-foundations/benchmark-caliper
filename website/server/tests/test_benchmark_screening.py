@@ -224,14 +224,14 @@ def test_continuation_retries_only_errors_retains_results_and_usage_origins(clie
     assert response.status_code == 409
 
 
-def test_quotation_diagnostics_survive_export_restart_and_retry(client, monkeypatch):
+def test_saved_legacy_quotation_errors_retry_without_repeating_valid_assessments(client, monkeypatch):
     source = seed_retrieval(facets=1, per_facet=2)
     invalid_quotes = {
         "task.evidence[0]": "Explain why two even numbers always add up to an even number.",
         "ratings.input_form.evidence[0]": 'Use the patient’s "history"\nand diagnostic tests.',
     }
 
-    def invalid_one(value, row):
+    def nonliteral_evidence(value, row):
         if row["id"] == "0-1":
             value["task"]["evidence"] = [invalid_quotes["task.evidence[0]"]]
             value["ratings"]["input_form"]["evidence"] = [invalid_quotes["ratings.input_form.evidence[0]"]]
@@ -239,7 +239,27 @@ def test_quotation_diagnostics_survive_export_restart_and_retry(client, monkeypa
             value["ratings"]["input_content"]["score"] = 2
         return value
 
-    first_calls = mock_screener(monkeypatch, invalid_one)
+    legacy_error = (
+        "A screening evidence quotation does not occur exactly in the original item.\n\n"
+        "Assessment field: task.evidence[0]\n"
+        f"Returned quotation: {json.dumps(invalid_quotes['task.evidence[0]'], ensure_ascii=False)}\n\n"
+        "Assessment field: ratings.input_form.evidence[0]\n"
+        f"Returned quotation: {json.dumps(invalid_quotes['ratings.input_form.evidence[0]'], ensure_ascii=False)}"
+    )
+    real_screener = item_review.AsyncItemScreener
+
+    class LegacyQuoteScreener(real_screener):
+        async def __call__(self, answers, requirements, item):
+            result = await super().__call__(answers, requirements, item)
+            if item["id"] == "0-1":
+                # Reproduce a saved assessment error from the earlier validator.
+                result = {key: value for key, value in result.items()
+                          if key not in {"assessment", "gate"}}
+                result.update(status="error", error=legacy_error)
+            return result
+
+    monkeypatch.setattr(item_review, "AsyncItemScreener", LegacyQuoteScreener)
+    first_calls = mock_screener(monkeypatch, nonliteral_evidence)
     first = start_screening(client, source)
     original = finished(client, first).json()
     retained, rejected = original["screening"]["items"]
@@ -247,13 +267,7 @@ def test_quotation_diagnostics_survive_export_restart_and_retry(client, monkeypa
     assert retained["status"] == "complete" and retained["gate"]["status"] == "fail"
     assert rejected["status"] == "error"
     assert "assessment" not in rejected and "gate" not in rejected
-    assert rejected["error"] == (
-        "A screening evidence quotation does not occur exactly in the original item.\n\n"
-        "Assessment field: task.evidence[0]\n"
-        f"Returned quotation: {json.dumps(invalid_quotes['task.evidence[0]'], ensure_ascii=False)}\n\n"
-        "Assessment field: ratings.input_form.evidence[0]\n"
-        f"Returned quotation: {json.dumps(invalid_quotes['ratings.input_form.evidence[0]'], ensure_ascii=False)}"
-    )
+    assert rejected["error"] == legacy_error
     assert rejected["usage"]["input_tokens"] == 100
     assert original["usage"]["input_tokens"] == 200
     assert export(client, first).json()["screening"] == original["screening"]
@@ -265,7 +279,8 @@ def test_quotation_diagnostics_survive_export_restart_and_retry(client, monkeypa
     assert export(client, first).json()["screening"] == original["screening"]
     assert len(first_calls) == 2
 
-    retry_calls = mock_screener(monkeypatch)
+    monkeypatch.setattr(item_review, "AsyncItemScreener", real_screener)
+    retry_calls = mock_screener(monkeypatch, nonliteral_evidence)
     resumed = start_screening(client, first)
     retried = finished(client, resumed).json()
     assert len(retry_calls) == 1
@@ -276,13 +291,16 @@ def test_quotation_diagnostics_survive_export_restart_and_retry(client, monkeypa
     assert retried["screening"]["items"][0] == retained
     accepted = retried["screening"]["items"][1]
     assert accepted["status"] == "complete" and accepted["gate"]["status"] == "pass"
+    assert accepted["assessment"]["task"]["evidence"] == [invalid_quotes["task.evidence[0]"]]
+    assert accepted["assessment"]["ratings"]["input_form"]["evidence"] == [
+        invalid_quotes["ratings.input_form.evidence[0]"]]
     assert accepted["screened_run_id"] == resumed["run_id"]
     assert "error" not in accepted
     assert retried["usage"]["input_tokens"] == 100
     assert finished(client, first).json() == original
 
 
-def test_outer_whitespace_adjustments_are_saved_without_changing_gate_or_source(client, monkeypatch):
+def test_nonliteral_evidence_is_saved_unchanged_without_changing_gate_or_source(client, monkeypatch):
     source = seed_retrieval(facets=1, per_facet=3)
     source_rows = [deepcopy(candidate["evidence"]["item"]) for candidate in
                    item_review.jobs[source["run_id"]].benchmark_retrieval["rankings"][0]["candidates"]]
@@ -294,7 +312,6 @@ def test_outer_whitespace_adjustments_are_saved_without_changing_gate_or_source(
             value["ratings"]["input_content"].update(
                 score=2, evidence=[f"\t {row['content']} \n"])
         else:
-            # A changed space inside the quotation remains unsupported evidence.
             value["ratings"]["input_form"]["evidence"] = [
                 f"\n{row['content'].replace('adding two', 'adding  two')}\n"]
         return value
@@ -302,26 +319,18 @@ def test_outer_whitespace_adjustments_are_saved_without_changing_gate_or_source(
     calls = mock_screener(monkeypatch, padded_evidence)
     access = start_screening(client, source)
     original = finished(client, access).json()
-    accepted, failed_gate, invalid = original["screening"]["items"]
+    accepted, failed_gate, internal_spacing = original["screening"]["items"]
     assert len(calls) == 3
     assert accepted["status"] == "complete" and accepted["gate"]["status"] == "pass"
-    assert accepted["assessment"]["task"]["evidence"] == [source_rows[0]["content"]]
-    assert accepted["evidence_adjustments"] == [{
-        "field": "task.evidence[0]",
-        "returned_quote": f"\n{source_rows[0]['content']}\n",
-        "source_quote": source_rows[0]["content"],
-    }]
+    assert accepted["assessment"]["task"]["evidence"] == [f"\n{source_rows[0]['content']}\n"]
     assert failed_gate["status"] == "complete" and failed_gate["gate"]["status"] == "fail"
     assert failed_gate["assessment"]["ratings"]["input_content"]["score"] == 2
-    assert failed_gate["assessment"]["ratings"]["input_content"]["evidence"] == [source_rows[1]["content"]]
-    assert failed_gate["evidence_adjustments"] == [{
-        "field": "ratings.input_content.evidence[0]",
-        "returned_quote": f"\t {source_rows[1]['content']} \n",
-        "source_quote": source_rows[1]["content"],
-    }]
-    assert invalid["status"] == "error" and "gate" not in invalid
-    assert "ratings.input_form.evidence[0]" in invalid["error"]
-    assert "adding  two" in invalid["error"]
+    assert failed_gate["assessment"]["ratings"]["input_content"]["evidence"] == [
+        f"\t {source_rows[1]['content']} \n"]
+    assert internal_spacing["status"] == "complete" and internal_spacing["gate"]["status"] == "pass"
+    assert internal_spacing["assessment"]["ratings"]["input_form"]["evidence"] == [
+        f"\n{source_rows[2]['content'].replace('adding two', 'adding  two')}\n"]
+    assert all("evidence_adjustments" not in record for record in original["screening"]["items"])
     assert [record["evidence"]["item"] for record in original["screening"]["items"]] == source_rows
     assert export(client, access).json()["screening"] == original["screening"]
 

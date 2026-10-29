@@ -6,7 +6,7 @@ import { ItemDetails } from './ItemDetails'
 function EvidenceNotes({ evidence, justification, information_gaps }: { evidence: string[]; justification: string; information_gaps: string[] }) {
   return <>
     <p className="review-preserve">{justification}</p>
-    {evidence.length > 0 && <div><h5>Supporting item evidence</h5>{evidence.map((quote, index) => <blockquote className="review-preserve" key={index}>{quote}</blockquote>)}</div>}
+    {evidence.length > 0 && <div><h5>Model-provided item evidence</h5><ul>{evidence.map((passage, index) => <li className="review-preserve" key={index}>{passage}</li>)}</ul></div>}
     {information_gaps.length > 0 && <div><h5>Information gaps</h5><ul>{information_gaps.map((gap, index) => <li className="review-preserve" key={index}>{gap}</li>)}</ul></div>}
   </>
 }
@@ -59,12 +59,12 @@ export function ScreeningItem({ item, index, review, taskName, label = 'Screened
         <p className="help">Item ID: <code>{item.item_id}</code> · Evidence hash: <code>{item.evidence_hash}</code></p>
         <h4>Original item evidence</h4><pre>{JSON.stringify(item.evidence, null, 2)}</pre>
         {item.evidence_adjustments && item.evidence_adjustments.length > 0 && <>
-          <h4>Evidence quotation formatting</h4>
-          <p>Only leading or trailing whitespace was removed from these returned quotations. Each resulting quotation matches the original item exactly. Internal spacing, punctuation, and wording were preserved.</p>
+          <h4>Saved quotation formatting adjustments</h4>
+          <p>An earlier screening version removed leading or trailing whitespace from these returned quotations and verified the resulting text against the original item. These saved adjustments preserve both versions for review.</p>
           {item.evidence_adjustments.map((adjustment, adjustmentIndex) => <div key={adjustmentIndex}>
             <p><strong>Assessment field:</strong> <code>{adjustment.field}</code></p>
             <p>Returned quotation</p><pre>{JSON.stringify(adjustment.returned_quote)}</pre>
-            <p>Verified source quotation</p><pre>{JSON.stringify(adjustment.source_quote)}</pre>
+            <p>Source quotation verified at the time</p><pre>{JSON.stringify(adjustment.source_quote)}</pre>
           </div>)}
         </>}
         <h4>Full row text used for retrieval</h4><pre>{item.search_text}</pre>

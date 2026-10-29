@@ -167,7 +167,7 @@ def test_selection_requires_finished_private_source_and_rejects_limit_override(c
                        headers={"X-OpenAI-Key": KEY}).status_code == 400
 
 
-@pytest.mark.parametrize("change", ["row", "assessment", "quote", "allocation", "duplicate", "sources"])
+@pytest.mark.parametrize("change", ["row", "assessment", "allocation", "duplicate", "sources"])
 def test_corrupt_source_is_rejected_before_solver(client, monkeypatch, change):
     source = seed_screening(facets=1, per_facet=1)
     job = item_review.jobs[source["run_id"]]
@@ -176,8 +176,6 @@ def test_corrupt_source_is_rejected_before_solver(client, monkeypatch, change):
         item["evidence"]["item"]["content"] = "changed row"
     elif change == "assessment":
         item["assessment"]["task"]["matched_facet_ids"] = ["not-extracted"]
-    elif change == "quote":
-        item["assessment"]["task"]["evidence"] = ["not present in item"]
     elif change == "allocation":
         job.screening["allocation"]["budget"] = 51
     elif change == "duplicate":
@@ -188,6 +186,26 @@ def test_corrupt_source_is_rejected_before_solver(client, monkeypatch, change):
     response = client.post(f"/api/item-review/runs/{source['run_id']}/select",
                            headers={"X-Review-Token": source["run_secret"]})
     assert response.status_code == 409
+
+
+def test_nonliteral_evidence_does_not_block_selection_or_override_ratings(client, monkeypatch):
+    source = seed_screening(facets=1, per_facet=2)
+    job = item_review.jobs[source["run_id"]]
+    for item in job.screening["items"]:
+        item["assessment"]["task"]["evidence"] = ["Explain why two even integers have an even sum."]
+        item["assessment"]["ratings"]["input_content"]["evidence"] = ["\nA mathematical explanation.\n"]
+    job.screening["items"][1]["assessment"]["ratings"]["input_content"]["score"] = 2
+    original = deepcopy(job.screening)
+    forbid_external_calls(monkeypatch)
+    access = start_selection(client, source)
+    result = finished(client, access).json()
+    assert result["status"] == "completed", result["message"]
+    assert result["selection"]["selected_item_ids"] == [original["items"][0]["item_id"]]
+    assert result["selection"]["excluded_counts"]["gate_fail"] == 1
+    assert result["screening"] == original
+    assert export(client, access).json()["screening"] == original
+    item_review.jobs.clear()
+    assert finished(client, access).json() == result
 
 
 def test_capacity_is_inherited_without_requesting_an_api_key(client):

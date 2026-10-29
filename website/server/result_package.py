@@ -107,7 +107,8 @@ def _supported(value) -> str:
 def _finding(value) -> str:
     value = value or {}
     text = f'<p class="preserve">{_html(value.get("justification"), "No explanation recorded.")}</p>'
-    text += "".join(f"<blockquote>{_html(quote)}</blockquote>" for quote in value.get("evidence", []))
+    if value.get("evidence"):
+        text += "<h5>Model-provided item evidence</h5>" + _list(value["evidence"])
     if value.get("information_gaps"):
         text += "<h5>Information gaps</h5>" + _list(value["information_gaps"])
     return text

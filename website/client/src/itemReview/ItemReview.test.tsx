@@ -953,7 +953,45 @@ it('shows actual task matching, six ratings, four-dimension gates, coverage, and
   expect(screen.getByText(/No final benchmark has been selected/)).toBeVisible()
 })
 
-it('preserves exact quotation diagnostics as plain text alongside the full original item without a gate decision', async () => {
+it('shows model-provided evidence as plain text without changing screening decisions or original item data', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'screen-run', run_secret: 'screen-access' }))
+  const passages = [
+    '<img src=x onerror=alert(1)>\nA treatment choice with two  spaces.',
+    'The answer should explain the initial treatment.',
+    'An allergy affects the treatment choice.',
+  ]
+  const reviewedItem: api.ScreenedItem = { ...screeningItem, assessment: { ...assessment,
+    task: { ...assessment.task, evidence: [passages[0]] },
+    ratings: { ...assessment.ratings, input_content: { ...assessment.ratings.input_content, evidence: [passages[1]] } },
+    coverage: [{ ...assessment.coverage[0], evidence: [passages[2]] }],
+  } }
+  const originalEvidence = JSON.stringify(reviewedItem.evidence, null, 2)
+  vi.mocked(api.getReview).mockResolvedValue({ ...screened, screening: { ...screened.screening!, items: [reviewedItem] } })
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  const item = await screen.findByRole('article', { name: 'Screened item 1' })
+  await user.click(within(item).getByText('Item details', { exact: true }))
+  await user.click(within(item).getByText('Inspect task interpretation and six validity ratings'))
+  await user.click(within(item).getByText('Inspect coverage requirements (1)'))
+  expect(within(item).getAllByRole('heading', { name: 'Model-provided item evidence' })).toHaveLength(8)
+  for (const passage of passages) {
+    const displayed = Array.from(item.querySelectorAll('li.review-preserve')).find(element => element.textContent === passage)
+    expect(displayed).toBeVisible()
+  }
+  expect(item.querySelector('img')).toBeNull()
+  expect(item.querySelector('blockquote')).toBeNull()
+  expect(within(item).getByRole('heading', { name: 'Screening gate: Pass' })).toBeVisible()
+  expect(within(item).getByText('Input content').parentElement).toHaveTextContent('Gate dimension4 / 5')
+  expect(within(item).getByRole('heading', { name: 'Coverage requirement 1: Satisfied' })).toBeVisible()
+  expect(within(item).queryByRole('alert')).not.toBeInTheDocument()
+  expect(within(item).queryByRole('heading', { name: 'Saved quotation formatting adjustments' })).not.toBeInTheDocument()
+  await user.click(within(item).getByText('Inspect original row and sources'))
+  const original = Array.from(item.querySelectorAll('pre')).find(element => element.textContent === originalEvidence)
+  expect(original).toBeVisible()
+  expect(JSON.stringify(reviewedItem.evidence, null, 2)).toBe(originalEvidence)
+})
+
+it('preserves historical exact quotation diagnostics as plain text alongside the full original item without a gate decision', async () => {
   sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'screen-run', run_secret: 'screen-access' }))
   const question = 'Read the full clinical scenario before choosing the indicated initial treatment.\nThe patient has a documented allergy that affects the treatment choice. Explain how the allergy changes the management decision, using the evidence provided in the case.'
   const evidence = { item: { content: question, grading_criterion: 'Reference answer' } }
@@ -985,7 +1023,7 @@ it('preserves exact quotation diagnostics as plain text alongside the full origi
   expect(originalEvidence).toBeVisible()
 })
 
-it.each(['complete', 'error'] as const)('shows quotation whitespace adjustments for a %s item without changing its result or original evidence', async status => {
+it.each(['complete', 'error'] as const)('shows saved quotation whitespace adjustments for a historical %s item without changing its result or original evidence', async status => {
   sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'screen-run', run_secret: 'screen-access' }))
   const sourceQuote = '<img src=x onerror=alert(1)>\nPreserve two  spaces and "quoted" words.'
   const returnedQuote = `  ${sourceQuote}\n `
@@ -1014,10 +1052,11 @@ it.each(['complete', 'error'] as const)('shows quotation whitespace adjustments 
     expect(within(item).getByRole('alert')).toHaveTextContent('Another evidence quotation does not occur exactly in the original item.')
     expect(within(item).queryByRole('heading', { name: /Screening gate:/ })).not.toBeInTheDocument()
   }
-  expect(within(item).getByRole('heading', { name: 'Evidence quotation formatting' })).not.toBeVisible()
+  expect(within(item).getByRole('heading', { name: 'Saved quotation formatting adjustments' })).not.toBeVisible()
   await user.click(within(item).getByText('Inspect original row and sources'))
-  expect(within(item).getByRole('heading', { name: 'Evidence quotation formatting' })).toBeVisible()
-  expect(within(item).getByText(/Only leading or trailing whitespace was removed/)).toHaveTextContent('Internal spacing, punctuation, and wording were preserved.')
+  expect(within(item).getByRole('heading', { name: 'Saved quotation formatting adjustments' })).toBeVisible()
+  expect(within(item).getByText(/An earlier screening version removed/)).toHaveTextContent('These saved adjustments preserve both versions for review.')
+  expect(within(item).getByText('Source quotation verified at the time')).toBeVisible()
   expect(within(item).getByText('ratings.input_form.evidence[0]')).toBeVisible()
   const blocks = Array.from(item.querySelectorAll('pre'))
   expect(blocks.find(element => element.textContent === JSON.stringify(returnedQuote))).toBeVisible()

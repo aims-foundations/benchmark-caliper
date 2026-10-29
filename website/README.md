@@ -481,19 +481,20 @@ and complete original item row, without the retrieval query, acquisition task,
 or scores. The model identifies the decision the question actually requests,
 matches it to extracted task facets, gives six independent 1–5 or null ratings,
 and reports true/false/null coverage findings indexed to the explicit coverage
-requirements. The preview shows the task, excerpts, justifications, information
-gaps, ratings, and coverage. Python checks that evidence excerpts occur literally
-in original item string values; semantic support still needs human review.
+requirements. The preview shows the task, model-provided evidence, justifications,
+information gaps, ratings, and coverage. Python checks response structure, score
+ranges, task identifiers, and coverage references. The prompt asks for faithful
+supporting excerpts, but an exact-text mismatch does not invalidate the assessment.
+The model's evidence is preserved unchanged alongside the original item; literal
+accuracy and semantic support need human review.
 Null ratings and the prompt's score anchors are explicit implementation choices.
 Clinical answer correctness is not established by an LLM screening judgment.
 
-An unmatched quotation with extra leading or trailing whitespace is corrected
-only if trimming those edges produces an exact excerpt of an original item
-value. The original row stays unchanged, and `evidence_adjustments` records both
-quotation versions and their assessment field. These records appear under
-**Inspect original row and sources** and in the export. Internal text changes
-still fail validation. This also applies to continued and adaptive screening,
-without changing the saved prompt or making extra model requests.
+This applies to initial and adaptive screening and to selection from saved
+assessments. Steps 2 and 3 retain their literal source checks. Older saved items
+may retain `evidence_adjustments` from the previous whitespace correction; those
+historical details remain available under **Inspect original row and sources**
+and in the export. New assessments do not normalize or rewrite model evidence.
 
 Python computes the gate: a matched task and scores of at least 3 on input
 ontology, input content, input form, and output ontology are required to pass.
@@ -505,13 +506,11 @@ step adds no confidence aggregate, final benchmark selection, or adaptive
 allocation. Collection selection is a separate Step 6 action, followed by the
 optional Step 7 adaptive loop described below.
 
-When an evidence quotation fails the exact-match check, the item's error records
-each mismatched quotation and its assessment field. Quotations use JSON string
-notation so line breaks and escaping remain inspectable in the page and export.
-These are rejected model quotations, not accepted evidence. Raw provider errors
-and unparseable responses are not included. Older saved errors cannot acquire
-these details retrospectively; a continued screening attempt records them if it
-encounters the same validation failure.
+Saved quotation errors from earlier versions remain readable. Those records do
+not contain the rejected assessment's full scores, so **Continue screening** must
+retry affected items; completed assessments are retained. No full pipeline restart
+is needed. Other response failures still produce assessment errors. Raw provider
+errors and unparseable responses are not included.
 
 `POST /api/item-review/runs/{run_id}/screen` accepts `{}` or an omitted body and
 requires the source run's `X-Review-Token` and a fresh `X-OpenAI-Key`. Budget and

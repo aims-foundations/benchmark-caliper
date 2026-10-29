@@ -213,6 +213,18 @@ def test_output_content_and_form_do_not_affect_selection_quality():
     assert result["selected_item_ids"] == [low["item_id"]]
 
 
+def test_selection_does_not_reintroduce_an_exact_evidence_check():
+    item = candidate("nonliteral", coverage=(True,))
+    item["assessment"]["task"]["evidence"] = ["  Choose the requested action.  "]
+    item["assessment"]["ratings"]["input_form"]["evidence"] = ["A self-contained\nquestion."]
+    item["assessment"]["coverage"][0]["evidence"] = ["Model-provided support for the condition."]
+    original = deepcopy(item)
+    result = selection.select_collection(requirements(1, (1,)), [item])
+    assert result["selected_item_ids"] == [item["item_id"]]
+    assert result["fully_satisfied"] is True
+    assert item == original
+
+
 def test_exact_rows_deduplicate_but_different_original_ids_remain_distinct():
     first, second = candidate(1), candidate(2)
     duplicate = deepcopy(first)

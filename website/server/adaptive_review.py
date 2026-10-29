@@ -327,7 +327,7 @@ async def adapt_benchmarks(job, api_key: str) -> None:
                 saved = {**service.candidate_store().compact(candidate),
                          "acquisition": {"queue_id": batch["queue_id"], "facet_id": batch["facet_id"]},
                          "screened_run_id": job.run_id,
-                         **{name: result[name] for name in ("status", "assessment", "gate", "response_id", "response_model", "usage", "error", "evidence_adjustments") if name in result}}
+                         **{name: result[name] for name in ("status", "assessment", "gate", "response_id", "response_model", "usage", "error") if name in result}}
                 records = {item["item_id"]: item for item in job.screening["items"]}
                 records[key] = saved
                 order = acquisitions(job.screening, state)

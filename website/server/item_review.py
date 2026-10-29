@@ -735,7 +735,7 @@ def validate_selection_source(source: ReviewJob) -> Requirements:
             raise ValueError("Screening must retain original item evidence and sources.")
         if item["status"] == "complete":
             assessment = ScreeningAssessment.model_validate(item["assessment"])
-            assessment.validate_context(requirements, item["evidence"]["item"])
+            assessment.validate_context(requirements)
     return requirements
 
 
@@ -1424,7 +1424,7 @@ async def screen_benchmarks(job: ReviewJob, api_key: str) -> None:
                     "acquisition": {key: acquisition[key] for key in ("queue_id", "facet_id")},
                     "screened_run_id": job.run_id,
                     **{key: result[key] for key in (
-                        "status", "assessment", "gate", "response_id", "response_model", "usage", "evidence_adjustments",
+                        "status", "assessment", "gate", "response_id", "response_model", "usage",
                     ) if key in result},
                 }
                 if result["status"] == "error":

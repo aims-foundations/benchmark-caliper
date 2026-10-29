@@ -114,18 +114,26 @@ def response_body(assessment, mode="complete"):
 
 
 @pytest.mark.parametrize("async_mode", [False, True])
-@pytest.mark.parametrize("mode", ["complete", "fabricated_quote", "unknown_facet", "missing_coverage",
-                                 "malformed", "incomplete", "refusal", "mixed_refusal", "outer_padding"])
+@pytest.mark.parametrize("mode", ["complete", "nonliteral_evidence", "unknown_facet", "missing_coverage",
+                                 "missing_evidence", "invalid_score",
+                                 "malformed", "incomplete", "refusal", "mixed_refusal",
+                                 "outer_padding", "internal_spacing"])
 def test_real_sdk_contract_preserves_input_and_sanitizes_errors(answers, requirements, item_row, assessment, async_mode, mode):
-    if mode == "fabricated_quote":
-        assessment["ratings"]["input_form"]["evidence"] = ["private-provider-diagnostic"]
+    if mode == "nonliteral_evidence":
+        assessment["ratings"]["input_form"]["evidence"] = ["Which initial treatment is indicated?"]
     elif mode == "unknown_facet":
         assessment["task"]["matched_facet_ids"] = ["private-provider-diagnostic"]
     elif mode == "missing_coverage":
         assessment["coverage"].pop()
+    elif mode == "missing_evidence":
+        assessment["ratings"]["input_form"]["evidence"] = []
+    elif mode == "invalid_score":
+        assessment["ratings"]["input_form"]["score"] = 6
     elif mode == "outer_padding":
         assessment["ratings"]["input_form"]["evidence"] = [f"\t  {QUESTION}\n  "]
         assessment["ratings"]["input_form"]["score"] = 2
+    elif mode == "internal_spacing":
+        assessment["ratings"]["input_form"]["evidence"] = ["Which\ninitial  management is indicated?"]
     captured = []
     original = deepcopy((answers, requirements.model_dump(), item_row))
 
@@ -157,28 +165,13 @@ def test_real_sdk_contract_preserves_input_and_sanitizes_errors(answers, require
     assert result["response_id"] == "resp_screen" and result["response_model"] == "gpt-6-luna"
     assert result["usage"]["output_tokens_details"]["reasoning_tokens"] == 30
     assert "raw_output" not in result and "overall_score" not in result
-    if mode == "complete":
+    if mode in {"complete", "nonliteral_evidence", "outer_padding", "internal_spacing"}:
         assert result["status"] == "complete" and result["assessment"] == assessment
-        assert result["gate"]["status"] == "pass"
+        assert result["gate"]["status"] == ("fail" if mode == "outer_padding" else "pass")
         assert "evidence_adjustments" not in result
-    elif mode == "outer_padding":
-        assert result["status"] == "complete"
-        assert result["gate"]["status"] == "fail"
-        assert result["assessment"]["ratings"]["input_form"]["evidence"] == [QUESTION]
-        assert result["assessment"]["ratings"]["input_form"]["score"] == 2
-        assert result["evidence_adjustments"] == [{
-            "field": "ratings.input_form.evidence[0]",
-            "returned_quote": f"\t  {QUESTION}\n  ",
-            "source_quote": QUESTION,
-        }]
     else:
         assert result["status"] == "error" and "assessment" not in result and "gate" not in result
-        if mode == "fabricated_quote":
-            # Parsed evidence is saved for diagnosis, not accepted as an assessment.
-            assert 'Assessment field: ratings.input_form.evidence[0]' in result["error"]
-            assert 'Returned quotation: "private-provider-diagnostic"' in result["error"]
-        else:
-            assert "private-provider-diagnostic" not in json.dumps(result)
+        assert "private-provider-diagnostic" not in json.dumps(result)
 
 
 @pytest.mark.parametrize("dimension", GATED_DIMENSIONS)
@@ -212,13 +205,13 @@ def test_nonessential_and_unknown_essential_facets_can_match(requirements, item_
     assessment["task"]["matched_facet_ids"] = [facet]
     assessment["coverage"][0]["satisfied"] = False
     value = ScreeningAssessment.model_validate(assessment)
-    value.validate_context(requirements, item_row)
+    value.validate_context(requirements)
     assert gate_for(value)["status"] == "pass"
 
 
 def test_multiple_requested_decisions_can_match_but_ids_must_be_unique(requirements, item_row, assessment):
     assessment["task"]["matched_facet_ids"] = ["initial_management", "diagnosis"]
-    ScreeningAssessment.model_validate(assessment).validate_context(requirements, item_row)
+    ScreeningAssessment.model_validate(assessment).validate_context(requirements)
     assessment["task"]["matched_facet_ids"].append("diagnosis")
     with pytest.raises(ValidationError, match="must not repeat"):
         ScreeningAssessment.model_validate(assessment)
@@ -254,60 +247,33 @@ def test_coverage_references_and_positive_task_scope_are_checked(requirements, i
     else:
         assessment["task"].update(status=change, matched_facet_ids=[], information_gaps=["The task is uncertain."])
     with pytest.raises(ValueError):
-        ScreeningAssessment.model_validate(assessment).validate_context(requirements, item_row)
+        ScreeningAssessment.model_validate(assessment).validate_context(requirements)
 
 
 def test_coverage_unknown_or_unsatisfied_does_not_gate_and_zero_requirements_need_empty_list(requirements, item_row, assessment):
     assessment["coverage"][0].update(satisfied=None, information_gaps=["The allergy's effect is unclear."])
     assessment["coverage"][1]["satisfied"] = False
     value = ScreeningAssessment.model_validate(assessment)
-    value.validate_context(requirements, item_row)
+    value.validate_context(requirements)
     assert gate_for(value)["status"] == "pass"
     requirements.coverage_requirements.clear()
     assessment["coverage"] = []
-    ScreeningAssessment.model_validate(assessment).validate_context(requirements, item_row)
+    ScreeningAssessment.model_validate(assessment).validate_context(requirements)
 
 
 @pytest.mark.parametrize("location", ["task", *DIMENSIONS, "coverage"])
-def test_all_findings_require_literal_item_evidence(requirements, item_row, assessment, location):
+def test_model_evidence_is_preserved_without_an_exact_text_gate(requirements, assessment, location):
     finding = assessment["task"] if location == "task" else (
         assessment["coverage"][0] if location == "coverage" else assessment["ratings"][location])
-    finding["evidence"] = ["A fabricated source excerpt."]
-    with pytest.raises(ValueError, match="quotation"):
-        ScreeningAssessment.model_validate(assessment).validate_context(requirements, item_row)
+    finding["evidence"] = ["Model-provided supporting passage with changed wording."]
+    original = deepcopy(assessment)
+    value = ScreeningAssessment.model_validate(assessment)
+    value.validate_context(requirements)
+    assert value.model_dump() == original
+    assert gate_for(value)["status"] == "pass"
 
 
-@pytest.mark.parametrize("quote", ["content", "English-speaking students.", QUESTION + CONSTRAINT, "Which  initial management is indicated?"])
-def test_keys_goal_only_quotes_joined_values_and_rewritten_whitespace_are_not_evidence(requirements, item_row, assessment, quote):
-    assessment["ratings"]["input_content"]["evidence"] = [quote]
-    with pytest.raises(ValueError, match="quotation"):
-        ScreeningAssessment.model_validate(assessment).validate_context(requirements, item_row)
-
-
-def test_quote_errors_identify_every_rejected_excerpt_without_changing_it(requirements, item_row, assessment):
-    task_quote = 'Changed task wording with "quotes", a newline\nthen literal \\n.'
-    rating_quote = 'A fabricated source excerpt: <img src=x onerror=alert(1)>.'
-    coverage_quote = 'Unverified coverage \u2014 preserve punctuation.'
-    assessment["task"]["evidence"] = [QUESTION, task_quote]
-    assessment["ratings"]["input_content"]["evidence"] = [rating_quote]
-    assessment["coverage"][1]["evidence"] = [coverage_quote]
-    original = deepcopy((assessment, item_row))
-    with pytest.raises(ValueError) as caught:
-        ScreeningAssessment.model_validate(assessment).validate_context(requirements, item_row)
-    message = str(caught.value)
-    assert message.startswith("A screening evidence quotation does not occur exactly in the original item.")
-    for path, quote in (
-        ("task.evidence[1]", task_quote),
-        ("ratings.input_content.evidence[0]", rating_quote),
-        ("coverage[1].evidence[0]", coverage_quote),
-    ):
-        assert f"Assessment field: {path}\nReturned quotation: {json.dumps(quote, ensure_ascii=False)}" in message
-    assert message.count("Returned quotation:") == 3
-    assert "Assessment field: task.evidence[0]" not in message
-    assert (assessment, item_row) == original
-
-
-def test_reported_indented_quotes_are_corrected_to_verbatim_source(requirements, item_row, assessment):
+def test_reported_indented_quotes_are_preserved_for_review(requirements, item_row, assessment):
     quotes = [
         "     - Immediately initialize the simulated patient using scenario_id = 2.",
         "     - You may assume that the environment will provide sensible, consistent\n     answers.",
@@ -320,60 +286,10 @@ def test_reported_indented_quotes_are_corrected_to_verbatim_source(requirements,
     assessment["ratings"]["input_form"]["evidence"] = quotes[2:]
     original = deepcopy((assessment, item_row))
     value = ScreeningAssessment.model_validate(assessment)
-    with pytest.raises(ValueError, match="quotation"):
-        value.validate_context(requirements, item_row)
-    adjustments = value.trim_evidence_padding(item_row)
-    assert adjustments == [
-        {"field": field, "returned_quote": quote, "source_quote": quote.strip()}
-        for field, quote in zip(("ratings.input_content.evidence[0]", "ratings.input_content.evidence[1]",
-                                 "ratings.input_form.evidence[0]"), quotes)
-    ]
-    value.validate_context(requirements, item_row)
-    assert value.ratings.input_content.evidence == [quote.strip() for quote in quotes[:2]]
-    assert value.ratings.input_form.evidence == [quotes[2].strip()]
+    value.validate_context(requirements)
+    assert value.ratings.input_content.evidence == quotes[:2]
+    assert value.ratings.input_form.evidence == quotes[2:]
     assert (assessment, item_row) == original
-    # Already accepted excerpts never acquire another adjustment on validation.
-    assert value.trim_evidence_padding(item_row) == []
-
-
-@pytest.mark.parametrize("quote", [
-    "  Which  initial management is indicated?  ",
-    "  Which initial management is indicated!  ",
-    "  which initial management is indicated?  ",
-    "  Which initial treatment is indicated?  ",
-    f"  {QUESTION} {CONSTRAINT}  ",
-])
-def test_trimming_does_not_accept_changed_text_or_join_separate_fields(requirements, item_row, assessment, quote):
-    assessment["task"]["evidence"] = [quote]
-    value = ScreeningAssessment.model_validate(assessment)
-    assert value.trim_evidence_padding(item_row) == []
-    assert value.task.evidence == [quote]
-    with pytest.raises(ValueError, match="quotation"):
-        value.validate_context(requirements, item_row)
-
-
-def test_literal_padding_and_raw_json_cells_are_preserved(requirements, item_row, assessment):
-    literal = f"   {QUESTION}\n\t"
-    item_row["literal_padding"] = literal
-    item_row["json_cell"] = json.dumps({"rule": "Original\nscoring text."})
-    assessment["task"]["evidence"] = [literal]
-    assessment["ratings"]["output_ontology"]["evidence"] = ["  Original\nscoring text.  "]
-    value = ScreeningAssessment.model_validate(assessment)
-    assert value.trim_evidence_padding(item_row) == []
-    assert value.task.evidence == [literal]
-    with pytest.raises(ValueError, match="quotation"):
-        value.validate_context(requirements, item_row)
-
-
-def test_nested_and_raw_json_cell_excerpts_preserve_original_values(requirements, item_row, assessment):
-    item_row["new_field"] = [{"note": "Multiline\noriginal evidence."}]
-    item_row["json_cell"] = '{ "rule": "keep original spacing" }'
-    assessment["ratings"]["input_form"]["evidence"] = ["Multiline\noriginal evidence."]
-    assessment["ratings"]["output_form"]["evidence"] = ['"rule": "keep original spacing"']
-    ScreeningAssessment.model_validate(assessment).validate_context(requirements, item_row)
-    assessment["ratings"]["output_form"]["evidence"] = ['{"rule":"keep original spacing"}']
-    with pytest.raises(ValueError, match="quotation"):
-        ScreeningAssessment.model_validate(assessment).validate_context(requirements, item_row)
 
 
 @pytest.mark.parametrize("mutation", ["known_no_evidence", "unknown_no_gap", "blank_evidence", "blank_reason", "bool_score", "too_high", "extra_confidence"])
@@ -399,7 +315,7 @@ def test_missing_media_and_opaque_scorer_can_leave_only_affected_dimensions_unkn
     assessment["ratings"]["output_ontology"]["information_gaps"] = ["Source scoring behavior is absent."]
     assessment["ratings"]["output_form"] = rating(None, QUESTION)
     value = ScreeningAssessment.model_validate(assessment)
-    value.validate_context(requirements, item_row)
+    value.validate_context(requirements)
     assert value.ratings.input_ontology.score == 4
     assert gate_for(value)["status"] == "unresolved"
     assert value.ratings.output_content.score is None

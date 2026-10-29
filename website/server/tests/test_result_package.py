@@ -145,6 +145,26 @@ def test_join_selected_ids_preserves_order_and_all_raw_json_without_mutation(sna
     assert snapshot == before == original
 
 
+def test_screening_support_is_labeled_as_model_provided_and_preserved_as_safe_text(snapshot):
+    item = snapshot["screening"]["items"][1]
+    passage = '<img src=x onerror=alert(1)>\nTwo  spaces and altered wording.'
+    for finding in (item["assessment"]["task"], item["assessment"]["ratings"]["input_content"],
+                    item["assessment"]["coverage"][0]):
+        finding["evidence"] = [passage]
+    before = deepcopy(snapshot)
+
+    html, rows, original = read_package(snapshot)
+
+    assert html.count("<h5>Model-provided item evidence</h5>") == 8
+    assert '<li class="preserve">&lt;img src=x onerror=alert(1)&gt;\nTwo  spaces and altered wording.</li>' in html
+    assert "<img" not in html
+    assert "<blockquote>&lt;img" not in html
+    assert "<blockquote>Help triage patients" in html  # Step 2 still cites literal answer excerpts.
+    assert rows[0]["screening_gate"] == "pass"
+    assert rows[0]["input_content"] == str(item["assessment"]["ratings"]["input_content"]["score"])
+    assert original == before == snapshot
+
+
 def test_unselected_rows_stay_in_json_but_not_selected_report_or_csv(snapshot):
     html, rows, original = read_package(snapshot)
     assert "UNSELECTED SENTINEL" not in html
