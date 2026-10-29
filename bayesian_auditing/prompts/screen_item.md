@@ -104,14 +104,27 @@ do not change the item's dimension ratings or the construction gate.
 
 ## Make the evidence and uncertainty inspectable
 
-For every task finding, dimension rating, and coverage finding, provide a concise
-justification and specific information gaps. Put only exact, contiguous excerpts
-of original string values from `item` in `evidence`; these may come from
-nested fields. Preserve spelling and whitespace. Do not substitute field names,
-paraphrases, quotes from the deployment answers, or text joined across different
-values. If a cell contains JSON as a string, quote its original text rather than
-silently rewriting or reformatting it. Explain comparisons with the deployment
-in the justification.
+For every task finding, dimension rating, and coverage finding, return the exact
+excerpts from `item` that support your score or conclusion in `evidence`. Include
+enough surrounding context for a reviewer to understand the evidence. Excerpts
+do not have to be short: use complete sentences or longer passages whenever they
+are needed to show why the finding is supported. Do not replace those passages
+with isolated keywords or paraphrases just to make them shorter.
+
+Copy each excerpt unchanged from one original string value in `item`, including
+values in nested fields. Preserve its spelling, punctuation, capitalization,
+spacing, and line breaks. When support comes from separate passages, return them
+as separate entries in `evidence`; do not join them into a quotation or insert
+ellipses. Field names and quotations from the deployment answers are not item
+evidence. If a cell contains JSON as a string, quote its original text rather
+than silently rewriting or reformatting it. Before returning the assessment,
+check that every evidence entry occurs exactly as one contiguous passage in an
+original item value.
+
+Use `justification` to explain how those excerpts support the score or conclusion
+when compared with the deployment requirements. Keep your interpretation in this
+explanation, separate from the unchanged quotations, and describe any missing
+support in `information_gaps`.
 
 A resolved task, numerical rating, or true/false coverage finding requires item
 evidence. An unresolved task, null rating, or null coverage finding requires an
