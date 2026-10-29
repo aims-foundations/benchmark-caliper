@@ -141,11 +141,27 @@ class ScreeningAssessment(StrictModel):
                 if requirement.facet_ids and not set(requirement.facet_ids).intersection(self.task.matched_facet_ids):
                     raise ValueError("Positive coverage must apply to a matched task facet.")
         strings = list(_item_strings(item_row))
-        findings = [self.task, *(getattr(self.ratings, name) for name in DIMENSIONS), *self.coverage]
-        for finding in findings:
-            for quote in finding.evidence:
+        findings = [
+            ("task", self.task),
+            *((f"ratings.{name}", getattr(self.ratings, name)) for name in DIMENSIONS),
+            *((f"coverage[{index}]", finding) for index, finding in enumerate(self.coverage)),
+        ]
+        mismatches = []
+        for path, finding in findings:
+            for index, quote in enumerate(finding.evidence):
                 if not any(quote in original for original in strings):
-                    raise ValueError("A screening evidence quotation does not occur exactly in the original item.")
+                    # Preserve only the rejected evidence from the parsed assessment,
+                    # not the raw provider response. JSON notation makes differences
+                    # such as a newline versus a literal backslash-n inspectable.
+                    mismatches.append(
+                        f"Assessment field: {path}.evidence[{index}]\n"
+                        f"Returned quotation: {json.dumps(quote, ensure_ascii=False)}"
+                    )
+        if mismatches:
+            raise ValueError(
+                "A screening evidence quotation does not occur exactly in the original item.\n\n"
+                + "\n\n".join(mismatches)
+            )
 
 
 def gate_for(assessment: ScreeningAssessment) -> dict:

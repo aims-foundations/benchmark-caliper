@@ -26,7 +26,7 @@ export function ScreeningItem({ item, index, review, taskName, label = 'Screened
     <p className="help"><strong>Acquired from:</strong> {taskName(item.acquisition.facet_id)} queue · <strong>Sources:</strong> {[...new Set(item.sources.map(source => source.benchmark))].join(', ')}</p>
     {item.screened_run_id && item.screened_run_id !== review.run_id && <p className="help">Retained assessment from an earlier screening run.</p>}
     <ItemDetails question={item.question_text}>
-      {item.status === 'error' ? <div className="review-error" role="alert"><p>{item.error || 'No valid assessment was returned for this item.'}</p><p>This is an assessment error; the item has no screening gate decision.</p></div>
+      {item.status === 'error' ? <div className="review-error" role="alert"><p className="review-preserve">{item.error || 'No valid assessment was returned for this item.'}</p><p>This is an assessment error; the item has no screening gate decision.</p></div>
         : assessment && <>
           <h4>Task actually tested</h4>
           <p className="review-preserve">{assessment.task.decision ?? 'The tested decision is unresolved.'}</p>
@@ -78,6 +78,7 @@ export function ScreeningResults({ review, run, busy, onCancel, onRestart, onScr
   const complete = items.filter(item => item.status === 'complete').length
   const errors = items.filter(item => item.status === 'error').length
   const remaining = Math.max(0, (allocation?.allocated ?? 0) - complete)
+  const completedTitle = remaining > 0 ? 'Initial screening needs attention' : 'Your initial screening is ready'
   async function download() {
     setDownloading(true)
     setDownloadError('')
@@ -95,7 +96,7 @@ export function ScreeningResults({ review, run, busy, onCancel, onRestart, onScr
 
   return <div className="screening-results">
     <section className="review-panel review-progress" aria-live="polite">
-      <h2>{active ? 'Screening initial candidates' : review.status === 'completed' ? 'Your initial screening is ready' : review.status === 'cancelled' ? 'Screening stopped' : 'Screening interrupted'}</h2>
+      <h2>{active ? 'Screening initial candidates' : review.status === 'completed' ? completedTitle : review.status === 'cancelled' ? 'Screening stopped' : 'Screening interrupted'}</h2>
       <p className="review-intro" role={review.status === 'failed' ? 'alert' : undefined}>{review.message}</p>
       <p>{items.length} of {allocation?.allocated ?? 0} allocated items processed · {complete} valid assessments · {errors} assessment errors</p>
       {active && <progress max={allocation?.allocated || 1} value={items.length} aria-label="Initial items processed" />}

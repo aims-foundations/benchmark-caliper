@@ -159,7 +159,12 @@ def test_real_sdk_contract_preserves_input_and_sanitizes_errors(answers, require
         assert result["gate"]["status"] == "pass"
     else:
         assert result["status"] == "error" and "assessment" not in result and "gate" not in result
-        assert "private-provider-diagnostic" not in json.dumps(result)
+        if mode == "fabricated_quote":
+            # Parsed evidence is saved for diagnosis, not accepted as an assessment.
+            assert 'Assessment field: ratings.input_form.evidence[0]' in result["error"]
+            assert 'Returned quotation: "private-provider-diagnostic"' in result["error"]
+        else:
+            assert "private-provider-diagnostic" not in json.dumps(result)
 
 
 @pytest.mark.parametrize("dimension", GATED_DIMENSIONS)
@@ -263,6 +268,29 @@ def test_keys_goal_only_quotes_joined_values_and_rewritten_whitespace_are_not_ev
     assessment["ratings"]["input_content"]["evidence"] = [quote]
     with pytest.raises(ValueError, match="quotation"):
         ScreeningAssessment.model_validate(assessment).validate_context(requirements, item_row)
+
+
+def test_quote_errors_identify_every_rejected_excerpt_without_changing_it(requirements, item_row, assessment):
+    task_quote = 'Changed task wording with "quotes", a newline\nthen literal \\n.'
+    rating_quote = 'A fabricated source excerpt: <img src=x onerror=alert(1)>.'
+    coverage_quote = 'Unverified coverage \u2014 preserve punctuation.'
+    assessment["task"]["evidence"] = [QUESTION, task_quote]
+    assessment["ratings"]["input_content"]["evidence"] = [rating_quote]
+    assessment["coverage"][1]["evidence"] = [coverage_quote]
+    original = deepcopy((assessment, item_row))
+    with pytest.raises(ValueError) as caught:
+        ScreeningAssessment.model_validate(assessment).validate_context(requirements, item_row)
+    message = str(caught.value)
+    assert message.startswith("A screening evidence quotation does not occur exactly in the original item.")
+    for path, quote in (
+        ("task.evidence[1]", task_quote),
+        ("ratings.input_content.evidence[0]", rating_quote),
+        ("coverage[1].evidence[0]", coverage_quote),
+    ):
+        assert f"Assessment field: {path}\nReturned quotation: {json.dumps(quote, ensure_ascii=False)}" in message
+    assert message.count("Returned quotation:") == 3
+    assert "Assessment field: task.evidence[0]" not in message
+    assert (assessment, item_row) == original
 
 
 def test_nested_and_raw_json_cell_excerpts_preserve_original_values(requirements, item_row, assessment):

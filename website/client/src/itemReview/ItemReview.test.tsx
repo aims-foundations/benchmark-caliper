@@ -900,7 +900,7 @@ it('starts initial screening only after a fresh-key submission and preserves pri
   expect(api.startScreening).not.toHaveBeenCalled()
   expect(screen.getByText(/Starting authorizes up to 48 paid/)).toBeVisible()
   await user.click(screen.getByRole('button', { name: 'Screen initial candidates' }))
-  await screen.findByRole('heading', { name: 'Your initial screening is ready' })
+  await screen.findByRole('heading', { name: 'Initial screening needs attention' })
   expect(api.startScreening).toHaveBeenCalledWith({ run_id: 'retrieve-run', run_secret: 'retrieve-access' }, 'sk-screen-private')
   expect(api.startBenchmarkRetrieval).not.toHaveBeenCalled()
   expect(api.startGrounding).not.toHaveBeenCalled()
@@ -916,7 +916,7 @@ it('shows actual task matching, six ratings, four-dimension gates, coverage, and
   vi.mocked(api.getReview).mockResolvedValue(screened)
   const user = userEvent.setup()
   render(<ItemReview />)
-  await screen.findByRole('heading', { name: 'Your initial screening is ready' })
+  await screen.findByRole('heading', { name: 'Initial screening needs attention' })
   expect(screen.getByText('Budget: 48 distinct items · Allocated: 4 · Shortfall: 44')).toBeVisible()
   expect(screen.getByText('Passed gate').parentElement).toHaveTextContent('1')
   expect(screen.getByText('Failed gate').parentElement).toHaveTextContent('1')
@@ -953,6 +953,38 @@ it('shows actual task matching, six ratings, four-dimension gates, coverage, and
   expect(screen.getByText(/No final benchmark has been selected/)).toBeVisible()
 })
 
+it('preserves exact quotation diagnostics as plain text alongside the full original item without a gate decision', async () => {
+  sessionStorage.setItem('item_review_run_v1', JSON.stringify({ run_id: 'screen-run', run_secret: 'screen-access' }))
+  const question = 'Read the full clinical scenario before choosing the indicated initial treatment.\nThe patient has a documented allergy that affects the treatment choice. Explain how the allergy changes the management decision, using the evidence provided in the case.'
+  const evidence = { item: { content: question, grading_criterion: 'Reference answer' } }
+  const firstQuote = '<img src=x onerror=alert(1)>'
+  const secondQuote = 'Preserve "quoted" words, two  spaces,\nand the line break.'
+  const diagnostic = 'A screening evidence quotation does not occur exactly in the original item.\n\n'
+    + `Assessment field: task.evidence[0]\nReturned quotation: ${JSON.stringify(firstQuote)}\n\n`
+    + `Assessment field: ratings.input_form.evidence[0]\nReturned quotation: ${JSON.stringify(secondQuote)}`
+  vi.mocked(api.getReview).mockResolvedValue({ ...screened, screening: { ...screened.screening!, items: [
+    ...screened.screening!.items.slice(0, 3),
+    { ...screened.screening!.items[3], question_text: question, evidence, search_text: JSON.stringify(evidence.item), error: diagnostic },
+  ] } })
+  const user = userEvent.setup()
+  render(<ItemReview />)
+  await screen.findByRole('heading', { name: 'Initial screening needs attention' })
+  const item = screen.getByRole('article', { name: 'Screened item 4' })
+  await user.click(within(item).getByText('Item details', { exact: true }))
+  const alert = within(item).getByRole('alert')
+  const displayedDiagnostic = alert.querySelector('p')!
+  expect(displayedDiagnostic.textContent).toBe(diagnostic)
+  expect(displayedDiagnostic).toHaveClass('review-preserve')
+  expect(displayedDiagnostic).toBeVisible()
+  expect(item.querySelector('img')).toBeNull()
+  expect(item.querySelector('.review-item-body > p')!.textContent).toBe(question)
+  expect(within(alert).getByText('This is an assessment error; the item has no screening gate decision.')).toBeVisible()
+  expect(within(item).queryByRole('heading', { name: /Screening gate:/ })).not.toBeInTheDocument()
+  await user.click(within(item).getByText('Inspect original row and sources'))
+  const originalEvidence = Array.from(item.querySelectorAll('pre')).find(element => element.textContent === JSON.stringify(evidence, null, 2))
+  expect(originalEvidence).toBeVisible()
+})
+
 it('retains completed screening assessments when stopped and continues only pending or errored items', async () => {
   const access = { run_id: 'screen-run', run_secret: 'screen-access' }
   sessionStorage.setItem('item_review_run_v1', JSON.stringify(access))
@@ -981,6 +1013,7 @@ it('does not offer another paid screening once every allocated item has a valid 
   const user = userEvent.setup()
   render(<ItemReview />)
   await screen.findByRole('heading', { name: 'Your initial screening is ready' })
+  expect(screen.queryByRole('heading', { name: 'Initial screening needs attention' })).not.toBeInTheDocument()
   await user.click(within(screen.getByRole('article', { name: 'Screened item 2' })).getByText('Item details', { exact: true }))
   await user.click(within(screen.getByRole('article', { name: 'Screened item 3' })).getByText('Item details', { exact: true }))
   expect(screen.getByRole('heading', { name: 'Screening gate: Fail' })).toBeVisible()
@@ -1047,7 +1080,7 @@ it('keeps retrieval visible on screening start errors and prevents competing sta
   expect(screen.getAllByRole('button', { name: 'Starting…' }).every(button => (button as HTMLButtonElement).disabled)).toBe(true)
   vi.mocked(api.getReview).mockResolvedValue(screened)
   accept({ run_id: 'screen-run', run_secret: 'screen-access' })
-  await screen.findByRole('heading', { name: 'Your initial screening is ready' })
+  await screen.findByRole('heading', { name: 'Initial screening needs attention' })
   expect(sessionStorage.getItem('item_review_run_v1')).not.toContain('sk-private')
 })
 
@@ -1074,7 +1107,7 @@ it('selects at most 30 items across the whole collection without a key or anothe
   vi.mocked(api.getReview).mockResolvedValueOnce(screened).mockResolvedValue(selected)
   const user = userEvent.setup()
   render(<ItemReview />)
-  await screen.findByRole('heading', { name: 'Your initial screening is ready' })
+  await screen.findByRole('heading', { name: 'Initial screening needs attention' })
   expect(screen.getByText(/one shared limit of 30 items across all tasks/)).toBeVisible()
   expect(screen.getByText(/Selection runs locally, makes no model calls, and needs no API key/)).toBeVisible()
   expect(screen.getByLabelText('OpenAI API key for initial screening')).toHaveValue('')

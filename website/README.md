@@ -497,6 +497,14 @@ step adds no confidence aggregate, final benchmark selection, or adaptive
 allocation. Collection selection is a separate Step 6 action, followed by the
 optional Step 7 adaptive loop described below.
 
+When an evidence quotation fails the exact-match check, the item's error records
+each mismatched quotation and its assessment field. Quotations use JSON string
+notation so line breaks and escaping remain inspectable in the page and export.
+These are rejected model quotations, not accepted evidence. Raw provider errors
+and unparseable responses are not included. Older saved errors cannot acquire
+these details retrospectively; a continued screening attempt records them if it
+encounters the same validation failure.
+
 `POST /api/item-review/runs/{run_id}/screen` accepts `{}` or an omitted body and
 requires the source run's `X-Review-Token` and a fresh `X-OpenAI-Key`. Budget and
 other request overrides are rejected. The source must be completed retrieval

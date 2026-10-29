@@ -224,6 +224,64 @@ def test_continuation_retries_only_errors_retains_results_and_usage_origins(clie
     assert response.status_code == 409
 
 
+def test_quotation_diagnostics_survive_export_restart_and_retry(client, monkeypatch):
+    source = seed_retrieval(facets=1, per_facet=2)
+    invalid_quotes = {
+        "task.evidence[0]": "Explain why two even numbers always add up to an even number.",
+        "ratings.input_form.evidence[0]": 'Use the patient’s "history"\nand diagnostic tests.',
+    }
+
+    def invalid_one(value, row):
+        if row["id"] == "0-1":
+            value["task"]["evidence"] = [invalid_quotes["task.evidence[0]"]]
+            value["ratings"]["input_form"]["evidence"] = [invalid_quotes["ratings.input_form.evidence[0]"]]
+        else:
+            value["ratings"]["input_content"]["score"] = 2
+        return value
+
+    first_calls = mock_screener(monkeypatch, invalid_one)
+    first = start_screening(client, source)
+    original = finished(client, first).json()
+    retained, rejected = original["screening"]["items"]
+    assert len(first_calls) == 2
+    assert retained["status"] == "complete" and retained["gate"]["status"] == "fail"
+    assert rejected["status"] == "error"
+    assert "assessment" not in rejected and "gate" not in rejected
+    assert rejected["error"] == (
+        "A screening evidence quotation does not occur exactly in the original item.\n\n"
+        "Assessment field: task.evidence[0]\n"
+        f"Returned quotation: {json.dumps(invalid_quotes['task.evidence[0]'], ensure_ascii=False)}\n\n"
+        "Assessment field: ratings.input_form.evidence[0]\n"
+        f"Returned quotation: {json.dumps(invalid_quotes['ratings.input_form.evidence[0]'], ensure_ascii=False)}"
+    )
+    assert rejected["usage"]["input_tokens"] == 100
+    assert original["usage"]["input_tokens"] == 200
+    assert export(client, first).json()["screening"] == original["screening"]
+
+    # Restore through the real HTTP access path after losing all process memory.
+    item_review.jobs.clear()
+    restored = finished(client, first).json()
+    assert restored == original
+    assert export(client, first).json()["screening"] == original["screening"]
+    assert len(first_calls) == 2
+
+    retry_calls = mock_screener(monkeypatch)
+    resumed = start_screening(client, first)
+    retried = finished(client, resumed).json()
+    assert len(retry_calls) == 1
+    assert json.loads(retry_calls[0]["input"])["item"]["id"] == "0-1"
+    assert retried["screening"]["allocation"] == original["screening"]["allocation"]
+    assert retried["screening"]["model"] == original["screening"]["model"]
+    assert retry_calls[0]["instructions"] == original["screening"]["model"]["prompt"]
+    assert retried["screening"]["items"][0] == retained
+    accepted = retried["screening"]["items"][1]
+    assert accepted["status"] == "complete" and accepted["gate"]["status"] == "pass"
+    assert accepted["screened_run_id"] == resumed["run_id"]
+    assert "error" not in accepted
+    assert retried["usage"]["input_tokens"] == 100
+    assert finished(client, first).json() == original
+
+
 def test_continuation_reuses_original_prompt_settings_after_file_edit(client, monkeypatch, tmp_path):
     from bayesian_auditing import screening
 
