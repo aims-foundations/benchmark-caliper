@@ -489,7 +489,7 @@ it('extracts from the six answers without dataset access and displays evidence a
   expect(screen.queryByRole('heading', { name: 'Ranked shortlist items' })).not.toBeInTheDocument()
   expect(screen.queryByText(/no paid model calls yet/)).not.toBeInTheDocument()
   expect(screen.getByRole('heading', { name: 'Deployment summary' })).toBeVisible()
-  expect(screen.getByText('Unknown — not specified in the answers.')).toBeVisible()
+  expect(screen.getByText('Unknown. Not specified in the answers.')).toBeVisible()
   const task = screen.getByRole('article', { name: 'Task 1' })
   expect(within(task).getByText('Essential')).toBeVisible()
   const sourceLink = within(task).getByRole('link', { name: 'Answer 5: What counts as a successful response?' })
@@ -607,7 +607,7 @@ it('grounds retained requirements without dataset access and hands off only a fr
   await user.click(within(mapping).getByText('Records considered but not adopted (1)'))
   expect(within(mapping).getByText('Staff supervision is outside the stated task.')).toBeVisible()
   await user.click(within(mapping).getByText('Inspect retrieval candidates (2)'))
-  expect(within(mapping).getByText(/Keyword rank: 2/)).toHaveTextContent('Meaning search rank: 1 · Keyword rank: 2 · Combined ranking score: 0.0300')
+  expect(within(mapping).getByText(/Keyword rank: 2/)).toHaveTextContent('Meaning search rank: 1. Keyword rank: 2. Combined ranking score: 0.0300.')
   expect(document.getElementById('original-answer-task')!.querySelector('p')!.textContent).toBe(medicalDeployment.task)
 })
 

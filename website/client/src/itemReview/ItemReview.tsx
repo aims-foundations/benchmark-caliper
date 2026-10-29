@@ -235,6 +235,7 @@ export function ItemReview() {
       <div className="review-hero-heading"><div><p className="eyebrow">Goal-conditioned auditing <span className="review-badge">Demo</span></p>
         <h1>Find tests that fit.</h1></div>
         <p>Describe your deployment, inspect extracted requirements, or retrieve and assess candidate test items.</p></div>
+      <a className="construction-gallery-entry" href={appPath('/items?gallery=1')}>Explore completed benchmark examples</a>
     </header></div>
     <main className="rd-container item-review-main">
       <div className="review-layout">

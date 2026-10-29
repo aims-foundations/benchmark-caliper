@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { startReview, startGrounding, startBenchmarkRetrieval, startScreening, startSelection, startAdaptive, getCandidates, getReview, getReviewPackage, ReviewRequestError } from './api'
+import { startReview, startGrounding, startBenchmarkRetrieval, startScreening, startSelection, startAdaptive, getCandidates, getReview, getReviewPackage, getPublishedReviewPackage, ReviewRequestError } from './api'
 
 afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers() })
 
@@ -367,4 +367,26 @@ it.each(['body', 'backoff'] as const)('aborts an active %s without retrying or c
   await vi.advanceTimersByTimeAsync(45000)
   expect(fetchMock).toHaveBeenCalledTimes(2)
   expect(vi.getTimerCount()).toBe(0)
+})
+
+it('downloads public package pieces with bounded retry and no private credentials or preparation calls', async () => {
+  vi.useFakeTimers()
+  const fetchMock = vi.fn().mockRejectedValueOnce(new TypeError('Connection lost')).mockResolvedValueOnce(packagePiece('zip-content'))
+  vi.stubGlobal('fetch', fetchMock)
+  const result = getPublishedReviewPackage('clinical-exam-study', packageMetadata)
+  await vi.runAllTimersAsync()
+  expect(await (await result).blob.text()).toBe('zip-content')
+  expect(fetchMock).toHaveBeenCalledTimes(2)
+  for (const [url, options] of fetchMock.mock.calls) {
+    expect(url).toBe('/api/item-review/examples/clinical-exam-study/package/chunk?package_id=zip-version-1&offset=0')
+    expect(options.headers).toEqual({})
+    expect(options.method).toBeUndefined()
+  }
+})
+
+it('asks visitors to reload when a published package changes instead of retrying stale metadata', async () => {
+  const fetchMock = vi.fn().mockResolvedValue(new Response('', { status: 412 }))
+  vi.stubGlobal('fetch', fetchMock)
+  await expect(getPublishedReviewPackage('clinical-exam-study', packageMetadata)).rejects.toThrow('The published package has changed. Reload this page before downloading again.')
+  expect(fetchMock).toHaveBeenCalledTimes(1)
 })

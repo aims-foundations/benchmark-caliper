@@ -1,0 +1,76 @@
+﻿item_id,question_preview,matched_tasks,sources,quality_score,screening_gate,input_ontology,input_content,input_form,output_ontology,output_content,output_form,reviewer_notes
+535fd2a8b37b39fd491e55bff64306991c3c8fa83e360c2cb431a0d946da0729,"You are an expert in medical exams. To answer the following medical question, think step by step and then generate ""The answer is (X)"" (where X is the option).
+
+Q: A 7-year-old boy with sickle cell disease is brought to the office by his father because of fever and bone pain. The father says that his son was discharged 5 days ago after a 3-day hospitalization for the same symptoms. The patient had been admitted with a diagnosis of vaso-occlusive crisis with bone infarct, with resolution of symptoms after treatment with intravenous fluids, narcotics, and antibiotic therapy for 3 days. Blood cultures were negative. The patient's back pain and fever recurred 2 days ago and seem more severe than prior to the hospitalization. His medical chart shows that he had one other uncomplicated hospital admission at age 4 years for a vaso-occlusive crisis with lower extremity bone pain. Vital signs today are temperature 39.2°C (102.5°F), pulse 110/min, respirations 24/min, and blood pressure 115/60 m…",Choose the indicated initial management based on the supplied clinical information.,benchmark: chatgpt_drift · branch: main · commit: 54074453da7b9911be0f48e4c560be547bc84d21 · item_id: ada90b128544b1d2 · items_path: chatgpt_drift/formatted_tables/items.parquet · repo: aims-foundations/measurement-db · row: 11456,4.0,pass,5,3,5,3,,5,
+643300d21df05a16834cf2c2507bb405ed3e8cd3e1b641fe0151ccf5aa8f7c8c,"You are an expert in medical exams. To answer the following medical question, think step by step and then generate ""The answer is (X)"" (where X is the option).
+
+Q: A 7-year-old boy with sickle cell disease is brought to the office by his father because of fever and bone pain. The father says that his son was discharged 5 days ago after a 3-day hospitalization for the same symptoms. The patient had been admitted with a diagnosis of vaso-occlusive crisis with bone infarct, with resolution of symptoms after treatment with intravenous fluids, narcotics, and antibiotic therapy for 3 days. Blood cultures were negative. The patient's back pain and fever recurred 2 days ago and seem more severe than prior to the hospitalization. His medical chart shows that he had one other uncomplicated hospital admission at age 4 years for a vaso-occlusive crisis with lower extremity bone pain. Vital signs today are temperature 39.2°C (102.5°F), pulse 110/min, respirations 24/min, and blood pressure 115/60 m…",Choose the indicated initial management based on the supplied clinical information.,benchmark: chatgpt_drift · branch: main · commit: 54074453da7b9911be0f48e4c560be547bc84d21 · item_id: 30d665191c052155 · items_path: chatgpt_drift/formatted_tables/items.parquet · repo: aims-foundations/measurement-db · row: 11226,4.0,pass,5,3,5,3,,4,
+757de556db22ff7be0f11ad4e42d39e0e0750b19667d8ec292cc3b5eb1ed84b0,"###Instruction: You are a skilled doctor with years of experience in the medical field in Africa, working in a hospital setting. Your expertise spans a range of conditions from common ailments to complex diseases. As part of your commitment to ongoing medical education, you are evaluating a set of multiple choice questions (MCQs) designed for medical students. 
+Carefully select the most appropriate answer based on your clinical knowledge. 
+You should directly answer the question by choosing the correct option and then provide a rationale for your answer. 
+
+Here are some examples and then answer the last question:
+###Question: 78-year-old woman is admitted to the hospital because of a 1-week history of jaundice. CT scan of the abdomen shows a mass suggestive of pancreatic cancer. Three hours later, the on-call physician enters the patient's room to discuss the prognosis and obtain consent for a biopsy scheduled for the next morning. On entering the room, the physician greets the patient…",Identify the likely diagnosis based on the supplied clinical information.,benchmark: afrimedqa · branch: main · commit: 54074453da7b9911be0f48e4c560be547bc84d21 · item_id: 406abf09d4690217 · items_path: afrimedqa/formatted_tables/items.parquet · repo: aims-foundations/measurement-db · row: 32221,3.75,pass,4,3,5,3,,3,
+75c9f6b3205d23734f26edfd97ea4cd49228b656c4a2a6d0a240c806c7d75e97,"###Instruction: You are a skilled doctor with years of experience in the medical field in Africa, working in a hospital setting. Your expertise spans a range of conditions from common ailments to complex diseases. As part of your commitment to ongoing medical education, you are evaluating a set of multiple choice questions (MCQs) designed for medical students. 
+Carefully select the most appropriate answer based on your clinical knowledge. 
+You should directly answer the question by choosing the correct option and then provide a rationale for your answer. 
+
+Here are some examples and then answer the last question:
+###Question: The study of paediatrics began under the influence of the prussan-born physician known as father paediatrics my
+A.  Hippocrates
+B.  Abraham Jacob
+C.  Olukoye Ransom kuti
+D.  Sigmund freud
+E.  August comte
+
+###Answer: B 
+###Rationale: The study of pediatrics began in the late 1800s under Abraham Jacobi, who pioneered research on childhood diseases. Efforts like est…",Identify the likely diagnosis based on the supplied clinical information.,benchmark: afrimedqa · branch: main · commit: 54074453da7b9911be0f48e4c560be547bc84d21 · item_id: 4fcf4e682f1a01a4 · items_path: afrimedqa/formatted_tables/items.parquet · repo: aims-foundations/measurement-db · row: 30598,3.25,pass,3,3,4,3,3,3,
+7843eb1c5a162e486e97b65fad5c4d039126573293078da16518813880330673,"###Instruction: You are a skilled doctor with years of experience in the medical field in Africa, working in a hospital setting. Your expertise spans a range of conditions from common ailments to complex diseases. As part of your commitment to ongoing medical education, you are evaluating a set of multiple choice questions (MCQs) designed for medical students. 
+Carefully select the most appropriate answer based on your clinical knowledge. 
+You should directly answer the question by choosing the correct option and then provide a rationale for your answer. 
+
+Here are some examples and then answer the last question:
+###Question: A 56-year-old man presents with a lateral tongue cancer, which measures 3 cm with no associated  nodal  or  distant  disease. What stage is the cancer?
+A.  Stage I
+B.  Stage II
+C.  Stage III
+D.  Stage IV
+
+###Answer: B 
+###Rationale: Stage II disease is limited to the primary site. T2 (2–4 cm), N0, M0 disease. Many of these patients will in fact have occult disease…",Choose the indicated initial management based on the supplied clinical information.,benchmark: afrimedqa · branch: main · commit: 54074453da7b9911be0f48e4c560be547bc84d21 · item_id: 7480a64963fedb62 · items_path: afrimedqa/formatted_tables/items.parquet · repo: aims-foundations/measurement-db · row: 32817,3.5,pass,4,3,4,3,,3,
+83f41eb7c1b2e96f748e15c7d303ec98308f265f258c8b359cb46b701fcf3863,"###Instruction: You are a skilled doctor with years of experience in the medical field in Africa, working in a hospital setting. Your expertise spans a range of conditions from common ailments to complex diseases. As part of your commitment to ongoing medical education, you are evaluating a set of multiple choice questions (MCQs) designed for medical students. 
+Carefully select the most appropriate answer based on your clinical knowledge. 
+You should directly answer the question by choosing the correct option and then provide a rationale for your answer. 
+
+Here are some examples and then answer the last question:
+###Question: During a prenatal class, the nurse explains the rationale for breathing techniques during preparation for labor based on the understanding thatbreathing techniques are most important in achieving which of the following?
+A.  Eliminate pain and give the expectant parents something to do
+B.  Reduce the risk of fetal distress by increasing uteroplacental perfusion
+C. …",Choose the appropriate investigation based on the supplied clinical information.,benchmark: afrimedqa · branch: main · commit: 54074453da7b9911be0f48e4c560be547bc84d21 · item_id: cc170ca06a043b02 · items_path: afrimedqa/formatted_tables/items.parquet · repo: aims-foundations/measurement-db · row: 31152,4.0,pass,4,4,5,3,,3,
+9323b1bba8884c0f2d3c806f4d5a73da05bbf8973b7bbc9227345751b9cf2e21,"###Instruction: You are a skilled doctor with years of experience in the medical field in Africa, working in a hospital setting. Your expertise spans a range of conditions from common ailments to complex diseases. As part of your commitment to ongoing medical education, you are evaluating a set of multiple choice questions (MCQs) designed for medical students. 
+Carefully select the most appropriate answer based on your clinical knowledge. 
+You should directly answer the question by choosing the correct option and then provide a rationale for your answer. 
+
+Here are some examples and then answer the last question:
+###Question: A patient presents to hospital with confusion and whilst waiting to be seen she has a seizure. She is found to be hyponatraemic. She is deemed euvolaemic on examination. She recently attended her general practice (GP) surgery complaining of lethargy, weight gain, menorrhagia, dry skin and constipation. Considering the underlying diagnosis which of thefollowing is …",Identify the likely diagnosis based on the supplied clinical information.,benchmark: afrimedqa · branch: main · commit: 54074453da7b9911be0f48e4c560be547bc84d21 · item_id: 7948c9681eac173d · items_path: afrimedqa/formatted_tables/items.parquet · repo: aims-foundations/measurement-db · row: 30699,3.75,pass,4,3,5,3,,3,
+c2600a43c97f2777d16e5d6db7471f5589985102bffa72c07a964f80ff1e67ca,"###Instruction: You are a skilled doctor with years of experience in the medical field in Africa, working in a hospital setting. Your expertise spans a range of conditions from common ailments to complex diseases. As part of your commitment to ongoing medical education, you are evaluating a set of multiple choice questions (MCQs) designed for medical students. 
+Carefully select the most appropriate answer based on your clinical knowledge. 
+You should directly answer the question by choosing the correct option and then provide a rationale for your answer. 
+
+Here are some examples and then answer the last question:
+###Question: What is the importance of asking about the site of pain in a patient with acute abdominal symptoms?
+A.  helps to determine the location of the underlying problem.
+B.  It is not important as all abdominal pain is the same.
+C.  it helps to diagnose appendicitis specifically.
+D.  It is used to rule out other causes of abdominal pain.
+E.  it is not a relevant question…",Identify the likely diagnosis based on the supplied clinical information.,benchmark: afrimedqa · branch: main · commit: 54074453da7b9911be0f48e4c560be547bc84d21 · item_id: 819f5099ff2dd102 · items_path: afrimedqa/formatted_tables/items.parquet · repo: aims-foundations/measurement-db · row: 31700,4.25,pass,5,4,5,3,,3,
+cd0c4489eed984fa809046ee000482f0f84216c44e6e1b843787794d88cd50a6,"{""prompt"": ""The following are multiple choice questions (with answers) about clinical knowledge.\n\nThe energy for all forms of muscle contraction is provided by:\nA. ATP.\nB. ADP.\nC. phosphocreatine.\nD. oxidative phosphorylation.\nAnswer: A\n\nWhat is the difference between a male and a female catheter?\nA. Male and female catheters are different colours.\nB. Male catheters are longer than female catheters.\nC. Male catheters are bigger than female catheters.\nD. Female catheters are longer than male catheters.\nAnswer: B\n\nIn the assessment of the hand function which of the following is true?\nA. Abduction of the thumb is supplied by spinal root T2\nB. Opposition of the thumb by opponens policis is supplied by spinal root T1\nC. Finger adduction is supplied by the median nerve\nD. Finger abduction is mediated by the palmar interossei\nAnswer: B\n\nHow many attempts should you make to cannulate a patient before passing the job on to a senior colleague, according to the medical know…",Choose the indicated initial management based on the supplied clinical information.,benchmark: mmlu · branch: main · commit: 54074453da7b9911be0f48e4c560be547bc84d21 · item_id: e8c31741e57fe0d9 · items_path: mmlu/formatted_tables/items.parquet · repo: aims-foundations/measurement-db · row: 699,3.5,pass,3,3,5,3,,5,
+cfb92ba3299f17182d6451deddc88247b85a182d7d2188aca808e8c44b226a1a,"###Instruction: You are a skilled doctor with years of experience in the medical field in Africa, working in a hospital setting. Your expertise spans a range of conditions from common ailments to complex diseases. As part of your commitment to ongoing medical education, you are evaluating a set of multiple choice questions (MCQs) designed for medical students. 
+Carefully select the most appropriate answer based on your clinical knowledge. 
+You should directly answer the question by choosing the correct option and then provide a rationale for your answer. 
+
+Here are some examples and then answer the last question:
+###Question: What is a unique challenge in the management of renal cell carcinoma (RCC) in Nigeria, and how does it influence treatment decisions?
+A.  High prevalence of hereditary RCC syndromes, necessitating genetic counseling for affected families
+B.  Lack of availability of targeted therapies such as tyrosine kinase inhibitors, limiting treatment options
+C.  Resistance to …",Identify the likely diagnosis based on the supplied clinical information.,benchmark: afrimedqa · branch: main · commit: 54074453da7b9911be0f48e4c560be547bc84d21 · item_id: e72e9ea220961e94 · items_path: afrimedqa/formatted_tables/items.parquet · repo: aims-foundations/measurement-db · row: 32453,4.0,pass,4,4,5,3,4,3,

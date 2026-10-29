@@ -648,6 +648,48 @@ pipeline checkpoints survive server restarts on persistent storage. See
 the [Step 7 implementation notes](../bayesian_auditing/README.md#step-7-adapt-screening-and-freeze-the-collection)
 for the priority formula and conditional-quota extension.
 
+### Published construction examples
+
+The construction gallery is available at `/items?gallery=1`. Its first example,
+**Clinical exam study with management constraints**, has the permanent link
+`/items?example=clinical-exam-study`. Include `/benchmark-caliper` before these
+paths on the public website. The link has no date, while the saved record retains
+its original run identifier and timestamps.
+
+The example presents the frozen collection, its task coverage, the remaining
+coverage requirement, and the results from Step 7 through Step 1. Readers can
+browse all 160 screening decisions and open individual assessments as needed.
+The page identifies the 10 selected items and explains that the automated run
+stopped at the candidate limit with a shortfall of three management cases.
+Human validation is not included in this saved record.
+
+Published examples use separate curated files under
+`website/construction_examples/`. Opening a gallery page does not restore a
+private run, read its access token, or make a model call. The initial page uses
+a compact snapshot. Complete item records load when requested, and the original
+HTML report, selected item CSV, JSON record, and results package remain available
+as downloads. The complete ZIP uses the same bounded download approach as private
+results packages, with automatic retries of interrupted pieces.
+
+Authors import an exported directory or ZIP locally with
+`website.scripts.import_construction_example`. The importer checks the saved
+selection against its screening records, preserves the original artifact bytes,
+and creates the gallery snapshot and item files. The curated entry and its index
+are deployed with the application. Publishing a later run is a separate import;
+viewing the gallery cannot change the published result.
+
+```bash
+.venv/bin/python -m website.scripts.import_construction_example /path/to/export \
+  --id clinical-exam-study \
+  --title "Clinical exam study with management constraints" \
+  --description "Explore how a clinical exam study goal becomes a benchmark collection, with evidence for each selection and a record of the remaining coverage gap."
+```
+
+An existing entry is retained unless the importer is explicitly given
+`--overwrite`. The public API is under `/api/item-review/examples`. It exposes
+the example catalog, compact snapshots, individual screened items, and the
+allowlisted download artifacts. No private run credentials are needed.
+
 ### Saving and sharing construction results
 
 An optional **Run name** entered with the deployment carries through Steps 2–7.

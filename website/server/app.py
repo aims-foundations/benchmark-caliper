@@ -47,6 +47,7 @@ from starlette.responses import FileResponse, Response, StreamingResponse
 
 from . import (
     active_runs,
+    construction_gallery,
     dataset_analysis,
     db,
     email_notify,
@@ -218,6 +219,7 @@ app.add_middleware(
     expose_headers=["Content-Disposition"],
 )
 app.include_router(item_review.router)
+app.include_router(construction_gallery.router)
 app.include_router(item_analysis.router)
 
 

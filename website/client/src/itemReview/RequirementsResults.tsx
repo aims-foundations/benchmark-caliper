@@ -9,7 +9,7 @@ const SUMMARY_FIELDS = [
 
 export function SupportedValue({ value }: { value: SupportedText }) {
   return <div className="requirements-value">
-    <p className="review-preserve">{value.text ?? 'Unknown — not specified in the answers.'}</p>
+    <p className="review-preserve">{value.text ?? 'Unknown. Not specified in the answers.'}</p>
     {value.evidence.length > 0 && <ul className="requirements-evidence" aria-label="Supporting quotations">
       {value.evidence.map((source, index) => {
         const answerIndex = QUESTIONS.findIndex(question => question.id === source.answer_id)

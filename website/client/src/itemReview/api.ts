@@ -251,7 +251,7 @@ export const getReviewExport = async (run: RunAccess) => (await fetchResponse(`/
   headers: { 'X-Review-Token': run.run_secret },
 })).blob()
 export type PackageDownloadProgress = { phase: 'preparing' } | { phase: 'downloading'; receivedBytes: number; totalBytes: number }
-type PreparedPackage = { package_id: string; bytes: number; filename: string; chunk_bytes: number }
+export type PreparedPackage = { package_id: string; bytes: number; filename: string; chunk_bytes: number }
 type PackageStatus = Partial<PreparedPackage> & {
   status: 'not_started' | 'preparing' | 'ready' | 'failed'
   message: string
@@ -322,6 +322,32 @@ async function packagePiece(path: string, prepared: PreparedPackage, offset: num
   }
 }
 
+async function transferPackage(path: string, metadata: Partial<PreparedPackage>, headers: Record<string, string>, signal: AbortSignal, onProgress?: (progress: PackageDownloadProgress) => void): Promise<{ blob: Blob; filename: string }> {
+  const prepared = preparedPackage({ ...metadata, status: 'ready', message: '' })
+  const pieces: Blob[] = []
+  let receivedBytes = 0
+  onProgress?.({ phase: 'downloading', receivedBytes, totalBytes: prepared.bytes })
+  while (receivedBytes < prepared.bytes) {
+    const piece = await packagePiece(path, prepared, receivedBytes, headers, signal)
+    signal.throwIfAborted()
+    pieces.push(piece)
+    receivedBytes += piece.size
+    onProgress?.({ phase: 'downloading', receivedBytes, totalBytes: prepared.bytes })
+  }
+  return { blob: new Blob(pieces, { type: 'application/zip' }), filename: prepared.filename }
+}
+
+export async function getPublishedReviewPackage(exampleId: string, metadata: PreparedPackage, onProgress?: (progress: PackageDownloadProgress) => void, signal?: AbortSignal): Promise<{ blob: Blob; filename: string }> {
+  const activeSignal = signal ?? new AbortController().signal
+  try {
+    return await transferPackage(`/examples/${encodeURIComponent(exampleId)}/package`, metadata, {}, activeSignal, onProgress)
+  } catch (error) {
+    if (activeSignal.aborted) throw activeSignal.reason
+    if (error instanceof ReviewRequestError && error.status === 412) throw new Error('The published package has changed. Reload this page before downloading again.')
+    throw new Error('The package download was interrupted. The published example remains available. Please try downloading again.')
+  }
+}
+
 export const getReviewPackage = async (run: RunAccess, onProgress?: (progress: PackageDownloadProgress) => void, signal?: AbortSignal): Promise<{ blob: Blob; filename: string }> => {
   const activeSignal = signal ?? new AbortController().signal
   const path = `/runs/${encodeURIComponent(run.run_id)}/package`
@@ -338,19 +364,8 @@ export const getReviewPackage = async (run: RunAccess, onProgress?: (progress: P
     if (status.status !== 'ready') {
       throw new ReviewRequestError(status.error_status || 409, status.message || 'Package preparation was interrupted. Please try downloading again; your saved results are unchanged.', true)
     }
-    const prepared = preparedPackage(status)
     phase = 'downloading'
-    const pieces: Blob[] = []
-    let receivedBytes = 0
-    onProgress?.({ phase: 'downloading', receivedBytes, totalBytes: prepared.bytes })
-    while (receivedBytes < prepared.bytes) {
-      const piece = await packagePiece(path, prepared, receivedBytes, options.headers, activeSignal)
-      activeSignal.throwIfAborted()
-      pieces.push(piece)
-      receivedBytes += piece.size
-      onProgress?.({ phase: 'downloading', receivedBytes, totalBytes: prepared.bytes })
-    }
-    return { blob: new Blob(pieces, { type: 'application/zip' }), filename: prepared.filename }
+    return await transferPackage(path, status, options.headers, activeSignal, onProgress)
   } catch (error) {
     if (activeSignal.aborted) throw activeSignal.reason
     if (error instanceof ReviewRequestError && error.hasServerDetail) throw error

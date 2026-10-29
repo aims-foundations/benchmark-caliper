@@ -1,5 +1,6 @@
 import { App } from './App'
 import { ItemReview } from './itemReview/ItemReview'
+import { ConstructionGallery } from './itemReview/ConstructionGallery'
 import { ItemAnalysisEntry } from './ItemAnalysisEntry'
 import { SiteHeader } from './components/SiteHeader'
 import { SiteFooter } from './components/SiteFooter'
@@ -7,7 +8,11 @@ import { appPath, stripBasePath } from './paths'
 
 export function EvaluationSite() {
   const path = stripBasePath(window.location.pathname).replace(/\/+$/, '') || '/'
-  if (path === '/items') return <ItemReview />
+  if (path === '/items') {
+    const query = new URLSearchParams(window.location.search)
+    if (query.has('example') || query.get('gallery') === '1') return <ConstructionGallery exampleId={query.get('example') || undefined} />
+    return <ItemReview />
+  }
   if (path === '/item-analysis') return <App legacyItemAnalysis />
   if (path === '/caliper' && new URLSearchParams(window.location.search).get('start') === 'items'
       && !new URLSearchParams(window.location.search).has('assessment') && !new URLSearchParams(window.location.search).has('demo')) return <ItemAnalysisEntry />

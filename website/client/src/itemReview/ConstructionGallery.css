@@ -1,0 +1,49 @@
+.construction-gallery .item-review-hero h1 { max-width: 24ch; font-size: clamp(2rem, 4.2vw, 3.5rem); line-height: 1.1; letter-spacing: -.035em; margin: .6rem 0 1rem; font-weight: 550; }
+.construction-gallery .item-review-hero a { color: #791c16; text-underline-offset: .2em; }
+.construction-lead { max-width: 68ch; font-size: 1.05rem; line-height: 1.65; color: #554d45; }
+.construction-main { max-width: 1050px; padding-top: 2.5rem; padding-bottom: 4rem; }
+.construction-main > section { margin-bottom: 3rem; }
+.construction-main h2 { font-size: clamp(1.4rem, 2.5vw, 1.9rem); line-height: 1.3; }
+.construction-main h3 { font-size: 1.15rem; }
+.construction-main p, .construction-main li { line-height: 1.65; }
+.construction-main a { color: #791c16; text-underline-offset: .2em; }
+.construction-main pre { background: #f4f1ec; padding: 1rem; border-radius: 6px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .76rem; max-height: 35rem; }
+.construction-cards { display: grid; gap: 1.5rem; }
+.construction-facts { display: flex; flex-wrap: wrap; gap: 1rem 2.5rem; margin: 1.5rem 0; }
+.construction-facts dt { font-size: .8rem; color: #665c52; }
+.construction-facts dd { font-size: 1.7rem; margin: .25rem 0 0; font-weight: 550; }
+.construction-table { overflow-x: auto; margin: 1.5rem 0; }
+.construction-table table { border-collapse: collapse; width: 100%; text-align: left; font-size: .88rem; }
+.construction-table caption { font-size: 1.15rem; font-weight: 550; text-align: left; padding-bottom: .8rem; }
+.construction-table th, .construction-table td { padding: .8rem; border-bottom: 1px solid #dedbd6; vertical-align: top; }
+.construction-table thead { background: #f4f1ec; }
+.construction-table tbody th { font-weight: 450; min-width: 12rem; }
+.construction-quota { border-top: 1px solid #dedbd6; padding: .5rem 0; }
+.construction-quota .construction-facts dd { font-size: 1.2rem; }
+.construction-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem 1.5rem; padding-top: 1rem; font-size: .86rem; }
+.construction-item { border: 1px solid #dedbd6; border-radius: 8px; background: #fff; margin: .8rem 0; }
+.construction-main .construction-item > summary { padding: 1rem 1.25rem; cursor: pointer; }
+.construction-item summary > strong { display: block; margin: .65rem 0; line-height: 1.6; font-size: .95rem; font-weight: 500; overflow-wrap: anywhere; }
+.construction-item-label { font-size: .82rem; font-weight: 550; }
+.construction-selected { display: inline-block; margin-left: .8rem; font-size: .7rem; background: #edf3e9; padding: .2rem .5rem; border-radius: 4px; color: #38552d; }
+.construction-item-meta { display: block; color: #665c52; font-size: .76rem; line-height: 1.6; }
+.construction-assessment-body { padding: 0 1.4rem 1.4rem; border-top: 1px solid #e8e4de; }
+.construction-assessment-body h4 { font-size: 1rem; margin-top: 1.5rem; }
+.construction-assessment-body h5 { font-size: .87rem; }
+.construction-filters { display: flex; flex-wrap: wrap; gap: 1rem 2rem; }
+.construction-filters label { display: flex; flex-direction: column; gap: .5rem; font-size: .82rem; font-weight: 550; }
+.construction-filters select { font: inherit; font-weight: 400; padding: .7rem; border: 1px solid #cfc8c0; border-radius: 6px; background: white; }
+.construction-stage { background: #f4f1ec; border: 1px solid #dedbd6; border-radius: 10px; margin: 1rem 0; scroll-margin-top: 6rem; }
+.construction-main .construction-stage > summary { padding: 1.4rem; }
+.construction-stage > summary h2 { display: inline; margin: 0; font-size: 1.3rem; }
+.construction-stage > summary > span { display: block; margin: .65rem 0 0; color: #655b52; line-height: 1.6; font-weight: 400; }
+.construction-stage-body { padding: 0 1.4rem 1.4rem; }
+.construction-gallery :is([id^="facet-"], [id^="original-answer-"], #all-assessments) { scroll-margin-top: 6rem; }
+.construction-gallery-entry { display: inline-block; color: #791c16; margin-top: 1.2rem; font-size: .88rem; }
+@media (max-width: 600px) {
+  .construction-main { padding-top: 1.5rem; }
+  .construction-facts { gap: 1rem 1.5rem; }
+  .construction-stage-body, .construction-assessment-body { padding-left: .85rem; padding-right: .85rem; }
+  .construction-filters { flex-direction: column; }
+  .construction-table th, .construction-table td { padding: .65rem .5rem; }
+}

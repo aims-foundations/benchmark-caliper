@@ -94,9 +94,9 @@ export function GroundingContent({ review }: { review: Pick<GroundingReview, 'gr
           <details><summary>Inspect retrieval candidates ({facet.candidates.length})</summary>
             <h4>Search query</h4><p className="review-preserve">{facet.query}</p>
             <ol className="grounding-candidates">{facet.candidates.map(candidate => <li key={candidate.doc_id}>
-              <strong>{candidate.name}</strong><p className="help"><code>{candidate.doc_id}</code> · {candidate.kind}{candidate.occupation_id && ` · Occupation ${candidate.occupation_id}`}</p>
+              <strong>{candidate.name}</strong><p className="help"><code>{candidate.doc_id}</code>. Record type: {candidate.kind}.{candidate.occupation_id && ` Occupation: ${candidate.occupation_id}.`}</p>
               <p className="review-preserve">{candidate.text}</p>
-              <p className="help">Meaning search rank: {candidate.dense_rank ?? 'Not ranked'} · Keyword rank: {candidate.bm25_rank ?? 'Not ranked'} · Combined ranking score: {candidate.rrf_score.toFixed(4)}</p>
+              <p className="help">Meaning search rank: {candidate.dense_rank ?? 'Not ranked'}. Keyword rank: {candidate.bm25_rank ?? 'Not ranked'}. Combined ranking score: {candidate.rrf_score.toFixed(4)}.</p>
             </li>)}</ol>
           </details>
         </article>
