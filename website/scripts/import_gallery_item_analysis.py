@@ -25,7 +25,7 @@ import tempfile
 from zipfile import BadZipFile, ZipFile, ZIP_DEFLATED
 
 from anthropic_api_package_release.item_analysis.scoring import (
-    DIMENSIONS, validate_dimensions, validate_score_spec,
+    DIMENSIONS, check_result_progress, validate_dimensions, validate_score_spec,
 )
 from website.server import gallery, gallery_item_analysis
 
@@ -71,16 +71,27 @@ def load_json(files: dict[str, bytes], name: str):
         raise ValueError(f"Missing or invalid JSON artifact: {name}") from exc
 
 
-def load_rows(files: dict[str, bytes], name: str) -> list[dict]:
+def load_rows(files: dict[str, bytes], name: str, *, unique_ids: bool = True) -> list[dict]:
     try:
         rows = [json.loads(line) for line in files[name].splitlines() if line.strip()]
         require(all(isinstance(row, dict) for row in rows), f"Invalid records in {name}")
         ids = [row.get("item_id") for row in rows]
         require(all(isinstance(item_id, str) and item_id for item_id in ids), f"Invalid item ID in {name}")
-        require(len(ids) == len(set(ids)), f"Duplicate item ID in {name}")
+        if unique_ids:
+            require(len(ids) == len(set(ids)), f"Duplicate item ID in {name}")
         return rows
     except (KeyError, UnicodeError, json.JSONDecodeError) as exc:
         raise ValueError(f"Missing or invalid JSONL artifact: {name}") from exc
+
+
+def load_results(files: dict[str, bytes]) -> dict[str, dict]:
+    """Resolve valid retry checkpoints without changing the archived history."""
+    results = {}
+    for record in load_rows(files, "audit/results.jsonl", unique_ids=False):
+        item_id = record["item_id"]
+        check_result_progress(record, results.get(item_id))
+        results[item_id] = record
+    return results
 
 
 _CREDENTIAL_PATTERN = re.compile(
@@ -132,9 +143,8 @@ def validate_export(files: dict[str, bytes], assessment_id: str) -> tuple[dict, 
     require(manifest.get("rubric_version") == summary.get("rubric_version") == spec.get("rubric_version"), "Rubric differs across artifacts")
 
     source_items = load_rows(files, "audit/items.jsonl")
-    results = load_rows(files, "audit/results.jsonl")
     source_by_id = {item["item_id"]: item for item in source_items}
-    results_by_id = {result["item_id"]: result for result in results}
+    results_by_id = load_results(files)
     selected = manifest.get("selected_item_ids")
     require(isinstance(selected, list) and selected and all(isinstance(item_id, str) for item_id in selected), "No selected item IDs")
     require(len(selected) == len(set(selected)), "Duplicate selected item ID")

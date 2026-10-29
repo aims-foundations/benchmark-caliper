@@ -134,7 +134,7 @@ it('offers public prefixed downloads and preserves the full-snapshot scope in ex
   render(<SavedItemAnalysis assessmentId="saved entry" onRunOwnAnalysis={vi.fn()} />)
   await screen.findByText('25-item sample complete')
   const exports = screen.getByRole('region', { name: 'Save and share results' })
-  expect(exports).toHaveTextContent('all 1,319 prepared rows')
+  expect(exports).toHaveTextContent('The complete package includes all 1,319 prepared items')
   expect(exports).toHaveTextContent('only the 25 evaluated items')
   await user.click(within(exports).getByText('Individual files'))
   for (const [name, artifact] of [

@@ -91,7 +91,7 @@ function SavedResults({ data, assessmentId, onRunOwnAnalysis }: {
         <a className="ia-primary" href={artifactPath('report')} target="_blank" rel="noreferrer">View exported report <span aria-hidden="true">↗</span></a>
         <a className="ia-secondary" href={artifactPath('package')} download>Download complete results package <span aria-hidden="true">↓</span></a>
       </div>
-      <p className="ia-small">The original exported report includes all {data.summary.total_items.toLocaleString()} prepared rows. This gallery view and the evaluated-item CSV show only the {count.toLocaleString()} evaluated items.</p>
+      <p className="ia-small">This gallery view and the evaluated-item CSV show only the {count.toLocaleString()} evaluated items. The complete package includes all {data.summary.total_items.toLocaleString()} prepared items.</p>
       <details className="ia-individual-files"><summary>Individual files</summary><div>
         <a href={artifactPath('items')} download>Evaluated item scores CSV <span aria-hidden="true">↓</span></a>
         <a href={artifactPath('summary')} download>Summary JSON <span aria-hidden="true">↓</span></a>

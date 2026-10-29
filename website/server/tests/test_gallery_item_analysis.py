@@ -58,6 +58,12 @@ def export(tmp_path, monkeypatch):
               "information_gaps": [] if index == 0 else ["Reference interpretation is unavailable."]}
         for key in scoring.DIMENSIONS
     }} for index in range(2)]
+    for result in results:
+        result.update({
+            "schema_version": scoring.RESULT_SCHEMA_VERSION, "analysis_type": "six_scores",
+            "attempts": [{"attempt": 1, "kind": "primary",
+                          "response": json.dumps({"dimensions": result["dimensions"]})}],
+        })
     items_jsonl = b"\n".join(encode(item) for item in source_items) + b"\n"
     dataset = {"benchmark": "gsm8k", "item_count": 3, "assessment": {"kind": "gallery", "id": "gsm8k"},
                "benchmark_identity_confirmed": True, "source": {"revision": "frozen-revision"},
@@ -181,6 +187,8 @@ def test_import_refuses_corrupt_or_mismatched_export_before_writing(export, chan
         if change == "incomplete":
             rows = [json.loads(line) for line in files[artifact].splitlines()]
             rows[0]["status"] = "error"
+            rows[0]["dimensions"] = {}
+            rows[0]["error"] = "Scoring request failed."
             files[artifact] = b"\n".join(encode(row) for row in rows)
         elif change == "csv":
             files[artifact] = files[artifact].replace(b"0,complete,4", b"0,complete,3")
@@ -198,6 +206,70 @@ def test_import_refuses_corrupt_or_mismatched_export_before_writing(export, chan
             files[artifact] = encode(value)
         refresh_manifest(files)
     source = write_export(files, tmp_path / "bad-export")
+    with pytest.raises(ValueError, match=message):
+        import_snapshot(source, "gsm8k")
+    assert not gallery_item_analysis.SNAPSHOT_ROOT.exists()
+
+
+def retry_results(files):
+    rows = [json.loads(line) for line in files["audit/results.jsonl"].splitlines()]
+    failed = deepcopy(rows[0])
+    failed.update({"status": "error", "dimensions": {}, "error": "Provider temporarily unavailable.",
+                   "attempts": [{"attempt": 1, "kind": "api", "error": "Provider temporarily unavailable."}]})
+    rows[0]["attempts"][0]["attempt"] = 2
+    rows[0]["attempts"] = deepcopy(failed["attempts"]) + rows[0]["attempts"]
+    return [failed, *rows]
+
+
+def test_publish_successful_retry_preserves_complete_audit_history(export):
+    files, tmp_path = export
+    rows = retry_results(files)
+    files["audit/results.jsonl"] = b"\n".join(encode(row) for row in rows) + b"\n"
+    refresh_manifest(files)
+    source = write_export(files, tmp_path / "retried-export")
+
+    metadata = import_snapshot(source, "gsm8k")
+
+    assert metadata["item_count"] == 2
+    publication = gallery_item_analysis.SNAPSHOT_ROOT / "gsm8k"
+    snapshot = json.loads((publication / "snapshot.json").read_text())
+    assert [item["item_id"] for item in snapshot["items"]] == ["0", "1"]
+    assert snapshot["items"][0]["dimensions"] == rows[1]["dimensions"]
+    with ZipFile(publication / "complete-results.zip") as archive:
+        assert {name: archive.read(name) for name in archive.namelist()} == files
+
+
+@pytest.mark.parametrize("change, message", [
+    ("duplicate_complete", "Duplicate completed"),
+    ("changed_attempt", "cannot change or disappear"),
+    ("missing_attempt", "cannot change or disappear"),
+    ("no_new_attempt", "cannot change or disappear"),
+    ("invalid_status", "Invalid six-score item status"),
+    ("incomplete_final", "not complete"),
+    ("duplicate_source", "Duplicate item ID in audit/items"),
+])
+def test_import_rejects_invalid_retry_history_and_duplicate_source_items(export, change, message):
+    files, tmp_path = export
+    rows = retry_results(files)
+    if change == "duplicate_complete":
+        rows.insert(2, deepcopy(rows[1]))
+    elif change == "changed_attempt":
+        rows[1]["attempts"][0]["error"] = "Rewritten attempt history."
+    elif change == "missing_attempt":
+        rows[1]["attempts"] = rows[1]["attempts"][1:]
+        rows[1]["attempts"][0]["attempt"] = 1
+    elif change == "no_new_attempt":
+        rows[1]["attempts"] = deepcopy(rows[0]["attempts"])
+    elif change == "invalid_status":
+        rows[1]["status"] = "pending"
+    elif change == "incomplete_final":
+        rows[1].update({"status": "error", "dimensions": {}, "error": "Retry also failed."})
+    elif change == "duplicate_source":
+        files["audit/items.jsonl"] += files["audit/items.jsonl"].splitlines()[0] + b"\n"
+    files["audit/results.jsonl"] = b"\n".join(encode(row) for row in rows)
+    refresh_manifest(files)
+    source = write_export(files, tmp_path / "bad-retried-export")
+
     with pytest.raises(ValueError, match=message):
         import_snapshot(source, "gsm8k")
     assert not gallery_item_analysis.SNAPSHOT_ROOT.exists()
