@@ -39,7 +39,7 @@ export function SixScoreWorkflow({ run, context, canPrepare, onPrepare, onRestar
   page: number; setPage: (page: number) => void; pageLoading: boolean; filter: ItemFilter; onFilterChange: (filter: ItemFilter) => void;
   filteredItems?: Item[]; filterLoading: boolean; inspectionError: string; retryInspection: () => void;
   onDownload: (artifact: Artifact) => void; onViewReport: () => void; onDownloadPackage: () => void;
-  downloading: Artifact | 'package' | 'view' | null; management: ReactNode; errors: ReactNode;
+  downloading: Artifact | 'package-preparing' | 'package' | 'view' | null; management: ReactNode; errors: ReactNode;
 }) {
   const [viewedStep, setViewedStep] = useState<number | null>(null)
   const [scope, setScope] = useState<RunScope>('all')

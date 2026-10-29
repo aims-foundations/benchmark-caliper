@@ -104,13 +104,59 @@ it('opens the report without an opener or secret URL and preserves the package f
   expect(tab.opener).toBeNull()
   expect(tab.location.replace).toHaveBeenCalledWith('blob:local-report')
   await user.click(screen.getByRole('button', { name: /Download complete results package/ }))
-  expect(api.downloadPackage).toHaveBeenCalledExactlyOnceWith(access)
+  expect(api.downloadPackage).toHaveBeenCalledExactlyOnceWith(access, expect.any(Function), expect.any(AbortSignal))
   expect(filenames).toEqual(['MathDial-pilot-run-123.zip'])
   await user.click(screen.getByText('Individual files'))
   await user.click(screen.getByRole('button', { name: /Item labels CSV/ }))
   expect(api.download).toHaveBeenLastCalledWith(access, 'items')
   expect(filenames).toEqual(['MathDial-pilot-run-123.zip', 'items.csv'])
   expect(api.classify).not.toHaveBeenCalled()
+})
+
+it('shows package preparation and transfer progress and enables a cached retry after a connection error', async () => {
+  localStorage.setItem('item_analysis_run_v1', JSON.stringify(access))
+  let reportProgress: (progress: api.PackageDownloadProgress) => void = () => {}
+  let failTransfer: (reason: Error) => void = () => {}
+  vi.mocked(api.downloadPackage).mockImplementationOnce((_run, progress) => {
+    reportProgress = progress!
+    return new Promise((_resolve, reject) => { failTransfer = reject })
+  })
+  const user = userEvent.setup()
+  render(<ItemAnalysis />)
+  await openExports(user)
+  await user.click(screen.getByRole('button', { name: /Download complete results package/ }))
+  expect(screen.getByRole('button', { name: /Preparing package/ })).toBeDisabled()
+  expect(screen.getByRole('button', { name: /View report/ })).toBeDisabled()
+  act(() => reportProgress('downloading'))
+  expect(screen.getByRole('button', { name: /Downloading package/ })).toBeDisabled()
+  await act(async () => failTransfer(new Error('The connection was interrupted. Please try again.')))
+  expect(screen.getByRole('alert')).toHaveTextContent('The connection was interrupted. Please try again.')
+  expect(screen.getByRole('button', { name: /Download complete results package/ })).toBeEnabled()
+  vi.mocked(api.downloadPackage).mockImplementationOnce(() => new Promise(() => {}))
+  await user.click(screen.getByRole('button', { name: /Download complete results package/ }))
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /Preparing package/ })).toBeDisabled()
+  expect(api.downloadPackage).toHaveBeenCalledTimes(2)
+  expect(api.classify).not.toHaveBeenCalled()
+  expect(localStorage.getItem('item_analysis_run_v1')).toBe(JSON.stringify(access))
+})
+
+it('aborts package requests when leaving the page without discarding saved results', async () => {
+  localStorage.setItem('item_analysis_run_v1', JSON.stringify(access))
+  let requestSignal: AbortSignal | undefined
+  vi.mocked(api.downloadPackage).mockImplementationOnce((_run, _progress, signal) => {
+    requestSignal = signal
+    return new Promise((_resolve, reject) => signal!.addEventListener('abort', () => reject(signal!.reason), { once: true }))
+  })
+  const user = userEvent.setup()
+  const { unmount } = render(<ItemAnalysis />)
+  await openExports(user)
+  await user.click(screen.getByRole('button', { name: /Download complete results package/ }))
+  expect(requestSignal?.aborted).toBe(false)
+  unmount()
+  expect(requestSignal?.aborted).toBe(true)
+  expect(api.discardRun).not.toHaveBeenCalled()
+  expect(localStorage.getItem('item_analysis_run_v1')).toBe(JSON.stringify(access))
 })
 
 it('deletes saved results only after the discard action is confirmed and then clears both access stores', async () => {

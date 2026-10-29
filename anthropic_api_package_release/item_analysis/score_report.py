@@ -115,7 +115,7 @@ def _write_csv(directory: Path, items, results: dict, selected_ids: set[str]) ->
     with _atomic_text(directory / "items.csv") as stream:
         writer = csv.DictWriter(stream, fieldnames=columns)
         writer.writeheader()
-        for item in items:
+        for item in _selected_items(items, selected_ids):
             result = results.get(item["item_id"], {})
             state = result.get("status", "pending")
             row = {key: item.get(key) for key in ("item_id", "content", "reference_answer", "grading_criterion")}
@@ -176,7 +176,7 @@ def _review(directory: Path, items, selected: list[str], *, export_artifacts: bo
 
 def generate_score_report(directory: Path, *, run_metadata: dict | None = None,
                           export_artifacts: bool = True) -> dict:
-    """Save the summary; materialize portable reports only when requested."""
+    """Save population counts; optionally export readable selected-item reports."""
     spec, dataset, items, results = _load(directory)
     evidence = _read_json(directory / "evidence.json", {})
     selected = _selection_ids(directory, items, results)
@@ -286,7 +286,7 @@ def _html_parts(summary: dict, items, results: dict, selected_ids: set[str]):
              f"{experiment['selected_error_items']} errors; {experiment['selected_pending_items']} pending. "
              f"Prepared dataset: {summary['total_items']} items.</p>",
              f"<p>{_escape(summary['interpretation'])}</p>",
-             "<p><a href='items.csv'>All item scores (CSV)</a> · <a href='summary.json'>Summary JSON</a> · "
+             "<p><a href='items.csv'>Selected item scores (CSV)</a> · <a href='summary.json'>Summary JSON</a> · "
              "<a href='classifier_spec.json'>Shared context and fixed rubric</a></p>",
              "<p>1 = fundamental mismatch; 2 = substantial mismatch; 3 = partial alignment; "
              "4 = strong alignment with minor limitations; 5 = strong alignment supported by evidence.</p>",
@@ -323,15 +323,19 @@ def _html_parts(summary: dict, items, results: dict, selected_ids: set[str]):
                      f"<td>{dimension['unknown']}</td><td>{dimension['errors']}</td><td>{dimension['pending']}</td></tr>")
     yield ("</table></section><section id='items'><h2>Items and supporting evidence</h2>"
                  "<p>Open a score to see its explanation, evidence, and information gaps. "
-                 "Unselected prepared items remain visible as pending.</p><table><tr><th>Item</th><th>Status</th>" +
+                 "This report and items.csv include selected items, including any pending items or errors. "
+                 "The complete package retains the full prepared dataset in audit/items.jsonl.</p>")
+    if not selected_ids:
+        yield "<p>No items have been selected for scoring.</p>"
+    yield ("<table><tr><th>Item</th><th>Status</th>" +
                  "".join(f"<th>{_escape(value.replace('_', ' ').title())}</th>" for value in DIMENSIONS) + "</tr>")
-    for item in items:
+    for item in _selected_items(items, selected_ids):
         result = results.get(item["item_id"], {})
         state = result.get("status", "pending")
         yield (f"<tr><td><strong>{_escape(item['item_id'])}</strong><br>"
                      f"{_escape(_text(item.get('content'))[:160])}"
                      f"<details><summary>Complete item evidence</summary>{_render_fields(item)}</details></td>"
-                     f"<td>{_escape(state.title())}{'' if item['item_id'] in selected_ids else ' (not selected)'}"
+                     f"<td>{_escape(state.title())}"
                      f"{('<p>' + _escape(result.get('error', '')) + '</p>') if state == 'error' else ''}</td>")
         for dimension in DIMENSIONS:
             if state != "complete":

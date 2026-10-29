@@ -92,6 +92,18 @@ restart, an interrupted classification keeps completed judgments, and explicit
 deletion removes a saved run. A new paid phase still requires the visitor's key.
 The complete results package contains available audit files and a readable
 offline report. It is an independent archive, not a website-run import mechanism.
+For six-score analyses, the readable HTML and CSV cover the selected items;
+`audit/items.jsonl` retains the full prepared snapshot, including unselected items.
+Package downloads first send an authenticated `POST /api/item-analysis/runs/{id}/package`.
+This returns immediately with preparation status. The browser polls
+`GET /api/item-analysis/runs/{id}/package/status`, then downloads the ready ZIP
+with `GET /api/item-analysis/runs/{id}/package?prepared=true`. No model calls occur.
+Leaving the page stops browser polling but lets server preparation finish.
+Completed packages are reused while saved inputs, results, and run state are
+unchanged, including after a server restart. A new scoring phase invalidates
+the cached package. Preparation and transfer block changes to that run;
+compression is serialized across runs to limit resource use.
+The original package GET remains available for older clients.
 Preserve the benchmark tuple workspace under the data
 directory: saved report continuation needs its deployment and assessment
 artifacts, including when trace logging was not enabled. The existing benchmark

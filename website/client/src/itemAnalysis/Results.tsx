@@ -22,7 +22,7 @@ type ResultsProps = {
   onDownload: (artifact: Artifact) => void
   onViewReport?: () => void
   onDownloadPackage?: () => void
-  downloading: Artifact | 'package' | 'view' | null
+  downloading: Artifact | 'package-preparing' | 'package' | 'view' | null
   pageLoading: boolean
   demo?: boolean
   classifierNames?: Record<string, string>
@@ -258,7 +258,7 @@ export function ResultExports({ run, onDownload, onViewReport, onDownloadPackage
     <section className="ia-exports" aria-label="Save and share results"><h3>Save and share results</h3>
       <div className="ia-primary-exports">
         {onViewReport && <button type="button" className="ia-primary" onClick={onViewReport} disabled={exportsDisabled}>{downloading === 'view' ? 'Opening report…' : 'View report'}<span aria-hidden="true"> ↗</span></button>}
-        {onDownloadPackage && <button type="button" className="ia-secondary" onClick={onDownloadPackage} disabled={exportsDisabled}>{downloading === 'package' ? 'Downloading…' : 'Download complete results package'}<span aria-hidden="true"> ↓</span></button>}
+        {onDownloadPackage && <button type="button" className="ia-secondary" onClick={onDownloadPackage} disabled={exportsDisabled}><span aria-live="polite">{downloading === 'package-preparing' ? 'Preparing package…' : downloading === 'package' ? 'Downloading package…' : 'Download complete results package'}</span><span aria-hidden="true"> ↓</span></button>}
       </div>
       <p className="ia-small">{demo ? 'These files contain the bundled sample and authored example judgments. No live experiment package is created.' : 'View the readable report or keep the complete package for later review and team sharing. It includes the current saved results, including partial progress.'}</p>
       {active && <p className="ia-small">Downloads become available when the current processing phase stops or finishes.</p>}

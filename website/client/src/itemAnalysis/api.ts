@@ -78,8 +78,52 @@ export const discardRun = async (run: RunAccess): Promise<void> => {
   await response(runPath(run), { method: 'DELETE', headers: accessHeader(run) })
 }
 
-export const downloadPackage = async (run: RunAccess): Promise<{ blob: Blob; filename: string }> => {
-  const result = await response(`${runPath(run)}/package`, { headers: accessHeader(run) })
+export type PackageDownloadProgress = 'preparing' | 'downloading'
+type PackageStatus = {
+  status: 'not_started' | 'preparing' | 'ready' | 'failed'
+  message: string
+  error_status?: number
+}
+
+function waitForPackagePoll(signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    signal.throwIfAborted()
+    const timer = setTimeout(() => { signal.removeEventListener('abort', abort); resolve() }, 1000)
+    function abort() { clearTimeout(timer); reject(signal.reason) }
+    signal.addEventListener('abort', abort, { once: true })
+  })
+}
+
+export const downloadPackage = async (run: RunAccess, onProgress?: (progress: PackageDownloadProgress) => void, signal?: AbortSignal): Promise<{ blob: Blob; filename: string }> => {
+  const controller = new AbortController()
+  const abort = () => controller.abort(signal?.reason)
+  signal?.addEventListener('abort', abort, { once: true })
+  if (signal?.aborted) abort()
+  const timeout = setTimeout(() => controller.abort(new Error('Package preparation is taking longer than expected. Please try downloading again; your saved results are unchanged.')), 15 * 60 * 1000)
+  let result: Response
+  try {
+    onProgress?.('preparing')
+    const options = { headers: accessHeader(run), signal: controller.signal }
+    let status = await json<PackageStatus>(`${runPath(run)}/package`, { ...options, method: 'POST' })
+    while (status.status === 'preparing') {
+      await waitForPackagePoll(controller.signal)
+      status = await json<PackageStatus>(`${runPath(run)}/package/status`, options)
+    }
+    if (status.status !== 'ready') {
+      throw new AnalysisApiError(status.message || 'Package preparation was interrupted. Please try downloading again; your saved results are unchanged.', status.error_status || 409)
+    }
+    clearTimeout(timeout)
+    onProgress?.('downloading')
+    result = await response(`${runPath(run)}/package?prepared=true`, options)
+    const blob = await result.blob()
+    return { blob, filename: packageFilename(result) }
+  } finally {
+    clearTimeout(timeout)
+    signal?.removeEventListener('abort', abort)
+  }
+}
+
+function packageFilename(result: Response): string {
   const disposition = result.headers.get('Content-Disposition') || ''
   const encoded = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1]
   const quoted = disposition.match(/filename="([^"]+)"/i)?.[1]
@@ -87,5 +131,5 @@ export const downloadPackage = async (run: RunAccess): Promise<{ blob: Blob; fil
   let filename = quoted || unquoted?.trim() || 'caliper-results.zip'
   if (encoded) { try { filename = decodeURIComponent(encoded) } catch { /* Use the fallback filename. */ } }
   filename = filename.split(/[\\/]/).pop()?.replace(/[\u0000-\u001f\u007f]/g, '') || 'caliper-results.zip'
-  return { blob: await result.blob(), filename }
+  return filename
 }

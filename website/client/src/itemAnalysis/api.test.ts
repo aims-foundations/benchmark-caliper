@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest'
 import { AnalysisApiError, classify, createAssessmentRun, createDirectRun, createRun, discardRun, download, downloadPackage, getAssessment, getDirectSetup, getRun, searchSources } from './api'
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers() })
 
 const directContext = { benchmark: 'MathDial', deployment: 'India tutoring', task_requirements: 'Arithmetic', answer_requirements: 'Hints' }
 
@@ -118,14 +118,100 @@ it('preserves HTTP status so an expired run can stop polling', async () => {
 })
 
 it('downloads the package with its descriptive server filename and only the private access header', async () => {
-  const fetch = vi.fn().mockResolvedValue(new Response('ZIP fixture', { headers: {
-    'Content-Disposition': "attachment; filename*=UTF-8''MathDial%20pilot%20results.zip",
-  } }))
+  const fetch = vi.fn()
+    .mockResolvedValueOnce(new Response(JSON.stringify({ status: 'ready' })))
+    .mockResolvedValueOnce(new Response('ZIP fixture', { headers: {
+      'Content-Disposition': "attachment; filename*=UTF-8''MathDial%20pilot%20results.zip",
+    } }))
   vi.stubGlobal('fetch', fetch)
   const result = await downloadPackage({ run_id: 'test', run_secret: 'private-secret' })
   expect(result.filename).toBe('MathDial pilot results.zip')
   expect(await result.blob.text()).toBe('ZIP fixture')
-  expect(fetch).toHaveBeenCalledExactlyOnceWith('/api/item-analysis/runs/test/package', expect.objectContaining({ headers: { 'X-Review-Token': 'private-secret' } }))
+  expect(fetch).toHaveBeenNthCalledWith(1, '/api/item-analysis/runs/test/package', expect.objectContaining({ method: 'POST', headers: { 'X-Review-Token': 'private-secret' } }))
+  expect(fetch).toHaveBeenNthCalledWith(2, '/api/item-analysis/runs/test/package?prepared=true', expect.objectContaining({ headers: { 'X-Review-Token': 'private-secret' } }))
+})
+
+it('waits for background preparation with short authenticated status requests before downloading', async () => {
+  vi.useFakeTimers()
+  const fetch = vi.fn()
+    .mockResolvedValueOnce(new Response(JSON.stringify({ status: 'preparing' }), { status: 202 }))
+    .mockResolvedValueOnce(new Response(JSON.stringify({ status: 'preparing' }), { status: 202 }))
+    .mockResolvedValueOnce(new Response(JSON.stringify({ status: 'ready' })))
+    .mockResolvedValueOnce(new Response('ZIP fixture'))
+  vi.stubGlobal('fetch', fetch)
+  const progress = vi.fn()
+  const pending = downloadPackage({ run_id: 'test', run_secret: 'private-secret' }, progress)
+  await vi.advanceTimersByTimeAsync(999)
+  expect(fetch).toHaveBeenCalledTimes(1)
+  expect(progress).toHaveBeenCalledExactlyOnceWith('preparing')
+  await vi.advanceTimersByTimeAsync(1001)
+  expect((await pending).filename).toBe('caliper-results.zip')
+  expect(fetch.mock.calls.map(([url]) => url)).toEqual([
+    '/api/item-analysis/runs/test/package', '/api/item-analysis/runs/test/package/status',
+    '/api/item-analysis/runs/test/package/status', '/api/item-analysis/runs/test/package?prepared=true',
+  ])
+  for (const [url, request] of fetch.mock.calls) {
+    expect(url).not.toContain('private-secret')
+    expect(request.headers).toEqual({ 'X-Review-Token': 'private-secret' })
+  }
+  expect(progress.mock.calls).toEqual([['preparing'], ['downloading']])
+})
+
+it('reports a background preparation failure without requesting an incomplete file', async () => {
+  vi.useFakeTimers()
+  const fetch = vi.fn()
+    .mockResolvedValueOnce(new Response(JSON.stringify({ status: 'preparing' }), { status: 202 }))
+    .mockResolvedValueOnce(new Response(JSON.stringify({ status: 'failed', message: 'Storage is full. Your results remain saved.', error_status: 507 })))
+  vi.stubGlobal('fetch', fetch)
+  const pending = expect(downloadPackage({ run_id: 'test', run_secret: 'private-secret' })).rejects.toEqual(new AnalysisApiError('Storage is full. Your results remain saved.', 507))
+  await vi.advanceTimersByTimeAsync(1000)
+  await pending
+  expect(fetch).toHaveBeenCalledTimes(2)
+})
+
+it('can retry the same cached package after a failed transfer and sanitizes the filename', async () => {
+  const failedTransfer = new Response('ZIP fixture')
+  vi.spyOn(failedTransfer, 'blob').mockRejectedValue(new TypeError('Failed to fetch'))
+  const fetch = vi.fn()
+    .mockResolvedValueOnce(new Response(JSON.stringify({ status: 'ready' })))
+    .mockResolvedValueOnce(failedTransfer)
+    .mockResolvedValueOnce(new Response(JSON.stringify({ status: 'ready' })))
+    .mockResolvedValueOnce(new Response('ZIP fixture', { headers: { 'Content-Disposition': "attachment; filename*=UTF-8''..%2Fresults%00.zip" } }))
+  vi.stubGlobal('fetch', fetch)
+  const run = { run_id: 'test', run_secret: 'private-secret' }
+  await expect(downloadPackage(run)).rejects.toThrow('Failed to fetch')
+  const result = await downloadPackage(run)
+  expect(result.filename).toBe('results.zip')
+  expect(await result.blob.text()).toBe('ZIP fixture')
+  expect(fetch.mock.calls.map(([url]) => url)).toEqual([
+    '/api/item-analysis/runs/test/package', '/api/item-analysis/runs/test/package?prepared=true',
+    '/api/item-analysis/runs/test/package', '/api/item-analysis/runs/test/package?prepared=true',
+  ])
+})
+
+it('stops waiting when the page leaves without cancelling the saved server job', async () => {
+  vi.useFakeTimers()
+  const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ status: 'preparing' }), { status: 202 }))
+  vi.stubGlobal('fetch', fetch)
+  const controller = new AbortController()
+  const pending = expect(downloadPackage({ run_id: 'test', run_secret: 'private-secret' }, undefined, controller.signal)).rejects.toMatchObject({ name: 'AbortError' })
+  await vi.advanceTimersByTimeAsync(0)
+  controller.abort()
+  await pending
+  await vi.advanceTimersByTimeAsync(2000)
+  expect(fetch).toHaveBeenCalledTimes(1)
+  expect(vi.getTimerCount()).toBe(0)
+})
+
+it('limits preparation waiting and explains that retrying preserves saved results', async () => {
+  vi.useFakeTimers()
+  const fetch = vi.fn().mockImplementation(async () => new Response(JSON.stringify({ status: 'preparing' }), { status: 202 }))
+  vi.stubGlobal('fetch', fetch)
+  const pending = expect(downloadPackage({ run_id: 'test', run_secret: 'private-secret' })).rejects.toThrow('Please try downloading again; your saved results are unchanged.')
+  await vi.advanceTimersByTimeAsync(15 * 60 * 1000)
+  await pending
+  expect(fetch.mock.calls.some(([url]) => url.includes('prepared=true'))).toBe(false)
+  expect(vi.getTimerCount()).toBe(0)
 })
 
 it('discards a saved run using authenticated DELETE and handles an empty response', async () => {

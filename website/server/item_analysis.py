@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 import hashlib
 from itertools import islice
 import json
+import logging
 import math
 import os
 from pathlib import Path
@@ -25,7 +26,7 @@ import time
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, File, Form, Header, HTTPException, Query, Response, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from anthropic_api_package_release.item_analysis import classify, generate, model_client, prepare, report, score_report, scoring
@@ -34,8 +35,10 @@ from anthropic_api_package_release.item_analysis.catalog import CATALOG_VERSION
 from anthropic_api_package_release.item_analysis.storage import check_prepared, read_json, write_json
 from . import db, item_analysis_assessment, item_analysis_databank, item_analysis_direct, item_analysis_source
 from . import item_analysis_store as store
+from . import item_analysis_exports as exports
 
 router = APIRouter(prefix="/api/item-analysis", tags=["Item analysis"])
+logger = logging.getLogger(__name__)
 FIXTURE_PATH = Path(__file__).with_name("item_analysis_demo.json")
 CHECKPOINT_SIZE = 100
 PAGE_SIZE = 20
@@ -102,6 +105,8 @@ class AnalysisJob:
     created_at: float = field(default_factory=time.time)
     updated_at: float = field(default_factory=time.time)
     downloads: int = 0
+    package_task: asyncio.Task | None = field(default=None, repr=False)
+    package_error: dict | None = field(default=None, repr=False)
     assessment: dict | None = field(default=None, repr=False)
     source: dict | None = field(default=None, repr=False)
     call_sequence: int = 0
@@ -328,6 +333,7 @@ async def shutdown() -> None:
         if job.task and not job.task.done():
             stop(job)
     await asyncio.gather(*(job.task for job in jobs.values() if job.task), return_exceptions=True)
+    await asyncio.gather(*(job.package_task for job in jobs.values() if job.package_task), return_exceptions=True)
     for job in jobs.values():
         persist_finished_job(job)
     jobs.clear()
@@ -340,6 +346,7 @@ async def delete_for_assessment(run_id: str) -> None:
     for job in linked:
         stop(job)
     await asyncio.gather(*(job.task for job in linked if job.task), return_exceptions=True)
+    await asyncio.gather(*(job.package_task for job in linked if job.package_task), return_exceptions=True)
     for job in linked:
         # Keep active jobs visible until drained: otherwise authorization could
         # restore the still-existing directory while its writer is stopping.
@@ -1030,26 +1037,92 @@ async def delete_analysis(run_id: str, x_review_token: Annotated[str | None, Hea
     return Response(status_code=204, headers={"Cache-Control": "no-store"})
 
 
+def package_state(job: AnalysisJob) -> dict:
+    if job.package_task and not job.package_task.done():
+        return {"status": "preparing", "message": "Preparing package…"}
+    # Another export may be updating derived files. Check the cache only once
+    # all writers are finished; package preparation itself holds this guard.
+    idle = not job.downloads and job.status not in ACTIVE_STATUSES and (not job.task or job.task.done())
+    path = exports.cached_package(job) if idle else None
+    if path is not None:
+        return {"status": "ready", "message": "Package ready.", "filename": path.name,
+                "bytes": path.stat().st_size}
+    if job.package_error:
+        return {"status": "failed", **job.package_error}
+    return {"status": "not_started", "message": "Prepare the package to download the saved results."}
+
+
+async def prepare_package(job: AnalysisJob) -> None:
+    started = time.monotonic()
+    try:
+        path = await drained_thread(exports.build_package, job)
+        logger.info("Item results package ready: run=%s bytes=%d seconds=%.1f",
+                    job.run_id, path.stat().st_size, time.monotonic() - started)
+    except asyncio.CancelledError:
+        job.package_error = {"message": "Package preparation was interrupted. Retry the download; saved results are retained.",
+                             "error_status": 503}
+        raise
+    except Exception as error:
+        full = store.is_storage_full(error)
+        job.package_error = {"message": STORAGE_FULL_MESSAGE if full else
+                             "The results package could not be prepared. Retry the download; saved results are retained.",
+                             "error_status": 507 if full else 500}
+        logger.warning("Item results package failed: run=%s error=%s seconds=%.1f",
+                       job.run_id, type(error).__name__, time.monotonic() - started)
+    finally:
+        job.downloads -= 1
+
+
+@router.post("/runs/{run_id}/package")
+async def start_package(run_id: str, x_review_token: Annotated[str | None, Header()] = None):
+    job = authorize(run_id, x_review_token)
+    if job.package_task and not job.package_task.done():
+        return JSONResponse(package_state(job), status_code=202, headers={"Cache-Control": "no-store"})
+    if job.status in ACTIVE_STATUSES or (job.task and not job.task.done()) or job.downloads:
+        raise HTTPException(409, "Wait for the current phase or download to finish before exporting the results package.")
+    if not job.spec:
+        raise HTTPException(409, "Prepare valid criteria before exporting a results package.")
+    state = package_state(job)
+    if state["status"] == "ready":
+        return JSONResponse(state, headers={"Cache-Control": "no-store"})
+    job.package_error = None
+    job.downloads += 1
+    job.package_task = asyncio.create_task(prepare_package(job))
+    return JSONResponse(package_state(job), status_code=202, headers={"Cache-Control": "no-store"})
+
+
+@router.get("/runs/{run_id}/package/status")
+async def get_package_status(run_id: str, response: Response,
+                             x_review_token: Annotated[str | None, Header()] = None):
+    response.headers["Cache-Control"] = "no-store"
+    return package_state(authorize(run_id, x_review_token))
+
+
 @router.get("/runs/{run_id}/package")
-async def download_package(run_id: str, x_review_token: Annotated[str | None, Header()] = None):
-    from anthropic_api_package_release.item_analysis.package import build_results_package
+async def download_package(run_id: str, x_review_token: Annotated[str | None, Header()] = None,
+                           prepared: bool = False):
 
     job = authorize(run_id, x_review_token)
     if job.status in ACTIVE_STATUSES or (job.task and not job.task.done()) or job.downloads:
         raise HTTPException(409, "Wait for the current phase or download to finish before exporting the results package.")
     if not job.spec:
         raise HTTPException(409, "Prepare valid criteria before exporting a results package.")
+    path = exports.cached_package(job)
+    if prepared and path is None:
+        raise HTTPException(409, "The package is not ready. Retry the download to prepare it from saved results.")
     job.downloads += 1
     try:
-        path = await drained_thread(build_results_package, job.directory,
-                                    run_id=job.run_id, status=job.status, scope=job.scope,
-                                    created_at=store.timestamp(job.created_at), updated_at=store.timestamp(job.updated_at),
-                                    usage=job.usage, model=job.model)
+        # Keep older clients working; the current website prepares via POST
+        # and uses prepared=true so the file request never builds an archive.
+        if path is None:
+            path = await drained_thread(exports.build_package, job)
     except asyncio.CancelledError:
         job.downloads -= 1
         raise
-    except Exception:
+    except Exception as error:
         job.downloads -= 1
+        if store.is_storage_full(error):
+            raise HTTPException(507, STORAGE_FULL_MESSAGE) from None
         raise HTTPException(500, "The results package could not be prepared. Saved results are retained.") from None
 
     return AnalysisFileResponse(path, job=job, media_type="application/zip", filename=path.name,

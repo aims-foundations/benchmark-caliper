@@ -101,9 +101,8 @@ def _selected_ids(directory: Path, summary: dict, spec: dict) -> list[str]:
 def _blank_review(directory: Path, spec: dict, selected_ids: list[str], stream) -> None:
     """Create a fresh worksheet from inputs, never from existing human responses."""
     if is_score_spec(spec):
-        from .score_report import write_blank_review
-        selected = set(selected_ids)
-        write_blank_review((item for item in _records(directory / "items.jsonl") if item["item_id"] in selected), stream)
+        from .score_report import _selected_items, write_blank_review
+        write_blank_review(_selected_items(_records(directory / "items.jsonl"), set(selected_ids)), stream)
         return
     columns = ["item_id", "content", "reference_answer", "grading_criterion"]
     classifiers = [c for c in spec["classifiers"] if c.get("applicable", True)]
@@ -263,14 +262,17 @@ Snapshot: {snapshot_status}
 
 Extract the whole ZIP and open report.html in a browser. It needs no server or
 internet connection. Keep companion file names so relative links still work.
-The report shows one row per item and six 1–5 deployment-alignment scores:
+The report shows one row per selected item and six 1–5 deployment-alignment scores:
 Input Ontology, Input Content, Input Form, Output Ontology, Output Content,
 and Output Form. Open each score to inspect its explanation, evidence, and gaps.
 Unknown means insufficient evidence. Operational errors and pending items are
 separate states. An item can be complete while some scores remain Unknown.
 
-items.csv contains all prepared items, selection flags, scores, explanations,
-evidence, and information gaps. summary.json records the selected-item score
+items.csv contains only selected items, selection flags, scores, explanations,
+evidence, and information gaps. Selected pending items and errors remain visible
+in both the report and CSV. Before a selection is recorded, they contain no item
+rows. audit/items.jsonl retains the full prepared dataset, including unselected
+items, unchanged. summary.json records the selected-item score
 distributions, selected progress, and full prepared-population counts. No item
 rank or combined benchmark score is computed. A completed pilot does not imply
 completion of the full prepared snapshot or establish benchmark-wide coverage.

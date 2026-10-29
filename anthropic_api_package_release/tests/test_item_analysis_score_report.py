@@ -1,6 +1,7 @@
 """Six-score exports preserve evidence, scope, Unknown, and historical reports."""
 
 import csv
+import hashlib
 import io
 import json
 import tracemalloc
@@ -85,16 +86,19 @@ def test_scores_unknown_errors_and_pending_are_distinct_and_selection_is_explici
     assert not summary["complete_snapshot"]
     with (score_run / "items.csv").open() as stream:
         rows = list(csv.DictReader(stream))
-    assert len(rows) == 4
+    assert [row["item_id"] for row in rows] == ["item-0", "item-1", "item-2"]
+    assert all(row["selected"] == "true" for row in rows)
     assert rows[0]["input_form.score"] == "4"
     assert rows[0]["output_content.score"] == "unknown"
     assert rows[1]["output_content.score"] == ""
     assert rows[1]["output_content.status"] == "error"
     assert rows[2]["output_content.status"] == "pending"
-    assert rows[3]["selected"] == "false"
     assert rows[0]["reference_answer"] == "'=SUM(1,2)"
     assert "unavailable.png" in rows[0]["item_evidence"]
     report = (score_run / "report.html").read_text()
+    assert report.count("Complete item evidence") == 3
+    assert "<strong>item-3</strong>" not in report
+    assert "<td>Pending</td>" in report and "Provider unavailable" in report
     assert "Unknown" in report and "Information gaps" in report
     assert "<img src=x" not in report and "&lt;img src=x" in report
     assert "Content-Security-Policy" in report and "<script" not in report
@@ -220,7 +224,59 @@ def test_context_only_report_defers_selection_and_worksheet(score_run):
         manifest = json.loads(archive.read("manifest.json"))
         assert manifest["selected_item_ids"] == []
         assert "review/blank_review.csv" not in archive.namelist()
-        assert "href='review.csv'" not in archive.read("report.html").decode()
+        report = archive.read("report.html").decode()
+        assert "href='review.csv'" not in report
+        assert "No items have been selected for scoring." in report
+        assert "Complete item evidence" not in report
+        assert list(csv.DictReader(io.StringIO(archive.read("items.csv").decode()))) == []
+        assert archive.read("audit/items.jsonl") == (score_run / "items.jsonl").read_bytes()
+
+
+@pytest.mark.parametrize("execution, expected_ids", [
+    ({"selected_item_ids": ["item-3", "item-1"]}, ["item-1", "item-3"]),
+    ({"target_items": 2}, ["item-0", "item-1"]),
+    ({"selected_item_ids": [f"item-{index}" for index in range(4)]},
+     [f"item-{index}" for index in range(4)]),
+    ({"selected_item_ids": []}, []),
+    (None, ["item-0", "item-1"]),
+])
+def test_package_reports_selection_and_retains_full_saved_population(score_run, execution, expected_ids):
+    if execution is not None:
+        _json(score_run / "execution.json", execution)
+    _records(score_run / "results.jsonl", [_complete("item-0"), _error("item-1")])
+    inputs_before = (score_run / "items.jsonl").read_bytes()
+    results_before = (score_run / "results.jsonl").read_bytes()
+    summary_before = generate_report(score_run, export_artifacts=False)
+
+    package = build_results_package(score_run, run_id="selection-test", status="cancelled", scope="pilot")
+    with ZipFile(package) as archive:
+        rows = list(csv.DictReader(io.StringIO(archive.read("items.csv").decode())))
+        assert [row["item_id"] for row in rows] == expected_ids
+        report = archive.read("report.html").decode()
+        assert report.count("Complete item evidence") == len(expected_ids)
+        for item_id in [f"item-{index}" for index in range(4)]:
+            assert (f"<strong>{item_id}</strong>" in report) == (item_id in expected_ids)
+        assert archive.read("audit/items.jsonl") == inputs_before
+        assert archive.read("audit/results.jsonl") == results_before
+        summary = json.loads(archive.read("summary.json"))
+        assert summary["total_items"] == 4 and summary["completed_items"] == 1
+        assert summary["error_items"] == 1 and summary["pending_items"] == 2
+        assert summary["dimensions"] == summary_before["dimensions"]
+        assert summary["experiment"] == summary_before["experiment"]
+        manifest = json.loads(archive.read("manifest.json"))
+        assert manifest["counts"]["prepared_items"] == 4
+        assert set(manifest["selected_item_ids"]) == set(expected_ids)
+        for entry in manifest["artifacts"]:
+            content = archive.read(entry["path"])
+            assert len(content) == entry["bytes"]
+            assert hashlib.sha256(content).hexdigest() == entry["sha256"]
+        readme = archive.read("README.txt").decode()
+        assert "one row per selected item" in readme
+        assert "items.csv contains only selected items" in readme
+        assert "audit/items.jsonl retains the full prepared dataset" in readme
+
+    assert (score_run / "items.jsonl").read_bytes() == inputs_before
+    assert (score_run / "results.jsonl").read_bytes() == results_before
 
 
 def test_report_rejects_invalid_saved_score_instead_of_treating_it_as_unknown(score_run):

@@ -64,7 +64,8 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
   const [pollError, setPollError] = useState('')
   const [pollVersion, setPollVersion] = useState(0)
   const [catalogVersion, setCatalogVersion] = useState(0)
-  const [downloading, setDownloading] = useState<Artifact | 'package' | 'view' | null>(null)
+  const [downloading, setDownloading] = useState<Artifact | 'package-preparing' | 'package' | 'view' | null>(null)
+  const packageController = useRef<AbortController | null>(null)
   const [discardRequested, setDiscardRequested] = useState(false)
   const [privacyOpen, setPrivacyOpen] = useState(false)
   const [pilotReviewed, setPilotReviewed] = useState(false)
@@ -80,6 +81,8 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
   const errorRef = useRef<HTMLDivElement>(null)
   const focusStartedRun = useRef(false)
   const direct = assessment?.kind === 'direct'
+
+  useEffect(() => () => { packageController.current?.abort() }, [])
 
   useEffect(() => {
     if (!starting) return
@@ -240,6 +243,9 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
   }
 
   function reset() {
+    packageController.current?.abort()
+    packageController.current = null
+    setDownloading(null)
     clearStoredValue(storageKey)
     setAccess(null)
     setRun(null)
@@ -289,13 +295,23 @@ function AnalysisView({ assessment, directContext, initialSetup, onEditContext, 
 
   async function downloadPackage() {
     if (!access || downloading) return
+    const controller = new AbortController()
+    packageController.current = controller
     setError('')
-    setDownloading('package')
+    setDownloading('package-preparing')
     try {
-      const result = await api.downloadPackage(access)
-      saveBlob(result.blob, result.filename)
-    } catch (problem) { showRequestError(problem instanceof Error ? problem.message : 'Could not download the results package.') }
-    finally { setDownloading(null) }
+      const result = await api.downloadPackage(access, progress => {
+        if (!controller.signal.aborted) setDownloading(progress === 'preparing' ? 'package-preparing' : 'package')
+      }, controller.signal)
+      if (!controller.signal.aborted) saveBlob(result.blob, result.filename)
+    } catch (problem) {
+      if (!controller.signal.aborted) showRequestError(problem instanceof Error ? problem.message : 'Could not download the results package.')
+    } finally {
+      if (packageController.current === controller) {
+        packageController.current = null
+        if (!controller.signal.aborted) setDownloading(null)
+      }
+    }
   }
 
   const example = run?.example || catalog?.examples.find(value => value.id === exampleId)
