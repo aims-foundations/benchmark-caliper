@@ -5,13 +5,15 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import sqlite3
 from zipfile import BadZipFile, ZipFile
 import zlib
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse, Response, StreamingResponse
 
 from .review_exports import CHUNK_BYTES
+from . import construction_retrieval
 
 
 ROOT = Path(__file__).resolve().parents[1] / "construction_examples"
@@ -94,6 +96,28 @@ def get_item(entry_id: str, item_id: str):
             return json.load(stream)
     except (OSError, ValueError, EOFError, zlib.error):
         raise HTTPException(503, "The saved example item could not be read.") from None
+
+
+def _retrieval_view(entry_id, read):
+    _, directory = published(entry_id)
+    path = local_file(directory, construction_retrieval.FILENAME)
+    try:
+        return read(path)
+    except construction_retrieval.RetrievalNotFound as error:
+        raise HTTPException(404, str(error)) from None
+    except (OSError, ValueError, KeyError, IndexError, TypeError, sqlite3.Error, EOFError, zlib.error):
+        raise HTTPException(503, "The saved retrieval records could not be read.") from None
+
+
+@router.get("/{entry_id}/retrieved")
+def get_retrieved(entry_id: str, queue_id: str | None = None,
+                  page: int = Query(1, ge=1, le=2**31 - 1), page_size: int = Query(10, ge=1, le=50)):
+    return _retrieval_view(entry_id, lambda path: construction_retrieval.page(path, queue_id, page, page_size))
+
+
+@router.get("/{entry_id}/retrieved/{item_id}")
+def get_retrieved_item(entry_id: str, item_id: str, queue_id: str | None = None):
+    return _retrieval_view(entry_id, lambda path: construction_retrieval.item(path, queue_id, item_id))
 
 
 @router.get("/{entry_id}/artifacts/{artifact}")

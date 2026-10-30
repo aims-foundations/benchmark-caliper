@@ -1,7 +1,11 @@
-.construction-gallery .item-review-hero h1 { max-width: 24ch; font-size: clamp(2rem, 4.2vw, 3.5rem); line-height: 1.1; letter-spacing: -.035em; margin: .6rem 0 1rem; font-weight: 550; }
-.construction-gallery .item-review-hero a { color: #791c16; text-underline-offset: .2em; }
-.construction-lead { max-width: 68ch; font-size: 1.05rem; line-height: 1.65; color: #554d45; }
-.construction-main { max-width: 1050px; padding-top: 2.5rem; padding-bottom: 4rem; }
+.construction-main { max-width: 1050px; padding-top: calc(var(--site-header-h) + 1.5rem); padding-bottom: 4rem; }
+.construction-header { margin-bottom: 1.5rem; }
+.construction-context { display: flex; align-items: center; justify-content: space-between; gap: .75rem 1.5rem; margin-bottom: 1.25rem; font-size: .8rem; }
+.construction-main .construction-context a { display: inline-flex; align-items: center; gap: .3rem; min-height: 2.5rem; color: #665c52; text-decoration: none; }
+.construction-main .construction-context a:hover { color: #791c16; text-decoration: underline; }
+.construction-context svg, .construction-downloads summary svg { width: 1rem; height: 1rem; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.construction-header h1 { font-size: clamp(1.65rem, 2.6vw, 2.25rem); line-height: 1.2; letter-spacing: -.025em; margin: 0; font-weight: 550; }
+.construction-lead { max-width: 75ch; margin: .65rem 0 0; font-size: .95rem; line-height: 1.6; color: #665c52; }
 .construction-main > section { margin-bottom: 3rem; }
 .construction-main h2 { font-size: clamp(1.4rem, 2.5vw, 1.9rem); line-height: 1.3; }
 .construction-main h3 { font-size: 1.15rem; }
@@ -18,8 +22,6 @@
 .construction-table th, .construction-table td { padding: .8rem; border-bottom: 1px solid #dedbd6; vertical-align: top; }
 .construction-table thead { background: #f4f1ec; }
 .construction-table tbody th { font-weight: 450; min-width: 12rem; }
-.construction-quota { border-top: 1px solid #dedbd6; padding: .5rem 0; }
-.construction-quota .construction-facts dd { font-size: 1.2rem; }
 .construction-composition-tables { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
 .construction-composition-tables .construction-table { margin: .5rem 0; }
 .construction-composition-tables tbody th { min-width: 0; overflow-wrap: anywhere; }
@@ -29,26 +31,233 @@
 .construction-main .construction-item > summary { padding: 1rem 1.25rem; cursor: pointer; }
 .construction-item summary > strong { display: block; margin: .65rem 0; line-height: 1.6; font-size: .95rem; font-weight: 500; overflow-wrap: anywhere; }
 .construction-item-label { font-size: .82rem; font-weight: 550; }
-.construction-selected { display: inline-block; margin-left: .8rem; font-size: .7rem; background: #edf3e9; padding: .2rem .5rem; border-radius: 4px; color: #38552d; }
-.construction-item-meta { display: block; color: #665c52; font-size: .76rem; line-height: 1.6; }
 .construction-assessment-body { padding: 0 1.4rem 1.4rem; border-top: 1px solid #e8e4de; }
 .construction-assessment-body h4 { font-size: 1rem; margin-top: 1.5rem; }
 .construction-assessment-body h5 { font-size: .87rem; }
 .construction-filters { display: flex; flex-wrap: wrap; gap: 1rem 2rem; }
 .construction-filters label { display: flex; flex-direction: column; gap: .5rem; font-size: .82rem; font-weight: 550; }
 .construction-filters select { font: inherit; font-weight: 400; padding: .7rem; border: 1px solid #cfc8c0; border-radius: 6px; background: white; }
-.construction-stage { background: #f4f1ec; border: 1px solid #dedbd6; border-radius: 10px; margin: 1rem 0; scroll-margin-top: 6rem; }
-.construction-main .construction-stage > summary { padding: 1.4rem; }
-.construction-stage > summary h2 { display: inline; margin: 0; font-size: 1.3rem; }
-.construction-stage > summary > span { display: block; margin: .65rem 0 0; color: #655b52; line-height: 1.6; font-weight: 400; }
-.construction-stage-body { padding: 0 1.4rem 1.4rem; }
 .construction-gallery :is([id^="facet-"], [id^="original-answer-"], [id^="selected-item-"], #all-assessments) { scroll-margin-top: 6rem; }
 .construction-gallery-entry { display: inline-block; color: #791c16; margin-top: 1.2rem; font-size: .88rem; }
 @media (max-width: 600px) {
-  .construction-main { padding-top: 1.5rem; }
+  .construction-main { padding-top: calc(var(--site-header-h) + .75rem); }
   .construction-facts { gap: 1rem 1.5rem; }
-  .construction-stage-body, .construction-assessment-body { padding-left: .85rem; padding-right: .85rem; }
   .construction-filters { flex-direction: column; }
   .construction-composition-tables { grid-template-columns: 1fr; gap: 1rem; }
   .construction-table th, .construction-table td { padding: .65rem .5rem; }
+}
+
+.construction-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .75rem 1rem; margin-bottom: 2rem; border-bottom: 1px solid #dedbd6; }
+.construction-view-tabs { display: flex; align-self: stretch; gap: .3rem; }
+.construction-gallery .construction-main.review-workspace .construction-view-tabs button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: .9rem .85rem; background: transparent; color: #665c52; box-shadow: none; font-size: .85rem; white-space: nowrap; }
+.construction-gallery .construction-main.review-workspace .construction-view-tabs button[aria-selected="true"] { color: #791c16; border-bottom-color: #791c16; font-weight: 600; }
+.construction-gallery .construction-main.review-workspace .construction-view-tabs button:hover:not(:disabled) { background: #f4f1ec; }
+.construction-gallery button:focus-visible, .construction-gallery summary:focus-visible, .construction-gallery a:focus-visible { outline: 2px solid #791c16; outline-offset: 4px; }
+.construction-sharing { position: relative; display: flex; align-items: center; gap: .5rem; padding: 0 0 .4rem; font-size: .8rem; }
+.construction-sharing > .construction-copy-link, .construction-downloads > summary { white-space: nowrap; }
+.construction-downloads { position: static; z-index: 2; }
+.construction-gallery .construction-downloads > summary { display: flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.5rem; cursor: pointer; padding: .5rem .75rem; border: 1px solid #d8d0c7; border-radius: 6px; background: #fff; color: #554d45; font-size: .8rem; font-weight: 500; list-style: none; }
+.construction-downloads > summary::-webkit-details-marker { display: none; }
+.construction-gallery .construction-downloads > summary:hover { background: #f4f1ec; }
+.construction-downloads[open] > summary svg { transform: rotate(180deg); }
+.construction-downloads > div { position: absolute; right: 0; top: 100%; width: min(22rem, 80vw); padding: 1.25rem; border: 1px solid #d8d0c7; border-radius: 8px; background: #fff; box-shadow: 0 8px 24px #37281c1a; display: grid; gap: 1rem; }
+.construction-downloads p { font-size: .75rem; color: #665c52; margin: 0; }
+.construction-gallery .construction-main.review-workspace .construction-copy-link { min-height: 2.5rem; padding: .5rem .65rem; border: 1px solid transparent; border-radius: 6px; background: transparent; color: #665c52; box-shadow: none; font-size: .8rem; font-weight: 500; }
+.construction-view-panel { min-width: 0; }
+.construction-overview { display: grid; gap: 1.5rem; }
+.construction-overview .review-panel { margin: 0; }
+.construction-outcome h2 { margin-top: .4rem; }
+.construction-goal { max-width: 80ch; color: #554d45; }
+.construction-outcome .construction-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 1.4rem 0; border-top: 1px solid #e6dfd6; border-bottom: 1px solid #e6dfd6; }
+.construction-facts dd span { font-size: .85rem; font-weight: 400; color: #665c52; }
+.construction-coverage-note { padding: 1rem 1.2rem; background: #f8f1e5; border-radius: 7px; }
+.construction-coverage-note h3 { margin: 0 0 .45rem; font-size: .95rem; }
+.construction-coverage-note p { margin: .4rem 0 0; font-size: .9rem; }
+.construction-coverage-note strong { display: block; margin-top: .4rem; }
+.construction-validation { color: #665c52; font-size: .85rem; }
+.construction-composition-details { margin-top: 1.2rem; border-top: 1px solid #dedbd6; }
+.construction-gallery .construction-composition-details > summary { cursor: pointer; padding: 1rem 0 0; font-size: .88rem; font-weight: 500; }
+.construction-composition-details p, .construction-composition-details li { font-size: .88rem; }
+.construction-gallery :is([id^="facet-"], [id^="original-answer-"], [id^="screened-item-"], [id^="selected-item-"]) { scroll-margin-top: 7rem; }
+@media (max-width: 760px) {
+  .construction-toolbar { flex-direction: column-reverse; align-items: stretch; gap: .5rem; margin-bottom: 1.5rem; }
+  .construction-sharing { width: 100%; padding-bottom: .25rem; }
+  .construction-view-tabs { width: 100%; }
+  .construction-gallery .construction-main.review-workspace .construction-view-tabs button { flex: 1; min-width: 0; padding: .8rem .3rem; font-size: .82rem; white-space: normal; }
+}
+@media (max-width: 600px) {
+  .construction-header { margin-bottom: 1rem; }
+  .construction-context { gap: .65rem; margin-bottom: 1rem; font-size: .74rem; }
+  .construction-context a { flex-shrink: 0; }
+  .construction-lead { font-size: .88rem; }
+  .construction-main .review-panel { padding: 1.2rem; }
+  .construction-outcome .construction-facts { grid-template-columns: 1fr; gap: 1rem; padding: 1.2rem 0; }
+  .construction-outcome .construction-facts > div { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+  .construction-outcome .construction-facts dd { font-size: 1.4rem; white-space: nowrap; }
+  .construction-assessment-body { padding-left: .85rem; padding-right: .85rem; }
+}
+.construction-gallery .construction-main.review-workspace .construction-copy-link:hover:not(:disabled) { background: #f4f1ec; color: #791c16; }
+
+/* Presentation of saved results and shared pipeline components in the gallery. */
+body .construction-gallery .eyebrow,
+body .construction-gallery hr { display: none !important; }
+
+body .construction-gallery :is(
+  .construction-toolbar,
+  .construction-outcome .construction-facts,
+  .construction-composition-details,
+  .construction-step-panel > header,
+  .construction-step-evidence,
+  .construction-step-pagination,
+  .construction-assessment-body,
+  .construction-assessment-body > details,
+  .construction-item-statuses,
+  .construction-table th,
+  .construction-table td,
+  .requirements-coverage,
+  .requirements-original > section + section,
+  .requirements-summary > section + section,
+  .grounding-record,
+  .grounding-candidates > li,
+  .review-source-detail,
+  .review-item-body,
+  .review-dimension-detail,
+  .review-dimension,
+  .review-result-header,
+  .screening-explanation,
+  .selection-coverage,
+  .screening-allocation th,
+  .screening-allocation td,
+  .review-catalog li
+) { border-top: 0 !important; border-bottom: 0 !important; }
+body .construction-gallery .rd-header { border-bottom-color: transparent !important; }
+
+body .construction-gallery .construction-main.review-workspace .construction-view-tabs button {
+  border: 0 !important;
+  border-radius: 6px;
+  padding-top: .7rem;
+  padding-bottom: .7rem;
+}
+body .construction-gallery .construction-main.review-workspace .construction-view-tabs button[aria-selected="true"] {
+  background: #f2e8e2 !important;
+  color: #791c16;
+}
+body .construction-gallery .construction-sharing { padding-bottom: 0; }
+body .construction-gallery :is(.construction-outcome > h2, .construction-step-panel > header h2, .construction-item-browser > h2) { margin-top: 0; }
+body .construction-gallery .construction-step-panel > header { padding-bottom: .25rem; }
+body .construction-gallery .construction-outcome .construction-facts { padding-block: .65rem; }
+body .construction-gallery .construction-step-explanation > h3 {
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: .95rem;
+  font-weight: 600;
+  color: #554d45;
+}
+body .construction-gallery .construction-browser-item .construction-item-label { display: block; margin-bottom: .65rem; }
+body .construction-gallery .construction-preview-label {
+  display: inline;
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: .85rem;
+  color: #665c52;
+}
+body .construction-gallery .construction-preview-label::after { content: ': '; }
+body .construction-gallery .construction-browser-item summary > strong { display: inline; }
+body .construction-gallery .construction-item-context { margin-top: 1rem; }
+body .construction-gallery .construction-item-statuses {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: .4rem;
+  padding-top: .2rem;
+  font-size: .8rem;
+  line-height: 1.5;
+}
+body .construction-gallery .construction-item-statuses b { font-weight: 600; color: #473e36; }
+body .construction-gallery .construction-item-content { margin: .7rem 0 1.5rem; scroll-margin-top: 6rem; }
+body .construction-gallery .construction-item-content > h4 { margin-top: 0; }
+body .construction-gallery .construction-item-content > p { margin-bottom: .8rem; }
+body .construction-gallery .construction-main.review-workspace .construction-content-toggle { padding: .45rem .65rem; font-size: .8rem; }
+body .construction-gallery .construction-open-metadata { margin: 1.5rem 0; }
+
+/* The original answers stay visible beneath the optional step overview. */
+body .construction-gallery #construction-step-1 .requirements-original {
+  border: 0;
+  padding: 0;
+  margin: 1.5rem 0;
+  background: transparent;
+  box-shadow: none;
+}
+body .construction-gallery #construction-step-1 .requirements-original > h2 {
+  font-size: 1.15rem;
+  margin: 0 0 1.5rem;
+}
+body .construction-gallery #construction-step-1 .requirements-original > section { margin: 1.4rem 0; }
+body .construction-gallery #construction-step-1 .requirements-original h3 { font-size: .95rem; margin-bottom: .45rem; }
+body .construction-gallery #construction-step-1 .requirements-original p { margin-top: 0; }
+body .construction-gallery #construction-step-1 .construction-step-evidence { margin-top: 1.5rem; }
+
+/* Primary results stay visible, with spacing instead of nested panel frames. */
+body .construction-gallery .construction-primary-results { margin: 1.5rem 0; }
+body .construction-gallery .construction-primary-results .review-panel {
+  border: 0;
+  padding: 0;
+  margin: 1.8rem 0;
+  background: transparent;
+  box-shadow: none;
+}
+body .construction-gallery .construction-primary-results h2 {
+  font-size: 1.15rem;
+  margin: 1.8rem 0 1rem;
+}
+body .construction-gallery .construction-primary-results h3 { font-size: 1rem; }
+body .construction-gallery .construction-primary-results h4 { font-size: .95rem; }
+body .construction-gallery .construction-primary-results .requirements-summary > section { margin: 1.4rem 0; }
+body .construction-gallery .construction-primary-results .grounding-record { margin-top: 1.6rem; }
+body .construction-gallery .construction-search-queries > section { margin: 1.4rem 0; }
+body .construction-gallery .construction-step-panel > header + .construction-step-evidence { margin-top: 1rem; }
+
+body .construction-gallery .construction-run-summary {
+  margin: 1.5rem 0 1.8rem;
+}
+
+body .construction-gallery .construction-run-summary .construction-facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem 2rem;
+  margin: 0;
+}
+
+body .construction-gallery .construction-run-summary .construction-facts > div {
+  min-width: 0;
+}
+
+body .construction-gallery .construction-run-summary .construction-facts dd {
+  font-variant-numeric: tabular-nums;
+}
+
+body .construction-gallery .construction-quality-note {
+  margin-top: .85rem;
+  color: #665c52;
+  font-size: .8rem;
+}
+
+body .construction-gallery .construction-quality-note summary {
+  width: fit-content;
+  cursor: pointer;
+}
+
+body .construction-gallery .construction-quality-note p {
+  max-width: 85ch;
+  margin: .65rem 0 0;
+}
+
+@media (max-width: 760px) {
+  body .construction-gallery .construction-run-summary .construction-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.2rem;
+  }
+
+  body .construction-gallery .construction-run-summary .construction-facts dd {
+    font-size: 1.5rem;
+  }
 }

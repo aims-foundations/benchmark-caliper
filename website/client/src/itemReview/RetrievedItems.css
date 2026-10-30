@@ -1,0 +1,25 @@
+.construction-gallery .construction-retrieved-items { margin: 2rem 0; min-width: 0; }
+.construction-gallery .construction-retrieved-items > h3 { font-size: 1.2rem; }
+.construction-gallery .construction-retrieved-filters { display: grid; gap: 1rem; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); margin: 1.3rem 0; }
+.construction-gallery .construction-retrieved-filters label,
+.construction-gallery .construction-retrieved-pagination label { display: flex; flex-direction: column; gap: .5rem; font-size: .85rem; min-width: 0; }
+.construction-gallery .construction-retrieved-filters select,
+.construction-gallery .construction-retrieved-pagination select { width: 100%; min-width: 0; max-width: 100%; padding: .65rem; background: #fff; border: 1px solid #d8d0c7; border-radius: 6px; color: #554d45; }
+.construction-gallery .construction-retrieved-card { margin: .8rem 0; padding: 1rem; border: 1px solid #dedbd6; border-radius: 8px; min-width: 0; overflow-wrap: anywhere; }
+.construction-gallery .construction-retrieved-card > summary { cursor: pointer; }
+.construction-gallery .construction-retrieved-card > summary > strong { display: block; margin: .6rem 0; font-size: .95rem; line-height: 1.6; font-weight: 500; white-space: pre-wrap; }
+.construction-gallery .construction-retrieved-rank { font-weight: 600; font-size: .9rem; }
+.construction-gallery .construction-retrieved-source { display: block; color: #665c52; font-size: .8rem; margin: .4rem 0; }
+.construction-gallery .construction-retrieved-body { margin-top: 1.4rem; }
+.construction-gallery .construction-retrieved-body > details { margin-top: 1.2rem; }
+.construction-gallery .construction-retrieved-body summary { cursor: pointer; font-size: .88rem; }
+.construction-gallery .construction-retrieved-body pre { max-height: 32rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.construction-gallery .construction-retrieved-scores div { margin: 1rem 0; }
+.construction-gallery .construction-retrieved-scores dd { margin: .3rem 0; }
+.construction-gallery .construction-retrieved-pagination { display: flex; align-items: end; justify-content: space-between; gap: .75rem; margin-top: 1.2rem; }
+@media (max-width: 760px) {
+  .construction-gallery .construction-retrieved-filters { grid-template-columns: minmax(0, 1fr); }
+  .construction-gallery .construction-retrieved-pagination { display: grid; grid-template-columns: 1fr 1fr; }
+  .construction-gallery .construction-retrieved-pagination label { grid-column: 1 / -1; grid-row: 1; }
+  .construction-gallery .construction-retrieved-pagination button { font-size: .78rem; padding: .65rem .5rem; }
+}

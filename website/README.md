@@ -656,15 +656,33 @@ The construction gallery is available at `/items?gallery=1`. Its first example,
 paths on the public website. The link has no date, while the saved record retains
 its original run identifier and timestamps.
 
-The example presents the frozen collection, its task coverage, the remaining
-coverage requirement, and the results from Step 7 through Step 1. Readers can
-browse all 160 screening decisions and open individual assessments as needed.
-The page identifies the 10 selected items and explains that the automated run
-stopped at the candidate limit with a shortfall of three management cases.
-Human validation is not included in this saved record.
+The gallery shows the selected count, average quality Q, assessed count, and
+required task coverage above the tabs. These describe the final collection and
+stay visible when readers switch views. Average quality Q is computed from the
+saved total quality and selected count; an empty collection has no average.
 
-Above the selected items, a composition summary shows the source counts and
-shares, task counts, coverage findings, question formats where described, and
+The example has three views. **Overview** presents the frozen collection, task
+coverage, remaining coverage requirement, and composition. **How it was built**
+shows one step at a time in chronological order from Step 1 through Step 7.
+Each step shows its saved outputs, including the original answers, requirements,
+O*NET mappings, retrieved candidates, assessments, and selection results.
+General explanations are collapsed under **Step overview** at the start of each
+step. Evidence and settings remain available in disclosures. **Browse items**
+starts with compact selected item cards showing content excerpts, benchmark,
+and quality Q. Switching to all screened items reveals eligibility and stage
+filters. Returning to the selected collection clears those filters. These views
+change presentation only; the live
+construction workflow retains its existing stage order.
+
+The clinical example distinguishes the initial 48 assessments and empty initial
+selection from the 112 additional assessments and final 10 selected items.
+Retrieval counts describe overlapping task lists, not disjoint groups. The run
+stopped at the candidate limit with a shortfall of three management cases.
+Human validation is not included in this saved record. Links to individual
+steps, requirements, original answers, and items open the appropriate view.
+
+The overview composition summary shows the benchmark counts and
+shares, task counts, coverage findings, and
 repeated question text. Counts use selected rows only. Each row counts once per
 distinct source and matched task, so totals can overlap when a row has multiple
 sources or tasks. Question text is compared after collapsing whitespace only;
@@ -682,9 +700,15 @@ describes the inputs and does not establish clinical correctness or expert valid
 Published examples use separate curated files under
 `website/construction_examples/`. Opening a gallery page does not restore a
 private run, read its access token, or make a model call. The initial page uses
-a compact snapshot. Complete item records load when requested, and the original
+a compact snapshot. Item previews use identifiable question excerpts where
+available, otherwise a saved assessment decision labeled **Task identified during screening**.
+The deterministic preview helper does not rewrite questions or make model calls.
+When an item opens, **Item content** appears first. Long content shows an exact
+excerpt ending in `...`; **Show full content** expands the unchanged saved text.
+Ratings, evidence, and provenance follow the content. Complete item records
+load when requested, and the original
 HTML report, selected item CSV, JSON record, and results package remain available
-as downloads. A separate **report with composition summary** includes the new
+under **Download results**. A separate **report with composition summary** includes the new
 summary and the selected item evidence. The original report and original ZIP keep
 their existing contents and checksums. The complete ZIP uses the same bounded
 download approach as private results packages, with automatic retries of
@@ -693,9 +717,19 @@ interrupted pieces.
 Authors import an exported directory or ZIP locally with
 `website.scripts.import_construction_example`. The importer checks the saved
 selection against its screening records, preserves the original artifact bytes,
-and creates the gallery snapshot and item files. The curated entry and its index
+and creates the gallery snapshot, item files, and `retrieval.sqlite3`. The curated entry and its index
 are deployed with the application. Publishing a later run is a separate import;
 viewing the gallery cannot change the published result.
+
+Step 4 reads its saved retrieval rankings from the immutable SQLite file.
+Shared evidence is compressed and stored once, while each task retains its
+original ranking metadata and queue membership. The importer builds this file
+incrementally from the export. Public requests read at most 50 summaries or one
+complete candidate, without loading the full retrieval export into memory.
+`/api/item-review/examples/{id}/retrieved` accepts `queue_id`, `page`, and
+`page_size`; `/retrieved/{item_id}` accepts `queue_id` and checks membership in
+that saved queue. Browsing does not contact the retrieval service or recompute
+any rankings. All displayed records come from the saved run.
 
 The importer calculates the composition summary from the saved selection and
 creates `report-with-composition.html`. Optional `--composition-annotations`
@@ -706,6 +740,8 @@ format group. Items without a format description are reported as unknown. This
 small annotation is saved as `composition_annotations.json`; no model calls or
 automatic format guesses are made. The clinical example's annotation can be
 reused when reimporting the same saved selection.
+These optional format annotations remain in the downloadable composition report;
+they are not displayed in the gallery.
 
 ```bash
 .venv/bin/python -m website.scripts.import_construction_example /path/to/export \

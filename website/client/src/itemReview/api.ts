@@ -344,7 +344,7 @@ export async function getPublishedReviewPackage(exampleId: string, metadata: Pre
   } catch (error) {
     if (activeSignal.aborted) throw activeSignal.reason
     if (error instanceof ReviewRequestError && error.status === 412) throw new Error('The published package has changed. Reload this page before downloading again.')
-    throw new Error('The package download was interrupted. The published example remains available. Please try downloading again.')
+    throw new Error('The package download was interrupted. The saved results remain available. Please try downloading again.')
   }
 }
 

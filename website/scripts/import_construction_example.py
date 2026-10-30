@@ -3,13 +3,14 @@
 
 Accepts the original ZIP or a folder containing report.html, selected_items.csv,
 and results.json. The complete JSON remains inside the archived ZIP. The public
-page uses a compact snapshot and one gzip file per screened item.
+page uses a compact snapshot, one gzip file per screened item, and a read-only
+SQLite file for paginated retrieval records.
 """
 
 from __future__ import annotations
 
 import argparse
-from contextlib import ExitStack
+from contextlib import closing, ExitStack
 import csv
 import gzip
 import hashlib
@@ -27,7 +28,8 @@ from bayesian_auditing.requirements import Requirements
 from bayesian_auditing.screening import GATED_DIMENSIONS, ScreeningAssessment, gate_for
 from website.server import construction_gallery as gallery
 from website.server.adaptive_review import validate_collection
-from website.server import construction_composition, result_package, streaming_json
+from website.server.construction_item_preview import item_preview
+from website.server import construction_composition, construction_retrieval, result_package, streaming_json
 
 
 FILES = ("report.html", "selected_items.csv", "results.json")
@@ -108,6 +110,7 @@ def derive_snapshot(stream, directory):
     def transform(path, record):
         if (len(path) == 5 and path[:2] == ("retrieval", "rankings")
                 and path[3] == "candidates" and isinstance(path[2], int) and isinstance(path[4], int)):
+            retrieved.add(path[2], path[4], record)
             return {}
         if len(path) != 3 or path[:2] != ("screening", "items") or not isinstance(path[2], int):
             return record
@@ -123,10 +126,9 @@ def derive_snapshot(stream, directory):
             require((record.get("gate") or {}).get("status") == gate_for(assessment)["status"], "A saved screening gate differs from its ratings")
         with gzip.open(directory / "items" / gallery.item_filename(item_id), "wt", encoding="utf-8") as output:
             json.dump(record, output, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
-        text = record.get("question_text") or record.get("search_text") or json.dumps(row, ensure_ascii=False)
         scores = [getattr(assessment.ratings, name).score for name in GATED_DIMENSIONS] if assessment else []
         summaries.append({
-            "item_id": item_id, "index": path[2], "question_preview": " ".join(text.split())[:300],
+            "item_id": item_id, "index": path[2], **item_preview(record),
             "status": record["status"], "gate": (record.get("gate") or {}).get("status"),
             "matched_facet_ids": assessment.task.matched_facet_ids if assessment else [],
             "sources": list(dict.fromkeys(source["benchmark"] for source in record.get("sources", []) if source.get("benchmark"))),
@@ -134,8 +136,10 @@ def derive_snapshot(stream, directory):
         })
         return {}
 
-    review = streaming_json.load(stream, transform=transform)
-    require(isinstance(review, dict), "The export must contain a result object")
+    with closing(construction_retrieval.Builder(directory / construction_retrieval.FILENAME)) as retrieved:
+        review = streaming_json.load(stream, transform=transform)
+        require(isinstance(review, dict), "The export must contain a result object")
+        retrieved.finish(review.get("retrieval"))
     require(not {"run_secret", "owner_hash", "api_key", "access_token"}.intersection(review), "The source includes private run credentials")
     require(review.get("mode") in {"screening", "selection", "adaptive"}, "The export must include screened construction items")
     require(isinstance(review.get("run_id"), str) and review["run_id"], "The source run ID is missing")

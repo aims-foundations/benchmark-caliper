@@ -1,0 +1,124 @@
+.construction-process { scroll-margin-top: calc(var(--site-header-h) + 1rem); }
+.construction-process-intro { max-width: 75ch; margin-bottom: 2rem; }
+.construction-process-intro h2 { margin-bottom: .65rem; }
+.construction-process-intro p { color: #665c52; }
+.construction-process-layout { display: grid; grid-template-columns: 14rem minmax(0, 1fr); align-items: start; gap: 2rem; }
+.construction-step-nav { position: sticky; top: 6rem; }
+.construction-step-nav ol { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
+.construction-gallery .construction-main.review-workspace .construction-step-nav button { display: flex; align-items: center; gap: .85rem; width: 100%; padding: .85rem .9rem; border: 1px solid transparent; border-radius: 8px; background: transparent; color: #554d45; text-align: left; font-size: .88rem; font-weight: 450; line-height: 1.35; box-shadow: none; }
+.construction-gallery .construction-main.review-workspace .construction-step-nav button:hover:not(:disabled) { background: #f4f1ec; }
+.construction-gallery .construction-main.review-workspace .construction-step-nav button[aria-current="step"] { background: #f5eae6; color: #791c16; border-color: #dec8c0; }
+.construction-step-number { display: grid; flex: 0 0 1.85rem; height: 1.85rem; place-items: center; border-radius: 50%; border: 1px solid #d7cec5; font-size: .8rem; }
+.construction-step-nav button[aria-current="step"] .construction-step-number { background: #791c16; border-color: #791c16; color: white; }
+.construction-step-nav-label { display: none; }
+.construction-step-panel { min-width: 0; padding: 1.8rem 2rem; border: 1px solid #dedbd6; border-radius: 10px; background: white; scroll-margin-top: 6rem; }
+.construction-step-panel > header { padding-bottom: 1.25rem; margin-bottom: .25rem; border-bottom: 1px solid #e8e4de; }
+.construction-step-panel > header h2 { font-size: clamp(1.35rem, 2vw, 1.65rem); margin: .5rem 0 0; }
+.construction-step-panel > header .eyebrow { margin: 0; }
+.construction-step-explanation { margin: 1.5rem 0; }
+.construction-step-explanation > h3 { color: #665c52; font-size: .78rem; font-weight: 650; letter-spacing: .04em; margin: 0 0 .45rem; text-transform: uppercase; }
+.construction-step-explanation p { margin: .5rem 0; }
+.construction-step-result { padding: 1.25rem; background: #f7f5f0; border-radius: 8px; }
+.construction-step-result > h3 { color: #554d45; }
+.construction-step-result .construction-table { margin: .6rem 0 1rem; }
+.construction-step-result .construction-table caption { font-size: 1rem; }
+.construction-step-result ul, .construction-task-list { padding-left: 1.25rem; margin-bottom: 0; }
+.construction-task-list li, .construction-step-result li { margin: .55rem 0; }
+.construction-step-counts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem 1.5rem; margin: .9rem 0; }
+.construction-step-counts dt { color: #665c52; font-size: .8rem; line-height: 1.4; }
+.construction-step-counts dd { margin: .2rem 0 0; font-size: 1.65rem; font-weight: 550; }
+.construction-step-outcome { font-size: 1.3rem; }
+.construction-step-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1.5rem 0; }
+.construction-step-evidence { border-top: 1px solid #e8e4de; margin: 0; }
+.construction-gallery .construction-step-evidence > summary { padding: 1rem 0; font-weight: 500; font-size: .88rem; cursor: pointer; }
+.construction-step-evidence > div { padding-bottom: 1.2rem; }
+.construction-step-evidence .review-panel { margin: 1rem 0; padding: 1rem; }
+.construction-step-evidence .review-panel h2 { font-size: 1.2rem; }
+.construction-step-evidence .review-panel h3 { font-size: 1rem; }
+.construction-step-evidence .construction-table tbody th { min-width: 8rem; }
+.construction-step-pagination { display: flex; align-items: center; justify-content: space-between; gap: .6rem; border-top: 1px solid #e8e4de; margin-top: 1.3rem; padding-top: 1.4rem; }
+.construction-step-pagination > span { color: #665c52; font-size: .8rem; white-space: nowrap; }
+@media (max-width: 760px) {
+  .construction-process-layout { grid-template-columns: minmax(0, 1fr); gap: 1.25rem; }
+  .construction-step-nav { position: static; }
+  .construction-step-nav ol { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .3rem; }
+  .construction-gallery .construction-main.review-workspace .construction-step-nav button { padding: .6rem .15rem; justify-content: center; }
+  .construction-step-nav button > span:last-child { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .construction-step-nav-label { display: inline; }
+  .construction-step-panel { padding: 1.4rem; }
+  .construction-step-panel .construction-table tbody th { min-width: 0; }
+}
+@media (max-width: 420px) {
+  .construction-step-panel { padding: 1.1rem; }
+  .construction-step-result { padding: 1rem; }
+  .construction-step-pagination { display: grid; grid-template-columns: 1fr 1fr; }
+  .construction-step-pagination > span { grid-column: 1 / -1; grid-row: 1; text-align: center; }
+  .construction-step-pagination button { font-size: .78rem; padding: .65rem .75rem; }
+}
+
+body .construction-gallery .construction-coverage-mobile {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  body .construction-gallery .construction-coverage-desktop {
+    display: none;
+  }
+
+  body .construction-gallery .construction-coverage-mobile {
+    display: block;
+    min-width: 0;
+    margin: 1.25rem 0;
+  }
+
+  body .construction-gallery .construction-coverage-caption {
+    margin: 0 0 1rem;
+    font-weight: 600;
+  }
+
+  body .construction-gallery .construction-coverage-mobile > ul {
+    display: grid;
+    gap: 1.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  body .construction-gallery .construction-coverage-mobile > ul > li {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  body .construction-gallery .construction-coverage-task {
+    display: block;
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+  }
+
+  body .construction-gallery .construction-coverage-mobile dl {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    gap: .75rem;
+    margin: .75rem 0 0;
+  }
+
+  body .construction-gallery .construction-coverage-mobile dl > div {
+    min-width: 0;
+  }
+
+  body .construction-gallery .construction-coverage-mobile dt {
+    font-size: .85rem;
+    line-height: 1.4;
+    font-weight: 400;
+  }
+
+  body .construction-gallery .construction-coverage-mobile dd {
+    margin: .2rem 0 0;
+    font-size: 1rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+}
